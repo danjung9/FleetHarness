@@ -26,3 +26,21 @@ Every existing frontend line changed is in [App.tsx](~/Documents/CDAO/fh-org/ast
 Automatic approval review rejected additional synthetic marking fixtures as restricted content. The accepted sample-banner tests passed; broader literal marking cases remain unverified.
 
 COMMIT: Add sample connectors and frozen build context
+
+## 18:42 report
+
+Implemented real connection flows, secret prompts, cancellation, restart persistence, disconnect cleanup, marking fix, checkpoint fix, and expanded native smoke. Changes remain uncommitted.
+
+Passed: 26 core tests, 95 adapter tests, the Pi regression, all three type checks, Vite build and smoke syntax.
+
+The Codex regression was attempted but failed on denied `sandbox-exec` and unconfirmed cleanup. Native Electron smoke, Chrome, keychain and full-suite verification remain for the overseer. Event builds still accept synthetic data only.
+
+Existing frontend changes:
+
+- `Connectors.tsx`: lines 1-2, 7-11, 38-41, 43-72, 76-79, 82-87, 90-91, 96-100, 102, 104, 107-108, 110-119, 122, 124-125, 128, 149.
+- `connectors.css`: lines 26-29.
+- Existing rail and brief hooks: unchanged.
+
+[Every removed and added frontend line](~/Documents/CDAO/fh-org/astra-c1/docs/connectors-frontend-lines.md). [Full results and limitations](~/Documents/CDAO/fh-org/astra-c1/docs/connectors-core-report.md).
+
+COMMIT: Wire real connector flows and fix empty connector checkpoints
