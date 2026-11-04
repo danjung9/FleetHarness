@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { challenges } from '../dist-electron/harness/catalog.js';
 
 const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-electron-'));
 const piDir=path.join(root,'pi');await fs.mkdir(piDir);
@@ -31,7 +32,8 @@ try {
   await page.getByRole('button',{name:'Save model settings'}).click();
   await page.getByText('Model settings saved.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'New challenge',exact:true}).click();
-  await page.getByRole('button',{name:'Norfolk catalog · 34'}).click();
+  const catalogCount=await page.evaluate(async fallback=>(await window.fleetHarness.bootstrap()).state.norfolkCatalog?.challenges.length??fallback,challenges.length);
+  await page.getByRole('dialog',{name:'New challenge',exact:true}).getByRole('button',{name:`Norfolk catalog · ${catalogCount}`,exact:true}).click();
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');
   await page.locator('.catalog-results button').click();
   assert.match(await page.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
