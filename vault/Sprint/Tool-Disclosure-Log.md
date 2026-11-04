@@ -87,6 +87,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Archived ID 12 R1 plan | Synthetic regression dataset | Reproduce generic-only bypass | Existing project QA evidence | 2026-11-04 |
 | bsdtar 3.5.3 | archive extraction | exact-commit review copy | libarchive/Apple. Other tool disclosures are recorded in the journal. | 2026-11-04 |
 | ID 16 synthetic artifacts | review dataset | app judgment | existing team benchmark. | 2026-11-04 |
+| Round-101 synthetic receipts | evidence dataset | repair prioritization | team benchmark. | 2026-11-04 |
 
 ## Data and sources
 

@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 12 round 101 is NOT: real extraction and timeline still replace the required input format; earlier round 1 judgments retained."
+summary: "Challenge 11 round 101 is NOT: real conflict checks still rely on preset alternatives; earlier judgments retained."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id11-training]] records NOT for Ten/Exp1/R101/id11-training. Real checks and a usable sample do not supply departmental negotiation or optimization. A qualified spare person exists in the sample, but Engineering cannot select that person unless its candidate list is edited in code. Meaningful tests and saved receipts report twenty tests and twenty browser executions passing; requirementsMet true overstates the scope. All requested screenshots were inspected; no fresh app execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id11-training]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id11-training]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id12-optask]] records NOT for the copy under Ten/Exp1/R101/id12-optask. The sample extracts all three categories and produces a real daily timeline, but its invented grammar replaces the required USMTF format. Meaningful tests and retained receipts report 31 tests and twelve browser runs passing; requirementsMet is false. All three screenshots were inspected; no fresh app execution or Sailor trial occurred. Local handoffs: [[Research/QA/Officer/Sprint/Judge-R101-id12-optask]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id12-optask]].
 

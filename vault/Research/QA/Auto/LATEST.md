@@ -3,31 +3,31 @@ type: research
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Automatic QA at 1d9eeee on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only."
+summary: "Automatic QA at c6ce52d on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only."
 ---
 
-# Automatic QA at 1d9eeee
+# Automatic QA at c6ce52d
 
-[E, automatic run, 16:16 to 16:20 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
+[E, automatic run, 16:55 to 17:00 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
 
 | Step | Exit | Seconds | Counts |
 | --- | --- | --- | --- |
 | typecheck | 0 | 1 |  |
 | electron compile | 0 | 0 |  |
-| web build | 0 | 2 |  |
-| unit tests | 0 | 62 | tests 125, pass 125, fail 0 |
+| web build | 0 | 1 |  |
+| unit tests | 0 | 49 | tests 125, pass 125, fail 0 |
 | harness compile | 0 | 0 |  |
-| harness tests | 0 | 2 | tests 51, pass 51, fail 0 |
+| harness tests | 0 | 1 | tests 51, pass 51, fail 0 |
 | smoke-activity | 0 | 13 |  |
-| smoke-chatgpt | 0 | 12 |  |
-| smoke-electron | 1 | 34 |  |
-| smoke-home | 0 | 4 |  |
-| smoke-journey | 0 | 17 |  |
-| smoke-model-selector | 0 | 5 |  |
-| smoke-norfolk | 1 | 12 |  |
+| smoke-chatgpt | 0 | 15 |  |
+| smoke-electron | 1 | 35 |  |
+| smoke-home | 0 | 3 |  |
+| smoke-journey | 0 | 12 |  |
+| smoke-model-selector | 0 | 4 |  |
+| smoke-norfolk | 1 | 13 |  |
 | smoke-phases | 0 | 5 |  |
 | smoke-quality | 0 | 2 |  |
-| smoke-system-design | 0 | 29 |  |
+| smoke-system-design | 0 | 31 |  |
 
 ## smoke-electron
 

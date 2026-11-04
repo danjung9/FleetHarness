@@ -10,7 +10,7 @@ summary: "Finish one source-linked primary-task repair and judge the current exp
 
 ## Current decision
 
-[P, [[Research/Agentic/Flow-Goals]]] Success remains ten satisfactory builds from unchanged catalog cards without human help during generation. [E, [[Research/QA/Ten/Scoreboard]]] Round one has nine automatic passes and zero satisfactory results. [E, [[Research/QA/Ten/Exp1/Round-101]]] Three of five experiment entries automatically pass; judgments are pending. No satisfaction or speed improvement is established.
+[P, [[Research/Agentic/Flow-Goals]]] Success remains ten satisfactory builds from unchanged catalog cards without human help during generation. [E, [[Research/QA/Ten/Scoreboard]]] Round one has nine automatic passes and zero satisfactory results. [E, [[Research/QA/Ten/Exp1/Round-101]]] Three of five experiment entries automatically pass; ID 12 is now judged NOT for input-format substitution, with the other judgments pending. No satisfaction or speed improvement is established.
 
 [R] This replaces the previous directive. New task JSON is empty. Existing routed work continues under current overseer ownership. Withdraw the old native-select dispatch: ID 36 now has a newer 20/20 automatic journey result, so compare and judge that artifact before allocating another repair. Keep the round-one failure and diagnosis as evidence.
 
@@ -26,7 +26,7 @@ summary: "Finish one source-linked primary-task repair and judge the current exp
 
 | Finding | Current ruling and proof needed |
 | --- | --- |
-| ID 12 primary deferral | The enum-only bypass is reproduced and its exact working-source rejection is reported at 16:47 in Ten-Benchmark-Audit. Preserve that regression. A permitted dependency label alone is insufficient. Require a source-linked synthetic message-to-output case with literal values and category extraction, labeled as an assumed mock format. The new 31-test experiment result still needs independent semantic judgment. |
+| ID 12 primary deferral | The enum-only bypass is reproduced and its exact working-source rejection is reported at 16:47 in Ten-Benchmark-Audit. Preserve that regression. A permitted dependency label alone is insufficient. The new 31-test experiment is judged NOT in [[Research/QA/Officer/JUDGE-R101-id12-optask]]: it covers all three event types but replaces the requested format with invented syntax. Return this to dev-5's existing repair and the already routed architect diagnosis. Require independently checked synthetic examples in the requested input format before generation, retain public-source provenance or explicit validation limits, and reject format substitution even when labels claim the original requirement passed. Do not invent unavailable format authority. |
 | ID 16 omitted narrative | A true requirementsMet flag based on three recipe checks cannot cover missing narrative obligations. Intake/planning must inventory defining prose outcomes and bind them to source wording and acceptance cases. Send this into the existing deferral review, including a negative fixture whose structured rows pass while a narrative obligation is omitted. No new broad runtime rewrite. |
 | ID 11 false expected explanation | Preserve the rejected contract and failure. Independently establish the correct expected explanation, version the contract openly and regenerate/reverify. Do not silently soften an oracle or teach the app a false statement. Departmental negotiation, recurrence and optimization need their own synthetic expected outcomes; 20/20 planned experiment journeys alone do not establish them. |
 | ID 36 native option | The round-one parser lacked the local option; browser checks correctly caught it. Keep that diagnosis and four failed journeys. The new experiment reports 20/20, so no fresh dispatch now. If the same cause recurs, return one bounded factory-guidance/browser-fixture repair with parsed DOM evidence and preserved frozen steps, not a generated-app hand edit. |
@@ -49,6 +49,8 @@ summary: "Finish one source-linked primary-task repair and judge the current exp
 [R] Keep independent expected outcomes outside builder authority. Use only synthetic/public data and label assumed rules. No external system changes, invented permission or operational input is required for these tests. Honest missing-dependency status is preferable to a false completion claim.
 
 ## Integration and finish
+
+[E, closing relay f579651 and patch read] The hosted smoke accepts passed requested-demo criteria while retaining supplemental deferrals, and c1fb845 changes command polling. [R] Preserve requested wording and report-schema compatibility. Do not import this smoke's narrower scope into the ten-challenge criterion inventory or use its scripted approval as a human verdict. No agentic code or prompt assignment follows from hosted polling.
 
 [R] Follow [[Ops/Directors/Directive-development]] for exclusive ownership. Dev-1 already integrates the mandatory sandbox and registered-test evidence, preserving build-test history and bounded repairs across resume. Do not add another direct generated-test subprocess. Foreground prompts are guidance; native shutdown still requires main's receipt at the landed revision.
 

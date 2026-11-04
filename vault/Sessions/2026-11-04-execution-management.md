@@ -24,6 +24,8 @@ summary: "Audit and execution coordination against the newer ten-challenge facto
 
 [E, assigned review completed at 16:27] [[Research/QA/Review-Queue-Notes]] reviews three exact queued commits, confirms the inherited unsandboxed-test blocker, records focused receipt limits and identifies metrics loss on a direct Resume integration. Main confirms dev-3 owns verifier submission and dev-2 owns serial preflight integration. Main confirmed ownership of the project runtime; its reported unrelated session is outside this task.
 
+[P/E, author setting at 17:02] Applied Mukul's explicit answer to the one stale local Git name: dev-5 now has user.name=Mukul, verified by a readback. The other five development clone settings already matched. No source, commit, tree or review identity changed. Main owns reconciliation of the existing unlanded commit metadata.
+
 ## Verification and limits
 
 [E] Audit guard passes. Existing Python/shell/Git/search/patch/bridge tools reused; isolated scheduler diagnostic disclosed centrally. Process inspection is denied; current activity is inferred from dated runner events. No worker was launched or stopped, no runner or product source changed, no remote push/deployment performed. The main runtime owner controls existing generation and browser execution.

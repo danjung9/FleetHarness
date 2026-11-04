@@ -21,6 +21,8 @@ summary: "Meeting 118 decisions, evidence and disclosure staged for central tran
 
 ## Tool and evidence ledger
 
+[E, closing read] Relay advanced to f579651/c1fb845 across five hosted polling/smoke files, with no reported branch overlap. Read the complete patch: bounded SDK waiting and final-progress reread are separate from detached-child shutdown; requested-demo verification retains supplemental deferrals and can reach scripted approval. Preserve teammate work under existing ownership without equating that scope with catalog satisfaction. The round-101 ID 12 judgment now says NOT because invented syntax replaces the requested format; its return is added to the existing primary-task correction. Other two available experiment judgments remain pending.
+
 | Item | Type and provider | Use |
 | --- | --- | --- |
 | [E] Local execution and patch interfaces, version unexposed | Workspace tooling, session environment | Read assigned evidence and write local meeting records. |
