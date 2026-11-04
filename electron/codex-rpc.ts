@@ -2,6 +2,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { runProcessEnvironment } from './process-sweep.js';
 
 export interface RpcMessage { id?: number | string; method?: string; params?: any; result?: any; error?: { code: number; message: string } }
 export function codexExecutable() {
@@ -36,7 +37,7 @@ export class CodexRpc {
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
   static launch(home: string) {
-    const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home };
+    const env: NodeJS.ProcessEnv = runProcessEnvironment({ ...process.env, CODEX_HOME: home });
     delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
     return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'forced_login_method="chatgpt"', '-c', 'cli_auth_credentials_store="file"'], {
       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true

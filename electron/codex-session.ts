@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { AgentSessionEvent, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { StageSession } from './agent-runner.js';
 import { CodexRpc, type RpcMessage } from './codex-rpc.js';
+import { runProcessEnvironment } from './process-sweep.js';
 
 type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<{ content: { type: string; text?: string }[] }> };
 export async function createCodexSession(options: {
@@ -69,7 +70,8 @@ export async function createCodexSession(options: {
     const skills = await Promise.all((options.skillPaths ?? []).map(async dir => fs.readFile(path.join(dir, 'SKILL.md'), 'utf8')));
     const result = await rpc.request('thread/start', {
       cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'workspace-write',
-      config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled' },
+      config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled',
+        'shell_environment_policy.set': runProcessEnvironment({}) },
       developerInstructions: [
         'You are a AppYard software-factory agent. Work only inside the provided workspace. Never access credentials or unrelated files, publish, deploy, or contact operational systems. Use synthetic examples. Write working artifacts and report limitations honestly. Use the fleet tools for domain logic and architecture updates. Do not spawn other agents. This is an unattended build: resolve routine choices yourself and document limitations.',
         ...skills

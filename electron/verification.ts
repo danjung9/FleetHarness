@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { listArtifacts, sourceHash } from './storage.js';
 import type { TestReport } from '../shared/types.js';
+import { runProcessEnvironment } from './process-sweep.js';
 export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
@@ -25,7 +26,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   if (signal?.aborted) throw new Error('Run stopped.');
   const args = ['--test', '--test-reporter=tap', ...files.map(file => './' + file)];
   const child = spawn(executable, args, {
-    cwd: root, env: { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
+    cwd: root, env: runProcessEnvironment({ PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' }),
     stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
   });
   const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };
