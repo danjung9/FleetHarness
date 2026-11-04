@@ -8,24 +8,22 @@ summary: "One-page officer walkthrough of the delivered synthetic training draft
 
 # Officer check: synthetic training draft
 
-[R] Use the delivered page and its actual guide. The technical operator records the folder, file digest, build route and browser, stops all writers, and prepares an offline browser context. Use only the invented people and rooms below. This is a partial training-draft demonstration, not an issued schedule or policy-compliance tool.
+[R] The technical operator identifies the delivered file, digest, build route and browser, stops writers, and prepares an offline context. Use only these invented people and rooms. Record **PASS**, **FAIL**, **NOT CHECKED** or **NOT IMPLEMENTED**, with an evidence filename, for each step.
 
-Record for each step: **PASS**, **FAIL**, **NOT CHECKED**, or **NOT IMPLEMENTED**, plus the evidence filename. Do not guess missing controls or count a green badge as proof.
+- [ ] **Open and understand.** Open the delivered `index.html` and guide. Find the synthetic label, four requests and constraints. Explain what checking and marking reviewed do. Nothing issues a schedule or contacts people.
+- [ ] **Check the base.** Load the supplied example. Compare every row below. Both people total 120 minutes across both days. P01 rests 30 minutes between A and B. No request disappears.
 
-- [ ] **Open and understand.** Open the exact delivered `index.html`. Find the synthetic label, all four requests, constraints and instructions. Explain what checking and marking reviewed do. Nothing may contact people or change an official calendar.
-- [ ] **Check the base.** Load the supplied four-request example. Check the actual rows against this table. P01 and P02 must each total 120 minutes across both days. P01 must rest 30 minutes between A and B. All four requests remain present.
-
-| Request | Base answer | Fresh-edit answer |
+| Request | Base answer | Fresh answer |
 | --- | --- | --- |
 | A, P01, Room-1 | Day 1, 0800 to 0900 | Day 1, 0830 to 0930 |
 | B, P01, Room-1 | Day 1, 0930 to 1030 | Day 1, 1000 to 1100 |
 | C, P02, Room-2 | Day 1, 0800 to 0900 | Unchanged |
 | D, P02, Room-2 | Day 2, 0800 to 0900 | Unchanged |
 
-- [ ] **Review, then edit.** Mark the correct base reviewed. Set A's permitted start to minute 30 and B's permitted starts to 0, 90 and 120. The old review must clear immediately, before another check. Check the fresh answer above; both totals stay 120. It must remain unreviewed until you explicitly review it again.
-- [ ] **Distinguish the four outcomes.** Reset the base between checks. B restricted to 0 is infeasible because A/B overlap. B restricted to 60 is also infeasible because rest is missing. Rename D to C: duplicate input must be invalid, without silently losing a request. If supported, set the search allowance to 1: exhaustion must say the search is incomplete, not that no solution exists. Record an absent search control or checker-only mode honestly.
-- [ ] **Reject attractive wrong answers.** A draft with B at 0800 overlaps A. A draft missing D is incomplete even when collision-free. Reject both. If the page cannot accept proposed drafts, record that limitation; do not invent an app-level rejection.
-- [ ] **Save and recover offline.** Restore, check and review the fresh answer. Save its portable draft and readable summary. Close the page. In a fresh offline browser context, reopen the same delivered file and import the actual saved draft. Compare inputs, all four rows, totals and review version. A reset example or old browser storage is not recovery. Compare the summary too.
-- [ ] **Decide on these bytes.** Read the guide and disclosed omissions. Record accept or reject against the final digest, with failures and untested steps attached. Any changed file or input needs affected checks and fresh review. Submission approval is separate.
+- [ ] **Review, then edit.** Mark the correct base reviewed. Set A's permitted start to minute 30 and B's to 0, 90 and 120. Old review must clear immediately, before rechecking. Check the fresh answer above; both totals stay 120. Explicitly review this new version.
+- [ ] **Distinguish outcomes.** Reset between changes. B restricted to 0 is infeasible due to overlap; B restricted to 60 lacks rest. Rename D to C: input must be invalid without silently losing a request. If supported, set search allowance to 1: exhaustion means incomplete search, not proven infeasibility. Record absent functionality honestly.
+- [ ] **Reject wrong drafts.** B at 0800 overlaps A. A draft missing D is incomplete even if collision-free. Reject both. If proposed drafts cannot be entered, record that limitation instead of an app-level pass.
+- [ ] **Save and recover.** Restore, check and review the fresh answer. Save its portable draft and readable summary. Close the page. Reopen the same file in a fresh offline context and import those saved bytes. Compare inputs, all rows, totals and review version. A reset example or old browser storage is not recovery. Compare the summary too.
+- [ ] **Decide on these bytes.** Follow the guide; record accept or reject against the final digest and disclosed limitations. Attach failures and untested steps. Changed files or inputs need affected checks and fresh review. Submission approval is separate.
 
-[R] Stop unexpected work and report unclear constraints, false approval, data loss or failed recovery to the coordinator. No real personnel, operational data, authoritative fatigue rules, recurrence or departmental negotiation are established by this example. The technical operator handles technical evidence; the officer remains in charge of the decision.
+[R] Stop unexpected work and report false approval, data loss or failed recovery. This partial example establishes no real personnel assignments, operational policy, recurrence or departmental negotiation. The officer owns the decision; the operator supplies technical evidence.

@@ -23,7 +23,7 @@ summary: "Independent browser acceptance of the exact delivered synthetic ID 11 
 
 ## Independent extra cases
 
-[E, manual derivation before candidate inspection] These inputs are independent evaluation variants, not security-isolated holdouts. They live in the shared vault and were not supplied in the public build brief by this QA assignment. Reset every unlisted value to the golden base.
+[E, manual derivation and separate Python standard-library enumeration before candidate inspection] These inputs are independent evaluation variants, not security-isolated holdouts. They live in the shared vault and were not supplied in the public build brief by this QA assignment. Reset every unlisted value to the golden base.
 
 | Case | Edits | Expected result |
 | --- | --- | --- |
@@ -35,3 +35,5 @@ summary: "Independent browser acceptance of the exact delivered synthetic ID 11 
 [R] Review screenshots and structured observations for stale examples, ambiguous status wording, dropped requests, hidden accepted output and unsupported input coercion. A green outcome alone is insufficient. The result needs complete current data and the correct branch: feasible, infeasible, invalid input or exhausted search. A checker-only fallback cannot claim a search outcome it does not implement.
 
 [R] Keep automated findings beside [[Research/QA/Acceptance/Officer-Walkthrough-11]]. A person decides whether the exact accepted bytes and disclosed partial scope are useful. This process does not issue a schedule, certify policy compliance, publish an app or authorize a submission.
+
+[E, preparation check] Independent enumeration of only the supplied synthetic constraints found one answer each for V13, V14 and V16 and zero for V15, matching the table. This calculation did not import or execute candidate code, open a browser, or establish application acceptance.

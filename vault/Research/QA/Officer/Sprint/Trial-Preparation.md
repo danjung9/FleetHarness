@@ -24,6 +24,7 @@ summary: "Local tool, friction and prior-work handoff for the anonymous syntheti
 | pandoc 3.12.1 | Local document tool | Tried plain-text conversion for the print companion | Pandoc project; installed distribution |
 | cupsfilter, version unexposed | Local document tool | Tried local PDF conversion; no printer or print job used | Installed macOS print tools |
 | Poppler 26.09.0, pdfinfo/pdftotext/pdftoppm | Local document tools | PDF page count, text extraction and attempted preview | Poppler project; installed distribution |
+| Vault fh.py guard, version unexposed | Local content guard | Attempted scoped guard check; blocked reading protected configuration | Existing vault tooling |
 
 [E] The exact writing-session model version is not exposed in these tool results. An authorized ledger owner should reconcile runtime metadata, without inferring a version from earlier test runs. No additional model, library or installed package was introduced for this task.
 
@@ -33,7 +34,8 @@ summary: "Local tool, friction and prior-work handoff for the anonymous syntheti
 - [E] The Python system launcher printed denied temporary-cache writes but returned Python 3.9.6 with exit status zero. No permission bypass was attempted.
 - [E] The Navy 2022 SWO survey PDF appeared in search but direct retrieval returned 403: https://www.surfpac.navy.mil/Portals/54/Documents/Files/CNSP/CNSF-Summary-of-2022-SWO%20Surveys.pdf. Its statistics are not used in the claims.
 - [E] Central Sprint, Sessions and Team/Now writes are outside the assigned folder. Local records preserve the pending handoff.
-- [E] Initial PDF conversion produced two pages. A standard-library PDF layout replaced it with one landscape page, two columns, 9-point text. A first layout attempt failed before writing; a corrected layout has 50 lines per column. Raster preview was unavailable because the viewer could not read its system Courier font. The PDF uses the standard Courier font; page count and text are separately checked. No claim of a physical print inspection is made.
+- [E] Initial PDF conversion produced two pages. A standard-library PDF layout replaced it with one landscape page, two columns, 9-point text. A first layout attempt failed before writing; final layout has 51 and 50 lines. Text comparison caught a split table heading; widening that cell fixed it. Raster preview was unavailable because the viewer could not read its system Courier font. The PDF uses the standard Courier font. Final page-count and complete-word-content checks passed. No claim of visual or physical print inspection is made.
+- [E] The scoped fh.py guard exited with PermissionError while checking its protected trace-pattern configuration outside the assigned folder. No bypass was attempted and no full guard pass is claimed. Separate local frontmatter, known-link, dash, PDF content and ten-minute allocation checks passed.
 
 ## Prior work and authority
 
