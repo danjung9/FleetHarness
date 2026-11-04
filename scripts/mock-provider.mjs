@@ -1,4 +1,5 @@
-import { qualityFixture, qualityFixtureHtml } from './quality-fixture.mjs';
+import { qualityFixtureHtml } from './quality-fixture.mjs';
+import { solutionFixture, solutionFixtureEvaluator } from './solution-fixture.mjs';
 import { syntheticDataFiles } from './data-fixture.mjs';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
@@ -37,7 +38,7 @@ export async function startFixtureProvider() {
       ];
       else if (prompt.includes('You are the verification agent')) files = [['verification.md', '# Verification\nOne source behavior is covered. Operational readiness is unverified.\n']];
       else if (prompt.includes('You are the implementation agent')) files = [
-        ['index.html', html], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
+        ['index.html', html], ['evaluate.cjs', solutionFixtureEvaluator], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
         ['core.cjs', 'exports.parse = text => ({task:"intentional defect"});\n'],
         ['parser.test.cjs', 'const {test}=require("node:test");const assert=require("node:assert/strict");const {parse}=require("./core.cjs");test("extracts a task",()=>assert.deepEqual(parse("TASK: inspect pump"),{task:"inspect pump"}));\n']
       ];
@@ -48,7 +49,7 @@ export async function startFixtureProvider() {
     }
     if (last?.role === 'user' && prompt.includes('You are the planning agent')) {
       const ids = /Acceptance IDs: ([^\n]+)/.exec(prompt)?.[1].split(', ').filter(Boolean) ?? [];
-      files.push(...Object.entries(qualityFixture(ids)));
+      files.push(...Object.entries(solutionFixture(ids)));
     }
     const progress = (componentId, status) => ({ name: 'fleet_component_progress', arguments: JSON.stringify({ componentId, status, detail: status === 'building' ? 'Implementing the fixture component.' : 'Fixture implementation written. Independent tests still determine correctness.' }) });
     if (last?.role === 'user') {

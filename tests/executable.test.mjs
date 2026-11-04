@@ -3,8 +3,14 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { createRequire } from 'node:module';
+import vm from 'node:vm';
 import { newProject, sourceHash, Store } from '../dist-electron/electron/storage.js';
 import { assertExecutableSource, stageExecutable, executableName, runPackageWorker, saveExecutable } from '../dist-electron/electron/executable.js';
+import { loadQualityContract, verifyApplication } from '../dist-electron/electron/quality.js';
+import { reportPassed } from '../dist-electron/shared/verification.js';
+import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-package-test-'));
@@ -85,4 +91,107 @@ test('a hanging packaging worker is terminated and cancellation never starts a w
   const controller = new AbortController(); controller.abort();
   await assert.rejects(runPackageWorker({}, '/missing-runtime', controller.signal));
   await assert.rejects(runPackageWorker({}, '/missing-runtime', undefined, 100, worker), /ENOENT/);
+});
+
+async function verifiedBrowserFixture(t) {
+  const prepared = await fixture(t), { project } = prepared;
+  const acceptance = [{ id: 'R1', requirement: 'Parse tasks.', method: 'automated', scenario: 'Parse varied messages.' }];
+  const files = solutionFixture(['R1']);
+  const solution = JSON.parse(files['solution-contract.json']);
+  solution.runtime.files = ['index.html', 'evaluate.cjs'];
+  solution.runtime.files.push('assets/status.mjs', 'assets/style.css', 'assets/data.json', 'package.json', 'package-lock.json', 'main.cjs');
+  solution.runtime.dependencies = { manager: 'npm', manifest: 'package.json', lockfile: 'package-lock.json' };
+  files['solution-contract.json'] = JSON.stringify(solution);
+  files['index.html'] = qualityFixtureHtml.replace('</head>', '<link rel="stylesheet" href="./assets/style.css"></head>')
+    .replace('</body>', '<script type="module" src="./assets/status.mjs"></script></body>');
+  files['evaluate.cjs'] = solutionFixtureEvaluator;
+  files['assets/status.mjs'] = 'document.body.dataset.assetLoaded="yes";';
+  files['assets/style.css'] = 'body { color: #123; }';
+  files['assets/data.json'] = '{"purpose":"declared example"}';
+  const packageJson = { name: 'agent-browser-payload', version: '1.0.0', private: true, main: 'main.cjs', dependencies: {},
+    scripts: { postinstall: 'node main.cjs' } };
+  files['package.json'] = JSON.stringify(packageJson);
+  files['package-lock.json'] = JSON.stringify({ name: packageJson.name, version: packageJson.version, lockfileVersion: 3, requires: true, packages: { '': packageJson } });
+  files['main.cjs'] = 'throw new Error("Generated payload main must never execute in Electron main");';
+  files['app.test.cjs'] = `const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+test('actual parser core',()=>{const context={};const html=fs.readFileSync('index.html','utf8');vm.runInNewContext(html.split('/* CORE_START */')[1].split('/* CORE_END */')[0],context);assert.equal(context.parseTask('TASK: inspect valve'),'inspect valve');});`;
+  files['.fleet/packet.json'] = JSON.stringify({ acceptance });
+  for (const [name, body] of Object.entries(files)) {
+    await fs.mkdir(path.dirname(path.join(project.workspace, name)), { recursive: true });
+    await fs.writeFile(path.join(project.workspace, name), body);
+  }
+  const contract = await loadQualityContract(project.workspace, acceptance, true);
+  project.report = await verifyApplication(project.workspace, process.execPath, contract, undefined, { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2_000 });
+  assert.equal(reportPassed(project.report, true), true, project.report.output);
+  project.qualityVersion = 2; project.runtimeProfile = 'browser';
+  return { ...prepared, solution };
+}
+
+test('version 2 browser staging isolates dependency manifests and generated main scripts while preserving declared assets', { timeout: 30_000 }, async t => {
+  const { root, project } = await verifiedBrowserFixture(t);
+  const staged = await stageExecutable(project, root);
+  assert.deepEqual((await fs.readdir(staged.source)).sort(), ['application', 'main.cjs', 'package.json']);
+  const payload = path.join(staged.source, 'application');
+  assert.deepEqual((await fs.readdir(payload)).sort(), ['assets', 'evaluate.cjs', 'index.html', 'main.cjs', 'package-lock.json', 'package.json']);
+  assert.deepEqual((await fs.readdir(path.join(payload, 'assets'))).sort(), ['data.json', 'status.mjs', 'style.css']);
+  assert.equal(await fs.readFile(path.join(payload, 'assets/status.mjs'), 'utf8'), 'document.body.dataset.assetLoaded="yes";');
+  assert.match(await fs.readFile(path.join(payload, 'main.cjs'), 'utf8'), /Generated payload main must never execute/);
+  assert.doesNotMatch(await fs.readFile(path.join(staged.source, 'main.cjs'), 'utf8'), /Generated payload main must never execute/);
+  const wrapperPackage = JSON.parse(await fs.readFile(path.join(staged.source, 'package.json'), 'utf8'));
+  assert.equal(wrapperPackage.main, 'main.cjs');
+  assert.notEqual(wrapperPackage.name, 'agent-browser-payload');
+  assert.equal(wrapperPackage.scripts, undefined); assert.equal(wrapperPackage.dependencies, undefined);
+  let handler, browserOptions;
+  const electron = {
+    app: { setName() {}, setPath() {}, getPath: () => root, whenReady: () => Promise.resolve(), on() {} },
+    protocol: { registerSchemesAsPrivileged() {}, handle: (_scheme, value) => { handler = value; } },
+    Menu: { setApplicationMenu() {}, buildFromTemplate: value => value },
+    BrowserWindow: class {
+      constructor(options) { browserOptions = options; this.webContents = { setWindowOpenHandler() {}, on() {}, session: { setPermissionRequestHandler() {}, setPermissionCheckHandler() {} } }; }
+      loadURL() {} on() {}
+    }
+  };
+  const require = createRequire(import.meta.url);
+  vm.runInNewContext(await fs.readFile(path.join(staged.source, 'main.cjs'), 'utf8'), {
+    require: name => name === 'electron' ? electron : require(name), __dirname: staged.source, process: { platform: 'linux' }, URL, Response
+  });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(browserOptions.webPreferences.nodeIntegration, false);
+  assert.equal(browserOptions.webPreferences.sandbox, true);
+  const script = await handler({ url: 'fleet-app://app/assets/status.mjs', method: 'GET' });
+  assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
+  assert.match(script.headers.get('content-security-policy'), /script-src 'self'/);
+  assert.equal(await script.text(), 'document.body.dataset.assetLoaded="yes";');
+  const dependencyManifest = await handler({ url: 'fleet-app://app/package.json', method: 'GET' });
+  assert.equal(dependencyManifest.status, 200);
+  assert.equal((await dependencyManifest.json()).name, 'agent-browser-payload');
+  for (const url of ['fleet-app://app/.env', 'fleet-app://app/evaluation-plan.json', 'fleet-app://app/main.cjs', 'fleet-app://other/index.html']) {
+    assert.equal((await handler({ url, method: 'GET' })).status, 404, url);
+  }
+  assert.equal((await handler({ url: 'fleet-app://app/index.html', method: 'POST' })).status, 404);
+});
+
+test('CLI runtime delivery offers source export and cannot become a browser-only standalone package', async t => {
+  const { root, project } = await fixture(t);
+  const acceptance = [{ id: 'R1', requirement: 'Calculate totals.', method: 'automated', scenario: 'Calculate independent examples.' }];
+  await fs.mkdir(path.join(project.workspace, '.fleet'));
+  await fs.writeFile(path.join(project.workspace, '.fleet/packet.json'), JSON.stringify({ acceptance }));
+  const files = { 'solution-contract.json': JSON.stringify({ schemaVersion: 1, objective: 'Calculate totals.',
+    runtime: { profile: 'cli', files: ['engine.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } },
+    capabilities: [{ id: 'total', kind: 'algorithm', description: 'Total values.', criterionIds: ['R1'], required: true, evaluationIds: ['examples'] }] }),
+    'acceptance-plan.json': JSON.stringify({ schemaVersion: 2, criteria: [{ criterionId: 'R1', disposition: 'implemented', expectedOutcome: 'Calculate correct totals.', journeyIds: [], capabilityIds: ['total'] }], journeys: [] }),
+    'ux-spec.json': solutionFixture(['R1'])['ux-spec.json'],
+    'evaluation-plan.json': JSON.stringify({ schemaVersion: 1, evaluations: [{ id: 'examples', capabilityId: 'total', description: 'Independent totals.',
+      dataset: { name: 'totals', version: '1', provenance: 'synthetic' }, evaluator: 'exact', threshold: 1, trials: 1,
+      cases: [{ id: 'values', input: [1, 2], expected: 3 }, { id: 'empty', input: [], expected: 0 }] }] }),
+    'engine.mjs': "import { readFileSync } from 'node:fs'; console.log(JSON.stringify(JSON.parse(readFileSync(0,'utf8')).reduce((a,b)=>a+b,0)));",
+    'app.test.cjs': "const test=require('node:test'),assert=require('node:assert/strict'),{spawnSync}=require('node:child_process'); test('CLI sums',()=>assert.equal(spawnSync(process.execPath,['engine.mjs'],{input:'[1,2]',encoding:'utf8'}).stdout.trim(),'3'));"
+  };
+  for (const [name, body] of Object.entries(files)) await fs.writeFile(path.join(project.workspace, name), body);
+  const contract = await loadQualityContract(project.workspace, acceptance, true);
+  project.report = await verifyApplication(project.workspace, process.execPath, contract);
+  project.qualityVersion = 2; project.runtimeProfile = 'cli';
+  assert.equal(reportPassed(project.report, true), true, project.report.output);
+  await assert.rejects(assertExecutableSource(project), /CLI or service runtime.*Export the runnable source package/);
+  await assert.rejects(stageExecutable(project, root), /Export the runnable source package/);
 });

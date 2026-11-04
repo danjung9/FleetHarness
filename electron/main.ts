@@ -7,7 +7,7 @@ import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash }
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { reportPassed } from './verification.js';
-import { PreviewServers } from './preview.js';
+import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
@@ -18,9 +18,12 @@ const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public',
 // Preserve existing workspaces and credentials when the display name changes.
 app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
 app.setName('AppYard');
+// A user-data directory has one owner for its rotating ChatGPT credentials.
+if (!app.requestSingleInstanceLock()) app.exit(0);
 let window: BrowserWindow | null = null;
+app.on('second-instance', () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } });
 let store: Store, backend: FleetBackend, codex: CodexAccount;
-const previews = new PreviewServers();
+const previews = new ApplicationPreviews(process.execPath);
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Set<string>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
@@ -39,7 +42,7 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 const bootstrap = () => ({
   state: store.state, models: backend.models(), storagePath: store.root,
   chatgpt: codex.account,
-  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? 'ChatGPT connected' : 'Sign in with ChatGPT to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
+  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' && codex.account.planUsageEnabled ? 'Using ChatGPT plan' : 'Connect your ChatGPT plan to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string) {
@@ -56,7 +59,7 @@ async function readArtifact(id: string, file: string) {
 }
 async function assertVerified(id: string) {
   const p = requireIdle(id);
-  if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
+  if (!p.workspace || !reportPassed(p.report, p.qualityVersion !== undefined)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
   if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before approving or exporting.');
   return p;
 }
@@ -80,7 +83,7 @@ function registerIPC() {
     const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
     const normalized = validateInput(input, catalog);
     Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
-    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+    p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
     p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
@@ -116,7 +119,7 @@ function registerIPC() {
     let destination: string | undefined, committed = false;
     try {
       if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this prototype before export.');
-      if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
+      if (!p.workspace || !reportPassed(p.report, p.qualityVersion !== undefined)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
       if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before exporting.');
       controller.signal.throwIfAborted();
       const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
@@ -124,12 +127,16 @@ function registerIPC() {
       controller.signal.throwIfAborted();
       destination = await exportVerifiedBundle({ workspace: p.workspace, parent: result.filePaths[0], title: p.title,
         verifiedHash: p.report!.sourceHash, deliveryMarkdown: [
-          '# ' + p.title, '', 'Open index.html in a browser to run the application.', '',
-          'Tests: install Node.js 22.19 or newer, then run: ' + p.report!.command, '',
+          '# ' + p.title, '', 'Follow README.md for the declared runtime, dependency installation, required environment settings and startup command.', '',
+          'Tests: follow the prerequisites in README.md, then run: ' + p.report!.command, '',
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
-            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have planned browser evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
+            ...(p.report!.quality.schemaVersion === 2 ? [
+              'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
+              'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
+            ] : []),
+            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
             ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
           'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
@@ -188,11 +195,18 @@ function registerIPC() {
       finally { deliveries.delete(id); finish(); }
     }
   });
-  const requireNoRuns = () => { if (backend.active.size) throw new Error('Stop active runs before changing accounts or providers.'); };
-  handle('fleet:chatgpt:connect', async () => { requireNoRuns(); await codex.login(); return bootstrap(); });
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size) throw new Error('Stop active runs before changing accounts or providers.'); };
+  const chatGPTAccountId = (value: unknown) => {
+    if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Choose a valid saved ChatGPT account.');
+    return value;
+  };
+  handle('fleet:chatgpt:connect', async (accountId?: unknown) => { requireNoRuns(); await codex.login(accountId === undefined ? undefined : chatGPTAccountId(accountId)); return bootstrap(); });
+  handle('fleet:chatgpt:select', async (accountId: unknown) => { requireNoRuns(); await codex.selectAccount(chatGPTAccountId(accountId)); return bootstrap(); });
+  handle('fleet:chatgpt:reopen', async () => { requireNoRuns(); await codex.reopenLogin(); return bootstrap(); });
+  handle('fleet:chatgpt:usage', async () => { await codex.manageUsage(); });
   handle('fleet:chatgpt:cancel', async () => { requireNoRuns(); await codex.cancel(); return bootstrap(); });
   handle('fleet:chatgpt:disconnect', async () => { requireNoRuns(); await codex.logout(); return bootstrap(); });
-  handle('fleet:chatgpt:refresh', async () => { await codex.refresh(); return bootstrap(); });
+  handle('fleet:chatgpt:refresh', async () => { requireNoRuns(); await codex.refresh(); return bootstrap(); });
   handle('fleet:developer-mode', async (enabled: boolean) => {
     if (typeof enabled !== 'boolean') throw new Error('Choose whether developer mode is enabled.');
     const previous = store.state.settings.developerMode;
@@ -202,13 +216,13 @@ function registerIPC() {
     notify(); return bootstrap();
   });
   handle('fleet:settings', async (settings: Settings, key?: string) => {
-    if (backend.active.size) throw new Error('Stop active runs before changing providers.');
+    requireNoRuns();
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
-      if (codex.account.status !== 'connected' || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT and select a Codex model first.');
+      if (codex.account.status !== 'connected' || !codex.account.planUsageEnabled || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT, allow plan usage, and select a Codex model first.');
       store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
       await store.save(); notify(); return bootstrap();
     }

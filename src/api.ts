@@ -47,5 +47,6 @@ export const api: FleetAPI = window.fleetHarness || {
     return api.bootstrap();
   },
   connectChatGPT: desktopOnly, cancelChatGPTLogin: desktopOnly, disconnectChatGPT: desktopOnly, refreshChatGPT: desktopOnly,
+  selectChatGPTAccount: desktopOnly, reopenChatGPTLogin: desktopOnly, manageChatGPTUsage: desktopOnly,
   onState: fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }
 };

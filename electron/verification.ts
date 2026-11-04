@@ -12,7 +12,8 @@ export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
   return { total: count('tests'), passed: count('pass'), failed: count('fail'), skipped: count('skipped') + count('todo') };
 }
-export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: Partial<VerificationLimits> = {}): Promise<TestReport> {
+export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal,
+  options: Partial<VerificationLimits> = {}, environment?: NodeJS.ProcessEnv): Promise<TestReport> {
   const limits = { timeoutMs: 120_000, maxOutputBytes: 2_000_000, ...options };
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid verification limit: ${key}`);
@@ -23,9 +24,10 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = ['--test', '--test-reporter=tap', ...files.map(file => './' + file)];
+  const args = [...(environment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=tap', ...files.map(file => './' + file)];
   const child = spawn(executable, args, {
-    cwd: root, env: { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
+    cwd: root, env: environment ? { ...environment, ELECTRON_RUN_AS_NODE: '1' }
+      : { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
   });
   const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };

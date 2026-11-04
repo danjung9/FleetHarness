@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { AgentModel, Bootstrap, FleetAPI } from '../shared/types';
 import './model-selector.css';
 
@@ -35,20 +36,23 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
     <label htmlFor={id} title={`${engine}${settings.provider ? ` · ${settings.provider}` : ''}`}>
       {engine} model{settings.provider && <span> · {settings.provider}</span>}{running && <span> · In use</span>}
     </label>
-    <select id={id} aria-label="Build model" aria-describedby={`${id}-hint`} value={value}
-      disabled={busy || running} title={`${selected?.name || settings.model || 'Choose a model'}${settings.model ? ` (${settings.provider}/${settings.model})` : ''}. ${description}`}
-      onChange={event => {
-        if (event.target.value === 'settings') { openSettings(); return; }
-        const model = connected.find(model => modelValue(model) === event.target.value);
-        if (model) choose(model);
-      }}>
-      {!settings.model && <option value="" disabled>Choose a model</option>}
-      {settings.model && !selected?.configured && <option value={value} disabled>{selected?.name || settings.model} · not connected</option>}
-      {providers.map(provider => <optgroup key={provider} label={provider}>
-        {connected.filter(model => model.provider === provider).map(model => <option key={model.id} value={modelValue(model)}>{model.name}</option>)}
-      </optgroup>)}
-      <option value="settings">{backend === 'pi' ? 'Connect a provider…' : 'Model settings…'}</option>
-    </select>
+    <div className="model-selector-control">
+      <select id={id} aria-label="Build model" aria-describedby={`${id}-hint`} value={value}
+        disabled={busy || running} title={`${selected?.name || settings.model || 'Choose a model'}${settings.model ? ` (${settings.provider}/${settings.model})` : ''}. ${description}`}
+        onChange={event => {
+          if (event.target.value === 'settings') { openSettings(); return; }
+          const model = connected.find(model => modelValue(model) === event.target.value);
+          if (model) choose(model);
+        }}>
+        {!settings.model && <option value="" disabled>Choose a model</option>}
+        {settings.model && !selected?.configured && <option value={value} disabled>{selected?.name || settings.model} · not connected</option>}
+        {providers.map(provider => <optgroup key={provider} label={provider}>
+          {connected.filter(model => model.provider === provider).map(model => <option key={model.id} value={modelValue(model)}>{model.name}</option>)}
+        </optgroup>)}
+        <option value="settings">{backend === 'pi' ? 'Connect a provider…' : 'Model settings…'}</option>
+      </select>
+      <ChevronDown className="model-selector-chevron" size={14} strokeWidth={1.75} aria-hidden="true"/>
+    </div>
     <span id={`${id}-hint`} className="model-selector-hint">{description}</span>
   </div>;
 }

@@ -26,6 +26,9 @@ const buildMessages: Partial<Record<StageId, string>> = {
 };
 
 function deliveryMessage(project: Project, appSaved: boolean): string {
+  if (project.runtimeProfile && project.runtimeProfile !== 'browser') return project.exportedTo
+    ? 'Runnable package and evidence exported. Follow README.md to start the solution.'
+    : 'Build approved. Export the runnable package when you’re ready.';
   if (project.executable?.status === 'packaging') return project.exportedTo
     ? 'Source and evidence exported. Packaging your app…'
     : 'Packaging your app. The download will be saved automatically.';
@@ -54,7 +57,7 @@ export function getJourneyState(project: Project): JourneyState {
     activeStage: 'deliver', message: deliveryMessage(project, appSaved), stale: false };
   }
 
-  const passed = reportPassed(project.report, project.qualityVersion === 1);
+  const passed = reportPassed(project.report, project.qualityVersion !== undefined);
   if (project.status === 'review' && project.workspace && passed) {
     return { current: 'review', completed: ['brief', 'build'], activeStage: 'review',
       message: 'Your review is needed. Try the app and check the evidence.', stale: false };

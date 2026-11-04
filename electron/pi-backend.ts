@@ -5,12 +5,15 @@ import { randomUUID } from 'node:crypto';
 import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { normalizeDataInputs } from '../shared/project-input.js';
-import { Store, safeFile } from './storage.js';
+import { Store, safeFile, sourceHash } from './storage.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
-import { loadQualityContract, assertQualityContract, verifyApplication, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
+import { loadQualityContract, assertQualityContract, verifyApplication, sealEvaluationPlan, restoreEvaluationPlan, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
+import { prepareSolutionRuntime } from './solution-runtime.js';
+import { runSolutionEvaluation } from './solution-evaluation.js';
 import type { AcceptanceCriterion } from '../harness/types.js';
 import { runAgentStage, stoppedMessage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
+import { materializeFoundation, validateFoundationPlan, assertFoundationIntegrity, type FoundationSnapshot } from '../harness/foundations.js';
 import { phasePrompt, toolsForPhase, syntheticDataPhase, type PhaseContract } from '../harness/phases.js';
 import { createFleetTools } from '../harness/pi-tools.js';
 import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompleteComponents } from './system-design.js';
@@ -19,7 +22,7 @@ import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt, freezeSyntheticData, syntheticDataFiles, syntheticDataInstruction, validateSyntheticData, type BriefDataSnapshot } from './brief-data.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; data?: BriefDataSnapshot };
+type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; repairUsed?: boolean; data?: BriefDataSnapshot; foundation?: FoundationSnapshot };
 interface BackendOptions {
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
@@ -67,7 +70,7 @@ export class FleetBackend {
     const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
     if (backend === 'codex') {
       await this.options.codex?.refresh();
-      if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
+      if (this.options.codex?.account.status !== 'connected' || this.options.codex.account.planUsageEnabled !== true || !this.options.codex.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
     } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
     // Authentication can await network I/O; recheck capacity before reserving the run.
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
@@ -82,7 +85,7 @@ export class FleetBackend {
       p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
       p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
       p.report = undefined; p.error = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.feedback = '';
-      p.qualityVersion = 1;
+      p.qualityVersion = 2; p.runtimeProfile = undefined;
       p.backend = backend;
       p.model = provider + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
@@ -119,7 +122,7 @@ export class FleetBackend {
       await this.finish(p, run); throw error;
     }
   }
-  private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[] }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }) {
+  private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }) {
     this.check(run);
     const phase = variant?.phase ?? run.phases!.find(phase => phase.id === stage)!;
     if (phase.owner !== 'agent') throw new Error('This phase is controlled by the human or host.');
@@ -132,7 +135,7 @@ export class FleetBackend {
       create: async signal => {
         const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))];
         if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
-          home: this.options.codex!.home, cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
+          home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
         });
         const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 2 } });
         const loader = new DefaultResourceLoader({
@@ -171,35 +174,46 @@ export class FleetBackend {
       },
       work: async (prompt, signal) => {
         const check = () => { this.check(run); signal.throwIfAborted(); };
-        const validateOutputs = async (required: string[]) => {
-          const missing = await this.missingFiles(p, run, stage, required, tests);
+        const validateOutputs = async (required: string[], requireComponents: boolean) => {
+          const missing = await this.missingFiles(p, run, stage, required, tests, requireComponents);
           if (!missing.length && variant) {
             try { await variant.validate(); }
             catch (error) { missing.push('valid synthetic data: ' + (error instanceof Error ? error.message : String(error))); }
           }
           return missing;
         };
-        const complete = async (text: string, required: string[]) => {
+        const complete = async (text: string, required: string[], requireComponents = true) => {
           await prompt(text);
           check(); await this.checkInputs(p, run); check();
-          let missing = await validateOutputs(required); check();
+          let missing = await validateOutputs(required, requireComponents); check();
           if (missing.length) {
             this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
             await prompt('The stage is incomplete. Produce these missing or empty artifacts before finishing: ' + missing.join(', ') + '. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
             check(); await this.checkInputs(p, run); check();
-            missing = await validateOutputs(required); check();
+            missing = await validateOutputs(required, requireComponents); check();
           }
           if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
         };
-        await complete([run.context, briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files);
+        await complete([run.context, briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);
         if (followUp) {
-          this.log(p, stage, 'info', 'Application implementation is ready. Writing README.md with a user guide before verification.');
+          if (followUp.coreGate) {
+            let passed = await this.evaluateCore(p, run);
+            check();
+            if (!passed) {
+              run.repairUsed = true;
+              this.log(p, stage, 'info', 'Core evaluation failed. Using the shared repair attempt before completing the application.');
+              await complete('The independent core evaluation failed. Read .quality-evidence/core-report.json. Repair the actual runtime implementation without changing solution-contract.json, acceptance-plan.json, ux-spec.json or host expectations. Do not substitute canned responses or copied test-only code. This consumes the shared repair attempt.', files, false);
+              passed = await this.evaluateCore(p, run);
+            }
+            if (!passed) throw new Error('The required computational capabilities failed independent evaluation. Application completion and delivery remain blocked. Inspect .quality-evidence/core-report.json.');
+          }
+          this.log(p, stage, 'info', 'Core evaluation passed. Completing the application and README.md user guide before verification.');
           await complete(followUp.instruction, [...files, ...followUp.files]);
         }
       }
     });
   }
-  private async missingFiles(p: Project, run: ActiveRun, stage: StageId, files: string[], tests = false) {
+  private async missingFiles(p: Project, run: ActiveRun, stage: StageId, files: string[], tests = false, requireComponents = true) {
     const missing: string[] = [];
     for (const file of files) {
       try {
@@ -210,18 +224,47 @@ export class FleetBackend {
     }
     if (tests && !(await applicationTestFiles(p.workspace!)).length) missing.push('application *.test.cjs or *.test.mjs files');
     if (['plan', 'build', 'verify'].includes(stage) && !p.systemDesign) missing.push('system-design.json (publish the application architecture with fleet_system_design)');
-    if (tests && incompleteComponents(p).length) missing.push('component progress: call fleet_component_progress for ' + incompleteComponents(p).join(', '));
-    if (stage === 'plan' && !missing.some(file => ['acceptance-plan.json', 'ux-spec.json'].includes(file))) {
-      try { await loadQualityContract(p.workspace!, run.acceptance!); }
+    if (tests && requireComponents && incompleteComponents(p).length) missing.push('component progress: call fleet_component_progress for ' + incompleteComponents(p).join(', '));
+    if (stage === 'plan' && !missing.some(file => ['acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json'].includes(file))) {
+      try {
+        const contract = await loadQualityContract(p.workspace!, run.acceptance!, true);
+        validateFoundationPlan(JSON.parse(await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8')), contract.solution!.runtime);
+      }
       catch (error) { missing.push('valid quality contract: ' + (error instanceof Error ? error.message : String(error))); }
     }
     return missing;
+  }
+  private async evaluateCore(p: Project, run: ActiveRun): Promise<boolean> {
+    await this.checkInputs(p, run);
+    let runtime: Awaited<ReturnType<typeof prepareSolutionRuntime>> | undefined;
+    let report: unknown, passed = false;
+    try {
+      runtime = await prepareSolutionRuntime(p.workspace!, run.quality!.solution!.runtime, this.executable, run.controller.signal);
+      const result = await runSolutionEvaluation(runtime, run.quality!.solution!, run.quality!.evaluation!, run.controller.signal);
+      report = result; passed = result.status === 'passed';
+    } catch (error) {
+      this.check(run);
+      report = { status: 'failed', errors: [error instanceof Error ? error.message : String(error)] };
+    } finally { await runtime?.close(); }
+    this.check(run);
+    await this.checkInputs(p, run);
+    const directory = path.join(p.workspace!, '.quality-evidence');
+    await fs.mkdir(directory, { recursive: true });
+    if ((await fs.lstat(directory)).isSymbolicLink()) throw new Error('Evidence directory must not be a symbolic link.');
+    const temporary = path.join(directory, randomUUID() + '.json');
+    try {
+      await fs.writeFile(temporary, JSON.stringify(report, null, 2), { flag: 'wx', mode: 0o600 });
+      await fs.rename(temporary, path.join(directory, 'core-report.json'));
+    } finally { await fs.rm(temporary, { force: true }); }
+    this.log(p, 'build', 'info', 'Independent core evaluation: ' + (passed ? 'passed' : 'failed') + '. Evidence: .quality-evidence/core-report.json');
+    return passed;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);
     await assertBriefDataIntegrity(p.workspace!, run.data!);
     if (run.quality) await assertQualityContract(p.workspace!, run.quality);
+    if (run.foundation) await assertFoundationIntegrity(p.workspace!, run.foundation);
     if (await fs.readFile(await safeFile(p.workspace!, 'requirements.md'), 'utf8') !== run.requirements) {
       throw new Error('The original requirements changed during the run. Review the artifacts and start a new run.');
     }
@@ -253,28 +296,36 @@ export class FleetBackend {
       await this.stage(p, 'research', 'complete');
       await this.stage(p, 'plan', 'active');
       await this.agent(p, run, 'plan', provider, model,
-        'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'acceptance-plan.json', 'ux-spec.json']);
-      run.quality = await loadQualityContract(p.workspace!, run.acceptance!);
-      this.log(p, 'plan', 'info', 'Acceptance plan and UX specification validated and frozen. Browser journeys will verify the delivered application at desktop and narrow sizes.');
+        'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/foundation-guide.md and .fleet/foundation-catalog.json; write foundation-plan.json selecting a versioned starter and computation pack with a concrete reason. Align solution-contract.json with that starter runtime and all its files. The host copies the foundation after planning; do not generate scaffold files yourself. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Read .fleet/solution-contract.md. Produce solution-contract.json and evaluation-plan.json, and acceptance-plan.json schemaVersion 2. Identify the mandatory computational capabilities, independently derived evaluation cases, baselines and thresholds. Choose browser, CLI or service runtime with a complete file manifest, locked dependencies and explicit model environment requirements. Use a shared implementation for the delivered runtime and tests. The host seals the answer key outside the builder workspace. Browser/service profiles need primary and recovery journeys; CLI can have no browser journeys. Keep Node orchestration tests named *.test.cjs or *.test.mjs. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'foundation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json']);
+      run.quality = await loadQualityContract(p.workspace!, run.acceptance!, true);
+      const selection = validateFoundationPlan(JSON.parse(await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8')), run.quality.solution!.runtime);
+      run.foundation = await materializeFoundation({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, selection });
+      this.check(run);
+      this.log(p, 'plan', 'info', `Foundation ${selection.templateId}@${selection.version} (${selection.computePack}): copied ${run.foundation.files} files / ${run.foundation.bytes} bytes before model implementation. ${selection.reason}`);
+      p.runtimeProfile = run.quality!.solution!.runtime.profile;
+      await sealEvaluationPlan(p.workspace!, run.quality!, path.join(this.store.root, 'evaluations', p.runId! + '.json'));
+      this.log(p, 'plan', 'info', 'Solution and acceptance contracts frozen. Evaluation answer keys are held outside the builder workspace. Required capabilities must pass host evaluation.');
       await this.stage(p, 'plan', 'complete');
       await this.stage(p, 'build', 'active');
       await this.agent(p, run, 'build', provider, model,
-        'You are the implementation agent. Read requirements.md, research.md, plan.md, acceptance-plan.json and ux-spec.json, then implement the complete usable application. Treat the validated browser steps, selectors and expected results as a frozen contract. Implement the specified first-run flow, feedback, recovery, keyboard operation and narrow layout. Do not edit acceptance-plan.json or ux-spec.json. Use one application implementation for browser and Node tests, for example by extracting the actual marked inline core in tests; avoid copied test-only logic. Deliver a self-contained index.html with inline CSS and classic JS (no imports, CDNs, or network dependencies), path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. Keep the tested core and inline app logic consistent. No placeholder controls or fake test results. Use the prepared brief data in the application workflow and sample data, keeping supplied and synthetic provenance accurate. Include empty states, validation, and accessible controls. Document limitations. Use no package dependencies. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'path-to-fleet.md'], true, {
-          instruction: 'Implementation is complete. Now write README.md as a practical user guide for the software you just built. Inspect the actual index.html, application source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and quick start (open index.html in a browser, with no install or server required); numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using the prepared input or synthetic sample data and the expected output, with accurate provenance; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Write or update README.md only in this step. Preserve requirements.md, .fleet, application source and tests.',
+        'You are the implementation agent. Read requirements.md, research.md, plan.md, solution-contract.json, acceptance-plan.json and ux-spec.json. Implement the computational core and the declared runtime first. Create all declared runtime files and an initial interface where needed. The host will evaluate this core before the application completion step. Treat the validated browser steps, selectors and expected results as a frozen contract. Implement the specified first-run flow, feedback, recovery, keyboard operation and narrow layout. Do not edit acceptance-plan.json or ux-spec.json. Use one application implementation for browser and Node tests, for example by extracting the actual marked inline core in tests; avoid copied test-only logic. Deliver the declared runtime entrypoint, all manifest files, path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. The interface and host invocation must use the same core implementation. Browser profiles use local files; services serve their UI and JSON invocation on the host-assigned loopback port. No placeholder controls or fake test results. Use the prepared brief data in the application workflow and sample data, keeping supplied and synthetic provenance accurate. Include empty states, validation, and accessible controls. Document limitations. Use only the declared locked dependencies. Required model settings must be explicit; unavailable inference must fail visibly, never return sample answers. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'path-to-fleet.md', ...run.quality!.solution!.runtime.files], true, {
+          coreGate: true,
+          instruction: 'Implementation is complete. The core passed host evaluation. Complete the planned application interactions using this exact core, then write README.md as a practical user guide for the software you just built. Inspect the declared runtime, applicable interface, source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and exact startup commands for the declared runtime, dependency installation and required model settings; numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using the prepared input or synthetic sample data and the expected output, with accurate provenance; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Preserve requirements.md, .fleet and frozen contracts. Keep the computational core and tests meaningful while finishing the UI and guide.',
           files: ['README.md']
         });
       await this.stage(p, 'build', 'complete'); await this.stage(p, 'verify', 'active');
       await this.agent(p, run, 'verify', provider, model,
-        'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested logic and index.html. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Keep index.html self-contained and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
+        'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested computational logic and the actual runtime entrypoint. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Preserve the declared runtime and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true);
       this.check(run);
       await this.checkInputs(p, run);
       p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
       this.log(p, 'verify', 'info', p.report.output);
-      if (!reportPassed(p.report, true)) {
+      if (!reportPassed(p.report, true) && !run.repairUsed) {
+        run.repairUsed = true;
         await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
         this.log(p, 'verify', 'info', 'Verification failed. Starting one ' + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt.');
         await this.agent(p, run, 'verify', provider, model,
-          'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Never edit acceptance-plan.json or ux-spec.json; the host checks their original hash. Keep index.html consistent with core source. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
+          'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Never edit solution-contract.json, acceptance-plan.json or ux-spec.json or recreate the sealed evaluation-plan.json; the host checks their original hash. Keep the delivered runtime and any interface connected to the evaluated core. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true);
         await this.checkInputs(p, run);
         p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
         this.log(p, 'verify', 'info', p.report.output);
@@ -282,9 +333,12 @@ export class FleetBackend {
       this.check(run);
       await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
+      await restoreEvaluationPlan(p.workspace!, run.quality!);
+      p.report.sourceHash = await sourceHash(p.workspace!);
+      await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');
       this.check(run);
-      p.status = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
+      p.status = 'review'; this.log(p, 'review', 'info', 'Required capabilities, clean runtime execution, application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
       p.error = error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';

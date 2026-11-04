@@ -1,3 +1,5 @@
+import type { RuntimeManifest, SolutionEvaluationReport } from './solution.js';
+
 export type BrowserStep =
   | { action: 'fill'; selector: string; value: string }
   | { action: 'click'; selector: string }
@@ -70,6 +72,14 @@ export interface JourneyResult {
   trace?: string;
 }
 
+export interface PackageEvidence {
+  status: 'passed' | 'failed';
+  cleanCopy: boolean;
+  profile: RuntimeManifest['profile'];
+  filesHash?: string;
+  detail: string;
+}
+
 export interface QualityReport {
   schemaVersion: 1 | 2;
   contractHash: string;
@@ -81,4 +91,6 @@ export interface QualityReport {
   /** Version 2 records the expected count so omitted browser checks cannot pass. */
   expectedJourneys?: number;
   capabilities?: CapabilityResult[];
+  solutionEvaluation?: SolutionEvaluationReport;
+  package?: PackageEvidence;
 }

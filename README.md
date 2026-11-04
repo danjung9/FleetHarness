@@ -12,7 +12,9 @@ The Electron app now runs **Pi coding agents** for intake, research, planning, i
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
-Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
+Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). New builds declare computational capabilities and a browser, CLI, or local-service runtime. Host-owned evaluations, clean package execution and applicable browser checks gate delivery. Operational integrations and field readiness remain unverified. Read [solution contracts and evaluation](docs/solution-evaluation.md) for supported scorers, runtime profiles and factory benchmarks. The product vision below describes the broader goal.
+
+Application agents start from [versioned foundations](docs/application-foundations.md): the host copies a Node or Python service with a browser client, then agents extend its shared backend computation. Recipe-selected modules reuse message parsing, scheduling, evidence search, dependency analysis and record reconciliation. See [foundation research](docs/application-foundations-research.md) for the starter alternatives and selection rationale.
 
 ## Overview
 

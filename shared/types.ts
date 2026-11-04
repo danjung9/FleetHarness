@@ -13,7 +13,8 @@ export interface TestReport {
 export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
 export interface BriefContext { resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
 export interface Project extends BriefContext {
-  qualityVersion?: 1;
+  qualityVersion?: 1 | 2;
+  runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
@@ -31,6 +32,9 @@ export interface Settings { backend?: AgentBackend; provider: string; model: str
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;
+  activeAccountId?: string;
+  accounts?: { id: string; label: string; email?: string; connected: boolean }[];
+  planUsageEnabled?: boolean;
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
@@ -53,7 +57,10 @@ export interface FleetAPI {
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
-  connectChatGPT(): Promise<Bootstrap>;
+  connectChatGPT(accountId?: string): Promise<Bootstrap>;
+  selectChatGPTAccount(accountId: string): Promise<Bootstrap>;
+  reopenChatGPTLogin(): Promise<Bootstrap>;
+  manageChatGPTUsage(): Promise<void>;
   cancelChatGPTLogin(): Promise<Bootstrap>;
   disconnectChatGPT(): Promise<Bootstrap>;
   refreshChatGPT(): Promise<Bootstrap>;

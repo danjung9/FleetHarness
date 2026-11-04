@@ -11,6 +11,7 @@ import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/in
 import { parseQualityPlan, parseUxSpec, qualityContractGuide } from '../harness/quality-contract.js';
 import type { AcceptanceCriterion, Challenge } from '../harness/types.js';
 import type { QualityPlan, UxSpec } from '../shared/quality.js';
+import type { SolutionContract } from '../shared/solution.js';
 
 const challenge: Challenge = {
   id: 'sample', title: 'Review records', summary: 'A complete local review workflow.', category: null,
@@ -205,4 +206,52 @@ test('UX contracts require the complete task, screen, state and recovery specifi
     { ...validUx(), persistence: 'x'.repeat(4_001) }
   ];
   for (const spec of invalid) assert.throws(() => parseUxSpec(spec));
+});
+
+function solutionPlan(): { plan: QualityPlan; solution: SolutionContract } {
+  const plan = validPlan();
+  plan.schemaVersion = 2;
+  plan.criteria = plan.criteria.map((criterion, i) => ({ ...criterion, journeyIds: [], capabilityIds: i === 0 ? ['engine'] : [] }));
+  plan.journeys = [];
+  return { plan, solution: {
+    schemaVersion: 1, objective: 'Compute the required result.',
+    capabilities: [{ id: 'engine', kind: 'algorithm', description: 'Compute the result for each input.', criterionIds: ['UCsample-1'], required: true, evaluationIds: ['reference-cases'] }],
+    runtime: { profile: 'cli', files: ['engine.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } }
+  } };
+}
+
+test('version 2 accepts computational-only CLI criteria with frozen capability mappings', () => {
+  const { plan, solution } = solutionPlan();
+  assert.deepEqual(parseQualityPlan(plan, acceptance, solution), plan);
+  assert.throws(() => parseQualityPlan(plan, acceptance), /requires solution-contract/);
+  assert.throws(() => parseQualityPlan(validPlan(), acceptance, solution), /schemaVersion 2/);
+});
+
+test('required capabilities cannot be deferred or replaced by green browser coverage', () => {
+  const { solution } = solutionPlan();
+  solution.runtime = { profile: 'browser', files: ['index.html', 'engine.mjs'], requiredEnv: [], entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+  const plan = validPlan(); plan.schemaVersion = 2;
+  plan.criteria[1] = { ...plan.criteria[1], disposition: 'implemented', journeyIds: ['create', 'recover'], capabilityIds: [] };
+  plan.criteria[0] = { ...plan.criteria[0], disposition: 'deferred', journeyIds: [], capabilityIds: [], reason: 'The UI demonstrates a sample result.' };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /Required capability engine.*cannot be deferred/);
+  plan.criteria[0] = { ...plan.criteria[0], disposition: 'implemented', journeyIds: ['create'], capabilityIds: [] };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /Required capability engine.*mapped/);
+  plan.criteria[0].capabilityIds = ['engine'];
+  assert.equal(parseQualityPlan(plan, acceptance, solution).schemaVersion, 2);
+});
+
+test('version 2 rejects invented evidence mappings and missing browser journeys', () => {
+  const { plan, solution } = solutionPlan();
+  plan.criteria[0].capabilityIds = ['unknown'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /unknown capability/);
+  plan.criteria[0].capabilityIds = ['engine', 'engine'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /capabilityIds contains duplicates/);
+  plan.criteria[0].capabilityIds = ['engine'];
+  solution.capabilities[0].criterionIds = ['USERsample-1'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /without its criterion mapping/);
+  solution.capabilities[0].criterionIds = ['UCsample-1'];
+  solution.runtime = { profile: 'browser', files: ['index.html', 'engine.mjs'], requiredEnv: [], entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /require primary and recovery/);
+  plan.journeys = [validPlan().journeys[0]];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /primary journey and one recovery/);
 });

@@ -14,16 +14,13 @@
 .model-settings-form .chatgpt-connection{margin:24px 0;padding:20px 0;border-top:1px solid var(--line,#d2d0c9);border-bottom:1px solid var(--line,#d2d0c9)}
 .model-settings-form .chatgpt-connection h3{margin:0 0 8px;font-size:17px}
 .model-settings-form .chatgpt-connection p{font-size:13px;line-height:1.6;max-width:65ch}
+.model-settings-form .saved-chatgpt-account{margin-top:18px}
 .model-settings-form .account-identity{display:flex;align-items:center;gap:10px;overflow-wrap:anywhere}
 .model-settings-form .account-identity svg{flex-shrink:0}
 .model-settings-form .account-identity small{display:block;text-transform:capitalize;margin-top:3px;color:var(--muted,#626c72)}
 .model-settings-form .connection-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
 .model-settings-form .connection-note{font-size:12px;color:var(--muted,#626c72);line-height:1.65;margin:16px 0}
 .model-settings-form .connection-error{color:var(--danger,#9b3022);overflow-wrap:anywhere}
-.model-settings-form .subscription-usage{display:flex;gap:24px;flex-wrap:wrap;margin:20px 0}
-.model-settings-form .subscription-usage>div{display:grid;gap:4px;font-size:12px}
-.model-settings-form .subscription-usage strong{font-size:17px;font-variant-numeric:tabular-nums}
-.model-settings-form .subscription-usage small{color:var(--muted,#626c72)}
 .desktop-setup-notice{margin:0 0 28px;padding:20px;border:1px solid var(--field-border);border-radius:6px;background:var(--selected)}
 .desktop-setup-notice h3{margin:0 0 10px;font-size:20px}
 .desktop-setup-notice p{font-size:13px;line-height:1.65;max-width:65ch;margin:0}

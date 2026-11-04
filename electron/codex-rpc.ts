@@ -4,6 +4,32 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 export interface RpcMessage { id?: number | string; method?: string; params?: any; result?: any; error?: { code: number; message: string } }
+export const CHATGPT_MODEL_PROVIDER = 'openai_chatgpt_plan';
+export const CHATGPT_ACCESS_TOKEN_ENV = 'FLEET_CHATGPT_ACCESS_TOKEN';
+export const CHATGPT_AGENT_NAME = 'AppYard';
+export interface CodexCredentials { accessToken: string; expiresAt: number }
+
+/** Keep the subscription bearer token out of command-line arguments and RPC messages. */
+export function codexProcessConfig(home: string, credentials: Pick<CodexCredentials, 'accessToken'>, inheritedEnv: NodeJS.ProcessEnv = process.env) {
+  if (!credentials?.accessToken?.trim()) throw new Error('Sign in with ChatGPT in Model settings before running Codex.');
+  const env: NodeJS.ProcessEnv = { ...inheritedEnv, CODEX_HOME: home, [CHATGPT_ACCESS_TOKEN_ENV]: credentials.accessToken };
+  delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
+  const provider = 'model_providers.' + CHATGPT_MODEL_PROVIDER;
+  const config = [
+    `model_provider="${CHATGPT_MODEL_PROVIDER}"`,
+    `${provider}.name="ChatGPT plan"`,
+    `${provider}.base_url="https://api.openai.com/v1"`,
+    `${provider}.env_key="${CHATGPT_ACCESS_TOKEN_ENV}"`,
+    `${provider}.wire_api="responses"`,
+    `${provider}.requires_openai_auth=false`,
+    `${provider}.supports_websockets=false`,
+    'features.code_mode_tool_search=false',
+    'features.image_generation=false',
+    'features.computer_use=false',
+    `shell_environment_policy.exclude=["${CHATGPT_ACCESS_TOKEN_ENV}"]`
+  ];
+  return { args: ['app-server', '--listen', 'stdio://', ...config.flatMap(value => ['-c', value])], env };
+}
 export function codexExecutable() {
   const platform = process.platform, arch = process.arch;
   const triple = `${arch === 'arm64' ? 'aarch64' : 'x86_64'}-${platform === 'darwin' ? 'apple-darwin' : platform === 'win32' ? 'pc-windows-msvc' : 'unknown-linux-musl'}`;
@@ -35,15 +61,14 @@ export class CodexRpc {
     child.stdin.on('error', () => this.fail(new Error('The Codex connection closed. Reconnect in Settings.')));
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
-  static launch(home: string) {
-    const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home };
-    delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
-    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'forced_login_method="chatgpt"', '-c', 'cli_auth_credentials_store="file"'], {
+  static launch(home: string, credentials: Pick<CodexCredentials, 'accessToken'>) {
+    const { args, env } = codexProcessConfig(home, credentials);
+    return new CodexRpc(spawn(codexExecutable(), args, {
       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
     }));
   }
   async initialize() {
-    await this.request('initialize', { clientInfo: { name: 'fleetharness', title: 'AppYard', version: '0.1.0' }, capabilities: { experimentalApi: true } });
+    await this.request('initialize', { clientInfo: { name: CHATGPT_AGENT_NAME, title: 'AppYard', version: '0.1.0' }, capabilities: { experimentalApi: true } });
     this.send({ method: 'initialized', params: {} });
   }
   request(method: string, params: unknown = {}): Promise<any> {
