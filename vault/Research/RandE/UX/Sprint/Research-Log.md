@@ -50,4 +50,18 @@ summary: "Local tool disclosures, coordination gaps and prior-work references fo
 
 ## Sources
 
+## Follow-up at 631849f, November 4
+
+[E, assigned directive and local file reads] The current task is a bounded adaptation of the existing UX handoff, not a new study. Read both relay files, the RandE directive, Plan/Findings, current Quality instructions and Acceptance-11. Delta-631849f.md did not exist at the initial file listing. No repository program or application was executed.
+
+[E, read-only Git] HEAD is 631849f638614735a89a555d487d6b3c777c52e3. Both 631849f and main merge 2e30b4a resolve to tree 9cdf95c54bdd68fd439e6e664ba9259c51e36db1; their file diff is empty. Test attribution stays at 631849f. Git emitted restricted temporary-cache warnings but returned the requested objects; no workaround was attempted.
+
+[E, tools] Reused the disclosed shell, Git 2.50.1, ripgrep 15.2.0, Python 3.9.6 standard library and file patch interface for local document work. New disclosure: UTC clock, version not exposed | Tool | Bound the 15-minute document adaptation | Session runtime. No new package, dataset, model selection or outside service was introduced. Exact usage and cost remain unknown.
+
+[E, friction] Some batched reads were truncated; decision-bearing sections were read again in smaller slices. Central Sprint, Sessions and Team/Now.md remain outside the assigned writable folder. The central fh.py command was not run because it writes there. These entries and the local session note are staged for authorized central transcription, not sent.
+
+[E, prior work] Reused the nine existing UX cards and historical protocol, Quality's existing gate IDs, Acceptance-11 and Static-Findings U2. The four-request arithmetic belongs to the existing officer acceptance record. No replacement fixture, oracle, QA suite, participant session or new research was created.
+
+## Historical source references
+
 [E] Assigned local files and read-only Git commands, November 4, 2026. [V] Full public source URLs are listed in [[Research/RandE/UX/Evidence]] and the individual cards. [E] Session outcome is in [[Research/RandE/UX/Sessions/2026-11-04-ux-ideas]].

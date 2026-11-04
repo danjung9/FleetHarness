@@ -1,10 +1,55 @@
 ---
 type: research
-status: draft
+status: complete
 owner: mukul
 updated: 2026-11-04
-summary: "Nine ranked proposals for Dan, grounded in 50fcaea, supplied screenshots and public product documentation."
+summary: "Current Home-to-Flow UX handoff for 631849f, with task acceptance still NOT RUN and earlier proposals preserved as history."
 ---
+
+# UX handoff for the retained interface
+
+## Bottom line
+
+[R, proposed, Directive-rande] Prepare the factory through desktop Home -> catalog ID 11 -> brief -> Flow; begin the officer demo in the actual accepted task app. [E, source-only, pinned Git] Main merge `2e30b4a` has exactly the `631849f` tree, so existing tests retain their original attribution. [E, attributed report, Acceptance-11] Try example, conflict correction, fresh review and task save/reopen are all **NOT RUN** on an actual delivered app. [R, proposed, Directive-rande] Reuse those acceptance outcomes and the existing Quality gates, with no new importer, renderer, redesign or research round.
+
+## Current handoff
+
+| Note | Use and evidence status |
+| --- | --- |
+| [Delta for 631849f](Delta-631849f.md) | [E, source-only] Current preparation route, identical-tree merge, three persistence boundaries and the one conditional frontend blocker for Dan. Runtime reproduction NOT RUN. |
+| [Acceptance mapping](Test-Protocol.md) | [R, proposed] Maps the four retained outcomes to existing Quality gates and Acceptance-11; all task runtime results NOT RUN. No new test plan or participant study. |
+| [[Research/QA/Officer/Acceptance-11]] | [E, attributed report] Independently checked four-request arithmetic and the single actual-app acceptance record. App outcomes NOT RUN; no accepted artifact identity or decision supplied there. |
+| [Local session handoff](Sessions/2026-11-04-ux-631849f.md) and [research log](Sprint/Research-Log.md) | [E] Verification, tools, friction, prior work and pending central status transcription. |
+
+[R, proposed, [[Ops/Directors/Directive-rande]] and [[Ops/Directors/Directive-qa]]] The main QA lead owns actual acceptance and the organization runner owns permitted launches. Reuse their records; do not create another runner or fixture. Gate-631849f.md is assigned by Quality but was absent from the supplied Runner folder at this review. Its absence does not authorize a replacement. Use the directive's current gate mapping and the existing [[Research/QA/Test-Plan]] identifiers meanwhile.
+
+[E, attributed report] `org/reports/mvp-gate.md`, 14:42:27, reports 128 passes and zero failures at `631849f`; it does not supply a task-app, GUI, live-provider or packaging receipt. [[Research/QA/Acceptance-Reconcile-631849f]] keeps seven separate runner failures open, observed at `50fcaea` in unchanged backend files. [[Research/Plan/Test-Results]] remains historical evidence at `0f175a8` and `f72c5dc`. No counts are combined or credited to the merge as a new run.
+
+[R, proposed, Directive-rande and Acceptance-11] Missing artifact/run identity, final-file digests, human decision and task behavior keep the demonstration unaccepted. Use the disclosed conflict-checker fallback only if it passes the same applicable task checks. Static inspection does not establish usability, time saved, offline recovery, synchronization or full ID 11 completion. Keep the existing 3 PM access, 4 PM useful-build and 6 PM accepted-task gates; this handoff does not restart them.
+
+## Historical notes and retired scope
+
+[E, source-only, `631849f` relay] Studio and Workbench were removed. [R, proposed, Directive-rande] All alternate-interface routes, launch advice, new importer work and redesign allocations below are retired from active sprint instructions. Retain the original evidence without treating a removed path as a demonstrated bug fix. Cards 01 to 04 now identify acceptance outcomes only; their old build estimates and proposed implementations are not new assignments. Cards 05 to 09 and participant/research proposals are deferred.
+
+| Preserved note | Current disposition under Directive-rande [R, proposed] |
+| --- | --- |
+| [01 Try a task](01-Try-a-task.md), [02 See and fix conflicts](02-See-and-fix-conflicts.md), [03 Review the evidence](03-Review-the-evidence.md), [04 Save and reopen](04-Save-and-reopen.md) | Historical proposals. Use the current acceptance mapping above. |
+| [05 Check a short brief](05-Check-a-short-brief.md), [06 Know what is happening](06-Know-what-is-happening.md) | No new intake or progress UI. Existing consent/Stop controls remain subject to Quality gates. |
+| [07 Preview an import](07-Preview-an-import.md), [08 Point to a change](08-Point-to-a-change.md), [09 Compare versions](09-Compare-and-recover-versions.md) | Deferred. Restoring the task's own saved draft remains required and is distinct from a general importer. |
+| [Evidence](Evidence.md), [original session](Sessions/2026-11-04-ux-ideas.md) | Historical source/screenshot/public-document evidence at the stated revisions; no current runtime claim. |
+
+## Sources
+
+- [E] [[Ops/Directors/Directive-rande]], [[Ops/Directors/Directive-qa]], [[Research/QA/Officer/Acceptance-11]], [[Research/QA/Static-Findings]], [[Research/QA/Acceptance-Reconcile-631849f]].
+- [E, local read only] https://github.com/danjung9/FleetHarness/tree/631849f638614735a89a555d487d6b3c777c52e3 ; revision/file references are in [Delta-631849f](Delta-631849f.md).
+- [E] `~/.local/share/fleethacker-context/org/relay/LATEST.md`, `relay/LATEST-analysis.md` and `reports/mvp-gate.md`, read November 4, 2026.
+
+## Historical handoff at 50fcaea, superseded
+
+[E] The following original text is retained as history. Its recommendations, estimates, future rankings and statements about missing directives are not the current instruction or current state.
+
+<details>
+<summary>Original 50fcaea proposal record</summary>
 
 # FleetHarness UX proposals for Thursday and after
 
@@ -94,4 +139,6 @@ summary: "Nine ranked proposals for Dan, grounded in 50fcaea, supplied screensho
 - [E] [[Research/Plan/Test-Results]], [[Research/Interfaces/Recommendation]].
 - [R] [[Research/Naval-User/Simplicity-Requirements]].
 - [V] Product and design documentation URLs are in [Evidence](Evidence.md) and each card; documented patterns are not comparative usability evidence.
+
+</details>
 
