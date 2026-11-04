@@ -1,5 +1,6 @@
 import type { QualityReport } from '../shared/quality';
 import './quality-evidence.css';
+import { isHosted } from './hosted-config';
 
 export function QualityEvidence({ report }: { report?: QualityReport }) {
   if (!report) return <p className="quality-legacy">This older report contains Node test results only. Browser journeys and requirement coverage were not recorded.</p>;
@@ -16,7 +17,7 @@ export function QualityEvidence({ report }: { report?: QualityReport }) {
       {report.errors.length > 0 && <ul>{report.errors.map((error, index) => <li key={index}>{error}</li>)}</ul>}
       <ul>{report.journeys.map(journey => <li key={journey.id + journey.viewport}>
         <strong>{journey.title}</strong> · {journey.viewport} · {journey.status}<p>{journey.detail}</p>
-        {(journey.screenshot || journey.trace) && <small>Evidence in the source folder: {[journey.screenshot, journey.trace].filter(Boolean).join(' · ')}</small>}
+        {(journey.screenshot || journey.trace) && <small>Evidence in {isHosted ? 'the source & evidence ZIP' : 'the source folder'}: {[journey.screenshot, journey.trace].filter(Boolean).join(' · ')}</small>}
       </li>)}</ul>
     </details>
   </section>;

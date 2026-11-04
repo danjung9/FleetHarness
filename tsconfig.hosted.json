@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "plugins": [
+      {
+        "name": "workflow"
+      }
+    ],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "server",
+    "api",
+    "workflows",
+    "vite.hosted.config.ts"
+  ]
+}
