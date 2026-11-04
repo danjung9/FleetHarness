@@ -78,15 +78,21 @@ test('a denied signal or denied inspection cannot claim successful cleanup', asy
   }
 });
 
-test('PID reuse or changed ownership between discovery and signal is never targeted', async () => {
+for (const [change, fresh] of [
+  ['PID reuse', [{ pid: 987654, started: 'new' }]],
+  ['lost run ownership', []],
+]) test(`${change} between discovery and signal is never targeted`, async () => {
   let scans = 0;
+  const signalAttempts = [];
   const scope = new RunProcessSweep({
     scan: async () => ++scans === 1 ? [{ pid: 987654, started: 'old' }]
-      : scans === 2 ? [{ pid: 987654, started: 'new' }] : [],
-    signal: () => assert.fail('reused PID received a signal'),
+      : scans === 2 ? fresh : [],
+    signal: (pid, signal) => { signalAttempts.push({ pid, signal }); },
   });
   scope.run(() => runProcessEnvironment());
   await scope.stop();
+  // Signal errors are caught by the sweep, so assert outside its callback.
+  assert.deepEqual(signalAttempts, [], `${change} must prevent every signal attempt`);
 });
 
 test('concurrent asynchronous runs keep unique markers without mutating the host environment', async () => {
