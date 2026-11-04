@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "audience": "Fictional expeditionary-unit training, supply and command clerks on desktop or tablet, and a local reviewer; synthetic data only.",
+  "primaryTask": "Capture and correct source-linked training, requisition and correspondence forms; consolidate weekly tasking into verified actions and status drafts; file, review, route offline and reconcile with a demo replica.",
+  "successOutcome": "Named outputs are saved locally and exportable, reviewed against their sources, routed locally pending sync, then acknowledged by a labeled demo replica after explicit conflict review.",
+  "screens": [
+    {
+      "name": "Packet and source review",
+      "purpose": "Show source images/text beside editable candidates; distinguish ambiguity, unsaved draft and saved revision.",
+      "primaryAction": "Save packet"
+    },
+    {
+      "name": "Tasking and records",
+      "purpose": "Review duplicate/conflicting task sources, verify actions, generate status drafts and apply the fictional filing schedule.",
+      "primaryAction": "Resolve due date and validate"
+    },
+    {
+      "name": "Review and routing",
+      "purpose": "Inspect all outputs and findings, attest to the saved revision, and route to Demo Administration Desk locally.",
+      "primaryAction": "Approve current revision then Route locally"
+    },
+    {
+      "name": "Reconnect and transfers",
+      "purpose": "Show competing values and tombstones, reasons, simulated receipts and acknowledged byte offsets.",
+      "primaryAction": "Resolve conflict or plan transfer"
+    },
+    {
+      "name": "Evidence and transition",
+      "purpose": "Download named outputs, inspect synthetic metrics and unscored worksheets, view limitations and pause simulation.",
+      "primaryAction": "Export evidence"
+    }
+  ],
+  "states": {
+    "empty": "Offer Load synthetic packet for DEMO-7; explain local-only storage and prohibit operational/personal data. Empty outputs explain the prerequisite action.",
+    "loading": "Disable duplicate actions during IndexedDB initialization/transactions and extraction; show Saving locally or Reconciling demo replicas. Do not show Saved until transaction completes.",
+    "error": "Inline field findings with an error summary linked to controls; preserve draft on validation/storage failure. Show both conflict values and request missing history without dropping queued operations.",
+    "success": "Saved locally identifies committed content; Reviewed identifies exact current revision; Routed locally — pending sync differs from Acknowledged by demo replica. Show next action and export options."
+  },
+  "persistence": "Self-contained index.html with inline classic JS and styles opens as a local file without network assets. IndexedDB atomically persists drafts, sources, revisions, approvals, routing idempotency keys, audit and acknowledged offsets. Persist editable drafts separately from committed content. Reload restores current screen and work; exports are backup, not encrypted storage. Failure retains in-memory draft with retry/export and never false success. Browser eviction/device restart are not certified.",
+  "recovery": "Seeded ambiguity/quantity/subject/deadline errors block approval and routing. Save or deliberate discard is required before reviewing unsaved changes. A save invalidates prior approval. Conflicts show source/value/delete alternatives, allow local/remote/custom choice and reason, and require renewed review. Missing history preserves queue and requests history. Failed ack resumes from acknowledged offset. Pause simulation blocks routing and acknowledgements; resume preserves work. Confirm any reset; never silently reset on reconnect.",
+  "keyboard": "Use labeled native inputs, selects, buttons and checkboxes, logical Tab order, visible focus, Enter/Space activation, and accessible status/error announcements. Move focus to error summary after failed validation and conflict heading after reconcile. No hover-only actions; all outputs reflow without horizontal page scrolling on narrow screens."
+}

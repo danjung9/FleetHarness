@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenges 8, 10, 11, 12, 16, 20, 32, 35 and 37 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
+summary: "Challenge 12 round 101 is NOT: real extraction and timeline still replace the required input format; earlier round 1 judgments retained."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id12-optask]] records NOT for the copy under Ten/Exp1/R101/id12-optask. The sample extracts all three categories and produces a real daily timeline, but its invented grammar replaces the required USMTF format. Meaningful tests and retained receipts report 31 tests and twelve browser runs passing; requirementsMet is false. All three screenshots were inspected; no fresh app execution or Sailor trial occurred. Local handoffs: [[Research/QA/Officer/Sprint/Judge-R101-id12-optask]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id12-optask]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id37-fielding]] records NOT. The honest transition planner creates notes about missing prerequisites but does not field the starting tool. Actual tests contain meaningful assertions; the latest report shows 22 test passes, six browser passes and fourteen unverified requirements. It supersedes earlier download-failure language in the guide. All three requested screenshots were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id37-fielding]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id37-fielding]].
 
