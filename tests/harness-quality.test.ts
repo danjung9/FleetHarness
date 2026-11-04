@@ -88,7 +88,7 @@ function validPlan(): QualityPlan {
     schemaVersion: 1,
     criteria: [
       { criterionId: 'UCsample-1', disposition: 'implemented', expectedOutcome: 'A saved record is visible. Empty titles are rejected and the draft can be corrected.', journeyIds: ['create', 'recover'] },
-      { criterionId: 'USERsample-1', disposition: 'deferred', expectedOutcome: 'Users sign in through the approved identity service.', journeyIds: [], reason: 'The owner has not supplied an authorized identity integration.' }
+      { criterionId: 'USERsample-1', disposition: 'deferred', expectedOutcome: 'Users sign in through the approved identity service.', journeyIds: [], reason: 'real-system: The owner has not supplied an authorized identity integration. Live sign-in is withheld; the local synthetic review workflow remains demonstrable.' }
     ],
     journeys: [
       { id: 'create', title: 'Create a record', kind: 'primary', steps: [{ action: 'fill', selector: '#title', value: 'Inspect pump' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#result', text: 'Saved: Inspect pump' }] },
@@ -115,6 +115,42 @@ test('quality plans preserve explicit deferrals and independent literal results 
   assert.deepEqual(parsed.criteria[1].journeyIds, []);
 });
 
+test('primary requirements and deliverables cannot be deferred without an allowed dependency category', async t => {
+  const reasons = [
+    'No official format specification is supplied.',
+    'No expert mapping is supplied.',
+    'Only a generic EVENT/TASK parser is available.',
+    'Not enough time to build departmental agents.',
+    'specification: Awaiting an official format.',
+    'expert: Awaiting a domain expert.',
+    'real-system:',
+    'real-data:   ',
+    'human-authority:\n '
+  ];
+  for (const kind of ['requirement', 'deliverable'] as const) {
+    for (const reason of reasons) await t.test(`${kind}: ${reason.trim()}`, () => {
+      const plan = validPlan();
+      const inventory = structuredClone(acceptance);
+      inventory[1] = { ...inventory[1], requirement: 'Extract frequency plans, crypto change-over windows and flight quarters onto a 24-hour timeline.',
+        provenance: [{ kind, id: inventory[1].id, path: `challenge.${kind}` }] };
+      plan.criteria[1].reason = reason;
+      assert.throws(() => parseQualityPlan(plan, inventory), /deferral reason must start with real-system:, real-data:, or human-authority: followed by a concrete dependency/);
+    });
+  }
+});
+
+test('deferrals preserve each declared real dependency and its synthetic workflow boundary', () => {
+  const reasons = [
+    'real-system: The approved identity endpoint is unavailable; no live sign-in is attempted. A labeled synthetic session demonstrates local review.',
+    'real-data: Production records are unavailable; no real-data accuracy is claimed. Labeled synthetic messages demonstrate every named extraction and timeline output.',
+    'human-authority: Only the owner can approve publication; publication is withheld. A labeled synthetic approval workflow produces a reviewable draft.'
+  ];
+  for (const reason of reasons) {
+    const plan = validPlan(); plan.criteria[1].reason = reason;
+    assert.deepEqual(parseQualityPlan(plan, acceptance), plan);
+  }
+});
+
 test('browser contracts accept the full bounded action vocabulary and empty reset values', () => {
   const plan = validPlan();
   plan.journeys[0].steps.push(
@@ -137,7 +173,7 @@ test('quality contracts reject incomplete or misleading coverage', () => {
     { label: 'implemented without a test', change: plan => { plan.criteria[0].journeyIds = []; }, error: /must map/ },
     { label: 'deferred without reason', change: plan => { delete plan.criteria[1].reason; }, error: /requires a nonempty reason/ },
     { label: 'deferred with passing journeys', change: plan => { plan.criteria[1].journeyIds = ['create']; }, error: /no journeyIds/ },
-    { label: 'no implementation', change: plan => { plan.criteria[0] = { ...plan.criteria[0], disposition: 'deferred', reason: 'Not built', journeyIds: [] }; }, error: /At least one.*implemented/ },
+    { label: 'no implementation', change: plan => { plan.criteria[0] = { ...plan.criteria[0], disposition: 'deferred', reason: 'real-system: The approved records endpoint is unavailable.', journeyIds: [] }; }, error: /At least one.*implemented/ },
     { label: 'unknown journey', change: plan => { plan.criteria[0].journeyIds = ['absent']; }, error: /unknown journey/ },
     { label: 'duplicate journey reference', change: plan => { plan.criteria[0].journeyIds.push('create'); }, error: /contains duplicates/ },
     { label: 'orphaned recovery journey', change: plan => { plan.criteria[0].journeyIds = ['create']; }, error: /Unmapped journeys: recover/ },
