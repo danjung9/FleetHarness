@@ -1,9 +1,9 @@
 ---
 type: research
-status: ready-for-review
+status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Active acceptance coverage for the unified Home/Flow app, with historical interface cases, fixed synthetic answers and a blocked GUI execution record."
+summary: "Current Home/Flow acceptance plan with fixed synthetic answers, delivery checks and an explicit runtime evidence boundary."
 ---
 
 # FleetHarness officer acceptance test plan
@@ -23,20 +23,20 @@ summary: "Active acceptance coverage for the unified Home/Flow app, with histori
 | U36 | Home, Offline & edge, select ID 36, scope to synthetic forms and records, save, create, exercise recovery/conflicts and inspect claimed delivery. | [R] O1/O2/O3 plus [[Research/QA/Officer/36-Paperless-Golden]], with real transport and cold-launch claims checked separately. |
 | UC | Home, New challenge or write your own brief, enter C and six criteria, save, reopen through My builds, start and check C1. | [R] Preserve validation, version-specific review and local-only delivery expectations. |
 
-[R] Apply all three persona passes and applicable G01 through G23 gates to these four active rows. This replaces the 12 historical interface rows as the current execution matrix. Do not restore removed interfaces or count their absence as a regression against a superseded product choice. Preserve test input IDs so evidence remains traceable across revisions.
+[R] Apply all three persona passes and applicable G01 through G23 gates to these four active rows. This replaces the superseded three-interface matrix. Do not restore removed interfaces or count their absence as a regression against a superseded product choice. Preserve test input IDs so evidence remains traceable across revisions.
 
 [R] New Home checks: search by the exact visible card title, select a card and verify its catalog ID survives, return from Home to a running build and locate Stop, resume through My builds, refresh into the default Home page, inspect empty-state recovery and operate the new model radio controls by keyboard. Existing headless results do not establish these behaviors. Alternate-profile data migration is not demonstrated; do not claim old Studio/Workbench browser or desktop data appears automatically in the retained app.
 
-[E] The loopback denial is an execution-environment block, not a failure of Home. Main has advanced `qa-lead` to `631849f`, removed stale alternate output folders and independently assigned itself a fixture-only GUI pass. [R] Do not advance or modify the checkout independently. Rebuild current source before any later permitted app launch; old output is not proof of the new UI. The commands at the end are the historical `50fcaea` batch and must not be reused for removed interfaces. Review main's actual GUI receipt when available; do not convert a planned run into a pass.
+[E] The loopback denial is an execution-environment block, not a failure of Home. Main has advanced `qa-lead` to `631849f`, removed stale alternate output folders and independently assigned itself a fixture-only GUI pass. [R] Do not advance or modify the checkout independently. Rebuild current source before any later permitted app launch; old output is not proof of the new UI. Current test entry points are listed at the end. Review main's actual GUI receipt when available; do not convert a planned run into a pass. Historical commands and results remain in [[Research/QA/Results-50fcaea]].
 
 ## Scope, ownership and evidence
 
 - [E, main-session handoff] The coordination session owns the organization runner and will relay Dan's pushes. This QA assignment does not create another runner or pull loop. The current assignment is two notes, this plan and [[Research/QA/Static-Findings]].
-- [E, later bridge handoff and local Git check] GUI execution now uses the dedicated, clean, detached checkout `~/Documents/CDAO/fh-org/qa-lead` at `50fcaea1e86028503ae66bd2f17287093ad30cbe`. The coordinator will keep it stable and advances it only on request. The moving `fh-org/qa` belongs to the runner. Its QA agents own catalog-wide harness coverage and pilot golden examples; this plan supplies GUI acceptance and independent review criteria without duplicating those jobs.
+- [E, later bridge handoff and local Git check] The dedicated checkout is `~/Documents/CDAO/fh-org/qa-lead`, now clean and detached at `631849f638614735a89a555d487d6b3c777c52e3` after main advanced it. The coordinator will keep it stable and advances it only on request. The moving `fh-org/qa` belongs to the runner. Its QA agents own catalog-wide harness coverage and pilot golden examples; this plan supplies GUI acceptance and independent review criteria without duplicating those jobs.
 - [E, handoff] Dan owns `src/` and `studio/`. QA reports frontend defects and reproduction steps. It does not edit those directories or the rest of the QA repository under this assignment.
-- [E] Source references below are relative to `~/Documents/CDAO/fh-org/qa`. The original/Studio matrix was designed against `0f175a8`; the revision update and execution proposal target `50fcaea`. After detecting the move, source reads use explicit Git objects. Source was read, not executed. Builds, browser launch, Electron launch, installation and model calls have not been performed in this review.
-- [E, user handoff] Any separately launched `codex exec` worker must use `-p fleet-lock`; permitted worker models are `gpt-6.1-sol` and `gpt-6-astra`. The event profile is not a personal ChatGPT login. Two bounded source reviewers supported baseline and new-revision checks; no additional organization was started.
-- [E, source] Browser mode can prepare briefs but cannot perform a real build, approve or export a generated application. Desktop is required for those stages (`src/api.ts`, `src/studio/api.ts`).
+- [E] Source references below are relative to `~/Documents/CDAO/fh-org/qa`. The initial matrix covered `0f175a8` and `50fcaea`; this active plan is rebased to `631849f`. Reads use explicit Git objects. Historical builds and the blocked fixture attempt are recorded in [[Research/QA/Results-50fcaea]]. No live model, login, installation or packaging was performed by this QA assignment.
+- [E, user handoff] Any separately launched `codex exec` worker must use `-p fleet-lock`; permitted worker models are `gpt-6.1-sol` and `gpt-6-astra`. The event profile is not a personal ChatGPT login. Bounded source reviews supported baseline, new-revision and acceptance checks; no additional organization was started.
+- [E, source] Browser mode can prepare briefs but cannot perform a real build, approve or export a generated application. Desktop is required for those stages (`src/api.ts`). The retained browser UI has no built-in brief transfer to desktop.
 - [R] Use only invented identifiers, tasks and administrative records. Do not use message traffic, real rosters, account screens containing personal information, operational data, actual forms completed for people, or external mailboxes. The examples below are proposed test inputs, not real naval procedures or policy.
 
 | Existing evidence | What it establishes | What it does not establish |
@@ -126,40 +126,31 @@ UNSUPPORTED PRACTICE LINE
 
 [R] Expected C1: exactly two seeded records, visible validation errors, recoverable notes and version-specific review. Test editing A-01 after approval; it must require new review. This is acceptance for a generated custom app, not a claim that the factory's own approval system supplies these business rules. [E] A custom brief defaults to the generic workflow recipe (`harness/integration.ts`).
 
-## Scenario matrix across both interfaces
+## Execution mapping
 
-[R] Execute every row in the appropriate desktop interface for end-to-end acceptance. Browser intake can be checked separately with no model. For each row, the division-officer persona prepares the request, the clerk persona exercises entry and recovery, and the department-head persona reviews the fixed answers and limitations. Those are three role passes per row, not a claim that three people have participated.
+[R] Run U12, U11, U36 and UC from the active matrix through the retained desktop app. In each journey the division-officer persona prepares the request, the clerk persona exercises data entry/recovery, and the department-head persona checks the fixed answers and limitations. These are three role passes per journey, not evidence that three people participated.
 
-| ID and interface | Plain-language steps | Expected result and pass/fail criteria | Live model needed? |
-| --- | --- | --- | --- |
-| M-O, original, case 12 | Home, New challenge, Norfolk catalog, search OPTASK, choose ID 12. Read and adjust the brief to the synthetic grammar. Save, start through the confirmation, try M1/M2 in Preview, then review and export locally. | [R] Catalog ID remains 12; message recipe is selected; every fixed answer is correct in the actual browser app; warnings and source text remain visible; approval follows inspection. Fail on lost duplicates, invented dates, unchecked claims of USMTF support or mismatched export. | Intake: no. Scripted path: fixture. Authentic generation: yes. |
-| M-S, Studio, case 12 | Discover, search OPTASK, Build this challenge. Edit the six-section brief, save, reopen, generate, open App preview, try M1/M2, then Review & delivery. | [R] Same oracle as M-O; saved sections survive; required outcomes are inspectable at review. A ready badge alone is insufficient. Record the current absence of a separate start-confirmation step. | Same distinction as M-O. |
-| S-O, original, case 11 | Choose the catalog PB4T entry, not the generic Scheduling shortcut. Add the invented constraints and separate success criteria. Save, generate, inspect the resulting board using S1 through S5, approve only the bounded draft. | [R] Catalog ID 11 and scheduling tool path retained; a valid alternative is shown; infeasibility differs from incomplete search; no silent constraint relaxation. Mark recurrence and departmental negotiation unimplemented if absent. | Intake: no. Complete generated board: yes. Existing helper checks do not replace it. |
-| S-S, Studio, case 11 | Discover, Scheduling, open the training entry, Build this challenge. Change one assumption, save, return through My builds, generate, test S1 through S5, inspect success criteria and decision. | [R] Same oracle as S-O; edited scope preserved; novice can see the conflict and explain the proposal. Fail if architecture progress is presented as validated schedule correctness. | Same distinction as S-O. |
-| O-O, original, case 36 | Choose Paperless Underway from the catalog. Scope the brief to fictional local record capture, conflict review and recovery. Generate, enter O1, perform O2, inspect O3 where exposed, then review the limitations. | [R] ID 36 retained; both edits survive; restart recovery actually works in each claimed environment; no fabricated synchronization receipt. In-memory reconciliation alone is partial scope. | Intake: no. Generated persistence and conflict UI: yes. Actual sync needs an implemented test transport as well. |
-| O-S, Studio, case 36 | Discover, Offline & edge, open Paperless Underway, prepare and save the brief. Generate, use App preview and Review & delivery; repeat recovery with the exported app. | [R] Same oracle as O-O; user distinguishes queued, saved, conflict and synchronized states. Fail on silent loss or automatic review of changed content. | Same distinction as O-O. |
-| C-O, original, custom | New challenge, Custom problem. Enter C and type six ordinary newline-separated criteria. Save, revisit Brief, generate, then act as clerk and reviewer on C1. | [R] Six separate criteria survive. Custom recipe remains intentional. Generated records and approval match C1. Normal line splitting is present in the source; this is a regression check, not a confirmed defect. | Intake: no. Authentic custom app: yes. |
-| C-S, Studio, custom | New challenge. Put C into Overview/Requirements, specify the local app as deliverable and the six checks as evaluation criteria. Save, reopen, generate, exercise C1 and review. | [R] All entered sections and six checks survive. Draft, saved brief, generated app and local export are distinguishable. Restarting generation must require a fresh inspection acknowledgment. | Intake: no. Authentic custom app: yes. |
+[R] Intake and empty-account checks need no live model. The existing scripted provider can check factory plumbing and its predetermined message example. It cannot stand in for an authentically generated scheduler, record system or custom register. A live acceptance run needs the owner-configured permitted model and the separate preparation gate. Record unsupported model identifiers rather than silently changing models or switching to a personal account.
 
-[R] Do not substitute the scripted message fixture for a generated scheduler, record system or custom register. A fixture verifies plumbing and predetermined behavior; it cannot answer whether a model follows a new brief. For thorough model coverage, repeat the four briefs with each allowed event model that the actual Pi runtime lists and the event account permits. Record unsupported model identifiers; do not invent a mapping, switch to a personal account, or silently choose another model. Cross-interface repetition is still needed for UI acceptance even when the shared backend passes once.
+[R] Input families remain M/S/O/C. Linked older golden notes may refer to M-O/S-O/O-O/C-O; map those to U12/U11/U36/UC respectively. The removed Studio/Workbench variants are retired. Preserve exact input revision and avoid double-counting shared boundary cases.
 
 ## Shared control and failure checks
 
-[R] Apply these to both interfaces unless stated. Fixture and simulation results remain separate from live-model results. Every unexecuted entry is currently `NOT RUN`.
+[R] Apply these to the retained Home/Flow interface unless stated. Fixture and simulation results remain separate from live-model results. Every unexecuted entry is currently `NOT RUN`.
 
 | ID | Action | Pass criterion | Required execution |
 | --- | --- | --- | --- |
 | G01, empty and invalid intake | Save a blank title, short/empty description and empty criteria. Enter six ordinary lines, literal separators and repeated edits. | Field errors are understandable; no silent criteria loss; saving does not duplicate an existing brief. | Browser or desktop; no model. |
-| G02, browser handoff | Save a browser brief, restart that browser context, transfer Studio JSON to an isolated desktop profile. Try returning to the original UI. | Browser limitations are explicit; Studio transfer preserves ID, text and criteria. Original automatic transfer is unsupported unless demonstrated. Separate storage must not look like data disappearance without explanation. | Browser plus desktop; no model. |
+| G02, browser handoff | Save a browser brief, restart that browser context and inspect the stated desktop continuation path. Open an isolated desktop profile separately. | Browser limitations and separate storage are explicit. Automatic transfer is unsupported at this revision. A saved browser brief must not be presented as already available in desktop; record the actual manual handoff burden. | Browser plus desktop; no model. |
 | G03, connection honesty | With a new empty app profile, try to start. Inspect engine and model choices. | Missing configuration blocks work with a useful next step. The UI must not imply that ChatGPT subscription login uses the event API key. | Desktop; no credential entry and no live inference. |
 | G04, model and key handling | After owner configuration only, identify Pi and the permitted exact model. Owner chooses session-only storage for the initial live trial. Inspect only non-secret connection status. | A successful live response is tied to the intended provider/model. No secrets appear in screenshots, logs, briefs, exported artifacts or evidence. A configured badge is not proof of inference. | Owner action and separate live-stage approval. Never inspect actual credential file contents. |
-| G05, start disclosure | Ask the operator what Generate/Start authorizes, then start a fixture run. | They can explain local file/command use, provider use and Stop before execution. Record original confirmation versus Studio immediate start. | Local fixture; cognitive check. |
+| G05, start disclosure | Ask the operator what Generate/Start authorizes, then start a fixture run. | They can explain local file/command use, provider use and Stop before execution. Verify the retained start-confirmation dialog, including cancellation before dispatch. | Local fixture; cognitive check. |
 | G06, progress and errors | Observe each phase; trigger the existing scripted repair and a failed result. | Active phase, failure, one repair attempt and final status are understandable. No false claim that research performed live browsing or that a generated component passed acceptance. | Phase and system-design fixtures. |
 | G07, stop and quit | Stop during a slow provider response and a tool step; repeat at start preflight. Quit while active, then reopen. | No further model/tool action after confirmed shutdown; descendants terminate; workspace and stopped state survive. A stopped badge without process evidence is partial verification. Cancel during auth preflight must prevent a later start. | Existing fixture covers a subset. Preflight and descendant checks need a separately reviewed bounded harness; do not access unrelated processes or files. |
 | G08, approval after new work | Inspect and approve a fixture, start another run of the same project, then return to review. Change the brief separately. | Old approval is invalidated; old notes cannot masquerade as inspection of the new version; checkbox resets. Distinguish backend gate from stale local form state. | Fixture plus manual UI; no live model needed. |
 | G09, failed or absent tests | Present absent tests, zero tests, failed tests, skipped/todo tests and a timeout through controlled fixtures. | Approval/export blocked; visible reason. Positive TAP counts prove executed assertions only. | Existing unit evidence first; add targeted fixture only if a gap or change requires it. |
 | G10, independent correctness | Supply a result with a wrong synthetic answer even when its generated tests pass. | Human/oracle review rejects it; actual preview behavior and exported app agree with M/S/O/C. | Live artifact or a clearly labeled mutation of a disposable fixture; new mutation harness needs review. |
-| G11, preview operation | Load a generated form, submit, change a field, refresh, download if supported. | Form handlers work under the preview sandbox; Refresh actually reloads; new content is visible. Test original and Studio separately. | Desktop fixture/manual interaction. |
+| G11, preview operation | Load a generated form, submit, change a field, refresh, download if supported. | Form handlers work under the preview sandbox; Refresh actually reloads; new content is visible. Check the retained iframe revision and current loading/error states. | Desktop fixture/manual interaction. |
 | G12, persistence and restart | Save a brief and a generated record, reload, quit, reopen, and reopen an export. | Each claimed persistence boundary retains exact synthetic data. Document origin changes and separate browser/desktop stores. | Fixture or generated app. No live model needed for the persistence check itself. |
 | G13, evidence freshness | Change a disposable generated artifact after tests, then attempt approval/export. Also change it while the folder chooser is open. | Stale bytes cannot be delivered under the old hash and approval. Test the exported bytes, not only the workspace. | Original smoke covers the first condition; dialog-time race remains a new targeted test requiring a reviewed fixture. |
 | G14, human delivery | With real review notes, approve only the prototype, choose a local destination, inspect the exported app and DELIVERY.md. Cancel the folder chooser once. | Cancel causes no delivery claim; successful export contains readable evidence and exact tested bytes; labels say local prototype delivery, not deployment or an official release. | Local fixture first; final acceptance repeats on real generated artifact. |
@@ -170,22 +161,9 @@ UNSUPPORTED PRACTICE LINE
 
 [E, source] Codex in this app requires ChatGPT sign-in and strips the standard OpenAI API-key variables; Pi is the event-key candidate (`electron/codex-rpc.ts`, `electron/codex-session.ts`, `electron/main.ts`). Pi's general tools have host permissions, and phase prompts are not an OS boundary (`electron/pi-backend.ts`, `harness/phases.ts`). [R] The initial approval request below is for local fixture/interface execution only. A live-generation proposal must name the actual permitted preparation environment and owner-configured provider before it runs. Token availability does not settle account authorization or filesystem containment.
 
-## Revision update: 50fcaea
+## Guide and standalone delivery checks
 
-[E, `git diff 0f175a8..50fcaea`] The checkout advanced to `50fcaea1e86028503ae66bd2f17287093ad30cbe` during review. The delta changes 48 files, including backend execution, packaging, dependency declarations and a third interface, Workbench. The commit title's frontend label does not describe its full scope. [E] No code in the checkout was modified by this QA task. The coordinator was notified, and all subsequent comparisons use pinned Git objects.
-
-[E, pinned source] `electron/pi-backend.ts` now requests a practical README after implementation, then asks verification/repair to keep it aligned with the app. This remains part of the build session, not a sixth named phase. `electron/main.ts`, `electron/executable.ts` and `electron/package-worker.ts` add approval-gated standalone packaging and a host-owned renderer wrapper. `package.json` adds `@electron/packager` 20.3.0 and `yazl` 3.3.1. `src/workbench/`, `workbench/index.html`, `vite.workbench.config.ts` and two new smoke scripts add the new interface and packaging tests. These dependencies and tests were inspected, not executed here.
-
-[R] Retain all eight original/Studio scenarios above as regressions at `50fcaea`; old passing results do not establish their outcome after this change. Add the following four Workbench rows. Each repeats the three persona passes and the same independent answer key. There are now 12 interface/use-case rows, with 36 role passes before any model repetitions.
-
-| ID | Plain-language steps in Workbench | Expected result and live-model boundary |
-| --- | --- | --- |
-| M-W, case 12 | Open the challenge catalog, search ID 12, choose Make this my challenge, edit and save the request, then Create my tool. Use Try your tool with M1/M2 and review each requirement. | [R] Same oracle as M-O/M-S, clear synthetic grammar scope, retained source/warning evidence. Intake needs no model; authentic generation does. |
-| S-W, case 11 | Choose training case 11, enter the fixed practice constraints, save, create, try the board and review the valid and impossible cases. | [R] Same S1 through S5 outcomes; constraints visible without opening technical logs. No claim of validated recurring-training policy. Live model needed for generated board. |
-| O-W, case 36 | Choose Paperless Underway, narrow to fictional records, save, create, try concurrent corrections and restart recovery, then inspect the delivery options. | [R] Same O1 through O3 outcomes; generated wrapper persistence and preview persistence checked independently. Live model needed for the actual app; network synchronization is still a separate implementation requirement. |
-| C-W, custom | Describe a problem, enter C and its six outcomes, save, reopen through My tools, create and test C1. Edit a reviewed record and inspect its approval. | [R] Exact custom criteria retained; clear distinction between factory approval and record-level approval. Live model needed for actual custom software. |
-
-[E, `src/workbench/BuildWorkspace.tsx`] Workbench has an explicit preview revision counter and displays the user's requirements at review. [R] Test these directly instead of carrying Studio's exact refresh behavior over to a different implementation. Also check review-state reset, creation confirmation, error recovery, keyboard focus and the ability to request another version after approval; do not assume the new surface fixes every older concern.
+[E] The backend retained at `631849f` includes `50fcaea`'s practical README follow-up and approval-gated executable packaging. The README follow-up is part of the existing build session, not a sixth named phase. Source export and executable download have different controls and need separate evidence.
 
 | Added gate | Concrete check | Pass condition and evidence limit |
 | --- | --- | --- |
@@ -195,9 +173,9 @@ UNSUPPORTED PRACTICE LINE
 | G22, executable recovery | In the standalone app, save synthetic data, reload, quit, reopen and update to a newer version. | [R] Persistence and version compatibility match the guide; evidence distinguishes stable wrapper storage from random preview-origin storage. Existing smoke checks reload, not every cold-start/update case. |
 | G23, download and signing behavior | Inspect whether packaging needs a runtime download and platform signing, and where packaged apps store state. | [R] Owner explicitly approves the concrete external/download/write scope before this suite runs. Do not run it as part of a no-install fixture batch. |
 
-[E, runner report] G09's meaningful-test limitation and G13's source-export races now have failing targeted-function results in [[Research/QA/Runner/Harness-Coverage]]. [R] Reuse those reproductions and request fixes through the coordinator. A native GUI reproduction can add confidence about the interface, but it must not be counted as the first discovery or replace the existing failure. Release acceptance remains open while these evidence/delivery defects remain unresolved.
+[E, runner report] G09's meaningful-test limitation and G13's source-export races have failing targeted-function results in [[Research/QA/Runner/Harness-Coverage]]. [R] Reuse those reproductions and request fixes through the coordinator. The reconciliation and concrete closure criteria are in [[Research/QA/Acceptance-Reconcile-631849f]]. A native GUI check adds evidence but does not replace those failures.
 
-[E, `scripts/smoke-executable.mjs`, `electron/package-worker.ts`, `electron/executable.ts`] The executable smoke invokes real packaging, may download Electron, requests ad hoc signing on macOS, launches a generated native app and writes that app's data under the operating system's application-data directory. Therefore it is excluded from the first no-install proposal. [R] The new Workbench UI smoke can be considered separately after inspecting its scripted provider and launch path; it does not stand in for executable acceptance.
+[E, script inspection] Executable smoke performs real packaging, can download Electron, requests ad hoc signing on macOS, launches the generated native app and writes its operating-system application profile. It remains outside the fixture-only scope. No packaged acceptance result is inferred from source staging or a passing development test.
 
 ## Result record and regression cadence
 
@@ -210,17 +188,15 @@ UNSUPPORTED PRACTICE LINE
 ## Sources
 
 - [E] Pinned sources, read locally: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323 and https://github.com/danjung9/FleetHarness/tree/50fcaea1e86028503ae66bd2f17287093ad30cbe
-- [E] `package.json`, `scripts/studio.mjs`, `scripts/smoke-electron.mjs`, `scripts/smoke-studio.mjs`, `scripts/smoke-system-design.mjs`, `scripts/smoke-activity.mjs`, `scripts/smoke-phases.mjs`, `scripts/mock-provider.mjs`, `vite.studio.config.ts`, `electron/main.ts`, `electron/pi-backend.ts`, `electron/preview.ts`, `harness/fixtures.ts`, `harness/recipes.ts`, `harness/integration.ts`, `tests/harness-tools.test.ts` at that commit.
+- [E] `package.json`, `src/Home.tsx`, `scripts/smoke-home.mjs`, `scripts/smoke-electron.mjs`, `scripts/smoke-system-design.mjs`, `scripts/smoke-activity.mjs`, `scripts/smoke-phases.mjs`, `scripts/mock-provider.mjs`, `electron/main.ts`, `electron/pi-backend.ts`, `electron/preview.ts`, `harness/fixtures.ts`, `harness/recipes.ts`, `harness/integration.ts`, `tests/harness-tools.test.ts` at the cited commits.
 - [E] [[Research/Plan/Test-Results]], [[Research/Interfaces/Officer-Walkthrough]], [[Research/FleetHarness-MVP/Delta-0f175a8]], [[Research/QA/Static-Findings]] and the November 4 bridge assignment. The chief's [[Research/Plan/Plan]] remains a draft recommendation, not authority to execute.
 - [P] Captured event requirements: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/12 ; https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11 ; https://cdao.hackathon.maximus.com/event/norfolk/use-cases/36 . Their vault summaries were read; live portal contents were not refreshed for this plan.
 
-## Historical commands reviewed for 50fcaea
+## Current test entry points at 631849f
 
-[E] This is the concrete fixture-only batch presented to Mukul before his continuation instruction. Build commands and the first phase-fixture command were subsequently executed; remaining GUI commands were blocked at the loopback prerequisite. Exact outcomes are in [[Research/QA/Results-50fcaea]]. [R] This historical scope covers existing dependencies, build outputs, synthetic temporary state and local UI tests. It does not authorize installation, sign-in, real API calls, live-key entry, source edits, pulls, commits, publication, standalone packaging or retrying the stopped UI sandbox experiment. User approval does not override the environment's enforced sandbox.
+[E] The first local batch at `50fcaea` passed compilation/builds and stopped when the fixture could not bind loopback. Main has explicitly assigned itself an independent fixture-only GUI pass at `631849f`; this chat is not retrying that blocked route. [R] The following command map documents current scripts for result attribution and future permitted execution, not a request to bypass sandbox restrictions. No installation, login, live key, source changes or executable packaging is included.
 
-[E] Package-declared versions include TypeScript 7.0.2, Vite 8.3.5, Electron 45.2.2 and Playwright 1.64.1. The moving QA checkout lacked Electron, but main supplied `qa-lead` with its own dependencies and installed runtime. A read-only path check confirmed its Electron executable, `path.txt`, TypeScript, Vite, Playwright, packager/yazl and local Chrome are present. [R] Check the binary before importing Electron; its loader can install if the binary disappears. Run commands sequentially and stop on failure. The clean environment prevents inheriting provider key variables; it is not a general filesystem sandbox. Do not capture real account screens.
-
-First, verify the approved revision and build the existing source without installing anything:
+[R] Verify the pinned source and existing binary before any separately permitted run. Stop on an unexpected revision, missing runtime or failed build. Do not import the Electron package merely to test availability: its loader can install a missing runtime.
 
 ```sh
 cd ~/Documents/CDAO/fh-org/qa-lead
@@ -230,43 +206,18 @@ test -x node_modules/electron/dist/Electron.app/Contents/MacOS/Electron
 node node_modules/typescript/bin/tsc --noEmit
 node node_modules/typescript/bin/tsc -p electron/tsconfig.json
 env -i PATH="$PATH" TMPDIR=/private/tmp node node_modules/vite/bin/vite.js build
-env -i PATH="$PATH" TMPDIR=/private/tmp node node_modules/vite/bin/vite.js build --config vite.studio.config.ts
-env -i PATH="$PATH" TMPDIR=/private/tmp node node_modules/vite/bin/vite.js build --config vite.workbench.config.ts
 ```
 
-[R] Confirm the hash is still `50fcaea1e86028503ae66bd2f17287093ad30cbe` and there are no unexpected source changes before building. Existing generated outputs are permitted by this execution proposal; tracked source remains untouched. If the coordinator updates the checkout, revise the approval target before executing changed scripts.
-
-Next, run the existing local fixture suites that cover the new phase and UI checks:
+[R] Required source hash: `631849f638614735a89a555d487d6b3c777c52e3`. The current source scripts are:
 
 ```sh
 env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-phases.mjs
+env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-home.mjs
 env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-electron.mjs
-env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-studio.mjs
 env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-system-design.mjs
 env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-activity.mjs
-env -i PATH="$PATH" TMPDIR=/private/tmp node scripts/smoke-workbench.mjs
 ```
 
-[E, script inspection] The UI scripts write captures under `output/playwright/`; fixture scripts create and remove their own temporary state. Studio/system-design/activity/Workbench require local Chrome, and all except activity require Electron for their desktop portion. The phase test uses Node and a local fixture. Workbench smoke exports source but does not package an executable. [R] A missing binary is a blocked result, not permission to download it. The original desktop smoke is repeated because backend guide generation and delivery UI changed since its reported `0f175a8` pass. The ChatGPT smoke is excluded because it starts the actual login protocol; executable smoke is excluded because it can download, sign and launch a packaged app outside the temporary host profile.
+[E] Home smoke has no npm alias, so it must be named explicitly. Electron smoke now selects the Pi radio, and system-design smoke navigates Home to Flow and returns to Preview after reload. UI captures go under `output/playwright/`; the scripts use synthetic temporary profiles. [R] Retain raw result receipts and source hashes, classify environment failures separately, and do not automatically retry blocked launches. The raw smoke output alone does not cover the Home title-search/Stop/accessibility findings or independent pilot acceptance.
 
-For manual intake and empty-account checks in the actual desktop app, create a new temporary profile in the same shell and launch one interface at a time:
-
-```sh
-qa_state=$(mktemp -d /private/tmp/fleetharness-qa.XXXXXX)
-mkdir -p "$qa_state/pi" "$qa_state/original" "$qa_state/studio" "$qa_state/workbench" "$qa_state/codex"
-env -i PATH="$PATH" TMPDIR=/private/tmp FLEET_USER_DATA="$qa_state/original" PI_CODING_AGENT_DIR="$qa_state/pi" CODEX_HOME="$qa_state/codex" node node_modules/electron/cli.js .
-```
-
-[R] Use the menus to quit the original app before the next command. Do not sign in or configure a provider during this empty-profile check. Then launch Studio using its existing launcher:
-
-```sh
-env -i PATH="$PATH" TMPDIR=/private/tmp FLEET_STUDIO_USER_DATA="$qa_state/studio" PI_CODING_AGENT_DIR="$qa_state/pi" CODEX_HOME="$qa_state/codex" node scripts/studio.mjs
-```
-
-[R] Quit Studio and end its launcher with Ctrl-C if needed. Workbench has the same empty-profile boundary:
-
-```sh
-env -i PATH="$PATH" TMPDIR=/private/tmp FLEET_WORKBENCH_USER_DATA="$qa_state/workbench" PI_CODING_AGENT_DIR="$qa_state/pi" CODEX_HOME="$qa_state/codex" node scripts/workbench.mjs
-```
-
-[R] Quit the application and end its launcher with Ctrl-C if needed; retain only synthetic evidence and record the temporary directory for deliberate cleanup. These launches support manual intake and connection-state checks. They do not provide a live model. G07/G13/G15's new lifecycle, export-race and containment harnesses, and the live M/S/O/C generation matrix, require a later concrete command review; they are not silently included in this first approval.
+[R] Keep `smoke-chatgpt.mjs` and `smoke-executable.mjs` outside this batch. The former starts the actual login protocol; the latter has download/signing/native-launch effects. New lifecycle, export-race and containment harnesses require concrete review. Live M/S/O/C generation requires its separate owner-approved preparation boundary and event connection. These are outstanding evidence gates, not silently granted permission.

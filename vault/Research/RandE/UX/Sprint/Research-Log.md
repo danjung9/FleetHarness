@@ -48,8 +48,6 @@ summary: "Local tool disclosures, coordination gaps and prior-work references fo
 - [E] Supplied screenshots come from Research/FleetHarness-MVP/screens. Their commit is not embedded in the images; existing interface research associates them with 0f175a8.
 - [E] Inspected 50fcaea via Git objects, including the new Workbench and executable download. These are teammate work, not new features produced by this research. The cards explicitly avoid duplicating them.
 
-## Sources
-
 ## Follow-up at 631849f, November 4
 
 [E, assigned directive and local file reads] The current task is a bounded adaptation of the existing UX handoff, not a new study. Read both relay files, the RandE directive, Plan/Findings, current Quality instructions and Acceptance-11. Delta-631849f.md did not exist at the initial file listing. No repository program or application was executed.
@@ -61,6 +59,8 @@ summary: "Local tool disclosures, coordination gaps and prior-work references fo
 [E, friction] Some batched reads were truncated; decision-bearing sections were read again in smaller slices. Central Sprint, Sessions and Team/Now.md remain outside the assigned writable folder. The central fh.py command was not run because it writes there. These entries and the local session note are staged for authorized central transcription, not sent.
 
 [E, prior work] Reused the nine existing UX cards and historical protocol, Quality's existing gate IDs, Acceptance-11 and Static-Findings U2. The four-request arithmetic belongs to the existing officer acceptance record. No replacement fixture, oracle, QA suite, participant session or new research was created.
+
+[E, final recheck] Both relay files were read again. Main advanced to d322b39 after the identical-tree merge. Pinned Git confirms five deployment/configuration changes and no change in the reviewed frontend/backend/harness/shared/scripts paths. The analysis file still covers 2e30b4a. Recorded the limited update without a new research round; runtime attribution stays at 631849f. Local document checks passed. Closure and the suggested central status entry are in [[Research/RandE/UX/Sessions/2026-11-04-ux-631849f]].
 
 ## Historical source references
 

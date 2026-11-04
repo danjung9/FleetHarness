@@ -25,6 +25,8 @@ summary: "Current Home-to-Flow UX handoff for 631849f, with task acceptance stil
 
 [E, attributed report] `org/reports/mvp-gate.md`, 14:42:27, reports 128 passes and zero failures at `631849f`; it does not supply a task-app, GUI, live-provider or packaging receipt. [[Research/QA/Acceptance-Reconcile-631849f]] keeps seven separate runner failures open, observed at `50fcaea` in unchanged backend files. [[Research/Plan/Test-Results]] remains historical evidence at `0f175a8` and `f72c5dc`. No counts are combined or credited to the merge as a new run.
 
+[E, final relay and pinned Git, source-only] The final read reports main advancing again to `d322b39`, with five deployment/configuration files changed and no delta in `src/`, `electron/`, `harness/`, `shared/` or `scripts/`. LATEST-analysis still describes `2e30b4a`. This handoff stays pinned to `631849f`; no deployed-site success or new test pass is inferred. Details are in the delta note.
+
 [R, proposed, Directive-rande and Acceptance-11] Missing artifact/run identity, final-file digests, human decision and task behavior keep the demonstration unaccepted. Use the disclosed conflict-checker fallback only if it passes the same applicable task checks. Static inspection does not establish usability, time saved, offline recovery, synchronization or full ID 11 completion. Keep the existing 3 PM access, 4 PM useful-build and 6 PM accepted-task gates; this handoff does not restart them.
 
 ## Historical notes and retired scope
