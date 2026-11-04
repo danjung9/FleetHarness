@@ -12,7 +12,7 @@ summary: "Close current review defects with exclusive file ownership and exact i
 
 [P] [[Research/Agentic/Flow-Goals]] governs allocation. This directive replaces the previous one. [E, snapshot-158 at 17:25:48] Code seats are enabled; dev-1, dev-2, dev-4, dev-5 and agentic-architect are running. Builder is absent from both running and queued lists. The feed repeatedly records unresolved merges. [R] Preserve current overseer assignments and coalesce repeated returns rather than dispatching equivalent work again.
 
-[E, current QA] [[Research/QA/Ten/Scoreboard]] now describes round 3 at f662d81 plus disclosed scratch patches: two finished, zero automatic passes, both stopped at review because cleanup could not be confirmed. [[Research/QA/Ten/Exp1/Scoreboard]] has five automatic passes; the five officer judgments, including [[Research/QA/Officer/JUDGE-R101-id20-contact-brief]], establish zero satisfactory. Its pending ID 20 cell is stale. Historical round-one results are not the current board.
+[E, current QA] [[Research/QA/Ten/Scoreboard]] now describes round 3 at f662d81 plus disclosed scratch patches: three finished, zero automatic passes, all stopped at review because cleanup could not be confirmed. [[Research/QA/Ten/Exp1/Scoreboard]] has five automatic passes; the five officer judgments, including [[Research/QA/Officer/JUDGE-R101-id20-contact-brief]], establish zero satisfactory. Its pending ID 20 cell is stale. Historical round-one results are not the current board.
 
 [R] The task JSON contains one continuation of builder's existing df9ff1d review return, limited to electron/agent-runner.ts and tests/agent-runner.test.mjs. Runner checks current locks and coalesces any equivalent return before dispatch. No other seat receives new work from this meeting.
 
@@ -54,7 +54,20 @@ summary: "Close current review defects with exclusive file ownership and exact i
 
 [R] Main obtains containment and affected browser smoke receipts on the exact landed tree. Allowed workspace/tool use must succeed, outside access and network must fail, and launcher refusal must never fall back to direct generated-test execution. Auto/f662d81 still records smoke-electron and smoke-norfolk failures; later source fixes require their own runtime receipt. Hosted requested-demo checks do not replace catalog acceptance.
 
-[E, relay comparison] LATEST.md names mvp 0da7ce9; LATEST-analysis.md names Windows 5a9d7d1. Its native-path checkpoint fix is relevant to the hash return but is not proof of desktop, server or cross-platform compatibility. [R] Preserve native ordering, portable manifest paths, junction protections and export hardening together. Do not bypass a mismatch or silently reuse old approvals.
+[E, opening relay comparison] LATEST.md names mvp 0da7ce9; LATEST-analysis.md names Windows 5a9d7d1. Its native-path checkpoint fix is relevant to the hash return but is not proof of desktop, server or cross-platform compatibility. [R] Preserve native ordering, portable manifest paths, junction protections and export hardening together. Do not bypass a mismatch or silently reuse old approvals.
+
+
+## Closing teammate change: e27ad6a
+
+[E, closing relays and targeted patch inspection] Dan's dan/backend-improvements branch adds Data & inputs, host-protected attached data and a conditional synthetic-data session after intake. e27ad6a adds version 2 capability mappings. This is separate from mvp 0da7ce9. The relay comparison includes branch divergence: apparent deletion of process-sweep and its tests is not evidence that Dan deliberately removed them. Integrate his commits onto the current base; do not replace the newer tree with the older branch.
+
+[E, relay source review] shared/solution.ts is reported missing from the committed tree. The patch imports its SolutionContract, rejects a version 2 plan without that contract and permits capability-only evidence. The relay reports that electron/quality.ts still omits the contract and emits version 1 reports. No successful compile or runtime receipt was supplied.
+
+[R] Keep the existing owner split. Main coordinates Dan's committed dependency and integration; dev-5 owns the single quality-contract/shared-quality reconciliation, with electron/quality.ts transferred from dev-1 only after prerequisite integration. Do not invent a competing solution schema or discard either capability mappings or original source obligations. Closure requires both type checks, actual load/validate/freeze/hash/evaluate/report wiring, retained version 1 behavior, missing or stale capability evidence rejection and no pass when required browser journeys or required capabilities are omitted. A capability ID or a zero-journey plan alone is not execution proof.
+
+[R] Dev-1 preserves prepared-input hashes across recovery and rejects changed inputs on resume. Dev-2 adapts Start/default readiness to Dan's current App.tsx without overwriting it. Dev-4's judge reads prepared-data provenance and original obligations. Dev-5 retains the mock-provider's conditional data-session protocol and updates fixture session counts without weakening assertions. Builder's inherited note/effort changes must preserve the extra session and measure its actual work after shared-file transfer. The sole two-file telemetry correction does not overlap Dan's listed changes.
+
+[R] Main/QA prove attachment and paste persistence, removal, input limits, links-only fallback, invalid synthetic-data rejection, completion retry, tamper refusal and cancellation on both engines. Preserve Dan's five frontend files, existing process markers and sweep tests, mandatory verifier, deferral constraints and approval invalidation. Only public/synthetic inputs are permitted; attached text remains data, not instructions. This is local input support, not connector authorization. Report any unresolved contract dependency through main; do not message Dan or claim integration from patch inspection.
 
 ## Finish and boundaries
 

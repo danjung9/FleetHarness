@@ -91,3 +91,11 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 [E, source recheck at 17:14 EST] The current ten.py now uses a tolerant verifier replacement and raises an error if the required old launcher cannot be matched. An isolated transformation against exact fc97f36 matches the generated-test launcher, retains runProcessEnvironment and shell_environment_policy.set markers, and removes the legacy workspace-write selection. This closes the original exact-string mismatch reproduction on that tree. It is not a native containment receipt; the helper's broad sandbox-word check is not itself sufficient evidence of enforcement on future trees.
 
 [E, final experiment judgment] ID 20 is also NOT: source acquisition/import and immutable capture remain absent, despite useful sample briefing handlers. Experiment 1 therefore has five automatic passes and zero of five satisfactory judgments. All final judges are recorded under Research/QA/Officer/JUDGE-R101-*.
+
+## Live round 3 overrides earlier HOLD status at 17:32 EST
+
+[E] The actual current scoreboard is round 3 at f662d81 plus disclosed scratch changes, started 17:11. HOLD is absent. Round 2 ended on a settings selector timeout. The first three round-3 builds all pass their application tests and journeys but fail at review because process cleanup cannot be confirmed. The driver starts later challenges despite that failure. This is evidence of unconfirmed cleanup, not proof of surviving processes. Earlier HOLD statements describe historical checkpoints only.
+
+[E/R] Sent an urgent blocked message to main to pause new launches and establish owned-process cleanup. Assigned the existing QA task to prioritize this evidence in its native Stop review. The running process-sweep source is at ~/fhten/app/electron/process-sweep.ts. No process census was available to this audit and no environment values were read or printed.
+
+[E, bridge metadata] Both runtime-target questions timed out. The bridge read markers show all messages consumed by 17:29, but neither question has a corresponding reply; the last recorded answer is 16:38. This is an unanswered coordination request, not a lost inbox delivery. No confirmation of a runtime pause is claimed.

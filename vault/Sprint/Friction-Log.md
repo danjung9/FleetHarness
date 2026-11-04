@@ -43,3 +43,5 @@ Type is one of: policy, data, authority, infrastructure, acquisition, technical.
 - [E, 2026-11-04 17:14 EST] Experiment records use Ten/Exp1, but scoreboard and judge task paths omit Exp1 and manifest prose points to fhten instead of fhexp. A missing promised summary path caused an incorrect not-started status; corrected from raw receipts. A ten-minute bridge request also timed out. Main received the correct namespace and completed-run evidence.
 
 - [E, 2026-11-04 17:18 EST] The runner started stale dev-3 verifier reapply task c3057e9 after its report handed that integration to dev-1. Recovery/verifier revision e6b5000 is already under review. Main notified to reconcile the duplicate assignment before it creates another integration cycle.
+
+- [E, 2026-11-04 17:32 EST] Live R3 has three cleanup-confirmation failures while the driver continues starting later challenges. Escalated pause and native cleanup verification to main and QA. Two runtime-target requests timed out despite bridge read markers; no pause acknowledgment yet.

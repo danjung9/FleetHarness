@@ -26,3 +26,5 @@ summary: "Local disclosure, friction and prior-work handoff for engineering meet
 [E, write boundary] Central Sprint/, Sessions/ and Team/Now.md are outside this folder. Vault/tools is explicitly denied, so the prescribed ledger command and full vault guard cannot run here. No denied read or outside-folder write was attempted. This record and the local session note stage authorized central transfer; central logging is not claimed complete.
 
 [R, next] Transfer tool, friction, prior-work and session facts centrally through an authorized coordinator. Carry the concrete review returns into existing work, coalesce duplicate queues and require exact integrated receipts.
+
+[E, additional friction] A combined delete/add patch was rejected before changes because it targeted each replacement path twice. Direct, properly shell-quoted Node writes replaced only authorized files. Local document checks then passed. The closing relay advanced to e27ad6a; source sections were inspected and decisions adapted before completion. No new runtime or external service was used.
