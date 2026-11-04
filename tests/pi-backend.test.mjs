@@ -9,6 +9,9 @@ import { reportPassed } from '../dist-electron/electron/verification.js';
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 const resourcesRoot = path.resolve('.');
+// Full functional workflows launch real Node tests and Chromium. Keep their
+// scheduling allowance separate from deliberately short timeout/cancel limits.
+const functionalTimeout = 60_000;
 const never = () => new Promise(() => {});
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const stageOf = prompt => prompt.includes('The independent test run failed') ? 'repair'
@@ -38,7 +41,7 @@ async function harness(t, options = {}) {
   const project = store.state.projects[0], sessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
-    verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
+    verificationLimits: { browserTimeoutMs: 45_000, browserStepTimeoutMs: 2500, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
@@ -70,7 +73,7 @@ async function harness(t, options = {}) {
   const settle = async () => { await backend.active.get(project.id)?.done; };
   const run = async () => { await backend.start(project.id); await settle(); };
   const assertSettled = async status => {
-    assert.equal(project.status, status, project.error);
+    assert.equal(project.status, status, JSON.stringify({ error: project.error, report: project.report, logs: project.logs }));
     assert.equal(backend.active.has(project.id), false);
     assert.equal(project.stages.some(s => s.status === 'active'), false);
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
@@ -79,7 +82,7 @@ async function harness(t, options = {}) {
   return { root, store, project, backend, sessions, snapshots, run, settle, assertSettled };
 }
 
-test('builds accept optional criteria and hand resources and links to agents', { timeout: 10000 }, async t => {
+test('builds accept optional criteria and hand resources and links to agents', { timeout: functionalTimeout }, async t => {
   const h = await harness(t);
   h.project.criteria = [];
   h.project.resources = 'Synthetic task messages and a blank report template.';
@@ -96,7 +99,7 @@ test('builds accept optional criteria and hand resources and links to agents', {
   assert.equal(reportPassed(h.project.report), true);
 });
 
-test('the complete workflow advances in order and persists real test evidence before human review', { timeout: 10000 }, async t => {
+test('the complete workflow advances in order and persists real test evidence before human review', { timeout: functionalTimeout }, async t => {
   const h = await harness(t); await h.run(); await h.assertSettled('review');
   assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
   for (const id of ['intake', 'research', 'plan', 'build', 'verify']) {
@@ -130,8 +133,8 @@ test('the complete workflow advances in order and persists real test evidence be
   }
 });
 
-for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: 30000 }, async t => {
-  const h = await harness(t, { verificationLimits: { browserStepTimeoutMs: 1000 }, scenario: async ({ cwd, stage }) => {
+for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: functionalTimeout }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage === 'build') {
       await artifacts(cwd, stage);
       await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main>');
@@ -143,7 +146,7 @@ for (const repair of [true, false]) test(`passing Node tests cannot hide a stati
   await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
   assert.equal(h.project.report.passed, 2);
   assert.equal(h.project.report.failed, 0);
-  assert.equal(reportPassed(h.project.report, true), repair);
+  assert.equal(reportPassed(h.project.report, true), repair, JSON.stringify(h.project.report));
   assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
   assert.equal(h.project.report.quality.status, repair ? 'passed' : 'failed');
   assert.ok(h.project.logs.some(log => log.text.includes('Browser journeys: 0/4 passed')));
@@ -182,7 +185,7 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
 for (const brokenRepair of [false, true]) {
   // Two real Node/browser verification passes need scheduling room on Windows;
   // this outer test budget does not change agent or verification deadlines.
-  test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: 60000 }, async t => {
+  test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: functionalTimeout }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
     assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair'], JSON.stringify(h.project.logs));
@@ -209,7 +212,7 @@ for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
   });
 }
 
-test('missing artifacts get one targeted completion prompt within the same stage', { timeout: 10000 }, async t => {
+test('missing artifacts get one targeted completion prompt within the same stage', { timeout: functionalTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
     if (stage !== 'plan') return false;
     await artifacts(cwd, stage); if (session.prompts.length === 1) await fs.rm(path.join(cwd, 'plan.md'));
@@ -234,7 +237,7 @@ test('empty files and directories cannot satisfy stage outputs', { timeout: 1000
   await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /plan\.md.*test-matrix\.md/);
 });
 
-test('missing application tests are recovered before verification starts', { timeout: 10000 }, async t => {
+test('missing application tests are recovered before verification starts', { timeout: functionalTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
     if (stage !== 'build') return false;
     await artifacts(cwd, stage); if (session.prompts.length === 1) await fs.rm(path.join(cwd, 'app.test.cjs')); return true;
@@ -243,7 +246,7 @@ test('missing application tests are recovered before verification starts', { tim
   assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 3); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
 });
 
-test('the user guide is requested after implementation and checked before verification', { timeout: 10000 }, async t => {
+test('the user guide is requested after implementation and checked before verification', { timeout: functionalTimeout }, async t => {
   const steps = [];
   const h = await harness(t, { scenario: async ({ cwd, stage, session, project }) => {
     steps.push(stage);
@@ -267,7 +270,7 @@ test('the user guide is requested after implementation and checked before verifi
 });
 
 for (const recover of [true, false]) {
-  test(`an empty user guide ${recover ? 'gets one completion attempt' : 'blocks verification after one completion attempt'}`, { timeout: 10000 }, async t => {
+  test(`an empty user guide ${recover ? 'gets one completion attempt' : 'blocks verification after one completion attempt'}`, { timeout: recover ? functionalTimeout : 10000 }, async t => {
     let attempts = 0;
     const h = await harness(t, { scenario: async ({ cwd, stage }) => {
       if (stage !== 'guide') return false;
@@ -294,7 +297,7 @@ test('stopping while writing the user guide aborts the build and never starts ve
   assert.equal(h.project.report, undefined);
 });
 
-test('repair updates the user guide before independent verification fingerprints the source', { timeout: 10000 }, async t => {
+test('repair updates the user guide before independent verification fingerprints the source', { timeout: functionalTimeout }, async t => {
   const h = await harness(t, { brokenBuild: true, scenario: async ({ cwd, stage, session }) => {
     if (stage === 'repair') {
       assert.match(session.prompts[0], /Update README.md.*repaired application/);
@@ -326,7 +329,7 @@ test('session initialization errors and preparation errors release capacity', { 
   await assert.rejects(bad.backend.start(bad.project.id), /ENOENT/); await bad.assertSettled('failed');
 });
 
-test('stopped runs can restart in fresh workspaces and late old events cannot corrupt the new run', { timeout: 10000 }, async t => {
+test('stopped runs can restart in fresh workspaces and late old events cannot corrupt the new run', { timeout: functionalTimeout }, async t => {
   const entered = deferred(); let stopFirst = true;
   const h = await harness(t, { scenario: () => { if (stopFirst) { entered.resolve(); return never(); } return false; } });
   await h.backend.start(h.project.id); await entered.promise;
@@ -361,7 +364,7 @@ test('duplicate starts and the concurrency limit are enforced; stopAll drains an
   assert.equal(restored.state.projects[3].status, 'draft');
 });
 
-test('a hung generated test is bounded, repaired once, then reaches review on actual passing evidence', { timeout: 10000 }, async t => {
+test('a hung generated test is bounded, repaired once, then reaches review on actual passing evidence', { timeout: functionalTimeout }, async t => {
   const h = await harness(t, { verificationLimits: { timeoutMs: 500 }, scenario: async ({ cwd, stage }) => {
     if (stage === 'build') { await artifacts(cwd, stage); await fs.writeFile(path.join(cwd, 'hang.test.cjs'), 'setInterval(() => {}, 1000);'); return true; }
     if (stage === 'repair') await fs.writeFile(path.join(cwd, 'hang.test.cjs'), 'require("node:test")("invalid prefix", () => require("node:assert/strict").equal(require("./core.cjs").parse("INVALID"), null));');

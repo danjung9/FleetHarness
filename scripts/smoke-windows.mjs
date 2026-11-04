@@ -107,6 +107,8 @@ async function launch() {
 }
 async function closeApp() { if (app) { await app.close(); app = undefined; page = undefined; } }
 const boot = () => page.evaluate(() => window.fleetHarness.bootstrap());
+// Optional undefined IPC properties are omitted by the on-disk JSON format.
+const persistedState = state => JSON.parse(JSON.stringify(state));
 const project = id => page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id), id);
 async function completed(id) {
   await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id)?.status), id, { timeout: 180_000 });
@@ -227,12 +229,12 @@ try {
   assert.equal(await fs.readFile(path.join(interrupted.workspace, 'saved-before-stop.txt'), 'utf8'), 'Keep this previous workspace after restart and upgrade.');
   check('stopped run restarts with previous workspace preserved');
 
-  const snapshot = (await boot()).state;
+  const snapshot = persistedState((await boot()).state);
   const workspaceHashes = await Promise.all([built.workspace, restarted.workspace, interrupted.workspace].map(async workspace => ({ workspace, hash: await treeHash(workspace) })));
   await page.screenshot({ path: path.join(output, 'before-upgrade.png') });
   await closeApp();
   await launch();
-  assert.deepEqual((await boot()).state, snapshot);
+  assert.deepEqual(persistedState((await boot()).state), snapshot);
   check('saved challenges and settings survive process restart');
   await closeApp();
 
@@ -244,7 +246,7 @@ try {
   assert.ok(b.some((value, i) => a.slice(0, i).every((previous, j) => previous === b[j]) && value > a[i]), 'Candidate B must have a newer numeric version than A.');
   assert.equal(result.candidateRegistration.DisplayVersion, result.candidate.version);
   const upgraded = await boot();
-  assert.deepEqual(upgraded.state, snapshot, 'Upgrade must preserve saved challenges, requirements, settings and run state.');
+  assert.deepEqual(persistedState(upgraded.state), snapshot, 'Upgrade must preserve saved challenges, requirements, settings and run state.');
   assert.equal(upgraded.buildInfo.version, result.candidate.version);
   assert.match(upgraded.buildInfo.revision, /^[a-f0-9]{40}$/);
   assert.ok(upgraded.buildInfo.sourceUrl.endsWith('/commit/' + upgraded.buildInfo.revision));
