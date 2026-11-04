@@ -1,0 +1,112 @@
+{
+  "title": "Synthetic PB4T departmental deconfliction",
+  "description": "Local-only fictional training coordination; bounded feasibility, explicit synthetic fatigue/recurrence, operator review. No operational integration or SFTRM validation.",
+  "components": [
+    {
+      "id": "inputs",
+      "label": "Synthetic week and policy workspace",
+      "description": "Fictional roster, operations, resources, duty history, recurrence and five departmental requests; versioned local drafts.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Five departmental agents (simulated)",
+      "description": "Engineering, Weapons, Combat Systems, Damage Control and Flight Operations deterministic proposal/response participants.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "domain",
+      "label": "Occurrence and hard-constraint engine",
+      "description": "Expand recurrence; enumerate qualified crew and slots; bounded cooperative backtracking; independent feasibility audit and fatigue blocks.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "board",
+      "label": "Weekly PB4T board and reports",
+      "description": "Editable board, negotiation log, conflict report, periodicity coverage and personnel loading heatmap.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Synthetic review and export",
+      "description": "Revision-bound deliberate acceptance, invalidation, local persistence and downloadable schedule/report bundle.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "tests",
+      "label": "Application domain verification",
+      "description": "Node tests execute the actual inline classic domain core extracted from index.html in a VM; independent interval and load oracle.",
+      "kind": "logic",
+      "files": [
+        "domain.test.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs",
+      "to": "agents",
+      "label": "Requests, preferred slots and qualifications"
+    },
+    {
+      "from": "inputs",
+      "to": "domain",
+      "label": "Versioned windows, history and synthetic policy"
+    },
+    {
+      "from": "agents",
+      "to": "domain",
+      "label": "Ranked proposals and explicit crew alternatives"
+    },
+    {
+      "from": "domain",
+      "to": "agents",
+      "label": "Rejected candidates and feasible counterproposals"
+    },
+    {
+      "from": "agents",
+      "to": "board",
+      "label": "Participant responses and negotiation events"
+    },
+    {
+      "from": "domain",
+      "to": "board",
+      "label": "Audited assignments, conflicts, loads and coverage"
+    },
+    {
+      "from": "board",
+      "to": "inputs",
+      "label": "Deliberate draft edits and policy revisions"
+    },
+    {
+      "from": "board",
+      "to": "review",
+      "label": "Validated committed revision for review"
+    },
+    {
+      "from": "review",
+      "to": "board",
+      "label": "Saved, pending or accepted state"
+    },
+    {
+      "from": "tests",
+      "to": "domain",
+      "label": "Actual core calls and independent boundary checks"
+    }
+  ]
+}

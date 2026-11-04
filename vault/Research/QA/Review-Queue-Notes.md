@@ -35,3 +35,13 @@ summary: "Three queued commits reviewed; assigned review adds reproduced recover
 5. [E/R] Preserve all existing regression assertions in the combined gate. b8cb505 includes the sixth tests/pi-sdk.test.mjs change that deliberately expects two requests for its bounded timeout retry. 4af1bd9 changes three wiring files beyond its original seven-file metadata. Update ownership/review scope to the actual diff, not only the stale task file list.
 
 [E] Existing full-suite receipts retain environment-limited failures. Focused fixture passes above do not prove native sandbox containment, browser acceptance, packaging or ten satisfactory real builds. The runtime owner confirmed that dev-3 submits its verifier through review and dev-2 owns preflight integration after dev-1 lands.
+
+## Replacement checkpoint at 16:53 EST
+
+[E, assigned reviewer report] e93a877 replaces the recovery defects in b8cb505. All 49 independent focused checks pass; seven added regressions fail against the parent and pass against the replacement. The remaining review hold is integration with the corrected mandatory verifier and registered-test evidence. Treat this as a dependency, not a fresh recovery implementation defect. Native and combined behavior still require validation.
+
+[E, source and staging inspection] The coordinator separated the verifier from bundled smoke work onto the 1d9eeee base. c3057e9 is the replacement under review. Earlier eadfea1 review had 28 passing independent verifier tests and no additional blocking defect in the three verifier files; its exact bundled commit was rejected for scope. Native containment remains distinct from those unit results.
+
+[E, exact diff] Stop replacement 44faa80 fixes a test whose failing assertion was thrown inside a callback where production cleanup catches exceptions. It now records signal attempts and asserts afterward for both PID reuse and lost ownership. No new native Stop success is inferred from the corrected test.
+
+[E, assigned review] 1cd427d still requires production wiring, broader local error-producer coverage and a Stop regression synchronized on actual readiness entry. Its existing helper checks alone do not establish the intended Start/Resume behavior.

@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenges 8, 10, 11, 12, 16, 20, 32 and 35 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
+summary: "Challenges 8, 10, 11, 12, 16, 20, 32, 35 and 37 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id37-fielding]] records NOT. The honest transition planner creates notes about missing prerequisites but does not field the starting tool. Actual tests contain meaningful assertions; the latest report shows 22 test passes, six browser passes and fourteen unverified requirements. It supersedes earlier download-failure language in the guide. All three requested screenshots were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id37-fielding]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id37-fielding]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id16-mordecai]] records NOT. The readable simulation implements changed winners and halt but omits user-defined onboarding and continuous mismatch quarantine. The guide discloses limits; requirementsMet true covers only three reduced criteria. Retained receipts report 15 tests and ten browser executions passing. All requested screenshots and actual tests were inspected; no fresh app run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id16-mordecai]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id16-mordecai]].
 

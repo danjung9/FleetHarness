@@ -70,6 +70,8 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 
 [E, pure parser probe at 16:37] The in-progress dev-5 deferral-basis check still accepts the rejected ID 12 baseline after only adding deferralBasis: real-data to its deferred entries. Called parseQualityPlan with the canonical packet and unchanged existing journeys. Result: accepted, with UC12-1 and DELIVERABLE12-1 both deferred and zero journeys. No file, generated app or live run changed. Sent this exact regression to the runtime owner: require evidence of the synthetic primary workflow, rather than only an allowed dependency label. This is a finding against a work in progress, not a landed regression.
 
+[E, same pure probe at 16:47] The updated working source now rejects that exact enum-only baseline because syntheticCoverage is missing. This closes the demonstrated structural loophole in the working diff. The broad test gate still failed and the experiment had not started at the latest checkpoint. Independent semantic judgment and narrative-only source coverage remain separate requirements.
+
 [E, main bridge] Main owns the live runtime and benchmark repairs. The dated restart and source findings above supersede the earlier draining status. [[Research/QA/Ten/Scoreboard]] remains the changing result record.
 
 [P, direct user reply at 16:27] Mukul explicitly selected Mukul as commit author. Main received the answer through the existing bridge. This resolves the conflicting divinedev111 report; existing unlanded commit identities and review SHAs must be reconciled without changing reviewed code.

@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Ten-challenge benchmark, round 101 at 1d9eeee: 1 of 5 finished, 1 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 101 at 1d9eeee: 2 of 5 finished, 2 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 101
@@ -17,3 +17,4 @@ summary: "Ten-challenge benchmark, round 101 at 1d9eeee: 1 of 5 finished, 1 pass
 | Challenge | Status | Min | Tests | Journeys | Criteria met / deferred / failed | Repair | Open errors | Tokens, uncached plus output | Bar | Judge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [[Research/QA/Ten/R101/id12-optask/final\|id12-optask]] | review | 12.6 | 31/31 | 12/12 | 6 / 1 / 0 | no | 0 | 281527 | pass | pending |
+| [[Research/QA/Ten/R101/id11-training/final\|id11-training]] | review | 15 | 20/20 | 20/20 | 7 / 0 / 0 | no | 0 | 285821 | pass | pending |
