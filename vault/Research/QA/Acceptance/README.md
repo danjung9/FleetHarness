@@ -1,6 +1,6 @@
 ---
 type: test-plan
-status: preparing
+status: reviewing
 owner: mukul
 updated: 2026-11-04
 summary: "Independent browser acceptance of the exact delivered synthetic ID 11 page, with incomplete discovery kept visible."
@@ -37,3 +37,5 @@ summary: "Independent browser acceptance of the exact delivered synthetic ID 11 
 [R] Keep automated findings beside [[Research/QA/Acceptance/Officer-Walkthrough-11]]. A person decides whether the exact accepted bytes and disclosed partial scope are useful. This process does not issue a schedule, certify policy compliance, publish an app or authorize a submission.
 
 [E, preparation check] Independent enumeration of only the supplied synthetic constraints found one answer each for V13, V14 and V16 and zero for V15, matching the table. This calculation did not import or execute candidate code, open a browser, or establish application acceptance.
+
+[E, implementation review] The checker stages regular eligible payload files under its evidence folder and compares source and staged manifests. Excluded hidden, credential-like or linked entries keep complete-payload coverage NOT CHECKED. A staged copy is the tested artifact; the original directory is not silently called accepted. Main must stop writers and retain the exact delivered-file scope.

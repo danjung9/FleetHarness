@@ -1,0 +1,10 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const root = __dirname;
+const core = fs.readFileSync(path.join(root, 'core.cjs'), 'utf8');
+const template = fs.readFileSync(path.join(root, 'index.template.html'), 'utf8');
+const marker = '/* INLINE_CORE */';
+if (template.split(marker).length !== 2 || /<\/script/i.test(core)) throw new Error('Unsafe or ambiguous inline source.');
+fs.writeFileSync(path.join(root, 'index.html'), template.replace(marker, () => core));
+console.log('Built index.html with exact core.cjs bytes.');

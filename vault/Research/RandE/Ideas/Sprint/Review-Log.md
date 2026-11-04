@@ -42,3 +42,13 @@ summary: "Local tool, friction and prior-work records awaiting central reconcili
 [E] Friction: broad source reads truncated, so smaller reads and structured selection of the six requirement fields supplied retained claims. Apple Git/Python emitted denied temporary-cache writes but completed reads; no workaround. The local `AGENTS.md` and an assumed workflow-tool filename were absent; the vault AGENTS and actual offline-tool file supplied the needed context. Central Sprint, Sessions and Team/Now writes remain prohibited by the current-folder boundary. This is staged disclosure and prior-work/friction evidence for authorized central transfer, not a completed central update. No bridge tools were available and no message was sent.
 
 [R] Authorized coordinator should reconcile the new web-service/public-source entries through `python3 tools/fh.py tool NAME TYPE USE PROVIDER`, transfer the local session completion to central Sessions and update Team/Now. No new run or approval should be inferred from this handoff.
+
+## ID 11 evidence correction, 2026-11-04
+
+[E, local document work] Reused command execution, zsh, ripgrep, system text readers, Python standard library and the patch interface disclosed above. No new tool, model selection, dataset, library or outside service was adopted. Runtime model version and cost are unavailable. No web research, repository execution, build, trial, contact or polling occurred.
+
+[E, prior-work review] Reused Plan/Review, Plan/Plan, Plan/Findings, historical Test-Results, Scalability-Evidence, Receipt-Review, Directive-qa's exact STOP-CHILD-01 result.json, Acceptance-11 and Acceptance-Reconcile-631849f. The existing card lacked the reported starts and bounded child Stop result; corrected it in place. README status remains consistent, so it was left unchanged.
+
+[E, verification] Card contains 318 whitespace-delimited words including required frontmatter, no long dashes, 12 resolving wikilinks and an existing exact Stop-receipt link. The linked six-gap heading exists. Claim review retained reported versus observed attribution, stock/modified and desktop/hosted/artifact distinctions, seven OPEN defects, NOT RUN task outcomes and unallocated conditional ID 36 work. No feature or build scope was added.
+
+[E, friction] Broad batched output truncated; smaller targeted reads supplied retained claims. Python emitted developer-cache write denials but completed document checks successfully. No workaround. Central Sprint, Sessions and Team/Now remain outside the write boundary. This local record and [[Research/RandE/Ideas/Sessions/2026-11-04-id11-evidence-correction]] stage disclosure/session/status transfer by an authorized coordinator; central logging is not claimed complete.
