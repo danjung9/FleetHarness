@@ -94,7 +94,12 @@ test('artifact bundles are canonical, bounded, and restore only authenticated by
   await fs.writeFile(path.join(workspace, 'secret.txt'), 'token-that-must-never-leave-runtime');
   await assert.rejects(collectArtifacts(workspace, runId, 1, ['token-that-must-never-leave-runtime']), /credential/);
   await fs.rm(path.join(workspace, 'secret.txt'));
-  await fs.symlink('/etc/passwd', path.join(workspace, 'outside'));
+  const outside = path.join(root, 'outside-files');
+  await fs.mkdir(outside); await fs.writeFile(path.join(outside, 'secret.txt'), 'outside-workspace');
+  // Junctions exercise the same link rejection without Windows administrator or
+  // Developer Mode privileges; the target contains a real out-of-workspace file.
+  await fs.symlink(process.platform === 'win32' ? outside : path.join(outside, 'secret.txt'),
+    path.join(workspace, 'outside'), process.platform === 'win32' ? 'junction' : 'file');
   await assert.rejects(collectArtifacts(workspace, runId, 1), /Symbolic links/);
 });
 
