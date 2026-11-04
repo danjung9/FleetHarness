@@ -66,6 +66,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Node 26.0.0 | runtime/tests | synthetic fixtures | Node.js | 2026-11-04 |
 | zsh 5.9 and local command/edit tools | tooling | changes/evidence | local runtime | 2026-11-04 |
 | Python 3.9.6 queried; process inspection denied | tooling | environment checks | Apple | 2026-11-04 |
+| Shell and patch interfaces, versions unavailable | workspace tools | evidence records | session environment | 2026-11-04 |
 
 ## Data and sources
 

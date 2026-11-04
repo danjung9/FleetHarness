@@ -140,6 +140,8 @@ summary: "Pinned static findings with independently reported runtime confirmatio
 
 ## Unified-interface findings at 631849f
 
+[E, later pinned source at d0f4c69] These three entries retain their original reproduction scope. U1's Home catalog-search surface has been removed by redesign. U2 still has no direct Stop on Home, but recent builds now display Building and provide a shortcut. U3's accessible name now includes its visible title in source. The new Home smoke fails before targeted closure checks. See [[Research/QA/Auto/Review-d0f4c69]]; none is silently promoted to a fresh runtime pass.
+
 ### U1. Medium: a visible card title is not searchable
 
 - [E] `src/Home.tsx:35` searches catalog ID, formal title, summary and category, while line 65 displays a friendly title from line 15. The actual catalog text for ID 12 at `harness/catalog.ts:138` does not contain its visible phrase, Message to mission timeline.

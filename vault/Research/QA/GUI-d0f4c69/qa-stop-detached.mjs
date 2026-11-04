@@ -51,9 +51,9 @@ function stopChecks(start, end, beforeRequests, afterRequests, msToStopped, stop
 function sameIdentity(expected, current) {
   return !!(expected && current?.present && current.owned && expected.pid === current.pid && expected.started === current.started && expected.commandSha256 === current.commandSha256 && expected.pgid === current.pgid && expected.session === current.session);
 }
-const repo = path.resolve(process.argv[2] || '');
-const outputBase = path.resolve(process.argv[3] || '');
 if (!process.argv[2] || !process.argv[3]) throw new Error('Supply the pinned repository and an output directory.');
+const repo = await fs.realpath(path.resolve(process.argv[2]));
+const outputBase = await fs.realpath(path.resolve(process.argv[3]));
 if (!['darwin', 'linux'].includes(process.platform)) throw new Error('This POSIX shell test does not cover Windows.');
 assert.equal(repo, '/Users/mukul/Documents/CDAO/fh-org/gui-d0f4c69', 'Use only the assigned GUI checkout.');
 assert.ok(outputBase !== repo && !outputBase.startsWith(repo + path.sep), 'Evidence must remain outside the repo.');
@@ -105,7 +105,7 @@ function processState(record) {
     const columns = ps.split(/\s+/);
     if (columns.length < 11 || Number(columns[0]) !== record.pid) throw new Error('Incomplete process identity.');
     // Inspect only the recorded PID. Validate nonce/path but retain no arguments.
-    const command = execFileSync('/bin/ps', ['-p', String(record.pid), '-o', 'command='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 1000 }).trim();
+    const command = execFileSync('/bin/ps', ['-ww', '-p', String(record.pid), '-o', 'command='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 1000 }).trim();
     const workerName = record.role === 'child' ? 'child.mjs' : 'parent.mjs';
     return { pid: record.pid, present: true, ppid: Number(columns[1]), pgid: Number(columns[2]), session: columns[3], started: columns.slice(4, 9).join(' '), stat: columns[9], comm: columns.slice(10).join(' '), commandSha256: digest(command), owned: command.includes(nonce) && command.includes(path.join(control, workerName)) };
   } catch { return { pid: record.pid, present: exists(record.pid), psUnavailable: true }; }
@@ -168,6 +168,8 @@ try {
     const bytes = await fs.readFile(path.join(repo, 'node_modules', name, 'package.json'));
     result.provenance.installedPackages[name] = { version: JSON.parse(bytes).version, packageJsonSha256: digest(bytes) };
   }
+  result.provenance.sdkStopSources = {};
+  for (const name of ['dist/core/tools/bash.js', 'dist/utils/shell.js']) result.provenance.sdkStopSources[name] = digest(await fs.readFile(path.join(repo, 'node_modules/@earendil-works/pi-coding-agent', name)));
   const { _electron: electron } = createRequire(path.join(repo, 'package.json'))('playwright');
 
   // Both workers have independent referenced deadlines. Parent exit never cleans
@@ -319,6 +321,9 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   await assert.rejects(fs.access(cleanupFile), { code: 'ENOENT' }, 'Cleanup must not precede observation.');
   for (const name of ['parent', 'child']) await assert.rejects(fs.access(path.join(control, name + '.exit.json')), { code: 'ENOENT' }, 'A worker self-exit cannot establish Stop.');
   for (const sample of [result.observationStart, result.observationEnd]) for (const key of ['parentProcess', 'childProcess', 'shellProcess']) assert.ok(!sample[key].psUnavailable, 'Process inspection failure is inconclusive.');
+  for (const sample of [result.observationStart, result.observationEnd]) for (const [key, identity] of [['parentProcess', parentIdentity], ['childProcess', childIdentity], ['shellProcess', shellIdentity]]) {
+    if (sample[key].present) assert.ok(sameIdentity(identity, sample[key]), 'A sampled PID changed identity; inconclusive.');
+  }
   result.checks = stopChecks(result.observationStart, result.observationEnd, result.beforeStop.requests, requests.length, result.msToStopped, result.limits.stopStatusMs);
   result.detachedHeartbeatAdvanced = result.observationEnd.childHeartbeat.count > result.observationStart.childHeartbeat.count;
   result.detachedIdentityStillPresent = sameIdentity(childIdentity, result.observationEnd.childProcess);
@@ -336,7 +341,7 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   // consumed only by our two synthetic workers; do not signal unrelated PIDs.
   cleanupStarted = true;
   result.cleanupStartedAt = Date.now();
-  try { await fs.writeFile(cleanupFile, nonce); } catch {}
+  try { await fs.writeFile(cleanupFile, nonce); } catch { result.cleanupMarkerError = true; }
   // Recover partial startup records without treating unknown startup as cleanup success.
   for (const name of ['parent', 'child']) {
     try {
@@ -384,8 +389,8 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   }
   result.requests = requests;
   result.finishedAt = new Date().toISOString();
-  result.cleanupSeparateFromVerdict = cleanupStarted && result.verdictRecordedBeforeCleanup === true;
-  result.cleanupOutcome = result.cleanupWorkersAbsent === true && !result.appCloseError && !result.controlEvidenceError ? 'PASS' : 'UNCONFIRMED';
+  result.cleanupSeparateFromVerdict = cleanupStarted && result.verdictRecordedBeforeCleanup === true && result.verdictRecordedAt <= result.cleanupStartedAt;
+  result.cleanupOutcome = result.cleanupWorkersAbsent === true && !result.appCloseError && !result.controlEvidenceError && !result.cleanupMarkerError ? 'PASS' : 'UNCONFIRMED';
   if (result.cleanupOutcome !== 'PASS') {
     result.retainedTemporaryRoot = root;
     if (result.result === 'PASS') result.result = 'ERROR';
