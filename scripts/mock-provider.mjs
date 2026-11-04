@@ -56,11 +56,14 @@ export async function startFixtureProvider() {
       extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'generated'));
     }
     const calls = [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
+    const judgment = body.tools?.some(tool => tool.function?.name === 'judge_read');
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
     const base = { id: 'chatcmpl-' + randomUUID(), object: 'chat.completion.chunk', created: Math.floor(Date.now()/1000), model:'fixture-model' };
     function send(delta, finish_reason = null) { res.write('data: ' + JSON.stringify({ ...base, choices: [{index:0, delta, finish_reason}] }) + '\n\n'); }
     send({role:'assistant', content:''});
-    if (calls.length) {
+    if (judgment) {
+      send({ content: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) }); send({}, 'stop');
+    } else if (calls.length) {
       send({tool_calls:calls.map((call, index) => ({index,id:'call_'+randomUUID().replaceAll('-',''),type:'function',function:call}))});
       send({}, 'tool_calls');
     } else { send({content:'Local fixture stage completed. No live model was called.'}); send({}, 'stop'); }
