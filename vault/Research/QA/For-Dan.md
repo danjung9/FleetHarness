@@ -25,3 +25,9 @@ summary: "Frontend defects seen in the running app at 631849f, for Dan to decide
 - [E, `b8cb505`, not landed yet] A failed build will be able to resume from its last good stage through `resumeRun` in IPC and preload. It has no button yet, and a Resume button on a failed build is yours if you want it.
 - [E, `d402b67`, not landed yet] On an event API key run, the start dialog, readiness text and model settings still say ChatGPT subscription allowance. That wording should change when the account is an API key.
 - [E, automatic QA at `1d9eeee`] `smoke-electron` and `smoke-norfolk` fail. Cause not yet known; see [[Research/QA/Auto/1d9eeee]].
+
+## 2026-11-04 17:41 EST: use `git pull origin mvp`
+
+- [E] A plain `git pull` fetches every branch, including `mukul-dev`, which carried about 272 MB of test screenshots and browser traces. Those files are now out of the branch's latest commit and new ones are no longer added, but they stay in its history. `git pull origin mvp` fetches only your branch.
+- [E] `c4f6ac9` made every real build on a Mac that got past tests end as failed, because a `ps` flag this Mac rejects made process cleanup fail. `f5fec32` fixes it. Pull before you push: org commits now land on `mvp` directly.
+- [E] Known failure on `mvp`: tests/pi-backend.test.mjs "the complete workflow advances in order" gets an extra `bash` tool. It fails before and after `f5fec32` and is being fixed.

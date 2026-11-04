@@ -58,3 +58,8 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:39 Astra audit-lifecycle started: Backend audit: run lifecycle and recovery.
 - 17:39 Astra audit-engines started: Backend audit: engines and safety.
 - 17:39 Astra audit-pipeline started: Backend audit: pipeline results.
+- 17:30 Found `mukul-dev` carrying 328 MB of test evidence, which a plain pull fetches. Trimmed to 15 MB at 17:33; new evidence stays out. It remains in history.
+- 17:35 Mukul faded the council and stopped the benchmark. Order: backend fully done and audited, then benchmark.
+- 17:39 Astra agents started: one fixer and three auditors (run lifecycle, engines and safety, pipeline verdicts).
+- 17:41 `f5fec32` landed on `mvp`: real builds on a Mac no longer end as failed from a rejected `ps` flag. Unit tests 141 of 142; the one failure also fails on `0da7ce9` and is with the fixer.
+- 17:41 Team branch: mvp now f5fec32
