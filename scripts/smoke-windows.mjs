@@ -38,7 +38,7 @@ const stateDir = path.join(root, 'state');
 const piDir = path.join(root, 'pi');
 const binary = path.join(installDir, 'AppYard.exe');
 const result = { passed: false, platform: process.platform, arch: process.arch, installers, checks: [], root };
-let app, page, generated, generatedData, fixture, installed = false, uninstallAttempted = false;
+let app, page, generated, generatedData, fixture, installed = false, uninstallAttempted = false, stateCreated = false;
 const rendererErrors = [];
 const check = name => { result.checks.push(name); console.log('PASS ' + name); };
 const childEnv = { ...process.env, FLEET_USER_DATA: stateDir, PI_CODING_AGENT_DIR: piDir };
@@ -63,7 +63,10 @@ async function command(executable, args, options = {}) {
   });
 }
 async function registration() {
-  const script = "$ErrorActionPreference='Stop'; $roots=@('HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'); $entries=@(Get-ItemProperty -Path $roots -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'AppYard' -or $_.DisplayName -eq 'fleetharness' } | Select-Object DisplayName,DisplayVersion,InstallLocation,UninstallString,PSPath); ConvertTo-Json -InputObject $entries -Compress";
+  // Electron-builder UUIDv5 for appId dev.fleetharness.desktop, using its
+  // 50e065bc-3134-11e6-9bab-38c9862bdaf3 namespace. Match identity first, and
+  // legacy display names too: the default uninstall name includes the version.
+  const script = "$ErrorActionPreference='Stop'; $roots=@('HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKCU:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'); $entries=@(Get-ItemProperty -Path $roots -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -eq '0a4ae40f-80ab-5617-ae8f-aa83a5ddafeb' -or $_.DisplayName -match '^(AppYard|fleetharness)( [0-9]+(\\.[0-9]+){1,3}([-+][0-9A-Za-z.-]+)?)?$' } | Select-Object DisplayName,DisplayVersion,InstallLocation,UninstallString,PSPath); ConvertTo-Json -InputObject $entries -Compress";
   return JSON.parse(await command('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script]));
 }
 async function install(installer) {
@@ -84,6 +87,7 @@ async function launch() {
   page = await app.firstWindow();
   page.on('pageerror', error => rendererErrors.push(error.message));
   await page.locator('.app-shell').waitFor({ timeout: 60_000 });
+  stateCreated = true;
   await app.evaluate(({ shell }) => { shell.showItemInFolder = () => {}; });
   const identity = await app.evaluate(({ app }) => ({ packaged: app.isPackaged, version: app.getVersion(), name: app.getName(), userData: app.getPath('userData'), appData: app.getPath('appData'), appPath: app.getAppPath() }));
   assert.equal(identity.packaged, true);
@@ -168,8 +172,8 @@ async function uninstall() {
   await fs.access(uninstaller);
   await command(uninstaller, ['/S', '/currentuser', '_?=' + installDir], { windowsVerbatimArguments: true });
   assert.equal((await registration()).length, 0, 'The temporary install registration must be removed.');
-  await fs.access(path.join(stateDir, 'state.json'));
   installed = false;
+  if (stateCreated) await fs.access(path.join(stateDir, 'state.json'));
 }
 
 try {
@@ -182,6 +186,7 @@ try {
   } } }));
   result.previousRegistration = await install(installers.previous);
   result.previous = await launch();
+  result.previous.buildInfo = (await boot()).buildInfo ?? null;
   check('installed A starts from ASAR with isolated saved-state root');
   const beforeSettings = await boot();
   await assert.rejects(page.evaluate(id => window.fleetHarness.startRun(id), beforeSettings.state.projects[0].id), /Choose a model/);

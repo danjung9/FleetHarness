@@ -18,6 +18,8 @@ jobs:
     env:
       # The smoke harness uses only its local fixture provider.
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # Bundled runtimes are large; balanced compression keeps per-commit builds practical.
+      ELECTRON_BUILDER_COMPRESSION_LEVEL: '5'
     steps:
       - uses: actions/checkout@v4
         with:
