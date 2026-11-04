@@ -16,9 +16,13 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
+import { runPreflight, probeVerificationSandbox, type PreflightOptions } from './preflight.js';
+import { plainError, recordProjectError } from './plain-errors.js';
 
 type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
 interface BackendOptions {
+  // Trusted host/test probes only; renderer settings cannot disable readiness checks.
+  preflight?: Pick<PreflightOptions, 'browser' | 'sandbox' | 'freeBytes'>;
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
@@ -49,9 +53,10 @@ export class FleetBackend {
   private async finish(p: Project, run: ActiveRun) {
     try { await this.changed(p); }
     catch (error) {
-      p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
+      const previous = p.error;
+      recordProjectError(p, error, detail => this.log(p, 'intake', 'error', 'Could not save run state: ' + detail));
+      p.error = [previous, p.error].filter(Boolean).join('\n');
       if (p.status !== 'stopped') p.status = 'failed';
-      this.log(p, 'intake', 'error', p.error);
     } finally {
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
@@ -62,20 +67,37 @@ export class FleetBackend {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
-    if (backend === 'codex') {
-      await this.options.codex?.refresh();
-      if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
-    } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
-    const route = backend === 'codex' ? this.options.codex?.route : undefined;
-    // Authentication can await network I/O; recheck capacity before reserving the run.
-    if (this.active.has(id)) throw new Error('This challenge already has an active run.');
-    if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
+    const settings = { ...this.store.state.settings };
+    const { backend = 'pi' } = settings;
+    let { provider, model: modelId } = settings;
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
     const run: ActiveRun = { backend, controller: new AbortController(), done, resolve };
     this.active.set(id, run);
     try {
+      p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined;
+      const selected = await runPreflight({
+        root: this.store.root, settings, signal: run.controller.signal,
+        engine: async signal => {
+          if (backend === 'codex') {
+            await this.options.codex?.refresh(); signal.throwIfAborted();
+            return { connected: this.options.codex?.account.status === 'connected' && provider === 'chatgpt', models: this.options.codex?.models ?? [] };
+          }
+          const connected = this.runtime.hasConfiguredAuth(provider);
+          const chosen = modelId ? this.runtime.getModel(provider, modelId) : undefined;
+          const models = chosen ? [{ id: modelId, name: modelId, provider, backend: 'pi' as const, configured: connected }]
+            : this.runtime.getModels().map(model => ({ id: model.id, name: model.name, provider: model.provider, backend: 'pi' as const, configured: this.runtime.hasConfiguredAuth(model.provider) }));
+          return { connected, models };
+        },
+        browser: this.options.preflight?.browser,
+        sandbox: this.options.preflight?.sandbox ?? (signal => probeVerificationSandbox({ root: this.store.root, executable: this.executable, signal })),
+        freeBytes: this.options.preflight?.freeBytes
+      });
+      this.check(run);
+      provider = selected.provider; modelId = selected.model;
+      const current = this.store.state.settings;
+      if (!settings.model && current.model === settings.model && current.provider === settings.provider && (current.backend ?? 'pi') === backend) current.model = modelId;
+      const route = backend === 'codex' ? this.options.codex?.route : undefined;
       p.runId = randomUUID();
       p.workspace = path.join(this.store.root, 'workspaces', p.id, p.runId);
       p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
@@ -105,10 +127,10 @@ export class FleetBackend {
       this.check(run);
       void this.execute(p, run, provider, modelId);
     } catch (error) {
-      p.status = run.controller.signal.aborted ? 'stopped' : 'failed'; p.error = error instanceof Error ? error.message : String(error);
+      p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
+      recordProjectError(p, error, detail => this.log(p, 'intake', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      this.log(p, 'intake', 'error', p.error);
-      await this.finish(p, run); throw error;
+      await this.finish(p, run); throw new Error(plainError(error).message, { cause: error });
     }
   }
   private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[] }) {
@@ -253,9 +275,10 @@ export class FleetBackend {
       this.check(run);
       p.status = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
-      p.error = error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
+      p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';
-      p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; }); this.log(p, stage, 'error', p.error);
+      p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
+      recordProjectError(p, error, detail => this.log(p, stage, 'error', detail));
     } finally { await this.finish(p, run); }
   }
   async stop(id: string) {

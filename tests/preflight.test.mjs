@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { Store, newProject } from '../dist-electron/electron/storage.js';
+import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -15,6 +17,138 @@ const ready = extra => ({
   ...extra
 });
 const start = async (options, callModel) => { const selection = await runPreflight(options); callModel(selection); return selection; };
+
+// Production Start acceptance, with synthetic connection and inference boundaries.
+const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
+const readyProbes = { browser: async () => {}, sandbox: async () => {}, freeBytes: async () => 1024 ** 3 };
+async function backendFixture(t, { backend = 'pi', chosen = 'gpt-6.1-sol', probes = {}, models = ['small-model', 'gpt-6.1-sol'], resourcesRoot = path.resolve('.') } = {}) {
+  const root = await fs.mkdtemp(path.resolve('.tmp/preflight-start-'));
+  const store = new Store(root); await store.init();
+  const project = newProject({ title: 'Synthetic startup', description: 'Synthetic startup regression only.', criteria: [] });
+  const provider = backend === 'codex' ? 'chatgpt' : 'openai';
+  store.state.projects = [project]; store.state.settings = { backend, provider, model: chosen, rememberKey: false };
+  let calls = 0;
+  const create = async () => { calls++; throw new Error('Synthetic SDK session fault'); };
+  const codex = { home: path.join(root, 'codex'), account: { status: 'connected' },
+    route: { provider: 'openai', label: 'Event API key' }, async refresh() {},
+    models: models.map(id => ({ id, name: id, backend, provider, configured: true })) };
+  const instance = new FleetBackend(store, process.execPath, () => {}, resourcesRoot, {
+    codex, preflight: { ...readyProbes, ...probes }, createSession: create, createCodexSession: create
+  });
+  instance.runtime = { hasConfiguredAuth: () => true,
+    getModel: (p, id) => p === provider && models.includes(id) ? { id, provider: p } : undefined,
+    getModels: () => models.map(id => ({ id, name: id, provider })) };
+  t.after(async () => { await instance.stopAll(); await fs.rm(root, { recursive: true, force: true }); });
+  return { root, store, project, backend: instance, codex, calls: () => calls,
+    settle: () => instance.active.get(project.id)?.done,
+    errors: () => project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n') };
+}
+
+for (const backend of ['pi', 'codex']) {
+  for (const [probe, instruction] of [['browser', /install Google Chrome/], ['sandbox', /restart AppYard/]]) {
+    test(`production ${backend} Start refuses ${probe} within two seconds before inference`, async t => {
+      let entered = 0;
+      const h = await backendFixture(t, { backend, probes: { [probe]: async () => { entered++; throw new Error('Synthetic ' + probe + ' fault'); } } });
+      const began = performance.now();
+      await assert.rejects(h.backend.start(h.project.id), instruction);
+      assert.ok(performance.now() - began < 2000);
+      assert.equal(entered, 1); assert.equal(h.calls(), 0);
+      assert.equal(h.project.status, 'failed'); assert.match(h.project.error, instruction);
+      assert.doesNotMatch(h.project.error, /Synthetic|SDK|session|stage/);
+      assert.match(h.errors(), new RegExp('Synthetic ' + probe + ' fault'));
+      assert.equal(h.backend.active.size, 0);
+      const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects[0];
+      assert.equal(saved.error, h.project.error); assert.equal(saved.status, 'failed');
+    });
+  }
+  for (const chosen of ['', 'small-model']) {
+    test(`production ${backend} Start ${chosen ? 'preserves an explicit model' : 'persists an available default'} and hides external errors`, async t => {
+      const h = await backendFixture(t, { backend, chosen });
+      await h.backend.start(h.project.id); await h.settle();
+      const expected = chosen || 'gpt-6.1-sol';
+      assert.equal(h.calls(), 1); assert.equal(h.store.state.settings.model, expected);
+      assert.equal(h.project.model, 'openai/' + expected);
+      assert.doesNotMatch(h.project.error, /Synthetic|SDK|session|stage/); assert.match(h.project.error, /activity log/);
+      assert.match(h.errors(), /Synthetic SDK session fault/);
+      const reopened = new Store(h.root); await reopened.init();
+      assert.equal(reopened.state.settings.model, expected);
+      assert.equal(reopened.state.projects[0].error, h.project.error);
+      assert.equal(h.backend.active.size, 0);
+    });
+  }
+}
+
+test('production Start refuses a hanging readiness probe within the shared budget', async t => {
+  let entered = false, signal;
+  const h = await backendFixture(t, { probes: { sandbox: value => { entered = true; signal = value; return new Promise(() => {}); } } });
+  const began = performance.now();
+  await assert.rejects(h.backend.start(h.project.id), /restart AppYard/);
+  assert.ok(performance.now() - began < 2000); assert.equal(entered, true);
+  assert.equal(signal.aborted, true); assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+});
+
+test('production Stop waits for actual probe entry, aborts it and releases the run slot', async t => {
+  const entered = deferred(); let signal, aborted = 0;
+  const h = await backendFixture(t, { probes: { sandbox: value => {
+    signal = value; value.addEventListener('abort', () => aborted++, { once: true }); entered.resolve();
+    return new Promise(() => {});
+  } } });
+  const pending = h.backend.start(h.project.id).catch(error => error);
+  let timer;
+  try {
+    await Promise.race([entered.promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Start never entered the readiness probe')), 1000); })]);
+    assert.equal(h.backend.active.size, 1); assert.equal(signal.aborted, false);
+    await h.backend.stop(h.project.id);
+    const error = await pending;
+    assert.match(error.message, /build was stopped/); assert.equal(signal.aborted, true); assert.equal(aborted, 1);
+    assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0); assert.equal(h.project.status, 'stopped');
+    const again = h.backend.start(h.project.id).catch(error => error);
+    await h.backend.stop(h.project.id); await again;
+    assert.equal(h.backend.active.size, 0);
+  } finally { clearTimeout(timer); await h.backend.stopAll(); await pending; }
+});
+
+test('production Start refuses unavailable explicit models and defaults only to advertised models', async t => {
+  const invalid = await backendFixture(t, { chosen: 'missing-model' });
+  await assert.rejects(invalid.backend.start(invalid.project.id), /selected build option is unavailable/);
+  assert.equal(invalid.calls(), 0); assert.equal(invalid.store.state.settings.model, 'missing-model');
+  const fallback = await backendFixture(t, { chosen: '', models: ['available-only'] });
+  await fallback.backend.start(fallback.project.id); await fallback.settle();
+  assert.equal(fallback.store.state.settings.model, 'available-only');
+});
+
+test('production Start hides preparation and save failures while retaining raw diagnostics', async t => {
+  const bad = await backendFixture(t, { resourcesRoot: path.resolve('.tmp/missing-preflight-resources') });
+  await assert.rejects(bad.backend.start(bad.project.id), /required build files are missing/);
+  assert.equal(bad.calls(), 0); assert.match(bad.errors(), /ENOENT/);
+  const save = await backendFixture(t);
+  save.store.save = async () => { throw new Error('EACCES Synthetic save fault'); };
+  await assert.rejects(save.backend.start(save.project.id), /permissions/);
+  assert.equal(save.calls(), 0); assert.match(save.project.error, /permissions/);
+  assert.doesNotMatch(save.project.error, /EACCES|Synthetic/); assert.match(save.errors(), /Synthetic save fault/);
+  assert.equal(save.backend.active.size, 0);
+});
+
+test('production Start does not overwrite a newer model selection while readiness awaits', async t => {
+  const entered = deferred(), release = deferred();
+  const h = await backendFixture(t, { chosen: '', probes: { sandbox: async () => { entered.resolve(); await release.promise; } } });
+  const pending = h.backend.start(h.project.id);
+  await entered.promise;
+  h.store.state.settings.model = 'small-model';
+  release.resolve(); await pending; await h.settle();
+  assert.equal(h.project.model, 'openai/gpt-6.1-sol');
+  assert.equal(h.store.state.settings.model, 'small-model');
+});
+
+test('production Stop cancels a pending connection check before browser or model work', async t => {
+  const entered = deferred(); let browsers = 0;
+  const h = await backendFixture(t, { backend: 'codex', probes: { browser: async () => { browsers++; } } });
+  h.codex.refresh = () => { entered.resolve(); return new Promise(() => {}); };
+  const pending = h.backend.start(h.project.id).catch(error => error);
+  await entered.promise; await h.backend.stop(h.project.id);
+  assert.match((await pending).message, /build was stopped/);
+  assert.equal(browsers, 0); assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+});
 
 for (const [check, code, instruction] of [
   ['browser', 'browser', /install Google Chrome/i],

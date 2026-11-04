@@ -10,6 +10,14 @@ import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.m
 
 const resourcesRoot = path.resolve('.');
 const never = () => new Promise(() => {});
+
+// Public errors are plain instructions; the original diagnostics remain testable in the log.
+function rawError(project) {
+  assert.equal(typeof project.error, 'string');
+  assert.doesNotMatch(project.error, /\b(stage|session|SDK|Codex turn|thread|artifact)\b/i);
+  return project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n');
+}
+
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const stageOf = prompt => prompt.includes('The independent test run failed') ? 'repair'
   : prompt.includes('You are the intake agent') ? 'intake'
@@ -37,6 +45,7 @@ async function harness(t, options = {}) {
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
   const project = store.state.projects[0], sessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
+    preflight: { browser: async () => {}, sandbox: async () => {}, freeBytes: async () => 1024 ** 3 },
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
@@ -160,7 +169,7 @@ test('builder cannot weaken a planned browser expectation', { timeout: 10000 }, 
     return true;
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /changed after planning/);
+  assert.match(rawError(h.project), /changed after planning/);
   assert.equal(h.project.report, undefined);
   assert.ok(!h.sessions.some(session => session.stage === 'verify'));
 });
@@ -175,7 +184,7 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
   } });
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 2);
-  assert.match(h.project.error, /quality contract/);
+  assert.match(rawError(h.project), /quality contract/);
   assert.ok(!h.sessions.some(session => session.stage === 'build'));
 });
 
@@ -186,14 +195,14 @@ for (const brokenRepair of [false, true]) {
     assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair']);
     assert.equal(reportPassed(h.project.report), !brokenRepair);
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
-    if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
+    if (brokenRepair) { assert.match(rawError(h.project), /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
 for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
   test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: 10000 }, async t => {
     const h = await harness(t, { agentLimits: { idleMs: 200, timeoutMs: 3000 }, scenario: ({ stage }) => stage === blockedStage ? never() : false });
-    await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /no progress/);
+    await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /no progress/);
     assert.equal(h.sessions.at(-1).stage, blockedStage); assert.equal(h.sessions.at(-1).aborts, 1);
     assert.equal(h.project.report, undefined);
   });
@@ -202,7 +211,7 @@ for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
     const entered = deferred();
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === blockedStage) { entered.resolve(); return never(); } return false; } });
     await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
-    await h.assertSettled('stopped'); assert.match(h.project.error, /stopped by you/);
+    await h.assertSettled('stopped'); assert.match(rawError(h.project), /stopped by you/);
     assert.equal(h.sessions.at(-1).aborts, 1);
   });
 }
@@ -221,7 +230,7 @@ test('an agent that keeps omitting artifacts cannot advance or loop forever', { 
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.sessions.length, 3); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
-  assert.match(h.project.error, /after one completion attempt.*plan\.md/);
+  assert.match(rawError(h.project), /after one completion attempt.*plan\.md/);
 });
 
 test('empty files and directories cannot satisfy stage outputs', { timeout: 10000 }, async t => {
@@ -229,7 +238,7 @@ test('empty files and directories cannot satisfy stage outputs', { timeout: 1000
     if (stage !== 'plan') return false;
     await fs.writeFile(path.join(cwd, 'plan.md'), ''); await fs.mkdir(path.join(cwd, 'test-matrix.md'), { recursive: true }); return true;
   } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /plan\.md.*test-matrix\.md/);
+  await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /plan\.md.*test-matrix\.md/);
 });
 
 test('missing application tests are recovered before verification starts', { timeout: 10000 }, async t => {
@@ -276,7 +285,7 @@ for (const recover of [true, false]) {
     assert.equal(attempts, 2);
     assert.match(h.sessions.find(s => s.stage === 'build').prompts[2], /README.md/);
     if (!recover) {
-      assert.match(h.project.error, /after one completion attempt.*README.md/);
+      assert.match(rawError(h.project), /after one completion attempt.*README.md/);
       assert.equal(h.project.report, undefined);
       assert.equal(h.project.stages.find(s => s.id === 'verify').status, 'queued');
     }
@@ -313,15 +322,16 @@ for (const target of ['requirements.md', '.fleet/README.md']) {
       if (stage === 'plan') await fs.appendFile(path.join(cwd, target), '\nChanged by agent'); return false;
     } });
     await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 3);
-    assert.match(h.project.error, /requirements changed|integrity failed/);
+    assert.match(rawError(h.project), /requirements changed|integrity failed/);
   });
 }
 
 test('session initialization errors and preparation errors release capacity', { timeout: 10000 }, async t => {
   const h = await harness(t, { createSession: () => { throw new Error('Cannot initialize session'); } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /Cannot initialize/);
+  await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /Cannot initialize/);
   const bad = await harness(t, { resourcesRoot: path.join(h.root, 'missing-resources') });
-  await assert.rejects(bad.backend.start(bad.project.id), /ENOENT/); await bad.assertSettled('failed');
+  await assert.rejects(bad.backend.start(bad.project.id), /required build files are missing/); await bad.assertSettled('failed');
+  assert.match(rawError(bad.project), /ENOENT/);
 });
 
 test('stopped runs can restart in fresh workspaces and late old events cannot corrupt the new run', { timeout: 10000 }, async t => {
@@ -341,7 +351,7 @@ test('Stop during workspace preparation clears prior approval and test evidence'
   const h = await harness(t);
   h.project.status = 'approved'; h.project.approvedAt = 'previous approval';
   h.project.report = { passed: 5 }; h.project.exportedTo = 'previous export';
-  const rejected = assert.rejects(h.backend.start(h.project.id), /stopped by you/);
+  const rejected = assert.rejects(h.backend.start(h.project.id), /build was stopped/);
   await h.backend.stop(h.project.id); await rejected; await h.assertSettled('stopped');
   assert.equal(h.project.report, undefined); assert.equal(h.project.approvedAt, undefined);
   assert.equal(h.project.exportedTo, undefined); assert.equal(h.sessions.length, 0);

@@ -100,6 +100,7 @@ test('factory records the observed Codex account route while preserving the Chat
     t.after(() => codex.dispose());
     store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
     const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { codex,
+      preflight: { browser: async () => {}, sandbox: async () => {}, freeBytes: async () => 1024 ** 3 },
       createSession: () => { throw new Error('Pi must not run'); },
       createCodexSession: async () => ({ subscribe() { return () => {}; }, async prompt() {}, async abort() {}, dispose() {} })
     });
@@ -235,8 +236,9 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
   const root = await temp(t), store = new Store(root); await store.init();
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
   const project = store.state.projects[0], phases = [];
-  const codex = { home: path.join(root, 'codex'), models: [{ id: 'fixture-codex', configured: true }], async refresh() {} };
+  const codex = { home: path.join(root, 'codex'), account: { status: 'connected' }, models: [{ id: 'fixture-codex', name: 'Fixture', backend: 'codex', provider: 'chatgpt', configured: true }], async refresh() {} };
   const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { codex,
+    preflight: { browser: async () => {}, sandbox: async () => {}, freeBytes: async () => 1024 ** 3 },
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
       const rpc = new FakeRpc(); rpc.signedIn = true;

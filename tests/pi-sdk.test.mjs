@@ -9,6 +9,13 @@ import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store, sourceHash } from '../dist-electron/electron/storage.js';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
 
+// Public errors are plain instructions; the original diagnostics remain testable in the log.
+function rawError(project) {
+  assert.equal(typeof project.error, 'string');
+  assert.doesNotMatch(project.error, /\b(stage|session|SDK|Codex turn|thread|artifact)\b/i);
+  return project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n');
+}
+
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 async function provider(t, respond) {
   const entered = deferred(), requests = [];
@@ -29,7 +36,7 @@ async function backend(t, baseUrl, limits = { idleMs: 10000, timeoutMs: 20000 })
   runtime.registerProvider('fleet-fixture', { baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
     models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] });
   store.state.settings = { provider: 'fleet-fixture', model: 'fixture-model', rememberKey: false };
-  const pi = new PiBackend(store, process.execPath, () => {}, path.resolve('.'), { agentLimits: limits }); pi.runtime = runtime;
+  const pi = new PiBackend(store, process.execPath, () => {}, path.resolve('.'), { agentLimits: limits, preflight: { browser: async () => {}, sandbox: async () => {}, freeBytes: async () => 1024 ** 3 } }); pi.runtime = runtime;
   t.after(async () => { await pi.stopAll(); await fs.rm(root, { recursive: true, force: true }); });
   return { pi, store, root, project: store.state.projects[0], settle: async () => { await pi.active.get(store.state.projects[0].id)?.done; } };
 }
@@ -58,7 +65,7 @@ test('real Pi provider that never responds is bounded by the inactivity watchdog
   const h = await backend(t, stalled.baseUrl, { idleMs: 500, timeoutMs: 3000 });
   await h.pi.start(h.project.id); await h.settle();
   assert.equal(stalled.requests.length, 1); assert.equal(h.project.status, 'failed');
-  assert.match(h.project.error, /no progress/); assert.equal(h.pi.active.size, 0);
+  assert.match(rawError(h.project), /no progress/); assert.equal(h.pi.active.size, 0);
   assert.equal(h.project.stages.some(s => s.status === 'active'), false);
 });
 
@@ -73,6 +80,6 @@ test('Stop cancels a real stalled provider and leaves a persisted stopped run', 
 test('a permanent real provider error stops before implementation without false completion', { timeout: 10000 }, async t => {
   const denied = await provider(t, (_req, res) => res.writeHead(401, { 'content-type': 'application/json' }).end(JSON.stringify({ error: { message: 'Fixture credentials rejected' } })));
   const h = await backend(t, denied.baseUrl); await h.pi.start(h.project.id); await h.settle();
-  assert.equal(h.project.status, 'failed'); assert.match(h.project.error, /Fixture credentials rejected/);
+  assert.equal(h.project.status, 'failed'); assert.match(rawError(h.project), /Fixture credentials rejected/);
   assert.equal(h.project.stages.find(s => s.id === 'build').status, 'queued'); assert.equal(h.pi.active.size, 0);
 });
