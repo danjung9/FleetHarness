@@ -95,6 +95,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | R101 synthetic benchmark records | evidence dataset | decision review | team. | 2026-11-04 |
 | Codex TUI task tools, session version unspecified | Local task coordination | Inspect and coordinate existing Fleethacker Codex tasks under the user management instruction | OpenAI | 2026-11-04 |
 | Detached Pi Stop fixture, pinned 0da7ce9 revision | QA tool | Reuse the measured detached-worker case with the integrated revision pin and current UI selectors; syntax and pure validation only here, native runtime owned by main | Team-created fixture, reusing the d0f4c69 regression | 2026-11-04 |
+| R3 challenge 12 packet | synthetic benchmark evidence | failure diagnosis | project benchmark. | 2026-11-04 |
 
 ## Data and sources
 

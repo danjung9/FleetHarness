@@ -3,57 +3,41 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Finish one source-linked primary-task repair and judge the current experiment without duplicate work."
+summary: "Finish one source-coverage correction, one bounded internal judge and the returned telemetry fix."
 ---
 
 # Agentic development instructions
 
-## Current decision
+[P] [[Research/Agentic/Flow-Goals]] remains the measure: ten satisfactory catalog builds without human help during generation. This replaces the previous directive. [E, R101 audit and all five officer judgments] Five automatic passes produced zero satisfactory results. Matched time and uncached/output tokens increased by about 24 percent and 19 percent. A new internal judge or shorter notes has no measured benefit until a matching experiment demonstrates it.
 
-[P, [[Research/Agentic/Flow-Goals]]] Success remains ten satisfactory builds from unchanged catalog cards without human help during generation. [E, [[Research/QA/Ten/Scoreboard]]] Round one has nine automatic passes and zero satisfactory results. [E, [[Research/QA/Ten/Exp1/Round-101]]] Three of five experiment entries automatically pass; ID 12 is now judged NOT for input-format substitution, with the other judgments pending. No satisfaction or speed improvement is established.
+## Existing owners and the sole dispatch
 
-[R] This replaces the previous directive. New task JSON is empty. Existing routed work continues under current overseer ownership. Withdraw the old native-select dispatch: ID 36 now has a newer 20/20 automatic journey result, so compare and judge that artifact before allocating another repair. Keep the round-one failure and diagnosis as evidence.
+[R] Agentic-builder receives only the existing df9ff1d interrupted-usage return in electron/agent-runner.ts and tests/agent-runner.test.mjs. Follow the JSON done conditions and [[Ops/Directors/Directive-development]] ownership table. Coalesce any equivalent queued task. Preserve its previously tested effort, note limits, turn ordering and terminal persistence. Missing follow-up usage must be unknown before Stop/timeout metrics are saved; observed usage must remain observed. Do not edit Codex-session or shared backend files without a later explicit transfer.
 
-## One implementation, existing owners
+[R] Agentic-architect finishes currently routed diagnoses in [[Research/Agentic/09-Primary-Task-Deferral]], adding only evidence that changes the repair. Dev-5 remains the canonical source-coverage owner. Earlier proposals naming builder for primary-task repairs are superseded. No new parser, nineteen-file implementation, duplicate ID 32/36 audit or per-challenge app patch is dispatched. Keep original failure receipts and identify the smallest shared factory regression.
 
-[R] Dev-5 retains the canonical primary-deferral correction with source-linked syntheticCoverage and lifecycle fixture repair. Agentic-builder's overlapping prefix-only implementation is not a separate deliverable. Preserve useful intake/planning/evidence wording and reconcile it through dev-5 and the serial integrator. No silent schema rollback or duplicate parser.
+[R] Dev-4 already owns the internal judge. Require a fresh read-only context, complete original card plus narrative obligations, immutable source/evidence identity, actionable gaps and fail-closed treatment of missing or malformed verdicts. Preserve rejection of writes and forged evidence. Host tests rerun after each repair, with at most two repairs under the shared persistent budget. Stop must cancel judging without starting a repair. Internal SATISFACTORY only informs progression to review; independent QA still judges the final artifact and a person retains approval authority.
 
-[R] Builder instead finishes its already returned telemetry work after file transfer: receipt turn IDs must match the measured turn; unknown usage stays null; report-write failure must not leave a running project or unfinished terminal metrics. Note budgets cannot remove source requirements or expected outcomes. Keep the review regressions and the shared sandbox prerequisite.
+## Correct the acceptance meaning
 
-[R] Architect continues queued diagnoses, but adds only new, decision-changing evidence to [[Research/Agentic/09-Primary-Task-Deferral]]. Its proposed owner and growing file list are recommendations, not new task allocation. Do not send every negative judgment back as another duplicate builder job. Consolidate the existing primary-task group, distinguish native-control and evidence-quality findings, and await the experiment's judgments before expanding repair scope.
+[E, current diagnosis] At 0da7ce9 the parser constrains deferral reasons, but implemented rows can still replace original outcomes with easier ones. The separately reported stronger syntheticCoverage correction is not established in that inspected checkout. [R] Dev-5 integrates the canonical correction once after closing the smoke return. Keep useful landed guidance and fixture compatibility, while correcting instructions that permit an invented format to satisfy a named standard. An allowed reason prefix, label, disclaimer or passing self-written test cannot establish source coverage.
 
-## Answers to the findings
-
-| Finding | Current ruling and proof needed |
+| Evidence to retain | Required factory behavior |
 | --- | --- |
-| ID 12 primary deferral | The enum-only bypass is reproduced and its exact working-source rejection is reported at 16:47 in Ten-Benchmark-Audit. Preserve that regression. A permitted dependency label alone is insufficient. The new 31-test experiment is judged NOT in [[Research/QA/Officer/JUDGE-R101-id12-optask]]: it covers all three event types but replaces the requested format with invented syntax. Return this to dev-5's existing repair and the already routed architect diagnosis. Require independently checked synthetic examples in the requested input format before generation, retain public-source provenance or explicit validation limits, and reject format substitution even when labels claim the original requirement passed. Do not invent unavailable format authority. |
-| ID 16 omitted narrative | A true requirementsMet flag based on three recipe checks cannot cover missing narrative obligations. Intake/planning must inventory defining prose outcomes and bind them to source wording and acceptance cases. Send this into the existing deferral review, including a negative fixture whose structured rows pass while a narrative obligation is omitted. No new broad runtime rewrite. |
-| ID 11 false expected explanation | Preserve the rejected contract and failure. Independently establish the correct expected explanation, version the contract openly and regenerate/reverify. Do not silently soften an oracle or teach the app a false statement. Departmental negotiation, recurrence and optimization need their own synthetic expected outcomes; 20/20 planned experiment journeys alone do not establish them. |
-| ID 36 native option | The round-one parser lacked the local option; browser checks correctly caught it. Keep that diagnosis and four failed journeys. The new experiment reports 20/20, so no fresh dispatch now. If the same cause recurs, return one bounded factory-guidance/browser-fixture repair with parsed DOM evidence and preserved frozen steps, not a generated-app hand edit. |
-| IDs 8, 20, 32, 35 and 37 | Use the existing source-coverage repair and independent judges. Require the defining input-to-output workflow, not a routing-only substitute, generic advice, first-finding-only proposal or export filename. Preserve legitimate unmet dependencies. Do not fan this into new domain-skill assignments before the experiment identifies the smallest remaining shared failure. |
-| ID 10 missing engineering authority | Retain the original task as incomplete if essential formulas, limits or independently checked reference cases are unavailable. Do not invent constants, safety authority or claim a notebook meets the engineering task. Explicit synthetic assumptions can demonstrate software behavior, but cannot establish real-format compliance or operational correctness. |
+| R101 IDs 8/12: assumed output format and invented input grammar pass | Independently checked synthetic examples must preserve the requested format. Check complete output, not fragments. Missing permitted format evidence leaves the obligation incomplete; do not invent standard conformance. |
+| R101 ID 11: all rows implemented, preset alternatives only | Require fresh roster alternatives, independently scored optimization and changed recurrence inputs. Fixed assignments cannot stand in for departmental scheduling. |
+| R101 ID 36: canned capture and sender-local acknowledgement | Require new synthetic input, revision-bound review, durable transfer to a separate local workspace and receiver-originated evidence. Do not weaken browser containment to simulate proof. |
+| R101 ID 20: fixed source snapshots and mutable source/fingerprint pair | Require independently supplied synthetic source ingestion, protected capture identity, full exported claim/timestamp checks and refusal after source alteration. Hard-coded citation coverage is not evidence. |
+| R1 IDs 16/37: missing narrative obligations or starting application | Preserve source narrative coverage. Check prerequisites before build; a recipe-only pass or fielding checklist cannot replace the missing task. |
 
-[R] Completion accounting must keep real dependencies and deferred obligations visible. Synthetic stand-ins demonstrate bounded behavior; they do not erase missing live systems, human authority, deployment, synchronization or safety validation. Require primary outcomes before claiming the original task complete, with independent judgment separate from structural validation.
+[R] Check implemented and deferred rows against original obligations. Freeze independent expected results outside builder authority, bind them to source/fixture/artifact identity and invalidate them on change or resume mismatch. Structural validation cannot prove semantics. Missing real authority remains a genuine blocker; synthetic demonstration never grants real approval, access or transmission.
 
-## Evidence and experiment sequence
+## Questions, measurement and scope
 
-[R] Main retains the active five-challenge experiment. Do not launch another benchmark or revive a historical blanket hold against that authorized run. Do not schedule a further full ten until the current correction and independent judgments justify it; the eventual ten-of-ten goal remains unchanged.
+[R] Answer to the architect's owner proposals: dev-5, after current review and shared-file release. Answer to format gaps: no invented standard or false positive fixture; retain an honest incomplete result. Answer to the builder's prerequisite: reuse dev-1's integrated single sandbox execution and host-owned registered-test evidence. Answer to judge design: use dev-4's existing implementation, with independent external acceptance retained and no multiplied repair allowance.
 
-1. [R] Freeze each final artifact, contract, fixture and patch/revision identity. Retain original failures and known round-one normalized-copy limitations.
-2. [R] Quality judges exact saved artifacts against original card outcomes, including omitted prose. Existing automatic routing owns these judgments; no duplicate officer task.
-3. [R] Compare baseline and experiment by challenge: primary coverage, deferred outcomes, independent verdict, elapsed time, uncached input/output and repairs. More tests or fewer deferred rows alone are not a win.
-4. [R] Route only a reproduced remaining factory failure to one owner and one bounded reviewable change. Preserve full expected content, changed-input checks, citations and native interactions.
+[E, [[Research/Agentic/10-App-Starter]]] A tested starter is a stated project direction. [R] Preserve any explicit overseer assignment for it, but this meeting adds no parallel starter owner while current returns remain. An unfilled domain slot must fail, domain logic must determine results, and shared shell tests cannot satisfy a challenge. Compare time/tokens and independent outcomes before claiming savings. Do not narrow original requirements to shorten planning.
 
-[R] Generated downloads must match all expected current values, identities and supporting citations. Capture each output once and inspect its whole record; repeated substring downloads add friction without proving completeness. Proposed actions and simulated acknowledgements must remain distinct from measured execution.
+[R] Main owns regeneration, benchmark records and runtime execution. R3 cleanup failures take priority over efficiency claims; never remove a cleanup gate to reach review. The next measured experiment must identify the integrated commit and scratch changes, preserve full raw artifacts, report all journeys and source obligations, then receive an independent verdict. R101's stale pending ID 20 cell and links omitting Exp1 need coordinator reconciliation, not another judge task.
 
-[R] Keep independent expected outcomes outside builder authority. Use only synthetic/public data and label assumed rules. No external system changes, invented permission or operational input is required for these tests. Honest missing-dependency status is preferable to a false completion claim.
-
-## Integration and finish
-
-[E, closing relay f579651 and patch read] The hosted smoke accepts passed requested-demo criteria while retaining supplemental deferrals, and c1fb845 changes command polling. [R] Preserve requested wording and report-schema compatibility. Do not import this smoke's narrower scope into the ten-challenge criterion inventory or use its scripted approval as a human verdict. No agentic code or prompt assignment follows from hosted polling.
-
-[R] Follow [[Ops/Directors/Directive-development]] for exclusive ownership. Dev-1 already integrates the mandatory sandbox and registered-test evidence, preserving build-test history and bounded repairs across resume. Do not add another direct generated-test subprocess. Foreground prompts are guidance; native shutdown still requires main's receipt at the landed revision.
-
-[R] Preserve Dan's 1d9eeee frontend, Windows 4c49e85 test assertions and hosted 5d2996f mocked restoration case. The hosted test does not justify a prompt change or deployment claim. RandE ideas, imports and new connectors remain deferred.
-
-[R] Preserve monitoring, escalation, shutdown and final-byte human review. Thursday noon is the code freeze. Report exact evidence, open limitations and the next action in the journal. The current meeting allocates no new seat; queue coalescing and central log transfer remain runner/coordinator actions.
+[R] Preserve Dan's frontend, 0da7ce9 fixture/smoke changes and the distinct 5a9d7d1 checkpoint work. Shared hash compatibility must be fixed through existing owners, not bypassed for resume. RandE novelty, connectors and new walkthrough work stay deferred. Keep human approval, monitoring, escalation and shutdown visible. Thursday noon freeze and exact-byte acceptance remain; no external action or generated-app hand edit is allocated.

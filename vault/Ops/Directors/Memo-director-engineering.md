@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Finish existing integration and judge the smaller experiment before assigning more work."
+summary: "Close concrete review returns, serialize integration and preserve truthful benchmark outcomes."
 ---
 
 # Engineering decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, round-one scoreboard] Ten finished, nine automatic passes, zero satisfactory; nine negative judgments. [E, Round-101] The smaller experiment has three automatic passes, including ID 36 at 20/20 journeys, but ID 12 is now judged NOT for input-format substitution. Scratch results are not shipped behavior.
+[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, current records] R101 has five automatic passes and five NOT judgments; its ID 20 scoreboard cell is stale. Round 3 has two finished builds, both failing at review because cleanup could not be confirmed. Neither record proves improvement.
 
-[R] Write an empty new-task list. Withdraw the stale ID 36 dispatch; finish existing work. Dev-5 retains primary-deferral repair; builder's overlapping implementation becomes input to that owner. No expanded allocation.
+[R] Finish existing work. Assign only the idle builder's narrow interrupted-usage return, in two exclusive files. Coalesce duplicate returns; do not restart overlapping verifier implementations.
 
-[E, dev-1 journal] Combined recovery/sandbox integration is already active. [R] Keep that owner, incorporate dev-3's separated verifier, and serialize preflight and telemetry afterward. Dev-2 must prove actual Start behavior. Builder must correct turn-ID usage attribution and terminal persistence. Preserve reviewed regressions.
+[E, e6b5000 review] Recovery checks pass, but desktop hashing rejects unchanged hosted checkpoints. [R] Dev-1 and the existing hosted owner must reconcile all hash producers through main, preserving export hardening, native path handling and stale-approval rejection. Dev-3 supplies its verifier patch to that integration.
 
-[E, feed-118] Cleanup landed at c6ce52d; native discovery and detached Stop remain unverified. [R] Main owns that receipt and experiment execution. Retain round-one artifact limits.
+[R] Dev-2 must bound Start through slow persistence, catch dynamic error messages and make defaults reachable through existing controls. Dev-5 fixes the stale reopen selector before extending source coverage. Dev-4 finishes its existing internal judge; that verdict cannot replace independent QA or human acceptance.
 
-[R] Require narrative source coverage, complete synthetic outcomes and independent judgments before another full round. ID 16 shows why a true requirementsMet flag alone is insufficient. Preserve frozen failures and genuine missing-authority blockers.
+[R] Main diagnoses round-three cleanup failures and obtains native detached-Stop proof before affected workspaces resume. Do not suppress cleanup errors to improve the score. Source obligations marked implemented need independent outcome evidence too.
 
-[R] Protect Dan's 1d9eeee frontend, Windows 4c49e85 checks and hosted f579651 changes. Its demo-scope smoke cannot replace catalog acceptance. Keep Thursday noon freeze and exact-byte human acceptance. No deployment or publication work.
+[R] Preserve Dan's frontend and 0da7ce9 smoke/fixture changes. Keep Windows 5a9d7d1 separate from mvp evidence. No new connector, deployment or research allocation. Thursday noon freeze and final-byte human review remain.

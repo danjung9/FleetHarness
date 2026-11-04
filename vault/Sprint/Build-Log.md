@@ -50,3 +50,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:26 Real build, round 3, id11-training: failed in 14.7 minutes, tests 15/15, journeys 16/16. Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before st
 - 17:27 dev-4: Added the independent judge inside verify, with fresh read-only sessions, at most two repairs, reverification, verdict/gap history, timing and tokens. Human review remains required.
 - 17:27 dev-2: Fixed the three review gaps and prepared tested teammate integration patches.
+- 17:28 Teammate push: dan/backend-improvements now e27ad6a. Outside the frontend: docs/desktop.md, docs/pipeline.md, electron/brief-data.ts, electron/browser-verification.t
+- 17:29 agentic-architect: Added the diagnosis to [the existing shutdown note](~/Documents/CDAO/Fleethacker-Vault/Research/Agentic/03-Stop-and-Supervision.md). Updated README and `.tmp/JOURNAL.md`.
