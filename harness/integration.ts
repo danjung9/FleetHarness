@@ -17,7 +17,7 @@ export interface PrepareFleetWorkspaceInput extends BriefContext {
 }
 export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   if (input.sourceChallenge && input.sourceChallenge.id !== input.challengeId) throw new Error('The saved Norfolk source does not match this challenge.');
-  const packet = input.sourceChallenge ? packetFor(input.sourceChallenge, input.criteria) : input.challengeId ? createPacket(input.challengeId, input.criteria) : customPacket(input);
+  const packet = input.sourceChallenge ? packetFor(input.sourceChallenge, input.criteria, input.description) : input.challengeId ? createPacket(input.challengeId, input.criteria, input.description) : customPacket(input);
   const workspace = await fs.realpath(input.workspace);
   const target = path.join(workspace,'.fleet');
   const files = new Map<string,string>();

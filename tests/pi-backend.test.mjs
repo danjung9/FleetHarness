@@ -64,6 +64,10 @@ async function harness(t, options = {}) {
         const judge = { disposed: false, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
           async prompt() {
             for (const name of ['requirements.md', 'index.html', 'test-report.json']) await customTools[0].execute('judge', { path: name });
+            const evidence = JSON.parse((await customTools[0].execute('baseline', { path: 'test-report.json' })).content[0].text);
+            const baseline = JSON.parse(evidence.text).testBaseline;
+            assert.ok(Object.keys(baseline.hashes).length);
+            assert.match(baseline.policy, /explicit contract revision/);
             for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
               usage: options.usage,
               content: [{ type: 'text', text: JSON.stringify(options.judgeAnswers?.[judgeSessions.indexOf(this)] ?? { verdict: 'SATISFACTORY', gaps: [] }) }] } });
@@ -1094,11 +1098,17 @@ test('duplicate starts and the concurrency limit are enforced; stopAll drains an
 });
 
 test('a hung generated test is bounded, repaired once, then reaches review on actual passing evidence', { timeout: functionalTimeout }, async t => {
+  const original = 'require("node:test")("invalid prefix", () => require("node:assert/strict").equal(require("./core.cjs").parse("INVALID"), null));';
   const h = await harness(t, { verificationLimits: { timeoutMs: 500 }, scenario: async ({ cwd, stage }) => {
-    if (stage === 'build') { await artifacts(cwd, stage); await fs.writeFile(path.join(cwd, 'hang.test.cjs'), 'setInterval(() => {}, 1000);'); return true; }
-    if (stage === 'repair') await fs.writeFile(path.join(cwd, 'hang.test.cjs'), 'require("node:test")("invalid prefix", () => require("node:assert/strict").equal(require("./core.cjs").parse("INVALID"), null));');
+    if (stage === 'build') {
+      await artifacts(cwd, stage);
+      await fs.appendFile(path.join(cwd, 'core.cjs'), '\nsetInterval(() => {}, 1000);');
+      await fs.writeFile(path.join(cwd, 'hang.test.cjs'), original); return true;
+    }
     return false;
   } });
   await h.run(); await h.assertSettled('review');
+  assert.equal(await fs.readFile(path.join(h.project.workspace, 'hang.test.cjs'), 'utf8'), original);
+  assert.equal(h.project.report.total, 3);
   assert.ok(h.project.logs.some(l => l.text.includes('Verification exceeded'))); assert.equal(h.sessions.at(-1).stage, 'repair');
 });

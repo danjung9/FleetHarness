@@ -37,7 +37,7 @@ async function fixture(t, answers = [not, satisfactory], options = {}) {
     const failed = options.failVerification === true || options.failVerification === verifications;
     return { time: new Date().toISOString(), command: 'fake verifier', passed: 1, failed: failed ? 1 : 0,
       skipped: 0, total: 1, exitCode: failed ? 1 : 0, output: 'Verifier evidence', durationMs: 1, sourceHash: await sourceHash(workspace),
-      quality: { schemaVersion: 1, status: 'passed', journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }], errors: [] } };
+      quality: { schemaVersion: 1, status: 'passed', requirementsMet: true, journeys: [{ status: 'passed' }], criteria: [{ criterionId: 'DESCsynthetic-1', status: 'passed', detail: 'Synthetic browser evidence' }], errors: [] } };
   };
   const engine = {
     backend: 'pi', provider: 'fixture', model: 'fixture', runtime: { getModel: () => ({}) }, agentDir: workspace,
@@ -180,16 +180,65 @@ test('judge has only snapshot reads, no builder context, inherited skills, shell
   await h.run();
 });
 
-test('malformed output and contradictory satisfactory verdicts become honest NOT gaps, never approval', async t => {
+test('malformed output and contradictory satisfactory verdicts retry only evaluation and never approve', async t => {
   for (const answer of ['not json', 'I inspected it. ' + JSON.stringify(satisfactory), '```json\n' + JSON.stringify(satisfactory) + '\n```',
     { verdict: 'SATISFACTORY', gaps: [gap] }, { verdict: 'NOT', gaps: [] }, { verdict: 'MAYBE', gaps: [] }]) {
     const h = await fixture(t, [answer], { noUsage: true }); const report = await h.run();
     assert.equal(report.independentJudge.verdict, 'NOT');
     assert.match(report.output, /Invalid judge response/);
     assert.equal(report.independentJudge.attempts[0].tokens, null);
-    assert.equal(h.repairs.length, 2);
+    assert.equal(h.repairs.length, 0);
+    assert.equal(h.verifications, 1);
+    assert.equal(h.sessions.length, 2);
+    assert.equal(report.independentJudge.evaluatorRetries, 1);
+    assert.equal(report.independentJudge.repairLimitReached, false);
+    assert.match(report.independentJudge.evaluationError, /Invalid judge response/);
+    assert.equal(report.quality.requirementsMet, false);
   }
 });
+
+test('an invalid evaluation can recover without changing the application or spending a repair', async t => {
+  const h = await fixture(t, ['incomplete JSON', satisfactory]);
+  const report = await h.run();
+  assert.equal(h.repairs.length, 0); assert.equal(h.verifications, 1); assert.equal(h.sessions.length, 2);
+  assert.equal(report.independentJudge.verdict, 'SATISFACTORY');
+  assert.equal(report.independentJudge.evaluationError, undefined);
+  assert.equal(report.independentJudge.attempts[0].evaluationError.startsWith('Invalid judge response'), true);
+  assert.equal(report.quality.requirementsMet, true);
+  assert.equal(await fs.readFile(path.join(h.workspace, 'index.html'), 'utf8'), '<!doctype html><title>Synthetic schedule</title><main>Preset</main>');
+});
+
+test('provider failure and timeout retry the evaluator without consuming application repairs', async t => {
+  for (const timeout of [false, true]) {
+    const h = await fixture(t, [satisfactory], { limits: { timeoutMs: 60, idleMs: 40 }, onPrompt: () => {
+      if (timeout) return new Promise(() => {});
+      throw new Error('503 synthetic provider unavailable');
+    } });
+    const report = await h.run();
+    assert.equal(h.sessions.length, 2); assert.equal(h.repairs.length, 0); assert.equal(h.verifications, 1);
+    assert.equal(report.independentJudge.repairs, 0);
+    assert.equal(report.independentJudge.evaluatorRetries, 1);
+    assert.match(report.independentJudge.evaluationError, /could not complete/);
+    assert.equal(report.quality.requirementsMet, false);
+  }
+});
+
+for (const evidence of ['Invented format replaces the named real format.', 'Preset answers replace generation from changed inputs.', 'Delivery only changes local state; no receiver gets the file.']) {
+  test('negative judgment holds source obligations open: ' + evidence, async t => {
+    const h = await fixture(t, [{ verdict: 'NOT', gaps: [{ ...gap, requirement: 'DESCsynthetic-1', evidence }] }], { repairLimit: 0 });
+    await fs.mkdir(path.join(h.workspace, '.fleet'));
+    const acceptance = [{ id: 'DESCsynthetic-1', requirement: 'Complete the named task with fresh synthetic inputs.', provenance: [{ kind: 'description', path: 'challenge.description[0:56]' }] }];
+    await fs.writeFile(path.join(h.workspace, '.fleet/packet.json'), JSON.stringify({ challenge: { description: acceptance[0].requirement }, acceptance }));
+    const report = await h.run();
+    assert.equal(report.quality.requirementsMet, false);
+    assert.equal(report.independentJudge.gaps[0].evidence, evidence);
+    assert.equal(report.quality.criteria[0].status, 'unverified');
+    assert.ok(report.quality.criteria[0].detail.includes(evidence));
+    const read = h.sessions[0].config.customTools[0];
+    assert.match(JSON.stringify(await read.execute('inventory', { path: 'acceptance-inventory.json' })), /DESCsynthetic-1/);
+    assert.match(h.sessions[0].promptText, /every source span/);
+  });
+}
 
 test('repair cannot weaken the frozen acceptance plan', async t => {
   const h = await fixture(t, [not], { onRepair: workspace => fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{}') });
