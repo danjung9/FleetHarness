@@ -14,7 +14,8 @@ const messages = {
   'invalid-output': 'The build produced unreadable results; try again and ask the app maintainer for help if this continues.',
   sandbox: 'Safe build tools could not start; restart AppYard and ask the app maintainer for help if this continues.',
   stopped: 'The build was stopped; press Start build when you are ready to try again.',
-  shutdown: 'Build cleanup could not be confirmed; use the operator shutdown procedure and ask the app maintainer for help before starting another build.',
+  shutdown: 'Build cleanup could not be confirmed and processes may still be active; use the operator shutdown procedure and ask the app maintainer for help before starting another build.',
+  writer: 'AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer for help before starting another build.',
   timeout: 'The build stopped because it took too long; check the saved work and try again.',
   capacity: 'A build is already running; wait for it to finish or stop it before starting another.',
   changed: 'The build inputs or checked files changed; review the saved work and start a new build before approving it.',
@@ -33,6 +34,7 @@ const messages = {
 } as const;
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
+  ['writer', /Writer shutdown was not confirmed/i],
   ['shutdown', /shutdown was not confirmed|Possible background job detected/i],
   ['shutdown', /Could not terminate the verification process tree|Verification process did not close after termination/i],
   ['recovery', /Only a failed or stopped build can resume|no saved recovery checkpoint|No incomplete build stage can resume|Invalid recovery checkpoint|build-test baseline is (?:missing|invalid)|frozen plan checkpoint is missing/i],

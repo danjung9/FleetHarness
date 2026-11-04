@@ -170,7 +170,7 @@ export class FleetBackend {
         engine: async signal => {
           if (backend === 'codex') {
             await this.options.codex?.refresh(); signal.throwIfAborted();
-            return { connected: this.options.codex?.account.status === 'connected' && provider === 'chatgpt', models: this.options.codex?.models ?? [] };
+            return { connected: this.options.codex?.account?.status === 'connected' && provider === 'chatgpt', models: this.options.codex?.models ?? [] };
           }
           const connected = this.runtime.hasConfiguredAuth(provider);
           const chosen = modelId ? this.runtime.getModel(provider, modelId) : undefined;

@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "a83c6a077b8c542ae698b372b39bed6e2bbeadf290fa7d0018b2e8f0323e2f61",
+  "electron/pi-backend.ts": "e260af72cdc340df6e6cbaf157312e1e4a5c92d56c29ac1b1758edaed7ba2ac1",
   "electron/storage.ts": "1273162630d14990ad7e7c46072dc36f66060cace266293935eada85254c52c7",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
   "harness/norfolk.ts": "da08994d91c5fb94a96a7e154d39b42c232f4659c6848ecfe80e0c8ee1b478cb",
@@ -184,6 +184,21 @@ test('teammate cleanup, checkpoint and deferral errors retain plain recovery ins
     assert.equal(result.code, code, raw); assert.match(result.message, /;/);
     assert.doesNotMatch(result.message, /checkpoint|stage|session|SDK|artifact/i);
   }
+});
+
+test('unconfirmed writers stay unsafe without falsely reporting failed process cleanup', () => {
+  for (const prefix of ['Run stopped by you.\n', '503 provider error\n']) {
+    const result = plainError(new Error(prefix + 'Writer shutdown was not confirmed. Recovery in this workspace is blocked.'));
+    assert.equal(result.code, 'writer');
+    assert.match(result.message, /could not confirm that all build work stopped/);
+    assert.match(result.message, /operator shutdown procedure.*before starting another build/);
+    assert.doesNotMatch(result.message, /cleanup could not be confirmed/);
+    assert.match(result.detail, /Writer shutdown was not confirmed/);
+  }
+  const result = plainError(new Error('Process cleanup could not be confirmed.'));
+  assert.equal(result.code, 'shutdown');
+  assert.match(result.message, /processes may still be active/);
+  assert.match(result.message, /operator shutdown procedure.*before starting another build/);
 });
 
 test('unknown external failures stay out of the project error but remain in the log', () => {

@@ -60,6 +60,16 @@ async function savedResume(t, backend) {
   return h;
 }
 
+for (const account of [undefined, { status: 'disconnected' }]) test(`Codex Start requires a connected account even with configured models (${account?.status ?? 'missing'})`, async t => {
+  const h = await backendFixture(t, { backend: 'codex' });
+  h.codex.account = account;
+  await assert.rejects(h.backend.start(h.project.id), /build service is not connected/);
+  assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+  assert.equal(h.project.status, 'failed');
+  assert.match(h.project.error, /build service is not connected/);
+  assert.doesNotMatch(h.errors(), /TypeError/);
+});
+
 for (const engine of ['pi', 'codex']) {
   for (const probe of ['engine', 'browser', 'sandbox', 'freeBytes']) test(`${engine} Resume refuses ${probe} before inference and preserves the saved attempt`, async t => {
     const h = await savedResume(t, engine), metrics = structuredClone(h.project.stages[0].metrics), workspace = h.project.workspace;
@@ -255,7 +265,7 @@ for (const backend of ['pi', 'codex']) {
       const expected = chosen || 'gpt-6.1-sol';
       assert.equal(h.calls(), 1); assert.equal(h.store.state.settings.model, expected);
       assert.equal(h.project.model, 'openai/' + expected);
-      assert.doesNotMatch(h.project.error, /Synthetic|SDK|session|stage/); assert.match(h.project.error, /cleanup could not be confirmed.*operator shutdown procedure/);
+      assert.doesNotMatch(h.project.error, /Synthetic|SDK|session|stage/); assert.match(h.project.error, /could not confirm that all build work stopped.*operator shutdown procedure/);
       assert.equal(h.project.runCheckpoint.writerState, 'unconfirmed');
       assert.match(h.errors(), /Synthetic SDK session fault/);
       const reopened = new Store(h.root); await reopened.init();

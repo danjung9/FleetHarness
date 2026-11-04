@@ -28,6 +28,7 @@ function rawError(project) {
 // Public rejection and saved error must agree; retain each original diagnostic
 // assertion against the logged cause when refusal crossed the plain-error boundary.
 async function resumeRefused(backend, project, expected) {
+  project = backend.store.project(project.id); // Inspect the reloaded project's current state, not the previous Store's object.
   await assert.rejects(backend.resume(project.id), error => {
     if (error.cause) {
       assert.equal(error.message, plainError(error.cause).message);
@@ -261,7 +262,11 @@ test('cleanup integration: resumed stages and verifier launches retain a new run
 
 test('cleanup integration: failed process cleanup persists an unsafe checkpoint and refuses resume', { timeout: 10000 }, async t => {
   const h = await harness(t, {
-    processSweep: () => ({ run: work => work(), stop: async () => { throw new Error('Synthetic cleanup denial'); } }),
+    processSweep: () => {
+      let started = false;
+      return { run: work => { started = true; return work(); },
+        stop: async () => { if (started) throw new Error('Synthetic cleanup denial'); } };
+    },
     scenario: async () => { throw new Error('Synthetic interruption'); }
   });
   await h.run(); await h.assertSettled('failed');
