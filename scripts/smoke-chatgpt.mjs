@@ -8,7 +8,7 @@ const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-chatgpt-ui-'));
 const output = path.resolve('.impeccable/review/chatgpt'); await fs.mkdir(output, { recursive: true });
 const errors = [];
 let app, browser, server;
-async function capture(page, name) { await page.evaluate(() => document.fonts.ready); await page.screenshot({ path: path.join(output, name), fullPage: true, animations: 'disabled', scale: 'css' }); }
+async function capture(page, name) { await page.evaluate(() => document.fonts.ready); await page.evaluate(() => window.scrollTo(0, 0)); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))); await page.screenshot({ path: path.join(output, name), fullPage: false, animations: 'disabled', scale: 'css' }); }
 try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: root, VITE_DEV_SERVER_URL: '' } });
   const page = await app.firstWindow(); page.on('pageerror', e => errors.push(e.message));
@@ -63,7 +63,7 @@ try {
     await p.getByText('Model settings saved.', { exact: true }).waitFor();
     assert.equal(await p.evaluate(() => window.savedEngine), 'codex');
     await capture(p, studio ? 'studio-connected.png' : 'desktop-connected.png');
-    if (studio) { await p.setViewportSize({ width: 390, height: 844 }); assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await capture(p, 'studio-mobile-connected.png'); }
+    if (studio) { await p.getByRole('button', { name: 'Save model settings' }).scrollIntoViewIfNeeded(); await p.screenshot({ path: path.join(output, 'studio-desktop-controls.png'), animations: 'disabled', scale: 'css' }); await p.setViewportSize({ width: 390, height: 844 }); assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await capture(p, 'studio-mobile-connected.png'); await p.getByRole('button', { name: 'Save model settings' }).scrollIntoViewIfNeeded(); await p.screenshot({ path: path.join(output, 'studio-mobile-controls.png'), animations: 'disabled', scale: 'css' }); }
     await p.getByRole('button', { name: 'Sign out', exact: true }).click();
     await p.getByRole('button', { name: 'Continue with ChatGPT' }).waitFor();
     assert.equal(await p.getByRole('button', { name: 'Save model settings' }).isDisabled(), true);

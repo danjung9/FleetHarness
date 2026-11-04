@@ -29,7 +29,7 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 
 - All logs and badges reflect actual agent events and saved state.
 - Each agent phase inherits global `read`, `write`, `edit` and `bash` tools, then adds only its assigned phase tools. The `.fleet` packet records both levels and the skills allotted to each phase. Select a phase in **Build flow** to inspect the assignment, outputs and completion gate.
-- Each role has a 40-turn and 30-minute ceiling, including session setup and artifact completion. Five minutes without model, tool, retry, or compaction activity fails the stage with its last activity recorded. These limits settle the host run even if Pi's prompt or abort promise never returns.
+- Each role has a 30-minute ceiling, including session setup and artifact completion. Pi also has a 40-model-turn ceiling; Codex reports user turns rather than its internal model iterations. Five minutes without model, tool, retry, or compaction activity fails the stage with its last activity recorded. These limits settle the host run even if Pi's prompt or abort promise never returns.
 - Missing or empty stage outputs get one targeted completion prompt within the same budget. Requirements and packet integrity are checked after every agent handoff. A recovered provider retry can continue normally.
 - FleetHarness executes generated tests independently using the Node runtime bundled with Electron.
 - A failed test run gets one repair attempt and one repeat execution.
