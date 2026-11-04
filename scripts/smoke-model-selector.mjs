@@ -5,8 +5,12 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { qualityFixtureProject } from './quality-fixture.mjs';
+import { Store, newProject } from '../dist-electron/electron/storage.js';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-model-selector-'));
+const store = new Store(path.join(root, 'state')); await store.init();
+store.state.projects[0] = newProject(qualityFixtureProject); await store.save();
 const piDir = path.join(root, 'pi');
 const output = path.resolve('output/playwright/model-selector');
 await fs.mkdir(piDir);

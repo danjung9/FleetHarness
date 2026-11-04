@@ -5,6 +5,7 @@ import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
 import { challenges } from '../dist-electron/harness/catalog.js';
+import { qualityFixtureProject } from './quality-fixture.mjs';
 
 const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-electron-'));
 const piDir=path.join(root,'pi');await fs.mkdir(piDir);
@@ -39,9 +40,20 @@ try {
   assert.match(await page.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
   await page.getByRole('button',{name:'Save challenge',exact:true}).click();
   await page.getByText('Challenge saved.',{exact:true}).waitFor();
-  const id=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
   const saved=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0]);
   assert.equal(saved.challengeId,'12');
+  assert.equal(saved.sourceChallenge.recipe,'messages');
+  assert.match(saved.sourceChallenge.requirements.join('\n'),/frequency plans/);
+  assert.match(saved.sourceChallenge.expectedDeliverables,/24-hour visual schedule/);
+  // Preserve catalog intake above; run the parser's own synthetic brief below.
+  await page.getByRole('button',{name:'New challenge',exact:true}).click();
+  const synthetic=page.getByRole('dialog',{name:'New challenge',exact:true});
+  await synthetic.getByLabel('Challenge title',{exact:true}).fill(qualityFixtureProject.title);
+  await synthetic.getByLabel(/^Problem statement(?:\s|$)/).fill(qualityFixtureProject.description);
+  await synthetic.getByLabel('Evaluation criteria (optional)',{exact:false}).fill(qualityFixtureProject.criteria.join('\n'));
+  await synthetic.getByRole('button',{name:'Save challenge',exact:true}).click();
+  await page.getByText('Challenge saved.',{exact:true}).waitFor();
+  const id=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
   await page.getByRole('button',{name:'Start build',exact:true}).click();
   await page.getByRole('dialog',{name:'Start build',exact:true}).getByRole('button',{name:'Start automatic build',exact:true}).click();
   await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, {timeout:90000});

@@ -3,6 +3,9 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { qualityFixtureProject } from './quality-fixture.mjs';
+import { customPacket } from '../dist-electron/harness/planner.js';
+import { getChallenge } from '../dist-electron/harness/catalog.js';
 
 // Exercise the real Pi SDK against a local provider, including tool selection and repair.
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-phase-sdk-'));
@@ -18,11 +21,18 @@ try {
       { id: 'fixture-model', name: 'Local phase fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
     ] }
   } }));
-  const { Store } = await import('../dist-electron/electron/storage.js');
+  const { Store, newProject } = await import('../dist-electron/electron/storage.js');
   const { PiBackend } = await import('../dist-electron/electron/pi-backend.js');
   const store = new Store(root); await store.init();
   store.state.settings = { provider: 'fleet-fixture', model: 'fixture-model', rememberKey: false };
-  const project = store.state.projects[0]; project.challengeId = '12';
+  const source = getChallenge('12');
+  assert.match(source.requirements.join('\n'), /frequency plans/);
+  assert.match(source.expectedDeliverables, /24-hour visual schedule/);
+  assert.equal(source.recipe, 'messages');
+  // Exercise message-recipe routing without claiming this parser implements ID 12.
+  const project = store.state.projects[0] = newProject(qualityFixtureProject);
+  project.challengeId = 'custom';
+  project.sourceChallenge = customPacket(qualityFixtureProject, source.recipe).challenge;
   backend = new PiBackend(store, process.execPath, () => {}, path.resolve('.'));
   await backend.init();
   await backend.start(project.id); await backend.active.get(project.id)?.done;
@@ -38,6 +48,7 @@ try {
     const phase = project.phasePlan.find(phase => phase.id === stage);
     const tools = request.tools.map(tool => tool.function.name).sort();
     assert.deepEqual(tools, [...project.globalTools, ...phase.tools].sort(), stage);
+    if (stage === 'build' || stage === 'verify') assert.ok(tools.includes('fleet_extract_messages'), 'Message recipe retains its validation tool');
     assert.equal(tools.includes('fleet_solve_schedule'), false, 'Message builds must not expose scheduling tools');
   }
   assert.deepEqual([...observed], ['intake', 'research', 'plan', 'build', 'verify']);

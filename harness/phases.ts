@@ -26,7 +26,7 @@ export function phasesForRecipe(recipe: Recipe): PhaseContract[] {
   return [
     { id: 'intake', role: 'Requirements analyst', owner: 'agent',
       inputs: ['requirements.md', '.fleet/packet.json'], outputs: ['scope.md'],
-      exit: 'The primary user task, source-linked requirements, evaluation criteria, deliverables, user criteria, data boundaries and unknowns are recorded before research begins.',
+      exit: 'The primary user task, source-linked requirements, evaluation criteria, deliverables, user criteria, data boundaries and unknowns are recorded before research begins. Report primary deferrals first; missing specifications or experts require explicit synthetic assumptions and examples in the requested input format.',
       skills: ['fleet-intake'], tools: ['fleet_get_challenge'], hostTools: ['Save original requirements and challenge packet'] },
     { id: 'research', role: 'Reuse researcher', owner: 'agent',
       inputs: ['scope.md', 'Recipe candidates'], outputs: ['research.md'],
@@ -35,7 +35,7 @@ export function phasesForRecipe(recipe: Recipe): PhaseContract[] {
     { id: 'plan', role: 'Implementation planner', owner: 'agent',
       inputs: ['scope.md', 'research.md', 'Source-linked acceptance criteria', '.fleet/quality-contract.md'],
       outputs: ['plan.md', 'test-matrix.md', 'system-design.json', 'acceptance-plan.json', 'ux-spec.json'],
-      exit: 'Architecture, UX behavior and literal browser outcomes are planned for every implemented criterion; deferred criteria retain a reason. The host validates and freezes both JSON plans before implementation.',
+      exit: 'Architecture, UX behavior and literal browser outcomes are planned for every implemented criterion; deferred criteria retain a reason under the quality contract. Primary deferrals include source-linked syntheticCoverage, with independently fixed expected outputs for examples in the requested input format. A substitute format remains incomplete. The host validates and freezes both JSON plans before implementation; the independent judge assesses semantic adequacy.',
       skills: ['fleet-planning', 'fleet-ux', 'fleet-evidence', ...domain], tools: ['fleet_system_design'], hostTools: ['Validate and freeze acceptance and UX plans'] },
     { id: 'build', role: 'Implementation agent', owner: 'agent',
       inputs: ['plan.md', 'test-matrix.md', 'system-design.json', 'Frozen acceptance-plan.json', 'Frozen ux-spec.json', '.fleet/quality-contract.md', 'Synthetic fixtures'],
