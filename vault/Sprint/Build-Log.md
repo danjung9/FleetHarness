@@ -74,3 +74,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:52 Astra fix-approval started: Backend fixer: approval, export and evidence.
 - 17:52 Astra fix-pi started: Backend fixer: Pi tool containment and secrets.
 - 17:52 Astra fix-truth started: Backend fixer: coverage and repair truth.
+- 17:58 Mukul added data connectors (Gmail, Outlook, calendars, Drive, OneDrive, custom APIs), Model settings tabs and GenAI.mil. Design: `Research/Connectors/Design.md`. These start when the Codex API-key sign-in lands.
+- 17:59 Mukul: GenAI.mil gets the UI and framework only for now, its API is tested later. Everything else fully tested.
