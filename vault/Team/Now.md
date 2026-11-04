@@ -12,7 +12,10 @@ Last updated 2026-11-04, after independent GUI receipt review at 631849f.
 
 ## Latest session
 
-- [E, independent receipt review] Six smoke scripts report success at `631849f`; three Home defects reproduce. This includes a real login-start/cancel check, with no completed sign-in or live model inference. See [[Research/QA/Results-631849f-GUI]] and scope corrections in [[Research/QA/GUI-631849f/Receipt-Review]]. The first post-click poll saw stopped, but child-process termination was unmeasured.
+- [E, independent Stop receipt] Ordinary Pi shell parent/child shutdown passes at `631849f`: both PIDs absent, stable heartbeats and no further provider calls during observation before separate cleanup. See [[Research/QA/GUI-631849f/Stop-Child-Runbook]]. Other shutdown paths remain open.
+- [E, main-session report] Two real partial ID 11 candidates started at 15:11 EST: patched factory and locked CLI routes. Main relays prior owner approval and selected-canary containment results for its temporary profile. These changes are not yet shipped product behavior. Independent browser acceptance is being prepared; no candidate correctness or delivered-app acceptance is claimed.
+
+- [E, independent receipt review] Six smoke scripts report success at `631849f`; three Home defects reproduce. This includes a real login-start/cancel check, with no completed sign-in or live model inference. See [[Research/QA/Results-631849f-GUI]] and scope corrections in [[Research/QA/GUI-631849f/Receipt-Review]]. The earlier first-request Stop capture was limited; the later shell-child receipt above supplies its separate bounded result.
 - [E, source and syntax checks] Prepared [[Research/QA/GUI-631849f/Stop-Child-Runbook]] and a bounded script for main to run in its independently authorized GUI clone. It measures an ordinary Pi shell command and child before separate cleanup. No GUI or worker was executed by this preparation.
 
 - [E, pinned source diff and bridge handoff] `631849f` consolidates the product into the retained Home/Flow interface and removes Studio/Workbench. The active [[Research/QA/Test-Plan]] now targets four unified-interface journeys; older interface rows remain historical. Backend code is unchanged from `50fcaea`. Main advanced qa-lead to clean, detached `631849f` and independently owns the completed GUI receipt and next bounded Stop execution.
@@ -52,4 +55,4 @@ Last updated 2026-11-04, after independent GUI receipt review at 631849f.
 1. Join or create a team in the portal.
 2. Approve the Codex hooks, per [[Setup/Hooks]].
 3. Review the research and choose which use cases FleetHarness demos.
-4. Review the main-session Stop-child receipt, coordinate reviewed changes through the sole runner, and retain all open frontend and verification/export defects. Other QA seats own golden examples and catalog coverage.
+4. Complete independent browser acceptance and the officer checklist for both ID 11 candidates, coordinate changes through the sole runner, and retain all open frontend and verification/export defects. Other QA seats own golden examples and catalog coverage.

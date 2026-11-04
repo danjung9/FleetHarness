@@ -3,7 +3,7 @@ type: test-plan
 status: ready
 owner: mukul
 updated: 2026-11-04
-summary: "Bounded synthetic Stop test for a Pi shell command and its child; syntax checked, not executed here."
+summary: "Bounded Pi shell-child Stop test, prepared here and independently executed with a passing receipt at 631849f."
 ---
 
 # Stop during a shell command
@@ -35,3 +35,9 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/GUI-631849f/qa-stop-child.mj
 [R] A PID that persists with increasing heartbeats demonstrates continuing execution. A persistent PID with stable heartbeats can be a zombie or an identity race; inspect the recorded process state before calling it live work. This strict test still withholds PASS until both PIDs are absent. It covers an ordinary Pi shell command and direct child only, not detached descendants, signal-resistant programs, Codex, preflight cancellation, application Quit, packaging, or containment of arbitrary model actions.
 
 [E, installed SDK source inspection] `@earendil-works/pi-coding-agent` 1.5.0, `dist/core/tools/bash.js`, defines a required string `command` and optional `timeout`, with no default timeout. Its cancellation path calls `killProcessTree` on the shell. This source finding motivates the execution check; it does not prove the application wires Stop to that cancellation path.
+
+## Independent execution received
+
+[E, retained JSON reviewed after main execution] [STOP-CHILD-01 result](stop-child-16bd720f-1ef9-408f-aac2-df194cc67e21/result.json) ran from 20:11:52.069 to 20:12:06.349 UTC on November 4, 2026, at clean tracked source `631849f638614735a89a555d487d6b3c777c52e3`. The executed script digest matches this script: `c69163395d4bb5c7932d71e302e166003571a809f23aa8b5b99fdf5a6a5fa268`. Both owned workers had three heartbeats before Stop. Both PIDs were absent at the observation beginning and end, heartbeats stayed fixed throughout the eight-second interval, request count stayed one and state remained stopped. The first state observation was five milliseconds after click completion; this is not an exact process-termination latency.
+
+[E, timestamps and separate verdict fields] Stop PASS was recorded before cleanup began; cleanup separately passed. This closes only the ordinary Pi foreground-command/direct-child case. It does not close Home Stop discoverability, pending-start cancellation, Quit, Codex, detached descendants, packaging or the live preparation environment's enclosing shutdown. No repeat execution was performed by this review.

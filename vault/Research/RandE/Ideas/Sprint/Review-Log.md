@@ -32,3 +32,13 @@ summary: "Local tool, friction and prior-work records awaiting central reconcili
 
 - [E] [[Sprint/Tool-Disclosure-Log]], [[Research/Plan/Research-Map]], [[Research/Plan/Test-Results]].
 - [E] [[Research/RandE/Ideas/README]].
+
+## Scalability evidence follow-up, 2026-11-04
+
+[E] Asked: recommend one second catalog brief in another rating/domain and map every shared Fleet-Ready requirement from IDs 32 to 37. Reused the assigned plan/review, use-case capture, reported QA, directive, existing ID 36 golden key and pinned catalog/recipe/offline-helper source at `631849f`. No fixture suite, implementation, model build, government data, external contact or dependency installation was added. Direct read-only Git source inspection is the evidence method; reported tests were not rerun.
+
+[E] Reused the command/patch interfaces, zsh, Git, ripgrep, system text readers and Python standard library already disclosed above. Added public web search/retrieval, version not exposed, provided by the session environment, to verify official blank-form metadata. Data providers: Washington Headquarters Services and Defense Logistics Agency, official DD 1348-1A public form listings, retrieved as search-index metadata on 2026-11-04. Direct page opens returned 403; no bypass, template adoption or form-compliance claim. The proposed inputs remain the existing synthetic practice records. Session-model exact version and actual cost are unavailable.
+
+[E] Friction: broad source reads truncated, so smaller reads and structured selection of the six requirement fields supplied retained claims. Apple Git/Python emitted denied temporary-cache writes but completed reads; no workaround. The local `AGENTS.md` and an assumed workflow-tool filename were absent; the vault AGENTS and actual offline-tool file supplied the needed context. Central Sprint, Sessions and Team/Now writes remain prohibited by the current-folder boundary. This is staged disclosure and prior-work/friction evidence for authorized central transfer, not a completed central update. No bridge tools were available and no message was sent.
+
+[R] Authorized coordinator should reconcile the new web-service/public-source entries through `python3 tools/fh.py tool NAME TYPE USE PROVIDER`, transfer the local session completion to central Sessions and update Team/Now. No new run or approval should be inferred from this handoff.

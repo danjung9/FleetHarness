@@ -12,6 +12,8 @@ summary: "Novelty scanning closed; feature proposals deferred; one partial ID 11
 
 [R] Novelty scanning is closed. All feature proposals, including settled-event preservation, are deferred under [[Ops/Directors/Directive-rande]]. The single submission evidence record is [[Research/RandE/Ideas/ID11-Evidence-Card]]. Optional equivalent-input and reviewer-understanding checks remain manual additions after required QA, with no new control or study.
 
+[R, subsequent assigned plan follow-up] [[Research/RandE/Ideas/Scalability-Evidence]] recommends one conditional ID 36 supply-paperwork brief and maps all six shared Fleet-Ready requirements to evidence, bounded additions and gaps. It does not reopen feature scanning or authorize another build. The first accepted task and submission work retain priority.
+
 ## Historical proposals
 
 | Note | Current disposition [R, Directive-rande] |
