@@ -16,6 +16,8 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
+import { runPreflight, probeVerificationSandbox, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
+import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
 
@@ -38,6 +40,8 @@ function transientFailure(error: unknown) {
 }
 
 interface BackendOptions {
+  // Trusted host/test probes only; renderer settings cannot disable readiness checks.
+  preflight?: Pick<PreflightOptions, 'browser' | 'sandbox' | 'freeBytes'>;
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
@@ -92,20 +96,19 @@ export class FleetBackend {
     metrics.inferenceDurationMs += measured.durationMs;
   }
   private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
-  private async finish(p: Project, run: ActiveRun) {
+  private async finish(p: Project, run: ActiveRun, saveTimeoutMs?: number) {
     try {
       await run.processes.stop();
       p.status = run.controller.signal.aborted ? 'stopped' : run.outcome ?? 'failed';
       if (p.status === 'stopped') {
-        p.error = p.runCheckpoint?.writerState === 'unconfirmed' && p.error ? stoppedMessage + '\n' + p.error : stoppedMessage;
+        if (p.runCheckpoint?.writerState !== 'unconfirmed') recordProjectError(p, new Error(stoppedMessage), detail => this.log(p, 'verify', 'error', detail));
         p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       }
     } catch {
       if (p.runCheckpoint) p.runCheckpoint.writerState = 'unconfirmed';
       p.status = 'failed';
-      p.error = [run.controller.signal.aborted ? undefined : p.error, 'Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.'].filter(Boolean).join('\n');
+      recordProjectError(p, new Error('Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.'), detail => this.log(p, 'verify', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      this.log(p, 'verify', 'error', p.error);
     }
     for (const stage of p.stages) this.finishStageMetrics(p, stage.id);
     // Evidence-file errors must not prevent saving the terminal project state.
@@ -116,16 +119,30 @@ export class FleetBackend {
         await fs.writeFile(temporary, JSON.stringify(p.report, null, 2), { flag: 'wx', mode: 0o600 });
         await fs.rename(temporary, path.join(p.workspace!, 'test-report.json'));
       } catch (error) {
-        p.error = [p.error, 'Could not save verification report: ' + String(error)].filter(Boolean).join('\n');
+        const previous = p.error;
+        recordProjectError(p, new Error('Could not save verification report.', { cause: error }), detail => this.log(p, 'verify', 'error', detail));
+        p.error = [previous, p.error].filter(Boolean).join('\n');
         if (p.status !== 'stopped') p.status = 'failed';
       } finally { await fs.rm(temporary, { force: true }).catch(() => {}); }
     }
-    try { await this.changed(p); }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const saving = this.changed(p).then(() => true);
+      // Store owns serialized writes. Keep the existing write queued, but release
+      // a refused startup even if persistence is stuck. Promise.race also handles
+      // a late rejection without mutating a subsequent run's status or errors.
+      const saved = saveTimeoutMs === undefined ? await saving : await Promise.race([
+        saving, new Promise<false>(resolve => { timer = setTimeout(() => resolve(false), saveTimeoutMs); })
+      ]);
+      if (!saved) this.log(p, 'intake', 'error', 'Saving build state is still pending; keep AppYard open and ask the app maintainer for help if this continues.');
+    }
     catch (error) {
-      p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
+      const previous = p.error;
+      recordProjectError(p, error, detail => this.log(p, 'intake', 'error', 'Could not save run state: ' + detail));
+      p.error = [previous, p.error].filter(Boolean).join('\n');
       if (p.status !== 'stopped') p.status = 'failed';
-      this.log(p, 'intake', 'error', p.error);
     } finally {
+      clearTimeout(timer);
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
       this.notify();
@@ -139,20 +156,37 @@ export class FleetBackend {
     const p = this.store.project(id);
     if (resuming && !['failed', 'stopped'].includes(p.status)) throw new Error('Only a failed or stopped build can resume.');
     if (resuming && (!p.workspace || !p.runId || p.runCheckpoint?.version !== 1)) throw new Error('This build has no saved recovery checkpoint. Start a new run.');
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
-    if (backend === 'codex') {
-      await this.options.codex?.refresh();
-      if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
-    } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
-    // Authentication can await network I/O; recheck capacity before reserving the run.
-    if (this.active.has(id)) throw new Error('This challenge already has an active run.');
-    if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
-    if (resuming && !['failed', 'stopped'].includes(p.status)) throw new Error('Only a failed or stopped build can resume.');
+    const settings = { ...this.store.state.settings };
+    const { backend = 'pi' } = settings;
+    let { provider, model: modelId } = settings;
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
     const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve };
     this.active.set(id, run);
     try {
+      p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined;
+      const selected = await runPreflight({
+        root: this.store.root, settings, signal: run.controller.signal,
+        engine: async signal => {
+          if (backend === 'codex') {
+            await this.options.codex?.refresh(); signal.throwIfAborted();
+            return { connected: this.options.codex?.account.status === 'connected' && provider === 'chatgpt', models: this.options.codex?.models ?? [] };
+          }
+          const connected = this.runtime.hasConfiguredAuth(provider);
+          const chosen = modelId ? this.runtime.getModel(provider, modelId) : undefined;
+          const models = chosen ? [{ id: modelId, name: modelId, provider, backend: 'pi' as const, configured: connected }]
+            : this.runtime.getModels().map(model => ({ id: model.id, name: model.name, provider: model.provider, backend: 'pi' as const, configured: this.runtime.hasConfiguredAuth(model.provider) }));
+          return { connected, models };
+        },
+        browser: this.options.preflight?.browser,
+        sandbox: this.options.preflight?.sandbox ?? (signal => probeVerificationSandbox({ root: this.store.root, executable: this.executable, signal })),
+        freeBytes: this.options.preflight?.freeBytes
+      });
+      this.check(run);
+      provider = selected.provider; modelId = selected.model;
+      const current = this.store.state.settings;
+      if (!settings.model && current.model === settings.model && current.provider === settings.provider && (current.backend ?? 'pi') === backend) current.model = modelId;
+      const route = backend === 'codex' ? this.options.codex?.route : undefined;
       if (resuming) {
         await this.restore(p, run);
         this.check(run);
@@ -160,7 +194,7 @@ export class FleetBackend {
         p.stages.slice(first).forEach(s => { s.status = 'queued'; });
         p.status = 'running'; p.report = undefined; p.error = undefined;
         p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.feedback = '';
-        p.backend = backend; p.model = provider + '/' + modelId;
+        p.backend = backend; p.model = (route?.provider ?? provider) + '/' + modelId;
         this.log(p, p.stages[first].id, 'info', 'Resuming in the saved workspace from ' + p.stages[first].label + '. Frozen inputs checked.');
         await this.changed(p); this.check(run);
         void run.processes.run(() => this.execute(p, run, provider, modelId));
@@ -174,7 +208,7 @@ export class FleetBackend {
       p.qualityVersion = 1;
       p.runCheckpoint = undefined;
       p.backend = backend;
-      p.model = provider + '/' + modelId;
+      p.model = (route?.provider ?? provider) + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
@@ -193,15 +227,16 @@ export class FleetBackend {
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
         packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle' };
       this.check(run);
-      this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
+      this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ' + (route?.label ?? 'ChatGPT subscription') : 'Pi SDK') + ' · ' + p.model);
       await this.changed(p);
       this.check(run);
       void run.processes.run(() => this.execute(p, run, provider, modelId));
     } catch (error) {
-      run.outcome = 'failed'; p.error = error instanceof Error ? error.message : String(error);
+      run.outcome = 'failed';
+      p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
+      recordProjectError(p, error, detail => this.log(p, 'intake', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      this.log(p, 'intake', 'error', p.error);
-      await this.finish(p, run); throw error;
+      await this.finish(p, run, refusalSaveTimeoutMs); throw new Error(plainError(error).message, { cause: error });
     }
   }
   private async planningHash(p: Project) {
@@ -554,9 +589,10 @@ export class FleetBackend {
       this.check(run);
       run.outcome = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
-      p.error = error instanceof Error ? error.message : String(error); run.outcome = 'failed';
+      run.outcome = 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';
-      p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; }); this.log(p, stage, 'error', p.error);
+      p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
+      recordProjectError(p, error, detail => this.log(p, stage, 'error', detail));
     } finally { await this.finish(p, run); }
   }
   async stop(id: string) {

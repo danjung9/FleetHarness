@@ -178,6 +178,12 @@ test('a follow-up with no usage receipt cannot reuse the previous prompt total',
   assert.equal(measured.usage.totalTokens, null);
 });
 
+async function codexHome(t) {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'codex-metrics-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  return root;
+}
+
 function rpcFixture() {
   let listener, turn = 0;
   const calls = [];
@@ -194,9 +200,9 @@ function rpcFixture() {
   };
 }
 
-test('Codex stage measurements use cumulative thread totals once', async () => {
+test('Codex stage measurements use cumulative thread totals once', async t => {
   const rpc = rpcFixture(); let measured;
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal,
+  const s = await createCodexSession({ home: await codexHome(t), cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal,
     launch: () => rpc });
   const total = { inputTokens: 180, cachedInputTokens: 100, outputTokens: 20, reasoningOutputTokens: 5, totalTokens: 200 };
   await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
@@ -210,10 +216,10 @@ test('Codex stage measurements use cumulative thread totals once', async () => {
   assert.deepEqual(measured.usage, expectedUsage);
 });
 
-test('Codex accepts a final usage receipt after turn completion and keeps a missing follow-up receipt unknown', async () => {
+test('Codex accepts a final usage receipt after turn completion and keeps a missing follow-up receipt unknown', async t => {
   for (const late of [true, false]) {
     const rpc = rpcFixture(); let measured;
-    const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
+    const s = await createCodexSession({ home: await codexHome(t), cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
     await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
       const first = prompt('Initial'); await setImmediate();
       rpc.emit('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, totalTokens: 15 } } });
@@ -228,14 +234,14 @@ test('Codex accepts a final usage receipt after turn completion and keeps a miss
 });
 
 
-test('review regression: a previous-turn receipt cannot make missing follow-up usage known', async () => {
+test('review regression: a previous-turn receipt cannot make missing follow-up usage known', async t => {
   const rpc = rpcFixture(); let measured, turn = 0;
   const request = rpc.request;
   rpc.request = async (method, params) => {
     const result = await request(method, params);
     return method === 'turn/start' ? { turn: { id: `turn-${++turn}` } } : result;
   };
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [],
+  const s = await createCodexSession({ home: await codexHome(t), cwd: '.', model: 'fixture', tools: [],
     signal: new AbortController().signal, launch: () => rpc });
   const total = { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, reasoningOutputTokens: 0, totalTokens: 15 };
   await run(s, { onMetrics: value => { measured = value; }, work: async prompt => {
@@ -252,11 +258,11 @@ test('review regression: a previous-turn receipt cannot make missing follow-up u
     'A receipt for turn-1 must not satisfy the usage requirement for turn-2');
 });
 
-for (const late of [false, true]) test(`turn-correlated usage survives a delayed start response (${late ? 'after' : 'before'} completion)`, async () => {
+for (const late of [false, true]) test(`turn-correlated usage survives a delayed start response (${late ? 'after' : 'before'} completion)`, async t => {
   const rpc = rpcFixture(), reply = deferred();
   const request = rpc.request;
   rpc.request = (method, params) => method === 'turn/start' ? reply.promise : request(method, params);
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
+  const s = await createCodexSession({ home: await codexHome(t), cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
   const total = { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, totalTokens: 15 };
   let measured;
   await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
@@ -279,7 +285,7 @@ for (const reason of ['Stop', 'timeout']) for (const reported of [false, true]) 
     const project = store.state.projects[0]; project.workspace = root;
     const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'));
     const controller = new AbortController(), rpc = rpcFixture();
-    const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: controller.signal, launch: () => rpc });
+    const s = await createCodexSession({ home: await codexHome(t), cwd: '.', model: 'fixture', tools: [], signal: controller.signal, launch: () => rpc });
     const active = { controller, outcome: 'failed', processes: { async stop() {} }, resolve() {} };
     backend.active.set(project.id, active); project.status = 'running';
     await backend.stage(project, 'build', 'active');
@@ -309,7 +315,7 @@ for (const reason of ['Stop', 'timeout']) for (const reported of [false, true]) 
   });
 }
 
-for (const status of ['failed', 'stopped']) test(`review regression: report-write failure still persists ${status} project state and metrics`, async t => {
+for (const status of ['failed', 'stopped']) for (const cleanupFails of [false, true]) test(`review regression: report-write failure persists ${status} state and metrics with ${cleanupFails ? 'unconfirmed' : 'confirmed'} cleanup`, async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'review-report-save-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const store = new Store(root); await store.init();
@@ -321,7 +327,7 @@ for (const status of ['failed', 'stopped']) test(`review regression: report-writ
   await backend.stage(project, 'verify', 'active');
   let cleaned = false;
   const active = { controller: new AbortController(), outcome: status,
-    processes: { async stop() { cleaned = true; } }, resolve() {} };
+    processes: { async stop() { cleaned = true; if (cleanupFails) throw new Error('Synthetic cleanup failure'); } }, resolve() {} };
   if (status === 'stopped') active.controller.abort();
   backend.active.set(project.id, active);
   project.report = { time: new Date().toISOString(), command: 'synthetic', exitCode: 1,
@@ -335,9 +341,11 @@ for (const status of ['failed', 'stopped']) test(`review regression: report-writ
   assert.equal(backend.active.has(project.id), false);
   assert.equal(cleaned, true, 'Process cleanup precedes terminal persistence');
   const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
-  assert.equal(saved.status, status, 'Terminal state must survive an independent report-write failure');
+  assert.equal(saved.status, cleanupFails ? 'failed' : status, 'Terminal state must survive an independent report-write failure and fail closed on unsafe cleanup');
   assert.ok(saved.stages.find(stage => stage.id === 'verify').metrics.finishedAt);
   assert.deepEqual(saved.stages.find(stage => stage.id === 'verify').metrics.usage, expectedUsage);
-  assert.match(saved.error, /Could not save.*report/);
+  assert.match(saved.error, /could not access the build files.*permissions/);
+  if (cleanupFails) assert.match(saved.error, /cleanup could not be confirmed.*operator shutdown procedure/);
+  assert.match(saved.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Could not save.*report/);
   assert.deepEqual(saved.report.stageMetrics, project.report.stageMetrics);
 });

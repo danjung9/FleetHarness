@@ -40,28 +40,29 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     <fieldset className="engine-selector" disabled={disabled || connecting}>
       <legend>Build engine</legend>
       <div className="engine-options">
-        {([{ id: 'codex', name: 'Codex', description: 'ChatGPT subscription' }, { id: 'pi', name: 'Pi', description: 'Model providers' }] as const).map(engine => <label className="engine-option" key={engine.id}>
+        {([{ id: 'codex', name: 'Codex', description: 'ChatGPT or API key' }, { id: 'pi', name: 'Pi', description: 'Model providers' }] as const).map(engine => <label className="engine-option" key={engine.id}>
           <input type="radio" name="build-engine" value={engine.id} checked={backend === engine.id} onChange={() => { setBackend(engine.id); setModel(''); setKey(''); }}/>
           <span><strong>{engine.name}</strong><small>{engine.description}</small></span>
         </label>)}
       </div>
     </fieldset>
     {backend === 'codex' ? <div className="chatgpt-connection">
-      <h3>ChatGPT account</h3>
-      <p>Use the Codex allowance included with your ChatGPT plan. Availability and usage limits depend on your account.</p>
+      <h3>Codex account</h3>
+      <p>Connect with ChatGPT or an API key. ChatGPT uses your plan's Codex allowance; API-key usage is billed to the key's account.</p>
       <div role="status" aria-live="polite">
         {connected ? <p className="account-identity"><CheckCircle2 size={17}/><span>{account.email || 'ChatGPT connected'}{account.plan && <small>{account.plan} plan</small>}</span></p>
-          : connecting ? <p className="account-identity"><Loader2 size={17}/><span>Finish signing in in your browser. This screen updates automatically.</span></p> : <p>Sign in to connect your subscription.</p>}
+          : connecting ? <p className="account-identity"><Loader2 size={17}/><span>{account.authType === 'apiKey' ? 'Connecting your API key.' : 'Finish signing in in your browser. This screen updates automatically.'}</span></p> : <p>Sign in with ChatGPT or enter an API key.</p>}
       </div>
       {account?.error && <p className="connection-error" role="alert">{account.error}</p>}
       <div className="connection-actions">
         {connecting ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.cancelChatGPTLogin()))}>Cancel sign-in</button>
-          : connected ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'ChatGPT signed out of AppYard.')}>Sign out</button>
+          : connected ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'Codex signed out of AppYard.')}>Sign out</button>
           : <button className="button primary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT()))}>Continue with ChatGPT <ArrowRight size={16}/></button>}
         {!connecting && <button className="button secondary" type="button" disabled={busy || !desktop} onClick={() => void action(async () => updated(await api.refreshChatGPT()))}><RefreshCw size={14}/>Refresh connection</button>}
       </div>
+      {!connected && !connecting && <><label>API key<input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="OpenAI API key"/></label><button className="button secondary" type="button" disabled={disabled || !key.trim() || !api.connectCodexKey} onClick={() => { const entered = key; setKey(''); void action(async () => updated(await api.connectCodexKey!(entered))); }}>Sign in with API key</button></>}
       {connected && <div className="subscription-usage">{account.limits?.length ? account.limits.map((limit, i) => <div key={i}><span>{limit.label}</span><strong>{Math.round(limit.usedPercent)}% used</strong>{limit.resetsAt && <small>Resets {new Date(limit.resetsAt * 1000).toLocaleString()}</small>}</div>) : <p>Usage details are currently unavailable.</p>}</div>}
-      <p className="connection-note">Sign-in opens OpenAI in your browser. AppYard keeps its Codex login locally, separate from your other Codex apps. No API key is needed.</p>
+      <p className="connection-note">ChatGPT sign-in opens your browser. AppYard keeps its Codex login locally, separate from your other Codex apps. API keys stay out of project files and exports.</p>
     </div> : <>
       <label>Provider<select aria-label="Provider" value={provider} disabled={disabled} onChange={e => { setProvider(e.target.value); setModel(''); }}><option value="">Select a provider</option>{providers.map(p => <option key={p} value={p}>{p}{allModels.find(m => m.provider === p)?.configured ? ' · connected' : ''}</option>)}</select></label>
       <label>API key <span className="field-hint">Leave blank to use existing Pi credentials.</span><input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>

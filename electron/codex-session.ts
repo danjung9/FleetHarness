@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { tokenUsage, type StageEvent, type StageSession } from './agent-runner.js';
-import { CodexRpc, type RpcMessage } from './codex-rpc.js';
+import { CodexRpc, prepareCodexHome, type RpcMessage } from './codex-rpc.js';
 import { runProcessEnvironment } from './process-sweep.js';
 
 type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<{ content: { type: string; text?: string }[] }> };
@@ -10,6 +10,9 @@ export async function createCodexSession(options: {
   home: string; cwd: string; model: string; signal: AbortSignal; tools: ToolDefinition[]; skillPaths?: string[];
   launch?: (home: string) => CodexRpc;
 }): Promise<StageSession> {
+  options.signal.throwIfAborted();
+  await prepareCodexHome(options.home);
+  options.signal.throwIfAborted();
   const rpc = (options.launch ?? CodexRpc.launch)(options.home);
   const listeners = new Set<(event: StageEvent) => void>();
   // Reuse the factory's existing activity contract; Codex never starts a Pi session.
@@ -87,18 +90,17 @@ export async function createCodexSession(options: {
         if (turnId && p.turn.id !== turnId) return;
         identifyTurn(p.turn.id);
         emit({ type: 'turn_end' });
-        settle(p.turn.status === 'completed' ? undefined : new Error(p.turn.error?.message || `Codex turn ${p.turn.status}. Check your ChatGPT connection and usage in Settings.`)); break;
+        settle(p.turn.status === 'completed' ? undefined : new Error(p.turn.error?.message || `Codex turn ${p.turn.status}. Check your account connection and usage in Settings.`)); break;
     }
   });
   try {
     options.signal.throwIfAborted(); await rpc.initialize(); options.signal.throwIfAborted();
     const { account } = await rpc.request('account/read', { refreshToken: false });
-    if (account?.type !== 'chatgpt') throw new Error('Sign in with ChatGPT in Model settings before running Codex.');
+    if (account?.type !== 'chatgpt' && account?.type !== 'apiKey') throw new Error('Sign in with ChatGPT or an API key in Model settings before running Codex.');
     const skills = await Promise.all((options.skillPaths ?? []).map(async dir => fs.readFile(path.join(dir, 'SKILL.md'), 'utf8')));
     const result = await rpc.request('thread/start', {
-      cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'workspace-write',
-      config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled',
-        'shell_environment_policy.set': runProcessEnvironment({}) },
+      cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never',
+      config: { web_search: 'disabled', 'shell_environment_policy.set': runProcessEnvironment({}) },
       developerInstructions: [
         'You are a AppYard software-factory agent. Work only inside the provided workspace. Never access credentials or unrelated files, publish, deploy, or contact operational systems. Use synthetic examples. Write working artifacts and report limitations honestly. Use the fleet tools for domain logic and architecture updates. Do not spawn other agents. This is an unattended build: resolve routine choices yourself and document limitations.',
         ...skills
