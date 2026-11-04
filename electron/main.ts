@@ -14,6 +14,7 @@ import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/cata
 import { exportVerifiedBundle } from './source-export.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
 // Preserve existing workspaces and credentials when the display name changes.
 app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
 app.setName('AppYard');
@@ -218,6 +219,7 @@ function registerIPC() {
 function createWindow() {
   window = new BrowserWindow({
     width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'AppYard',
+    icon: iconPath,
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
     webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false }
   });
@@ -232,6 +234,7 @@ function createWindow() {
 }
 app.whenReady().then(async () => {
   try {
+    if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));
     await store.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));

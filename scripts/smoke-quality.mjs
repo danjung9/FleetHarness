@@ -9,7 +9,7 @@ import { newProject } from '../dist-electron/electron/storage.js';
 const output = path.resolve('output/playwright/quality');
 await fs.mkdir(output, { recursive: true });
 const project = { ...newProject({ title: 'Task review · evidence fixture', description: 'Synthetic UI fixture for reviewing application quality evidence.', criteria: ['Parse a synthetic task.', 'Connect to an approved operational source.'] }),
-  status: 'review', qualityVersion: 1, report: { time: new Date().toISOString(), command: 'node --test app.test.cjs', exitCode: 0, passed: 2, failed: 0, skipped: 0, total: 2, durationMs: 1200, sourceHash: 'fixture', output: '2 Node tests passed. Browser task failed.',
+  status: 'review', workspace: '/synthetic/quality-ui-fixture', runId: 'quality-ui-fixture', qualityVersion: 1, report: { time: new Date().toISOString(), command: 'node --test app.test.cjs', exitCode: 0, passed: 2, failed: 0, skipped: 0, total: 2, durationMs: 1200, sourceHash: 'fixture', output: '2 Node tests passed. Browser task failed.',
     quality: { schemaVersion: 1, contractHash: 'fixture', status: 'failed', requirementsMet: false, errors: [],
       criteria: [{ criterionId: 'TASK-1', requirement: 'Parse a synthetic task.', status: 'failed', detail: 'Expected inspect pump, received placeholder.' }, { criterionId: 'INTEGRATION-1', requirement: 'Connect to an approved operational source.', status: 'unverified', detail: 'An authorized connector and domain validation are required.' }],
       journeys: [{ id: 'parse', title: 'Parse a synthetic task', viewport: 'desktop', status: 'failed', detail: 'Expected inspect pump, received placeholder.', screenshot: '.quality-evidence/fixture/parse-desktop.png' }, { id: 'parse', title: 'Parse a synthetic task', viewport: 'narrow', status: 'passed', detail: 'Task completed.' }] } } };
@@ -28,8 +28,9 @@ try {
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.httpServer.address().port}`);
-  await page.getByRole('button', { name: 'Review — evidence & delivery', exact: true }).click();
-  await page.getByRole('heading', { name: 'Verification needs attention' }).waitFor();
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
+  await page.getByText('Verification needs attention', { exact: true }).waitFor();
   await page.getByLabel('Review notes').fill('Reviewed the synthetic fixture, including the explicit integration gap.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
   assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false);
@@ -42,8 +43,10 @@ try {
   project.report.quality.status = 'passed'; project.report.quality.criteria[0].status = 'passed'; project.report.quality.criteria[0].detail = 'The expected task appeared at both viewport sizes.';
   project.report.quality.journeys[0].status = 'passed'; project.report.quality.journeys[0].detail = 'Task completed.';
   await page.evaluate(value => window.setQualityFixture(value), state);
-  await page.getByRole('heading', { name: 'Automated checks passed' }).waitFor();
+  await page.getByText('Automated checks passed', { exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  const evidence = page.locator('.review-evidence');
+  if (await evidence.getAttribute('open') === null) await evidence.locator(':scope > summary').click();
   assert.equal(await page.getByText('Unverified', { exact: true }).count(), 1);
   await page.setViewportSize({ width: 1512, height: 982 });
   await page.locator('.page').evaluate(element => { element.scrollTop = 0; });

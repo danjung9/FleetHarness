@@ -63,15 +63,18 @@ try {
   assert.equal(await selector.inputValue(), second);
   await capture(page, 'home-desktop.png');
 
-  const screens = ['Flow — build pipeline', 'Preview — development workspace', 'Agents — coding sessions', 'Review — evidence & delivery', 'Brief — requirements', 'Files — artifacts', 'Model settings', 'Home — challenge portfolio'];
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Model settings', 'Home — challenge portfolio'];
   for (const screen of screens) {
-    await page.getByRole('button', { name: screen, exact: true }).first().click();
+    const navigation = ['Build', 'Review', 'Brief', 'Deliver'].includes(screen) ? page.getByRole('navigation', { name: 'Challenge progress', exact: true }) : page;
+    await navigation.getByRole('button', { name: screen, exact: true }).click();
     assert.equal(await selector.isVisible(), true, screen);
     assert.equal(await selector.inputValue(), second, screen);
   }
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
   await capture(page, 'home-minimum.png');
-  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Build', exact: true }).click();
   await selector.focus();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Shift+Tab');
@@ -81,8 +84,8 @@ try {
   fixture.setDelay(2000);
   const id = (await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].id;
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
-  await page.getByRole('button', { name: 'Run Pi agents', exact: true }).click();
-  await page.getByRole('button', { name: 'Stop run', exact: true }).waitFor();
+  await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
+  await page.getByRole('button', { name: 'Stop build', exact: true }).waitFor();
   assert.equal(await selector.isDisabled(), true);
   assert.match(await selector.getAttribute('title'), /Stop active builds/);
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].model, 'fleet-fixture/fixture-b');

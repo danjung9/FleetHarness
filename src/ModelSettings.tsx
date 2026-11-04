@@ -4,7 +4,7 @@ import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
 import './model-settings.css';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
-export function ModelSettings({ data, api, busy, action, updated, desktop }: { data: Bootstrap; api: FleetAPI; busy: boolean; action: Action; updated: (value: Bootstrap) => void; desktop: boolean }) {
+export function ModelSettings({ data, api, busy, action, updated, desktop, onSaved }: { data: Bootstrap; api: FleetAPI; busy: boolean; action: Action; updated: (value: Bootstrap) => void; desktop: boolean; onSaved?: (value: Bootstrap) => void }) {
   const [backend, setBackend] = useState<AgentBackend>(data.state.settings.backend ?? (data.state.settings.provider ? 'pi' : 'codex'));
   const [provider, setProvider] = useState(data.state.settings.provider);
   const [model, setModel] = useState(data.state.settings.model);
@@ -32,7 +32,8 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
   }, [api, connecting]);
   return <form className="model-settings-form" onSubmit={e => {
     e.preventDefault(); void action(async () => {
-      updated(await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined)); setKey('');
+      const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined);
+      updated(saved); setKey(''); onSaved?.(saved);
     }, 'Model settings saved.');
   }}>
     {!desktop && <div className="desktop-setup-notice"><h3>Builds run in the desktop app</h3><p>This browser preview lets you explore AppYard and save briefs. To run a build, open the AppYard desktop app, add your brief, then connect a model in Settings.</p><p>Briefs saved here stay in this browser; they do not sync to the desktop app.</p></div>}
