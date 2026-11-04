@@ -95,3 +95,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:15 Astra fix-approval finished, exit 0. Report: `Research/Backend-Audit/fix-approval.md`
 - 18:16 `6228623` pushed: repairs can no longer weaken tests, prose requirements stay in coverage, evaluator failures retry without spending repairs, one download serves many checks. Unit 295 of 295, harness 80 of 80, outside the sandbox.
 - 18:17 Team branch: mvp now 6228623
+- 18:18 Astra fix-approval started: Two things, in this order. Same rules: no git writes, leave changes in the working tree, never weaken an assertion.
+- 18:18 Astra fix-pi finished, exit 0. Report: `Research/Backend-Audit/fix-pi.md`
+- 18:19 Astra fixer finished, exit 0. Report: `Research/Backend-Audit/fixer.md`
+- 18:19 Astra conn-core finished, exit 1. Report: `Research/Backend-Audit/conn-core.md`

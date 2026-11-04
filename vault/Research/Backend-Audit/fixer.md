@@ -34,3 +34,20 @@ Incoming `App.tsx` changes at lines **211, 221 and 281** were retained. Its subs
 [Handoff and exact frontend diffs](~/Documents/CDAO/fh-org/integrator/.tmp/Sprint/api-key-merge-handoff.md). No Git writes performed.
 
 COMMIT: Add Codex API key sign-in and integrate readiness checks
+
+## 18:19 report
+
+Fixed the reported failures:
+
+- Codex fixtures now supply connected accounts; missing accounts still block inference.
+- Pi’s Stop fixture now actually cancels its pending prompt.
+- Unconfirmed writers retain a distinct warning and blocked Resume.
+- Cleanup failures explicitly warn that processes may still be active.
+
+No cleanup assertions were weakened. Preflight expectations now match the distinct writer warning; stale recovery fixtures were corrected.
+
+Both TypeScript checks passed. All six cleanup cases and 15 focused recovery checks passed. All touched tests: **170 passed, 12 failed** in native discovery/browser workflows.
+
+I could not validate native `ps`, sandbox execution or Chrome here. Changes remain uncommitted in the working tree.
+
+COMMIT: Fix cleanup outcome reporting and account readiness fixtures

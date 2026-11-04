@@ -20,3 +20,17 @@ The smoke script passes syntax checking. Native execution stops at `sandbox_appl
 [Handoff and receipts](~/Documents/CDAO/fh-org/astra-a2/Sprint/Pi-containment-session.md). Overseer command: `node scripts/smoke-pi-containment.mjs`.
 
 COMMIT: Contain Pi tools and prevent credential leakage
+
+## 18:18 report
+
+Left changes uncommitted:
+
+- Fixed canonical workspace aliases, including macOS `/var` paths, while retaining escape rejection. Added regression and native smoke coverage.
+- Made the timeout test trigger its intended 80 ms stall deterministically. Preserved existing assertions and added exactly-one-retry checks.
+- Deleted the two symlink audit checks as requested. Approval commit `1af5235` owns their coverage.
+
+Both TypeScript checks passed. All 42 containment, secrets and runner tests passed. Smoke syntax passed.
+
+Native validation remains unavailable: sandbox startup is denied and `ps` cannot run. Backend results were 4 passed, 92 failed at sandbox preflight; SDK/audit results were 1 passed, 5 failed, 2 existing skips. The revised retry and SDK workflows need the overseer’s native rerun. Chrome could not run here.
+
+COMMIT: Fix Pi workspace aliases and stabilize timeout retry regression
