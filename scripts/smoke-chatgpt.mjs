@@ -12,7 +12,7 @@ async function capture(page, name) { await page.evaluate(() => document.fonts.re
 try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: root, VITE_DEV_SERVER_URL: '' } });
   const page = await app.firstWindow(); page.on('pageerror', e => errors.push(e.message));
-  await page.getByRole('button', { name: 'Model settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('heading', { name: 'ChatGPT account' }).waitFor();
   assert.equal(await page.getByRole('radio', { name: 'Codex ChatGPT subscription' }).isChecked(), true);
   await page.getByRole('radio', { name: 'Codex ChatGPT subscription' }).focus();
@@ -63,7 +63,7 @@ try {
   }, { boot });
   const p = await ctx.newPage(); p.setDefaultTimeout(15000); p.on('pageerror', e => errors.push(e.message));
   await p.goto(`http://127.0.0.1:${address.port}/`);
-  await p.getByRole('button', { name: 'Model settings', exact: true }).click();
+  await p.getByRole('button', { name: 'Settings', exact: true }).click();
   await p.getByText('builder@example.test', { exact: false }).waitFor();
   await p.getByRole('button', { name: 'Save model settings' }).click();
   await p.getByText('Model settings saved.', { exact: true }).waitFor();

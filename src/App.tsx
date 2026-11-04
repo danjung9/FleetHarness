@@ -4,6 +4,7 @@ import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
 import { getJourneyState } from '../shared/journey';
 import { BuildFlow } from './BuildFlow';
+import { SystemDesign } from './SystemDesign';
 import { ReviewWorkspace, DeliveryWorkspace } from './ReviewFlow';
 import { ModelSettings } from './ModelSettings';
 import { ModelSelector } from './ModelSelector';
@@ -163,9 +164,18 @@ function AgentSessions({ project }: { project: Project }) {
   </div>;
 }
 function Settings({ data, action, updated, busy, onBack, onSaved }: { data: Bootstrap; action: Action; updated: (b: Bootstrap) => void; busy: boolean; onBack?: () => void; onSaved: (b: Bootstrap) => void }) {
-  return <div className="page settings-page"><div className="page-heading"><div><h1>Model settings</h1></div><div>{onBack && <button className="secondary" onClick={onBack}>Back to challenge <ArrowRight size={14}/></button>}</div></div>
+  const developerMode = data.state.settings.developerMode === true;
+  const { backend, provider, model, rememberKey } = data.state.settings;
+  return <div className="page settings-page"><div className="page-heading"><div><h1>Settings</h1></div><div>{onBack && <button className="secondary" onClick={onBack}>Back to challenge <ArrowRight size={14}/></button>}</div></div>
+    <section className="developer-mode-setting" aria-labelledby="developer-mode-label">
+      <div><h2 id="developer-mode-label">Developer mode</h2><p id="developer-mode-description">Show system design in navigation and while building.</p></div>
+      <label className="settings-switch"><input type="checkbox" role="switch" aria-labelledby="developer-mode-label" aria-describedby="developer-mode-description" checked={developerMode} disabled={busy} onChange={event => {
+        const enabled = event.target.checked;
+        void action(async () => updated(await api.setDeveloperMode(enabled)), enabled ? 'Developer mode enabled.' : 'Developer mode disabled.');
+      }}/><span aria-hidden="true">{developerMode ? 'On' : 'Off'}</span></label>
+    </section>
     <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">Connect ChatGPT or choose a Pi provider.</p>
-      <ModelSettings key={JSON.stringify(data.state.settings)} data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop} onSaved={onSaved}/>
+      <ModelSettings key={JSON.stringify([backend, provider, model, rememberKey])} data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop} onSaved={onSaved}/>
     </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Your selected engine reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>The agent writes the app and tests. AppYard executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
       <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this Mac. AppYard independently runs the generated tests locally. Codex uses your ChatGPT allowance; Pi uses your configured provider account.</p></div>
       <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Credentials stay in the desktop backend. The interface shows your account, models, and usage status.</p>
@@ -174,7 +184,9 @@ function Settings({ data, action, updated, busy, onBack, onSaved }: { data: Boot
 }
 export default function App() {
   const [data, setData] = useState<Bootstrap | null>(null), [state, setState] = useState<AppState | null>(null);
-  const [active, setActive] = useState<View>('portfolio'), [current, setCurrent] = useState('');
+  const [selectedView, setActive] = useState<View>('portfolio'), [current, setCurrent] = useState('');
+  const developerMode = state?.settings.developerMode === true;
+  const active = selectedView === 'design' && !developerMode ? 'factory' : selectedView;
   const [requestedArtifact, setRequestedArtifact] = useState('');
   const settingsReturn = useRef<View | null>(null);
   const [intakeCatalogId, setIntakeCatalogId] = useState('');
@@ -183,6 +195,12 @@ export default function App() {
   useEffect(() => { api.bootstrap().then(b => { setData(b); setState(b.state); setCurrent(b.state.projects[0]?.id || ''); }).catch(e => setError(String(e))); return api.onState(setState); }, []);
   useEffect(() => { const handler = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearch(v => !v); } }; window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler); }, []);
   useEffect(() => { if (!message) return; const timer = setTimeout(() => setMessage(''), 5000); return () => clearTimeout(timer); }, [message]);
+  useEffect(() => {
+    if (!developerMode) {
+      setActive(view => view === 'design' ? 'factory' : view);
+      if (settingsReturn.current === 'design') settingsReturn.current = 'factory';
+    }
+  }, [developerMode]);
   const action: Action = async (work, success) => {
     setBusy(true); setError('');
     try { await work(); if (success) setMessage(success); return true; }
@@ -194,7 +212,7 @@ export default function App() {
   function navigate(view: View) {
     if (view === 'settings' && active !== 'settings') settingsReturn.current = active === 'portfolio' ? null : active;
     if (view === 'artifacts') setRequestedArtifact('');
-    setActive(view);
+    setActive(view === 'design' && !developerMode ? 'factory' : view);
   }
   function updateBootstrap(value: Bootstrap) {
     setData(value); setState(value.state);
@@ -213,6 +231,7 @@ export default function App() {
   }
   const nav: { id: View; label: string; shortLabel: string; icon: typeof Bot }[] = [
     { id: 'portfolio', label: 'Home — challenge portfolio', shortLabel: 'Home', icon: LayoutDashboard },
+    { id: 'design', label: 'System design — application architecture', shortLabel: 'Design', icon: GitBranch },
     { id: 'workspace', label: 'Preview — generated app', shortLabel: 'Preview', icon: Code2 },
     { id: 'agents', label: 'Activity — agent work', shortLabel: 'Activity', icon: Activity },
     { id: 'artifacts', label: 'Files — artifacts', shortLabel: 'Files', icon: Archive }
@@ -224,8 +243,8 @@ export default function App() {
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
-      <nav aria-label="Primary">{nav.map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running') && <i className="live-dot"/>}</IconButton>)}</nav>
-      <div className="rail-bottom"><IconButton label="Model settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
+      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running') && <i className="live-dot"/>}</IconButton>)}</nav>
+      <div className="rail-bottom"><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar">
@@ -240,7 +259,8 @@ export default function App() {
       {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
       {p && !showHome && active !== 'settings' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} navigate={navigate} start={() => setStart(true)} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
-      {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
+      {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
+      {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')}/>}
       {p && active === 'agents' && <AgentSessions key={p.id} project={p}/>}
       {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onApproved={() => navigate('delivery')}/>}

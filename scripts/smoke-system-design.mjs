@@ -16,34 +16,36 @@ async function openBuild(page) {
 }
 
 async function openSystemDesign(page) {
-  await openBuild(page);
-  if (await page.locator('.build-flow').count()) {
-    await page.getByRole('button', { name: /^Plan: / }).click();
-    const disclosure = page.locator('.build-disclosure').filter({ has: page.locator('summary').filter({ hasText: /^System design$/ }) });
-    await disclosure.waitFor();
-    if (await disclosure.getAttribute('open') === null) await disclosure.locator(':scope > summary').click();
-  } else {
-    await page.getByRole('button', { name: 'System design', exact: true }).click();
-  }
+  const navigation = page.getByRole('button', { name: 'System design — application architecture', exact: true });
+  await navigation.click();
+  await page.locator('.design-workspace .system-design').waitFor({ state: 'visible' });
+  assert.equal(await navigation.getAttribute('aria-current'), 'page', 'Design is available directly from the sidebar');
+}
+
+async function setDeveloperMode(page, enabled) {
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
+  const toggle = page.getByRole('switch', { name: 'Developer mode', exact: true });
+  if (await toggle.isChecked() !== enabled) await toggle.click();
+  await page.getByRole('switch', { name: 'Developer mode', exact: true, checked: enabled }).waitFor();
+  await page.getByRole('button', { name: 'System design — application architecture', exact: true }).waitFor({ state: enabled ? 'visible' : 'detached' });
+}
+
+async function assertDesignHidden(page) {
+  assert.equal(await page.getByRole('button', { name: 'System design — application architecture', exact: true }).count(), 0, 'Non-developer mode hides Design navigation');
+  assert.equal(await page.locator('.system-design').count(), 0, 'Non-developer mode hides the system design diagram');
 }
 
 async function openDesignWithActivity(page) {
-  const legacyPreview = page.getByRole('button', { name: 'Preview — development workspace', exact: true });
-  if (await legacyPreview.count()) {
-    await legacyPreview.click();
-    await page.getByRole('button', { name: 'System design', exact: true }).click();
-    const activity = page.getByRole('button', { name: 'Toggle activity', exact: true });
-    if (await activity.getAttribute('aria-expanded') !== 'true') await activity.click();
-  } else {
-    await openSystemDesign(page);
-    const activity = page.locator('.build-disclosure').filter({ has: page.locator('summary').filter({ hasText: /^Activity/ }) });
-    if (await activity.getAttribute('open') === null) await activity.locator(':scope > summary').click();
-  }
+  await openBuild(page);
+  await page.locator('.build-system-design .system-design').waitFor({ state: 'visible' });
+  const activity = page.locator('.build-disclosure').filter({ has: page.locator('summary').filter({ hasText: /^Activity/ }) });
+  if (await activity.getAttribute('open') === null) await activity.locator(':scope > summary').click();
 }
 
 async function assertNoOuterOverflow(page, context) {
   const overflowing = await page.evaluate(() => {
-    const selectors = ['html', '.app-shell', '.factory-main', '.build-flow', '.development', '.preview-system-design', '.system-design'];
+    const selectors = ['html', '.app-shell', '.factory-main', '.build-flow', '.build-system-design', '.design-workspace', '.development', '.preview-system-design', '.system-design'];
     return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
       .filter(element => element.clientWidth && element.scrollWidth > element.clientWidth + 1)
       .map(element => ({ selector, width: element.clientWidth, content: element.scrollWidth, children: [...element.querySelectorAll('*')]
@@ -134,22 +136,38 @@ try {
     window.hide();
   });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
+  const initial = await page.evaluate(() => window.fleetHarness.bootstrap());
+  assert.equal(initial.state.settings.developerMode, false, 'Developer mode is off for a fresh installation');
+  await openBuild(page);
+  await assertDesignHidden(page);
+  await setDeveloperMode(page, true);
+  assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true, 'Developer mode saves without a configured model');
+  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
+  await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
+  await page.getByText('Model settings saved.', { exact: true }).waitFor();
+  assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true, 'Saving model settings preserves developer mode');
+  await page.reload(); await page.locator('.app-shell').waitFor();
+  await page.getByRole('button', { name: 'System design — application architecture', exact: true }).waitFor();
   const id = await page.evaluate(async () => {
     const api = window.fleetHarness;
-    await api.saveSettings({ provider: 'fleet-fixture', model: 'fixture-model', rememberKey: false });
     const p = (await api.bootstrap()).state.projects[0];
     window.designSnapshots = [];
     api.onState(state => { const p = state.projects[0]; window.designSnapshots.push({ status: p.status, runId: p.runId, progress: p.systemDesign?.progress, report: p.report }); });
     return p.id;
   });
+  await openSystemDesign(page);
+  await page.getByRole('heading', { name: 'Your system design will appear here', exact: true }).waitFor();
   await openBuild(page);
+  await page.locator('.build-system-design').getByRole('heading', { name: 'Your system design will appear here', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('button', { name: /^(Run Pi agents|Start automatic build)$/ }).click();
   await page.waitForFunction(() => window.designSnapshots.some(state => state.status === 'running' && state.runId));
-  if (await page.locator('.build-flow').count()) await openSystemDesign(page);
-  else await page.getByRole('heading', { name: 'Designing your system' }).waitFor();
+  await page.getByRole('heading', { name: 'Designing your system' }).waitFor();
   await page.getByRole('button', { name: 'Message review: Planned', exact: true }).waitFor();
+  assert.equal(await page.locator('.build-system-design .sd-node').first().isVisible(), true, 'Published architecture appears automatically in Build');
   await page.getByRole('button', { name: 'Task extraction: Building', exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: /^Implement: / }).getAttribute('aria-pressed'), 'true', 'The diagram remains visible as the current phase advances to Implement');
   await page.getByRole('button', { name: 'Task extraction: Building', exact: true }).click();
   await page.locator('.sd-detail-title h3').filter({ hasText: 'Task extraction' }).waitFor();
   await page.screenshot({ path: path.join(output, 'system-design-building.png'), scale: 'css' });
@@ -162,6 +180,13 @@ try {
   assert.ok(states.some(s => s.progress && Object.values(s.progress).every(p => p.status === 'planned')));
   assert.ok(states.some(s => s.progress?.parser.status === 'building' && !s.report));
   assert.ok(states.some(s => s.progress?.parser.status === 'building' && s.report?.failed === 1), 'Repair must return affected component to building');
+  assert.equal(await page.getByRole('button', { name: /^Test: / }).getAttribute('aria-pressed'), 'true', 'The build follows the final Test phase without hiding the diagram');
+  for (const phase of ['Implement', 'Test']) {
+    await page.getByRole('button', { name: new RegExp('^' + phase + ': ') }).click();
+    assert.equal(await page.locator('.build-system-design .sd-node.generated').count(), 3, `All components remain available while inspecting ${phase}`);
+    assert.equal(await page.locator('.build-system-design .sd-node').first().isVisible(), true, `The diagram remains visible while inspecting ${phase}`);
+  }
+  await openSystemDesign(page);
   await page.getByRole('button', { name: 'Message review: Generated', exact: true }).focus();
   await page.keyboard.press('Enter');
   assert.match(await page.locator('.sd-relationships').innerText(), /Synthetic message text/);
@@ -184,8 +209,18 @@ try {
   await page.screenshot({ path: path.join(output, 'system-design-development-activity.png'), scale: 'css' });
   await page.evaluate(id => window.fleetHarness.updateProject(id, { title: 'Revised parser', description: 'A revised application brief should clear the previous system architecture.', criteria: ['Publish a new design.'] }), id);
   assert.equal(await page.evaluate(async id => !!(await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.systemDesign, id), false, 'Editing the brief clears the persisted design');
-  if (await page.locator('.build-flow').count()) await page.locator('.system-design').waitFor({ state: 'hidden' });
-  else await page.getByRole('heading', { name: 'Your system design will appear here' }).waitFor();
+  await page.locator('.build-system-design').getByRole('heading', { name: 'Your system design will appear here', exact: true }).waitFor();
+  assert.equal(await page.locator('.sd-node').count(), 0, 'Editing the brief removes stale components from the visible Build diagram');
+  await openSystemDesign(page);
+  await page.getByRole('heading', { name: 'Your system design will appear here', exact: true }).waitFor();
+  await setDeveloperMode(page, false);
+  await page.getByRole('button', { name: 'Back to challenge', exact: true }).click();
+  await page.locator('.build-flow').waitFor();
+  await assertDesignHidden(page);
+  await page.reload(); await page.locator('.app-shell').waitFor();
+  await openBuild(page);
+  await assertDesignHidden(page);
+  assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, false, 'Disabled developer mode survives reload');
   assert.deepEqual(errors, []);
   // Check interrupted states in the retained browser renderer using the real fixture result.
   server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false }, plugins: [{
@@ -213,8 +248,11 @@ try {
   const renderer = await browser.newPage({ viewport: { width: 1120, height: 720 }, reducedMotion: 'reduce' });
   renderer.on('pageerror', e => errors.push(e.message));
   await renderer.goto(`http://127.0.0.1:${server.httpServer.address().port}/`);
+  await renderer.locator('.app-shell').waitFor();
+  await openBuild(renderer);
+  await assertDesignHidden(renderer);
   const seed = async project => {
-    await renderer.evaluate(project => localStorage.setItem('fleet-browser-preview', JSON.stringify({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: [project] })), project);
+    await renderer.evaluate(project => localStorage.setItem('fleet-browser-preview', JSON.stringify({ version: 1, settings: { provider: '', model: '', rememberKey: false, developerMode: true }, projects: [project] })), project);
     await renderer.reload();
     await renderer.locator('.app-shell').waitFor();
     await openSystemDesign(renderer);
@@ -225,6 +263,18 @@ try {
   await seed(interrupted);
   assert.equal(await renderer.locator('.sd-node.building').count(), 0);
   assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Stopped' }).count(), 1);
+  await setDeveloperMode(renderer, false);
+  await renderer.getByRole('button', { name: 'Back to challenge', exact: true }).click();
+  await renderer.locator('.build-flow').waitFor();
+  await assertDesignHidden(renderer);
+  await renderer.reload(); await renderer.locator('.app-shell').waitFor();
+  await openBuild(renderer);
+  await assertDesignHidden(renderer);
+  assert.equal(await renderer.evaluate(() => JSON.parse(localStorage.getItem('fleet-browser-preview')).settings.developerMode), false, 'Browser developer mode persists when disabled');
+  await setDeveloperMode(renderer, true);
+  await renderer.reload(); await renderer.locator('.app-shell').waitFor();
+  await openSystemDesign(renderer);
+  assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Stopped' }).count(), 1, 'Browser developer mode persists when enabled and retains the design');
   interrupted.status = 'failed'; await seed(interrupted);
   assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Blocked' }).count(), 1);
 
@@ -275,11 +325,16 @@ try {
   await renderer.getByRole('button', { name: 'Fit diagram', exact: true }).click();
   await assertNoOuterOverflow(renderer, 'Dense workspace after zoom and pan');
 
-  // Empty states remain covered even when the surrounding shell only shows published designs.
+  // Exercise standalone empty states and a design with all components in one column.
   const emptyPage = await browser.newPage({ viewport: { width: 1120, height: 720 }, reducedMotion: 'reduce' });
   emptyPage.on('pageerror', error => errors.push(error.message));
   await emptyPage.goto(`http://127.0.0.1:${server.httpServer.address().port}/`);
   const empty = structuredClone(final); delete empty.systemDesign; empty.status = 'running';
+  empty.stages.forEach(stage => { stage.status = stage.id === 'research' ? 'active' : 'queued'; });
+  await emptyPage.evaluate(async project => (await import('/@system-design-smoke')).mount(project), empty);
+  await emptyPage.getByRole('heading', { name: 'Your system design will appear here', exact: true }).waitFor();
+  assert.equal(await emptyPage.getByRole('status').filter({ hasText: 'Planning in progress' }).count(), 0, 'Research does not claim planning is active');
+  empty.stages.forEach(stage => { stage.status = stage.id === 'plan' ? 'active' : 'queued'; });
   await emptyPage.evaluate(async project => (await import('/@system-design-smoke')).mount(project), empty);
   await emptyPage.getByRole('heading', { name: 'Designing your system', exact: true }).waitFor();
   empty.status = 'review';
@@ -301,7 +356,7 @@ try {
   await emptyPage.keyboard.press('-');
   assert.equal(await emptyPage.locator('.sd-zoom-value').innerText(), fittedOneKind, 'Zoom out cannot enlarge a diagram fitted below the manual minimum');
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, planning: true, liveProgress: true, repair: true, sourceReferences: true, persistence: true, staleDesignCleared: true, interruptedStates: true, emptyStates: true, zoomAndPan: true, connectionFocus: true, linkedInspector: true, denseResponsiveLayout: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, developerModeDefaultOff: true, developerModePersistence: true, modelSavePreservesDeveloperMode: true, safeReturnFromHiddenDesign: true, browserDeveloperModePersistence: true, automaticDiagramVisibility: true, directDesignNavigation: true, visibilityAcrossBuildPhases: true, planning: true, liveProgress: true, repair: true, sourceReferences: true, persistence: true, staleDesignCleared: true, interruptedStates: true, emptyStates: true, zoomAndPan: true, connectionFocus: true, linkedInspector: true, denseResponsiveLayout: true, rendererErrors: 0, screenshots: output }, null, 2));
 } catch (error) {
   if (app) {
     const page = await app.firstWindow();
