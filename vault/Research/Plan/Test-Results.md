@@ -3,10 +3,22 @@ type: research
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Results of running the mvp branch's test suites from a clean install at commit f72c5dc."
+summary: "Results of running the mvp branch test suites from a clean install, at commits f72c5dc and 0f175a8."
 ---
 
-# Test results for mvp at f72c5dc
+# Test results for mvp
+
+## Update: commit 0f175a8, the latest on mvp
+
+- [E] Clean copy on this Mac, Node v26.0.0, `npm ci` with install scripts.
+- [E] `npm test`: exits 0, 78 of 78 pass. The compile step now succeeds.
+- [E] `npm run test:harness`: exits 0, 39 of 39 pass.
+- [E] `npx tsc --noEmit` at the root: exits 0, no errors.
+- [E] All five type errors reported below are fixed at this commit.
+- [E] `npm run test:desktop`: not finished when this was written. It was waiting on the Electron binary download.
+- These are unit and integration tests with fake or scripted providers. No real model run, full challenge build or generated app has been exercised.
+
+The rest of this note records the earlier commit f72c5dc.
 
 ## Bottom line
 

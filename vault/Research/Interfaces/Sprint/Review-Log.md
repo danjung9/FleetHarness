@@ -17,13 +17,17 @@ summary: "Local tool, friction and prior-work record for the interface compariso
 | Tool or source | Type and provider | Use in this review |
 | --- | --- | --- |
 | [E] Local shell execution tool, version not exposed | Workspace tool, session environment | Read named text files and inspect Git identity; no repository programs executed. |
-| [E] Git, ripgrep, cat, sed and nl, versions not queried | Local command-line utilities, installed environment | Read-only revision, file, text and line-reference checks. |
+| [E] Git 2.50.1 (Apple Git-155), ripgrep 15.2.0 | Local command-line utilities, installed environment | Read-only revision, file and text checks. Versions observed with their version commands. |
+| [E] cat, sed and nl, versions not queried | Operating-system command-line utilities, installed environment | Read text and inspect source line references. |
+| [E] Python 3.9.6 with standard-library pathlib and re | Python runtime, installed environment | Check note frontmatter, required sections, local links and prohibited dash characters; no project code imported or executed. |
 | [E] Clock tool, version not exposed | Session environment | Bound the review to the requested time. |
 | [E] Patch tool, version not exposed | Session environment | Write research notes only under Research/Interfaces. |
 | [E] Supplied seven PNG screenshots | Review inputs, supplied by Mukul | Visual comparison at the stated 1440 by 900 size; no independent capture. |
 | [E] FleetHarness source at 0f175a8 | Existing project, team repository | Static comparison of both renderers, shared backend and test definitions. |
 
 [E] No new model was selected, dependency installed, external service contacted or dataset downloaded. [E] Libraries named in the comparison are inspected product dependencies, not newly used review tools. [E] The requested central `tools/fh.py tool` command was not executed because it writes outside this folder; these entries are pending central reconciliation, not a completed central disclosure.
+
+[E] Final local document checks found all six notes had the required frontmatter and sections, all vault links resolved, and no em or en dash characters were present. [E] A final read-only Git check still showed the requested commit and a clean clone. These checks validate the review artifacts, not application execution.
 
 ## Friction
 
