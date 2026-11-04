@@ -55,6 +55,7 @@ test('combined prerequisite: registered evidence comes from a single execution t
   assert.equal(report.registeredTests.length, 1);
   assert.equal(report.registeredTests[0].tests, 1);
   assert.equal(report.registeredTests[0].file, 'app.test.cjs');
+  assert.deepEqual(JSON.parse(JSON.stringify(report)), report, 'Persisted verification evidence must equal the in-memory report');
 });
 
 test('combined prerequisite: a zero-byte file beside real cases cannot pass verification', async t => {

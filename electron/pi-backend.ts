@@ -98,7 +98,7 @@ export class FleetBackend {
     p.verification = undefined;
     try {
       await run.processes.stop();
-      if (p.processScope?.marker === run.processes.marker && p.processScope.runId === p.runId) p.processScope.cleanup = 'confirmed';
+      if (p.processScope && p.processScope.marker === run.processes.marker && p.processScope.runId === p.runId) p.processScope.cleanup = 'confirmed';
       p.status = run.controller.signal.aborted ? 'stopped' : run.outcome ?? 'failed';
       if (p.status === 'stopped') {
         p.error = p.runCheckpoint?.writerState === 'unconfirmed' && p.error ? stoppedMessage + '\n' + p.error : stoppedMessage;

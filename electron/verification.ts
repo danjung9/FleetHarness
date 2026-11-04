@@ -133,8 +133,8 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
-    const environment = runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
-      CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot });
+    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+      CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
       cwd: root, env: environment,
       stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
