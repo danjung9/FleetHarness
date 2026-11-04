@@ -51,6 +51,17 @@ test('real Pi SDK recovers a 503, executes file tools, repairs a failing test an
   assert.equal(h.project.report.passed, 1); assert.equal(h.project.report.failed, 0);
   assert.equal(h.project.report.sourceHash, await sourceHash(h.project.workspace));
   assert.ok((await fs.readdir(path.join(h.root, 'sessions', h.project.id))).filter(name => name.endsWith('.jsonl')).length >= 4);
+  // This transport deliberately omits usage. Pi fills its Usage structure with zeros;
+  // these must never be presented as measured zero tokens/cost.
+  const usage = h.project.runSummary.usage;
+  assert.ok(proxy.requests.length > 0);
+  assert.ok(usage.prompts > 0);
+  assert.ok(usage.requests.value > usage.prompts);
+  assert.equal(usage.requests.state, 'partial');
+  assert.deepEqual(usage.tokens, { value: null, state: 'unavailable' });
+  assert.deepEqual(usage.costUsd, { value: null, state: 'unavailable' });
+  const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8'));
+  assert.deepEqual(saved.projects[0].runSummary.usage, usage);
 });
 
 test('real Pi provider that never responds is bounded by the inactivity watchdog', { timeout: 10000 }, async t => {
@@ -68,6 +79,8 @@ test('Stop cancels a real stalled provider and leaves a persisted stopped run', 
   assert.equal(h.project.status, 'stopped'); assert.equal(h.pi.active.size, 0);
   const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8'));
   assert.equal(saved.projects[0].status, 'stopped');
+  assert.deepEqual(saved.projects[0].runSummary.usage.tokens, { value: null, state: 'unavailable' });
+  assert.equal(saved.projects[0].runSummary.usage.prompts, 1);
 });
 
 test('a permanent real provider error stops before implementation without false completion', { timeout: 10000 }, async t => {
@@ -75,4 +88,30 @@ test('a permanent real provider error stops before implementation without false 
   const h = await backend(t, denied.baseUrl); await h.pi.start(h.project.id); await h.settle();
   assert.equal(h.project.status, 'failed'); assert.match(h.project.error, /Fixture credentials rejected/);
   assert.equal(h.project.stages.find(s => s.id === 'build').status, 'queued'); assert.equal(h.pi.active.size, 0);
+});
+
+test('real Pi usage reports reconcile provider cache/reasoning subsets across artifact recovery', { timeout: 10000 }, async t => {
+  const measured = await provider(t, (_req, res, _raw, count) => {
+    const base = { id: `usage-${count}`, object: 'chat.completion.chunk', model: 'fixture-model', created: 1 };
+    res.writeHead(200, { 'content-type': 'text/event-stream' });
+    res.write('data: ' + JSON.stringify({ ...base, choices: [{ index: 0, delta: { role: 'assistant', content: 'A response without an artifact.' }, finish_reason: null }] }) + '\n\n');
+    res.write('data: ' + JSON.stringify({ ...base, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] }) + '\n\n');
+    res.write('data: ' + JSON.stringify({ ...base, choices: [], usage: { prompt_tokens: 150, completion_tokens: 30, total_tokens: 180,
+      prompt_tokens_details: { cached_tokens: 40 }, completion_tokens_details: { reasoning_tokens: 8 } } }) + '\n\n');
+    res.end('data: [DONE]\n\n');
+  });
+  const h = await backend(t, measured.baseUrl); await h.pi.start(h.project.id); await h.settle();
+  assert.equal(h.project.status, 'failed');
+  assert.match(h.project.error, /required artifacts after one completion attempt/);
+  assert.equal(measured.requests.length, 2, 'initial prompt plus the single missing-artifact recovery');
+  const usage = h.project.runSummary.usage;
+  assert.equal(usage.prompts, 2);
+  assert.equal(usage.requests.value, 2);
+  assert.equal(usage.tokens.value, 360);
+  assert.equal(usage.inputTokens.value, 300);
+  assert.equal(usage.outputTokens.value, 60);
+  assert.equal(usage.cachedInputTokens.value, 80);
+  assert.equal(usage.reasoningTokens.value, 16);
+  assert.equal(usage.tokens.state, 'partial');
+  assert.equal(usage.costUsd.value, null, 'the fixture zero catalog price is not a measured dollar cost');
 });

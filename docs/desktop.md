@@ -41,6 +41,11 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 
 ## Evidence and control
 
+- **Whole-build time limit (minutes)** in Model settings sets one allowance for the next build: 1–180 whole minutes, default 60. The start dialog confirms it; **Time & usage** in the run header shows remaining time, phase durations, observed responses, prompt submissions and available token/cost observations. Existing workspaces without this setting use 60; older runs retain unknown usage.
+- The allowance begins before asynchronous account/session setup and includes every generation phase, README follow-up, artifact completion, retries, compaction, host verification and the one repair. A monotonic deadline is shared across them; activity and phase changes cannot renew it. The settings snapshot is fixed for that build. Up to three runs remain supported, each with its own allowance.
+- Expiry stops further AppYard model dispatch, aborts active sessions and host checks, preserves artifacts and available usage, and releases the run slot with **Time budget exhausted**. Local cancellation cannot guarantee an upstream provider immediately stops an already accepted request. Process/browser cleanup may take a bounded grace period after expiry; state-save failure is reported rather than holding the slot indefinitely.
+- Automatic time stops when the verified build reaches human review. Review time, source export and a separately requested executable package do not consume or restart the build allowance. Packaging retains its own ten-minute limit. A new build gets a new run ID and allowance; previous folders and summaries remain available. There is no desktop Resume feature.
+- Tokens and money are **observational, not caps**. Pi exposes some assistant/compaction usage, with hidden retries or canceled responses potentially missing. Its response count is a lower bound, not all network attempts. Codex exposes cumulative thread tokens but no complete public request count or per-run subscription dollar cost. Missing values display **Unavailable**; partial totals never claim full coverage. Provider-reported and catalog-estimated costs retain their provenance; cached and reasoning fields are not added twice. See [verified provider capabilities and accounting](run-budget-provider-notes.md).
 - All logs and badges reflect actual agent events and saved state.
 - Each agent phase inherits global `read`, `write`, `edit` and `bash` tools, then adds only its assigned phase tools. The `.fleet` packet records both levels and the skills allotted to each phase. Select a phase in **Build flow** to inspect the assignment, outputs and completion gate.
 - Each role has a 30-minute ceiling, including session setup and artifact completion. Pi also has a 40-model-turn ceiling; Codex reports user turns rather than its internal model iterations. Five minutes without model, tool, retry, or compaction activity fails the stage with its last activity recorded. These limits settle the host run even if Pi's prompt or abort promise never returns.
@@ -51,13 +56,15 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 - Empty suites, failures, skipped tests, and incomplete results block approval.
 - Source fingerprints are checked at verification, review, and export.
 - Review approves a prototype; operational validation remains explicitly unverified.
-- Stopping or quitting retains files and waits for the stopped state to be saved. Completed, failed, and stopped runs release their concurrency slot; late session events cannot update a finished run. Restarting creates a new run directory; it does not resume the previous conversation.
+- Stopping or quitting retains files and saves the stopped state with bounded cleanup. Completed, failed, and stopped runs release their concurrency slot; late session events cannot update a finished run. Restarting creates a new run directory; it does not resume the previous conversation.
 
 Tests are agent-authored and must be reviewed for meaningful coverage. Passing them does not prove acceptance criteria or operational correctness.
 
 ## Storage and credentials
 
 On macOS the default application state is under ~/Library/Application Support/fleetharness/ (the exact path appears in Model settings). State writes use a temporary file and rename. Previous run folders and Pi JSONL sessions remain on disk.
+
+Each new run also writes `run-summary.json` beside its artifacts, mirrored in application state. It includes the immutable allowance/deadline, terminal reason, measured phase durations, submitted prompts, usage observations and coverage limitations. Checkpoints occur at workflow boundaries and every five seconds while active; finalization saves the latest available totals. An interrupted app reopens that run as stopped, retains its last measured elapsed time and usage, and marks the summary interrupted/partial. It does not fabricate usage during downtime or grant a new allowance to that run. Mutable summary files are excluded from source fingerprints so telemetry cannot invalidate verified application code.
 
 An entered key is held in memory unless **Remember this key** is selected. Remembered keys use Electron safeStorage encryption and a private file; API keys are never included in the bootstrap payload sent to the UI. Existing Pi credentials remain managed by Pi. Disabling remembered storage removes AppYard's encrypted key file but keeps the current in-memory key until the app exits.
 
@@ -85,6 +92,8 @@ Useful commands:
     npm run test:flow
     npm run test:harness
     npm run test:desktop
+    npm run test:budgets
+    npm run test:budgets:ui
     npm run dist
 
 The desktop smoke test drives the actual Electron application with Playwright and a **local deterministic test provider**. It exercises the real Pi SDK, file tools, independent test failure/repair, preview isolation, review, export, and persistence. It does not validate the quality or authentication of a hosted model. A live provider smoke run requires your credentials.

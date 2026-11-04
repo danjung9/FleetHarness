@@ -40,6 +40,17 @@ export class Store {
       if (p.status === 'running') {
         p.status = 'stopped'; p.error = 'The previous run was interrupted. Start a new run to continue from the saved requirements.';
         p.stages.filter(s => s.status === 'active').forEach(s => { s.status = 'failed'; });
+        if (p.runSummary && !p.runSummary.finishedAt) {
+          // The last checkpoint is the last measured duration; downtime is not invented as active work.
+          p.runSummary.terminalReason = 'interrupted';
+          p.runSummary.finishedAt = p.updatedAt;
+          const phase = p.runSummary.phases.at(-1);
+          if (phase && !phase.finishedAt) phase.finishedAt = p.updatedAt;
+          p.runSummary.usage.limitations = [...new Set([...p.runSummary.usage.limitations, 'The app was interrupted; usage after the last saved checkpoint may be missing.'])];
+          for (const metric of ['requests', 'tokens', 'inputTokens', 'outputTokens', 'cachedInputTokens', 'cacheWriteTokens', 'reasoningTokens', 'costUsd'] as const) {
+            if (p.runSummary.usage[metric].value !== null) p.runSummary.usage[metric].state = 'partial';
+          }
+        }
       }
     }
     await this.save();
@@ -51,15 +62,29 @@ export class Store {
   }
   save() {
     const json = JSON.stringify(this.state, null, 2);
+    const summaries = this.state.projects.filter(p => p.workspace && p.runSummary).map(p => ({
+      workspace: p.workspace!, json: JSON.stringify(p.runSummary, null, 2)
+    }));
     this.writes = this.writes.catch(() => {}).then(async () => {
       const target = path.join(this.root, 'state.json');
       await fs.writeFile(target + '.tmp', json, { mode: 0o600 });
       await fs.rename(target + '.tmp', target);
+      // The immutable run folder retains its summary when a later build replaces the project view.
+      for (const summary of summaries) {
+        const file = path.join(summary.workspace, 'run-summary.json');
+        try {
+          // Never follow an application-created temporary-file symlink while writing host evidence.
+          await fs.rm(file + '.tmp', { force: true });
+          await fs.writeFile(file + '.tmp', summary.json, { mode: 0o600, flag: 'wx' });
+          await fs.rename(file + '.tmp', file);
+        }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+      }
     });
     return this.writes;
   }
 }
-const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);
+const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store', 'run-summary.json.tmp']);
 export async function listArtifacts(root: string, prefix = ''): Promise<Artifact[]> {
   const results: Artifact[] = [];
   for (const entry of await fs.readdir(path.join(root, prefix), { withFileTypes: true })) {
@@ -81,7 +106,7 @@ export async function safeFile(root: string, relative: string) {
 export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
   const hash = createHash('sha256');
   for (const file of await listArtifacts(root)) {
-    if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
+    if (['test-report.json', 'review.json', 'DELIVERY.md', 'run-summary.json', 'run-summary.json.tmp'].includes(file.path)) continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));

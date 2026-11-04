@@ -37,6 +37,11 @@ export async function createCodexSession(options: {
   rpc.subscribe(message => {
     if (message.id !== undefined && message.method) { void serverRequest(message); return; }
     const p = message.params;
+    // Usage may arrive after turn/completed. Keep accepting it until session disposal,
+    // and forward only the cumulative total so repeated notifications cannot be summed twice.
+    if (!disposed && !controller.signal.aborted && p?.threadId === threadId && message.method === 'thread/tokenUsage/updated') {
+      emit({ type: 'usage_update', threadId, usage: p.tokenUsage?.total }); return;
+    }
     if (!pending || p?.threadId !== threadId) return;
     switch (message.method) {
       case 'turn/started': turnId = p.turn.id; emit({ type: 'turn_start' }); break;
