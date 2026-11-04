@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Finish current factory corrections and judgments; retire duplicate allocations and keep research idle."
+summary: "Finish existing corrections, reject task substitution and keep research idle."
 ---
 
 # Product decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard at 16:44 EST] All ten finished; nine pass automatically, zero are satisfactory. IDs 8, 11, 12, 20 and 35 have negative judgments. Earlier director counts are historical.
+[P, Flow-Goals] Ten satisfactory catalog builds govern allocation. [E, current boards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 has four of five finished: all four pass automatically and all four are NOT satisfactory.
 
-[R] Prioritize original-task coverage over generic recipe success. Accept the shared diagnosis in [[Research/Agentic/09-Primary-Task-Deferral]], not its proposed duplicate builder allocation. Dev-5's current journal explicitly replaces the older ID 36 task with primary-deferral work. Main/Engineering retains that owner; withdraw the conflicting native-select dispatch.
+[R] Return format substitution, preset scheduling and simulated delivery to dev-5's existing source-coverage correction. Include omitted narrative obligations and missing starting artifacts. Preserve the now-reproduced rejection of the old ID 12 label-only bypass; it does not establish semantic completeness. No competing parser or generated-app hand edits.
 
-[E, benchmark audit at 16:37] Adding a permitted deferral label still lets the rejected ID 12 plan pass. [R] Return that evidence to the existing correction/review, requiring synthetic primary-outcome coverage. Preserve independent semantic judgment; labels and structural tests cannot establish satisfaction.
+[R] Agree with Engineering and Quality: finish current integration and unique judgments. Retire held ID 32, ID 36 and UX duplicates. Research seats remain idle; write an empty new-task list.
 
-[R] Keep recovery, metrics and containment returns open. Finish serial integration and matching runtime proof before further shared-file work. Main owns cancellation, frozen artifacts and benchmark execution; Quality retains judgments and its ID 32 audit.
+[R] Dev-1 retains recovery/verifier integration. Serialize preflight, canonical source coverage and telemetry through explicit file transfers. Builder's overlapping verifier work supplies evidence to that owner. Require exact-commit review and native runtime receipts.
 
-[R] Accept completed scout/UX handoffs at their recorded revisions. Retire the held replacement walkthrough; research seats idle. Write an empty new-task list, not duplicate work.
+[E, relay] Preserve Dan's 7a4c6cc Settings/Developer mode, hosted merge 98b8334 and Windows test adaptation fae8180. Hosted demo success is separate from catalog acceptance.
 
-[E, relays] Preserve Dan's 1d9eeee journey, Windows 4c49e85 assertions and hosted 40a6225 dependency/check changes. No frontend, deployment or publication assignment. Keep Thursday noon freeze, exact-byte human acceptance and the morning decisions in Status.
+[R] No new walkthrough, connector, deployment or sharing task. Keep Thursday noon freeze, exact-byte human acceptance and the morning decision list in Status. Another full round needs evidence that the current correction changes outcomes.
