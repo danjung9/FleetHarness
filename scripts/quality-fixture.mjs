@@ -1,9 +1,10 @@
 // Explicit integration-test artifacts. Production code never imports this module.
+// Deferral dependencies are synthetic host-path test inputs, not assessments of the supplied catalog criteria.
 export function qualityFixture(criterionIds) {
   const plan = { schemaVersion: 1,
     criteria: criterionIds.map((criterionId, index) => index === 0
       ? { criterionId, disposition: 'implemented', expectedOutcome: 'Parse a synthetic task and recover from empty input.', journeyIds: ['parse-task', 'recover-empty'] }
-      : { criterionId, disposition: 'deferred', expectedOutcome: 'Evaluate the original requirement independently.', journeyIds: [], reason: 'This deterministic integration fixture does not implement this requirement.' }),
+      : { criterionId, disposition: 'deferred', expectedOutcome: 'Evaluate the original requirement independently.', journeyIds: [], reason: 'human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; only synthetic task parsing is demonstrated.' }),
     journeys: [
       { id: 'parse-task', title: 'Parse a synthetic task', kind: 'primary', steps: [
         { action: 'fill', selector: '#message', value: 'TASK: inspect pump' }, { action: 'click', selector: '#parse' },
