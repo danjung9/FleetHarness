@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Tactical watchstanders and analysts reviewing fictional contacts of interest in an offline demonstration; no operational decisions or authoritative sanctions screening.",
+  "primaryTask": "Load synthetic maritime snapshots; enter Name, IMO or MMSI; resolve identity; inspect source-linked evidence; save a separate interpretation and export a concise Cited Contact Brief with portable evidence.",
+  "successOutcome": "A clearly SYNTHETIC one-page brief has 100% cited factual claims, visible UNKNOWN and stale/conflict states, a traceable identity record and offline-resolving evidence appendix. Local acknowledgement never implies operational approval.",
+  "screens": [
+    {
+      "name": "Contact research",
+      "purpose": "Show synthetic boundary, fixed as-of, corpus status and identifier entry with explicit candidate choice. Stack fields and candidate cards on narrow widths.",
+      "primaryAction": "Research contact"
+    },
+    {
+      "name": "Cited Contact Brief",
+      "purpose": "Present identity, registry particulars, AIS, port history, sanctions, gaps and separate interpretation; readable print brief limited to one page, appendix separate.",
+      "primaryAction": "Export brief and evidence"
+    },
+    {
+      "name": "Evidence Appendix / Snapshot Viewer",
+      "purpose": "Open citation in page with exact span, original snapshot, source locator, revision, capture and observation times and digest; show competing AIS values with no automatic resolution.",
+      "primaryAction": "Inspect source citation"
+    },
+    {
+      "name": "Synthetic Evaluation Report",
+      "purpose": "Show actual held-out outcomes, latency, relevance, corpus/runtime metadata and pending owner review. Keep synthetic diagnostics collapsed and secondary.",
+      "primaryAction": "Run synthetic evaluation"
+    }
+  ],
+  "states": {
+    "empty": "Initial corpus is empty: explain synthetic-only and offer Load synthetic samples. No selected vessel and no active brief. No-match displays UNKNOWN and a correction path. Missing fields remain UNKNOWN rather than disappearing.",
+    "loading": "Local operations are short but announce Loading synthetic snapshots, Researching contact, Checking integrity, Exporting, or Evaluating through a polite status region; temporarily prevent duplicate work, then restore controls. Stop cancels queued synthesis.",
+    "error": "Specific inline errors preserve query and previous valid corpus. Ambiguity shows both candidates with evidence before synthesis. Malformed import is rejected atomically. Tampered snapshots withhold affected claims and block export; restore samples to recover. Export errors preserve brief for retry. Unsaved interpretation blocks review until Save or discard.",
+    "success": "Display complete SYNTHETIC Cited Contact Brief, source-family coverage, missing/stale/conflict diagnostics and next actions. Save confirms local persistence; acknowledgement reads Local review acknowledged \u2014 no operational approval. Export confirms portable appendix. Evaluation shows actual measurements and PENDING owner review."
+  },
+  "persistence": "Use versioned localStorage for validated synthetic corpus selection, query, candidate, saved interpretation, draft interpretation and acknowledgement bound to the committed brief and saved note. Revalidate digest on restore. Unsaved drafts survive reload and citation viewing; changed evidence or saved note clears acknowledgement. Report unavailable storage visibly and continue in memory with export. No network. Stop clears active brief/selection and retains draft; reset requires explicit confirmation before deleting local work.",
+  "recovery": "Correct invalid identifiers; reselect an ambiguous vessel; restore original samples after tampering or conflicting diagnostic data. Reject malformed import without replacing the valid corpus. Keep paired conflict values visible and withhold a location conclusion. Save or discard draft before review or changing committed content; guard new query/load/selection if dirty using explicit in-page Save and continue or Discard and continue. Stop cancels work; reset is separately confirmed. Never contact anyone: escalation is a visible human-review message.",
+  "keyboard": "Use labeled native inputs, selects, buttons and checkbox; logical Tab order, visible focus and Enter in the query field runs research. Citation buttons move focus to the viewer heading and a Return to brief control restores it. Inline errors associate via aria-describedby; status updates use aria-live. No hover-only actions or trapped focus. Desktop and narrow layouts allow wrapping, stacked actions and readable spans without horizontal page scrolling."
+}

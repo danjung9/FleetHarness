@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 36 round 101 is NOT: real local checks do not deliver document capture and reconnect routing; earlier judgments retained."
+summary: "Challenge 8 round 101 is NOT: real routing does not enforce required CASREP formatting; earlier judgments retained."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id08-casrep]] records NOT for Ten/Exp1/R101/id08-casrep. Return, revision, six-role routing and downloads are substantive, but the required message format is replaced with assumptions while requirementsMet is true. Saved receipts report eleven tests and fourteen browser executions passing. All requested screenshots and actual tests were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id08-casrep]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id08-casrep]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id36-paperless]] records NOT for Ten/Exp1/R101/id36-paperless. The sample has real validation, approval and conflict handling, but source capture reads stored text and delivery remains in one browser. These limits are honestly disclosed. Latest receipts record 23 tests and twenty browser passes, superseding the guide's pending-rerun wording; requirementsMet remains false. All requested screenshots and actual tests were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id36-paperless]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id36-paperless]].
 

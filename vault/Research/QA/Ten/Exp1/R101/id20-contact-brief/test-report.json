@@ -1,0 +1,215 @@
+{
+  "time": "2026-11-04T22:09:16.092Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./application.test.cjs\"",
+  "exitCode": 0,
+  "total": 18,
+  "passed": 18,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: SHA-256 known vectors, UTF-8 and exact original UTF-16 spans\nok 1 - SHA-256 known vectors, UTF-8 and exact original UTF-16 spans\n  ---\n  duration_ms: 3.234708\n  type: 'test'\n  ...\n# Subtest: atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans\nok 2 - atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans\n  ---\n  duration_ms: 2.215708\n  type: 'test'\n  ...\n# Subtest: identity normalization, exact joins, ambiguity and abstention\nok 3 - identity normalization, exact joins, ambiguity and abstention\n  ---\n  duration_ms: 9.605417\n  type: 'test'\n  ...\n# Subtest: denied strongest lexical hit excluded before scoring, future filtered and no export leakage\nok 4 - denied strongest lexical hit excluded before scoring, future filtered and no export leakage\n  ---\n  duration_ms: 2.79225\n  type: 'test'\n  ...\n# Subtest: time boundary separates capture, observation and unknown time\nok 5 - time boundary separates capture, observation and unknown time\n  ---\n  duration_ms: 0.428125\n  type: 'test'\n  ...\n# Subtest: actual brief facts and all factual references resolve to exact original permitted spans\nok 6 - actual brief facts and all factual references resolve to exact original permitted spans\n  ---\n  duration_ms: 1.242458\n  type: 'test'\n  ...\n# Subtest: tamper withholds affected owner, blocks viewing and export; original restore recovers\nok 7 - tamper withholds affected owner, blocks viewing and export; original restore recovers\n  ---\n  duration_ms: 1.771125\n  type: 'test'\n  ...\n# Subtest: equal-time conflicting AIS is deterministic and withholds location\nok 8 - equal-time conflicting AIS is deterministic and withholds location\n  ---\n  duration_ms: 2.160917\n  type: 'test'\n  ...\n# Subtest: portable HTML resolves every anchor and safely retains evidence and unverified note\nok 9 - portable HTML resolves every anchor and safely retains evidence and unverified note\n  ---\n  duration_ms: 2.36775\n  type: 'test'\n  ...\n# Subtest: review state separates draft, saved note and bound acknowledgement\nok 10 - review state separates draft, saved note and bound acknowledgement\n  ---\n  duration_ms: 0.136792\n  type: 'test'\n  ...\n# Subtest: six held-out cases use real pipeline, actual timing, correct relevance and pending owner\nok 11 - six held-out cases use real pipeline, actual timing, correct relevance and pending owner\n  ---\n  duration_ms: 53.075166\n  type: 'test'\n  ...\n# Subtest: stale AIS is visibly historical and unknown observation cannot establish latest location\nok 12 - stale AIS is visibly historical and unknown observation cannot establish latest location\n  ---\n  duration_ms: 1.296375\n  type: 'test'\n  ...\n# Subtest: citation rejects trailing components rather than aliasing a supported reference\nok 13 - citation rejects trailing components rather than aliasing a supported reference\n  ---\n  duration_ms: 0.265666\n  type: 'test'\n  ...\n# Subtest: export rejects altered asserted values even when the reference itself exists\nok 14 - export rejects altered asserted values even when the reference itself exists\n  ---\n  duration_ms: 1.434\n  type: 'test'\n  ...\n# Subtest: conflicting identity identifiers withhold selection independent of source order\nok 15 - conflicting identity identifiers withhold selection independent of source order\n  ---\n  duration_ms: 0.578375\n  type: 'test'\n  ...\n# Subtest: empty and unmatched lexical queries abstain, duplicate tokens do not change results\nok 16 - empty and unmatched lexical queries abstain, duplicate tokens do not change results\n  ---\n  duration_ms: 0.753083\n  type: 'test'\n  ...\n# Subtest: portable export retains deliberate ambiguous selection and refuses changed identity metadata\nok 17 - portable export retains deliberate ambiguous selection and refuses changed identity metadata\n  ---\n  duration_ms: 1.749375\n  type: 'test'\n  ...\n# Subtest: actual UI diagnostic handler refreshes identity, blocks export and restores owner\nok 18 - actual UI diagnostic handler refreshes identity, blocks export and restores owner\n  ---\n  duration_ms: 8.0005\n  type: 'test'\n  ...\n1..18\n# tests 18\n# suites 0\n# pass 18\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 195.014083\n\nBrowser journeys: 18/18 passed.\nRequirements: 3 demonstrated, 0 failed, 2 unverified.",
+  "durationMs": 10229,
+  "sourceHash": "7a3772d75ba2a051560004b4906af9c2351718b95dd141baaffb74b4555efc8b",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "7c77522d8294f85092ede92a958d69c6eade586a7a6275e2bbd3531cc847e15a",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC20-1",
+        "requirement": "Open-Source Grounding: Ingest unclassified commercial and open maritime feeds (AIS, IMO ship registries, OFAC/EU sanctions).",
+        "status": "unverified",
+        "detail": "Approved real AIS, IMO registry, OFAC/EU snapshots with provenance and permitted usage are absent and prohibited by this synthetic-only workspace. Fictional snapshots demonstrate the full workflow but cannot establish real open-source grounding; live acquisition also needs separately authorized connectors."
+      },
+      {
+        "criterionId": "UC20-2",
+        "requirement": "Zero Hallucination Tolerance: 100% of claims must link to an immutable captured source snapshot; unresolved queries must declare \"Unknown\".",
+        "status": "passed",
+        "detail": "In the explicitly synthetic complete workflow, every factual brief claim resolves to a permitted exact original span, revision, capture and observation timestamps and a verified captured-content digest; unsupported intent, flag, sanctions applicability and conflicting AIS remain UNKNOWN. Same-name identities require deliberate selection. The Cited Contact Brief exports with a resolvable offline Evidence Appendix and Identity Resolution Record. Integrity failures block affected claims and export; local review preserves saved and unsaved interpretation separately. Synthetic evaluation is generated, but this does not establish real-format compliance, production immutability, owner acceptance or operational validation. — demonstrated by brief-export, ambiguous-name, input-recovery, missing-stale, permitted-evidence, integrity-recovery, import-conflict, review-boundary, synthetic-evaluation at both viewport sizes."
+      },
+      {
+        "criterionId": "RET-01",
+        "requirement": "Every result cites an exact permitted source span.",
+        "status": "passed",
+        "detail": "The denied snapshot is the strongest unfiltered lexical match but is removed before identity matching, retrieval, viewing and export. ALDER REACH owner North Lantern returns only REG-A and its exact owner span; no denied content or unsupported claims appear in any result or portable export. An allowed flag is a synthetic filtering fixture, not authorization. — demonstrated by permitted-evidence, brief-export at both viewport sizes."
+      },
+      {
+        "criterionId": "RET-02",
+        "requirement": "Expose stale and missing evidence.",
+        "status": "passed",
+        "detail": "The fixed synthetic as-of and more-than-30-day policy expose PORT-A observation as STALE despite fresh capture; OFAC observation time and absent flag, EU applicability and intent are UNKNOWN. One future snapshot is excluded. No-match and conflicting AIS conclusions abstain; restoration and corrected identifiers recover without guessed facts. — demonstrated by missing-stale, input-recovery, import-conflict at both viewport sizes."
+      },
+      {
+        "criterionId": "RET-03",
+        "requirement": "Measure relevance and latency with the owner.",
+        "status": "unverified",
+        "detail": "No participating owner can review labels, assess relevance or accept measured results in this unattended run. The local report explicitly says PENDING; synthetic labels and automated timing cannot substitute for that person’s participation."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "brief-export",
+        "title": "Resolve IMO, inspect citations, review and export the Cited Contact Brief",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 28 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/brief-export-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/brief-export-desktop.zip"
+      },
+      {
+        "id": "brief-export",
+        "title": "Resolve IMO, inspect citations, review and export the Cited Contact Brief",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 28 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/brief-export-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/brief-export-narrow.zip"
+      },
+      {
+        "id": "ambiguous-name",
+        "title": "Resolve same-name candidates deliberately and inspect identifier-linked designation",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 13 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/ambiguous-name-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/ambiguous-name-desktop.zip"
+      },
+      {
+        "id": "ambiguous-name",
+        "title": "Resolve same-name candidates deliberately and inspect identifier-linked designation",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 13 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/ambiguous-name-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/ambiguous-name-narrow.zip"
+      },
+      {
+        "id": "input-recovery",
+        "title": "Recover invalid identifier and no matches, then stop synthesis",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 18 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/input-recovery-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/input-recovery-desktop.zip"
+      },
+      {
+        "id": "input-recovery",
+        "title": "Recover invalid identifier and no matches, then stop synthesis",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 18 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/input-recovery-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/input-recovery-narrow.zip"
+      },
+      {
+        "id": "missing-stale",
+        "title": "Inspect missing, stale, future and unknown-time evidence",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 14 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/missing-stale-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/missing-stale-desktop.zip"
+      },
+      {
+        "id": "missing-stale",
+        "title": "Inspect missing, stale, future and unknown-time evidence",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 14 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/missing-stale-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/missing-stale-narrow.zip"
+      },
+      {
+        "id": "permitted-evidence",
+        "title": "Filter strongest excluded lexical hit and inspect exact permitted span",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/permitted-evidence-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/permitted-evidence-desktop.zip"
+      },
+      {
+        "id": "permitted-evidence",
+        "title": "Filter strongest excluded lexical hit and inspect exact permitted span",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/permitted-evidence-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/permitted-evidence-narrow.zip"
+      },
+      {
+        "id": "integrity-recovery",
+        "title": "Block changed snapshot and recover the original synthetic corpus",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/integrity-recovery-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/integrity-recovery-desktop.zip"
+      },
+      {
+        "id": "integrity-recovery",
+        "title": "Block changed snapshot and recover the original synthetic corpus",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/integrity-recovery-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/integrity-recovery-narrow.zip"
+      },
+      {
+        "id": "import-conflict",
+        "title": "Reject malformed corpus then withhold conflicting AIS conclusions",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 18 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/import-conflict-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/import-conflict-desktop.zip"
+      },
+      {
+        "id": "import-conflict",
+        "title": "Reject malformed corpus then withhold conflicting AIS conclusions",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 18 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/import-conflict-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/import-conflict-narrow.zip"
+      },
+      {
+        "id": "review-boundary",
+        "title": "Preserve unsaved interpretation and require save before local acknowledgement",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 21 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/review-boundary-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/review-boundary-desktop.zip"
+      },
+      {
+        "id": "review-boundary",
+        "title": "Preserve unsaved interpretation and require save before local acknowledgement",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 21 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/review-boundary-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/review-boundary-narrow.zip"
+      },
+      {
+        "id": "synthetic-evaluation",
+        "title": "Produce the held-out Synthetic Evaluation Report for later owner review",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/synthetic-evaluation-desktop.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/synthetic-evaluation-desktop.zip"
+      },
+      {
+        "id": "synthetic-evaluation",
+        "title": "Produce the held-out Synthetic Evaluation Report for later owner review",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/synthetic-evaluation-narrow.png",
+        "trace": ".quality-evidence/419425fd76c5-1f5207d8-3217-455d-9c87-f1b3883b1e17/synthetic-evaluation-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

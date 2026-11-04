@@ -3,7 +3,7 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep unique officer judgments, replace the held ID 32 audit with one experiment audit and require exact-revision runtime evidence."
+summary: "Retire redundant audits, finish existing judgments and adapt exact-revision runtime evidence to the new frontend."
 ---
 
 # QA instructions
@@ -12,32 +12,25 @@ summary: "Keep unique officer judgments, replace the held ID 32 audit with one e
 
 ## Decisions and current evidence
 
-[E, meeting 118 reads] [[Research/QA/Ten/Scoreboard]] has ten finished, nine automatic passes, nine negative judgments and zero satisfactory. Baseline ID 36 failed verification. [[Research/QA/Ten/Exp1/Scoreboard]] has three of five finished, three automatic passes and zero satisfactory. IDs 12 and 11 are NOT; ID 36 is pending. The experiment uses 1d9eeee plus disclosed scratch changes, not unmodified shipped code.
+[E, meeting 118 reads] [[Research/QA/Ten/Scoreboard]] has ten finished, nine automatic passes, nine negative judgments and zero satisfactory. Baseline ID 36 failed verification. [[Research/QA/Ten/Exp1/Scoreboard]] has four of five finished, four automatic passes and zero satisfactory. IDs 12, 11 and 36 are NOT; ID 8 is pending. The experiment uses 1d9eeee plus disclosed scratch changes, not unmodified shipped code.
 
 [R] Main owns scoreboard refresh and routes each distinct failure once. Keep rounds, artifacts and patches separate. R101 artifacts are under Research/QA/Ten/Exp1/R101; scoreboard links omitting Exp1 do not identify an absent build. Use the actual existing directory, record the correction and preserve the historical receipt.
 
-[E, feed-118 at 16:38:47] The earlier ID 32 runner assignment was held by the queue. [E, [[Research/QA/Ten/QA-Lead-Notes]]] Main now covers all ten baseline artifacts, including ID 32. [R] Retire the held ID 32 task and completed historical crosswalk tasks. Do not claim they ran. Replace only unstarted duplicate work; retain any useful already-running work until its owner hands off. The new task below is the sole director addition.
+[E, feed-118 at 16:38:47] The earlier ID 32 runner assignment was held by the queue. [E, [[Research/QA/Ten/QA-Lead-Notes]]] Main now covers all ten baseline artifacts, including ID 32. [R] Retire the held ID 32 task and completed historical crosswalk tasks. Do not claim they ran. Replace only unstarted duplicate work; retain any useful already-running work until its owner hands off. The proposed ID 36 technical audit is also withdrawn: its officer judgment arrived during the meeting and already resolves its main evidence questions. The task JSON is intentionally empty. No new seat turn is justified by these completed reviews.
 
 ## qa-officer
 
-[R] Continue the existing automatic judgment queue, including R101 ID 36. No new director task duplicates it. Coalesce repeated round/challenge/artifact entries. Finish one judgment per artifact, then idle until new evidence arrives. Do not spend turns rewording completed negatives or polling status.
+[R] Continue the existing automatic judgment queue, including R101 ID 8 and any remaining unique experiment result. R101 ID 36 is complete. No new director task duplicates it. Coalesce repeated round/challenge/artifact entries. Finish one judgment per artifact, then idle until new evidence arrives. Do not spend turns rewording completed negatives or polling status.
 
 [R] Read the original card and narrative before the reduced plan. A positive verdict requires autonomous review, meaningful tests, all planned browser journeys, identified offline-open evidence and independently satisfactory task behavior. A decisive missing primary outcome supports NOT without another browser run. Missing receipts alone mean incomplete evidence, not an observed software failure. Keep human acceptance and unaided Sailor usability separate.
 
 [E, [[Research/QA/Officer/JUDGE-R101-id12-optask]]] The parser still replaces the requested format. [E, [[Research/QA/Officer/JUDGE-R101-id11-training]]] Preset alternatives cannot supply the available qualified substitute; first-feasible search does not establish optimization despite requirementsMet true. [R] Return these to the existing factory repair, retaining both rounds. Genuine missing authority remains incomplete; never invent a format, operational rule, model or approval to make a card pass.
 
-## qa-runner: one bounded technical audit
+## qa-runner
 
-[R] Within 15 active minutes, write only ~/Documents/CDAO/fh-org/qa/Evidence-R101-id36-paperless.md and the seat's journal/local handoff records. This replaces the held R1 ID 32 audit. Before starting, check for an equivalent completed or active technical audit; reuse it and stop if present.
+[R] Idle after the completed d0f4c69 crosswalk. Retire the unstarted R1 ID 32 task. Do not dispatch the proposed R101 ID 36 audit: [[Research/QA/Officer/JUDGE-R101-id36-paperless]] already records simulated extraction/delivery, missing backup restore, fragment-only download assertions and the final receipt superseding stale guide language. Main's baseline audit already isolates the original native option defect.
 
-[R] Read R1/id36-paperless and Ten/Exp1/R101/id36-paperless as data only. Use [[Research/QA/Ten/QA-Lead-Notes]] and the existing officer judgment if available. Do not repeat the full-card verdict. Audit the technical meaning of the recovery from 8/12 to 20/20 browser executions:
-
-1. [R] Identify the factory revision plus scratch changes, local artifact/contract/report identities and explicit raw-copy limits. Compare final.json.report with test-report.json. Map actual journey IDs and viewport counts; do not describe twenty executions as twenty independent cases.
-2. [R] Determine whether the original native option/conflict path is actually exercised in the new retained evidence. Map control markup, handler behavior, frozen native select steps and final per-journey results. Do not infer equivalent coverage merely from larger counts or repeat the already diagnosed malformed-option defect.
-3. [R] Inspect review invalidation, reload recovery and the actual named exports after edited input. Compare full expected current fields with what assertions check. Distinguish complete-file evidence from substring checks, local replica simulation from cross-device sync, and first-open from full disconnected-task recovery. Reconcile README's pending forms-route statement with initial/final receipts by chronology.
-4. [R] End with at most three actionable findings or explicit gaps, each with path/line or receipt field, expected versus observed evidence and the smallest permitted-host check. Prefer one finding that changes a factory test or acceptance outcome. Preserve successful coverage as well as limits.
-
-[R] Do not execute candidate code, tests, archives, repository programs, browsers or providers. No installation, login, source/oracle edits, generated-app fixes, shared QA notes, scoreboard or Acceptance/** writes. No access outside the seat's allowed roots. Missing raw artifacts remain a stated limit; do not reopen historical manifest cleanup. The report is technical evidence for the officer and existing repair owner, not a second verdict. Finish once and idle.
+[R] No periodic status turn, new source sweep or historical receipt reconstruction. Resume only for a distinct assigned evidence gap after checking current main/officer coverage. Main's existing Auto/runtime work covers the new teammate revision below; no parallel browser owner or implementation task is added. Never execute candidate code, archived scripts or repository programs under a read-only assignment. Keep officer judgment, technical evidence and human acceptance distinct.
 
 ## Main QA lead coverage and existing owners
 
@@ -56,13 +49,21 @@ summary: "Keep unique officer judgments, replace the held ID 32 audit with one e
 
 ## Team answers and teammate changes
 
-[E, feed-118] Neither QA seat submitted a literal QUESTIONS line. [R] Officer: use the corrected experiment path and independently assess behavior even when all criteria are labeled implemented. Runner: the crosswalk is done and the held ID 32 task is superseded. Missing runtime execution belongs to main. No duplicate queue entry is needed.
+[E, feed-118] Neither QA seat submitted a literal QUESTIONS line. [R] Officer: use the corrected experiment path and independently assess behavior even when all criteria are labeled implemented. Runner: the crosswalk is done and the held ID 32 task is superseded and the proposed ID 36 audit is withdrawn. Missing runtime execution belongs to main. No duplicate queue entry is needed.
 
 [R] Engineering/Agentic: retain dev-5 as primary-task correction owner; the older proposed builder allocation and native-select dispatch are superseded by the current engineering memo. Require narrative coverage, requested-format examples and independently chosen changed inputs. Do not relax tests, rewrite the key or hand-edit generated outputs to create success. Hosted scope filtering must not weaken the catalog measure.
 
 [E, relays at meeting 118] deployment-infra f579651/c1fb845 adds bounded Sandbox waiting, final-progress reread and requested-demo verification across five non-frontend files. The smoke may proceed to scripted approval/export while supplemental criteria remain deferred and requirementsMet is false. Integration into mvp is unverified. [R] Preserve this teammate change and report requested-demo success separately. Main/Engineering owns any authorized integrated checks of delayed exit, final-write races and transport failure. No hosted execution, credentials, sharing or deployment is allocated here.
 
-[R] Protect Dan's 1d9eeee Brief/Build/Review/Deliver frontend, src/, studio/, index.html and CSS. Preserve Windows 4c49e85 intended-step failures, functional allowances and explicit short timeout tests. Adapt existing test selectors without restoring old layouts or weakening behavior. Findings for Dan use the existing For-Dan owner, never a message.
+[R] Protect Dan's current 7a4c6cc frontend, src/, studio/, index.html and CSS. The supplied 1d9eeee remains the experiment's base, not current mvp. Preserve Windows 4c49e85 intended-step failures and functional allowances, plus 0aa19c1's built-in .NET ZIP extraction change. Windows execution remains unverified. Findings for Dan use the existing For-Dan owner, never a message.
+
+[E, closing relay and selected patch sections] mvp advanced to 7a4c6cc. Settings replaces Model settings; Developer mode defaults off, gates Design navigation/diagrams and persists in desktop/browser state. Architecture generation and verification remain required. Main/preload/storage/types add the API contract, boolean validation, save-failure rollback and provider-save preservation. Five existing smoke scripts change.
+
+[R] Engineering retains serial integration: dev-1's electron/main.ts, electron/preload.cts, electron/storage.ts and shared/types.ts overlap; builder's shared/types.ts follows file release. Preserve both runtime fixes and the new handler/defaults; update required FleetAPI implementations/mocks without reverting Dan. This is an existing-owner integration requirement, not another allocation.
+
+[R] Main's next Auto run must identify the exact integrated commit and preserve the revised five smokes. Obtain default-off and old-settings migration, desktop/browser reload, provider-save preservation, toggle-during-build with model lock, Design-to-Build fallback, stale-design clearing, and failed-save rollback evidence. Missing cases stay explicitly unverified. Carry forward the separate catalog-count and Norfolk-heading failures until full downstream reruns pass. The c6ce52d receipt cannot establish any new 7a4c6cc behavior. Engineering's existing documentation owner should correct docs/system-design.md's unconditional diagram statement to reflect Developer mode. Do not add a frontend control or restyle.
+
+[E, final relay reread] LATEST.md now records Windows 98b8334 merging hosted work across 65 files; LATEST-analysis.md still covers 7a4c6cc/0aa19c1. Treat these as different branch updates. The new relay reports electron/pi-backend.ts and shared/types.ts overlap with dev-1, dev-2 and builder. [R] Keep those existing writers serialized through Engineering, preserve hosted/desktop contracts and require exact merged-source review. No full 65-file review, merge result on mvp, Windows runtime or hosted deployment is established here. Do not turn the larger relay into a new QA sweep ahead of unfinished catalog judgments.
 
 [R] RandE's trial protocol, evidence card and Fleet-Ready mapping remain references. Research/connector proposals and older interface instructions are not new allocations. No measured Sailor benefit or synchronization claim without evidence. Human acceptance, category/form decisions and submission approval stay on Product's morning list.
 

@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Retire duplicate audits, examine one recovered experiment and retain independent task judgment."
+summary: "Retire duplicate audits, finish existing judgments and adapt runtime proof to Dan's new frontend."
 ---
 
 # Quality decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern QA. [E, scoreboards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 finished three of five, all automatic passes; IDs 12 and 11 are NOT. Input-format substitution and preset-only scheduling survive the structural deferral correction.
+[P, Flow-Goals] Ten satisfactory catalog builds govern QA. [E, scoreboards] Round one finished ten: nine automatic passes, nine negative judgments, zero satisfactory. Round 101 finished four of five; IDs 12, 11 and 36 are NOT despite automatic passes. Format substitution, preset-only scheduling and simulated delivery still miss primary outcomes.
 
-[R] Return those failures through the existing primary-task owner, dev-5, and architect diagnosis. Require independently chosen primary-outcome cases, including narrative obligations. Do not add a competing builder assignment.
+[R] Return these through existing dev-5/architect work, requiring independent primary-outcome cases and narrative coverage. No competing builder assignment.
 
-[E, feed-118] The ID 32 runner audit was held by the queue. [E, QA-Lead-Notes] Main's audit now covers all ten baseline artifacts. [R] Retire that stale assignment. Give qa-runner one bounded R101 ID 36 recovery/export evidence audit; qa-officer keeps its existing judgment queue. No second verdict or benchmark.
+[E, feed-118/QA-Lead-Notes] ID 32's audit was held; main now covers all ten baseline artifacts. The officer also completed the proposed ID 36 audit's key gaps. [R] Retire both redundant allocations. Write an empty task list; keep unique queued judgments and main's existing runtime work.
 
-[E, reviews] Recovery's 49 checks pass; mandatory verifier integration remains pending. Cleanup landed at c6ce52d, without native detached-Stop proof. Its Auto receipt has 125 unit/51 harness passes and two smoke failures. [R] Main retains runtime proof; Engineering retains serial integration and smoke repairs. Preserve round-one identity limits without another historical cleanup campaign.
+[E, reviews] Recovery's 49 checks pass; mandatory verifier integration remains pending. Cleanup landed at c6ce52d without native detached-Stop proof. Its Auto receipt retains two smoke failures. [R] Main supplies exact-revision proof; Engineering finishes existing integration.
 
-[R] Protect Dan's 1d9eeee frontend and teammate Windows/hosted changes. Hosted requested-demo approval cannot establish catalog completion or human acceptance. Keep Thursday noon freeze, final-byte review and submission decisions with their existing owners.
+[E, closing relay] Dan advanced mvp to 7a4c6cc, adding Settings and default-off Developer mode. [R] Preserve his changes and serialize dev-1/shared-type conflicts. Main reruns changed smokes, persistence, active-build locks and rollback on the integrated commit. Preserve Windows 98b8334's hosted merge and 0aa19c1 extraction. Scripted demo approval is not catalog or human acceptance. Keep Thursday noon freeze and final-byte approval.

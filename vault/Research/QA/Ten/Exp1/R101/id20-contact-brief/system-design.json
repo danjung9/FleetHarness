@@ -1,0 +1,103 @@
+{
+  "title": "Synthetic Cited Contact Brief",
+  "description": "Offline synthetic maritime research and human interpretation. Real feeds and owner validation deferred; no operational connectors.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "Contact research workspace",
+      "description": "Name/IMO/MMSI query, candidate selection, readable one-page brief, human review and stop controls.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "corpus",
+      "label": "Simulated maritime snapshot corpus",
+      "description": "Embedded fictional AIS, IMO, OFAC, EU and port logs with immutable expected digests; excluded and malformed fixtures.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "retrieval",
+      "label": "Identity and permitted lexical retrieval",
+      "description": "Inline reusable core filters before matching, joins exact identities, preserves spans and computes freshness without a model.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "brief",
+      "label": "Cited Contact Brief assembler",
+      "description": "Inline core constructs claim-level citations, UNKNOWN and conflicts; blocks altered evidence and separates human interpretation.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Snapshot viewer and portable export",
+      "description": "Exact spans, revision, UTC timestamps and digests; downloadable standalone HTML brief and permitted evidence appendix.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "evaluation",
+      "label": "Synthetic evaluation and local status",
+      "description": "Held-out expected cases, relevance, coverage and measured latency report; owner review pending. Tests extract and call actual inline core.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "application.test.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "workspace",
+      "to": "retrieval",
+      "label": "Validated identifier and deliberate candidate choice"
+    },
+    {
+      "from": "corpus",
+      "to": "retrieval",
+      "label": "Permitted original snapshots and metadata"
+    },
+    {
+      "from": "retrieval",
+      "to": "brief",
+      "label": "Identity-scoped exact spans, uncertainty and integrity status"
+    },
+    {
+      "from": "brief",
+      "to": "workspace",
+      "label": "Cited one-page intelligence brief and gaps"
+    },
+    {
+      "from": "brief",
+      "to": "evidence",
+      "label": "Committed brief and permitted snapshot references"
+    },
+    {
+      "from": "evaluation",
+      "to": "retrieval",
+      "label": "Held-out queries through actual application functions"
+    },
+    {
+      "from": "retrieval",
+      "to": "evaluation",
+      "label": "Observed identities, evidence IDs and elapsed time"
+    },
+    {
+      "from": "evaluation",
+      "to": "workspace",
+      "label": "Synthetic Evaluation Report and pending owner review"
+    }
+  ]
+}
