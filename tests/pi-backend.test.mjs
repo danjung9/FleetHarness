@@ -6,7 +6,7 @@ import path from 'node:path';
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed } from '../dist-electron/electron/verification.js';
-import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 
 const resourcesRoot = path.resolve('.');
 const never = () => new Promise(() => {});
@@ -34,6 +34,7 @@ async function artifacts(cwd, stage, broken = false) {
 async function harness(t, options = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-flow-'));
   const store = new Store(root); await store.init();
+  store.state.projects[0] = newProject(qualityFixtureProject);
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
   const project = store.state.projects[0], sessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
