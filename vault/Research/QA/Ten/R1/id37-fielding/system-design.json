@@ -1,0 +1,86 @@
+{
+  "title": "Synthetic transition package planner",
+  "description": "Local-only fictional tool record, unresolved barriers and reusable fielding playbook. No operational integrations, safety calculations or authorization decisions.",
+  "components": [
+    {
+      "id": "editor",
+      "label": "Transition record editor",
+      "description": "Labeled synthetic tool, evidence and proposed transition topics; draft validation and explicit save.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Record and barrier rules",
+      "description": "Validate records, retain known gaps, pair every barrier with a next action and ownership status; produce deterministic draft outputs.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "transition-core.cjs"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local draft and saved snapshot",
+      "description": "Versioned localStorage with explicit unavailable/corrupt-storage recovery. No server or sync.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Saved record review",
+      "description": "Review saved version, missing evidence and all barriers; prevent export of stale or unsaved content.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Draft package and reusable playbook",
+      "description": "UTF-8 Markdown downloads containing source attribution, evidence gaps, next actions and reusable steps; no fieldability assertion.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "transition-core.cjs",
+        "path-to-fleet.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "editor",
+      "to": "core",
+      "label": "Validate synthetic draft and barrier edits"
+    },
+    {
+      "from": "core",
+      "to": "store",
+      "label": "Persist draft and explicit saved snapshot"
+    },
+    {
+      "from": "store",
+      "to": "editor",
+      "label": "Restore unfinished work and saved status"
+    },
+    {
+      "from": "store",
+      "to": "review",
+      "label": "Render committed version with gaps"
+    },
+    {
+      "from": "review",
+      "to": "export",
+      "label": "Export explicitly reviewed saved record"
+    },
+    {
+      "from": "core",
+      "to": "export",
+      "label": "Generate barrier register and reusable steps"
+    }
+  ]
+}

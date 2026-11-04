@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Ten-challenge benchmark, round 1 at d0f4c69: 9 of 10 finished, 8 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 1 at d0f4c69: 10 of 10 finished, 9 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 1
@@ -25,6 +25,7 @@ summary: "Ten-challenge benchmark, round 1 at d0f4c69: 9 of 10 finished, 8 passe
 | [[Research/QA/Ten/R1/id10-mooring/final\|id10-mooring]] | review | 10.7 | 25/25 | 6/6 | 1 / 4 / 0 | no | 0 | 247159 | pass | pending |
 | [[Research/QA/Ten/R1/id32-readiness/final\|id32-readiness]] | review | 12.5 | 26/26 | 12/12 | 7 / 10 / 0 | no | 0 | 291009 | pass | pending |
 | [[Research/QA/Ten/R1/id16-mordecai/final\|id16-mordecai]] | review | 11.4 | 15/15 | 10/10 | 3 / 0 / 0 | no | 0 | 261649 | pass | pending |
+| [[Research/QA/Ten/R1/id37-fielding/final\|id37-fielding]] | review | 12.2 | 22/22 | 6/6 | 2 / 14 / 0 | yes | 0 | 314900 | pass | pending |
 
 ## What failed
 

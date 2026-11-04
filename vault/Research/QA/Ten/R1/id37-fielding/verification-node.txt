@@ -1,0 +1,27 @@
+✔ CommonJS: sample has eight unresolved barriers and explicit unknowns (0.825209ms)
+✔ CommonJS: missing values reject without draft loss (0.263792ms)
+✔ CommonJS: inclusive text boundaries and owner limits (0.770583ms)
+✔ CommonJS: explicit commits isolate saved content and guard dirty review (0.448083ms)
+✔ CommonJS: persistent envelope rejects corruption and reports storage failure (0.846875ms)
+✔ CommonJS: documents retain fixes, attribution and unknown approvals safely (0.309334ms)
+✔ CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.729917ms)
+✔ CommonJS: committed nested data and exported fixes stay isolated from draft edits (0.203458ms)
+✔ CommonJS: reusable nine-step playbook keeps external gates (0.170916ms)
+✔ browser inline: sample has eight unresolved barriers and explicit unknowns (0.310209ms)
+✔ browser inline: missing values reject without draft loss (0.117125ms)
+✔ browser inline: inclusive text boundaries and owner limits (0.279375ms)
+✔ browser inline: explicit commits isolate saved content and guard dirty review (0.305167ms)
+✔ browser inline: persistent envelope rejects corruption and reports storage failure (0.244833ms)
+✔ browser inline: documents retain fixes, attribution and unknown approvals safely (0.175667ms)
+✔ browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.552333ms)
+✔ browser inline: committed nested data and exported fixes stay isolated from draft edits (0.163166ms)
+✔ browser inline: reusable nine-step playbook keeps external gates (0.105417ms)
+✔ inline and standalone produce the same actual workflow results (0.210334ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.747625

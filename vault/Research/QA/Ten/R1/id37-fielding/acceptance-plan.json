@@ -1,0 +1,482 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC37-1",
+      "disposition": "deferred",
+      "expectedOutcome": "The owner tool installs through a permitted government-mobile path and completes its documented workflow without connectivity.",
+      "journeyIds": [],
+      "reason": "Actual tool, permitted install route and government device are absent. Local file use and responsive browser checks demonstrate only the synthetic planner."
+    },
+    {
+      "criterionId": "UC37-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Every operational result requires attributable human approval, with edits invalidating approval and an auditable decision history.",
+      "journeyIds": [],
+      "reason": "The owner application and operational approval identity are absent. Review of a draft transition record is not Beachmaster result approval."
+    },
+    {
+      "criterionId": "UC37-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Security evidence for the actual tool is mapped to the applicable authorization process and reviewed by its responsible authority.",
+      "journeyIds": [],
+      "reason": "No applicable checklist, real tool or authorizing representative is supplied. The prototype records missing evidence only."
+    },
+    {
+      "criterionId": "UC37-4",
+      "disposition": "deferred",
+      "expectedOutcome": "The transitioned owner application has openly available maintainable source, known reuse rights, reproducible instructions and application tests.",
+      "journeyIds": [],
+      "reason": "Readable prototype source and tests will be delivered, but the absent owner baseline and unknown license prevent establishing the complete source requirement."
+    },
+    {
+      "criterionId": "UC37-5",
+      "disposition": "deferred",
+      "expectedOutcome": "The actual solution runs offline, retains human authority, cites sources, logs auditable actions, synchronizes on reconnect and includes a one-page path to fleet.",
+      "journeyIds": [],
+      "reason": "The draft planner includes source attribution and a path summary only. Operational offline lifecycle, approval, audit integrity and sync remain unspecified and unverified."
+    },
+    {
+      "criterionId": "FLD-01",
+      "disposition": "deferred",
+      "expectedOutcome": "A second operator installs the owner package on the intended device and completes the offline demo using the supplied instructions.",
+      "journeyIds": [],
+      "reason": "The intended device, owner package and approved installation route are absent. Opening the synthetic index.html does not establish installation."
+    },
+    {
+      "criterionId": "FLD-02",
+      "disposition": "deferred",
+      "expectedOutcome": "The same supplied owner-application baseline tests pass before and after packaging, preserving behavior.",
+      "journeyIds": [],
+      "reason": "No owner application or baseline tests supplied. New planner tests and toolkit fixtures cannot substitute."
+    },
+    {
+      "criterionId": "FLD-03",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual accountable transition, hosting, authorization, update and sustainment owners review their decisions and unresolved approvals.",
+      "journeyIds": [],
+      "reason": "Real owners and owner review are external dependencies. The prototype shows explicit Unassigned statuses and proposed actions only."
+    },
+    {
+      "criterionId": "EVAL37-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual application calculations match an independent SME-reviewed hand-computed answer key including boundary cases.",
+      "journeyIds": [],
+      "reason": "Rules, units, thresholds, worksheet revision and answer key are absent. No surf calculation or GO/NO-GO output will be invented."
+    },
+    {
+      "criterionId": "EVAL37-2",
+      "disposition": "deferred",
+      "expectedOutcome": "The actual owner application completes its task offline on a confirmed representative device with retained evidence.",
+      "journeyIds": [],
+      "reason": "Device and operational offline test conditions are unknown. Desktop and narrow browser contexts are not representative-device evidence."
+    },
+    {
+      "criterionId": "EVAL37-3",
+      "disposition": "deferred",
+      "expectedOutcome": "The authorizing-official representative judges the real fielding package complete against the applicable checklist.",
+      "journeyIds": [],
+      "reason": "No applicable checklist, owner application or authority judgement supplied. Synthetic draft review cannot confer completeness."
+    },
+    {
+      "criterionId": "EVAL37-4",
+      "disposition": "deferred",
+      "expectedOutcome": "A real named sustainment owner accepts responsibility for support, updates, rollback and ongoing maintenance.",
+      "journeyIds": [],
+      "reason": "No accepted real owner supplied. Fictional names or Unassigned in the planner cannot satisfy this criterion."
+    },
+    {
+      "criterionId": "EVAL37-5",
+      "disposition": "implemented",
+      "expectedOutcome": "All eight known remaining barriers are documented with a nonempty proposed fix and explicit ownership status; save rejects a missing fix, review and exports retain unresolved status, and the saved register survives reload.",
+      "journeyIds": [
+        "review-barriers",
+        "recover-incomplete",
+        "protect-saved-review"
+      ]
+    },
+    {
+      "criterionId": "EVAL37-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Official judges evaluate the solution under Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges’ Discretion 15%.",
+      "journeyIds": [],
+      "reason": "External judging is unavailable. Preserve the packet rubric verbatim in documentation; do not calculate or self-award a score."
+    },
+    {
+      "criterionId": "DELIVERABLE37-1",
+      "disposition": "deferred",
+      "expectedOutcome": "At least one actual Sailor-built tool has a fieldable package with supported hosting/install route, reviewed security evidence and sustainment responsibility.",
+      "journeyIds": [],
+      "reason": "Only a synthetic draft record is feasible without the owner application, target platform, authorization evidence and external owners. Packaging alone grants no authorization."
+    },
+    {
+      "criterionId": "DELIVERABLE37-2",
+      "disposition": "implemented",
+      "expectedOutcome": "A downloadable reusable fielding playbook covers baseline, device/offline install, hosting/signing, security review, result approval/audit, disconnected sync, sustainment/update/rollback, barriers and proposed fixes, and second-operator rehearsal; it preserves external approval gates and is usable for a different tool.",
+      "journeyIds": [
+        "review-barriers",
+        "recover-incomplete",
+        "protect-saved-review"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "review-barriers",
+      "title": "Save, review, export and restore a synthetic transition record",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1: Synthetic Beach Log 0.1"
+        },
+        {
+          "action": "click",
+          "selector": "#review-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-title",
+          "text": "Synthetic Beach Log 0.1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#package-status",
+          "text": "Synthetic draft — not authorized for fielding"
+        },
+        {
+          "action": "expectText",
+          "selector": "#barrier-count",
+          "text": "8 unresolved barriers"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-baseline",
+          "text": "Owner application unavailable | Proposed fix: Obtain source, version, license and baseline tests from the tool owner. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-device",
+          "text": "Target device unknown | Proposed fix: Confirm representative device and permitted offline install route with the device authority. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-hosting",
+          "text": "Hosting and signing unapproved | Proposed fix: Request hosting decision and signing process from the hosting representative. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-security",
+          "text": "Authorization evidence requirements unknown | Proposed fix: Obtain the applicable checklist and review criteria from the authorizing representative. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-sustainment",
+          "text": "Sustainment owner unassigned | Proposed fix: Ask the command to name an owner who accepts support, updates and rollback. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-rules",
+          "text": "Calculation rules and answer key absent | Proposed fix: Obtain authoritative worksheet rules and an independent hand-computed answer key from the SME. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-approval",
+          "text": "Operational approval and audit undefined | Proposed fix: Define per-result human approval, identity, retention and audit integrity with the Beachmaster authority. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-sync",
+          "text": "Disconnected transfer unspecified | Proposed fix: Define transport, acknowledgements, replay and conflict rules with the network owner. | Owner: Unassigned | Status: Unresolved"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Synthetic draft — not authorized for fielding"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "1. Obtain the owner application, version, license and baseline tests."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "8. Record remaining barriers with a proposed fix and accountable owner or Unassigned."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Obtain source, version, license and baseline tests from the tool owner."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Confirm representative device and permitted offline install route with the device authority."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Request hosting decision and signing process from the hosting representative."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Obtain the applicable checklist and review criteria from the authorizing representative."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Ask the command to name an owner who accepts support, updates and rollback."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Obtain authoritative worksheet rules and an independent hand-computed answer key from the SME."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Define per-result human approval, identity, retention and audit integrity with the Beachmaster authority."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-package",
+          "fileName": "transition-package.md",
+          "text": "Define transport, acknowledgements, replay and conflict rules with the network owner."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "2. Confirm the representative device, permitted install route and offline test conditions."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "3. Record proposed hosting and signing decisions with the responsible external reviewers."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "4. Obtain the applicable security checklist and collect traceable evidence for authority review."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "5. Define human approval of every operational result and auditable change handling."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "6. Specify disconnected transfer, acknowledgements, replay handling and reconnect conflicts."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "7. Name an accepting sustainment owner and document updates, rollback and support."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "9. Have a second operator rehearse installation and the offline demo, then retain review evidence."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "click",
+          "selector": "#review-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-title",
+          "text": "Synthetic Beach Log 0.1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#barrier-count",
+          "text": "8 unresolved barriers"
+        }
+      ]
+    },
+    {
+      "id": "recover-incomplete",
+      "title": "Recover missing tool name and proposed fix without losing draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#tool-name",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-error",
+          "text": "Enter a fictional tool name."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#tool-version",
+          "value": "0.1"
+        },
+        {
+          "action": "fill",
+          "selector": "#tool-name",
+          "value": "Synthetic Harbor Log"
+        },
+        {
+          "action": "fill",
+          "selector": "#fix-baseline",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-error",
+          "text": "Enter a proposed fix for Owner application unavailable."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#tool-name",
+          "value": "Synthetic Harbor Log"
+        },
+        {
+          "action": "fill",
+          "selector": "#fix-baseline",
+          "value": "Obtain source, version, license and baseline tests from the tool owner."
+        },
+        {
+          "action": "click",
+          "selector": "#save-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1: Synthetic Harbor Log 0.1"
+        },
+        {
+          "action": "click",
+          "selector": "#review-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-title",
+          "text": "Synthetic Harbor Log 0.1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-barrier-baseline",
+          "text": "Owner application unavailable | Proposed fix: Obtain source, version, license and baseline tests from the tool owner. | Owner: Unassigned | Status: Unresolved"
+        }
+      ]
+    },
+    {
+      "id": "protect-saved-review",
+      "title": "Recover an unsaved draft and deliberately discard before reviewing saved content",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1: Synthetic Beach Log 0.1"
+        },
+        {
+          "action": "fill",
+          "selector": "#tool-name",
+          "value": "Synthetic Changed Log"
+        },
+        {
+          "action": "click",
+          "selector": "#review-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Unsaved changes. Save or discard changes before review or export."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#tool-name",
+          "value": "Synthetic Changed Log"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved changes"
+        },
+        {
+          "action": "click",
+          "selector": "#discard-changes"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#tool-name",
+          "value": "Synthetic Beach Log"
+        },
+        {
+          "action": "click",
+          "selector": "#review-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-title",
+          "text": "Synthetic Beach Log 0.1"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-playbook",
+          "fileName": "fielding-playbook.md",
+          "text": "Do not install, publish or submit for authorization without the appropriate external approvals."
+        }
+      ]
+    }
+  ]
+}

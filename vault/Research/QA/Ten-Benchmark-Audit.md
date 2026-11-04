@@ -58,7 +58,15 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 
 [E] The benchmark's STOP/deadline source still warns that its driver may remain running. No shutdown fix or runtime proof is claimed here.
 
-## Current ownership
+## Completed round-1 baseline
+
+[E, scoreboard, rows and DONE at 16:42] All ten builds finished; nine pass the automatic bar and zero are independently satisfactory so far. Four independent judgments reject their primary outcomes; the other judgments are still pending. Average build time is 11.64 minutes. Total uncached input plus output is 2,689,377 tokens; gross input plus output is 15,870,471. None is under eight minutes or under 200,000 uncached input plus output tokens. This is a measured baseline, not a quality or efficiency improvement.
+
+[E, canonical packet and actual report] ID 16 is the only requirementsMet:true result. Its packet contains only the three recipe criteria GOV-01, GOV-02 and GOV-03, with no source-backed criterion. Requested behavior in its narrative/demo text is not represented in that inventory. The flag therefore does not establish complete card coverage. Sent this gap to the primary-task fix owner through main; retain the approved synthetic scope and independent judgment.
+
+[E, main reply and source] HOLD is set, and ten.py skips heads without changes in its factory-related paths. Main owns a planned five-challenge experiment with the primary-task patch; that experiment is not a substitute for the final ten-challenge objective. The future driver now requests cancellation on STOP/3.5 hours, but still swallows rejected stop requests and logs stopped unconditionally, with an unbounded wait. Per-build timeouts still drop tracking without calling cancellation. These residual findings were sent back. Round 1 used the older driver and finished normally.
+
+## Current ownership and active follow-up
 
 [E, pure parser probe at 16:37] The in-progress dev-5 deferral-basis check still accepts the rejected ID 12 baseline after only adding deferralBasis: real-data to its deferred entries. Called parseQualityPlan with the canonical packet and unchanged existing journeys. Result: accepted, with UC12-1 and DELIVERABLE12-1 both deferred and zero journeys. No file, generated app or live run changed. Sent this exact regression to the runtime owner: require evidence of the synthetic primary workflow, rather than only an allowed dependency label. This is a finding against a work in progress, not a landed regression.
 

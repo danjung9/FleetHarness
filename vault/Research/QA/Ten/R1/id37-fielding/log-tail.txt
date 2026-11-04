@@ -1,0 +1,91 @@
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "building",
+  "detail": "Prepare saved-revision download links when review opens and invalidate them on draft changes."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Saved record review: building. The live diagram has been updated."}]
+verify text The Node suite passed all 19 tests. The browser run passed both recovery journeys at both widths, but the primary journey timed out on its eleventh download in both runs. That pattern points to browser download rate limiting. I’ll briefly disable both export controls between requests, preserving the saved-content guard and retry behavior.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"unzip -p .quality-evidence/*/review-barriers-desktop.zip trace.trace | rg -i 'thrott|download|console' | tail -15\""
+}
+verify tool bash completed
+"{\"type\":\"before\",\"callId\":\"cbjm@16333\",\"startTime\":2626338.198,\"title\":\"Wait for event \\\"download\\\"\",\"class\":\"Page\",\"method\":\"__waitInfo__\",\"params\":{\"waitId\":\"06ca9cd2e855940d03153266ae899fa9\",\"phase\":\"before\",\"event\":\"download\"}}\n{\"type\":\"log\",\"callId\":\"cbjm@16333\",\"time\":2626338.223,\"message\":\"waiting for event \\\"download\\
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('index.html')\ns=p.read_text()\ns=s.replace('Downloads use this saved revision. They do not mark evidence accepted or barriers resolved.', 'Downloads use this saved revision. Both download controls pause briefly after each request to prevent duplicate requests and browser rate limiting. They do not mark evidence
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > transition-download.test.cjs <<'EOF'\n'use strict';\nconst {test}=require('node:test');\nconst assert=require('node:assert/strict');\nconst fs=require('node:fs');\nconst vm=require('node:vm');\nconst C=require('./transition-core.cjs');\nconst html=fs.readFileSync(__dirname+'/index.html','utf8');\n// Execute the delivered UI download handler with controlled
+verify tool bash completed
+"✔ CommonJS: sample has eight unresolved barriers and explicit unknowns (0.788917ms)\n✔ CommonJS: missing values reject without draft loss (0.239792ms)\n✔ CommonJS: inclusive text boundaries and owner limits (0.627708ms)\n✔ CommonJS: explicit commits isolate saved content and guard dirty review (0.37725ms)\n✔ CommonJS: persistent envelope rejects corruption and reports storage failu
+verify text The trace shows ten downloads completing within about 300 ms, followed by the timeout. The repair now spaces requests by at least 250 ms. All 22 local application tests pass, including repeated requests across both controls and recovery after a download error. The host still needs to rerun the browser journeys; these tests do not establish a browser pass.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport json,hashlib\np=Path('README.md');s=p.read_text();s=s.replace('node --test transition-core.test.cjs','node --test transition-core.test.cjs transition-download.test.cjs');s=s.replace('8. Check your browser\\\\'s downloads.', '8. Both download controls pause for a quarter second after each request to avoid duplica
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Download pacing repair implemented; mapped files exist. Local application suite 22/22 passes; host desktop/narrow rerun required."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Saved record review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "export",
+  "status": "generated",
+  "detail": "Download pacing repair implemented; mapped files exist. Local application suite 22/22 passes; host desktop/narrow rerun required."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Draft package and reusable playbook: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "editor",
+  "status": "generated",
+  "detail": "Existing mapped implementation files preserved; actual core application tests pass. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Transition record editor: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "core",
+  "status": "generated",
+  "detail": "Existing mapped implementation files preserved; actual core application tests pass. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Record and barrier rules: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Existing mapped implementation files preserved; actual core application tests pass. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local draft and saved snapshot: generated. The live diagram has been updated."}]
+verify text Repaired rapid-download handling with a shared 250 ms pause between requests. Updated README, verification notes and criterion evidence.
+
+All 22 local application tests pass with no skips. Frozen plans and host evidence remain unchanged.
+
+Host browser rerun is still required. Fourteen criteria remain deferred; `requirementsMet` remains false.
+verify info TAP version 13
+# Subtest: CommonJS: sample has eight unresolved barriers and explicit unknowns
+ok 1 - CommonJS: sample has eight unresolved barriers and explicit unknowns
+  ---
+  duration_ms: 0.786792
+  type: 'test'
+  ...
+# Subtest: CommonJS: missing values reject without draft loss
+ok 2 - CommonJS: missing values reject without draft loss
+  ---
+  duration_ms: 0.225791
+  type: 'test'
+  ...
+# Subte
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

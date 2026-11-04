@@ -1,0 +1,30 @@
+✔ CommonJS: sample has eight unresolved barriers and explicit unknowns (0.788917ms)
+✔ CommonJS: missing values reject without draft loss (0.239792ms)
+✔ CommonJS: inclusive text boundaries and owner limits (0.627708ms)
+✔ CommonJS: explicit commits isolate saved content and guard dirty review (0.37725ms)
+✔ CommonJS: persistent envelope rejects corruption and reports storage failure (0.801125ms)
+✔ CommonJS: documents retain fixes, attribution and unknown approvals safely (0.285083ms)
+✔ CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.830042ms)
+✔ CommonJS: committed nested data and exported fixes stay isolated from draft edits (0.198166ms)
+✔ CommonJS: reusable nine-step playbook keeps external gates (0.17925ms)
+✔ browser inline: sample has eight unresolved barriers and explicit unknowns (0.258125ms)
+✔ browser inline: missing values reject without draft loss (0.095042ms)
+✔ browser inline: inclusive text boundaries and owner limits (0.339584ms)
+✔ browser inline: explicit commits isolate saved content and guard dirty review (0.324584ms)
+✔ browser inline: persistent envelope rejects corruption and reports storage failure (0.265541ms)
+✔ browser inline: documents retain fixes, attribution and unknown approvals safely (0.185667ms)
+✔ browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.618584ms)
+✔ browser inline: committed nested data and exported fixes stay isolated from draft edits (0.172208ms)
+✔ browser inline: reusable nine-step playbook keeps external gates (0.111459ms)
+✔ inline and standalone produce the same actual workflow results (0.217542ms)
+✔ UI exports preserve real documents and pace repeated cross-control requests (2.9305ms)
+✔ UI failed download keeps retry available after the cooldown (0.373375ms)
+✔ UI rejected saved-content guard issues no download and does not lock controls (0.253041ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.919792
