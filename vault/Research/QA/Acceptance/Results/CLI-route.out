@@ -1,1 +1,1 @@
-{"status":"FAIL","exit":1,"output":"/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-aaa1585f-8701-485b-861e-d2cc2ff42f8a","counts":{"PASS":27,"FAIL":1,"NOT CHECKED":18,"ERROR":0}}
+{"status":"INCOMPLETE","exit":3,"output":"/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-af6357a9-6421-4d12-ba9b-21b462cd2b3c","counts":{"PASS":28,"FAIL":0,"NOT CHECKED":18,"ERROR":0}}

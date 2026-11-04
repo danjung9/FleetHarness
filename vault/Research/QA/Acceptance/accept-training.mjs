@@ -534,8 +534,15 @@ async function main() {
     if (typeof next.routeWebSocket === 'function') await next.routeWebSocket(/.*/, socket => socket.close());
     const opened = await next.newPage(); opened.setDefaultTimeout(5000); opened.setDefaultNavigationTimeout(10000);
     opened.on('dialog', dialog => {
-      receipt.dialogs ||= []; receipt.dialogs.push({ type: dialog.type(), message: dialog.message().slice(0, 1000), sequence });
-      void dialog.dismiss();
+      receipt.dialogs ||= [];
+      const event = { type: dialog.type(), message: dialog.message().slice(0, 1000), sequence, action: 'pending' };
+      receipt.dialogs.push(event);
+      void (async () => {
+        try {
+          if (explicitAdapter?.handleDialog) event.action = await explicitAdapter.handleDialog(dialog);
+          else { await dialog.dismiss(); event.action = 'dismissed by generic handler'; }
+        } catch (error) { event.action = 'handler error'; event.error = String(error.message).slice(0, 500); try { await dialog.dismiss(); } catch {} }
+      })();
     });
     opened.on('pageerror', error => { receipt.rendererErrors ||= []; receipt.rendererErrors.push(String(error.message).slice(0, 1000)); });
     await opened.goto(pathToFileURL(entry).href, { waitUntil: 'load', timeout: 10000 });
@@ -647,7 +654,7 @@ async function main() {
       const upload = importControl(importView);
       if (upload && importBaseline?.judged.status === 'PASS' && importBaseline.entered.ok) {
         await page.locator('input[type=file]').nth(upload.index).setInputFiles(savedFresh.target);
-        await sleep(300);
+        if (explicitAdapter?.waitForImport) await explicitAdapter.waitForImport(page); else await sleep(300);
         const restored = await capture('fresh-context-after-import');
         const exported = await download(SAVE, 'reimported-roundtrip');
         const values = exported?.json ? findInputs(exported.json) : [];
@@ -664,7 +671,7 @@ async function main() {
             const editedImportControl = importControl(await observe(page));
             if (editedImportControl) {
               await page.locator('input[type=file]').nth(editedImportControl.index).setInputFiles({ name: 'edited-previously-reviewed.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(changed)) });
-              await sleep(300);
+              if (explicitAdapter?.waitForImport) await explicitAdapter.waitForImport(page); else await sleep(300);
               const edited = await capture('edited-reviewed-metadata-import');
               const echo = await download(SAVE, 'edited-import-roundtrip');
               const v = echo?.json ? findInputs(echo.json) : [];

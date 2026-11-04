@@ -12,8 +12,11 @@ const confirmedActions = new Set([
   'Replace the current inputs and draft with this saved file? Import clears review. Save first to keep current changes.'
 ]);
 export async function handleDialog(dialog) {
-  if (dialog.type() === 'confirm' && confirmedActions.has(dialog.message())) await dialog.accept();
-  else await dialog.dismiss();
+  if (dialog.type() === 'confirm' && confirmedActions.has(dialog.message())) { await dialog.accept(); return 'accepted exact synthetic import/reset confirmation'; }
+  await dialog.dismiss(); return 'dismissed unrecognized dialog';
+}
+export async function waitForImport(page) {
+  await page.waitForFunction(() => /^(Exact saved inputs and draft imported and rechecked\.|Import failed:)/.test(document.getElementById('notice')?.textContent || ''), { timeout: 5000 });
 }
 const clone = value => structuredClone(value);
 const canonical = value => JSON.stringify(value, function (_key, v) {
