@@ -1,0 +1,95 @@
+# FleetHarness
+
+**An AI-powered software factory for turning operational challenges into working, testable software.**
+
+## Overview
+
+FleetHarness is a project for the **Norfolk FleetHacker hackathon**. Its goal is to systematically build solutions for the **34 published use cases**, spanning naval operations, readiness, maintenance, cybersecurity, document processing, scheduling, and decision support.
+
+Instead of building 34 disconnected demos by hand—or forcing every problem into one generic AI agent—we want a repeatable process that takes a challenge from **problem statement to running application**.
+
+FleetHarness is primarily a **software development system**, not a common runtime that every resulting app must use. Each solution can have its own architecture, tools, and deployment model, while reusing components when that genuinely helps.
+
+## The Problem
+
+Many operational problems have already been described in detail, but turning them into useful software is still slow. Teams must interpret requirements, research existing technologies, design an implementation, write code, connect data, test edge cases, and demonstrate real functionality.
+
+AI coding tools can accelerate individual steps. The harder problem is coordinating the *entire process* across many different use cases without producing shallow prototypes that merely look functional.
+
+## What We're Building
+
+A repeatable, AI-assisted development pipeline that can:
+
+1. **Ingest a use case:** Capture its goals, users, constraints, inputs, outputs, dependencies, and success criteria.
+2. **Research existing solutions:** Discover relevant open-source projects, libraries, standards, and reusable components before writing new code.
+3. **Plan the implementation:** Produce a concrete specification, system design, development tasks, and executable acceptance tests.
+4. **Build the application:** Use coding agents in isolated workspaces to implement working software and integrate appropriate existing tools.
+5. **Test and repair:** Run automated tests and realistic end-to-end scenarios, then iterate on failures rather than declaring success after generating code.
+6. **Package and demonstrate:** Deliver a runnable application with setup instructions, test results, known limitations, and a reproducible demo.
+7. **Reuse what works:** Make proven components available to later use cases without imposing a one-size-fits-all architecture.
+
+Human reviewers retain control over requirements, security-sensitive actions, and claims of operational readiness.
+
+## Core Principles
+
+- **Working software over mockups.** A polished interface is not proof that a workflow works.
+- **Reuse before rebuilding.** Start with established open-source software where practical.
+- **Tests define success.** Every implementation needs measurable acceptance criteria and representative inputs.
+- **Fit the problem.** Scheduling may require constraint solvers; cybersecurity may require security tooling; document extraction may require OCR and parsers. An LLM is not always the right engine.
+- **Real integrations when authorized.** Prefer functional connections to approved data and systems. Use clearly labeled synthetic or sanitized data when operational access is unavailable.
+- **Human oversight.** High-consequence decisions and changes require appropriate approval, auditability, and safeguards.
+- **Honest status.** Distinguish generated, runnable, tested, and operationally validated solutions.
+
+## How It Works
+
+```text
+Norfolk use-case descriptions
+           |
+           v
+Requirements and acceptance tests
+           |
+           v
+Open-source research + implementation plan
+           |
+           v
+AI coding agents + reusable components
+           |
+           v
+Run application + execute tests + repair defects
+           |
+           v
+Human review + reproducible demo
+           |
+           v
+Working use-case solution
+```
+
+The orchestration layer should be assembled from existing open-source software where possible, rather than built from scratch. Projects to evaluate include **SWE-AF, SuperPlane, OpenAI Symphony, and Aperant**, alongside a coding agent, containerized execution, and automated test tooling. The final stack will be selected based on hands-on performance rather than feature claims.
+
+## Initial Proof of Concept
+
+We will first validate the process on **three deliberately different challenges**:
+
+- **Operational-message parsing:** Extract structured tasks, events, and source references from representative messages.
+- **Training schedule deconfliction:** Generate schedules that respect personnel, time, and resource constraints; detect infeasible cases.
+- **Offline-first workflow:** Make changes while disconnected and reliably synchronize when connectivity returns.
+
+This tests whether the system can produce real software across document intelligence, optimization, and distributed application design—not just generate similar chat interfaces.
+
+## Deliverables
+
+For each supported challenge, the desired output is:
+
+- A documented problem specification and explicit acceptance criteria.
+- A runnable codebase with installation and execution instructions.
+- Relevant data adapters, services, and user interfaces.
+- Automated tests and a reproducible end-to-end demonstration.
+- A short report describing what works, what failed, and what remains unverified.
+
+A dashboard may track progress across all 34 use cases, but **the number of generated repositories is not the measure of success**. The real measure is how many distinct challenges can be solved correctly, reproducibly, and with minimal unnecessary human effort.
+
+## Success Criteria
+
+FleetHarness succeeds if it demonstrates that the same development process can repeatedly turn different FleetHacker challenge descriptions into **functional, verifiable applications**, while reducing engineering effort and preserving the domain-specific rigor each problem requires.
+
+**Long-term vision:** a reusable system for rapidly translating operational needs into field-testable software—not simply a hackathon demo generator.
