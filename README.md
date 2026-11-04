@@ -8,9 +8,11 @@ AppYard has one interface: the original desktop app and its browser preview. The
 
 The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
-**Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
+**Windows x64:** use the [latest successful Windows release](https://github.com/danjung9/FleetHarness/releases/latest) once publishing is enabled, or build locally with `npm run dist:win`. This repository is private; sign in to GitHub with repository access to download. See [Windows downloads and team releases](docs/windows-releases.md) for activation status, installation, checksums, and manual upgrades.
 
-For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
+**Apple Silicon:** open `release/mac-arm64/AppYard.app` or install the DMG in `release/`. The existing `npm run dist` command still builds macOS ARM64 packages. In either app, connect an engine in **Model settings**, choose a challenge, and start a build.
+
+For development: `npm ci`, `npm run setup:browser`, then `npm run dev` (Node 22.19+; CI uses Node 24). Every team change must reach `main` to enter the shared Windows installer. Each successful Windows release includes all changes in its source commit. Installed copies are upgraded by running a newer installer; there is no background updater.
 
 Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
 

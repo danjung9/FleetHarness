@@ -3,6 +3,8 @@ dist/
 dist-electron/
 dist-harness/
 release/
+release-baseline/
+build/generated/
 output/
 .playwright-cli/
 .DS_Store

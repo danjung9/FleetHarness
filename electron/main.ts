@@ -12,6 +12,7 @@ import { assertExecutableSource, executableFileName, stageExecutable, runPackage
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
+import { readBuildInfo } from './build-info.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 // Preserve existing workspaces and credentials when the display name changes.
@@ -37,6 +38,7 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 }
 const bootstrap = () => ({
   state: store.state, models: backend.models(), storagePath: store.root,
+  buildInfo: readBuildInfo(app.getVersion(), process.resourcesPath, app.isPackaged),
   chatgpt: codex.account,
   credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? 'ChatGPT connected' : 'Sign in with ChatGPT to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron

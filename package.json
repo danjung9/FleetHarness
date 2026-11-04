@@ -18,6 +18,9 @@
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
+    "dist:win": "npm run build && node scripts/build-windows.mjs",
+    "dist:win:baseline": "npm run build && node scripts/build-windows.mjs --baseline",
+    "test:windows": "node scripts/smoke-windows.mjs",
     "sync:norfolk": "node scripts/sync-norfolk.mjs",
     "test:norfolk": "npm run build && node --test tests/norfolk.test.mjs && node scripts/smoke-norfolk.mjs",
     "harness:build": "tsc -p harness/tsconfig.json",
@@ -80,6 +83,20 @@
     "directories": {
       "output": "release",
       "buildResources": "build"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "AppYard-${version}-windows-${arch}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": false,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": false,
+      "differentialPackage": false
     },
     "artifactName": "AppYard-${version}-${arch}.${ext}",
     "npmRebuild": false,

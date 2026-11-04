@@ -44,7 +44,10 @@ test('missing, oversized and escaped entry points cannot be packaged', async t =
   const { root, project } = await fixture(t);
   await fs.rm(path.join(project.workspace, 'index.html'));
   await fs.writeFile(path.join(root, 'outside.html'), 'private');
-  await fs.symlink(path.join(root, 'outside.html'), path.join(project.workspace, 'index.html'));
+  // Junctions exercise the same escaping reparse-point boundary on Windows
+  // without requiring Developer Mode or administrator file-symlink rights.
+  await fs.symlink(process.platform === 'win32' ? root : path.join(root, 'outside.html'),
+    path.join(project.workspace, 'index.html'), process.platform === 'win32' ? 'junction' : 'file');
   project.report.sourceHash = await sourceHash(project.workspace);
   await assert.rejects(stageExecutable(project, root), /stay inside/);
   await fs.rm(path.join(project.workspace, 'index.html'));
@@ -60,7 +63,7 @@ test('saving replaces a complete archive and rejects workspaces through symlink 
   await fs.writeFile(archive, 'complete archive'); await fs.writeFile(destination, 'old archive');
   assert.equal(await saveExecutable(archive, destination, project.workspace), await fs.realpath(destination));
   assert.equal(await fs.readFile(destination, 'utf8'), 'complete archive');
-  await fs.symlink(project.workspace, path.join(root, 'alias'));
+  await fs.symlink(project.workspace, path.join(root, 'alias'), process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(saveExecutable(archive, path.join(root, 'alias', 'bad.zip'), project.workspace), /outside/);
   await assert.rejects(saveExecutable(path.join(root, 'missing.zip'), destination, project.workspace));
   assert.equal(await fs.readFile(destination, 'utf8'), 'complete archive');

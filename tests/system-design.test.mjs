@@ -65,9 +65,11 @@ test('cancelled stages cannot publish and symlinked sources cannot claim complet
     p.workspace = path.join(root, 'workspace'); await fs.mkdir(p.workspace);
     const controller = new AbortController();
     const publish = createSystemDesignTools(p, 'plan', controller.signal, async () => {})[0];
-    await publish.execute('publish', fixtureSystemDesign);
+    const linkedDesign = structuredClone(fixtureSystemDesign);
+    linkedDesign.components.find(component => component.id === 'parser').files = ['linked/outside.cjs'];
+    await publish.execute('publish', linkedDesign);
     await fs.writeFile(path.join(root, 'outside.cjs'), 'outside');
-    await fs.symlink(path.join(root, 'outside.cjs'), path.join(p.workspace, 'core.cjs'));
+    await fs.symlink(root, path.join(p.workspace, 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
     const update = createSystemDesignTools(p, 'build', controller.signal, async () => {})[0];
     await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'generated', detail: 'Done' }), /inside its workspace/);
     controller.abort();

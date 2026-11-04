@@ -1,4 +1,5 @@
 @font-face{font-family:'DM Serif Display';src:url('./fonts/dm-serif-display.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+.app-build-info{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}.app-build-info dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;font-size:12px}.app-build-info dt{color:var(--muted)}.app-build-info dd{margin:0;font-family:var(--mono);overflow-wrap:anywhere;user-select:text}
 /* Shared workspace palette and type system. */
 :root {
   font-family:'DM Sans',sans-serif; color:var(--ink); background:var(--ground);

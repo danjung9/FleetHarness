@@ -87,20 +87,22 @@ test('a correct primary flow does not conceal broken error recovery or incorrect
   assert.ok(result.journeys.filter(j => j.id === 'recover').every(j => j.status === 'failed'));
 });
 
-test('the preview supports native form events without permitting external form navigation', { timeout: 20_000 }, async t => {
+test('the preview supports native form events without permitting external form navigation', { timeout: 40_000 }, async t => {
   const nativeForm = application.replace('<section id="editor">', '<form id="editor">').replace('</section>', '</form>')
     .replace('id="save" type="button"', 'id="save" type="submit"')
     .replace("document.querySelector('#save').onclick=()=>{", "document.querySelector('#editor').onsubmit=e=>{e.preventDefault();")
     .replace("task.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('#save').click();}};", '');
   const root = await workspace(t, nativeForm);
-  const result = await verify(root, { stepTimeoutMs: 1000 });
+  const result = await verify(root, { stepTimeoutMs: 2500 });
   assert.ok(result.journeys.every(j => j.status === 'passed'), JSON.stringify(result));
   let requests = 0;
   const remote = createServer((_request, response) => { requests++; response.end('unexpected'); });
   await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => remote.close(resolve)));
   await fs.writeFile(path.join(root, 'index.html'), `<!doctype html><form action="http://127.0.0.1:${remote.address().port}"><label>Task<input id="task" name="task"></label><button>Send</button></form>`);
-  const blocked = await verify(root, { stepTimeoutMs: 200, plan: plan([
+  // Allow Windows browser startup/actionability before asserting the CSP denial.
+  // This is a navigation-policy test, not a 200 ms scheduling benchmark.
+  const blocked = await verify(root, { stepTimeoutMs: 2500, timeoutMs: 30_000, plan: plan([
     { action: 'fill', selector: '#task', value: 'Inspect pump' },
     { action: 'press', selector: '#task', key: 'Enter' },
     { action: 'expectValue', selector: '#task', value: 'Inspect pump' }
@@ -160,7 +162,7 @@ test('an unavailable browser is an actionable failure, never skipped verificatio
 
 test('browser evidence cannot be written through an application-created symlink', async t => {
   const root = await workspace(t), elsewhere = await workspace(t);
-  await fs.symlink(elsewhere, path.join(root, '.quality-evidence'), 'dir');
+  await fs.symlink(elsewhere, path.join(root, '.quality-evidence'), process.platform === 'win32' ? 'junction' : 'dir');
   const result = await verify(root);
   assert.match(result.errors.join('\n'), /real workspace directory/);
   assert.deepEqual(await fs.readdir(elsewhere), ['index.html']);
