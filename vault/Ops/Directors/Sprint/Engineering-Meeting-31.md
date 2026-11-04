@@ -35,4 +35,12 @@ summary: "Meeting 31 evidence, decisions and local handoff for restricted centra
 
 [R] Authorized coordinator: record this meeting in central Sprint and Sessions and update Team/Now.md. Proposed status: real modified-copy build complete; both first task-acceptance runs incomplete on schema discovery; current d0f4c69 gate red; existing three code owners retained; one dependent V1 task and one evidence correction queued. Main QA retains runtime acceptance. Product retains the single morning human-decision list in Status.md. No new human approval is invented.
 
-[R] Completion validation and final relay reconciliation will be recorded before closing this session.
+[E, later receipt read] Adapter runs edf3150f-4563-4059-b9c0-6ecca70e64ac (factory, 15:37:54) and aaa1585f-8701-485b-861e-d2cc2ff42f8a (CLI, 15:38:20) now report FAIL. Factory: CLOCK-DISPLAY uses midnight instead of the expected 0800; 33 PASS and 14 NOT CHECKED rows, including numeric-case and fresh-offline-import passes. CLI: OFFLINE-FRESH-IMPORT reports restored input mismatch; other cases remain unmeasured. These supersede the earlier discovery-only status without erasing its receipts. Directives and memo were corrected before closeout. No overall acceptance or new run is authorized.
+
+[R] Updated central status proposal: both candidates have measured adapter failures and remaining manual checks. Preserve the completed factory build and prioritize its clock-display correction through instructions after QA confirms the failure, following the existing code sequence. Keep the CLI backup unaccepted.
+
+[E, final relay reread] Both relay files still identify mvp d0f4c69 and main 8db53c3. The current gate still reports 96/20. Overseer memo and other director memos were reread; no Directive-directors.md appeared. Existing development ownership is unchanged.
+
+[E, file discovery] Guessed dev-2/dev-3 test directories did not exist. No clone path was assumed in assignments; verified repository-relative test filenames are used instead.
+
+[R] Completion validation will be recorded before closing this session.

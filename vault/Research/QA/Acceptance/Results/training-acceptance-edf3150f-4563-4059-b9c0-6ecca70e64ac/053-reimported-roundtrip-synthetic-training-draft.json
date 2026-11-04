@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "kind": "synthetic-training-draft",
+  "inputText": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1680\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        30\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90,\n        120\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}",
+  "inputs": {
+    "schemaVersion": 1,
+    "epoch": {
+      "label": "Synthetic day one at minute 0",
+      "day2Minute": 1440
+    },
+    "operatingWindows": [
+      [
+        0,
+        240
+      ],
+      [
+        1440,
+        1680
+      ]
+    ],
+    "people": [
+      {
+        "id": "P01",
+        "qualifications": [
+          "Q-A"
+        ],
+        "availability": [
+          [
+            0,
+            240
+          ],
+          [
+            1440,
+            1680
+          ]
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 30
+      },
+      {
+        "id": "P02",
+        "qualifications": [
+          "Q-B"
+        ],
+        "availability": [
+          [
+            0,
+            240
+          ],
+          [
+            1440,
+            1680
+          ]
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 0
+      }
+    ],
+    "requests": [
+      {
+        "id": "A",
+        "duration": 60,
+        "allowedStarts": [
+          30
+        ],
+        "personId": "P01",
+        "roomId": "Room-1",
+        "requiredQualification": "Q-A"
+      },
+      {
+        "id": "B",
+        "duration": 60,
+        "allowedStarts": [
+          0,
+          90,
+          120
+        ],
+        "personId": "P01",
+        "roomId": "Room-1",
+        "requiredQualification": "Q-A"
+      },
+      {
+        "id": "C",
+        "duration": 60,
+        "allowedStarts": [
+          0
+        ],
+        "personId": "P02",
+        "roomId": "Room-2",
+        "requiredQualification": "Q-B"
+      },
+      {
+        "id": "D",
+        "duration": 60,
+        "allowedStarts": [
+          1440
+        ],
+        "personId": "P02",
+        "roomId": "Room-2",
+        "requiredQualification": "Q-B"
+      }
+    ],
+    "maxNodes": 50000
+  },
+  "result": {
+    "status": "feasible",
+    "origin": "search",
+    "assignments": [
+      {
+        "requestId": "A",
+        "start": 30,
+        "end": 90,
+        "personId": "P01",
+        "roomId": "Room-1"
+      },
+      {
+        "requestId": "B",
+        "start": 120,
+        "end": 180,
+        "personId": "P01",
+        "roomId": "Room-1"
+      },
+      {
+        "requestId": "C",
+        "start": 0,
+        "end": 60,
+        "personId": "P02",
+        "roomId": "Room-2"
+      },
+      {
+        "requestId": "D",
+        "start": 1440,
+        "end": 1500,
+        "personId": "P02",
+        "roomId": "Room-2"
+      }
+    ],
+    "loads": [
+      {
+        "personId": "P01",
+        "proposedMinutes": 120,
+        "scheduledMinutes": 120,
+        "maxMinutes": 120
+      },
+      {
+        "personId": "P02",
+        "proposedMinutes": 120,
+        "scheduledMinutes": 120,
+        "maxMinutes": 120
+      }
+    ],
+    "diagnostics": [],
+    "explored": 6,
+    "inputRevision": 4148
+  },
+  "draftReview": {
+    "reviewer": "Synthetic QA reviewer",
+    "timestamp": "2026-11-04T20:38:12.063Z",
+    "inputRevision": 4148
+  }
+}

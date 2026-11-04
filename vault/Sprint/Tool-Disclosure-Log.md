@@ -48,6 +48,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Session clock, version unexposed | time service | dated review | session runtime. Shared-log handoff staged locally. | 2026-11-04 |
 | Independent ID 11 browser acceptance variants revision 1 | Synthetic evaluation data | Prepared fixed extra scheduling cases before candidate inspection; browser execution belongs to main session | Created for this sprint | 2026-11-04 |
 | Independent ID 11 browser checker revision 1 | QA tool | Prepared actual-page Chrome acceptance with fixed synthetic oracles, discovery limits, offline save/import and artifact receipts; only syntax and pure evaluator checks executed here | Created for this sprint | 2026-11-04 |
+| Independent ID 11 browser checker revision 2 | QA tool | Added explicit adapters discovered from both candidate interfaces, retaining the frozen independent oracle and reporting unrepresentable cases | Created for this sprint | 2026-11-04 |
 
 ## Data and sources
 

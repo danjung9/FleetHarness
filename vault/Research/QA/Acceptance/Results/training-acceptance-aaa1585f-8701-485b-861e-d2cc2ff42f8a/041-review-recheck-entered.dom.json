@@ -1,0 +1,546 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-aaa1585f-8701-485b-861e-d2cc2ff42f8a/payload/index.html",
+  "body": "SYNTHETIC DATA · DRAFT ONLY\nPractice session draft\n\nInspect four proposed administrative practice sessions for two fictional people. This local helper checks the supplied limits and finds times from your allowed choices. It does not issue a schedule or establish operational compliance.\n\nStart with the example below. Inspect the result, then mark it reviewed and save a draft file before closing. Nothing is sent anywhere.\n\n1. Inspect the four requests\n\nChange durations or allowed starts to try another synthetic scenario. Each edit recomputes the result and clears review. Assigned people, rooms and required qualifications stay fixed.\n\nAll times are integer minutes from the start of day 1. Day 1 starts at 0; day 2 starts at 1440. Enter starts separated by commas, such as 0, 90. A blank list leaves no allowed start. Intervals include the start and exclude the end; the rest gap is checked separately.\n\nAll requests remain required\nRequest\tPerson\tRoom\tRequires\tDuration, min\tAllowed start minutes\nA\tP01\tRoom-1\tQ-A\t\t\nB\tP01\tRoom-1\tQ-A\t\t\nC\tP02\tRoom-2\tQ-B\t\t\nD\tP02\tRoom-2\tQ-B\t\t\nInspect or edit synthetic constraints\n\nThe example uses operating and both-person availability windows 0 to 240 and 1440 to 1680. Each entire session must fit one window. Limits apply across both days combined. Editing these values defines a new synthetic scenario. Search never changes a constraint or adds a qualification.\n\nOperating windows\nWindow 1 start\nWindow 1 end\nWindow 2 start\nWindow 2 end\nP01\nSupplied qualifications, comma separated\nWhole-horizon maximum, minutes\nMinimum rest gap, minutes\n\nAvailability windows\n\nWindow 1 start\nWindow 1 end\nWindow 2 start\nWindow 2 end\nP02\nSupplied qualifications, comma separated\nWhole-horizon maximum, minutes\nMinimum rest gap, minutes\n\nAvailability windows\n\nWindow 1 start\nWindow 1 end\nWindow 2 start\nWindow 2 end\nEvaluator search allowance\nMaximum candidate attempts, 1 to 200000\n\nDefault: 50000. Reaching the allowance is inconclusive. It does not establish that no solution exists.\n\nFind draft again\nRestore supplied example\n2. Inspect the result\nFeasible draft\n\nAll four requests fit the current supplied constraints. This is a draft for inspection, not an issued schedule.\n\nNext: inspect the times and personnel totals, mark the current draft reviewed, then save a draft file.\n\nAll four requests and fixed assignments are present.\nFull sessions fit operating and assigned-person availability windows.\nSupplied qualifications, person rest, room exclusivity and whole-horizon limits pass.\n\nCandidate attempts: 6 of 50000. Feasibility is over listed starts only, not global optimization. Conflicts are observations, not a minimal conflict set.\n\nCurrent draft: all four requests\nRequest\tPerson and room\tSelected start\tEnd minute\nA\tP01 / Room-1\t\n30 (Day 1, +30 min)\n\t90 (Day 1, +90 min)\nB\tP01 / Room-1\t\n0 (Day 1, +0 min)\n90 (Day 1, +90 min)\n120 (Day 1, +120 min)\n\t180 (Day 1, +180 min)\nC\tP02 / Room-2\t\n0 (Day 1, +0 min)\n\t60 (Day 1, +60 min)\nD\tP02 / Room-2\t\n1440 (Day 2, +0 min)\n\t1500 (Day 2, +60 min)\n\nWhen a draft is present, select another allowed start to inspect a person-selected draft. Every selection is independently checked and clears review. A conflicting selection is invalid draft input, not proof that the allowed choices are infeasible. Find draft again returns to automatic search.\n\nPersonnel totals across both days\nPerson\tAll requested minutes\tChecked draft minutes\tWhole-horizon limit\nP01\t120\t120\t120\nP02\t120\t120\t120\n3. Review and keep your draft\n\nNot reviewed. Inspect the current draft before marking it reviewed.\n\nMark reviewed only after inspecting every request, time and constraint. This records acknowledgement on this page. It is not authorization to issue a schedule.\n\nMark current draft reviewed\nSave before you close\n\nNo automatic storage is used. Save draft file downloads a JSON copy of the exact inputs and draft, including errors if present. Keep that file and index.html. Reopen index.html, then use Import draft file to recover. Import rechecks the file and always clears review. File transfer is not reconnect synchronization.\n\nSave draft file\nImport draft file\n\nInputs changed. Result recomputed. Review cleared.\n\nPartial ID 11 demonstration. Synthetic and unclassified only. No real people, ships, units or records. No recurrence, SFTRM interpretation, departmental negotiation or agents, real readiness data, qualification policy beyond supplied values, official-calendar writes or reconnect sync.\n\nA coordinator remains in charge. If a result looks wrong, leave it unreviewed, save the draft and ask the responsible human to inspect the inputs. No contact or operational-system updates occur here. Close the page to stop using it.",
+  "editors": [],
+  "buttons": [
+    {
+      "index": 0,
+      "visible": true,
+      "disabled": false,
+      "name": "Find draft again"
+    },
+    {
+      "index": 1,
+      "visible": true,
+      "disabled": false,
+      "name": "Restore supplied example"
+    },
+    {
+      "index": 2,
+      "visible": true,
+      "disabled": false,
+      "name": "Mark current draft reviewed"
+    },
+    {
+      "index": 3,
+      "visible": true,
+      "disabled": false,
+      "name": "Save draft file"
+    }
+  ],
+  "outputs": [
+    {
+      "tag": "P",
+      "role": "status",
+      "text": "Not reviewed. Inspect the current draft before marking it reviewed."
+    },
+    {
+      "tag": "P",
+      "role": "status",
+      "text": "Inputs changed. Result recomputed. Review cleared."
+    }
+  ],
+  "tables": [
+    [
+      [
+        "Request",
+        "Person",
+        "Room",
+        "Requires",
+        "Duration, min",
+        "Allowed start minutes"
+      ],
+      [
+        "A",
+        "P01",
+        "Room-1",
+        "Q-A",
+        "",
+        ""
+      ],
+      [
+        "B",
+        "P01",
+        "Room-1",
+        "Q-A",
+        "",
+        ""
+      ],
+      [
+        "C",
+        "P02",
+        "Room-2",
+        "Q-B",
+        "",
+        ""
+      ],
+      [
+        "D",
+        "P02",
+        "Room-2",
+        "Q-B",
+        "",
+        ""
+      ]
+    ],
+    [
+      [
+        "Request",
+        "Person and room",
+        "Selected start",
+        "End minute"
+      ],
+      [
+        "A",
+        "P01 / Room-1",
+        "30 (Day 1, +30 min)",
+        "90 (Day 1, +90 min)"
+      ],
+      [
+        "B",
+        "P01 / Room-1",
+        "0 (Day 1, +0 min)\n90 (Day 1, +90 min)\n120 (Day 1, +120 min)",
+        "180 (Day 1, +180 min)"
+      ],
+      [
+        "C",
+        "P02 / Room-2",
+        "0 (Day 1, +0 min)",
+        "60 (Day 1, +60 min)"
+      ],
+      [
+        "D",
+        "P02 / Room-2",
+        "1440 (Day 2, +0 min)",
+        "1500 (Day 2, +60 min)"
+      ]
+    ],
+    [
+      [
+        "Person",
+        "All requested minutes",
+        "Checked draft minutes",
+        "Whole-horizon limit"
+      ],
+      [
+        "P01",
+        "120",
+        "120",
+        "120"
+      ],
+      [
+        "P02",
+        "120",
+        "120",
+        "120"
+      ]
+    ]
+  ],
+  "review": [],
+  "statusTexts": [
+    "3. Review and keep your draft",
+    "Not reviewed. Inspect the current draft before marking it reviewed.",
+    "Inputs changed. Result recomputed. Review cleared."
+  ],
+  "imports": [
+    {
+      "index": 0,
+      "label": "Import draft file",
+      "accept": ".json,application/json",
+      "multiple": false,
+      "disabled": false
+    }
+  ],
+  "busy": false,
+  "candidateResult": {
+    "status": "feasible",
+    "assignments": [
+      {
+        "id": "A",
+        "start": 30,
+        "end": 90,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "B",
+        "start": 120,
+        "end": 180,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "C",
+        "start": 0,
+        "end": 60,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      },
+      {
+        "id": "D",
+        "start": 1440,
+        "end": 1500,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      }
+    ],
+    "source": "CLI visible result title/status, selected option values, and rendered row cells",
+    "diagnostics": {
+      "title": "Feasible draft",
+      "summary": "All four requests fit the current supplied constraints. This is a draft for inspection, not an issued schedule.",
+      "explanations": [
+        "All four requests and fixed assignments are present.",
+        "Full sessions fit operating and assigned-person availability windows.",
+        "Supplied qualifications, person rest, room exclusivity and whole-horizon limits pass."
+      ],
+      "searchNote": "Candidate attempts: 6 of 50000. Feasibility is over listed starts only, not global optimization. Conflicts are observations, not a minimal conflict set."
+    }
+  },
+  "candidateTotals": {
+    "P01": 120,
+    "P02": 120
+  },
+  "candidateReview": false,
+  "candidateInput": {
+    "windows": [
+      {
+        "start": 0,
+        "end": 240
+      },
+      {
+        "start": 1440,
+        "end": 1680
+      }
+    ],
+    "people": [
+      {
+        "id": "P01",
+        "qualifications": [
+          "Q-A"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 30
+      },
+      {
+        "id": "P02",
+        "qualifications": [
+          "Q-B"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 0
+      }
+    ],
+    "requests": [
+      {
+        "id": "A",
+        "duration": 60,
+        "starts": [
+          30
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "B",
+        "duration": 60,
+        "starts": [
+          0,
+          90,
+          120
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "C",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      },
+      {
+        "id": "D",
+        "duration": 60,
+        "starts": [
+          1440
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      }
+    ],
+    "maxNodes": 50000
+  },
+  "extraEvidence": {
+    "nativeStatus": "feasible",
+    "title": "Feasible draft",
+    "reviewText": "Not reviewed. Inspect the current draft before marking it reviewed.",
+    "notice": "Inputs changed. Result recomputed. Review cleared.",
+    "formFields": [
+      {
+        "label": "A duration",
+        "value": "60"
+      },
+      {
+        "label": "A allowed starts",
+        "value": "30"
+      },
+      {
+        "label": "B duration",
+        "value": "60"
+      },
+      {
+        "label": "B allowed starts",
+        "value": "0, 90, 120"
+      },
+      {
+        "label": "C duration",
+        "value": "60"
+      },
+      {
+        "label": "C allowed starts",
+        "value": "0"
+      },
+      {
+        "label": "D duration",
+        "value": "60"
+      },
+      {
+        "label": "D allowed starts",
+        "value": "1440"
+      },
+      {
+        "label": "Operating window 1 start",
+        "value": "0"
+      },
+      {
+        "label": "Operating window 1 end",
+        "value": "240"
+      },
+      {
+        "label": "Operating window 2 start",
+        "value": "1440"
+      },
+      {
+        "label": "Operating window 2 end",
+        "value": "1680"
+      },
+      {
+        "label": "P01 qualifications",
+        "value": "Q-A"
+      },
+      {
+        "label": "P01 whole-horizon maximum",
+        "value": "120"
+      },
+      {
+        "label": "P01 rest gap",
+        "value": "30"
+      },
+      {
+        "label": "P01 availability window 1 start",
+        "value": "0"
+      },
+      {
+        "label": "P01 availability window 1 end",
+        "value": "240"
+      },
+      {
+        "label": "P01 availability window 2 start",
+        "value": "1440"
+      },
+      {
+        "label": "P01 availability window 2 end",
+        "value": "1680"
+      },
+      {
+        "label": "P02 qualifications",
+        "value": "Q-B"
+      },
+      {
+        "label": "P02 whole-horizon maximum",
+        "value": "120"
+      },
+      {
+        "label": "P02 rest gap",
+        "value": "0"
+      },
+      {
+        "label": "P02 availability window 1 start",
+        "value": "0"
+      },
+      {
+        "label": "P02 availability window 1 end",
+        "value": "240"
+      },
+      {
+        "label": "P02 availability window 2 start",
+        "value": "1440"
+      },
+      {
+        "label": "P02 availability window 2 end",
+        "value": "1680"
+      },
+      {
+        "label": "Search allowance",
+        "value": "50000"
+      }
+    ],
+    "fixedRequestRows": [
+      [
+        "A",
+        "P01",
+        "Room-1",
+        "Q-A",
+        "",
+        ""
+      ],
+      [
+        "B",
+        "P01",
+        "Room-1",
+        "Q-A",
+        "",
+        ""
+      ],
+      [
+        "C",
+        "P02",
+        "Room-2",
+        "Q-B",
+        "",
+        ""
+      ],
+      [
+        "D",
+        "P02",
+        "Room-2",
+        "Q-B",
+        "",
+        ""
+      ]
+    ],
+    "displayedRows": [
+      {
+        "cells": [
+          "A",
+          "P01 / Room-1",
+          "30 (Day 1, +30 min)",
+          "90 (Day 1, +90 min)"
+        ],
+        "selectedValue": "30"
+      },
+      {
+        "cells": [
+          "B",
+          "P01 / Room-1",
+          "0 (Day 1, +0 min)90 (Day 1, +90 min)120 (Day 1, +120 min)",
+          "180 (Day 1, +180 min)"
+        ],
+        "selectedValue": "120"
+      },
+      {
+        "cells": [
+          "C",
+          "P02 / Room-2",
+          "0 (Day 1, +0 min)",
+          "60 (Day 1, +60 min)"
+        ],
+        "selectedValue": "0"
+      },
+      {
+        "cells": [
+          "D",
+          "P02 / Room-2",
+          "1440 (Day 2, +0 min)",
+          "1500 (Day 2, +60 min)"
+        ],
+        "selectedValue": "1440"
+      }
+    ],
+    "totalRows": [
+      [
+        "P01",
+        "120",
+        "120",
+        "120"
+      ],
+      [
+        "P02",
+        "120",
+        "120",
+        "120"
+      ]
+    ],
+    "constraintsExpanded": true,
+    "inputTypeLimit": "Form-derived numeric values follow documented integer entry. Only a downloaded JSON roundtrip establishes serialized types, especially for imported digit strings.",
+    "resultIdentityLimit": "Rendered person/room cells show the supplied fixed assignments. Compare them with actual downloaded result fields as a separate saved-data check.",
+    "portableReviewPolicy": "The documented save format omits review. Every successful import clears review.",
+    "summaryCapability": "No separate readable-summary export control in the inspected interface"
+  }
+}

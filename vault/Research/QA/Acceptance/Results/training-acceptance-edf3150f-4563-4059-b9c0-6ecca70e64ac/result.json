@@ -1,0 +1,7430 @@
+{
+  "version": 2,
+  "startedAt": "2026-11-04T20:37:54.220Z",
+  "candidate": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/TaskApp/Pipeline-run1",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac",
+  "checks": [
+    {
+      "id": "STOPPED-WRITERS-ATTESTATION",
+      "status": "PASS",
+      "detail": "Operator supplied this evidence reference; shutdown was not independently observed by this browser script",
+      "at": "2026-11-04T20:37:54.232Z",
+      "path": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Receipts/Pipeline-run1-writers-stopped.md",
+      "sha256": "62884199cb6da58cd75301b0c314acbded2af19b5cf8a1c78a04bb600d26e54b",
+      "size": 382
+    },
+    {
+      "id": "PAYLOAD-SCOPE",
+      "status": "PASS",
+      "detail": "All bounded regular candidate payload files copied",
+      "at": "2026-11-04T20:37:54.247Z",
+      "skipped": []
+    },
+    {
+      "id": "CAUSAL-INPUT-OUTPUT",
+      "status": "PASS",
+      "detail": "Two distinct entered inputs produced their distinct independently expected outputs",
+      "at": "2026-11-04T20:37:57.271Z",
+      "first": {
+        "entered": {
+          "ok": true,
+          "mismatch": false,
+          "kind": "Observed native JSON editor with reversible schema mapping"
+        },
+        "observation": {
+          "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/payload/index.html",
+          "body": "PLANNING WORKSPACE / SYNTHETIC ONLY\nTraining Draft\n\nFour practice sessions. Two days. Explicit constraints.\n\nA coordinator’s feasibility workspace — synthetic draft, not an issued schedule or an operational compliance tool.\n\nOFFLINE · NO INTEGRATIONS\nReset sample\nGenerate draft\nSave JSON\nImport JSON\nGenerated from the current input. Review cleared.\nFeasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.\n01 / Session proposals\n\nEdit a value and leave the field to recompute. Times are integer minutes from the synthetic epoch; day two starts at 1440. People and rooms stay as explicitly assigned.\n\nREQUEST\tMINUTES\tALLOWED STARTS\tPERSON\tROOM\tQUALIFICATION\tDRAFT START\nA\t\t\t\t\t\t\nUnresolved\n30\n\nB\t\t\t\t\t\t\nUnresolved\n0\n90\n120\n\nC\t\t\t\t\t\t\nUnresolved\n0\n\nD\t\t\t\t\t\t\nUnresolved\n1440\n\nAllowed starts: comma-separated integers. A draft-start edit checks the entire selected draft; it never changes constraints.\n\n02 / Two-day board\nDay 1 · minutes 0–1440\nA\nP01 · Room-1\nD1 00:30 → D1 01:30\nB\nP01 · Room-1\nD1 02:00 → D1 03:00\nC\nP02 · Room-2\nD1 00:00 → D1 01:00\nDay 2 · minutes 1440–2880\nD\nP02 · Room-2\nD2 00:00 → D2 01:00\nConstraint observations\n\nNo conflicts in the complete current draft.\n\nExplanations describe observed search conflicts, not a minimal unsatisfiable core. No constraint is relaxed.\n\nExact input / Roster & windows\n\nEdit the complete JSON contract, including qualifications, availability, operating windows and fixed assignments. Invalid text is retained. All times must be within 0–2880; intervals are half-open [start,end).\n\nSynthetic input JSON\n\nEvaluator search allowance\n03 / Personnel loading\n\nWhole-horizon minutes across both days. Caps do not reset daily.\n\nP01 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nP02 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nSupplied constraints\n\nOperating windows: [0, 240], [1440, 1680]\n\nP01 · qualifications Q-A · rest 30 min · availability [0, 240], [1440, 1680]\n\nP02 · qualifications Q-B · rest 0 min · availability [0, 240], [1440, 1680]\n\n04 / Current-draft review\n\nInspect every session, load and constraint before marking this synthetic draft reviewed. Any input, result or reviewer-label edit clears the mark. Import always requires a fresh review.\n\nSynthetic reviewer label\nMark draft reviewed\nNot reviewed. Review applies only to the current feasible draft.\n\nLocal unauthenticated acknowledgment. Separate from source approval and issuing authority.\n\nScope & limits\nSynthetic data only. Not an issued schedule. This two-day view does not establish weekly coverage. Feasibility applies only to listed starts.\n\nNot implemented:\n\nRecurrence and SFTRM interpretation\nDepartmental negotiation/agents\nReal readiness data\nQualification policy beyond supplied values\nOfficial-calendar writes\nReconnect sync\n\nThe example rest and duty caps are demonstration inputs, not approved fatigue policy. No credentials, identity service, backend or operational connections.\n\nNothing is saved automatically. Save JSON before closing; reopen this HTML and import the file to recover inputs and draft. Local file transfer is not synchronization. Keep this prototype synthetic.\n\nTraining Draft v1 · Standalone prototype · Human acceptance and operational validation remain separate.",
+          "editors": [
+            {
+              "index": 0,
+              "visible": true,
+              "readOnly": false,
+              "disabled": false,
+              "label": "Synthetic input JSON",
+              "value": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1680\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        30\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90,\n        120\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}"
+            }
+          ],
+          "buttons": [
+            {
+              "index": 0,
+              "visible": true,
+              "disabled": false,
+              "name": "Reset sample"
+            },
+            {
+              "index": 1,
+              "visible": true,
+              "disabled": false,
+              "name": "Generate draft"
+            },
+            {
+              "index": 2,
+              "visible": true,
+              "disabled": false,
+              "name": "Save JSON"
+            },
+            {
+              "index": 3,
+              "visible": true,
+              "disabled": true,
+              "name": "Mark draft reviewed"
+            }
+          ],
+          "outputs": [
+            {
+              "tag": "DIV",
+              "role": "status",
+              "text": "Generated from the current input. Review cleared."
+            },
+            {
+              "tag": "P",
+              "role": "alert",
+              "text": ""
+            }
+          ],
+          "tables": [
+            [
+              [
+                "REQUEST",
+                "MINUTES",
+                "ALLOWED STARTS",
+                "PERSON",
+                "ROOM",
+                "QUALIFICATION",
+                "DRAFT START"
+              ],
+              [
+                "A",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n30"
+              ],
+              [
+                "B",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n0\n90\n120"
+              ],
+              [
+                "C",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n0"
+              ],
+              [
+                "D",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n1440"
+              ]
+            ]
+          ],
+          "review": [],
+          "statusTexts": [
+            "Generated from the current input. Review cleared.",
+            "Feasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+            "Feasible draft",
+            "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+            "",
+            "Not reviewed. Review applies only to the current feasible draft."
+          ],
+          "imports": [
+            {
+              "index": 0,
+              "label": "Import JSON",
+              "accept": ".json,application/json",
+              "multiple": false,
+              "disabled": false
+            }
+          ],
+          "busy": false,
+          "candidateResult": {
+            "status": "feasible",
+            "assignments": [
+              {
+                "id": "A",
+                "start": 30,
+                "end": 90,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "B",
+                "start": 120,
+                "end": 180,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "C",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              },
+              {
+                "id": "D",
+                "start": 1440,
+                "end": 1500,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              }
+            ],
+            "source": "Observed Pipeline status and rendered day-board cards",
+            "diagnostics": {
+              "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+              "explanation": "No conflicts in the complete current draft."
+            }
+          },
+          "candidateTotals": {
+            "P01": 120,
+            "P02": 120
+          },
+          "candidateReview": false,
+          "candidateInput": {
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "people": [
+              {
+                "id": "P01",
+                "qualifications": [
+                  "Q-A"
+                ],
+                "windows": [
+                  {
+                    "start": 0,
+                    "end": 240
+                  },
+                  {
+                    "start": 1440,
+                    "end": 1680
+                  }
+                ],
+                "maxMinutes": 120,
+                "restMinutes": 30
+              },
+              {
+                "id": "P02",
+                "qualifications": [
+                  "Q-B"
+                ],
+                "windows": [
+                  {
+                    "start": 0,
+                    "end": 240
+                  },
+                  {
+                    "start": 1440,
+                    "end": 1680
+                  }
+                ],
+                "maxMinutes": 120,
+                "restMinutes": 0
+              }
+            ],
+            "requests": [
+              {
+                "id": "A",
+                "duration": 60,
+                "starts": [
+                  30
+                ],
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ],
+                "qualifications": [
+                  "Q-A"
+                ]
+              },
+              {
+                "id": "B",
+                "duration": 60,
+                "starts": [
+                  0,
+                  90,
+                  120
+                ],
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ],
+                "qualifications": [
+                  "Q-A"
+                ]
+              },
+              {
+                "id": "C",
+                "duration": 60,
+                "starts": [
+                  0
+                ],
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ],
+                "qualifications": [
+                  "Q-B"
+                ]
+              },
+              {
+                "id": "D",
+                "duration": 60,
+                "starts": [
+                  1440
+                ],
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ],
+                "qualifications": [
+                  "Q-B"
+                ]
+              }
+            ],
+            "maxNodes": 50000
+          },
+          "extraEvidence": {
+            "title": "Feasible draft",
+            "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+            "review": "Not reviewed. Review applies only to the current feasible draft.",
+            "message": "Generated from the current input. Review cleared.",
+            "inputText": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1680\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        30\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90,\n        120\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}",
+            "sessions": [
+              {
+                "id": "A",
+                "identity": "P01 · Room-1",
+                "time": "D1 00:30 → D1 01:30"
+              },
+              {
+                "id": "B",
+                "identity": "P01 · Room-1",
+                "time": "D1 02:00 → D1 03:00"
+              },
+              {
+                "id": "C",
+                "identity": "P02 · Room-2",
+                "time": "D1 00:00 → D1 01:00"
+              },
+              {
+                "id": "D",
+                "identity": "P02 · Room-2",
+                "time": "D2 00:00 → D2 01:00"
+              }
+            ],
+            "loads": [
+              {
+                "who": "P01 · 120 proposed / 120 cap",
+                "total": "120 scheduled minutes"
+              },
+              {
+                "who": "P02 · 120 proposed / 120 cap",
+                "total": "120 scheduled minutes"
+              }
+            ],
+            "explanations": "No conflicts in the complete current draft.",
+            "clockConvention": "Observed board maps canonical minute zero to D1 00:00; frozen officer key maps it to 0800.",
+            "importRejected": false
+          }
+        },
+        "evidence": [
+          "003-calibration-fresh-result.dom.json",
+          "003-calibration-fresh-result.png"
+        ],
+        "judged": {
+          "status": "PASS",
+          "detail": "Independent constraint calculation",
+          "observed": {
+            "status": "feasible",
+            "assignments": [
+              {
+                "id": "A",
+                "start": 30,
+                "end": 90,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "B",
+                "start": 120,
+                "end": 180,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "C",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              },
+              {
+                "id": "D",
+                "start": 1440,
+                "end": 1500,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              }
+            ],
+            "source": "Observed Pipeline status and rendered day-board cards",
+            "diagnostics": {
+              "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+              "explanation": "No conflicts in the complete current draft."
+            }
+          },
+          "arithmetic": {
+            "valid": true,
+            "errors": [],
+            "totals": {
+              "P01": 120,
+              "P02": 120
+            },
+            "rest": {
+              "P01": [
+                30
+              ],
+              "P02": [
+                1380
+              ]
+            }
+          }
+        }
+      },
+      "second": {
+        "entered": {
+          "ok": true,
+          "mismatch": false,
+          "kind": "Observed native JSON editor with reversible schema mapping"
+        },
+        "observation": {
+          "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/payload/index.html",
+          "body": "PLANNING WORKSPACE / SYNTHETIC ONLY\nTraining Draft\n\nFour practice sessions. Two days. Explicit constraints.\n\nA coordinator’s feasibility workspace — synthetic draft, not an issued schedule or an operational compliance tool.\n\nOFFLINE · NO INTEGRATIONS\nReset sample\nGenerate draft\nSave JSON\nImport JSON\nGenerated from the current input. Review cleared.\nFeasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.\n01 / Session proposals\n\nEdit a value and leave the field to recompute. Times are integer minutes from the synthetic epoch; day two starts at 1440. People and rooms stay as explicitly assigned.\n\nREQUEST\tMINUTES\tALLOWED STARTS\tPERSON\tROOM\tQUALIFICATION\tDRAFT START\nA\t\t\t\t\t\t\nUnresolved\n0\n\nB\t\t\t\t\t\t\nUnresolved\n0\n90\n\nC\t\t\t\t\t\t\nUnresolved\n0\n\nD\t\t\t\t\t\t\nUnresolved\n1440\n\nAllowed starts: comma-separated integers. A draft-start edit checks the entire selected draft; it never changes constraints.\n\n02 / Two-day board\nDay 1 · minutes 0–1440\nA\nP01 · Room-1\nD1 00:00 → D1 01:00\nB\nP01 · Room-1\nD1 01:30 → D1 02:30\nC\nP02 · Room-2\nD1 00:00 → D1 01:00\nDay 2 · minutes 1440–2880\nD\nP02 · Room-2\nD2 00:00 → D2 01:00\nConstraint observations\n\nNo conflicts in the complete current draft.\n\nExplanations describe observed search conflicts, not a minimal unsatisfiable core. No constraint is relaxed.\n\nExact input / Roster & windows\n\nEdit the complete JSON contract, including qualifications, availability, operating windows and fixed assignments. Invalid text is retained. All times must be within 0–2880; intervals are half-open [start,end).\n\nSynthetic input JSON\n\nEvaluator search allowance\n03 / Personnel loading\n\nWhole-horizon minutes across both days. Caps do not reset daily.\n\nP01 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nP02 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nSupplied constraints\n\nOperating windows: [0, 240], [1440, 1680]\n\nP01 · qualifications Q-A · rest 30 min · availability [0, 240], [1440, 1680]\n\nP02 · qualifications Q-B · rest 0 min · availability [0, 240], [1440, 1680]\n\n04 / Current-draft review\n\nInspect every session, load and constraint before marking this synthetic draft reviewed. Any input, result or reviewer-label edit clears the mark. Import always requires a fresh review.\n\nSynthetic reviewer label\nMark draft reviewed\nNot reviewed. Review applies only to the current feasible draft.\n\nLocal unauthenticated acknowledgment. Separate from source approval and issuing authority.\n\nScope & limits\nSynthetic data only. Not an issued schedule. This two-day view does not establish weekly coverage. Feasibility applies only to listed starts.\n\nNot implemented:\n\nRecurrence and SFTRM interpretation\nDepartmental negotiation/agents\nReal readiness data\nQualification policy beyond supplied values\nOfficial-calendar writes\nReconnect sync\n\nThe example rest and duty caps are demonstration inputs, not approved fatigue policy. No credentials, identity service, backend or operational connections.\n\nNothing is saved automatically. Save JSON before closing; reopen this HTML and import the file to recover inputs and draft. Local file transfer is not synchronization. Keep this prototype synthetic.\n\nTraining Draft v1 · Standalone prototype · Human acceptance and operational validation remain separate.",
+          "editors": [
+            {
+              "index": 0,
+              "visible": true,
+              "readOnly": false,
+              "disabled": false,
+              "label": "Synthetic input JSON",
+              "value": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1680\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}"
+            }
+          ],
+          "buttons": [
+            {
+              "index": 0,
+              "visible": true,
+              "disabled": false,
+              "name": "Reset sample"
+            },
+            {
+              "index": 1,
+              "visible": true,
+              "disabled": false,
+              "name": "Generate draft"
+            },
+            {
+              "index": 2,
+              "visible": true,
+              "disabled": false,
+              "name": "Save JSON"
+            },
+            {
+              "index": 3,
+              "visible": true,
+              "disabled": true,
+              "name": "Mark draft reviewed"
+            }
+          ],
+          "outputs": [
+            {
+              "tag": "DIV",
+              "role": "status",
+              "text": "Generated from the current input. Review cleared."
+            },
+            {
+              "tag": "P",
+              "role": "alert",
+              "text": ""
+            }
+          ],
+          "tables": [
+            [
+              [
+                "REQUEST",
+                "MINUTES",
+                "ALLOWED STARTS",
+                "PERSON",
+                "ROOM",
+                "QUALIFICATION",
+                "DRAFT START"
+              ],
+              [
+                "A",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n0"
+              ],
+              [
+                "B",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n0\n90"
+              ],
+              [
+                "C",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n0"
+              ],
+              [
+                "D",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Unresolved\n1440"
+              ]
+            ]
+          ],
+          "review": [],
+          "statusTexts": [
+            "Generated from the current input. Review cleared.",
+            "Feasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+            "Feasible draft",
+            "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+            "",
+            "Not reviewed. Review applies only to the current feasible draft."
+          ],
+          "imports": [
+            {
+              "index": 0,
+              "label": "Import JSON",
+              "accept": ".json,application/json",
+              "multiple": false,
+              "disabled": false
+            }
+          ],
+          "busy": false,
+          "candidateResult": {
+            "status": "feasible",
+            "assignments": [
+              {
+                "id": "A",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "B",
+                "start": 90,
+                "end": 150,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "C",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              },
+              {
+                "id": "D",
+                "start": 1440,
+                "end": 1500,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              }
+            ],
+            "source": "Observed Pipeline status and rendered day-board cards",
+            "diagnostics": {
+              "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+              "explanation": "No conflicts in the complete current draft."
+            }
+          },
+          "candidateTotals": {
+            "P01": 120,
+            "P02": 120
+          },
+          "candidateReview": false,
+          "candidateInput": {
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "people": [
+              {
+                "id": "P01",
+                "qualifications": [
+                  "Q-A"
+                ],
+                "windows": [
+                  {
+                    "start": 0,
+                    "end": 240
+                  },
+                  {
+                    "start": 1440,
+                    "end": 1680
+                  }
+                ],
+                "maxMinutes": 120,
+                "restMinutes": 30
+              },
+              {
+                "id": "P02",
+                "qualifications": [
+                  "Q-B"
+                ],
+                "windows": [
+                  {
+                    "start": 0,
+                    "end": 240
+                  },
+                  {
+                    "start": 1440,
+                    "end": 1680
+                  }
+                ],
+                "maxMinutes": 120,
+                "restMinutes": 0
+              }
+            ],
+            "requests": [
+              {
+                "id": "A",
+                "duration": 60,
+                "starts": [
+                  0
+                ],
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ],
+                "qualifications": [
+                  "Q-A"
+                ]
+              },
+              {
+                "id": "B",
+                "duration": 60,
+                "starts": [
+                  0,
+                  90
+                ],
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ],
+                "qualifications": [
+                  "Q-A"
+                ]
+              },
+              {
+                "id": "C",
+                "duration": 60,
+                "starts": [
+                  0
+                ],
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ],
+                "qualifications": [
+                  "Q-B"
+                ]
+              },
+              {
+                "id": "D",
+                "duration": 60,
+                "starts": [
+                  1440
+                ],
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ],
+                "qualifications": [
+                  "Q-B"
+                ]
+              }
+            ],
+            "maxNodes": 50000
+          },
+          "extraEvidence": {
+            "title": "Feasible draft",
+            "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+            "review": "Not reviewed. Review applies only to the current feasible draft.",
+            "message": "Generated from the current input. Review cleared.",
+            "inputText": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1680\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}",
+            "sessions": [
+              {
+                "id": "A",
+                "identity": "P01 · Room-1",
+                "time": "D1 00:00 → D1 01:00"
+              },
+              {
+                "id": "B",
+                "identity": "P01 · Room-1",
+                "time": "D1 01:30 → D1 02:30"
+              },
+              {
+                "id": "C",
+                "identity": "P02 · Room-2",
+                "time": "D1 00:00 → D1 01:00"
+              },
+              {
+                "id": "D",
+                "identity": "P02 · Room-2",
+                "time": "D2 00:00 → D2 01:00"
+              }
+            ],
+            "loads": [
+              {
+                "who": "P01 · 120 proposed / 120 cap",
+                "total": "120 scheduled minutes"
+              },
+              {
+                "who": "P02 · 120 proposed / 120 cap",
+                "total": "120 scheduled minutes"
+              }
+            ],
+            "explanations": "No conflicts in the complete current draft.",
+            "clockConvention": "Observed board maps canonical minute zero to D1 00:00; frozen officer key maps it to 0800.",
+            "importRejected": false
+          }
+        },
+        "evidence": [
+          "005-calibration-base-result.dom.json",
+          "005-calibration-base-result.png"
+        ],
+        "judged": {
+          "status": "PASS",
+          "detail": "Independent constraint calculation",
+          "observed": {
+            "status": "feasible",
+            "assignments": [
+              {
+                "id": "A",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "B",
+                "start": 90,
+                "end": 150,
+                "people": [
+                  "P01"
+                ],
+                "resources": [
+                  "Room-1"
+                ]
+              },
+              {
+                "id": "C",
+                "start": 0,
+                "end": 60,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              },
+              {
+                "id": "D",
+                "start": 1440,
+                "end": 1500,
+                "people": [
+                  "P02"
+                ],
+                "resources": [
+                  "Room-2"
+                ]
+              }
+            ],
+            "source": "Observed Pipeline status and rendered day-board cards",
+            "diagnostics": {
+              "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+              "explanation": "No conflicts in the complete current draft."
+            }
+          },
+          "arithmetic": {
+            "valid": true,
+            "errors": [],
+            "totals": {
+              "P01": 120,
+              "P02": 120
+            },
+            "rest": {
+              "P01": [
+                30
+              ],
+              "P02": [
+                1380
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "G01",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:37:58.020Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "007-G01-result.dom.json",
+        "007-G01-result.png"
+      ]
+    },
+    {
+      "id": "CLOCK-DISPLAY",
+      "status": "FAIL",
+      "detail": "Observed base board uses midnight for minute zero; the frozen officer key expects 0800. Numeric-minute acceptance is recorded separately.",
+      "at": "2026-11-04T20:37:58.020Z",
+      "observed": [
+        {
+          "id": "A",
+          "identity": "P01 · Room-1",
+          "time": "D1 00:00 → D1 01:00"
+        },
+        {
+          "id": "B",
+          "identity": "P01 · Room-1",
+          "time": "D1 01:30 → D1 02:30"
+        },
+        {
+          "id": "C",
+          "identity": "P02 · Room-2",
+          "time": "D1 00:00 → D1 01:00"
+        },
+        {
+          "id": "D",
+          "identity": "P02 · Room-2",
+          "time": "D2 00:00 → D2 01:00"
+        }
+      ],
+      "evidence": [
+        "007-G01-result.dom.json",
+        "007-G01-result.png"
+      ]
+    },
+    {
+      "id": "G01-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:37:58.020Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "007-G01-result.dom.json",
+        "007-G01-result.png"
+      ]
+    },
+    {
+      "id": "G02",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:37:58.772Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              30
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90,
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "009-G02-result.dom.json",
+        "009-G02-result.png"
+      ]
+    },
+    {
+      "id": "G02-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:37:58.772Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "009-G02-result.dom.json",
+        "009-G02-result.png"
+      ]
+    },
+    {
+      "id": "G03",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:37:59.521Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes"
+        }
+      },
+      "evidence": [
+        "011-G03-result.dom.json",
+        "011-G03-result.png"
+      ]
+    },
+    {
+      "id": "G03-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:37:59.521Z",
+      "expectedReason": "P01 and Room-1 overlap",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes"
+      },
+      "evidence": [
+        "011-G03-result.dom.json",
+        "011-G03-result.png"
+      ]
+    },
+    {
+      "id": "G04",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:00.271Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B / A: P01 overlap or required rest 30 minutes"
+        }
+      },
+      "evidence": [
+        "013-G04-result.dom.json",
+        "013-G04-result.png"
+      ]
+    },
+    {
+      "id": "G04-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:00.271Z",
+      "expectedReason": "P01 has zero rest rather than 30",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B / A: P01 overlap or required rest 30 minutes"
+      },
+      "evidence": [
+        "013-G04-result.dom.json",
+        "013-G04-result.png"
+      ]
+    },
+    {
+      "id": "G05",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:38:01.020Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 4 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "015-G05-result.dom.json",
+        "015-G05-result.png"
+      ]
+    },
+    {
+      "id": "G05-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:38:01.020Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "015-G05-result.dom.json",
+        "015-G05-result.png"
+      ]
+    },
+    {
+      "id": "G06",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:01.771Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B: P01 exceeds whole-horizon duty cap 119\nB / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes"
+        }
+      },
+      "evidence": [
+        "017-G06-result.dom.json",
+        "017-G06-result.png"
+      ]
+    },
+    {
+      "id": "G06-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:01.771Z",
+      "expectedReason": "P01 requires 120 minutes, exceeding 119",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B: P01 exceeds whole-horizon duty cap 119\nB / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes"
+      },
+      "evidence": [
+        "017-G06-result.dom.json",
+        "017-G06-result.png"
+      ]
+    },
+    {
+      "id": "G07",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:02.687Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "A: P01 lacks qualification Q-A"
+        }
+      },
+      "evidence": [
+        "019-G07-result.dom.json",
+        "019-G07-result.png"
+      ]
+    },
+    {
+      "id": "G07-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:02.687Z",
+      "expectedReason": "P01 lacks Q-A",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "A: P01 lacks qualification Q-A"
+      },
+      "evidence": [
+        "019-G07-result.dom.json",
+        "019-G07-result.png"
+      ]
+    },
+    {
+      "id": "G08",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:03.438Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "invalid_input",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "Correct the retained input below. No previous success is current.",
+          "explanation": "requests: retain unique IDs A, B, C and D"
+        }
+      },
+      "evidence": [
+        "021-G08-result.dom.json",
+        "021-G08-result.png"
+      ]
+    },
+    {
+      "id": "G08-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:03.438Z",
+      "expectedReason": "Duplicate request ID C",
+      "observedDiagnostics": {
+        "detail": "Correct the retained input below. No previous success is current.",
+        "explanation": "requests: retain unique IDs A, B, C and D"
+      },
+      "evidence": [
+        "021-G08-result.dom.json",
+        "021-G08-result.png"
+      ]
+    },
+    {
+      "id": "G09",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:04.221Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              "0900"
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "invalid_input",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "Correct the retained input below. No previous success is current.",
+          "explanation": "requests[1].allowedStarts[0]: supply an integer from 0 to 2880"
+        }
+      },
+      "evidence": [
+        "023-G09-result.dom.json",
+        "023-G09-result.png"
+      ]
+    },
+    {
+      "id": "G09-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:04.221Z",
+      "expectedReason": "A quoted start is not an integer minute",
+      "observedDiagnostics": {
+        "detail": "Correct the retained input below. No previous success is current.",
+        "explanation": "requests[1].allowedStarts[0]: supply an integer from 0 to 2880"
+      },
+      "evidence": [
+        "023-G09-result.dom.json",
+        "023-G09-result.png"
+      ]
+    },
+    {
+      "id": "G10",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:04.968Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 1
+      },
+      "expected": {
+        "status": "budget_exhausted",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "budget_exhausted",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "Stopped after 1 candidate attempts. No complete draft; no proof of infeasibility.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "evidence": [
+        "025-G10-result.dom.json",
+        "025-G10-result.png"
+      ]
+    },
+    {
+      "id": "G10-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:04.968Z",
+      "expectedReason": "Interrupted search is not proof of infeasibility",
+      "observedDiagnostics": {
+        "detail": "Stopped after 1 candidate attempts. No complete draft; no proof of infeasibility.",
+        "explanation": "No conflicts in the complete current draft."
+      },
+      "evidence": [
+        "025-G10-result.dom.json",
+        "025-G10-result.png"
+      ]
+    },
+    {
+      "id": "G11",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:05.722Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: P02 is unavailable for the whole session"
+        }
+      },
+      "evidence": [
+        "027-G11-result.dom.json",
+        "027-G11-result.png"
+      ]
+    },
+    {
+      "id": "G11-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:05.722Z",
+      "expectedReason": "D lies outside P02 availability",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: P02 is unavailable for the whole session"
+      },
+      "evidence": [
+        "027-G11-result.dom.json",
+        "027-G11-result.png"
+      ]
+    },
+    {
+      "id": "G12a",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:06.470Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1499
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: whole session is outside operating windows"
+        }
+      },
+      "evidence": [
+        "029-G12a-result.dom.json",
+        "029-G12a-result.png"
+      ]
+    },
+    {
+      "id": "G12a-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:06.470Z",
+      "expectedReason": "D ends at 1500 beyond operating end 1499",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: whole session is outside operating windows"
+      },
+      "evidence": [
+        "029-G12a-result.dom.json",
+        "029-G12a-result.png"
+      ]
+    },
+    {
+      "id": "G12b",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:38:07.219Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1500
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "031-G12b-result.dom.json",
+        "031-G12b-result.png"
+      ]
+    },
+    {
+      "id": "G12b-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:38:07.219Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "031-G12b-result.dom.json",
+        "031-G12b-result.png"
+      ]
+    },
+    {
+      "id": "V13",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:38:07.971Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 45,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60,
+              75
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 45,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 75,
+            "end": 135,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 45,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 75,
+            "end": 135,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 105,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "033-V13-result.dom.json",
+        "033-V13-result.png"
+      ]
+    },
+    {
+      "id": "V13-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:38:07.971Z",
+      "actual": {
+        "P01": 105,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 105,
+        "P02": 120
+      },
+      "evidence": [
+        "033-V13-result.dom.json",
+        "033-V13-result.png"
+      ]
+    },
+    {
+      "id": "V14",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:38:08.720Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0,
+              60,
+              150
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 150,
+            "end": 210,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 150,
+            "end": 210,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 7 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1230
+          ]
+        }
+      },
+      "evidence": [
+        "035-V14-result.dom.json",
+        "035-V14-result.png"
+      ]
+    },
+    {
+      "id": "V14-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:38:08.720Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "035-V14-result.dom.json",
+        "035-V14-result.png"
+      ]
+    },
+    {
+      "id": "V15",
+      "status": "PASS",
+      "detail": "Expected status and empty accepted assignment list",
+      "at": "2026-11-04T20:38:09.470Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "infeasible",
+        "assignments": [],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+          "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: P02 exceeds whole-horizon duty cap 119"
+        }
+      },
+      "evidence": [
+        "037-V15-result.dom.json",
+        "037-V15-result.png"
+      ]
+    },
+    {
+      "id": "V15-EXPLANATION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must assess plain-language conflict explanation and retained editable requests",
+      "at": "2026-11-04T20:38:09.470Z",
+      "expectedReason": "P02 requires 120 minutes across both days",
+      "observedDiagnostics": {
+        "detail": "No complete draft satisfies these exact choices. All requests remain available for correction.",
+        "explanation": "B / A: room Room-1 collision\nB / A: P01 overlap or required rest 30 minutes\nD: P02 exceeds whole-horizon duty cap 119"
+      },
+      "evidence": [
+        "037-V15-result.dom.json",
+        "037-V15-result.png"
+      ]
+    },
+    {
+      "id": "V16",
+      "status": "PASS",
+      "detail": "Independent constraint calculation",
+      "at": "2026-11-04T20:38:10.252Z",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              30,
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 4 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "independentArithmetic": {
+        "valid": true,
+        "errors": [],
+        "totals": {
+          "P01": 120,
+          "P02": 120
+        },
+        "rest": {
+          "P01": [
+            30
+          ],
+          "P02": [
+            1380
+          ]
+        }
+      },
+      "evidence": [
+        "039-V16-result.dom.json",
+        "039-V16-result.png"
+      ]
+    },
+    {
+      "id": "V16-VISIBLE-TOTALS",
+      "status": "PASS",
+      "detail": "Visible numeric personnel totals compared separately",
+      "at": "2026-11-04T20:38:10.252Z",
+      "actual": {
+        "P01": 120,
+        "P02": 120
+      },
+      "expected": {
+        "P01": 120,
+        "P02": 120
+      },
+      "evidence": [
+        "039-V16-result.dom.json",
+        "039-V16-result.png"
+      ]
+    },
+    {
+      "id": "REVIEW-EDIT",
+      "status": "PASS",
+      "detail": "Review state checked after edit and before recheck",
+      "at": "2026-11-04T20:38:11.343Z",
+      "state": false,
+      "entered": {
+        "ok": true,
+        "mismatch": false,
+        "kind": "Observed native JSON editor with reversible schema mapping"
+      },
+      "evidence": [
+        "044-review-immediately-after-edit.dom.json",
+        "044-review-immediately-after-edit.png"
+      ]
+    },
+    {
+      "id": "REVIEW-RECHECK",
+      "status": "PASS",
+      "detail": "Recheck alone must not approve edited draft",
+      "at": "2026-11-04T20:38:12.019Z",
+      "state": false,
+      "evidence": [
+        "046-review-recheck-result.dom.json",
+        "046-review-recheck-result.png"
+      ]
+    },
+    {
+      "id": "REVIEW-FRESH",
+      "status": "PASS",
+      "detail": "Explicit review of changed, recalculated G02",
+      "at": "2026-11-04T20:38:12.155Z",
+      "state": true
+    },
+    {
+      "id": "READABLE-SUMMARY",
+      "status": "NOT CHECKED",
+      "detail": "No unambiguous readable-summary download discovered",
+      "at": "2026-11-04T20:38:12.190Z"
+    },
+    {
+      "id": "SAVE-INPUT-ROUNDTRIP",
+      "status": "PASS",
+      "detail": "Actual downloaded draft preserves all canonical G02 input fields",
+      "at": "2026-11-04T20:38:12.190Z",
+      "file": "048-reviewed-fresh-draft-synthetic-training-draft.json",
+      "sha256": "767bc810bba7741ec62f15312c2938dc9b5259b7d42b2a6e8d34c4b25606ccaf"
+    },
+    {
+      "id": "OFFLINE-FRESH-IMPORT",
+      "status": "PASS",
+      "detail": "Fresh offline context imported exact downloaded draft; rendered values checked before any recompute",
+      "at": "2026-11-04T20:38:13.657Z",
+      "observed": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ],
+        "source": "Observed Pipeline status and rendered day-board cards",
+        "diagnostics": {
+          "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 6 candidate attempts.",
+          "explanation": "No conflicts in the complete current draft."
+        }
+      },
+      "file": "048-reviewed-fresh-draft-synthetic-training-draft.json",
+      "roundtrip": "053-reimported-roundtrip-synthetic-training-draft.json",
+      "evidence": [
+        "052-fresh-context-after-import.dom.json",
+        "052-fresh-context-after-import.png"
+      ]
+    },
+    {
+      "id": "IMPORTED-REVIEW-BINDING",
+      "status": "NOT CHECKED",
+      "detail": "Visible reviewed state alone cannot prove version binding; inspect record identity and edited-import check",
+      "at": "2026-11-04T20:38:13.657Z",
+      "observedReviewState": false
+    },
+    {
+      "id": "EDITED-IMPORT-REVIEW",
+      "status": "NOT CHECKED",
+      "detail": "Changed input imported in original reviewed draft envelope without changing its other metadata; rejection/ambiguous import requires manual assessment",
+      "at": "2026-11-04T20:38:14.973Z",
+      "acceptedInputRoundtrip": false,
+      "reviewState": true,
+      "evidence": [
+        "057-edited-reviewed-metadata-import.dom.json",
+        "057-edited-reviewed-metadata-import.png"
+      ],
+      "roundtrip": "058-edited-import-roundtrip-synthetic-training-draft.json"
+    },
+    {
+      "id": "GUIDE-AND-HUMAN-DECISION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must follow the delivered guide and decide on this exact artifact scope; automation does not grant approval",
+      "at": "2026-11-04T20:38:14.973Z"
+    },
+    {
+      "id": "PAYLOAD-BYTES",
+      "status": "PASS",
+      "detail": "Original before/after and staged payload byte manifests compared",
+      "at": "2026-11-04T20:38:14.987Z"
+    }
+  ],
+  "provenance": "Independent browser observations of a staged synthetic candidate; no live generation claim",
+  "variants": "Fixed before candidate inspection and not supplied by this QA assignment in the public build brief; no protected holdout claim",
+  "limits": {
+    "harnessWatchdogMs": 300000,
+    "browserActionMs": 5000,
+    "maxPayloadBytes": 50000000
+  },
+  "scopeExclusions": [
+    "Factory consent and Stop",
+    "Executable packaging",
+    "Operational policy",
+    "Human approval decision",
+    "Complete security isolation"
+  ],
+  "selfCheck": {
+    "status": "PASS",
+    "validCases": 7,
+    "rejected": [
+      "N1",
+      "N2",
+      "N3",
+      "numeric strings",
+      "duplicate returned IDs",
+      "malformed people/resources"
+    ],
+    "acceptedExtraDiagnostics": true,
+    "scope": "Pure evaluator controls only, no candidate acceptance"
+  },
+  "status": "FAIL",
+  "contracts": {
+    "acceptanceSha256": "679f2fe753496a2c21fd75dfe39d663285b93b4b3113b520744458ece1fa288d",
+    "goldenSha256": "6c0b515006eafbd93751f8e9e292f1668a757fccac3694e1e90e011a86f63c54",
+    "scriptSha256": "18b64f0a9b5c32c47dac2ab46dd4d0736473940b927653f658c9f86450f4d53d"
+  },
+  "explicitAdapter": {
+    "id": "pipeline-run1",
+    "sha256": "965c65d3313c152e83d5875966a7e31d60ce43e0e33064a15283c7d1d59b7fc4"
+  },
+  "cases": [
+    {
+      "id": "G01",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G02",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              30
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90,
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G03",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 and Room-1 overlap"
+    },
+    {
+      "id": "G04",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 has zero rest rather than 30"
+    },
+    {
+      "id": "G05",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G06",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 requires 120 minutes, exceeding 119"
+    },
+    {
+      "id": "G07",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 lacks Q-A"
+    },
+    {
+      "id": "G08",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "reason": "Duplicate request ID C"
+    },
+    {
+      "id": "G09",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              "0900"
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "reason": "A quoted start is not an integer minute"
+    },
+    {
+      "id": "G10",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 1
+      },
+      "expected": {
+        "status": "budget_exhausted",
+        "assignments": []
+      },
+      "reason": "Interrupted search is not proof of infeasibility"
+    },
+    {
+      "id": "G11",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "D lies outside P02 availability"
+    },
+    {
+      "id": "G12a",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1499
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "D ends at 1500 beyond operating end 1499"
+    },
+    {
+      "id": "G12b",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1500
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V13",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 45,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60,
+              75
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 45,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 75,
+            "end": 135,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V14",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0,
+              60,
+              150
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 150,
+            "end": 210,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V15",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P02 requires 120 minutes across both days"
+    },
+    {
+      "id": "V16",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              30,
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    }
+  ],
+  "payloadBefore": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "runtime": {
+    "node": "v26.0.0",
+    "platform": "darwin",
+    "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "playwrightVersion": "1.64.1",
+    "chromeVersion": "156.0.8078.80"
+  },
+  "adapter": {
+    "kind": "explicit-ui"
+  },
+  "payloadAfter": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "stagedAfter": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "browserCleanup": "PASS",
+  "finishedAt": "2026-11-04T20:38:15.061Z"
+}

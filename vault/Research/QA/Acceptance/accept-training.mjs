@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Independent synthetic training acceptance. No candidate module is imported into Node.
-// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE]
+// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route]
 // Pure evaluator check: node accept-training.mjs --self-check
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -388,7 +388,7 @@ async function main() {
       flags[argv[n++]] = argv[n];
     } else positional.push(argv[n]);
   }
-  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE]');
+  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route]');
   if (flags['--adapter']) {
     if (!['pipeline-run1', 'cli-route'].includes(flags['--adapter'])) throw new Error('Unknown explicit adapter');
     explicitAdapter = await import('./adapters/' + flags['--adapter'] + '.mjs');
@@ -401,7 +401,7 @@ async function main() {
   const output = path.join(outputBase, 'training-acceptance-' + randomUUID());
   await fs.mkdir(output, { recursive: true });
   const receipt = {
-    version: 1, startedAt: new Date().toISOString(), candidate, output, checks: [],
+    version: 2, startedAt: new Date().toISOString(), candidate, output, checks: [],
     provenance: 'Independent browser observations of a staged synthetic candidate; no live generation claim',
     variants: 'Fixed before candidate inspection and not supplied by this QA assignment in the public build brief; no protected holdout claim',
     limits: { harnessWatchdogMs: 300000, browserActionMs: 5000, maxPayloadBytes: 50000000 },

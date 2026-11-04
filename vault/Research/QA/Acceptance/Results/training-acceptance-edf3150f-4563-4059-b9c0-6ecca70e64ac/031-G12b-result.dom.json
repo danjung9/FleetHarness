@@ -1,0 +1,339 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/payload/index.html",
+  "body": "PLANNING WORKSPACE / SYNTHETIC ONLY\nTraining Draft\n\nFour practice sessions. Two days. Explicit constraints.\n\nA coordinator’s feasibility workspace — synthetic draft, not an issued schedule or an operational compliance tool.\n\nOFFLINE · NO INTEGRATIONS\nReset sample\nGenerate draft\nSave JSON\nImport JSON\nGenerated from the current input. Review cleared.\nFeasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.\n01 / Session proposals\n\nEdit a value and leave the field to recompute. Times are integer minutes from the synthetic epoch; day two starts at 1440. People and rooms stay as explicitly assigned.\n\nREQUEST\tMINUTES\tALLOWED STARTS\tPERSON\tROOM\tQUALIFICATION\tDRAFT START\nA\t\t\t\t\t\t\nUnresolved\n0\n\nB\t\t\t\t\t\t\nUnresolved\n0\n90\n\nC\t\t\t\t\t\t\nUnresolved\n0\n\nD\t\t\t\t\t\t\nUnresolved\n1440\n\nAllowed starts: comma-separated integers. A draft-start edit checks the entire selected draft; it never changes constraints.\n\n02 / Two-day board\nDay 1 · minutes 0–1440\nA\nP01 · Room-1\nD1 00:00 → D1 01:00\nB\nP01 · Room-1\nD1 01:30 → D1 02:30\nC\nP02 · Room-2\nD1 00:00 → D1 01:00\nDay 2 · minutes 1440–2880\nD\nP02 · Room-2\nD2 00:00 → D2 01:00\nConstraint observations\n\nNo conflicts in the complete current draft.\n\nExplanations describe observed search conflicts, not a minimal unsatisfiable core. No constraint is relaxed.\n\nExact input / Roster & windows\n\nEdit the complete JSON contract, including qualifications, availability, operating windows and fixed assignments. Invalid text is retained. All times must be within 0–2880; intervals are half-open [start,end).\n\nSynthetic input JSON\n\nEvaluator search allowance\n03 / Personnel loading\n\nWhole-horizon minutes across both days. Caps do not reset daily.\n\nP01 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nP02 · 120 proposed / 120 cap\n\n120 scheduled minutes\n\nSupplied constraints\n\nOperating windows: [0, 240], [1440, 1500]\n\nP01 · qualifications Q-A · rest 30 min · availability [0, 240], [1440, 1680]\n\nP02 · qualifications Q-B · rest 0 min · availability [0, 240], [1440, 1680]\n\n04 / Current-draft review\n\nInspect every session, load and constraint before marking this synthetic draft reviewed. Any input, result or reviewer-label edit clears the mark. Import always requires a fresh review.\n\nSynthetic reviewer label\nMark draft reviewed\nNot reviewed. Review applies only to the current feasible draft.\n\nLocal unauthenticated acknowledgment. Separate from source approval and issuing authority.\n\nScope & limits\nSynthetic data only. Not an issued schedule. This two-day view does not establish weekly coverage. Feasibility applies only to listed starts.\n\nNot implemented:\n\nRecurrence and SFTRM interpretation\nDepartmental negotiation/agents\nReal readiness data\nQualification policy beyond supplied values\nOfficial-calendar writes\nReconnect sync\n\nThe example rest and duty caps are demonstration inputs, not approved fatigue policy. No credentials, identity service, backend or operational connections.\n\nNothing is saved automatically. Save JSON before closing; reopen this HTML and import the file to recover inputs and draft. Local file transfer is not synchronization. Keep this prototype synthetic.\n\nTraining Draft v1 · Standalone prototype · Human acceptance and operational validation remain separate.",
+  "editors": [
+    {
+      "index": 0,
+      "visible": true,
+      "readOnly": false,
+      "disabled": false,
+      "label": "Synthetic input JSON",
+      "value": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1500\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}"
+    }
+  ],
+  "buttons": [
+    {
+      "index": 0,
+      "visible": true,
+      "disabled": false,
+      "name": "Reset sample"
+    },
+    {
+      "index": 1,
+      "visible": true,
+      "disabled": false,
+      "name": "Generate draft"
+    },
+    {
+      "index": 2,
+      "visible": true,
+      "disabled": false,
+      "name": "Save JSON"
+    },
+    {
+      "index": 3,
+      "visible": true,
+      "disabled": true,
+      "name": "Mark draft reviewed"
+    }
+  ],
+  "outputs": [
+    {
+      "tag": "DIV",
+      "role": "status",
+      "text": "Generated from the current input. Review cleared."
+    },
+    {
+      "tag": "P",
+      "role": "alert",
+      "text": ""
+    }
+  ],
+  "tables": [
+    [
+      [
+        "REQUEST",
+        "MINUTES",
+        "ALLOWED STARTS",
+        "PERSON",
+        "ROOM",
+        "QUALIFICATION",
+        "DRAFT START"
+      ],
+      [
+        "A",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Unresolved\n0"
+      ],
+      [
+        "B",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Unresolved\n0\n90"
+      ],
+      [
+        "C",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Unresolved\n0"
+      ],
+      [
+        "D",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Unresolved\n1440"
+      ]
+    ]
+  ],
+  "review": [],
+  "statusTexts": [
+    "Generated from the current input. Review cleared.",
+    "Feasible draft\nAll four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+    "Feasible draft",
+    "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+    "",
+    "Not reviewed. Review applies only to the current feasible draft."
+  ],
+  "imports": [
+    {
+      "index": 0,
+      "label": "Import JSON",
+      "accept": ".json,application/json",
+      "multiple": false,
+      "disabled": false
+    }
+  ],
+  "busy": false,
+  "candidateResult": {
+    "status": "feasible",
+    "assignments": [
+      {
+        "id": "A",
+        "start": 0,
+        "end": 60,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "B",
+        "start": 90,
+        "end": 150,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "C",
+        "start": 0,
+        "end": 60,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      },
+      {
+        "id": "D",
+        "start": 1440,
+        "end": 1500,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      }
+    ],
+    "source": "Observed Pipeline status and rendered day-board cards",
+    "diagnostics": {
+      "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+      "explanation": "No conflicts in the complete current draft."
+    }
+  },
+  "candidateTotals": {
+    "P01": 120,
+    "P02": 120
+  },
+  "candidateReview": false,
+  "candidateInput": {
+    "windows": [
+      {
+        "start": 0,
+        "end": 240
+      },
+      {
+        "start": 1440,
+        "end": 1500
+      }
+    ],
+    "people": [
+      {
+        "id": "P01",
+        "qualifications": [
+          "Q-A"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 30
+      },
+      {
+        "id": "P02",
+        "qualifications": [
+          "Q-B"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 0
+      }
+    ],
+    "requests": [
+      {
+        "id": "A",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "B",
+        "duration": 60,
+        "starts": [
+          0,
+          90
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "C",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      },
+      {
+        "id": "D",
+        "duration": 60,
+        "starts": [
+          1440
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      }
+    ],
+    "maxNodes": 50000
+  },
+  "extraEvidence": {
+    "title": "Feasible draft",
+    "detail": "All four sessions satisfy the supplied constraints. First complete feasible choice found; 5 candidate attempts.",
+    "review": "Not reviewed. Review applies only to the current feasible draft.",
+    "message": "Generated from the current input. Review cleared.",
+    "inputText": "{\n  \"schemaVersion\": 1,\n  \"epoch\": {\n    \"label\": \"Synthetic day one at minute 0\",\n    \"day2Minute\": 1440\n  },\n  \"operatingWindows\": [\n    [\n      0,\n      240\n    ],\n    [\n      1440,\n      1500\n    ]\n  ],\n  \"people\": [\n    {\n      \"id\": \"P01\",\n      \"qualifications\": [\n        \"Q-A\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 30\n    },\n    {\n      \"id\": \"P02\",\n      \"qualifications\": [\n        \"Q-B\"\n      ],\n      \"availability\": [\n        [\n          0,\n          240\n        ],\n        [\n          1440,\n          1680\n        ]\n      ],\n      \"maxMinutes\": 120,\n      \"restMinutes\": 0\n    }\n  ],\n  \"requests\": [\n    {\n      \"id\": \"A\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"B\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0,\n        90\n      ],\n      \"personId\": \"P01\",\n      \"roomId\": \"Room-1\",\n      \"requiredQualification\": \"Q-A\"\n    },\n    {\n      \"id\": \"C\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        0\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    },\n    {\n      \"id\": \"D\",\n      \"duration\": 60,\n      \"allowedStarts\": [\n        1440\n      ],\n      \"personId\": \"P02\",\n      \"roomId\": \"Room-2\",\n      \"requiredQualification\": \"Q-B\"\n    }\n  ],\n  \"maxNodes\": 50000\n}",
+    "sessions": [
+      {
+        "id": "A",
+        "identity": "P01 · Room-1",
+        "time": "D1 00:00 → D1 01:00"
+      },
+      {
+        "id": "B",
+        "identity": "P01 · Room-1",
+        "time": "D1 01:30 → D1 02:30"
+      },
+      {
+        "id": "C",
+        "identity": "P02 · Room-2",
+        "time": "D1 00:00 → D1 01:00"
+      },
+      {
+        "id": "D",
+        "identity": "P02 · Room-2",
+        "time": "D2 00:00 → D2 01:00"
+      }
+    ],
+    "loads": [
+      {
+        "who": "P01 · 120 proposed / 120 cap",
+        "total": "120 scheduled minutes"
+      },
+      {
+        "who": "P02 · 120 proposed / 120 cap",
+        "total": "120 scheduled minutes"
+      }
+    ],
+    "explanations": "No conflicts in the complete current draft.",
+    "clockConvention": "Observed board maps canonical minute zero to D1 00:00; frozen officer key maps it to 0800.",
+    "importRejected": false
+  }
+}

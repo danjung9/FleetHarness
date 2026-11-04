@@ -12,6 +12,10 @@ Last updated 2026-11-04, after Stop-child receipt review and ID 11 acceptance-ch
 
 ## Latest session
 
+- [E, initial acceptance receipts] Generic browser discovery on both ID 11 copies produced 3 infrastructure/evidence passes and 27 NOT CHECKED each, not application acceptance. Explicit UI adapters are now ready and main owns reruns. The frozen oracle is unchanged. See [[Research/QA/Acceptance/README]].
+
+- [E, follow-up recheck] Worker status remains unchanged in the available runner records: none running in the latest 15:34:44 snapshot, development disabled, two dev-1 entries queued. No newer completion record was present.
+
 - [E, roster/status review] Latest inspected organization snapshot at 15:34:44 EST lists ten specialist threads, none running, code seats disabled and two queued dev-1 entries. Both candidate browser checks at 15:29 are INCOMPLETE because interface discovery failed. The newer `d0f4c69` gate reports 96 passed and 20 failed. See [[Sessions/2026-11-04-agent-status]] for scope and sources; earlier revision results below remain historical.
 
 - [E, preparation complete] [[Research/QA/Acceptance/README]] documents the independent browser checker and [[Research/QA/Acceptance/Officer-Walkthrough-11]] supplies the officer checklist. Syntax and pure evaluator checks pass. Main received both for execution against separately identified final copies; candidate outcomes remain unmeasured here.

@@ -58,6 +58,14 @@ export function replaceSavedInput(snapshot, input) {
 export async function inspect(page) {
   return page.evaluate(() => {
     const byId = id => document.getElementById(id);
+    const visible = el => {
+      if (!el || !el.getClientRects().length || el.closest('[aria-hidden="true"]')) return false;
+      for (let node = el; node; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+      }
+      return true;
+    };
     const cells = row => [...row.cells].map(cell => cell.textContent.trim());
     const split = text => text.trim() ? text.split(',').map(s => s.trim()) : [];
     const integerText = raw => /^\d+$/.test(raw.trim()) && Number.isSafeInteger(Number(raw.trim())) ? Number(raw.trim()) : null;
@@ -124,7 +132,7 @@ export async function inspect(page) {
       search_limit_reached: /^Search limit reached$/
     }[nativeStatus];
     const displayedRows = [], assignments = [];
-    let resultComplete = !!expectedTitle?.test(title);
+    let resultComplete = visible(byId('result')) && !!expectedTitle?.test(title);
     for (const row of [...(byId('draft-rows')?.rows || [])]) {
       const text = cells(row), requestId = text[0], select = row.querySelector('select');
       displayedRows.push({ cells: text, selectedValue: select?.value ?? null });
@@ -165,10 +173,10 @@ export async function inspect(page) {
       if (row.length !== 4 || Object.hasOwn(totalMap, row[0]) || value === null) totalsComplete = false;
       totalMap[row[0]] = value;
     }
-    const candidateTotals = totalsComplete && Object.keys(totalMap).length === 2 &&
+    const candidateTotals = visible(byId('totals')) && totalsComplete && Object.keys(totalMap).length === 2 &&
       Number.isSafeInteger(totalMap.P01) && Number.isSafeInteger(totalMap.P02) ? totalMap : null;
     const reviewText = byId('review-state')?.textContent.trim() || '';
-    const candidateReview = /^Current draft marked reviewed on this page\./.test(reviewText) ? true
+    const candidateReview = !visible(byId('review-state')) ? null : /^Current draft marked reviewed on this page\./.test(reviewText) ? true
       : /^Not reviewed\./.test(reviewText) ? false : null;
     return {
       candidateResult, candidateTotals, candidateReview, candidateInput,

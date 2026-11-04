@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep one training artifact, credit fixture evidence precisely and gate export work."
+summary: "Preserve the completed build, reconcile AppYard changes and sequence only the next verification fix."
 ---
 
 # Engineering decisions
 
-[R] Keep four-request partial ID 11 and manual final-copy acceptance. The 3 PM access gate has passed without a supplied clearance receipt. Recommend checker scope now; the overseer must record its permitted workspace, implementation owner and execution decision. Keep the 4 PM factory cutoff and 6 PM useful-artifact gate.
+[E, Real-Build-Run1] The modified 631849f factory completed five phases and reported 22 generated tests passing at 15:24. [R] Credit the 4 PM build gate. Lead with that build and its task, retaining the CLI backup. Neither artifact is accepted.
 
-[E, snapshot-19] Code seats remain disabled; dev-1 is already queued. [R] Replace that assignment, do not duplicate it. Source-export work remains conditional on enablement, ownership and time that does not delay the artifact. Leave dev-2, dev-3 and agentic-builder idle.
+[E, latest adapter receipts] Both candidates FAIL: factory clock display uses midnight instead of 0800; CLI saved-draft recovery differs. Factory numeric cases and offline import pass, with gaps. [R] Quality confirms defects and remaining coverage; subsequent repairs change instructions, not output files.
 
-[E, Results-631849f-GUI] Six fixture smoke scripts pass; consent and U1/U2/U3 are observed. Stop passed during one model request, not child-process shutdown. [R] Assign one ten-minute readiness correction. Keep live readiness HOLD. Quality owns runtime checks; Dan owns frontend defects.
+[E, relay and gate log] AppYard d0f4c69 adds contracts, browser checks and source-export protections; the gate reports 96 pass, 20 fail. Browser launch errors explain some failures; downstream causes need proof. [R] Preserve Dan's changes. Reproduce old export cases before adding a fix; keep seven historical defects open pending matching closure evidence.
 
-[E, Acceptance-Reconcile-631849f] Seven verification/export failures remain open despite 128 baseline passes. [R] Reuse E1/E2 reproducers; require accepted bytes or rejection, not another check before copying. Manual acceptance binds independent per-file digests and human review to final bytes.
+[R] Retain overseer-owned dev-2 route, dev-3 sandboxed tests and dev-1 export work. Collapse duplicate dev-1 queue entries. Code enablement remains required. Queue one bounded architecture reconciliation and one V1 test-counting fix after dev-3 releases verification files. Defer broader redesign.
 
-[E, relay] Main d322b39 adds browser deployment; desktop remains 631849f. [R] Preserve Home/Flow and the separate web build. No publication authorization follows. Defer connectors, frameworks and broader acceptance systems. See [[Ops/Directors/Sprint/Engineering-Meeting-19]].
+[R] Reviewed work targets dev/reviewed; mvp requires Mukul's own instruction. Protect frontend ownership. Keep 6 PM task acceptance, 7 PM evidence packaging and Thursday noon code freeze. Put person-only decisions on Product's morning list. See [[Ops/Directors/Sprint/Engineering-Meeting-31]].

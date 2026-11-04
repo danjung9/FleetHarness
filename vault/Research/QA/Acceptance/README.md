@@ -55,3 +55,15 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.m
 [E, preparation check] Independent enumeration of only the supplied synthetic constraints found one answer each for V13, V14 and V16 and zero for V15, matching the table. This calculation did not import or execute candidate code, open a browser, or establish application acceptance.
 
 [E, implementation review] The checker stages regular eligible payload files under its evidence folder and compares source and staged manifests. Excluded hidden, credential-like or linked entries keep complete-payload coverage NOT CHECKED. A staged copy is the tested artifact; the original directory is not silently called accepted. Main must stop writers and retain the exact delivered-file scope.
+
+## Explicit adapters after first runtime discovery
+
+[E, main-session receipts] Initial generic runs on Pipeline-run1 and CLI-route each recorded 3 PASS and 27 NOT CHECKED. The passes covered attestation and payload checks, not scheduling. Those receipts remain in Results. Schema discovery could not bind the page controls to the canonical contract.
+
+[R] Rerun the same CLI with `--adapter pipeline-run1` for `Research/TaskApp/Pipeline-run1`, or `--adapter cli-route` for `Research/TaskApp/CLI-route`. Keep the corresponding existing stopped-writer receipt and output arguments. The adapters were discovered from those exact pages and retained DOM captures. They change representation and UI navigation only; the 17 frozen oracle cases and expected answers are unchanged. Script and selected-adapter hashes are recorded in the new receipt.
+
+[E, source inspection] Pipeline-run1 uses `operatingWindows`, person `availability`, single person/room/qualification fields and board cards. The adapter fills its actual JSON editor and a synthetic reviewer label, and reads rendered times, membership, totals and review text. Its board maps minute zero to midnight while the frozen officer key maps zero to 0800. The checker preserves this as a separate CLOCK-DISPLAY failure; numeric-minute results stay separately assessable.
+
+[E, source inspection] CLI-route exposes labelled form fields and selected start options, plus a portable JSON format. Its adapter accepts only the exact known import/reset confirmations. It does not coerce G08 duplicate IDs, G09 quoted numeric types, G11 removal of an availability window or V14 room reassignment through controls that cannot express those values. Those exact form variants remain NOT CHECKED. Both candidates omit a separate readable-summary download. Their saved-review policies differ: pipeline snapshots can retain historical review, while CLI saves omit it; both require fresh current review after import.
+
+[E, preparation verification] Revised checker and both adapters pass syntax checks. Pure evaluator controls still pass. Pipeline schema mapping was compared with the actual captured native download, including preserved invalid scalar types and unchanged old result/review in a tampered-envelope test. No candidate function was imported or executed and no browser was launched here.

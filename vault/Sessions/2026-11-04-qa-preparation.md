@@ -34,6 +34,9 @@ summary: "QA coordination, pinned source review, independent GUI receipt assessm
 
 - [E, completed acceptance preparation] Delivered [[Research/QA/Acceptance/README]], `accept-training.mjs` and [[Research/QA/Acceptance/Officer-Walkthrough-11]] through the bridge. The checker covers 17 fixed cases and separates visible data, pure arithmetic, review freshness, actual downloads, cold offline import and file manifests. Independent source review corrected malformed-output handling, stale-output timing, import rejection classification and review-before-save ordering. Syntax and pure evaluator controls pass; no candidate was inspected or executed here. Main owns both runtime receipts.
 
+- [E, first browser receipts] Main ran the generic checker on both final copies. Each recorded 3 PASS for attestation/payload checks and 27 NOT CHECKED because the native UI/schema boundary was not discovered. These are not scheduling passes. Read retained DOM captures and only then inspected the candidate UI source.
+- [E, adapter preparation] Added explicit pipeline-run1 and cli-route adapters, preserving all 17 frozen expectations. They use actual editor/form, selected options, visible cards/totals and review text. Pure mapping and evaluator checks pass. Main received rerun commands. Pipeline displays minute zero as midnight while the officer key defines 0800; this mismatch is retained. CLI cannot express four exact variants through its form. Both lack a separate readable-summary export. New runtime receipts are pending.
+
 ## Verification
 
 [E] Git revision and status checks, source and test-script inspection, screenshot evidence from the bounded review, and direct comparison of findings with the pinned code. [E] Reported unit and fixture passes belong to earlier main-session evidence. No live acceptance result is claimed.

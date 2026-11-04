@@ -28,4 +28,6 @@ summary: "Roster and latest recorded activity for the project organization."
 
 ## Next
 
+[E, follow-up status recheck] Mukul asked whether workers are currently working. Latest available snapshot remains 15:34:44 with none running; state still reports development disabled and turn 32. No newer completion record was present. This confirms the recorded idle state, not a live process census.
+
 [R] Runtime owner should resolve candidate-specific acceptance discovery. Coordination should reconcile duplicate dev-1 queue entries before enabling development and investigate the newer failing gate. Do not count queued or completed threads as currently running.

@@ -1,0 +1,175 @@
+{
+  "format": "synthetic-practice-draft",
+  "version": 1,
+  "input": {
+    "windows": [
+      {
+        "start": 0,
+        "end": 240
+      },
+      {
+        "start": 1440,
+        "end": 1680
+      }
+    ],
+    "people": [
+      {
+        "id": "P01",
+        "qualifications": [
+          "Q-A"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 30
+      },
+      {
+        "id": "P02",
+        "qualifications": [
+          "Q-B"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 0
+      }
+    ],
+    "requests": [
+      {
+        "id": "A",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "B",
+        "duration": 60,
+        "starts": [
+          0,
+          90
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "C",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      },
+      {
+        "id": "D",
+        "duration": 60,
+        "starts": [
+          1440
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      }
+    ],
+    "maxNodes": 50000
+  },
+  "result": {
+    "status": "feasible",
+    "assignments": [
+      {
+        "id": "A",
+        "start": 0,
+        "end": 60,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "B",
+        "start": 90,
+        "end": 150,
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ]
+      },
+      {
+        "id": "C",
+        "start": 0,
+        "end": 60,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      },
+      {
+        "id": "D",
+        "start": 1440,
+        "end": 1500,
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ]
+      }
+    ],
+    "explanations": [],
+    "explored": 5,
+    "maxNodes": 50000,
+    "method": "search"
+  }
+}
