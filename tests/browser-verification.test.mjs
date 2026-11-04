@@ -52,12 +52,15 @@ async function workspace(t, html = application) {
   await fs.writeFile(path.join(root, 'index.html'), html);
   return root;
 }
-const verify = (root, overrides = {}) => verifyBrowserJourneys({ root, plan: plan(), contractHash: 'a'.repeat(64), timeoutMs: 20_000, stepTimeoutMs: 600, ...overrides });
+// Functional fixtures include browser startup, tracing and four viewport runs.
+// Deadline/cancellation cases below retain their explicit short test limits.
+const functionalTimeout = 60_000;
+const verify = (root, overrides = {}) => verifyBrowserJourneys({ root, plan: plan(), contractHash: 'a'.repeat(64), timeoutMs: 45_000, stepTimeoutMs: 2500, ...overrides });
 
-test('actual browser journeys cover keyboard, selection, validation, reload persistence and downloads at both viewport sizes', { timeout: 30_000 }, async t => {
+test('actual browser journeys cover keyboard, selection, validation, reload persistence and downloads at both viewport sizes', { timeout: functionalTimeout }, async t => {
   const root = await workspace(t);
-  const result = await verify(root, { stepTimeoutMs: 2500 });
-  assert.deepEqual(result.errors, []);
+  const result = await verify(root);
+  assert.deepEqual(result.errors, [], JSON.stringify(result));
   assert.equal(result.journeys.length, 4);
   for (const journey of result.journeys) {
     assert.equal(journey.status, 'passed', journey.detail);
@@ -70,37 +73,48 @@ test('actual browser journeys cover keyboard, selection, validation, reload pers
   }
 });
 
-test('passing core tests cannot hide a wrong rendered result', { timeout: 20_000 }, async t => {
+test('passing core tests cannot hide a wrong rendered result', { timeout: functionalTimeout }, async t => {
   const root = await workspace(t, application.replace("result.textContent='Saved: '+task.value+' ('+document.querySelector('#priority').value+')'", "result.textContent='Wrong result'"));
   await fs.writeFile(path.join(root, 'app.test.cjs'), 'require("node:test")("core passes",()=>require("node:assert/strict").equal(2+2,4));');
   assert.equal(reportPassed(await verifyWorkspace(root, process.execPath, () => {})), true);
-  const result = await verify(root, { stepTimeoutMs: 250 });
-  assert.equal(result.journeys.every(journey => journey.status === 'failed'), true);
-  assert.match(result.journeys[0].detail, /expectText|step exceeded/);
-  assert.ok(result.journeys[0].screenshot);
+  const result = await verify(root);
+  assert.equal(result.journeys.length, 4, JSON.stringify(result));
+  for (const journey of result.journeys) {
+    assert.equal(journey.status, 'failed', JSON.stringify(result));
+    // Only a failure at the rendered-result expectation proves this fixture;
+    // startup or earlier actionability failures must not satisfy the assertion.
+    const expectedStep = journey.id === 'save' ? 6 : 8;
+    assert.match(journey.detail, new RegExp(`^Step ${expectedStep}: (?:expectText #result:|Browser step exceeded)`), JSON.stringify(result));
+    assert.ok(journey.screenshot, JSON.stringify(result));
+  }
 });
 
-test('a correct primary flow does not conceal broken error recovery or incorrect export contents', { timeout: 20_000 }, async t => {
+test('a correct primary flow does not conceal broken error recovery or incorrect export contents', { timeout: functionalTimeout }, async t => {
   const root = await workspace(t, application.replace("error.textContent='Enter a task.'", "error.textContent='Unknown error'").replace('JSON.stringify({task:task.value})', 'JSON.stringify({task:"wrong task"})'));
-  const result = await verify(root, { stepTimeoutMs: 250 });
-  assert.ok(result.journeys.filter(j => j.id === 'save').every(j => j.status === 'failed' && /Downloaded content/.test(j.detail)));
-  assert.ok(result.journeys.filter(j => j.id === 'recover').every(j => j.status === 'failed'));
+  // Exercise the bad content/recovery assertions after normal browser actions;
+  // Windows runner startup and actionability are not the behavior under test.
+  const result = await verify(root);
+  assert.equal(result.journeys.length, 4, JSON.stringify(result));
+  assert.ok(result.journeys.filter(j => j.id === 'save').every(j => j.status === 'failed' && /Downloaded content/.test(j.detail)), JSON.stringify(result));
+  assert.ok(result.journeys.filter(j => j.id === 'recover').every(j => j.status === 'failed' && /^Step 5: (?:expectText #error:|Browser step exceeded)/.test(j.detail)), JSON.stringify(result));
 });
 
-test('the preview supports native form events without permitting external form navigation', { timeout: 20_000 }, async t => {
+test('the preview supports native form events without permitting external form navigation', { timeout: functionalTimeout }, async t => {
   const nativeForm = application.replace('<section id="editor">', '<form id="editor">').replace('</section>', '</form>')
     .replace('id="save" type="button"', 'id="save" type="submit"')
     .replace("document.querySelector('#save').onclick=()=>{", "document.querySelector('#editor').onsubmit=e=>{e.preventDefault();")
     .replace("task.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('#save').click();}};", '');
   const root = await workspace(t, nativeForm);
-  const result = await verify(root, { stepTimeoutMs: 1000 });
+  const result = await verify(root);
   assert.ok(result.journeys.every(j => j.status === 'passed'), JSON.stringify(result));
   let requests = 0;
   const remote = createServer((_request, response) => { requests++; response.end('unexpected'); });
   await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => remote.close(resolve)));
   await fs.writeFile(path.join(root, 'index.html'), `<!doctype html><form action="http://127.0.0.1:${remote.address().port}"><label>Task<input id="task" name="task"></label><button>Send</button></form>`);
-  const blocked = await verify(root, { stepTimeoutMs: 200, plan: plan([
+  // Allow Windows browser startup/actionability before asserting the CSP denial.
+  // This is a navigation-policy test, not a 200 ms scheduling benchmark.
+  const blocked = await verify(root, { plan: plan([
     { action: 'fill', selector: '#task', value: 'Inspect pump' },
     { action: 'press', selector: '#task', key: 'Enter' },
     { action: 'expectValue', selector: '#task', value: 'Inspect pump' }
@@ -109,7 +123,7 @@ test('the preview supports native form events without permitting external form n
   assert.ok(blocked.journeys.filter(j => j.id === 'save').every(j => j.status === 'failed' && /form-action|blocked resource/i.test(j.detail)), JSON.stringify(blocked));
 });
 
-test('console errors, runtime errors, external access and narrow overflow fail otherwise working journeys', { timeout: 20_000 }, async t => {
+test('console errors, runtime errors, external access and narrow overflow fail otherwise working journeys', { timeout: functionalTimeout }, async t => {
   let requests = 0;
   const remote = createServer((_request, response) => { requests++; response.end('unexpected'); });
   await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
@@ -119,10 +133,10 @@ test('console errors, runtime errors, external access and narrow overflow fail o
   const root = await workspace(t, html);
   const result = await verify(root);
   assert.equal(requests, 0, 'Generated scripts must not reach a different origin.');
-  assert.ok(result.journeys.every(j => j.status === 'failed'));
-  assert.match(result.journeys[0].detail, /broken console/);
-  assert.match(result.journeys[0].detail, /broken runtime/);
-  assert.match(result.journeys.find(j => j.viewport === 'narrow').detail, /Horizontal overflow/);
+  assert.ok(result.journeys.every(j => j.status === 'failed'), JSON.stringify(result));
+  assert.match(result.journeys[0].detail, /broken console/, JSON.stringify(result));
+  assert.match(result.journeys[0].detail, /broken runtime/, JSON.stringify(result));
+  assert.match(result.journeys.find(j => j.viewport === 'narrow').detail, /Horizontal overflow/, JSON.stringify(result));
 });
 
 test('a hung browser script hits the overall deadline and releases the browser and preview', { timeout: 12_000 }, async t => {
@@ -160,7 +174,7 @@ test('an unavailable browser is an actionable failure, never skipped verificatio
 
 test('browser evidence cannot be written through an application-created symlink', async t => {
   const root = await workspace(t), elsewhere = await workspace(t);
-  await fs.symlink(elsewhere, path.join(root, '.quality-evidence'), 'dir');
+  await fs.symlink(elsewhere, path.join(root, '.quality-evidence'), process.platform === 'win32' ? 'junction' : 'dir');
   const result = await verify(root);
   assert.match(result.errors.join('\n'), /real workspace directory/);
   assert.deepEqual(await fs.readdir(elsewhere), ['index.html']);

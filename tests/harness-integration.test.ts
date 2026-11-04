@@ -70,7 +70,7 @@ test('every recipe skill exists with valid frontmatter and every tool reference 
     for (const tool of recipe.tools) assert.ok(toolRegistry.some(t => t.name===tool),tool);
     for (const skill of recipe.skills) {
       const content=await fs.readFile(path.join(resourcesRoot,'skills',skill,'SKILL.md'),'utf8');
-      assert.match(content,new RegExp(`^---\nname: ${skill}\ndescription: .+\n---`));
+      assert.match(content.replace(/\r\n/g, '\n'),new RegExp(`^---\nname: ${skill}\ndescription: .+\n---`));
     }
   }
 });
@@ -139,7 +139,9 @@ test('packet integrity detects added files even if the editable manifest hash is
 });
 test('workspace handoff rejects a symlink packet and never writes into its destination', async t => {
   const workspace=await temporary(t),elsewhere=await temporary(t);
-  await fs.symlink(elsewhere,path.join(workspace,'.fleet'));
+  // A junction exercises the same linked-directory rejection without requiring
+  // Windows developer mode or elevated symlink privileges.
+  await fs.symlink(elsewhere,path.join(workspace,'.fleet'),process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(prepareFleetWorkspace({workspace,resourcesRoot,...toProjectInput('36')}),/ordinary directory/);
   assert.deepEqual(await fs.readdir(elsewhere),[]);
 });

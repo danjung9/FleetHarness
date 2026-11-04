@@ -1,0 +1,108 @@
+name: Windows installer
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Windows build, install and upgrade
+    runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      # The smoke harness uses only its local fixture provider.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # Bundled runtimes are large; balanced compression keeps per-commit builds practical.
+      ELECTRON_BUILDER_COMPRESSION_LEVEL: '5'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Clean dependency installation
+        run: npm ci
+      - name: Install the browser used by verification
+        run: npm run setup:browser
+      - name: Runtime regression checks
+        run: npm test
+      - name: Harness regression checks
+        run: npm run test:harness
+      - name: Fetch the latest successful Windows installer as upgrade baseline
+        id: baseline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/fetch-windows-baseline.mjs
+      - name: Package first-release version A when no published release exists
+        if: steps.baseline.outputs.synthetic == 'true'
+        run: npm run dist:win:baseline
+      - name: Package candidate B from this exact commit
+        run: npm run dist:win
+      - name: Install, exercise and upgrade the packaged app
+        run: npm run test:windows
+      - name: Save validated installer and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+            release/windows-build.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/windows-smoke/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Explain release enablement
+        if: github.ref == 'refs/heads/main' && vars.WINDOWS_RELEASES_ENABLED != 'true'
+        run: |
+          'Installer validation completed. Publishing requires an administrator to enable release immutability and set WINDOWS_RELEASES_ENABLED=true. See docs/windows-releases.md.' >> $env:GITHUB_STEP_SUMMARY
+
+  publish:
+    name: Publish immutable Windows release
+    needs: validate
+    if: >-
+      github.repository == 'danjung9/FleetHarness' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.WINDOWS_RELEASES_ENABLED == 'true'
+    runs-on: windows-2022
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    # Validation stays parallel. Only publication/promotion is serialized. FIFO
+    # arrival is not source order, so the publisher also compares build and SHA.
+    concurrency:
+      group: appyard-windows-release-promotion
+      queue: max
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release
+      - name: Verify downloads and promote only a newer successful build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-windows.mjs release
