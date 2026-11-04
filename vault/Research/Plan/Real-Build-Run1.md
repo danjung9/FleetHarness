@@ -49,6 +49,10 @@ The profile lives in the scratch `config.toml`, outside the patch: reads limited
 
 [E, final state log] After the run, no log entry mentions the real home outside the scratch folder, and no process from the run remains. [E] One tool failed under the profile: a Perl-based command could not load its library. The agents worked around it. [A] The profile may need that system path added.
 
+## Second run
+
+[E, run2, 15:34:33 to 15:47:36 EST] Same patch and brief on Dan's `d0f4c69`, with his new quality contract and browser verification active. Status `review` in 13 minutes. 21 of 21 Node tests, and 22 browser journeys passed across desktop and narrow widths. The record reports `requirementsMet: false`, naming the departmental agents, recurrence rules and weekly board as deferred, so the product is honest about what the partial build leaves out. Files: `Research/TaskApp/Pipeline-run2`. Two real builds, two reached review.
+
 ## Limits
 
 - [E] Agents wrote their own tests, and the 22 count is theirs. Independent acceptance is separate work.

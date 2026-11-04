@@ -8,9 +8,13 @@ summary: "Current sprint status, blockers and next actions."
 
 # Now
 
-Last updated 2026-11-04, after Stop-child receipt review and ID 11 acceptance-checker handoff.
+Last updated 2026-11-04, after adapted ID 11 receipts and d0f4c69 source reconciliation.
 
 ## Latest session
+
+- [E, independent receipt review] Pipeline-run1 passed all 17 numeric/outcome cases; CLI-route passed 13 with four form-boundary cases NOT CHECKED. Both pass actual fresh offline save/import. Corrected CLI receipt has 28 PASS, zero FAIL and 18 NOT CHECKED; its prior import failure was a checker dialog error. Pipeline's clock failure is a key/brief scope mismatch, not a demonstrated brief violation. It has a real contradictory exhausted-state explanation. Neither candidate is human accepted. See [[Research/QA/Acceptance/Review-Candidates]].
+
+- [E, pinned source] At d0f4c69, E1/E2/E4 have new export guards with original reproduction closure pending; H1/V1/E3/E5 remain open. See [[Research/QA/Acceptance-Reconcile-d0f4c69]]. Main owns execution of the next detached-job Stop fixture and the recurring Auto QA loop. Run2 was still in repair in the latest bridge report.
 
 - [E, initial acceptance receipts] Generic browser discovery on both ID 11 copies produced 3 infrastructure/evidence passes and 27 NOT CHECKED each, not application acceptance. Explicit UI adapters are now ready and main owns reruns. The frozen oracle is unchanged. See [[Research/QA/Acceptance/README]].
 

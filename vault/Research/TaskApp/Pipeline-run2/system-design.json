@@ -1,0 +1,106 @@
+{
+  "title": "Synthetic four-session training draft",
+  "description": "Offline synthetic feasibility and operator review; no operational integrations or departmental agents.",
+  "components": [
+    {
+      "id": "editor",
+      "label": "Synthetic input editor",
+      "description": "Four fixed requests, roster rules, operating windows and evaluator search budget.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "solver",
+      "label": "Validation and bounded feasibility",
+      "description": "Pure deterministic current-input validation and candidate search; distinct invalid, infeasible, exhausted and feasible outcomes.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "checker",
+      "label": "Independent constraint checker",
+      "description": "Recheck all assignments, pairs, windows, qualifications and whole-horizon totals.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "board",
+      "label": "Draft board and personnel loading",
+      "description": "Readable two-day assignments, conflict reasons and totals, with no optimization claim.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Current-draft review",
+      "description": "Review bound to exact current input and checked draft; every relevant edit invalidates it.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "portable",
+      "label": "Local portable snapshots",
+      "description": "Versioned synthetic JSON download and text/file import, staging and independent validation. No sync integration.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "editor",
+      "to": "solver",
+      "label": "Current explicit synthetic problem"
+    },
+    {
+      "from": "solver",
+      "to": "checker",
+      "label": "Candidate assignments and status"
+    },
+    {
+      "from": "checker",
+      "to": "board",
+      "label": "Verified intervals and load totals or errors"
+    },
+    {
+      "from": "board",
+      "to": "review",
+      "label": "Current feasible draft for deliberate review"
+    },
+    {
+      "from": "editor",
+      "to": "review",
+      "label": "Edits invalidate prior review"
+    },
+    {
+      "from": "review",
+      "to": "portable",
+      "label": "Exact inputs and draft snapshot"
+    },
+    {
+      "from": "portable",
+      "to": "checker",
+      "label": "Validate staged import before replacing work"
+    },
+    {
+      "from": "portable",
+      "to": "editor",
+      "label": "Confirmed restored inputs"
+    }
+  ]
+}
