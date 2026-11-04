@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Finish one accepted task, credit newer route evidence and stop repeat preparation."
+summary: "Keep the factory candidate primary, reconcile scope conflicts and finish two research handoffs."
 ---
 
 # Product decisions
 
-[R] Retain one four-request synthetic training artifact. Keep the 4 PM factory cutoff and 6 PM accepted-task target; Review's 7 PM milestone is final-copy evidence packaging, not extra factory time. The officer opens the accepted task first.
+[E, Real-Build-Run1] Modified 631849f completed five phases with 22 generated-test passes. [R] Credit the 4 PM gate. Show its task first, then factory evidence; retain CLI as backup. Neither candidate is accepted.
 
-[E, Plan/Review] Checker work and a real build reportedly started at 15:07 and 15:11. Modified-copy event-key and permission-profile probes are also reported. [R] This supersedes the earlier no-route-started assumption. Preserve those owned efforts; start no duplicate lane. Request exact provenance and completion evidence, without treating modified-copy behavior as shipped 631849f behavior.
+[E, retained receipts] Factory: 33 PASS/1 FAIL/14 NOT CHECKED. Latest CLI: 28 PASS/18 NOT CHECKED, with successful offline import. [R] Withdraw Engineering's stale recovery-defect claim. Clock and readable-summary expectations exceed the delivered brief. Preserve the key and raw failure; reconcile scope before human acceptance. Contradictory factory exhaustion wording is a concrete defect for instruction repair, without hand-editing output.
 
-[E, QA receipts] Six smoke scripts report success; ordinary Pi parent/child Stop and separate cleanup report PASS. No completed sign-in or general shutdown proof follows. Seven verification/export failures remain open. [R] Keep manual acceptance of final copied bytes with independent digests and human review.
+[E, latest gate] d0f4c69 reports 147 pass/20 fail inside the sandbox, superseding the earlier 96/20 headline. [R] QA reconciles counts and substantiates causes. E1/E2/E4 have source guards, not matched runtime closure. Preserve Dan's changes.
 
-[R] Accept completed UX, arithmetic and research preparation. Leave re-ux and re-connectors idle. Assign only a short route-evidence correction and evidence-card refresh. Conditional ID 36 research remains available after an accepted first artifact and successful factory route, with no second build assigned.
+[R] Retain existing code/QA owners; remove duplicate dev-1 work. The 15:45 enablement notice supersedes the disabled snapshot; file ownership still governs. Assign only an AppYard walkthrough update and evidence-card refresh. Connectors and second builds remain unallocated.
 
-[R] Protect Dan's Home/Flow. Main d322b39 adds browser deployment, not desktop execution proof. Defer importers and redesign. Proposed submission categories require a person's ruling; retain partial-scope omissions. Shared instructions and answers are in [[Ops/Directors/Directive-rande]].
+[R] Keep 6 PM task and 7 PM evidence targets, Thursday noon code freeze and 1:15 PM submission target. Pending human review stays pending overnight. Status holds one morning decision list. No new run or publication is authorized.

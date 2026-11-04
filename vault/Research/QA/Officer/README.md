@@ -3,28 +3,31 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Four-request acceptance keys, a ten-minute anonymous user trial and bounded burden claims."
+summary: "Factory and corrected CLI receipt review, frozen four-request keys and unperformed human acceptance/trial."
 ---
 
 # Synthetic pilot answer keys
 
 ## Bottom line
 
-[R] Use [[Research/QA/Officer/Acceptance-11]] with [[Research/QA/Officer/11-Training-Golden]] for the current four-request training draft. Every example value, person identifier, role, device, room, message and record is synthetic. [R] The main QA lead owns runtime execution and acceptance. [E] The paper arithmetic agrees with the plan; actual app outcomes remain NOT RUN.
+[R] Use [[Research/QA/Officer/Acceptance-11]] with [[Research/QA/Officer/11-Training-Golden]] for the current four-request training draft. Every example value, person identifier, role, device, room, message and record is synthetic. [E, captured evidence] [[Research/QA/Officer/Acceptance-Review-Run1]] reviews factory receipt `edf3150f` (33 PASS, 1 clock FAIL, 14 NOT CHECKED) and corrected CLI receipt `af6357a9` (28 PASS, 18 NOT CHECKED). Both support bounded numeric and fresh offline import results; neither has complete acceptance. [R] Factory remains primary, CLI backup. Main owns runtime and final acceptance. The 0800 oracle is unchanged; human decision and trial remain NOT RUN.
 
 ## Current directive and acceptance
 
+[E, captured DOM, screenshots, downloads and staged guides] The current review retains the factory clock mismatch against the key and its contradictory exhausted-state prose, distinguishes inconsistent-envelope rejection from approval of changed input, and preserves unsupported CLI G08/G09/G11/V14. Both lack a separate readable-summary export. Main's [[Research/QA/Acceptance/Review-Candidates]] identifies clock/summary differences from the narrower build briefs; no scope waiver or key change is made here. The review matrix gives main only residual browser steps and leaves source/audit/fielding limits explicit. Local handoffs: [[Research/QA/Officer/Sprint/Acceptance-Review-Run1]] and [[Research/QA/Officer/Sessions/2026-11-04-acceptance-review-run1]].
+
 [E, direct task, 2026-11-04] Added [[Research/QA/Officer/Trial-Protocol]] and [[Research/QA/Officer/Burden-Claim]] for Thursday morning. [R] Use the protocol with an accepted task artifact and one consenting participant; preserve an untimed baseline as ESTIMATE. The one-page landscape print companion is [Trial-Protocol.pdf](Trial-Protocol.pdf). [E] No trial or burden reduction was measured during preparation. Public Navy/GAO sources provide context only. Local disclosure and session handoffs: [[Research/QA/Officer/Sprint/Trial-Preparation]] and [[Research/QA/Officer/Sessions/2026-11-04-trial-preparation]].
 
-[E, current directive and relay reads, 2026-11-04] [[Ops/Directors/Directive-qa]] is now available and governs this work at `631849f638614735a89a555d487d6b3c777c52e3`. Both relay files now describe the retained single interface. [R] Use Home to Flow and the actual delivered task app. The historical three-interface mappings below do not authorize removed routes or additional pilot work. Preserve IDs 12 and 36 as backlog. The two-request S cases remain supplementary.
+[E, current directive and relay reads, 2026-11-04] [[Ops/Directors/Directive-qa]] names mvp `d0f4c69` and main `8db53c3`. Earlier `631849f` evidence is historical; neither generated candidate is attributed to shipped d0f4c69 behavior. [R] Show the actual delivered task first. Historical three-interface mappings below do not authorize removed routes or additional pilot work. Preserve IDs 12 and 36 as backlog. The two-request S cases remain supplementary.
 
 | Current note | Verdict and next owner |
 | --- | --- |
+| [[Research/QA/Officer/Acceptance-Review-Run1]] | [E] Existing captured evidence reviewed; factory primary and CLI backup remain incomplete. [R] Main owns residual browser proof; human acceptance remains unperformed. |
 | [[Research/QA/Officer/11-Training-Golden]] | [E] Existing key complete; no numerical correction needed after independent recalculation. Shared and public to builders, not a protected holdout. |
 | [[Research/QA/Officer/Acceptance-11]] | [E] Base/fresh assignments, both 120-minute totals, rest and negative controls agree with the plan. [R] Main QA lead fills the blank actual-app, export, review, guide, recovery, disconnected-launch, digest and human-decision records. |
 | [[Research/QA/Officer/12-Timeline-Golden]] and [[Research/QA/Officer/36-Paperless-Golden]] | [R] Completed backlog, no expansion or new runtime task this round. |
 
-[R] Current result statuses follow the directive: PASS only for an observed match, FAIL for an observed mismatch, NOT RUN when unperformed, BLOCKED for an actual execution barrier and NOT IMPLEMENTED for an absent capability. This supersedes the older UNSUPPORTED wording below. The 128-pass current gate is attributed test evidence, not acceptance of the delivered task.
+[R] Current result statuses follow the directive: PASS only for an observed match, FAIL for an observed mismatch, NOT RUN when unperformed, BLOCKED for an actual execution barrier, NOT IMPLEMENTED for an established absence and NOT CHECKED for unresolved evidence. This supersedes the older UNSUPPORTED wording below. The historical 128-pass gate is attributed test evidence, not acceptance of the delivered task. Current gate reconciliation belongs to qa-runner.
 
 ## Earlier coordination and scope
 

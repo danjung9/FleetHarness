@@ -58,6 +58,14 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Pi SDK 1.5.0 | existing library | factory fixtures | Earendil Works | 2026-11-04 |
 | Web search and [official documentation](https://developers.openai.com/codex/permissions/) | reference | profile format | OpenAI | 2026-11-04 |
 | Local execution/patch tools | development | workspace edits | platform-provided | 2026-11-04 |
+| Local shell and patch interfaces, versions unavailable | workspace tools | inspection and review records | session environment | 2026-11-04 |
+| Playwright 1.64.1 | browser tests | existing regression suite | Microsoft | 2026-11-04 |
+| otool, version unexposed | binary inspection | runtime dependencies | Apple | 2026-11-04 |
+| Execution/patch tools, version unexposed | development | edits/checks | session platform | 2026-11-04 |
+| [Permissions documentation](https://developers.openai.com/codex/permissions) | reference | profile syntax | OpenAI | 2026-11-04 |
+| Node 26.0.0 | runtime/tests | synthetic fixtures | Node.js | 2026-11-04 |
+| zsh 5.9 and local command/edit tools | tooling | changes/evidence | local runtime | 2026-11-04 |
+| Python 3.9.6 queried; process inspection denied | tooling | environment checks | Apple | 2026-11-04 |
 
 ## Data and sources
 
