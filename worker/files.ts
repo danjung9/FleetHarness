@@ -93,9 +93,13 @@ export async function collectArtifacts(root: string, runId: string, epoch: numbe
 
 export function bundleSourceHash(files: ArtifactFile[]) {
   const hash = createHash('sha256');
-  for (const file of files) {
+  // Manifest paths stay POSIX, while the reused desktop verifier hashes and
+  // orders native paths. Match that evidence format without changing saved
+  // desktop hashes; on the Linux hosted runtime these paths remain unchanged.
+  const ordered = [...files].sort((a, b) => path.normalize(a.path).localeCompare(path.normalize(b.path)));
+  for (const file of ordered) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    hash.update(file.path); hash.update(Buffer.from(file.base64, 'base64'));
+    hash.update(path.normalize(file.path)); hash.update(Buffer.from(file.base64, 'base64'));
   }
   return hash.digest('hex');
 }

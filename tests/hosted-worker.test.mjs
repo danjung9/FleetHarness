@@ -103,6 +103,27 @@ test('artifact bundles are canonical, bounded, and restore only authenticated by
   await assert.rejects(collectArtifacts(workspace, runId, 1), /Symbolic links/);
 });
 
+test('POSIX bundle paths retain native verification hashes across nested and punctuation paths', async t => {
+  const root = await temporary(t), workspace = path.join(root, 'workspace');
+  const contents = new Map([
+    ['.fleet/context.json', '{"fixture":true}'], ['a/b.cjs', 'nested'], ['a-b.cjs', 'hyphen'],
+    ['a.b/c.cjs', 'dotted directory'], ['a_b/c.cjs', 'underscore directory'], ['a!b.cjs', 'punctuation'],
+  ]);
+  for (const [name, bytes] of contents) {
+    const file = path.join(workspace, name);
+    await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, bytes);
+  }
+  const runId = randomUUID(), before = await sourceHash(workspace);
+  const bundle = await collectArtifacts(workspace, runId, 1);
+  assert.equal(bundle.sourceHash, before, 'Checkpoint hashes must match the verifier on this platform.');
+  assert.deepEqual(bundle.files.map(file => file.path), [...contents.keys()].sort((a, b) => a.localeCompare(b)),
+    'Serialized manifest order remains canonical POSIX order.');
+  const restored = path.join(root, 'restored');
+  await restoreArtifacts(restored, bundle, runId);
+  assert.equal(await sourceHash(restored), before);
+  for (const [name, bytes] of contents) assert.equal(await fs.readFile(path.join(restored, name), 'utf8'), bytes);
+});
+
 test('pause rolls back an interrupted phase and resume preserves completed phases through real verification', { timeout: 30_000 }, async t => {
   const root = await temporary(t);
   const input = inputFor(newProject({ title: 'Task parser', description: 'Parse a task from a synthetic message.', criteria: ['Parse a task and recover from empty input.'] }));
