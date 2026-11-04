@@ -81,6 +81,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Independent ID 11 browser checker revision 3 | QA tool | Distinguishes proven form limitations and out-of-brief summary expectations while preserving frozen evaluator and receipts; syntax and pure checks only here | Team-owned local QA | 2026-11-04 |
 | macOS `/bin/ps`, system version unavailable | process inspection | native discovery attempted but sandbox denied | Apple. Existing tool versions and disclosure entries are recorded in the journal. | 2026-11-04 |
 | Independent ID 11 Run2 browser adapter rev2 | QA adapter | Added explicit form-limitation and exact-brief scope reporting; preserved all 17 input mappings and frozen evaluator, with syntax and pure checks only | Team-owned local QA | 2026-11-04 |
+| Workspace execution and apply_patch, session versions | Development tools | Local reads, edits and checks | OpenAI | 2026-11-04 |
+| Round-1 synthetic artifacts | evidence dataset | QA coverage review | team benchmark. | 2026-11-04 |
 
 ## Data and sources
 
