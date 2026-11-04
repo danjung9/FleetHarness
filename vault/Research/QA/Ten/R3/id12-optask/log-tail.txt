@@ -1,0 +1,90 @@
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='core.test.cjs';s=open(p).read();s+='''\nfor(const [name,core]of [['module',C],['inline',inline]]){\n test(name+': planned calendar and missing-field boundaries',()=>{\n  for(const token of ['1900-01-01T00:00Z','2099-12-31T23:59Z','2028-02-29T08:00Z','2026-11-04T08:00+14:00','2026-11-04T08:00-14:00']) assert.ok(core.normalizeTimestamp(token))
+verify tool bash completed
+"✔ module: literal planning answer key and non-events (3.789125ms)\n✔ module: exact UTF-16 provenance with CRLF, LF and emoji (0.339333ms)\n✔ module: empty, invalid calendars and no zone cannot become events (0.221ms)\n✔ module: duplicate groups, malformed fields and reversed intervals (0.23175ms)\n✔ module: zone preservation and half-open daily boundaries (0.248167ms)\n✔ module: re
+verify text All 27 application tests now pass with zero skips, including reserved-name inputs, finite frequency validation, full-day clipping, replay, corrupt saved reviews, and benchmark error detection. I’m updating the criterion evidence and guides. The completion gate remains pending because the host’s browser journeys and screenshots have not run.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nfor p in ['README.md','user-guide.md']:\n s=Path(p).read_text().replace('Frequency accepts positive decimals','Frequency accepts finite positive decimals').replace('FREQ accepts a positive decimal literal','FREQ accepts a finite positive decimal literal')\n if p=='README.md':\n  s=s.replace('The recorded build run pass
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > verification.md <<'EOF'\n# Primary deferrals\n\nNone in the frozen plan for the scoped synthetic demonstration. **Synthetic, not validated against the real format.** UC12-1's original USMTF requirement remains unverified for real formats. All named categories and the daily schedule are implemented as a labeled synthetic stand-in; no absence of a specificat
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('test-matrix.md');s=p.read_text().replace('All seven criteria below are planned as implemented, not yet verified.','All seven criteria below are planned as implemented. Latest verification: 27 application tests pass; all browser journeys and independent human review remain unverified.').replace('| Not run; unver
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "capture",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic message workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "parser",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Traceable category parser: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Source and mapping review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "timeline",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"UTC daily schedule: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "storage",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local snapshot and export: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "benchmark",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection complete. Single parser repair synchronized into self-contained HTML. 27 Node application tests pass, no skips; browser journeys and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic answer-key comparison: generated. The live diagram has been updated."}]
+verify text Primary deferrals: none for the synthetic demonstration. Real-format validation remains unverified.
+
+Fixed parser crashes and non-finite frequency handling. All 27 Node tests pass with zero skips. Updated guides and [verification.md](verification.md); frozen plans preserved.
+
+Browser journeys, screenshots, traces, offline behavior and human review await the host. The verification gate remains inco
+verify info TAP version 13
+# Subtest: module: literal planning answer key and non-events
+ok 1 - module: literal planning answer key and non-events
+  ---
+  duration_ms: 5.700875
+  type: 'test'
+  ...
+# Subtest: module: exact UTF-16 provenance with CRLF, LF and emoji
+ok 2 - module: exact UTF-16 provenance with CRLF, LF and emoji
+  ---
+  duration_ms: 0.41575
+  type: 'test'
+  ...
+# Subtest: module: empty, invalid 
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.
+verify error Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.

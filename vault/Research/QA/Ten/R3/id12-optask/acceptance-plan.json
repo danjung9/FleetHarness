@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Within the explicit invented synthetic grammar, the raw sample yields F1 frequency plan 251.5 MHz at 08:00–12:00 UTC, C1 crypto change-over KEY-DEMO-A at 09:30–09:45 UTC, and A1 flight quarters 23:30–00:30 UTC; all three appear on a synchronized 24-hour timeline with source review. This does not establish real USMTF conformance.",
+      "journeyIds": [
+        "daily-schedule",
+        "source-trace"
+      ]
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every extracted field retains exact zero-based end-exclusive UTF-16 offsets into unchanged source. F1 id is [5,7) and start is [8,25) in the source-trace fixture; all fields are checked by actual-core Node tests, including mixed line endings and non-ASCII.",
+      "journeyIds": [
+        "source-trace"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Empty input is rejected; missing zones, invalid dates and unsupported lines are explicit issues, never guessed event times. Editing source preserves the previous revision, invalidates review, and reparsing valid input recovers the literal schedule.",
+      "journeyIds": [
+        "ambiguous-recovery",
+        "invalid-calendar-recovery",
+        "dirty-review"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "10:00+02:00 and 08:00Z normalize to 08:00 UTC; a 23:30Z–00:30Z interval remains 60 minutes, showing 30 minutes on each adjoining UTC day with continuation labels and explicit outside-day count.",
+      "journeyIds": [
+        "timezone-day"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Actual application output is compared against the separate planning-authored held-out synthetic key: expected/extracted/matched 3, false positives/missed 0, precision/recall 100%, field/time/span discrepancies 0, and 2 non-event lines produce no events and 1 unsupported warning. A deliberate local review acknowledgement is recorded; independent human/SME assessment remains a separate evidence boundary.",
+      "journeyIds": [
+        "held-out-comparison"
+      ]
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "implemented",
+      "expectedOutcome": "The locally opened dependency-free application supports parsing, source inspection, review, saved-state reload and UTF-8 reviewed schedule export without any network resource. The primary journey exports optask-2026-11-04.json containing the synthetic disclosure and retained provenance. Disconnected-runtime validation is an additional verification gate, not established merely by this declarative journey.",
+      "journeyIds": [
+        "daily-schedule",
+        "source-trace",
+        "dirty-review"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "A user converts mock USMTF-style raw text into the reviewed synchronized 24-hour schedule for all three named categories, saves and reloads it, and exports its full intervals and provenance. Original source, pending corrections and committed review remain distinct. All outputs disclose synthetic, not validated against the real format.",
+      "journeyIds": [
+        "daily-schedule",
+        "timezone-day",
+        "dirty-review"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "daily-schedule",
+      "title": "Extract, review, save and export all three categories",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#synthetic-notice",
+          "text": "Synthetic, not validated against the real format."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Training net//\nCRYPTO/C1/2026-11-04T09:30Z/2026-11-04T09:45Z/COMMS/KEY-DEMO-A/Change-over drill//\nFLIGHT/A1/2026-11-04T23:30Z/2026-11-05T00:30Z/AIR/Deck rehearsal//\nNOTE/Synthetic, not validated against the real format.//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "3 events extracted; 0 issues; review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#mapping-summary",
+          "text": "FREQ → Frequency plan; CRYPTO → Crypto change-over; FLIGHT → Flight quarters."
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed and saved locally: 3 events."
+        },
+        {
+          "action": "expectText",
+          "selector": "#day-heading",
+          "text": "24-hour schedule · 2026-11-04 · UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-F1",
+          "text": "Frequency plan · F1 · 08:00–12:00 UTC · 251.5 MHz · Training net"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-C1",
+          "text": "Crypto change-over · C1 · 09:30–09:45 UTC · KEY-DEMO-A · Change-over drill"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-A1",
+          "text": "Flight quarters · A1 · 23:30–24:00 UTC · continues next day · Deck rehearsal"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "optask-2026-11-04.json",
+          "text": "Synthetic, not validated against the real format."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "optask-2026-11-04.json",
+          "text": "2026-11-05T00:30:00.000Z"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "optask-2026-11-04.json",
+          "text": "251.5"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "optask-2026-11-04.json",
+          "text": "KEY-DEMO-A"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed and saved locally: 3 events."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-C1",
+          "text": "Crypto change-over · C1 · 09:30–09:45 UTC · KEY-DEMO-A · Change-over drill"
+        }
+      ]
+    },
+    {
+      "id": "source-trace",
+      "title": "Inspect the exact source behind extracted fields",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Training net//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "click",
+          "selector": "#inspect-F1"
+        },
+        {
+          "action": "select",
+          "selector": "#field-select",
+          "value": "id"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-value",
+          "text": "F1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-span",
+          "text": "UTF-16 [5, 7)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-source",
+          "text": "F1"
+        },
+        {
+          "action": "select",
+          "selector": "#field-select",
+          "value": "start"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-span",
+          "text": "UTF-16 [8, 25)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-source",
+          "text": "2026-11-04T08:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-normalized",
+          "text": "2026-11-04T08:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-recovery",
+      "title": "Reject missing timezone and recover through a source revision",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Enter synthetic message text."
+        },
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FLIGHT/A1/2026-11-04T23:30/2026-11-05T00:30Z/AIR/Deck rehearsal//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "0 events extracted; 1 issue; review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-1",
+          "text": "Line 1: start requires an explicit timezone."
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Resolve all issues before review."
+        },
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FLIGHT/A1/2026-11-04T23:30Z/2026-11-05T00:30Z/AIR/Deck rehearsal//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "1 event extracted; 0 issues; review required."
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed and saved locally: 1 event."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-A1",
+          "text": "Flight quarters · A1 · 23:30–24:00 UTC · continues next day · Deck rehearsal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#previous-source",
+          "text": "FLIGHT/A1/2026-11-04T23:30/2026-11-05T00:30Z/AIR/Deck rehearsal//"
+        }
+      ]
+    },
+    {
+      "id": "timezone-day",
+      "title": "Preserve instants and cross-midnight duration",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FREQ/Z1/2026-11-04T10:00+02:00/2026-11-04T11:00+02:00/COMMS/251.5/MHz/Offset net//\nFLIGHT/Z2/2026-11-04T08:00Z/2026-11-04T09:00Z/AIR/UTC drill//\nCRYPTO/Z3/2026-11-04T23:30Z/2026-11-05T00:30Z/COMMS/KEY-DEMO-B/Night drill//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-Z1",
+          "text": "Frequency plan · Z1 · 08:00–09:00 UTC · 251.5 MHz · Offset net"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-Z2",
+          "text": "Flight quarters · Z2 · 08:00–09:00 UTC · UTC drill"
+        },
+        {
+          "action": "click",
+          "selector": "#inspect-Z3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-interval",
+          "text": "2026-11-04T23:30:00.000Z → 2026-11-05T00:30:00.000Z · 60 minutes"
+        },
+        {
+          "action": "fill",
+          "selector": "#day",
+          "value": "2026-11-05"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#day-heading",
+          "text": "24-hour schedule · 2026-11-05 · UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-Z3",
+          "text": "Crypto change-over · Z3 · 00:00–00:30 UTC · continued from previous day · KEY-DEMO-B · Night drill"
+        },
+        {
+          "action": "expectText",
+          "selector": "#outside-day",
+          "text": "2 reviewed events outside this UTC day."
+        }
+      ]
+    },
+    {
+      "id": "held-out-comparison",
+      "title": "Compare extraction with the planning-authored synthetic key",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#run-benchmark"
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-disclosure",
+          "text": "Synthetic answer key authored during planning; not SME ground truth."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-counts",
+          "text": "Expected 3; extracted 3; matched 3; false positives 0; missed 0."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-metrics",
+          "text": "Event precision 100%; event recall 100%; field discrepancies 0; time discrepancies 0; span discrepancies 0."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-nonevents",
+          "text": "2 non-event lines; 0 extracted events; 1 unsupported-line warning."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-review",
+          "text": "Not human-reviewed."
+        },
+        {
+          "action": "check",
+          "selector": "#benchmark-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#save-benchmark-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-review",
+          "text": "Synthetic comparison reviewed locally."
+        }
+      ]
+    },
+    {
+      "id": "dirty-review",
+      "title": "Prevent review and export of stale committed content",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Training net//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Updated drill//"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved source changes; parse before review or export."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Updated drill//"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved source changes; parse before review or export."
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Parse the edited source before review."
+        },
+        {
+          "action": "click",
+          "selector": "#export"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Parse and review the edited source before export."
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-F1",
+          "text": "Frequency plan · F1 · 08:00–12:00 UTC · 251.5 MHz · Updated drill"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "optask-2026-11-04.json",
+          "text": "Updated drill"
+        }
+      ]
+    },
+    {
+      "id": "invalid-calendar-recovery",
+      "title": "Surface invalid dates and unsupported lines without phantom events",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FLIGHT/B1/2026-02-30T08:00Z/2026-03-01T09:00Z/AIR/Invalid drill//\nUNKNOWN/ignore//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "0 events extracted; 2 issues; review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-1",
+          "text": "Line 1: start is not a valid calendar timestamp."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-2",
+          "text": "Line 2: unsupported record type UNKNOWN."
+        },
+        {
+          "action": "fill",
+          "selector": "#source",
+          "value": "FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Training net//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-F1",
+          "text": "Frequency plan · F1 · 08:00–12:00 UTC · 251.5 MHz · Training net"
+        }
+      ]
+    }
+  ]
+}

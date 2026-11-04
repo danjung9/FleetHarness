@@ -1,0 +1,91 @@
+verify error bash failed
+"✔ module: extraction, independent literal answer, duplicate citations and ambiguity (3.826458ms)\n✔ module: malformed grammar and unknown images are rejected (0.819084ms)\n✔ module: five seeded findings and boundary validation (7.329417ms)\n✔ module: all named outputs and eight source-linked filing rows (0.748ms)\n✔ module: approval binds saved revision, validation cannot be bypassed,
+verify text The added adversarial tests found two defects: simulated delivery accepts unsaved edits, and editing after a confirmed task deletion assigns fields to the wrong task. I’ll fix both in the single bounded repair and also guard conflict simulation and resolution against overwriting an unsaved draft.
+
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfor p in ['core.cjs','index.html']:\n s=open(p).read().replace(\\\"function sync(s){if(s.conflicted||s.approval\"'!==s.rev||\", \"function sync(s){if(block(s)||\")\n if p=='\"'index.html':\n  s=s.replace(\\\"state.draft.tasks.forEach((t,n)=>{for(const k of ['action','owner','due'])t[k]=\"'$(`task${n+1}-${k}`).value;});\", \"state.draft.tasks.fo
+verify tool bash completed
+"✔ module: extraction, independent literal answer, duplicate citations and ambiguity (5.690125ms)\n✔ module: malformed grammar and unknown images are rejected (0.723875ms)\n✔ module: five seeded findings and boundary validation (5.244167ms)\n✔ module: all named outputs and eight source-linked filing rows (0.512208ms)\n✔ module: approval binds saved revision, validation cannot be byp
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> core.test.cjs <<'EOF'\n\ntest('actual conflict handlers preserve an unfinished draft',()=>{\n const html=fs.readFileSync(__dirname+'/index.html','utf8');\n for(const id of ['simulate-concurrent','resolve-conflicts']){\n  const state=moduleCore.empty();state.draft=moduleCore.extract(moduleCore.sources());moduleCore.commit(state,'r1');state.conflicted=true;
+verify tool bash completed
+"✔ module: extraction, independent literal answer, duplicate citations and ambiguity (5.119375ms)\n✔ module: malformed grammar and unknown images are rejected (1.433167ms)\n✔ module: five seeded findings and boundary validation (7.21225ms)\n✔ module: all named outputs and eight source-linked filing rows (0.610167ms)\n✔ module: approval binds saved revision, validation cannot be bypa
+verify text The repaired suite passes all 24 tests with no skips. The new checks exercise the actual UI field reader and conflict handlers, though they don’t exercise DOM rendering or IndexedDB. I’ll record the failures, repairs and remaining browser gates in verification.md. The host must still run all seven journeys at both viewport sizes.
+
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('verification.md');s=p.read_text();prefix=s.split('# Build evidence')[0]\na=json.loads(Path('acceptance-plan.json').read_text())\ncoverage={\n'UC36-1':'routing gates; simulated sync upsert/replay; queue retention',\n'UC36-2':'approval binds saved revision; unsaved delivery rejection; conflict draft 
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "capture",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Source capture and extraction review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "domain",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Packet rules and named outputs: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Human review and local routing: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Durable offline workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "sync",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated reconnect and transfer: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evidence",
+  "status": "generated",
+  "detail": "Mapped files exist; verification inspection and single bounded repair complete. 24 Node checks pass; desktop/narrow browser and IndexedDB persistence remain unverified pending host runner."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Packet exports and evidence: generated. The live diagram has been updated."}]
+verify text ## Primary deferrals
+
+All remain unverified; [verification.md](verification.md) records their dependencies, withheld actions and synthetic stand-ins:
+
+- **UC36-4:** Government-device and low-code compatibility.
+- **EVAL36-3:** Timing against a Fleet SME manual baseline.
+- **EVAL36-5:** Sailor-panel usability judgment.
+- **EVAL36-6:** Official judging scores.
+- **DELIVERABLE36-1:** Measured Sailor 
+verify info TAP version 13
+# Subtest: module: extraction, independent literal answer, duplicate citations and ambiguity
+ok 1 - module: extraction, independent literal answer, duplicate citations and ambiguity
+  ---
+  duration_ms: 3.939542
+  type: 'test'
+  ...
+# Subtest: module: malformed grammar and unknown images are rejected
+ok 2 - module: malformed grammar and unknown images are rejected
+  ---
+  duration_m
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.
+verify error Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.

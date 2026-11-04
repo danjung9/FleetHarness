@@ -1,0 +1,243 @@
+{
+ "title": "Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+ "status": "failed",
+ "error": "Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "failed"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T22:24:16.638Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: module: literal planning answer key and non-events\nok 1 - module: literal planning answer key and non-events\n  ---\n  duration_ms: 5.700875\n  type: 'test'\n  ...\n# Subtest: module: exact UTF-16 provenance with CRLF, LF and emoji\nok 2 - module: exact UTF-16 provenance with CRLF, LF and emoji\n  ---\n  duration_ms: 0.41575\n  type: 'test'\n  ...\n# Subtest: module: empty, invalid calendars and no zone cannot become events\nok 3 - module: empty, invalid calendars and no zone cannot become events\n  ---\n  duration_ms: 0.293\n  type: 'test'\n  ...\n# Subtest: module: duplicate groups, malformed fields and reversed intervals\nok 4 - module: duplicate groups, malformed fields and reversed intervals\n  ---\n  duration_ms: 0.269958\n  type: 'test'\n  ...\n# Subtest: module: zone preservation and half-open daily boundaries\nok 5 - module: zone preservation and half-open daily boundaries\n  ---\n  duration_ms: 0.304417\n  type: 'test'\n  ...\n# Subtest: module: revisions, review, dirty persistence and export provenance\nok 6 - module: revisions, review, dirty persistence and export provenance\n  ---\n  duration_ms: 0.545\n  type: 'test'\n  ...\n# Subtest: module: snapshot corruption and issue review rejection\nok 7 - module: snapshot corruption and issue review rejection\n  ---\n  duration_ms: 0.168333\n  type: 'test'\n  ...\n# Subtest: module: comparison detects discrepancies\nok 8 - module: comparison detects discrepancies\n  ---\n  duration_ms: 0.1475\n  type: 'test'\n  ...\n# Subtest: inline: literal planning answer key and non-events\nok 9 - inline: literal planning answer key and non-events\n  ---\n  duration_ms: 0.851917\n  type: 'test'\n  ...\n# Subtest: inline: exact UTF-16 provenance with CRLF, LF and emoji\nok 10 - inline: exact UTF-16 provenance with CRLF, LF and emoji\n  ---\n  duration_ms: 0.39275\n  type: 'test'\n  ...\n# Subtest: inline: empty, invalid calendars and no zone cannot become events\nok 11 - inline: empty, invalid calendars and no zone cannot become events\n  ---\n  duration_ms: 0.246917\n  type: 'test'\n  ...\n# Subtest: inline: duplicate groups, malformed fields and reversed intervals\nok 12 - inline: duplicate groups, malformed fields and reversed intervals\n  ---\n  duration_ms: 0.306708\n  type: 'test'\n  ...\n# Subtest: inline: zone preservation and half-open daily boundaries\nok 13 - inline: zone preservation and half-open daily boundaries\n  ---\n  duration_ms: 0.226542\n  type: 'test'\n  ...\n# Subtest: inline: revisions, review, dirty persistence and export provenance\nok 14 - inline: revisions, review, dirty persistence and export provenance\n  ---\n  duration_ms: 0.451667\n  type: 'test'\n  ...\n# Subtest: inline: snapshot corruption and issue review rejection\nok 15 - inline: snapshot corruption and issue review rejection\n  ---\n  duration_ms: 0.1375\n  type: 'test'\n  ...\n# Subtest: inline: comparison detects discrepancies\nok 16 - inline: comparison detects discrepancies\n  ---\n  duration_ms: 0.184041\n  type: 'test'\n  ...\n# Subtest: inline and module produce identical complete behavior\nok 17 - inline and module produce identical complete behavior\n  ---\n  duration_ms: 2.121792\n  type: 'test'\n  ...\n# Subtest: module: reserved object names cannot crash extraction or become record types\nok 18 - module: reserved object names cannot crash extraction or become record types\n  ---\n  duration_ms: 0.262791\n  type: 'test'\n  ...\n# Subtest: module: positive frequency must be finite\nok 19 - module: positive frequency must be finite\n  ---\n  duration_ms: 0.077834\n  type: 'test'\n  ...\n# Subtest: module: input bounds, full-day clipping, replay and corrupt reviewed restoration\nok 20 - module: input bounds, full-day clipping, replay and corrupt reviewed restoration\n  ---\n  duration_ms: 0.698958\n  type: 'test'\n  ...\n# Subtest: inline: reserved object names cannot crash extraction or become record types\nok 21 - inline: reserved object names cannot crash extraction or become record types\n  ---\n  duration_ms: 0.173833\n  type: 'test'\n  ...\n# Subtest: inline: positive frequency must be finite\nok 22 - inline: positive frequency must be finite\n  ---\n  duration_ms: 0.047167\n  type: 'test'\n  ...\n# Subtest: inline: input bounds, full-day clipping, replay and corrupt reviewed restoration\nok 23 - inline: input bounds, full-day clipping, replay and corrupt reviewed restoration\n  ---\n  duration_ms: 0.569333\n  type: 'test'\n  ...\n# Subtest: module: planned calendar and missing-field boundaries\nok 24 - module: planned calendar and missing-field boundaries\n  ---\n  duration_ms: 0.1275\n  type: 'test'\n  ...\n# Subtest: module: benchmark measures missed and spurious events separately\nok 25 - module: benchmark measures missed and spurious events separately\n  ---\n  duration_ms: 0.1845\n  type: 'test'\n  ...\n# Subtest: inline: planned calendar and missing-field boundaries\nok 26 - inline: planned calendar and missing-field boundaries\n  ---\n  duration_ms: 0.08875\n  type: 'test'\n  ...\n# Subtest: inline: benchmark measures missed and spurious events separately\nok 27 - inline: benchmark measures missed and spurious events separately\n  ---\n  duration_ms: 0.120083\n  type: 'test'\n  ...\n1..27\n# tests 27\n# suites 0\n# pass 27\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 166.139792\n\nBrowser journeys: 14/14 passed.\nRequirements: 7 demonstrated, 0 failed, 0 unverified.",
+  "durationMs": 21197,
+  "sourceHash": "b830255ef30ae9acfefb3775aa329030b4c1264fae6ca6cf727a94d3886aceb7",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "74f968c5753e08d8a2e4b46118c927585b7dc67f86e8627da353ce733b7fce43",
+   "status": "passed",
+   "requirementsMet": true,
+   "criteria": [
+    {
+     "criterionId": "UC12-1",
+     "requirement": "A parser that takes raw formatted military text (USMTF format), extracts frequency plans, crypto change-over windows, and flight quarters event times, and plots them on a consolidated visual timeline.",
+     "status": "passed",
+     "detail": "Within the explicit invented synthetic grammar, the raw sample yields F1 frequency plan 251.5 MHz at 08:00\u201312:00 UTC, C1 crypto change-over KEY-DEMO-A at 09:30\u201309:45 UTC, and A1 flight quarters 23:30\u201300:30 UTC; all three appear on a synchronized 24-hour timeline with source review. This does not establish real USMTF conformance. \u2014 demonstrated by daily-schedule, source-trace at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-01",
+     "requirement": "Every extracted field has exact source offsets.",
+     "status": "passed",
+     "detail": "Every extracted field retains exact zero-based end-exclusive UTF-16 offsets into unchanged source. F1 id is [5,7) and start is [8,25) in the source-trace fixture; all fields are checked by actual-core Node tests, including mixed line endings and non-ASCII. \u2014 demonstrated by source-trace at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-02",
+     "requirement": "Do not invent ambiguous timestamps.",
+     "status": "passed",
+     "detail": "Empty input is rejected; missing zones, invalid dates and unsupported lines are explicit issues, never guessed event times. Editing source preserves the previous revision, invalidates review, and reparsing valid input recovers the literal schedule. \u2014 demonstrated by ambiguous-recovery, invalid-calendar-recovery, dirty-review at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-03",
+     "requirement": "Normalize time zones without shifting the event.",
+     "status": "passed",
+     "detail": "10:00+02:00 and 08:00Z normalize to 08:00 UTC; a 23:30Z\u201300:30Z interval remains 60 minutes, showing 30 minutes on each adjoining UTC day with continuation labels and explicit outside-day count. \u2014 demonstrated by timezone-day at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-04",
+     "requirement": "Review output against an independent answer key.",
+     "status": "passed",
+     "detail": "Actual application output is compared against the separate planning-authored held-out synthetic key: expected/extracted/matched 3, false positives/missed 0, precision/recall 100%, field/time/span discrepancies 0, and 2 non-event lines produce no events and 1 unsupported warning. A deliberate local review acknowledgement is recorded; independent human/SME assessment remains a separate evidence boundary. \u2014 demonstrated by held-out-comparison at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-05",
+     "requirement": "Keep the timeline usable offline.",
+     "status": "passed",
+     "detail": "The locally opened dependency-free application supports parsing, source inspection, review, saved-state reload and UTF-8 reviewed schedule export without any network resource. The primary journey exports optask-2026-11-04.json containing the synthetic disclosure and retained provenance. Disconnected-runtime validation is an additional verification gate, not established merely by this declarative journey. \u2014 demonstrated by daily-schedule, source-trace, dirty-review at both viewport sizes."
+    },
+    {
+     "criterionId": "DELIVERABLE12-1",
+     "requirement": "A tool that seamlessly converts mock USMTF raw text into a synchronized 24-hour visual schedule for watchstanders and shipboard leaders.",
+     "status": "passed",
+     "detail": "A user converts mock USMTF-style raw text into the reviewed synchronized 24-hour schedule for all three named categories, saves and reloads it, and exports its full intervals and provenance. Original source, pending corrections and committed review remain distinct. All outputs disclose synthetic, not validated against the real format. \u2014 demonstrated by daily-schedule, timezone-day, dirty-review at both viewport sizes."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "daily-schedule",
+     "title": "Extract, review, save and export all three categories",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 20 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/daily-schedule-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/daily-schedule-desktop.zip"
+    },
+    {
+     "id": "daily-schedule",
+     "title": "Extract, review, save and export all three categories",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 20 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/daily-schedule-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/daily-schedule-narrow.zip"
+    },
+    {
+     "id": "source-trace",
+     "title": "Inspect the exact source behind extracted fields",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 11 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/source-trace-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/source-trace-desktop.zip"
+    },
+    {
+     "id": "source-trace",
+     "title": "Inspect the exact source behind extracted fields",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 11 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/source-trace-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/source-trace-narrow.zip"
+    },
+    {
+     "id": "ambiguous-recovery",
+     "title": "Reject missing timezone and recover through a source revision",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 18 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/ambiguous-recovery-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/ambiguous-recovery-desktop.zip"
+    },
+    {
+     "id": "ambiguous-recovery",
+     "title": "Reject missing timezone and recover through a source revision",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 18 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/ambiguous-recovery-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/ambiguous-recovery-narrow.zip"
+    },
+    {
+     "id": "timezone-day",
+     "title": "Preserve instants and cross-midnight duration",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 13 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/timezone-day-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/timezone-day-desktop.zip"
+    },
+    {
+     "id": "timezone-day",
+     "title": "Preserve instants and cross-midnight duration",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 13 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/timezone-day-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/timezone-day-narrow.zip"
+    },
+    {
+     "id": "held-out-comparison",
+     "title": "Compare extraction with the planning-authored synthetic key",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 9 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/held-out-comparison-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/held-out-comparison-desktop.zip"
+    },
+    {
+     "id": "held-out-comparison",
+     "title": "Compare extraction with the planning-authored synthetic key",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 9 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/held-out-comparison-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/held-out-comparison-narrow.zip"
+    },
+    {
+     "id": "dirty-review",
+     "title": "Prevent review and export of stale committed content",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 18 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/dirty-review-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/dirty-review-desktop.zip"
+    },
+    {
+     "id": "dirty-review",
+     "title": "Prevent review and export of stale committed content",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 18 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/dirty-review-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/dirty-review-narrow.zip"
+    },
+    {
+     "id": "invalid-calendar-recovery",
+     "title": "Surface invalid dates and unsupported lines without phantom events",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 10 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/invalid-calendar-recovery-desktop.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/invalid-calendar-recovery-desktop.zip"
+    },
+    {
+     "id": "invalid-calendar-recovery",
+     "title": "Surface invalid dates and unsupported lines without phantom events",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 10 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/invalid-calendar-recovery-narrow.png",
+     "trace": ".quality-evidence/a8b398b53ce0-94847a3e-eb80-4b6a-aa00-31930fcfc04d/invalid-calendar-recovery-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 12.7,
+ "challengeId": "12",
+ "workspace": "~/fhten/ud-r3/workspaces/50b57d63-af40-4201-a817-a989429507ca/fe3ee7a3-c3ff-4bfd-b822-4f2617495c35"
+}

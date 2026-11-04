@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders evaluating an offline synthetic OPTASK demonstration; not for operational scheduling.",
+  "primaryTask": "Paste synthetic raw tasking text, extract frequency plans, crypto change-over windows and flight quarters, inspect original source fields, explicitly review and save, then view and export a synchronized UTC daily schedule.",
+  "successOutcome": "All three named categories appear on a labeled 24-hour visual schedule; exact source fields and full cross-midnight intervals remain inspectable, reviewed state survives reload, and the local export carries provenance and the synthetic disclosure.",
+  "screens": [
+    {
+      "name": "Message workspace",
+      "purpose": "Preserve exact source, show grammar and synthetic disclosure, load sample, create revised source and parse with clear draft state.",
+      "primaryAction": "Parse message (#parse)"
+    },
+    {
+      "name": "Extraction and source review",
+      "purpose": "Show category mapping, every extracted field and UTF-16 source span, issues and previous revision. A labeled field selector follows Inspect source; unresolved items cannot be confirmed.",
+      "primaryAction": "Confirm review and save (#confirm-review) after checking #reviewed"
+    },
+    {
+      "name": "24-hour schedule",
+      "purpose": "Display three labeled lanes against 00:00–24:00 UTC with proportional bars, textual interval list, cross-midnight continuations and outside-day count.",
+      "primaryAction": "Export reviewed schedule (#export); Show day (#show-day) applies #day"
+    },
+    {
+      "name": "Synthetic answer-key review",
+      "purpose": "Secondary evidence panel compares actual application extraction against the planning-authored synthetic key; displays counts and discrepancies without implying SME validation.",
+      "primaryAction": "Run synthetic comparison (#run-benchmark), then Save comparison review (#save-benchmark-review)"
+    }
+  ],
+  "states": {
+    "empty": "Show Synthetic, not validated against the real format. Provide Load synthetic sample (#load-sample), labeled raw message textarea #source and grammar help. Initial UTC day #day is 2026-11-04 for reproducibility; no current-clock inference. No timeline events until parsed and reviewed.",
+    "loading": "All parsing, comparison and saves are local and normally immediate. Announce Parsing message or Comparing synthetic key with a polite live region, guard against duplicate action, then replace with results or actionable failure. No network spinner or model call.",
+    "error": "Keep source text intact. #validation-error explains empty source, dirty review/export or unresolved issues; #issue-1 etc. list line-specific reasons. Valid records in mixed input remain inspectable as unreviewed, never silently confirmed. Storage failure says Saved only for this session; export to keep a copy.",
+    "success": "#parse-summary reports event/issue counts and review required; display mapping and per-record Inspect source buttons. Confirmation requires #reviewed, no issues and unchanged source. #review-status states Reviewed and saved locally with exact count. Confirmed schedule and export follow; dirty edits mark results stale and block review/export with explanatory messages."
+  },
+  "persistence": "Use versioned localStorage for exact committed source revisions, parsed/reviewed records, selected UTC day, separate unfinished source draft and comparison review. Reload restores saved review and any visibly unsaved draft without approving it. Local-only storage, no server sync. Keep prior source revisions visible; Load sample changes draft only and never discards committed source. Export JSON contains raw source, revisions, all fields/spans, full UTC instants, day-clipped schedule, issues and review state. File-origin storage may be unavailable: disclose session-only fallback; no durable-save claim on failure.",
+  "recovery": "Correct uncertain fields by editing source and reparsing into a new immutable revision; original extraction and all prior source remain available, review resets. Do not fabricate corrected source spans for manual overrides. Dirty content must be parsed and deliberately reviewed before export. Unsupported content must be corrected or removed in a preserved new revision. No generic dismiss-all. Selected-day changes retain review and full instants. Invalid dates, missing zones, duplicate groups and reversed intervals cannot enter confirmed output.",
+  "keyboard": "Use native labeled textarea, checkbox, date input, select and buttons in logical Tab order, visible focus and Enter/Space activation. #field-select offers every source field. Focus validation summary after errors; use live status announcements. Provide non-color category labels and readable textual intervals alongside bars. Stack panels on narrow screens, wrap long source in a scrollable pre, keep controls full-width as needed and preserve a usable 24-hour axis. No drag-only action."
+}
