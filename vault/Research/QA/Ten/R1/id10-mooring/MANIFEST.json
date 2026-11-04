@@ -1,0 +1,32 @@
+{
+ "note": "Digests of the exact build output, kept unchanged at ~/fhten/frozen. Markdown in this vault copy has dashes normalized by the sync, so its digests can differ.",
+ "files": {
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-desktop.png": "ccdced91c29bc45441223417992182203abd3500be3bfc01693ecbcc03cc88d3",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-desktop.zip": "3280c89f033987c287d12fa6b9b555cd5e35f716b4e8969d4788868c326c0921",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-narrow.png": "93b44e4e0dade0115b38178d08ab206291f7e99e3750544ba9f5c000d0ac59c5",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-narrow.zip": "81729e5851d8f500712ed7350f31acf766fa580e0cdcab5d84700bce156bea07",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-desktop.png": "4d7a1f6b247527f92e3995321a75196515493ac0d0675d552f85e5572a967534",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-desktop.zip": "a5976f72aa310b77fed9f63b74d309a9b168c475a56794080228c4c0fb4527b9",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-narrow.png": "6be3108b25faf4950f2da005ae35af750cbbf53edd2115c44d03ea5037006e8b",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-narrow.zip": "e572398207e914d6a0219bb44251665543f90539ee8127d68219cbd47961150f",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-desktop.png": "c49603e5c9c52fac78d0f08aea7278e01e16053eea2653a715e9af970c10fc52",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-desktop.zip": "f35aeca9efdf8641e577f24d04af7c5c0b3e3fc4f2c10164f71ceed026b0bd36",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-narrow.png": "d67cd1375927a9d02722b237455d5e35bc70d4c09c6c93c740ff04c4175324e4",
+  ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-narrow.zip": "90a8d8f2ccd3a6bbac8d6700bf3fcbea89f921b7165117ea4e7e9cf98b59ca5e",
+  "README.md": "34df982c4c4c54249d475fb51d26fe730981ded2226a6543c1b5c50eeda04ad5",
+  "acceptance-plan.json": "851a4b8b7a34bbb3e1d0086edc38ea20f050b19c97fdafba7324cc4433d76198",
+  "core.cjs": "060004fc5dd024d391c6ab899de0f080b28d7a203229610d01091ff6c886d267",
+  "core.test.cjs": "68771c7b05b5c8f4789a08cf95ee97379c0de8877f2200d103c6331d1131dcb5",
+  "index.html": "131ef62ae851e4ba25a6958aa8fbac3c952acd72aec09d0c23e053a382b6704a",
+  "path-to-fleet.md": "d8964c3814c2a71ff0388b2bdd0e66d63ffcd7d6baaf9fac6609f1f32050d73b",
+  "plan.md": "08b44d01dd9485ef4f2899e4f269b74fb9e688517e653e7b51b4bb50ad316100",
+  "requirements.md": "559e01c2d9dad91a8489f5ea7280301a1542b7876b1c96b14d2467b2b5effa46",
+  "research.md": "93cc7ef92aacd93930d0e694159cbbdf9fc7df5a0b4c76cf0613a2b41f99af8e",
+  "scope.md": "33c5595de19315749d48b8608ecad6edc86afcb1a5c8f4f4833043c37bafbafd",
+  "system-design.json": "5c5e020e12a1d495f19a0af9167ed320673e8c4544d427337b0471277c83eb49",
+  "test-matrix.md": "8af9bd780f74bd6e1858c53819e49b09932e07bdc0a1ed05632f84c7b89ba09b",
+  "test-report.json": "4bb42d9ff8cc6b80665b12a76eb5f88406a677c4e0d54a9bb4febd1d1ef02db8",
+  "ux-spec.json": "b07c88c25bfcb0c8df51e955f417ac2a8d761f032e3ebfbc419dec22860d307f",
+  "verification.md": "bce62190d0697cf13ee8a8f1ebcf806cfb1e03c2a6fdceec6f0b1f18cd279006"
+ }
+}

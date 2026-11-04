@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Ten-challenge benchmark, round 1 at d0f4c69: 6 of 10 finished, 5 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 1 at d0f4c69: 8 of 10 finished, 7 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 1
@@ -18,10 +18,12 @@ summary: "Ten-challenge benchmark, round 1 at d0f4c69: 6 of 10 finished, 5 passe
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [[Research/QA/Ten/R1/id12-optask/final\|id12-optask]] | review | 9.7 | 12/12 | 8/8 | 3 / 4 / 0 | yes | 0 | 232070 | pass | unsatisfactory |
 | [[Research/QA/Ten/R1/id36-paperless/final\|id36-paperless]] | failed at verify | 13.2 | 22/22 | 8/12 | 3 / 15 / 2 | yes | 0 | 311374 | FAIL | pending |
-| [[Research/QA/Ten/R1/id11-training/final\|id11-training]] | review | 14.1 | 15/15 | 16/16 | 3 / 4 / 0 | no | 0 | 285944 | pass | pending |
+| [[Research/QA/Ten/R1/id11-training/final\|id11-training]] | review | 14.1 | 15/15 | 16/16 | 3 / 4 / 0 | no | 0 | 285944 | pass | NOT |
 | [[Research/QA/Ten/R1/id08-casrep/final\|id08-casrep]] | review | 11.3 | 15/15 | 8/8 | 3 / 2 / 0 | yes | 0 | 252079 | pass | pending |
 | [[Research/QA/Ten/R1/id20-contact-brief/final\|id20-contact-brief]] | review | 9 | 10/10 | 8/8 | 2 / 3 / 0 | yes | 0 | 219044 | pass | pending |
 | [[Research/QA/Ten/R1/id35-cyber-defender/final\|id35-cyber-defender]] | review | 12.3 | 22/22 | 8/8 | 1 / 17 / 0 | no | 0 | 274149 | pass | pending |
+| [[Research/QA/Ten/R1/id10-mooring/final\|id10-mooring]] | review | 10.7 | 25/25 | 6/6 | 1 / 4 / 0 | no | 0 | 247159 | pass | pending |
+| [[Research/QA/Ten/R1/id32-readiness/final\|id32-readiness]] | review | 12.5 | 26/26 | 12/12 | 7 / 10 / 0 | no | 0 | 291009 | pass | pending |
 
 ## What failed
 

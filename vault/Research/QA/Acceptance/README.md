@@ -24,7 +24,7 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.m
   --writers-stopped-evidence /absolute/path/to/operator-receipt.md
 ```
 
-[E, implementation] Exit codes are 0 for all checks passing, 1 for an observed failure, 2 for setup/harness/cleanup error and 3 for incomplete coverage. `result.json` retains every check, DOM observations, screenshots, downloaded files and manifests. Human guide/decision and unreadable or ambiguous summary/review-binding evidence deliberately remain NOT CHECKED, so a successful automated subset can still exit 3. Do not convert that result to overall acceptance. The optional stopped-writer file is recorded as an operator attestation and hash, not independently verified shutdown.
+[E, implementation] Exit codes are 0 for all applicable checks passing, 1 for an observed failure, 2 for setup/harness/cleanup error and 3 for incomplete coverage. `result.json` retains every check, DOM observations, screenshots, downloaded files and manifests. Known form limitations are UI LIMITATION and keep the result incomplete. OUT OF BRIEF is counted separately and does not become a product failure or a pass. Human guide/decision and ambiguous evidence remain NOT CHECKED, so a successful automated subset can still exit 3. Do not convert that result to overall acceptance. The optional stopped-writer file is recorded as an operator attestation and hash, not independently verified shutdown.
 
 [E, direct preparation verification] The final script passes Node syntax checking and its pure evaluator self-check. It validates seven feasible expected answers, rejects N1/N2/N3, numeric strings, duplicate IDs and malformed membership values, and accepts harmless extra diagnostics. Additional controls check room-only contention, cross-day minutes and chronological rest. No candidate was inspected or executed and no browser was launched during preparation.
 
@@ -35,7 +35,7 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.m
 - [R] Prove the evaluator rejects N1 overlap, N2 missing D and N3 disallowed start/rest. App rejection needs an actual supported proposed-draft boundary; an evaluator rejection alone is not an app pass.
 - [R] Establish reviewed base input, edit to the fresh case, and inspect review immediately before another check. Rechecking cannot silently approve the new result. Observe an explicit fresh review.
 - [R] Save an actual draft download and readable summary. Close the context, start a new offline context with no previous storage, import those saved bytes and compare complete fresh inputs, four assignments, totals and review binding. A local-storage reload is not an import test.
-- [R] Where controls, schema or results cannot be uniquely discovered, retain NOT CHECKED and the captured evidence. A known absent feature is NOT IMPLEMENTED in the human record. Neither is a pass or a waived requirement.
+- [R] Where controls, schema or results cannot be uniquely discovered, retain NOT CHECKED and the captured evidence. Distinguish this uncertainty from an established UI LIMITATION, with its exact boundary and evidence. A separate summary absent from the reviewed public brief is OUT OF BRIEF; retain it as an additional QA expectation without calling it a build failure.
 
 ## Independent extra cases
 
@@ -69,6 +69,19 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.m
 [E, preparation verification] Revised checker and both adapters pass syntax checks. Pure evaluator controls still pass. Pipeline schema mapping was compared with the actual captured native download, including preserved invalid scalar types and unchanged old result/review in a tampered-envelope test. No candidate function was imported or executed and no browser was launched here.
 
 ## Retained candidate outcomes
+
+[E, reporting revision 3] Both explicit Run1 adapters are ready. They already drive input, solve, rendered assignments/totals/outcomes, review, actual save and fresh offline import. The new reporting distinguishes established form limitations from missing observations, with no change to the 17 cases, evaluator, golden key or acceptance contract. Historical receipts below retain their original labels and counts; no new runtime receipt is claimed for this reporting revision.
+
+| Candidate and adapter | Existing stopped-writer receipt | Known input limitation |
+| --- | --- | --- |
+| `Research/TaskApp/Pipeline-run1`, `--adapter pipeline-run1` | `Research/QA/Acceptance/Receipts/Pipeline-run1-writers-stopped.md` | [E, later receipt] All 17 exact outcome inputs were exercised through its JSON editor. |
+| `Research/TaskApp/CLI-route`, `--adapter cli-route` | `Research/QA/Acceptance/Receipts/CLI-route-writers-stopped.md` | [E, inspected form and retained observations] G08 duplicate IDs, G09 quoted numeric types, G11 removal of an availability window and V14 room reassignment cannot be entered exactly through this form. New receipts label these UI LIMITATION. |
+
+[E] CLI portable import exists, and its behavior for those four exact variants was not tested. The form finding does not establish app-wide inability. V14 also changes the fixed room assignment in the supplied brief, so it is an additional evaluation variant rather than an established brief violation. Missing or ambiguous controls still yield NOT CHECKED.
+
+[E, supplied briefs] Separate readable-summary export is absent from Pipeline `requirements.md` and CLI `BRIEF.md`; both require portable save/import of inputs and draft. Each adapter records the reviewed brief digest, and a future receipt labels READABLE-SUMMARY as OUT OF BRIEF only if that exact file matches the copied payload manifest. A changed or missing brief leaves scope NOT CHECKED. The frozen additional summary expectation and historical results are unchanged.
+
+[E, preparation verification] Node syntax and pure evaluator/reporting checks pass. The frozen oracle/evaluator region SHA-256 remains `ee6dc9643add11efdde38b6ec69ec4c6e061e10755dfbd4b4038fcaff1fb8aa4`; both contract files also match their prior digests. Main owns any fresh browser run.
 
 [E, Run2 adapter and receipt] `--adapter pipeline-run2` supports the new labelled form and public two-step replacement preview, preserving the frozen oracle. Run `beb73e23` records 28 PASS, zero FAIL and 18 NOT CHECKED: 13 outcome cases and exact fresh offline downloaded-file recovery pass. G07/G08/G09/V14 remain unsupported; G11 passes. Review clears on edit/recalculation/import, and inconsistent saved inputs/results are rejected without replacing the original. See [[Research/QA/Acceptance/Review-Run2]] for exact identities, main's stopped-writer/Markdown-normalization provenance and remaining limits.
 

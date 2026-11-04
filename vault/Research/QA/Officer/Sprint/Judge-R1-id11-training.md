@@ -27,3 +27,9 @@ summary: "Local tool, friction and prior-work record for challenge 11 round 1 ju
 [E] Additional reused tool: Python 3.9.6 standard library (pathlib, hashlib, json, sys and zipfile), provided by the installed Python distribution/Python Software Foundation, for receipt comparison, artifact hashes, trace-header inspection and note validation. The launcher emitted denied cache-file warnings but the command completed. No forbidden read or write was attempted to fix those warnings.
 
 [R] Main retains scoreboard ownership and transfers the local tool/friction/prior-work/session record to central Sprint, Sessions and Team/Now. Route this failure through the existing factory workflow. The single recommended change makes an independently checked demonstration of the original primary task a non-deferrable acceptance condition. The present omission is established without another browser run. Final human acceptance remains separate.
+
+[E] final.json records 14.1 benchmark minutes and review status, with human review pending and delivery queued. This review does not establish per-stage elapsed time, gross input, uncached-plus-output tokens or monetary cost. Current mvp 1d9eeee is a supplied context reference, not independent authentication of the saved artifact's build source.
+
+[E] Final relay reread: LATEST.md and LATEST-analysis.md describe Windows branch 4c49e85 after e68e90e, with smoke/test-fixture changes and no product implementation change. Integration into supplied mvp 1d9eeee is not established. No new challenge 11 artifact or behavioral result follows, so this verdict remains unchanged.
+
+[E] Completion checks passed: 237 judgment words including frontmatter; required verdict, WHY and FIX lines present; five notes have valid frontmatter, no prohibited dashes and valid known-note links; all 53 artifact files retain their recorded lengths and hashes.

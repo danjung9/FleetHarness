@@ -48,7 +48,17 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 
 [E, queue and dev-3 working source] The current dev-3 task is smoke-script maintenance while its sandbox verifier changes remain uncommitted. The returned registration-check implementation still depends on integration with that verifier. Requested explicit ownership and completion of that dependency before treating smoke work as the only remaining task.
 
-## Ownership and open decisions
+## Verified follow-up at 16:30 EST
+
+[E] New raw captures are outside the normalized vault at ~/fhten/frozen/R1. All 27 manifest entries for id10-mooring and all 42 for id32-readiness match their saved raw bytes. Their first-open receipts show no page/console errors or external requests. Source now launches first-open against the raw copy. This correction applies to these captures; the earlier six results are not retroactively credited with raw-copy validation.
+
+[E] The scoreboard now records eight finished, seven automatic passes and zero satisfactory judgments. ID 11 and ID 12 are independently rejected for missing defining challenge outcomes. The ID 12 note changed its verdict spelling from NOT to unsatisfactory; route now treats nonpending, nonsatisfactory verdicts as failures. Exact verdict parsing and artifact binding remain preferable to prefix acceptance.
+
+[E] dev-3 submitted eadfea1, including its verifier and native containment smoke script, authored Mukul. It remains under review. [[Research/QA/Review-Queue-Notes]] incorporates the assigned reviewer's two reproduced recovery blockers; dev-1 is correcting them. Main owns serial integration and received the confirmed author decision.
+
+[E] The benchmark's STOP/deadline source still warns that its driver may remain running. No shutdown fix or runtime proof is claimed here.
+
+## Current ownership
 
 [E, main bridge] Main owns the live runtime and benchmark repairs. The dated restart and source findings above supersede the earlier draining status. [[Research/QA/Ten/Scoreboard]] remains the changing result record.
 

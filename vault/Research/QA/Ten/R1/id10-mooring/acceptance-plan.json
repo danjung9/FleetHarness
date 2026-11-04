@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC10-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Provide the full drag-and-drop ship/pier/line canvas, ingest mock wind/current, iteratively evaluate line geometry and bollard strain against applicable NSTM 582 limits, recommend optimal tug horsepower and line sequences, and warn at approved gust breaking thresholds.",
+      "journeyIds": [],
+      "reason": "Authoritative equations, NSTM revision, capacities, thresholds and optimization objective are absent. Planned synthetic intake/layout is only a demonstrated slice."
+    },
+    {
+      "criterionId": "PHY-01",
+      "disposition": "deferred",
+      "expectedOutcome": "Every calculation and below/at/above-limit boundary matches independently worked SME-signed synthetic reference cases within approved tolerances.",
+      "journeyIds": [],
+      "reason": "No authoritative equations, signed cases or approved tolerances supplied. Toolkit fixtures cannot verify application engineering."
+    },
+    {
+      "criterionId": "PHY-02",
+      "disposition": "deferred",
+      "expectedOutcome": "Reject missing inputs, inconsistent units, out-of-range values and unsupported craft configurations, with approved unit conversions and physical boundaries.",
+      "journeyIds": [],
+      "reason": "Approved conversion rules, physical ranges and craft definitions are absent. Planned completeness and structural unit/configuration checks cannot satisfy the whole criterion."
+    },
+    {
+      "criterionId": "PHY-03",
+      "disposition": "implemented",
+      "expectedOutcome": "The self-contained offline review screen shows missing engineering authority and unknown uncertainty, requires explicit acknowledgement of a saved synthetic scenario revision, blocks review of unsaved edits, invalidates acknowledgement on changed saved content and never grants operational approval. Qualified human authority is preserved by keeping engineering decisions unavailable.",
+      "journeyIds": [
+        "review-synthetic",
+        "recover-missing",
+        "recover-stale-review"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE10-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Output an approved Mooring Evolution Safety Sheet and graphical layout with traceable agent rationale and validated safety margins, plus demo walkthrough and one-page fielding brief.",
+      "journeyIds": [],
+      "reason": "Approved sheet schema, approval process and engineering basis are absent. The planned marked synthetic summary/layout, walkthrough and brief demonstrate only a limited slice."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "review-synthetic",
+      "title": "Save and acknowledge a synthetic scenario",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-scenario"
+        },
+        {
+          "action": "expectText",
+          "text": "Saved: Synthetic berth Alpha",
+          "selector": "#save-status"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic berth Alpha | Demo craft A | Demo pier 1 | Demo line A",
+          "selector": "#scenario-summary"
+        },
+        {
+          "action": "expectText",
+          "text": "Wind 12 m/s; gust 15 m/s; current 0.5 m/s; ebb. Direction convention unconfirmed.",
+          "selector": "#environment-summary"
+        },
+        {
+          "action": "expectText",
+          "text": "Engineering assessment unavailable",
+          "selector": "#engineering-status"
+        },
+        {
+          "action": "expectText",
+          "text": "Uncertainty unknown: authoritative model, limits and signed reference cases are missing.",
+          "selector": "#uncertainty"
+        },
+        {
+          "action": "expectText",
+          "text": "Operational approval unavailable. Qualified engineering review is required.",
+          "selector": "#approval-status"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic review recorded for saved revision 1. No operational approval.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "text": "Saved: Synthetic berth Alpha",
+          "selector": "#save-status"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic review recorded for saved revision 1. No operational approval.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "expectDownload",
+          "fileName": "synthetic-scenario.txt",
+          "text": "SYNTHETIC \u2014 UNVALIDATED \u2014 NOT FOR OPERATIONAL USE",
+          "selector": "#export-summary"
+        }
+      ]
+    },
+    {
+      "id": "recover-missing",
+      "title": "Correct missing wind speed and complete review",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "value": "",
+          "selector": "#wind-speed"
+        },
+        {
+          "action": "click",
+          "selector": "#save-scenario"
+        },
+        {
+          "action": "expectText",
+          "text": "Enter wind speed as a finite non-negative number.",
+          "selector": "#validation-error"
+        },
+        {
+          "action": "expectValue",
+          "value": "Synthetic berth Alpha",
+          "selector": "#scenario-name"
+        },
+        {
+          "action": "expectText",
+          "text": "Review unavailable: save a complete scenario first.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "fill",
+          "value": "0",
+          "selector": "#wind-speed"
+        },
+        {
+          "action": "click",
+          "selector": "#save-scenario"
+        },
+        {
+          "action": "expectText",
+          "text": "Wind 0 m/s; gust 15 m/s; current 0.5 m/s; ebb. Direction convention unconfirmed.",
+          "selector": "#environment-summary"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic review recorded for saved revision 1. No operational approval.",
+          "selector": "#review-status"
+        }
+      ]
+    },
+    {
+      "id": "recover-stale-review",
+      "title": "Save or discard edits before reviewing a changed revision",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-scenario"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "fill",
+          "value": "18",
+          "selector": "#wind-speed"
+        },
+        {
+          "action": "expectText",
+          "text": "Unsaved changes",
+          "selector": "#draft-status"
+        },
+        {
+          "action": "expectText",
+          "text": "Review blocked: save or discard unsaved changes.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "click",
+          "selector": "#discard-changes"
+        },
+        {
+          "action": "expectValue",
+          "value": "12",
+          "selector": "#wind-speed"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic review recorded for saved revision 1. No operational approval.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "fill",
+          "value": "18",
+          "selector": "#wind-speed"
+        },
+        {
+          "action": "click",
+          "selector": "#save-scenario"
+        },
+        {
+          "action": "expectText",
+          "text": "Saved revision 2 requires synthetic review.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "text": "Synthetic review recorded for saved revision 2. No operational approval.",
+          "selector": "#review-status"
+        },
+        {
+          "action": "expectText",
+          "text": "Operational approval unavailable. Qualified engineering review is required.",
+          "selector": "#approval-status"
+        }
+      ]
+    }
+  ]
+}

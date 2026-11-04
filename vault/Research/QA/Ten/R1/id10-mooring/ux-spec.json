@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Bridge-team and qualified mooring reviewers inspecting synthetic scenarios; operational approval and qualification verification are outside this prototype.",
+  "primaryTask": "Assemble and save a synthetic berth scenario, inspect its illustrative layout and authority gaps, then acknowledge review of the saved revision.",
+  "successOutcome": "The saved scenario and revision-specific synthetic acknowledgement survive reload while engineering assessment and operational approval remain unavailable.",
+  "screens": [
+    {
+      "name": "Scenario workspace",
+      "purpose": "Capture synthetic selections, raw observations, declared numeric inputs and illustrative layout; distinguish draft and saved content.",
+      "primaryAction": "Save scenario"
+    },
+    {
+      "name": "Saved scenario review",
+      "purpose": "Inspect committed inputs, layout, unknown uncertainty and missing authority before synthetic-only acknowledgement.",
+      "primaryAction": "Record synthetic review"
+    }
+  ],
+  "states": {
+    "empty": "Show No saved scenario, explain synthetic-only use and offer Load synthetic example. Disable review/export with an adjacent explanation.",
+    "loading": "Local operations are immediate, with no remote calls. Prevent duplicate submissions during writes; if pending, announce Saving scenario or Recording review and then announce completion.",
+    "error": "Show field-specific errors and a linked summary while preserving the draft. Unsaved edits block review until Save scenario or Discard changes. Storage failure keeps work in memory with Local storage unavailable; do not claim durable save. Corrupt data requires deliberate reset.",
+    "success": "Show saved name, committed input summary and layout, Engineering assessment unavailable, unknown uncertainty and Operational approval unavailable. Qualified engineering review is required. Review status identifies the exact revision and states No operational approval."
+  },
+  "persistence": "Versioned localStorage stores draft, saved snapshot and matching acknowledgement separately. Reload preserves dirty draft and committed content. No remote assets, backend or synchronization. Export committed content only as synthetic-scenario.txt, prominently marked SYNTHETIC \u2014 UNVALIDATED \u2014 NOT FOR OPERATIONAL USE. Storage failure is visible and export remains available for in-memory saved content.",
+  "recovery": "Correct invalid fields without erasing other values. Discard changes deliberately restores the saved snapshot and matching acknowledgement. Saving changed content increments revision and clears review. Loading the example over existing work requires explicit replacement confirmation. Corrupt storage offers a warning and deliberate reset, without claiming restoration.",
+  "keyboard": "Use labeled native controls, logical Tab order and visible focus. Enter submits the form and Space toggles acknowledgement. Focus first invalid field and announce status through a live region. Provide numeric position controls equivalent to pointer dragging. Narrow layouts stack panels with readable text and no page-level horizontal scrolling."
+}

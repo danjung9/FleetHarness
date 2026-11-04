@@ -19,3 +19,9 @@ summary: "Frontend defects seen in the running app at 631849f, for Dan to decide
 ## At d0f4c69
 
 [E, automatic QA, [[Research/QA/Auto/d0f4c69]]] All 116 unit tests and 51 harness tests pass outside the agent sandbox. Five GUI smoke scripts fail: `smoke-activity`, `smoke-electron`, `smoke-home`, `smoke-model-selector` and `smoke-system-design`. [A] They look stale against the new UI rather than app defects: for example, two Start build buttons now exist, one in the header and one in Stage details. [R] dev-3 is updating the scripts on `dev/reviewed`, with no change to `src/`. Dan, if you are fixing these yourself, say so through Mukul and the seat will stop.
+
+## Needs a small control or wording
+
+- [E, `b8cb505`, not landed yet] A failed build will be able to resume from its last good stage through `resumeRun` in IPC and preload. It has no button yet, and a Resume button on a failed build is yours if you want it.
+- [E, `d402b67`, not landed yet] On an event API key run, the start dialog, readiness text and model settings still say ChatGPT subscription allowance. That wording should change when the account is an API key.
+- [E, automatic QA at `1d9eeee`] `smoke-electron` and `smoke-norfolk` fail. Cause not yet known; see [[Research/QA/Auto/1d9eeee]].

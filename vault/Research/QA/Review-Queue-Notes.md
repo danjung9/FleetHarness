@@ -3,7 +3,7 @@ type: review
 status: complete
 owner: mukul
 updated: 2026-11-04
-summary: "Independent source review of three queued commits, with one inherited blocker and required integration checks."
+summary: "Three queued commits reviewed; assigned review adds reproduced recovery blockers alongside inherited containment and integration gaps."
 ---
 
 # Queued factory changes
@@ -12,13 +12,15 @@ summary: "Independent source review of three queued commits, with one inherited 
 
 ## Blocking finding
 
+[E, assigned reviewer report arrived after the initial source pass] dev-1-b8cb505-review.md adds two meaningful failing regressions: a timed-out session can write after the replacement attempt reaches review, and explicit Resume can launch another write-capable verification agent after the two-repair budget is exhausted. The first submitted late-event test covered callbacks, not pending file writes. The second counted only specially labeled repair prompts. These findings supersede any impression that the passing focused suite closes recovery. The coordinator has returned b8cb505 to dev-1. This audit read the report and regression evidence; the assigned reviewer ran them.
+
 **[E, P1] Do not land 4af1bd9 with its current e612ce0 parent unchanged.** The inherited electron/pi-backend.ts:298 directly spawns generated tests in registeredTestError. verify invokes it at :333 after verifyApplication. The new metrics commit retains this second execution outside the proposed mandatory verifier sandbox. Restricting the first verifier does not restrict this second process. This confirms the existing review finding rather than introducing a duplicate defect. Route registered-case collection through the same mandatory executor before landing the branch, preserve failure/Stop/output limits, and review the resulting exact commit.
 
 ## Commit assessments
 
 | Commit | Assessment | Evidence and limit |
 | --- | --- | --- |
-| b8cb505 | [E] No additional blocking source defect found in the retry/resume delta. | Checkpoints bind the brief, requirements, packet, acceptance/UX plans and planning notes. Resume clears delivery approval and reruns host verification. Transport retries are bounded to one per stage; permanent authentication errors reject. The two-repair budget persists across Resume. Source tests cover changed inputs, stalled attempts, stale events, review-boundary Stop and real Node failures. Retained resume-green.log records 34 passes, zero failures/skips; this audit did not rerun it. |
+| b8cb505 | [E] CHANGES required by the assigned review: confirm old writer shutdown and close unbudgeted verification on Resume. | Checkpoints and bounded explicit loops have meaningful tests, and retained resume-green.log records 34 passes with no failures/skips. Independent added regressions expose two uncovered paths despite those passes. The numeric counter persists, but it does not count the verification agent rerun. No new runtime execution by this audit. |
 | 1cd427d | [E] No additional blocking source defect found in the allocated helper delta. Product integration is incomplete. | One 1,500 ms budget covers checks, defaults use advertised configured models, missing containment rejects, unknown errors receive a plain instruction, and cancellation aborts probes. Retained preflight-errors-green.log records 25 passes, zero failures/skips. git grep finds no production caller for runPreflight or recordProjectError. The developer explicitly provides a separate unapplied integration patch and does not claim shipped behavior. |
 | 4af1bd9 | [E] Metrics/note-budget delta has meaningful coverage, but its current branch remains blocked above. | Pi message/compaction usage is summed; Codex cumulative usage replaces previous totals; missing receipts stay unknown. Notes are bounded by UTF-8 bytes without truncating contracts. Retained flow-final.tap records 25 passes, zero failures/skips. No real speed or token improvement is established. |
 

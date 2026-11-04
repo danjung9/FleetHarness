@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 11 and challenge 12 round 1 judgments are NOT; their passing narrow tests do not establish original-task completion."
+summary: "Challenges 8, 11 and 12 round 1 judgments are NOT; passing narrow tests do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id08-casrep]] records NOT. The app implements return, revision, ordered review and simulated release, but omits required CASREP formatting and all report types except INITIAL. It discloses those limits. The saved receipt reports 15 substantive tests and eight browser executions passing, with requirementsMet false. Source and retained screenshots were inspected; no fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id08-casrep]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id08-casrep]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id11-training]] records NOT. The sample resolves two Monday drills but omits departmental negotiation, mandatory training recurrence and optimization. Fifteen tests and sixteen journey/viewport runs pass for the limited workflow, while requirementsMet is false. The tests are substantive, but one requires an incorrect availability explanation. Source, receipts and three screenshots were reviewed; no fresh browser run or Sailor trial occurred. Local disclosure and session records are [[Research/QA/Officer/Sprint/Judge-R1-id11-training]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id11-training]].
 

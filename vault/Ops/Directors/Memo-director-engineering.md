@@ -3,19 +3,21 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Target ten satisfactory builds and consolidate test evidence inside the sandbox before benchmarking."
+summary: "Finish shared pipeline integration and assign one bounded repair for a measured benchmark failure."
 ---
 
 # Engineering decisions
 
-[P, overseer's new order and Flow-Goals] Target ten satisfactory end-to-end catalog builds. [E] The named scoreboard is absent. [R] Do not invent benchmark failures or speed gains; finish the execution-boundary prerequisite.
+## Bottom line
 
-[E, feed/source inspection] Dev-2 and builder both changed electron/pi-backend.ts. Builder's registration check directly launches generated tests after verification, bypassing dev-3's sandbox. [R] Send that slice back. Serialize provenance integration, sandbox landing and one builder consolidation task with exclusive file ownership. Preserve test-change evidence and foreground guidance; neither proves general shutdown.
+[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard read this meeting] Six finished, five automatic passes, zero satisfactory; ID 12 judged NOT. [R] Finish existing repairs before expanding scope.
 
-[E, reviewer] H1 needs corrected commit authorship. [R] Runner resubmits as Mukul; remove duplicate dev-1 work.
+[E, feed-77] Retry, telemetry and preflight work remains separated by repeated merge conflicts. [R] Main/runner retains serial integration. Return the extra unsandboxed registration execution; finish dev-3's verifier dependency first. Preserve retry checkpoints, bounded repairs, usage unknowns and preflight cancellation. Freeze competing edits to shared pipeline files until one writer receives them.
 
-[E, automatic QA] Outside-sandbox tests pass 116 unit plus 51 harness cases; five smoke scripts fail at stale assumptions. [R] Dev-3 already owns those repairs. Require downstream behavior receipts, protect Dan's frontend and retain native-containment gaps.
+[R] Replace the unstarted native-select recommendation for builder with one dev-5 task: repair guidance plus a real-browser regression pair. ID 36's malformed option survived label-only repair. Architect retains already routed primary-requirement and false-oracle diagnoses; no duplicate assignment or generated-app hand edit.
 
-[E, acceptance review] Both recorded candidates pass fresh offline import. Run1's clock failure is a brief/key mismatch; exhausted-state wording is contradictory. Run2 lacks independent acceptance. [R] Preserve evidence and human scope decisions. Benchmark failures drive factory repairs; never hand-edit output.
+[E, Auto/1d9eeee] 125 unit and 51 harness tests pass; Electron and Norfolk smokes fail. [R] Finish dev-3's reviewed smoke changes, then resolve Norfolk through its existing queue if unassigned. Preserve Dan's frontend.
 
-[R] Code seats are enabled; replace stale builder work with one gated task. The benchmark owns live runs. Keep Thursday noon freeze. Details: [[Ops/Directors/Sprint/Engineering-Meeting-51]].
+[R] Reconcile Windows e68e90e/4c49e85 test changes under one writer. New hosted relay 89874ce has no reported overlap; main owns obtaining exact integrated receipts through Quality. Neither establishes release readiness.
+
+[R] Keep detached Stop, benchmark cancellation and final-manifest defects open with main. Preserve Thursday noon freeze, independent judgments and human artifact/submission approval. No new deployment, connector or broad research work.

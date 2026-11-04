@@ -1,0 +1,285 @@
+{
+ "title": "Know Before It Breaks the Mission",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T21:29:19.462Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./adversarial.test.cjs\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: module: unsafe cumulative finish is rejected\nok 1 - module: unsafe cumulative finish is rejected\n  ---\n  duration_ms: 0.889917\n  type: 'test'\n  ...\n# Subtest: module: saved analysis cannot disagree with displayed duration or graph case\nok 2 - module: saved analysis cannot disagree with displayed duration or graph case\n  ---\n  duration_ms: 0.504333\n  type: 'test'\n  ...\n# Subtest: module: restored review must match note and acknowledgment\nok 3 - module: restored review must match note and acknowledgment\n  ---\n  duration_ms: 0.576084\n  type: 'test'\n  ...\n# Subtest: module: exported brief retains all five change names and before/after values\nok 4 - module: exported brief retains all five change names and before/after values\n  ---\n  duration_ms: 0.415417\n  type: 'test'\n  ...\n# Subtest: shipped inline: unsafe cumulative finish is rejected\nok 5 - shipped inline: unsafe cumulative finish is rejected\n  ---\n  duration_ms: 0.288458\n  type: 'test'\n  ...\n# Subtest: shipped inline: saved analysis cannot disagree with displayed duration or graph case\nok 6 - shipped inline: saved analysis cannot disagree with displayed duration or graph case\n  ---\n  duration_ms: 0.431333\n  type: 'test'\n  ...\n# Subtest: shipped inline: restored review must match note and acknowledgment\nok 7 - shipped inline: restored review must match note and acknowledgment\n  ---\n  duration_ms: 0.196209\n  type: 'test'\n  ...\n# Subtest: shipped inline: exported brief retains all five change names and before/after values\nok 8 - shipped inline: exported brief retains all five change names and before/after values\n  ---\n  duration_ms: 0.297125\n  type: 'test'\n  ...\n# Subtest: controller: oversized draft blocks stale analysis and recovers without losing note\nok 9 - controller: oversized draft blocks stale analysis and recovers without losing note\n  ---\n  duration_ms: 2.372375\n  type: 'test'\n  ...\n# Subtest: controller: save boundary, changed review, and restored state use actual handlers\nok 10 - controller: save boundary, changed review, and restored state use actual handlers\n  ---\n  duration_ms: 1.758584\n  type: 'test'\n  ...\n# Subtest: module: baseline and each independent event expectation, immutable sources\nok 11 - module: baseline and each independent event expectation, immutable sources\n  ---\n  duration_ms: 2.339833\n  type: 'test'\n  ...\n# Subtest: module: null remains unknown, zero remains zero, shorter unknown branch propagates\nok 12 - module: null remains unknown, zero remains zero, shorter unknown branch propagates\n  ---\n  duration_ms: 0.187041\n  type: 'test'\n  ...\n# Subtest: module: ties, own availability, zero margin, benign metadata\nok 13 - module: ties, own availability, zero margin, benign metadata\n  ---\n  duration_ms: 0.195083\n  type: 'test'\n  ...\n# Subtest: module: structural and number failures block conclusions\nok 14 - module: structural and number failures block conclusions\n  ---\n  duration_ms: 0.321875\n  type: 'test'\n  ...\n# Subtest: module: exact evidence closure, revisions and excerpt offsets\nok 15 - module: exact evidence closure, revisions and excerpt offsets\n  ---\n  duration_ms: 0.237833\n  type: 'test'\n  ...\n# Subtest: module: unresolved, conflict, stable identity and timestamp boundaries\nok 16 - module: unresolved, conflict, stable identity and timestamp boundaries\n  ---\n  duration_ms: 0.17425\n  type: 'test'\n  ...\n# Subtest: module: review fingerprint, actual brief and persistence validation\nok 17 - module: review fingerprint, actual brief and persistence validation\n  ---\n  duration_ms: 1.122208\n  type: 'test'\n  ...\n# Subtest: shipped inline: baseline and each independent event expectation, immutable sources\nok 18 - shipped inline: baseline and each independent event expectation, immutable sources\n  ---\n  duration_ms: 0.95325\n  type: 'test'\n  ...\n# Subtest: shipped inline: null remains unknown, zero remains zero, shorter unknown branch propagates\nok 19 - shipped inline: null remains unknown, zero remains zero, shorter unknown branch propagates\n  ---\n  duration_ms: 0.192292\n  type: 'test'\n  ...\n# Subtest: shipped inline: ties, own availability, zero margin, benign metadata\nok 20 - shipped inline: ties, own availability, zero margin, benign metadata\n  ---\n  duration_ms: 0.223334\n  type: 'test'\n  ...\n# Subtest: shipped inline: structural and number failures block conclusions\nok 21 - shipped inline: structural and number failures block conclusions\n  ---\n  duration_ms: 0.226583\n  type: 'test'\n  ...\n# Subtest: shipped inline: exact evidence closure, revisions and excerpt offsets\nok 22 - shipped inline: exact evidence closure, revisions and excerpt offsets\n  ---\n  duration_ms: 0.183125\n  type: 'test'\n  ...\n# Subtest: shipped inline: unresolved, conflict, stable identity and timestamp boundaries\nok 23 - shipped inline: unresolved, conflict, stable identity and timestamp boundaries\n  ---\n  duration_ms: 0.165666\n  type: 'test'\n  ...\n# Subtest: shipped inline: review fingerprint, actual brief and persistence validation\nok 24 - shipped inline: review fingerprint, actual brief and persistence validation\n  ---\n  duration_ms: 0.538375\n  type: 'test'\n  ...\n# Subtest: module: what-if provenance and storage failure preserve memory\nok 25 - module: what-if provenance and storage failure preserve memory\n  ---\n  duration_ms: 0.388958\n  type: 'test'\n  ...\n# Subtest: shipped inline: what-if provenance and storage failure preserve memory\nok 26 - shipped inline: what-if provenance and storage failure preserve memory\n  ---\n  duration_ms: 0.341\n  type: 'test'\n  ...\n1..26\n# tests 26\n# suites 0\n# pass 26\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 70.912916\n\nBrowser journeys: 12/12 passed.\nRequirements: 7 demonstrated, 0 failed, 10 unverified.",
+  "durationMs": 6131,
+  "sourceHash": "5ea676100e9e8143e5007fcdf3f8b6bb479eb3c461f24cf84d9db2208bc28dd9",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "091e78dc9d2b4681bac56a24f1df402fe3fd22eb6a05a1c89634e48f7a053f45",
+   "status": "passed",
+   "requirementsMet": false,
+   "criteria": [
+    {
+     "criterionId": "UC32-1",
+     "requirement": "Read-only by design: cannot write back to any source system",
+     "status": "passed",
+     "detail": "Synthetic source records remain immutable through all five local changes; the UI states that changes affect only the analysis copy, and the baseline remains SYN-21 r1. The application has no source-system write or network path. \u2014 demonstrated by all-risk-evidence at both viewport sizes."
+    },
+    {
+     "criterionId": "UC32-2",
+     "requirement": "Every flagged risk explains itself and traces to source records",
+     "status": "passed",
+     "detail": "Every flagged synthetic timing risk explains its causal prerequisite chain, finish and margin and resolves to its actual supporting source records. Both final flags show record IDs, revisions and exact excerpts; no unresolved source may support a flag. \u2014 demonstrated by all-risk-evidence at both viewport sizes."
+    },
+    {
+     "criterionId": "UC32-3",
+     "requirement": "Humans decide; the tool recommends",
+     "status": "passed",
+     "detail": "The analyst must acknowledge advisory synthetic analysis to record review; missing acknowledgment preserves the note and blocks review. Recorded review and exported brief require human decisions and execute no operational action. \u2014 demonstrated by human-brief, review-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "UC32-4",
+     "requirement": "Works on last-synced data; synthetic data only",
+     "status": "unverified",
+     "detail": "Bundled snapshots and local saved-session restoration are planned, but no source ingestion, synchronization or verified last-synced lifecycle exists. Synthetic-only is enforced; the full last-synced requirement remains unverified."
+    },
+    {
+     "criterionId": "UC32-5",
+     "requirement": "Fleet-Ready Definition of Done (all solutions): runs offline; keeps humans in authority; cites sources; logs auditable actions; syncs on reconnect; includes a one-page path to fleet.",
+     "status": "unverified",
+     "detail": "Offline local operation, advisory review, citations, local review log and path-to-fleet.md are planned slices. Authenticated source synchronization, operational audit assurances and the full Fleet-Ready composite are outside this synthetic-only boundary; remain unverified."
+    },
+    {
+     "criterionId": "DEP-01",
+     "requirement": "Identify the controlling path and deadline margin.",
+     "status": "passed",
+     "detail": "The known radar path Parts \u2192 Repair \u2192 Radar test finishes day 9 with margin 12 at deadline 21. A casualty increases finish to 12 and margin to 9; a part delay increases finish to 23 and margin to -2. Watch qualification initially finishes day 7 with margin 14. \u2014 demonstrated by known-path at both viewport sizes."
+    },
+    {
+     "criterionId": "DEP-02",
+     "requirement": "Never convert missing estimates to zero.",
+     "status": "passed",
+     "detail": "A blank repair duration becomes null and makes radar finish and margin UNKNOWN with only a lower-bound path, while watch finish stays 7. Restoring duration 3 yields radar finish 9 and margin 12. No missing prerequisite duration becomes a known zero. \u2014 demonstrated by unknown-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "DEP-03",
+     "requirement": "Reject cyclic and dangling dependencies.",
+     "status": "passed",
+     "detail": "A cycle blocks analysis with a cycle diagnostic; a missing-task dependency blocks analysis identifying repair and missing-task. Neither leaves stale results presented as current. Restoring the valid model yields finish 9 and margin 12. \u2014 demonstrated by invalid-graph-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "DEP-04",
+     "requirement": "Validate the model with the operational owner.",
+     "status": "unverified",
+     "detail": "No operational owner approval or SME-reviewed baseline is supplied. Planner arithmetic and toolkit calculations do not establish model validation."
+    },
+    {
+     "criterionId": "EVAL32-1",
+     "requirement": "Injected risks correctly identified and ranked against an answer key",
+     "status": "unverified",
+     "detail": "A five-change illustrative scenario and deterministic timing results are planned, but approved risk semantics, ranking policy and independent SME answer key are absent. No mission risk-ranking accuracy claim."
+    },
+    {
+     "criterionId": "EVAL32-2",
+     "requirement": "False-alarm rate on injected noise",
+     "status": "unverified",
+     "detail": "A benign metadata event can demonstrate unchanged arithmetic in Node tests, but there is no approved labeled noise corpus or acceptable threshold. A local zero-noise or single-case check cannot satisfy this evaluation."
+    },
+    {
+     "criterionId": "EVAL32-3",
+     "requirement": "Every flagged risk traceable to its source records",
+     "status": "passed",
+     "detail": "All two final flagged synthetic risks have inspectable source records: radar cites parts r2, casualty r1, maintenance r2, test r1 and schedule r2; watch cites manning r2, qualification r1 and schedule r2. Exact supporting excerpts and model links are retained. \u2014 demonstrated by all-risk-evidence at both viewport sizes."
+    },
+    {
+     "criterionId": "EVAL32-4",
+     "requirement": "Time to produce a leadership readiness brief against a manual baseline [baseline to be set with Fleet SME]",
+     "status": "unverified",
+     "detail": "Local brief generation is planned, but no Fleet SME baseline, timing endpoints or comparison protocol exists. Application timing is not evidence of time savings."
+    },
+    {
+     "criterionId": "EVAL32-5",
+     "requirement": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+     "status": "unverified",
+     "detail": "Only authorized human judges can assess the official rubric. No automated score or judging outcome is planned."
+    },
+    {
+     "criterionId": "DELIVERABLE32-1",
+     "requirement": "Earlier identification of compounding readiness risks",
+     "status": "unverified",
+     "detail": "The synthetic five-event sequence exposes timing changes before an illustrative deadline; approved capability links, a reviewed scenario and operational earlier-warning evidence are missing. Timing is not mission readiness."
+    },
+    {
+     "criterionId": "DELIVERABLE32-2",
+     "requirement": "Prioritized, explained actions for leadership",
+     "status": "unverified",
+     "detail": "The brief offers illustrative considerations ordered by known target margin, with unknowns separated; priority policy and response-option correctness have not been owner validated. Full leadership action prioritization stays unverified."
+    },
+    {
+     "criterionId": "DELIVERABLE32-3",
+     "requirement": "Less time spent assembling status",
+     "status": "unverified",
+     "detail": "A reproducible local synthetic brief is planned, but there is no manual baseline or study establishing reduced assembly time."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "known-path",
+     "title": "Calculate a known path and a delayed branch",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 12 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/known-path-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/known-path-desktop.zip"
+    },
+    {
+     "id": "known-path",
+     "title": "Calculate a known path and a delayed branch",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 12 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/known-path-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/known-path-narrow.zip"
+    },
+    {
+     "id": "all-risk-evidence",
+     "title": "Trace both late targets through all five synthetic changes",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 17 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/all-risk-evidence-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/all-risk-evidence-desktop.zip"
+    },
+    {
+     "id": "all-risk-evidence",
+     "title": "Trace both late targets through all five synthetic changes",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 17 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/all-risk-evidence-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/all-risk-evidence-narrow.zip"
+    },
+    {
+     "id": "human-brief",
+     "title": "Review, save locally and export an advisory brief",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 18 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/human-brief-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/human-brief-desktop.zip"
+    },
+    {
+     "id": "human-brief",
+     "title": "Review, save locally and export an advisory brief",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 18 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/human-brief-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/human-brief-narrow.zip"
+    },
+    {
+     "id": "unknown-recovery",
+     "title": "Keep a missing estimate unknown and restore a known result",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 10 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/unknown-recovery-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/unknown-recovery-desktop.zip"
+    },
+    {
+     "id": "unknown-recovery",
+     "title": "Keep a missing estimate unknown and restore a known result",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 10 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/unknown-recovery-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/unknown-recovery-narrow.zip"
+    },
+    {
+     "id": "invalid-graph-recovery",
+     "title": "Reject both cyclic and dangling dependencies then recover",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 14 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/invalid-graph-recovery-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/invalid-graph-recovery-desktop.zip"
+    },
+    {
+     "id": "invalid-graph-recovery",
+     "title": "Reject both cyclic and dangling dependencies then recover",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 14 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/invalid-graph-recovery-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/invalid-graph-recovery-narrow.zip"
+    },
+    {
+     "id": "review-recovery",
+     "title": "Preserve the review draft when acknowledgment is missing",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 9 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/review-recovery-desktop.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/review-recovery-desktop.zip"
+    },
+    {
+     "id": "review-recovery",
+     "title": "Preserve the review draft when acknowledgment is missing",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 9 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/review-recovery-narrow.png",
+     "trace": ".quality-evidence/6a439cce1ea5-3bae160a-99c8-4176-98ad-f77f02299ce0/review-recovery-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 12.5,
+ "challengeId": "32",
+ "workspace": "~/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e"
+}
