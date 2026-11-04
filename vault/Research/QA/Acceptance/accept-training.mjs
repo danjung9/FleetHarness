@@ -480,7 +480,7 @@ async function main() {
       if (changed && rejection?.status === 'invalid_input' && Array.isArray(rejection.assignments) && rejection.assignments.length === 0) {
         return { entered, ...rejectionEvidence, judged: { ...judge(c, rejection), detail: 'Immediate explicit invalid-input rejection; prior valid input may legitimately remain' } };
       }
-      return { entered, ...rejectionEvidence, judged: { status: 'NOT CHECKED', detail: 'Invalid import did not roundtrip; rejection versus coercion cannot be disambiguated', observed: rejection } };
+      return { entered, ...rejectionEvidence, judged: { status: 'NOT CHECKED', detail: entered.reason || 'Exact invalid input was not established; rejection versus coercion remains unverified', observed: rejection } };
     }
     if (!entered.ok) return { entered, ...before, judged: { status: entered.mismatch ? 'FAIL' : 'NOT CHECKED', detail: entered.mismatch ? 'Known canonical input roundtrip differs from submitted values' : entered.reason || 'Input roundtrip could not be established' } };
     const button = chooseButton(before.observation, CHECK);

@@ -53,6 +53,11 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Session execution/patch tools, versions unexposed | local operations | reads and notes | session environment. | 2026-11-04 |
 | Node.js 26.0.0 | runtime | log comparison/tests | Node.js contributors. | 2026-11-04 |
 | TypeScript 7.0.2 | compiler | Electron compilation | Microsoft. | 2026-11-04 |
+| Patch and UTC clock interfaces, versions unavailable | local tools | documentation and timebox | session runtime. | 2026-11-04 |
+| Codex CLI 0.166.0 | CLI | config parsing | OpenAI | 2026-11-04 |
+| Pi SDK 1.5.0 | existing library | factory fixtures | Earendil Works | 2026-11-04 |
+| Web search and [official documentation](https://developers.openai.com/codex/permissions/) | reference | profile format | OpenAI | 2026-11-04 |
+| Local execution/patch tools | development | workspace edits | platform-provided | 2026-11-04 |
 
 ## Data and sources
 

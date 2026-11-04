@@ -16,7 +16,7 @@ export async function handleDialog(dialog) {
   await dialog.dismiss(); return 'dismissed unrecognized dialog';
 }
 export async function waitForImport(page) {
-  await page.waitForFunction(() => /^(Exact saved inputs and draft imported and rechecked\.|Import failed:)/.test(document.getElementById('notice')?.textContent || ''), { timeout: 5000 });
+  await page.waitForFunction(() => /^(Exact saved inputs and draft imported and rechecked\.|Import failed:)/.test(document.getElementById('notice')?.textContent || ''), undefined, { timeout: 5000 });
 }
 const clone = value => structuredClone(value);
 const canonical = value => JSON.stringify(value, function (_key, v) {
