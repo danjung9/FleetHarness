@@ -59,7 +59,7 @@ function processState(record) {
   if (!exists(record.pid)) return { pid: record.pid, present: false };
   try {
     // Inspect only our recorded PID. Do not collect arguments or environment.
-    return { pid: record.pid, present: true, ps: execFileSync('/bin/ps', ['-p', String(record.pid), '-o', 'pid=,ppid=,stat=,comm='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() };
+    return { pid: record.pid, present: true, ps: execFileSync('/bin/ps', ['-p', String(record.pid), '-o', 'pid=,ppid=,stat=,comm='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 1000 }).trim() };
   } catch { return { pid: record.pid, present: exists(record.pid), psUnavailable: true }; }
 }
 async function heartbeat(name) {
@@ -83,6 +83,10 @@ async function until(check, timeoutMs, label) {
 }
 const watchdog = setTimeout(() => {
   result.result = 'ERROR'; result.error = 'Test harness exceeded 90 seconds.';
+  result.retainedTemporaryRoot = root;
+  result.cleanupOutcome = 'UNCONFIRMED';
+  result.requests = requests;
+  result.finishedAt = new Date().toISOString();
   try { writeFileSync(cleanupFile, nonce); } catch {}
   // This handle belongs only to the Electron process launched by this harness.
   try { app?.process()?.kill('SIGKILL'); } catch {}
@@ -91,11 +95,11 @@ const watchdog = setTimeout(() => {
 }, 90000);
 
 try {
-  result.commit = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  result.commit = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 5000 }).trim();
   assert.equal(result.commit, expectedCommit, 'Unexpected source revision; do not run changed code implicitly.');
-  result.trackedChanges = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim();
+  result.trackedChanges = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8', timeout: 5000 }).trim();
   assert.equal(result.trackedChanges, '', 'Tracked source changes need a new review.');
-  result.sourceTree = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
+  result.sourceTree = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8', timeout: 5000 }).trim();
   await fs.access(path.join(repo, 'dist/index.html'));
   await fs.access(path.join(repo, 'dist-electron/electron/main.js'));
   const electronDirectory = path.join(repo, 'node_modules/electron');

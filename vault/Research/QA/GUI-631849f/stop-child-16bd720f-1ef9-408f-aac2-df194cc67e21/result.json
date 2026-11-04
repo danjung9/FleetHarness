@@ -1,0 +1,509 @@
+{
+  "case": "STOP-CHILD-01",
+  "mode": "local-scripted-provider",
+  "expectedCommit": "631849f638614735a89a555d487d6b3c777c52e3",
+  "startedAt": "2026-11-04T20:11:52.069Z",
+  "platform": "darwin",
+  "node": "v26.0.0",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/GUI-631849f/stop-child-16bd720f-1ef9-408f-aac2-df194cc67e21",
+  "result": "PASS",
+  "limits": {
+    "workerWatchdogMs": 60000,
+    "stopStatusMs": 10000,
+    "settlingMs": 2000,
+    "observationMs": 8000
+  },
+  "scope": "One ordinary foreground bash tool command with one non-detached Node child. No detached, resistant, Codex or packaging claim.",
+  "commit": "631849f638614735a89a555d487d6b3c777c52e3",
+  "trackedChanges": "",
+  "sourceTree": "9cdf95c54bdd68fd439e6e664ba9259c51e36db1",
+  "provenance": {
+    "scriptSha256": "c69163395d4bb5c7932d71e302e166003571a809f23aa8b5b99fdf5a6a5fa268",
+    "lockSha256": "72d9e88d713f194499f17906f500923e3710f9ddb6490ca054a0f136e92de2b1",
+    "electronBinarySha256": "efdafc16245c1c30e12f4ac561ab724c89c919ff62713efb2a12d4a819f902f9",
+    "dist": [
+      {
+        "path": "assets/dm-sans-latin-400-normal-BwCSEQnW.woff",
+        "sha256": "38702875fe179437d200e7ba6f7fab4d497ffe48117ef332029b2081751186ad"
+      },
+      {
+        "path": "assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+        "sha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006"
+      },
+      {
+        "path": "assets/dm-sans-latin-500-normal-B9HHJjqV.woff2",
+        "sha256": "19bf1984956517c35c2bd35b6cdedac12a21d6fcd3596c614ecdfb88b648909d"
+      },
+      {
+        "path": "assets/dm-sans-latin-500-normal-Dr3UlScf.woff",
+        "sha256": "7deb957e430b780ee3272d801af4f9f2211b1330ec40a312a8f25309eacb4034"
+      },
+      {
+        "path": "assets/dm-sans-latin-600-normal-Aqo67rzb.woff2",
+        "sha256": "6bb2b2645ba5eeaecf56322c543fa3a75b87b927977b9c03b1dabc4205089120"
+      },
+      {
+        "path": "assets/dm-sans-latin-600-normal-BmdmIIQ2.woff",
+        "sha256": "e7351257e49400eff05aca30a2007289194a900860d30c30770d8b8732897564"
+      },
+      {
+        "path": "assets/dm-sans-latin-700-normal-CUSSCpQX.woff",
+        "sha256": "af422a448ac00679a8dbb13532db3616829c5a35b58d3eeea5903ce17ad2e36a"
+      },
+      {
+        "path": "assets/dm-sans-latin-700-normal-DvUfVpUG.woff2",
+        "sha256": "35c5efa0e5daa52ee5c6500f5be354bf751fb65c4e49e1d6806c6eb5883e8fe9"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-400-normal-BjWJ59Pq.woff",
+        "sha256": "3d63423c3204f61bb196d1ae3729b7f2871d87abd4403d198f4810923888c016"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-400-normal-BtiwyxMk.woff2",
+        "sha256": "962730c6ff7595f9499b0d963a3bccb2139d793f0fb31fbd87aed1881c020e0a"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-500-normal-BJfUCQsA.woff2",
+        "sha256": "e0a1d21584ba00798a3dbe90ef5f8a162741d454f52ab66630f9dc41da372b3d"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-500-normal-DR84L5F-.woff",
+        "sha256": "e1f67472aa96c6f60969c696ba8a9d36ed8ea26c2ff5c3e27ee29c664911575d"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-600-normal-4vooXBpG.woff2",
+        "sha256": "6406eb05e2eb50779cb95ee8745c98ad23cce7e67d752822782453da7f6b4491"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-600-normal-DRtaDpgU.woff",
+        "sha256": "f70e6bb2170e2ab7bfc23a021af0663dce4df0b502173c9c5135015d7fed457a"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-700-normal-BLI3TTWz.woff",
+        "sha256": "56084e69490970432de58b4a2406ee4daa1f58d90f9600ae3fda0e895a6355e7"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-700-normal-CJIcxD6K.woff2",
+        "sha256": "f6640907b94df0d227f26e2fcb6db2497d6c44c4b68f731ea1e06f5b45e2e91b"
+      },
+      {
+        "path": "assets/dm-serif-display-DEPTIRtf.ttf",
+        "sha256": "c03775f8cc3db88cfea259b231abe13f94e6a3d3cb01c09477a2e42a1f5919e1"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-400-normal-BSMlKf0J.woff2",
+        "sha256": "7635422bd10ddbbcb0e0caa1154b928298f5c8319b8c00b30978d4395f4783ce"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-400-normal-CEL4l2ZJ.woff",
+        "sha256": "42da81a28bbcddda6768a25a4b3105ee291e69d5fa6c74747bc51bbc6718c538"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-500-normal-Ael50iVv.woff",
+        "sha256": "55a3af5e5ba0f565b4e66149cfe077ba88ac42cc3f68650a901d58eadbf9cd9b"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-500-normal-Bq9vWWag.woff2",
+        "sha256": "1d89462e86cb8e87e7e9d6f6635605bd7c3081baca6caaecee84916bf7b60edc"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-600-normal-CTOM6hUh.woff2",
+        "sha256": "2b05a8695c7f9f4abd7178b279646a3b005a8ce57546bef6fd145f25d131e0aa"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-600-normal-fLZuRloM.woff",
+        "sha256": "877b7b3177c22f6911f36888fb09f003d63c665e2185d3dbadea83130ecbb316"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-400-normal-DMdlQ8Kv.woff",
+        "sha256": "0e4a2393e8ed3185ae300e4a202b6d9149d47d8a0e5bb8f1d1db33e76b86ecd1"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-400-normal-xuaO2J-f.woff2",
+        "sha256": "f8c22ec1804bd6966b70f43ac7c327025645b4c09597117fca2a5a6c750106fe"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-500-normal-BIfNGwUT.woff",
+        "sha256": "eadb2c427859b185761380143d1f42187fd7cbd94704b543e4c76c6368fbab52"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-500-normal-BqneJy0T.woff2",
+        "sha256": "3febe5c7f22e4b07b4552738673c3dbe8bced2dc5f48b866edf7ccd9552d109a"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-600-normal-9HEixskS.woff",
+        "sha256": "d17413b646f918a8b52316b1bc909068b90687a638fbf7fecc5653b870c7714a"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-600-normal-V-xxqcpd.woff2",
+        "sha256": "83109cdd4f8665b475dfc11d61bd44da328bf7e6eab3d3953d39c49b1b9f6015"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-400-normal-CvHOgSBP.woff",
+        "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+        "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-500-normal-CB9ihrfo.woff",
+        "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2",
+        "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-600-normal-BgSNZQsw.woff2",
+        "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-600-normal-DWFSQ4vo.woff",
+        "sha256": "cb96282f22c6f19112856fd6e0b34e2baefaf4ca6551e851d58c5ab0aabcd2be"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-400-normal-BmRBH3aV.woff2",
+        "sha256": "6bc0f226a5b7884a8170e3f62c63d7675609d4631bdc5931b5cdab81821f00eb"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-400-normal-D3D2R8hC.woff",
+        "sha256": "f8ddaa0ab9d3c052c9fe035751c8214b7e0d59e6e7b69b045f8659c2fe4dced2"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-500-normal-CAhNIIs5.woff2",
+        "sha256": "6bb06407c97584b0867a959e05e8874693bfeb8c317de190811c51598f2d99ea"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-500-normal-CZ70TYgx.woff",
+        "sha256": "ff5da89c3ee20d38359943b61a7aae9200d2a0f61cf95ca10a7cccef81da2ff5"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-600-normal-D38SheWl.woff2",
+        "sha256": "32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-600-normal-DmB0ttJJ.woff",
+        "sha256": "46249f4bc59bb78b3893d3a4ad39226d2f3fb66dfa21ccc21bda044a4a3c78c9"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-400-normal-BulugwFq.woff2",
+        "sha256": "62632b6375305e70ddcafdd895218e6ae41a184fcd280a69c739460604ca00a9"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-400-normal-DDuiU_S-.woff",
+        "sha256": "bced561d991e3f81c150c08e71f7fa849fcbff523560f6059245f2edce19b600"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-500-normal-C8zxqsMH.woff",
+        "sha256": "755f62b418df17518aa0ea16b4232e546ce949a4ab7acc577071fa9be9e3dc88"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-500-normal-DZ4AoWbu.woff2",
+        "sha256": "781633d95de88040fb77141d1e65d928c87c0144691fbc74da5a64d137a7e910"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-600-normal-D2EvbN8M.woff2",
+        "sha256": "51b74d53e106ba8a26dd33464b231a562069be2a234b923c115beb622e6f6bc6"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-600-normal-iLQfcSjf.woff",
+        "sha256": "e4c71658a1eebc5d2b50d801aa4450c94956da1342c2df261442d674ecb96f0e"
+      },
+      {
+        "path": "assets/index-ViH6nNJq.js",
+        "sha256": "5396c1a4a6490f57fa18e5329e35b75d687c1dc0f665d4aa017ef0dad2da3593"
+      },
+      {
+        "path": "assets/index-zh58bWfK.css",
+        "sha256": "89443822e76b3505e8e588ae32967b01e60318e6d0e677bc29db070a267266e1"
+      },
+      {
+        "path": "index.html",
+        "sha256": "12b684dc367e54cb83fd8a0c5f3587eb237c64dbe9714ba3f769071dd106f275"
+      }
+    ],
+    "distElectron": [
+      {
+        "path": "electron/agent-runner.js",
+        "sha256": "6e76854b9173e135a54614fd95347c62e794d62468c8ffbb1ff52c2ebea1164d"
+      },
+      {
+        "path": "electron/codex-account.js",
+        "sha256": "72fe9460e56749cc02c9d2bc052c3f84862ff74e2aa5744e9e669a9e32f971ab"
+      },
+      {
+        "path": "electron/codex-rpc.js",
+        "sha256": "a236dc645235439de3c001aacde6c75b7c8815361e5325e2b33ed1715585294d"
+      },
+      {
+        "path": "electron/codex-session.js",
+        "sha256": "974b21bc2ed77818fb29478c767d1078c817585333d9e23a3b62a134df6e0f53"
+      },
+      {
+        "path": "electron/executable.js",
+        "sha256": "c6d2a08736d99aa796b7202df8da3613ab00f80358ec848f55fd3147c9cd08b3"
+      },
+      {
+        "path": "electron/main.js",
+        "sha256": "f0590e21cfa89afbf8675efd3cc92bbb6a8a6705dcfd280286d1b1b390835265"
+      },
+      {
+        "path": "electron/package-worker.js",
+        "sha256": "07b165f26a2e50db52573ab6ba1338c042be73e1ecdf8d11196b64b1d6cc1e3f"
+      },
+      {
+        "path": "electron/pi-backend.js",
+        "sha256": "055abf33ddfea3d2721ee3f26109eb042ec1505a91e19e6fec7917638f8accdb"
+      },
+      {
+        "path": "electron/preload.cjs",
+        "sha256": "71fcc87e0590950f5df55f710112e955c27b42afcbdf3cc9735ea45517752d71"
+      },
+      {
+        "path": "electron/preview.js",
+        "sha256": "e8b81ec65bdb5c11c49b7189884ba120a4e8c6506e013ca345a36408d788335b"
+      },
+      {
+        "path": "electron/storage.js",
+        "sha256": "8c2188d234cdcc798e2afb36dc13a139e641b1348add2a85192d50d9d9fb6ca2"
+      },
+      {
+        "path": "electron/system-design.js",
+        "sha256": "61f29bfae9faa278a4364ea116aaf2edc74be683da6f477979b59163802399b2"
+      },
+      {
+        "path": "electron/verification.js",
+        "sha256": "9472b4d940b903beadbd160a808c77d9f4eeeba66d951df32e60c1c010535ab2"
+      },
+      {
+        "path": "harness/catalog.js",
+        "sha256": "753f7917cef78135011792059b4b08619ec82550c79aab154c742b63e76ca9fa"
+      },
+      {
+        "path": "harness/cli.js",
+        "sha256": "07c390fbdfe88a15cf28c0fbc65f3303c279f8add5c34d2fba03a0aca4e76165"
+      },
+      {
+        "path": "harness/evaluate.js",
+        "sha256": "b01632a3986223af56e1d0dfc5fa493632dc34b85d91c95a8a5eff20d5119ee8"
+      },
+      {
+        "path": "harness/fixtures.js",
+        "sha256": "dc20d828669772d77258842da3649190980561d88a0f58ca523f5a07239140d6"
+      },
+      {
+        "path": "harness/integration.js",
+        "sha256": "eb11cf9bf80a4749a27c5ed1d8af37eb227e2e694deb38299e3aae446f81334b"
+      },
+      {
+        "path": "harness/phases.js",
+        "sha256": "eab75cbb8a45273223e94121dcdf1367f9d00e2bfeb34fc209ca24b004d0f56d"
+      },
+      {
+        "path": "harness/pi-tools.js",
+        "sha256": "cde1b5f0e527fc4d969db4398fb793f83a0b0f994c93059365225292c25b7c8a"
+      },
+      {
+        "path": "harness/planner.js",
+        "sha256": "00b49d95a1dd64ae294b3ac6e40f18a5b2a11d56dab2d9dc78f931193da2661c"
+      },
+      {
+        "path": "harness/recipes.js",
+        "sha256": "32edbffbfce3bbeb2beb4194a543120276543cd790c458d6c3aee2647956b1bd"
+      },
+      {
+        "path": "harness/tool-registry.js",
+        "sha256": "b17a6fcaaa76cbad4250536c2f66bbead87db3e702908b3b5ccd2607ed0c4330"
+      },
+      {
+        "path": "harness/tools/evidence.js",
+        "sha256": "1444be76f46c0dc5d74934e2898441e1a533bb284953aaa53bc11912633d9617"
+      },
+      {
+        "path": "harness/tools/messages.js",
+        "sha256": "1f00e4691f3c20f5b15149a258b288268494003dcd18271e4751ef8179e76aad"
+      },
+      {
+        "path": "harness/tools/offline.js",
+        "sha256": "a993ac55e386c64d7be1b7883873e8976ffb9bb71c5e3afea1d3cc77b814a756"
+      },
+      {
+        "path": "harness/tools/readiness.js",
+        "sha256": "b1178292545082d2f2521987563386153465211e958ab8541a9e6e17f4ef80c8"
+      },
+      {
+        "path": "harness/tools/scheduling.js",
+        "sha256": "df1516b6be05527c8b4f1a6cbf70df81569e3f57fa69f525ce2144d16bc13ecf"
+      },
+      {
+        "path": "harness/tools/validation.js",
+        "sha256": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f"
+      },
+      {
+        "path": "harness/types.js",
+        "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+      },
+      {
+        "path": "shared/activity.js",
+        "sha256": "206b63d37b213082a79d82d4440a2ece054344675715cf53d9bf15101e2c924b"
+      },
+      {
+        "path": "shared/system-design.js",
+        "sha256": "2d8fec95cd0f090a01d5a9dead68009e456c02bc93d9323b9a66d0b25257f289"
+      },
+      {
+        "path": "shared/types.js",
+        "sha256": "75399c43b51875cbfd131dc8644ea5e4a26aef1908b9d6dec8d0fb6647ae0113"
+      }
+    ],
+    "installedPackages": {
+      "electron": {
+        "version": "45.2.2",
+        "packageJsonSha256": "f138cdee128cd0123bc5f5901751a8b64b097f3c7ec01cddf7d23fc193b8c117"
+      },
+      "playwright": {
+        "version": "1.64.1",
+        "packageJsonSha256": "313d23ce667d93962d3a1ab4be80908cefe840e4d9e48f1cd5863b91f65e8e39"
+      },
+      "@earendil-works/pi-coding-agent": {
+        "version": "1.5.0",
+        "packageJsonSha256": "990aac3caff17b717294fa792b4e3f60b991d274d9f4ab6977d6aa42aa43c95e"
+      }
+    },
+    "limitation": "Artifact hashes identify the executed bytes. Their derivation from pinned source relies on the separate build receipt; this script does not rebuild or attest every dependency file."
+  },
+  "bashSchemaAccepted": true,
+  "workers": {
+    "parent": {
+      "nonce": "16bd720f-1ef9-408f-aac2-df194cc67e21",
+      "pid": 6731,
+      "childPid": 6732,
+      "deadline": 1793823175734
+    },
+    "child": {
+      "nonce": "16bd720f-1ef9-408f-aac2-df194cc67e21",
+      "pid": 6732,
+      "parentPid": 6731,
+      "deadline": 1793823175734
+    }
+  },
+  "beforeStop": {
+    "at": 1793823116045,
+    "parentExists": true,
+    "childExists": true,
+    "parentProcess": {
+      "pid": 6731,
+      "present": true,
+      "ps": "6731  6703 Ss   /opt/homebrew/Cellar/node/26.0.0/bin/node"
+    },
+    "childProcess": {
+      "pid": 6732,
+      "present": true,
+      "ps": "6732  6731 S    /opt/homebrew/Cellar/node/26.0.0/bin/node"
+    },
+    "parentHeartbeat": {
+      "count": 3,
+      "lastTick": 1793823116002
+    },
+    "childHeartbeat": {
+      "count": 3,
+      "lastTick": 1793823116043
+    },
+    "requests": 1,
+    "status": "running"
+  },
+  "stopClickedAt": 1793823116214,
+  "stopClickCompletedAt": 1793823116228,
+  "clickActionDurationMs": 14,
+  "msToStopped": 5,
+  "observationStart": {
+    "at": 1793823118230,
+    "parentExists": false,
+    "childExists": false,
+    "parentProcess": {
+      "pid": 6731,
+      "present": false
+    },
+    "childProcess": {
+      "pid": 6732,
+      "present": false
+    },
+    "parentHeartbeat": {
+      "count": 5,
+      "lastTick": 1793823116206
+    },
+    "childHeartbeat": {
+      "count": 4,
+      "lastTick": 1793823116145
+    },
+    "requests": 1,
+    "status": "stopped"
+  },
+  "observationEnd": {
+    "at": 1793823126235,
+    "parentExists": false,
+    "childExists": false,
+    "parentProcess": {
+      "pid": 6731,
+      "present": false
+    },
+    "childProcess": {
+      "pid": 6732,
+      "present": false
+    },
+    "parentHeartbeat": {
+      "count": 5,
+      "lastTick": 1793823116206
+    },
+    "childHeartbeat": {
+      "count": 4,
+      "lastTick": 1793823116145
+    },
+    "requests": 1,
+    "status": "stopped"
+  },
+  "checks": {
+    "stoppedWithinDeadline": true,
+    "bothPidsAbsentAtObservationStart": true,
+    "bothPidsAbsentAtObservationEnd": true,
+    "parentHeartbeatStable": true,
+    "childHeartbeatStable": true,
+    "noNewProviderRequests": true,
+    "remainsStopped": true
+  },
+  "stopVerdict": "PASS",
+  "verdictRecordedBeforeCleanup": true,
+  "cleanupStartedAt": 1793823126293,
+  "cleanupWorkersAbsent": true,
+  "cleanupProcesses": {
+    "parent": {
+      "pid": 6731,
+      "present": false
+    },
+    "child": {
+      "pid": 6732,
+      "present": false
+    },
+    "knownPids": [
+      6731,
+      6732
+    ]
+  },
+  "requests": [
+    {
+      "at": 1793823115734,
+      "tools": [
+        "read",
+        "write",
+        "edit",
+        "bash",
+        "fleet_get_challenge"
+      ],
+      "afterStop": false
+    }
+  ],
+  "finishedAt": "2026-11-04T20:12:06.349Z",
+  "cleanupSeparateFromVerdict": true,
+  "cleanupOutcome": "PASS"
+}

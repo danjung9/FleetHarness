@@ -3,7 +3,7 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Bounded static QA of both interfaces identifies review-state, preview, officer handoff and new-revision packaging risks."
+summary: "Pinned static findings with independently reported runtime confirmation of three unified Home defects."
 ---
 
 # Static QA findings
@@ -144,21 +144,21 @@ summary: "Bounded static QA of both interfaces identifies review-state, preview,
 
 - [E] `src/Home.tsx:35` searches catalog ID, formal title, summary and category, while line 65 displays a friendly title from line 15. The actual catalog text for ID 12 at `harness/catalog.ts:138` does not contain its visible phrase, Message to mission timeline.
 - [R] Reproduce by pasting that displayed title into Home's Search challenges field. Pass requires the card to remain discoverable by its own visible title.
-- [A] The card disappears because its displayed wording is absent from the search input. This is source-derived, not a runtime observation.
+- [E, later independent GUI receipt] Searching its exact displayed wording returned zero cards and the empty-result heading. See [[Research/QA/GUI-631849f/Receipt-Review]] and retained u123.json. The original source inference is now reproduced at the pinned revision.
 - [E] `scripts/smoke-home.mjs:21` checks a nonexistent search but does not check a successful search by visible title.
 
 ### U2. Medium: Home hides Stop while a build runs
 
 - [E] `src/App.tsx:235` uses a Home-specific header branch without Stop; Stop is in the other branch at line 237. Reload defaults to Home at line 194. `src/Home.tsx:30` defaults to Discover, without a running-build summary or Stop action.
 - [R] Start a delayed synthetic fixture, return Home or reload while it is active, and ask the operator to stop it. Pass requires a readily discoverable path and no false stopped claim.
-- [A] Stop disappears until the operator returns to the running project's controls. The Agents running indicator remains (`src/App.tsx:222`), and My builds can reopen the project. This is a discoverability regression, not proof that termination fails.
+- [E, later independent GUI receipt] Home had zero Stop buttons before and after reload while status remained running. My builds reopened the project and restored Stop. Source retains the Agents dot (`src/App.tsx:222`); the capture script checked only one running-text phrase. This confirms a discoverability regression, not failed termination. The shell-child case is a separate prepared test.
 - [E] Home smoke saves a draft but never starts it (`scripts/smoke-home.mjs:34`); desktop smoke starts/stops through the API at lines 80-81, so neither checks Stop discovery from Home.
 
 ### U3. Low: the accessible card name omits its visible title
 
 - [E] `src/Home.tsx:63` sets the button's `aria-label` from the formal catalog title, overriding the friendly visible heading at line 65.
 - [R] For ID 12, compare the visible title with the button's accessibility-tree name and try speech or label-based navigation using the visible wording. Pass requires the visible label to be included in the accessible name.
-- [A] Users can be shown one label while assistive navigation identifies another. Rendered accessibility behavior has not been exercised here.
+- [E, later independent GUI receipt] Rendered DOM text and aria-label differ and the latter omits the visible title. [A] Effects on computed accessibility-tree navigation, screen readers and voice control remain unmeasured.
 - [E] `scripts/smoke-home.mjs:30` locates a card by the formal accessible name, so this mismatch is outside its assertions.
 
 ## Related runtime findings from the runner
@@ -171,5 +171,6 @@ summary: "Bounded static QA of both interfaces identifies review-state, preview,
 - [E] Revision-update source: https://github.com/danjung9/FleetHarness/tree/50fcaea1e86028503ae66bd2f17287093ad30cbe ; baseline source: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323 . Both were read locally, not fetched from those URLs.
 - [E] Existing screenshots visually inspected: `Research/FleetHarness-MVP/screens/studio-2-new-challenge.png` and `original-1-home.png`. The latter shows Ready, Queued, No run yet and Tests / Not run yet together; it supplies context for the original entry experience, not runtime proof of the findings above.
 - [E] Required context read: `AGENTS.md`, [[Team/Now]], [[Reference/Open-Questions]], [[Research/00-Brief]], plus the earlier research named above.
-- [A] Not verified: actual generated pilot behavior, browser-to-desktop transfer, fresh model inference, test execution, Stop termination, export contents and all reproduction outcomes. Existing reported test or smoke results do not substitute for those observations.
+- [E] Later independent evidence: [[Research/QA/Results-631849f-GUI]], corrected by [[Research/QA/GUI-631849f/Receipt-Review]], confirms U1 to U3 through retained observations. It reports six smoke scripts succeeding without live inference or completed sign-in.
+- [A] Not verified here: actual generated pilot behavior, browser-to-desktop transfer, fresh model inference, child-process shutdown and delivered-artifact correctness. Reported smoke results do not establish those outcomes.
 - [R] Keep this report with the runtime QA plan. Record any validation result against the same pinned revision or name the changed revision explicitly.

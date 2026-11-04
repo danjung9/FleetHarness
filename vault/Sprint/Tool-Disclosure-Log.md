@@ -43,6 +43,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Public product and design documentation, accessed November 4 | source collection | interaction research | publishers listed in [disclosure log](~/Documents/CDAO/Fleethacker-Vault/Research/RandE/UX/Sprint/Research-Log.md) | 2026-11-04 |
 | Node.js v26.0.0 | JavaScript runtime | Builds and local synthetic QA scripts in the pinned qa-lead checkout | Node.js project, installed runtime | 2026-11-04 |
 | UTC clock, version unavailable | Time service | Deadline check | Session runtime | 2026-11-04 |
+| FleetHarness Stop-child fixture revision 1 | Synthetic test fixture | Prepared a bounded ordinary Pi shell and child shutdown check; syntax checked only in this QA assignment | Team-authored synthetic material | 2026-11-04 |
+| macOS ps, installed system version | System diagnostic | Included in the prepared Stop fixture to inspect only recorded synthetic worker PIDs; not executed during preparation | Apple macOS | 2026-11-04 |
 
 ## Data and sources
 

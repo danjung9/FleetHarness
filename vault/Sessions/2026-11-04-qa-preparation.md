@@ -3,7 +3,7 @@ type: session
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "QA coordination, synthetic acceptance planning and pinned static review while app execution awaits the owner's approval."
+summary: "QA coordination, pinned source review, independent GUI receipt assessment and bounded Stop-test preparation."
 ---
 
 # QA preparation
@@ -25,10 +25,13 @@ summary: "QA coordination, synthetic acceptance planning and pinned static revie
 - [E] Continued permitted source review of `631849f`, which removes Studio/Workbench and adds default Home. A bounded independent source check confirmed three Home concerns: search omits visible friendly titles, Home hides Stop during an active build, and accessible card names omit the visible wording. Findings and the four-row active acceptance matrix were updated and relayed to main. The dedicated execution checkout remains at `50fcaea`.
 - [E, later handoff] Main advanced qa-lead to clean `631849f` and assigned itself the GUI pass independently. The next QA assignment was source-only reconciliation of the seven runner failures against the existing acceptance/checker/delivery designs. Completed [[Research/QA/Acceptance-Reconcile-631849f]], with correct-hash migration, real-case counting, final-copy acceptance and per-failure closure evidence. No new execution or code changes occurred for this reconciliation.
 
+- [E, independent GUI receipt review] Read the main-session GUI report and retained U1-U3 JSON at `631849f`. Six smoke scripts report success, and three Home defects reproduce. The login script initiated and cancelled a real protocol flow; no completed sign-in or live inference is shown. Wrote [[Research/QA/GUI-631849f/Receipt-Review]] to distinguish those scopes and correct Stop timing, consent and assertion claims.
+- [E, main-session assignment] Prepared [[Research/QA/GUI-631849f/Stop-Child-Runbook]] and its bounded synthetic script. An independent source review checked timing, worker identity, cleanup and evidence provenance. The outer script and both generated worker programs pass syntax checks; no application, fixture server or synthetic worker ran here. Delivered the paths through tell_main.
+
 ## Verification
 
 [E] Git revision and status checks, source and test-script inspection, screenshot evidence from the bounded review, and direct comparison of findings with the pinned code. [E] Reported unit and fixture passes belong to earlier main-session evidence. No live acceptance result is claimed.
 
 ## Next
 
-[R] Send the two note paths through `tell_main`, and request only the desktop/browser approval reserved to Mukul. Then execute approved checks if the environment permits, record failures against exact revisions and relay frontend defects to the owner through the main session. Avoid duplicating the runner's pilot golden examples and 34-entry harness coverage. Live generation remains dependent on separate approval and the owner configuring the event connection.
+[R] Review the main-session Stop-child receipt when available and close only the measured shutdown case. Keep the seven backend verification/export failures and three Home defects visible. Coordinate any reviewed code revisions through the sole runner. Avoid duplicating pilot golden examples and catalog coverage. Live generation still needs the concrete owner-configured event connection and permitted preparation boundary.

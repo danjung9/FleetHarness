@@ -16,11 +16,13 @@ summary: "Ranked design-only improvements for protected acceptance, independent 
 
 ## Evidence and teammate alignment
 
-[E, final relay and pinned diff] A later commit, `631849f`, consolidates the interface into the retained Home/Flow desktop app and browser preview. Studio/Workbench and their commands are removed. `git diff 50fcaea 631849f -- electron harness skills shared package-lock.json` is empty, so the seven backend designs remain applicable without a new general review. Use the retained desktop interface for any approved preparation; do not restore alternate renderers or assume saved alternate-profile data migrated. The latest gate reports 128 passed, zero failed at `631849f`, 14:42:27, still without live-provider or shutdown proof.
+[E, prior pinned diff and November 4 QA receipts] `631849f` retains Home/Flow and removes Studio/Workbench; backend/harness/skills/shared/dependency-lock contents are unchanged from `50fcaea`. The 14:42:27 gate reports 128 passes, zero failures. [Results-631849f-GUI](../QA/Results-631849f-GUI.md) adds six successful smoke scripts, consent on one Pi fixture path, reproduced U1/U2/U3 and one Stop observation: stopped at the first query 3 ms after click completion, with no later request over eight seconds. [Receipt-Review](../QA/GUI-631849f/Receipt-Review.md) limits this to observed plumbing, not child termination or live generation. [E, relay] `main` at `d322b39` adds hosted-preview deployment configuration; deployment success remains NOT VERIFIED and is separate from Electron and delivered ID 11 acceptance.
+
+[R] Live readiness remains HOLD for missing actual provider, containment, complete shutdown and authority evidence. [E, current directive] The 3 PM gate passed without supplied clearance. [R] Recommend the disclosed checker scope; the overseer must still identify its permitted workspace, implementation owner and execution/budget authority. Preserve the 4 PM useful-candidate cutoff and 6 PM accepted app/checker or eligible technical-finding gate. [E] Acceptance-11 application outcomes remain NOT RUN; the seven verification/export failures remain open. See [[Research/Agentic/Run-Readiness-50fcaea]] for exact receipts and the next decision.
 
 [E] Reviewed local Git object `50fcaea1e86028503ae66bd2f17287093ad30cbe` and its changes from `0f175a8`. The checkout's local `mvp` reference began at the older commit and advanced to `50fcaea` during review; all code claims use pinned object reads. The latest commit adds executable packaging/worker, delivery locking and interruption recovery, README follow-up and tests, and Workbench/frontend changes. No frontend implementation was opened for redesign or changed.
 
-[E] The supplied Plan/Findings and older Test-Results apply to `0f175a8`. A newly arrived `reports/mvp-gate.md` reports 128 passed, zero failed at `50fcaea`, at 14:34:58. It supplies no command breakdown, desktop smoke, live-provider or shutdown result. This review did not rerun those tests. The relay files and directive were absent initially, arrived during review and were read before completion. Final reconciliation is recorded in [[Research/Agentic/Session-2026-11-04]].
+[E, historical review] Plan/Findings and older Test-Results apply to `0f175a8`. The earlier gate reported 128 passes at `50fcaea`, 14:34:58; the current gate and subsequent GUI evidence are identified above. No tests were rerun for this document update. The initial design review is recorded in [[Research/Agentic/Session-2026-11-04]]; the current evidence correction and shared-log handoff are in [[Research/Agentic/Run-Readiness-50fcaea]].
 
 ## Ranked work before Thursday, November 5, 2:00 PM EST
 
@@ -71,7 +73,7 @@ Human reviews task contract and execution limits
 
 ## What these designs do not establish
 
-[E] No real event-key probe, full generated task, canary isolation/termination trial, current-commit test run, browser acceptance or executable cold start was performed. No code, frontend, dependencies, shared Sprint files or Team/Now was changed. No messages, commits or pushes were sent. [R] Do not turn these designs, existing fixture tests or a green development-test badge into a claim that the delivered app is accepted or operationally authorized.
+[E] This document review performed no runtime checks. It credits QA's `631849f` fixtures and narrow Stop observation above; real event-key inference through this app, containment, complete shutdown, live-generated task, delivered ID 11 acceptance/recovery and candidate executable cold start remain NOT VERIFIED or NOT RUN. Only local research documents changed. [R] Designs, fixture passes and a green development-test badge do not establish accepted delivered behavior or operational authority.
 
 ## Sources
 
