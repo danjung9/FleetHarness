@@ -170,7 +170,7 @@ async function exportExecutable(id) {
   assert.equal(exported.executable.arch, 'x64');
   const extracted = path.join(root, 'standalone');
   await command('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
-    `Expand-Archive -LiteralPath '${archive.replaceAll("'", "''")}' -DestinationPath '${extracted.replaceAll("'", "''")}'`]);
+    `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${archive.replaceAll("'", "''")}', '${extracted.replaceAll("'", "''")}')`]);
   const executable = (await fs.readdir(extracted)).find(name => name.endsWith('.exe'));
   assert.ok(executable, 'Generated export must contain a Windows executable.');
   generated = await electron.launch({ executablePath: path.join(extracted, executable), args: ['--user-data-dir=' + path.join(root, 'generated-bootstrap')], env: childEnv, timeout: 60_000 });
