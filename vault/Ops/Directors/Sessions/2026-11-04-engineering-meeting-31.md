@@ -1,6 +1,6 @@
 ---
 type: session
-status: active
+status: complete
 owner: mukul
 updated: 2026-11-04
 summary: "Meeting 31 directives, evidence reconciliation and pending central handoff."
@@ -16,4 +16,6 @@ summary: "Meeting 31 directives, evidence reconciliation and pending central han
 
 [R] Next: architecture reconciles current evidence; builder starts only after enablement and dev-3 file release. Quality validates the current failures and remaining cases. Runner independently tests/reviews named commits and lands only on dev/reviewed. Central Sprint, Sessions and Team/Now updates await an authorized writer using [[Ops/Directors/Sprint/Engineering-Meeting-31]].
 
-[R] Document/JSON checks and final guard outcome will be recorded before closeout. Runtime results are attributed to existing receipts, not execution by this meeting.
+[E, local checks] Five notes pass frontmatter, owner, style and existing wiki-link checks; memo is 236 words including frontmatter. Two-task JSON passes schema, allowed-seat, files/done_when and code-release checks. Both relays were reread and retain d0f4c69/8db53c3. New acceptance findings were incorporated before closeout. Runtime results are attributed to existing receipts, not execution by this meeting.
+
+[E, limitation] Standard fh.py guard exited 1 because its configuration is outside readable sandbox permissions. No workaround. Central logs/status and the guard remain pending authorized completion; local structural validation does not substitute for them.

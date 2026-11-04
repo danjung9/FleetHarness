@@ -1,6 +1,6 @@
 ---
 type: session
-status: active
+status: complete
 owner: mukul
 updated: 2026-11-04
 summary: "Meeting 31 evidence, decisions and local handoff for restricted central writes."
@@ -43,4 +43,16 @@ summary: "Meeting 31 evidence, decisions and local handoff for restricted centra
 
 [E, file discovery] Guessed dev-2/dev-3 test directories did not exist. No clone path was assumed in assignments; verified repository-relative test filenames are used instead.
 
-[R] Completion validation will be recorded before closing this session.
+## Completion checks
+
+[E, local Python validation] Five notes pass required frontmatter, owner, dash-style and existing wiki-link checks. Memo is 236 words including frontmatter. JSON parses with two unique allowed seats, integer priorities, files and done_when fields. The builder task explicitly requires code enablement and dev-3 reviewed/landed file release. No frontend path is allocated. No new development task duplicates the overseer's three seats.
+
+[E, standard guard attempt] fh.py guard exited 1 because its trace-patterns.txt configuration is outside readable sandbox permissions. No workaround was attempted. Local structural checks are not a completed standard content-guard pass. Authorized coordinator must rerun the guard and transfer the staged central updates.
+
+[E, scope] Queue cancellation, code enablement, code execution, current-gate recovery and accepted candidate delivery were not performed by this meeting. Requests and planned work are labeled accordingly.
+
+## Exact new evidence references
+
+- [E] [Current factory gate log](~/.local/share/fleethacker-context/org/logs/mvp-d0f4c69.gate.log).
+- [E] [Factory adapter receipt](~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/result.json).
+- [E] [CLI adapter receipt](~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-aaa1585f-8701-485b-861e-d2cc2ff42f8a/result.json).
