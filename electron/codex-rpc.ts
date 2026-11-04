@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { runProcessEnvironment } from './process-sweep.js';
 
 export interface RpcMessage { id?: number | string; method?: string; params?: any; result?: any; error?: { code: number; message: string } }
 export function codexExecutable() {
@@ -64,7 +65,7 @@ export class CodexRpc {
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
   static launch(home: string) {
-    const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home, TMPDIR: path.join(home, 'tmp') };
+    const env: NodeJS.ProcessEnv = runProcessEnvironment({ ...process.env, CODEX_HOME: home });
     delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
     return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'cli_auth_credentials_store="file"'], {
       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { chromium, type Browser, type BrowserContext, type BrowserServer, type Page } from 'playwright';
 import { PreviewServers } from './preview.js';
+import { runProcessEnvironment } from './process-sweep.js';
 import type { BrowserStep, JourneyResult, QualityPlan } from '../shared/quality.js';
 
 export interface BrowserVerificationOptions {
@@ -144,7 +145,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
     for (const candidate of candidates) {
       deadline.check();
       try {
-        launching = chromium.launchServer({ ...candidate, headless: true, chromiumSandbox: true, host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
+        launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: true, host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
         server = await deadline.run(launching);
         browser = await deadline.run(chromium.connect(server.wsEndpoint(), { timeout: Math.min(5_000, deadline.remaining()) }));
         break;

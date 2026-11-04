@@ -7,6 +7,7 @@ import path from 'node:path';
 import { listArtifacts, sourceHash } from './storage.js';
 import { codexExecutable } from './codex-rpc.js';
 import type { TestReport } from '../shared/types.js';
+import { runProcessEnvironment } from './process-sweep.js';
 export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
@@ -64,11 +65,30 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
   const args = ['--test', '--test-reporter=tap', ...files.map(file => './' + file)];
-  let command: VerificationCommand, home: string;
-  try {
-    command = await launcher(root, executable, args);
-    // Never load a user's credentials/config or let workspace .codex settings replace this profile.
-    home = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-verification-'));
+  const child = spawn(executable, args, {
+    cwd: root, env: runProcessEnvironment({ PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' }),
+    stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
+  });
+  const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };
+  let output = '', outputBytes = 0, timedOut = false, overflow = false;
+  let interrupt!: () => void;
+  const interrupted = new Promise<null>(resolve => { interrupt = () => { stop(); resolve(null); }; });
+  // Register completion and cancellation before exposing the child to a caller.
+  const completed = new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
+  const collect = (chunk: Buffer) => {
+    const remaining = Math.max(0, limits.maxOutputBytes - outputBytes);
+    output += chunk.subarray(0, remaining).toString(); outputBytes += chunk.length;
+    if (outputBytes > limits.maxOutputBytes) { overflow = true; interrupt(); }
+  };
+  child.stdout?.on('data', collect); child.stderr?.on('data', collect);
+  const timer = setTimeout(() => { timedOut = true; interrupt(); }, limits.timeoutMs);
+  signal?.addEventListener('abort', interrupt, { once: true });
+  if (signal?.aborted) interrupt();
+  let exitCode: number | null;
+  try { onProcess(child); exitCode = await Promise.race([completed, interrupted]); }
+  finally {
+    clearTimeout(timer); signal?.removeEventListener('abort', interrupt);
+    stop(); child.stdout?.destroy(); child.stderr?.destroy();
   }
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {

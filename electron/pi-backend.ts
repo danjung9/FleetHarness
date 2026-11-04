@@ -1,4 +1,4 @@
-import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
+import { createAgentSession, createBashToolDefinition, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -17,36 +17,16 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
+import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; buildTests?: Map<string, string>; lastTests?: Map<string, string>; testChanges?: string[] };
-
-// Per-file summaries are emitted by node:test only for registered tests, not its
-// synthetic file-completion passes. Keep this reporter in the host process and
-// use IPC so test stdout cannot impersonate registered-case evidence.
-const registeredTestReporter = 'data:text/javascript;base64,' + Buffer.from(`
-export default async function* (events) {
-  const files = [];
-  for await (const event of events) {
-    if (event.type === 'test:summary' && event.data.file) files.push(event.data);
-    if (event.type === 'test:stdout' || event.type === 'test:stderr') process.stdout.write(event.data.message);
-  }
-  process.send(files);
-}
-`).toString('base64');
-
-const backgroundShellCommand = /\b(?:nohup|disown|setsid|Start-Job|Start-Process)\b|(?<![&>\\])&(?![&>])/i;
-// Heuristic for visible shell launches, not process containment. Quoted data
-// and literal heredocs often contain ampersands while writing application HTML.
-function shellLaunchText(command: string) {
-  return command.replace(/<<-?\s*(['"])([A-Za-z_]\w*)\1[^\n]*\n[\s\S]*?\n\t*\2(?=\r?\n|$)/g, '')
-    .replace(/'[^']*'|"(?:\\.|[^"\\])*"|\\./gs, '');
-}
+type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
 interface BackendOptions {
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
   verificationLimits?: Partial<ApplicationVerificationLimits>;
+  processSweep?: () => RunProcessSweep;
 }
 export class FleetBackend {
   runtime!: ModelRuntime;
@@ -70,6 +50,19 @@ export class FleetBackend {
   }
   private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
   private async finish(p: Project, run: ActiveRun) {
+    try {
+      await run.processes.stop();
+      p.status = run.controller.signal.aborted ? 'stopped' : run.outcome ?? 'failed';
+      if (p.status === 'stopped') {
+        p.error = stoppedMessage;
+        p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
+      }
+    } catch {
+      p.status = 'failed';
+      p.error = [run.controller.signal.aborted ? undefined : p.error, 'Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.'].filter(Boolean).join('\n');
+      p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
+      this.log(p, 'verify', 'error', p.error);
+    }
     try { await this.changed(p); }
     catch (error) {
       p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
@@ -96,7 +89,7 @@ export class FleetBackend {
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, controller: new AbortController(), done, resolve };
+    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve };
     this.active.set(id, run);
     try {
       p.runId = randomUUID();
@@ -126,9 +119,9 @@ export class FleetBackend {
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ' + (route?.label ?? 'ChatGPT subscription') : 'Pi SDK') + ' · ' + p.model);
       await this.changed(p);
       this.check(run);
-      void this.execute(p, run, provider, modelId);
+      void run.processes.run(() => this.execute(p, run, provider, modelId));
     } catch (error) {
-      p.status = run.controller.signal.aborted ? 'stopped' : 'failed'; p.error = error instanceof Error ? error.message : String(error);
+      run.outcome = 'failed'; p.error = run.controller.signal.aborted ? 'Stopping run and checking its processes.' : error instanceof Error ? error.message : String(error);
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       this.log(p, 'intake', 'error', p.error);
       await this.finish(p, run); throw error;
@@ -149,6 +142,12 @@ export class FleetBackend {
         if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
           home: this.options.codex!.home, cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
         });
+        if (allowedTools.includes('bash')) {
+          const { renderCall, renderResult, ...bash } = createBashToolDefinition(p.workspace!, {
+            spawnHook: context => ({ ...context, env: runProcessEnvironment(context.env) })
+          });
+          customTools.push(bash);
+        }
         const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 2 } });
         const loader = new DefaultResourceLoader({
           cwd: p.workspace!, agentDir: path.join(this.store.root, 'pi'), settingsManager,
@@ -359,9 +358,9 @@ export class FleetBackend {
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');
       this.check(run);
-      p.status = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
+      run.outcome = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
-      p.error = error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
+      p.error = run.controller.signal.aborted ? 'Stopping run and checking its processes.' : error instanceof Error ? error.message : String(error); run.outcome = 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; }); this.log(p, stage, 'error', p.error);
     } finally { await this.finish(p, run); }
