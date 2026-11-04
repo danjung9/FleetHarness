@@ -8,10 +8,15 @@ summary: "Current sprint status, blockers and next actions."
 
 # Now
 
-Last updated 2026-11-04, after the 0f175a8 delta review.
+Last updated 2026-11-04, after QA preparation for 50fcaea.
 
 ## Latest session
 
+- [E, pinned source diff] `631849f` consolidates the product into the retained Home/Flow interface and removes Studio/Workbench. The active [[Research/QA/Test-Plan]] now targets four unified-interface journeys; older interface rows remain historical. Backend code is unchanged from `50fcaea`. The dedicated qa-lead checkout was not advanced.
+- [E, direct QA commands] At `50fcaea`, type checking, Electron compilation and all three UI builds pass. Fixture/GUI execution is blocked by sandbox `listen EPERM` on 127.0.0.1; the smoke batch stopped before application assertions. See [[Research/QA/Results-50fcaea]].
+- [E, Git and main_bridge] Completed [[Research/QA/Test-Plan]] and [[Research/QA/Static-Findings]] for original, Studio and new Workbench. GUI QA now has a dedicated clean checkout, `fh-org/qa-lead`, detached at `50fcaea`; main owns the live runner and the moving `fh-org/qa`. No repository programs were executed during this review. See [[Sessions/2026-11-04-qa-preparation]].
+- [E, runner report] The `50fcaea` headless gate reports 128 passed and zero failed. Main reports no GUI smoke at that revision. Exact fixture/UI commands are ready for Mukul's approval; live-model builds and standalone packaging remain separate stages.
+- [E, additional runner report] [[Research/QA/Runner/Harness-Coverage]] reports 403/410 additional checks passing and seven verification/export failures. These are different expectations from the 128-pass gate. They remain open; no all-clear is implied.
 - [E, pinned Git source] Completed [[Research/FleetHarness-MVP/Delta-0f175a8]]: five reported type errors addressed in source, live Codex/ChatGPT backend added, and five sequential agent phases. No repository changes, installs or tests were performed for this review. Event-key inference remains unverified through Pi; test execution belongs to the main session.
 - [E, main_bridge ask_main] A subsequent connection test succeeded and returned an answer from the main session. See [[Sessions/2026-11-04-bridge-check]].
 - [E, local shell, 11:32 AM EST] The requested session bridge status message failed: the sandbox blocked the inbox write outside writable roots. See [[Sessions/2026-11-04-bridge-check]].
@@ -25,7 +30,7 @@ Last updated 2026-11-04, after the 0f175a8 delta review.
 
 ## Needs a decision
 
-Nothing open. Mukul set aside the Google sheet question for now, and the tool ledger answers how tools get listed.
+[E] The user directed continuation after the concrete fixture/UI proposal. [R] The execution environment now blocks loopback listening, so GUI acceptance needs a permitted execution boundary; repeating approval alone does not remove that restriction. Live-key use, login and standalone packaging remain outside the executed batch. Mukul set aside the Google sheet question for now, and the tool ledger answers how tools get listed.
 
 ## Not captured yet
 
@@ -43,3 +48,4 @@ Nothing open. Mukul set aside the Google sheet question for now, and the tool le
 1. Join or create a team in the portal.
 2. Approve the Codex hooks, per [[Setup/Hooks]].
 3. Review the research and choose which use cases FleetHarness demos.
+4. Run approved GUI QA in the stable `qa-lead` checkout, coordinate changes through the main runner, and report frontend defects to Dan. The runner's other QA seats own golden examples and catalog coverage.

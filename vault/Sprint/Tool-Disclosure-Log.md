@@ -29,6 +29,20 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Pi coding agent SDK 1.5.0 (@earendil-works/pi-coding-agent) | Coding agent SDK | Runs the planning, build and verification roles in the FleetHarness desktop app | Open source, added by teammate danjung9 | 2026-11-04 |
 | Electron, React, Vite, TypeScript, Playwright, electron-builder | App framework and developer tools | FleetHarness desktop app, its build and its smoke tests | Open source, added by teammate danjung9 | 2026-11-04 |
 | OpenAI Docs workflow | Local documentation skill | Read-only auth, credential storage, sandbox and app-server checks for the FleetHarness delta review | Local skill and official OpenAI documentation | 2026-11-04 |
+| Codex collaboration tools | Local agent coordination | Two bounded source reviews supporting the QA plan, with a single organization runner owned by the main session | OpenAI, event profile | 2026-11-04 |
+| FleetHarness synthetic QA acceptance pack 2026-11-04 | Synthetic test design data | Fixed message, scheduling, record-conflict and custom-register expectations in Research/QA/Test-Plan.md; not yet executed | Created for this sprint | 2026-11-04 |
+| Command interface, version unavailable | tool | evidence reads | session runtime | 2026-11-04 |
+| Patch interface, version unavailable | tool | document edits | session runtime | 2026-11-04 |
+| Git 2.50.1 | tool | pinned source inspection | Git/Apple | 2026-11-04 |
+| ripgrep 15.2.0 | tool | evidence search | ripgrep project | 2026-11-04 |
+| Python 3.9.6 | tool | document/JSON validation | Python/Apple | 2026-11-04 |
+| fh.py, repository version | script | attempted content guard | sprint tooling | 2026-11-04 |
+| Synthetic officer examples, revision 1 | Synthetic acceptance dataset | Reused QA Officer examples for cases 11, 12 and 36 within the GUI acceptance matrix; execution pending | Created for this sprint | 2026-11-04 |
+| Shell, patch and image interfaces, versions unexposed | tools | read, write and screenshot inspection | session runtime | 2026-11-04 |
+| Web search/page reader, version unexposed | service | primary-source research | session web service | 2026-11-04 |
+| Public product and design documentation, accessed November 4 | source collection | interaction research | publishers listed in [disclosure log](~/Documents/CDAO/Fleethacker-Vault/Research/RandE/UX/Sprint/Research-Log.md) | 2026-11-04 |
+| Node.js v26.0.0 | JavaScript runtime | Builds and local synthetic QA scripts in the pinned qa-lead checkout | Node.js project, installed runtime | 2026-11-04 |
+| UTC clock, version unavailable | Time service | Deadline check | Session runtime | 2026-11-04 |
 
 ## Data and sources
 
