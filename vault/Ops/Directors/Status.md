@@ -3,21 +3,21 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Meeting 51: six benchmark results, no satisfactory verdicts, new teammate UI and one bounded research task."
+summary: "Meeting 77: ten builds finished, none satisfactory; finish existing repairs and judgments."
 ---
 
 # Team status
 
-[E, [[Research/QA/Ten/Scoreboard]], read 16:23 EST] Done: six of ten builds finished on patched d0f4c69; five pass the automatic bar, zero are satisfactory. ID 12's independent verdict is NOT. ID 36 fails four browser journeys. [[Research/QA/Ten/QA-Lead-Notes]] identifies its missing native option, ID 11's false frozen explanation and defining requirements deferred by ID 11/12.
+[E, [[Research/QA/Ten/Scoreboard]], meeting-77 close, 16:44 EST] Ten builds finished on d0f4c69 plus disclosed scratch changes. Nine pass the automatic bar; zero are satisfactory. IDs 8, 11, 12, 20 and 35 have negative independent judgments; five await verdicts. ID 36 fails four browser journeys. Completion is not ten successful challenges.
 
-[E, [[Research/QA/Acceptance/Review-Run2]]] Separate partial training run2 records 28 PASS/18 NOT CHECKED, including exact offline recovery; guide consistency and human acceptance remain open. Run1/CLI retain their earlier bounded receipts. No user benefit is measured.
+[E, [[Research/QA/Auto/1d9eeee]]] Current desktop evidence: 125 unit and 51 harness passes, eight of ten smoke scripts pass. Electron and Norfolk stop at stale selectors. Dev-3 reports smoke changes ready; integrated reruns remain required. Separate curated training candidates have bounded acceptance receipts, no human acceptance or measured user benefit.
 
-[E, relay/source/gate] Dan pushed mvp 1d9eeee: Brief/Build/Review/Deliver, activity tracking, prototype review, branding and revised smokes. Its 16:17:48 dev/reviewed sandbox gate reports 156 pass/20 fail; GUI/packaging remain unverified. Windows e68e90e adds integrity/upgrade checks and overlaps pipeline tests; preserve serial ownership.
+[E, teammate relays] Dan pushed mvp 1d9eeee with Brief/Build/Review/Deliver. Windows 4c49e85 changes persistence comparisons and browser-test evidence. Hosted 40a6225 pins a compatible HTTP dependency and extends the bundle check. Those branch changes establish no Windows or hosted runtime success.
 
-[R] In progress by ownership: main runs the sole benchmark; officer judges; architect receives failures. Engineering finishes route, sandbox, hash and test-evidence integration. Return builder's unsandboxed rerun. Dev-3 compares Dan's scripts before further edits. Snapshot-51 enabled code seats; its running list is historical, not a live census.
+[R] In progress: main/Engineering serializes integration; dev-1 corrects late writes and Resume budget bypass; builder corrects usage correlation, terminal-state persistence and inherited unsandboxed verification. Dev-2 wires preflight after file release. Dev-5 owns primary-deferral correction; its permitted-label bypass remains open. Quality finishes queued judgments and the ID 32 audit. Main retains detached Stop, benchmark cancellation and artifact-identity proof. Sources: [[Research/QA/Review-Queue-Notes]], [[Research/QA/Ten-Benchmark-Audit]].
 
-[R] Decided: ten satisfactory builds supersede single-app limits. Keep existing owners, remove duplicate tasks and protect Dan's frontend. Only new research assignment: one bounded re-ux review-walkthrough update. Scout/connectors idle. Automatic passes and prototype approval do not establish card completion. Keep 6 PM/7 PM checkpoints, Thursday noon freeze and 1:15 PM submission target.
+[R] Decided: preserve current owners and Dan's frontend. Retire conflicting dev-5 native-select dispatch and held UX walkthrough; no new tasks. Research idle. Retain original failures and independent acceptance. Keep 6 PM/7 PM evidence checkpoints, Thursday noon freeze and 1:15 PM approved-submission target.
 
-[R] Person-only morning list: accept exact final bytes and reconcile partial scope/clock/summary; confirm user/process and arrange the existing synthetic trial; settle portal/team/form/terms, category and partial eligibility including sync; confirm contribution rights, disclosures and mission/technical owners; approve submission and any move to mvp. None is presumed.
+[R] Person-only morning list: accept final bytes and disclosed scope; confirm user/process and arrange the existing synthetic trial; resolve portal/team/form/terms, category and partial eligibility including sync; confirm contribution rights and mission/technical owners; approve submission and any move to mvp. None is presumed.
 
-[E, snapshot-51 at 15:54:12 EST] Organization tokens: 5,100,594 of 1,000,000,000, up 1,818,272 from snapshot-31. Current meeting spend and dollar cost are unknown. Central logging/status transfer remains pending in [[Ops/Directors/Sprint/Product-Meeting-51]].
+[E, snapshot-77, 16:25:46 EST] Organization spend: 8,133,980 of 1,000,000,000 tokens, up 3,033,386 since snapshot-51. Meeting spend and dollar cost unknown. Central logging/status transfer remains pending in [[Ops/Directors/Sprint/Product-Meeting-77]].

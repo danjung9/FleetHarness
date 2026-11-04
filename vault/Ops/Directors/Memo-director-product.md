@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Prioritize benchmark failures, preserve Dan's new journey and allocate one bounded UX handoff."
+summary: "Finish current factory corrections and judgments; retire duplicate allocations and keep research idle."
 ---
 
 # Product decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard at 16:23 EST] Six finished, five automatic passes, zero satisfactory; ID 12 judged NOT. Engineering's absent-scoreboard statement and Quality's one-result snapshot are stale.
+[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard at 16:44 EST] All ten finished; nine pass automatically, zero are satisfactory. IDs 8, 11, 12, 20 and 35 have negative judgments. Earlier director counts are historical.
 
-[R] Existing architect owns ID 36's missing native option, ID 11's false frozen explanation and defining requirements deferred by ID 11/12. Quality judges exact artifacts. Preserve failures; repair the factory, never hand-edit outputs or lower acceptance to manufacture success. Coalesce automatic assignments.
+[R] Prioritize original-task coverage over generic recipe success. Accept the shared diagnosis in [[Research/Agentic/09-Primary-Task-Deferral]], not its proposed duplicate builder allocation. Dev-5's current journal explicitly replaces the older ID 36 task with primary-deferral work. Main/Engineering retains that owner; withdraw the conflicting native-select dispatch.
 
-[R] Uphold Engineering's return of the extra unsandboxed test execution. Preserve existing code owners and review gates; administrative returns belong to the runner. Remove stale duplicate tasks without restarting completed work.
+[E, benchmark audit at 16:37] Adding a permitted deferral label still lets the rejected ID 12 plan pass. [R] Return that evidence to the existing correction/review, requiring synthetic primary-outcome coverage. Preserve independent semantic judgment; labels and structural tests cannot establish satisfaction.
 
-[E, relay and pinned source] Dan pushed 1d9eeee with Brief/Build/Review/Deliver and revised all five failing smoke scripts. Windows e68e90e overlaps pipeline tests. [R] Dev-3 compares Dan's changes before further smoke edits. Require matching runtime receipts. Protect frontend files and shared-file ownership.
+[R] Keep recovery, metrics and containment returns open. Finish serial integration and matching runtime proof before further shared-file work. Main owns cancellation, frozen artifacts and benchmark execution; Quality retains judgments and its ID 32 audit.
 
-[R] Allocate only one bounded re-ux handoff for the new review journey and benchmark completion limits. Accept completed scout work; keep scout/connectors idle. No new scan, connector, trial protocol or separate build.
+[R] Accept completed scout/UX handoffs at their recorded revisions. Retire the held replacement walkthrough; research seats idle. Write an empty new-task list, not duplicate work.
 
-[R] Keep task-first presentation, explicit partial scope and pending human acceptance. Preserve 6 PM/7 PM evidence checkpoints, Thursday noon freeze and 1:15 PM submission target. Status holds person-only decisions and dated token accounting.
+[E, relays] Preserve Dan's 1d9eeee journey, Windows 4c49e85 assertions and hosted 40a6225 dependency/check changes. No frontend, deployment or publication assignment. Keep Thursday noon freeze, exact-byte human acceptance and the morning decisions in Status.

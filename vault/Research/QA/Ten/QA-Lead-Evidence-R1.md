@@ -89,7 +89,7 @@ summary: "Supporting source and receipt evidence for the concise round-one chall
 
 ## R1 ID 32
 
-[E] Readiness has real dependency-graph calculations, cycle rejection, unknown propagation, source resolution and review invalidation in `R1/id32-readiness/core.cjs:51` and its controller. Tests at `core.test.cjs:13` and `adversarial.test.cjs:16` use independent numerical expectations, changed graph shapes and invalidation assertions. These tests can detect wrong behavior; the algorithm is not a selection of canned output strings.
+[E] Readiness has real dependency-graph calculations, cycle rejection, unknown propagation, source resolution and review invalidation in `R1/id32-readiness/core.cjs:51` and its controller. Tests at `core.test.cjs:13` and `adversarial.test.cjs:16` use literal expected numbers, varied graph fixtures and invalidation assertions. These tests can detect wrong behavior; independent authorship or domain validation is not established, and the algorithm is not a selection of canned output strings.
 
 [E] Five scripted changes feed the model. The UI correctly labels its flags as timing risks and says mission readiness is not assessed, `index.html:87-89`. Its suggested action is to confirm dates and estimates, ordered by known margin. The card's readiness-risk/noise ranking and differentiated first actions remain unestablished, with 10 of 17 criteria deferred. [R] Require changed dependency estimates, benign-noise cases and evidence-linked action alternatives tied to the primary card outcome.
 
@@ -103,9 +103,17 @@ summary: "Supporting source and receipt evidence for the concise round-one chall
 
 [E] Initial state has two agents, `core.cjs:9`; the repair path registers a fixed missing agent at line 91. Halt directly manufactures local acknowledgement records for each registered simulator entry at line 115; it receives no independent worker acknowledgement. UI labels the execution and halt as simulated. [R] Assign IDs and dispositions to narrative obligations before calculating requirementsMet; require a synthetic 12-to-13 onboarding journey and separate worker acknowledgements before any broader shutdown claim. Existing local halt checks should remain.
 
+## R1 ID 37
+
+[E] Fielding implements real validation, saved/draft isolation and review/export guards in `R1/id37-fielding/index.html:37-46,87-94`; `transition-core.test.cjs:9-31` contains meaningful negative cases. The sample accepts unknown proposals, all barriers deliberately remain unresolved, and the reusable playbook is static (`index.html:20-35,61`; `transition-core.test.cjs:8,33`). This is an editable planning template, not a fieldable owner application. Fourteen complete source criteria remain deferred, including the actual baseline tool, representative device, security evidence and named accepting owner. No fabricated operational result was found.
+
+[E] `acceptance-plan.json:202-304` requests eighteen downloads to check package/playbook substrings. The final host receipt reports 22/22 Node and 6/6 browser passes after a shared export cooldown repair at `index.html:92-94`. All six final traces embed HTML matching the current app digest; all 43 manifest entries match. Earlier verification.md statements describe the retained pre-repair failure and are stale relative to that final host receipt, not proof that the rerun is missing.
+
+[E] `transition-download.test.cjs:15-45` checks real document bytes and download-handler guards with controlled browser APIs and createSample. It cannot establish native browser policy or edited UI-to-export wiring. [R] Extend the host vocabulary to capture one file and make multiple assertions against its retained bytes; add an edited sentinel through actual form save, review and download. Keep blocked external prerequisites separate from completion of the planner slice.
+
 ## Artifact identity and retained evidence
 
-[E] These SHA-256 values identify the inspected app bytes. Each entry's copied tests and host report were also read; screenshots and trace ZIPs were located for the six additional entries. No browser or candidate program was executed here.
+[E] These SHA-256 values identify the inspected app bytes. Each entry's copied tests and host report were also read; screenshots and trace ZIPs were located for the seven additional entries. No browser or candidate program was executed here.
 
 | Entry | index.html SHA-256 |
 | --- | --- |
@@ -115,6 +123,20 @@ summary: "Supporting source and receipt evidence for the concise round-one chall
 | ID 10 | `131ef62ae851e4ba25a6958aa8fbac3c952acd72aec09d0c23e053a382b6704a` |
 | ID 32 | `9c284750ff2e440a6e62895797d65b61728189cae781f487197e175fd1625421` |
 | ID 16 | `ca29bea9c3512e841828bb8e2d888d664ee8c02a9a9eb849fd3e45ddfb0d0c66` |
+| ID 37 | `96fc894b827dd2748876db608cc9bcd55ac1b6124410c48d7cb1b74284c00956` |
+
+| Entry and test file | SHA-256 |
+| --- | --- |
+| ID 08 core.test.cjs | `82253426a0a36b468b522dd36239f22e34cd96066dffa69f442f5008552078db` |
+| ID 20 app.test.cjs | `a4956e26ccfd379202051e7b37733507b99034fe0d16eba6bbc5492940a7c78a` |
+| ID 35 core.test.cjs | `95f161505e629b59462d6e107c56fd099ed5e492e62fa65c79bfe2973bdf9916` |
+| ID 10 core.test.cjs | `68771c7b05b5c8f4789a08cf95ee97379c0de8877f2200d103c6331d1131dcb5` |
+| ID 32 core.test.cjs | `c8b1f75697442516b4bdfc97b7878741396cd74569e4098506ed85473bd78f6b` |
+| ID 32 adversarial.test.cjs | `e2f956593aaa4ecba5c99b0bad8eaa035a99563b2dc532a12b72a29418ea74bc` |
+| ID 16 core.test.cjs | `93bbb1fd53734e45e85b2a2c36bfdc2798107a599a3099d2967d77337078f847` |
+| ID 16 browser-core.test.cjs | `2640f2a6f5aaab22c2af9330b65b2fde56205d9d5ea19211176d1b2de6c01b2f` |
+| ID 37 transition-core.test.cjs | `e6d47bf024c7002ade9f607c2a6baf43ab05bf2e1695b6dc9408fe216c040490` |
+| ID 37 transition-download.test.cjs | `0dbc502c849b70a1c866ece06381a735957c3be1bffe441e3d0a40393fe47180` |
 
 [E] CASREP and Contact Brief app/test/evidence bytes match their manifests, while five Markdown files differ per entry. CASREP: README, plan, research, test-matrix and verification. Contact Brief: README, requirements, research, test-matrix and verification. Preserve this discrepancy; this audit does not establish its cause. The separate execution audit owns raw-capture/normalization remediation. [R] Seal final documentation together with code and retain exact tested bytes.
 

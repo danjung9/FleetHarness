@@ -3,12 +3,12 @@ type: review
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Nine finished round-one challenge audits: real partial implementations, specific verification gaps and factory changes."
+summary: "All ten round-one challenge audits: real partial implementations, specific verification gaps and factory changes."
 ---
 
 # Ten-challenge QA notes
 
-[E, inspected [[Research/QA/Ten/Scoreboard]]] Round 1 at d0f4c69 plus the disclosed scratch patch has nine finished entries, eight automatic passes and zero satisfactory verdicts. The tenth has no finished row at this check. Main owns the runner; independent officer judges own satisfactory decisions. These audits read code, generated tests and retained reports without executing or editing candidates.
+[E, inspected [[Research/QA/Ten/Scoreboard]]] Round 1 at d0f4c69 plus the disclosed scratch patch has ten finished entries, nine automatic passes and zero satisfactory verdicts. All ten entries are reviewed below. Main owns the runner; independent officer judges own satisfactory decisions. These audits read code, generated tests and retained reports without executing or editing candidates.
 
 [E] The inspected apps contain real calculations or state transitions and meaningful negative assertions. The main gap is between the selected prototype workflow and the full card outcome. Detailed evidence, source lines, identities and earlier findings are retained in [[Research/QA/Ten/QA-Lead-Evidence-R1]].
 
@@ -23,12 +23,13 @@ summary: "Nine finished round-one challenge audits: real partial implementations
 | ID 10, mooring | [E] Real scenario validation, layout and revision review; engineering calculations and planning outputs explicitly remain unavailable. Its 25 checks are 12 cases on two core copies plus parity. | [R] Keep engineering scope incomplete until supported reference cases exist; verify native dragging and exported values. |
 | ID 32, readiness | [E] Real DAG arithmetic and unknown propagation; five scripted changes plus timing margins do not establish readiness-risk/noise ranking or differentiated first actions. Ten criteria remain deferred. | [R] Require independent risk/noise/action cases and complete exported results/citations. |
 | ID 16, MORDECAI | [E] Real local arbitration/halt simulator, but host requirementsMet is true after three recipe checks while narrative obligations remain omitted. Acknowledgements are generated local records, not worker responses. | [R] Include narrative obligations in completion accounting and test synthetic 12-to-13 onboarding; keep simulation and runtime guarantees separate. |
+| ID 37, fielding | [E] Real draft/save/review/export template, with fourteen criteria deferred; no fieldable owner tool. Final browser repair passes. Eighteen repeated downloads test substrings, while edited exported content lacks a browser assertion. | [R] Capture each file once, assert all expected content and an edited sentinel; retain missing owner-tool/device/authority dependencies as incomplete. |
 
 [R] Make these shared factory changes:
 
 1. In intake/planning and `harness/quality-contract.ts`, trace every defining card obligation, including prose-only requirements. A recipe pass or self-selected deferral cannot establish full task completion. ID 16 needs this even though its structured contract has no deferred rows.
 2. Freeze independently reasoned outcomes and negative explanations, then test changed inputs, permutations, multiple records and boundaries. Retain failing evidence and an explicit contract revision when an expectation is wrong. No operational authority or physical constants should be invented to fill a dependency.
-3. Exercise native controls and complete workflow results. Handler tests and module/inline parity are useful but cannot establish select-option availability, dragging or actual save/import. Export checks must compare complete current values, identities and citations, not just a banner or marker.
+3. Exercise native controls and complete workflow results. Handler tests and module/inline parity are useful but cannot establish select-option availability, dragging or actual save/import. Capture each download once and assert complete current values, identities and citations, including changed user input; repeated downloads for separate substrings add browser-policy friction without stronger content coverage.
 4. Keep UI finding selection, source citations, review binding and execution states testable. Require a reachable handoff for each reported finding; proposed remediation and local simulated acknowledgements must remain distinct from executed and measured outcomes.
 5. Seal the final source, tests, report and documentation together. CASREP and Contact Brief each have five Markdown digest mismatches despite matching app/test/evidence bytes; the separate raw-capture audit owns that repair. Earlier verify-phase notes and later host receipts must retain their different scopes.
 

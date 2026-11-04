@@ -28,6 +28,8 @@ summary: "Audit and execution coordination against the newer ten-challenge facto
 
 [E] Audit guard passes. Existing Python/shell/Git/search/patch/bridge tools reused; isolated scheduler diagnostic disclosed centrally. Process inspection is denied; current activity is inferred from dated runner events. No worker was launched or stopped, no runner or product source changed, no remote push/deployment performed. The main runtime owner controls existing generation and browser execution.
 
+[E, completed first baseline] Ten builds finished with nine automatic passes and no satisfactory judgments yet. Four independently reject defining task gaps; the rest remain pending. Verified HOLD prevents another full round before the primary-task repair. A pure read-only parser probe reproduced a deferral-label loophole; canonical packet inspection also showed narrative-only requirements missing from the sole requirementsMet:true inventory. Both findings were sent to the owner. New future-driver cancellation still needs bounded waits and honest failure reporting.
+
 ## Next
 
 [E, follow-up at 16:23 EST] Repaired runner restart is confirmed. Strict reviewer-verdict probes pass. Independent ID 12 judgment is NOT; automatic test passes do not establish primary-task completion. Full-manifest comparisons reproduce post-capture Markdown mutation, and benchmark STOP still lacks driver cancellation. Both were sent to the owner. No live runner or generated application was executed by this audit.

@@ -12,11 +12,13 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, all ten round-one audits] [[Research/QA/Ten/QA-Lead-Notes]] covers every finished challenge with one concise finding and factory change. Nine pass the automatic bar; zero satisfactory verdicts are recorded. ID 16 omits narrative obligations from a true requirementsMet result; other gaps include first-finding-only proposals, unchecked stored fact/citation consistency and fragment-only exports. Detailed evidence and identities are retained separately. No new candidate runtime or edits occurred.
+
 - [E, three-candidate comparison] Run1 remains the provisional coverage leader with 17 independent outcome cases versus 13 each for CLI and Run2. Run2's observed G10 exhaustion wording is correct, and its adapter is ready with the same frozen oracle and clearer limitation/scope reporting. No human acceptance or new browser result is claimed. See [[Research/QA/Acceptance/Review-Candidates]] and [[Research/QA/Acceptance/Review-Run2]].
 
 - [E, candidate comparison confirmed] [[Research/QA/Acceptance/Review-Candidates]] explicitly reconciles the original adapter receipts and corrected CLI rerun. Pipeline leads on independent coverage, 17 versus 13 outcome cases. Both original FAILs arise from the acceptance contract/checker; Pipeline's contradictory exhaustion explanation is a separate real defect. Candidate change recommendations are recorded, with no silent key revision or app edits.
 
-- [E, verified at 16:30] Eight benchmark builds finished, seven meet the automatic bar and none is independently satisfactory. ID 11 and ID 12 miss central requirements. Two newest raw captures pass all 69 manifest hashes. Verifier commit eadfea1 is authored Mukul and awaits review. Recovery repairs remain blocked by reproduced late writes and Resume budget bypass. See [[Research/QA/Ten-Benchmark-Audit]] and [[Research/QA/Review-Queue-Notes]].
+- [E, round 1 completed at about 16:42] Ten builds finished, nine meet the automatic bar and none is independently satisfactory so far. Four judgments reject missing primary outcomes; other judgments are pending. Mean time is 11.64 minutes, total uncached input/output 2,689,377 tokens. New full rounds are on HOLD pending the primary-task repair and a smaller experiment. Author Mukul is applied. See [[Research/QA/Ten-Benchmark-Audit]] and [[Research/QA/Review-Queue-Notes]].
 
 - [E, acceptance reporting ready] Both explicit Run1 adapters are ready with receipt revision 3. Known CLI form restrictions now produce UI LIMITATION; separate readable-summary export is OUT OF BRIEF only against the exact reviewed public brief. Frozen answers/evaluator and historical receipts are unchanged. Syntax and pure checks pass; no new browser result is claimed. See [[Research/QA/Acceptance/README]].
 
