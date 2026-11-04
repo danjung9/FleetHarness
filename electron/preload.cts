@@ -3,7 +3,10 @@ import type { AppState, NewProject, Settings } from '../shared/types.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
   connectors: {
     list: () => ipcRenderer.invoke('fleet:connectors:list'),
-    preview: (kind: string, filters: unknown) => ipcRenderer.invoke('fleet:connectors:preview', kind, filters),
+    connect: (kind: string, address?: string) => ipcRenderer.invoke('fleet:connectors:connect', kind, address),
+    progress: (kind: string) => ipcRenderer.invoke('fleet:connectors:progress', kind),
+    answer: (kind: string, requestId: string, value: string) => ipcRenderer.invoke('fleet:connectors:answer', kind, requestId, value),
+    preview: (kind: string, filters: unknown, mode?: string) => ipcRenderer.invoke('fleet:connectors:preview', kind, filters, mode),
     use: (id: string, digest: string) => ipcRenderer.invoke('fleet:connectors:use', id, digest),
     cancel: (kind: string) => ipcRenderer.invoke('fleet:connectors:cancel', kind),
     disconnect: (id: string) => ipcRenderer.invoke('fleet:connectors:disconnect', id)

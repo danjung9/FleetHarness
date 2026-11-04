@@ -70,9 +70,20 @@ Disconnect cancels active operations and removes the credential record. Google a
 
 ## Integration and test boundary
 
+The desktop main process now registers these adapters and passes administrator configuration from environment variables. These values are public registration IDs, never account credentials:
+
+| Registration | Client ID | Optional tenant ID |
+| --- | --- | --- |
+| Google | APPYARD_GOOGLE_CLIENT_ID | Not used |
+| Microsoft personal or business | APPYARD_MICROSOFT_CLIENT_ID | APPYARD_MICROSOFT_TENANT_ID |
+| US Government | APPYARD_MICROSOFT_GOV_CLIENT_ID | APPYARD_MICROSOFT_GOV_TENANT_ID |
+| Navy or DoD | APPYARD_MICROSOFT_DOD_CLIENT_ID | APPYARD_MICROSOFT_DOD_TENANT_ID |
+
+The host keeps those Microsoft registrations separate; it does not use a commercial ID for another cloud. No saved setting can override provider endpoints. See connectors-core.md for the screen flow, synthetic build boundary, native smoke script and the unpackaged-only local fixture seam.
+
 `types.ts` is unchanged. Use `GoogleConnector(kind, config)` or the `GmailConnector`, `GoogleCalendarConnector`, `GoogleDriveConnector` convenience classes. Microsoft provides `MicrosoftConnector(kind, config)` plus `OutlookConnector`, `OutlookCalendarConnector` and `OneDriveConnector`. All implement `ConnectorAdapter`.
 
-Construct adapters in the main process. Pass only the documented registration fields from saved configuration. The third constructor argument is reserved for tests, requires `NODE_ENV=test`, and allows only explicit loopback HTTP(S) endpoints. Normal configuration cannot replace any provider URL. Do not expose this argument through IPC or saved settings.
+Construct adapters in the main process. Pass only the documented registration fields from host configuration. The third constructor argument is reserved for tests, requires `NODE_ENV=test`, and allows only explicit loopback HTTP(S) endpoints. Normal configuration cannot replace any provider URL. Do not expose this argument through IPC or saved settings.
 
 The `SecretStore` holds one JSON credential record under `connectors:<kind>:oauth`, containing access token, optional refresh token, expiry and the selected Microsoft cloud. It must be the encrypted main-process store, never renderer state or workspace files. Pass a store scoped to the connection if multiple accounts of the same kind are supported. Returned labels are generic account labels, not verified identities. Tokens do not appear in `ContextItem` fields or error text; known credentials echoed by a provider are hidden.
 

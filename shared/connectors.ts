@@ -8,11 +8,22 @@ export interface ConnectorPreview {
 }
 export interface ConnectorCard {
   kind: ConnectorKind; label: string; summary: string; available: boolean;
+  signedIn?: { id: string };
   connection?: Omit<ConnectorPreview, 'items'> & { count: number };
+}
+export interface SavedConnection { id: string; kind: ConnectorKind; sample: boolean }
+export interface ConnectorProgress {
+  stage: 'idle' | 'connecting' | 'question' | 'choose' | 'fetching' | 'preview' | 'cancelled' | 'failed';
+  question?: { requestId: string; label: string; secret?: boolean; options?: { id: string; label: string }[] };
+  code?: { value: string; url: string };
+  error?: string;
 }
 export interface ConnectorsAPI {
   list(): Promise<ConnectorCard[]>;
-  preview(kind: ConnectorKind, filters: ConnectorFilters): Promise<ConnectorPreview>;
+  connect(kind: ConnectorKind, address?: string): Promise<void>;
+  progress(kind: ConnectorKind): Promise<ConnectorProgress>;
+  answer(kind: ConnectorKind, requestId: string, value: string): Promise<void>;
+  preview(kind: ConnectorKind, filters: ConnectorFilters, mode?: 'sample' | 'connected'): Promise<ConnectorPreview>;
   use(id: string, digest: string): Promise<void>;
   cancel(kind: ConnectorKind): Promise<void>;
   disconnect(id: string): Promise<void>;

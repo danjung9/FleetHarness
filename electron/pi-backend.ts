@@ -181,8 +181,8 @@ export class FleetBackend {
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
       if (p.connectedData?.length && !this.options.connectorStore) throw new Error('Connected data is unavailable. Choose sample data in Connectors.');
-      const connected = this.options.connectorStore ? await writeConnectedContext(this.options.connectorStore, p.workspace, p.connectedData, run.controller.signal) : undefined;
-      this.check(run);
+      const connected = p.connectedData?.length && this.options.connectorStore ? await writeConnectedContext(this.options.connectorStore, p.workspace, p.connectedData, run.controller.signal) : undefined;
+      if (connected) this.check(run);
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
         '# ' + p.title, '', p.description, '', '## Evaluation criteria',
         ...(p.criteria.length ? p.criteria.map((c, i) => (i + 1) + '. ' + c)
@@ -198,7 +198,7 @@ export class FleetBackend {
       run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
-        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', connectedContextHash: connected?.hash };
+        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', ...(connected ? { connectedContextHash: connected.hash } : {}) };
       if (connected) this.log(p, 'intake', 'info', connected.activity);
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
@@ -428,7 +428,7 @@ export class FleetBackend {
   }
   private async checkInputs(p: Project, run: ActiveRun) {
     if (p.connectedData?.length && !p.runCheckpoint?.connectedContextHash) throw new Error('Connected data is missing. Start a new build.');
-    await assertContext(p.workspace!, p.runCheckpoint?.connectedContextHash);
+    if (p.runCheckpoint?.connectedContextHash) await assertContext(p.workspace!, p.runCheckpoint.connectedContextHash);
     if (p.runCheckpoint && briefHash(p) !== p.runCheckpoint.briefHash) throw new Error('The brief changed during the run. Start a new run with the changed brief.');
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);

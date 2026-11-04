@@ -2,7 +2,8 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { SecretStore } from './types.js';
-import type { ConnectorPreview } from '../../shared/connectors.js';
+import type { ConnectorPreview, SavedConnection } from '../../shared/connectors.js';
+import { connectorCatalog } from './sample-data.js';
 export interface Encryption {
   isEncryptionAvailable(): boolean;
   getSelectedStorageBackend?(): string;
@@ -18,7 +19,24 @@ async function atomicWrite(target: string, contents: string | Buffer) {
 }
 export class ConnectorStore {
   constructor(readonly root: string, private encryption: Encryption) {}
-  async init() { await fs.mkdir(path.join(this.root, 'snapshots'), { recursive: true, mode: 0o700 }); }
+  async init() {
+    await fs.mkdir(path.join(this.root, 'snapshots'), { recursive: true, mode: 0o700 });
+    await fs.mkdir(path.join(this.root, 'connections'), { recursive: true, mode: 0o700 });
+  }
+  async saveConnection(connection: SavedConnection) {
+    const { id, kind, sample } = connection;
+    validId(id);
+    if (!connectorCatalog.some(card => card.kind === kind) || typeof sample !== 'boolean') throw new Error('This source is not valid. Connect it again.');
+    await atomicWrite(path.join(this.root, 'connections', id + '.json'), JSON.stringify({ id, kind, sample }));
+  }
+  async connections(): Promise<SavedConnection[]> {
+    const entries = await fs.readdir(path.join(this.root, 'connections'));
+    return Promise.all(entries.filter(file => /^[a-f0-9-]{36}\.json$/.test(file)).map(async file => {
+      const value = JSON.parse(await fs.readFile(path.join(this.root, 'connections', file), 'utf8'));
+      if (value?.id + '.json' !== file || !connectorCatalog.some(card => card.kind === value.kind) || typeof value.sample !== 'boolean') throw new Error('A saved source is unreadable. Connect it again.');
+      return { id: value.id, kind: value.kind, sample: value.sample };
+    }));
+  }
   private snapshotPath(id: string) { return path.join(this.root, 'snapshots', validId(id) + '.json'); }
   async save(snapshot: ConnectorPreview) { await atomicWrite(this.snapshotPath(snapshot.id), JSON.stringify(snapshot)); }
   async read(id: string): Promise<ConnectorPreview> { return JSON.parse(await fs.readFile(this.snapshotPath(id), 'utf8')); }
@@ -28,6 +46,7 @@ export class ConnectorStore {
   }
   async remove(id: string) {
     await fs.rm(this.snapshotPath(id), { force: true });
+    await fs.rm(path.join(this.root, 'connections', validId(id) + '.json'), { force: true });
     await fs.rm(path.join(this.root, 'secrets', validId(id)), { recursive: true, force: true });
   }
   secrets(id: string): SecretStore {

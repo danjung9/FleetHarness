@@ -353,6 +353,7 @@ test('combined prerequisite: transient build recovery and both repairs share reg
   assert.equal(builds, 2); assert.equal(repairs, 2); assert.equal(launches, 3);
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   assert.equal(h.project.runCheckpoint.testChanges.length, 2);
+  assert.equal(Object.hasOwn(h.project.runCheckpoint, 'connectedContextHash'), false);
   assert.deepEqual(h.project.runCheckpoint.lastTests, h.project.runCheckpoint.buildTests);
   assert.match(h.project.report.output, /restored to build snapshot/);
   assert.deepEqual(h.project.report.registeredTests, [{ file: 'app.test.cjs', tests: 2 }]);

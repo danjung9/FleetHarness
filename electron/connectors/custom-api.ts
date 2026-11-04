@@ -45,7 +45,7 @@ export const DATA_SERVICE_SECRET_NAMES = {
 } as const;
 export const DELIVERED_DATA_SERVICE_HELPER = 'skills/fleet-delivery/appyard-connectors.js';
 
-class ServiceError extends Error {}
+export class ServiceError extends Error {}
 function fail(message: string): never { throw new ServiceError(message); }
 const messages = {
   address: 'This address cannot be used safely. Paste a service address without a key or sign-in details.',

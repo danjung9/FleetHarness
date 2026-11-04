@@ -14,6 +14,8 @@ import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/cata
 import { exportVerifiedBundle } from './source-export.js';
 import { ConnectorService, registerConnectorIPC } from './connectors/index.js';
 import { ConnectorStore } from './connectors/store.js';
+import { connectorConfiguration, fixtureSource } from './connectors/config.js';
+import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -255,8 +257,21 @@ app.whenReady().then(async () => {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));
     await store.init();
-    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), safeStorage));
-    await connectors.registerInstalledAdapters();
+    const connectorConfig = connectorConfiguration(app.isPackaged, process.env);
+    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), safeStorage), [], 120_000, {
+      allowConnections: true,
+      openBrowser: async address => {
+        const url = new URL(address);
+        if (url.protocol !== 'https:' && !(connectorConfig.fixture && url.origin === connectorConfig.fixture.accounts)) throw new Error('Sign-in address is not allowed.');
+        await shell.openExternal(url.href);
+      },
+      isSynthetic: async (kind, secrets) => {
+        if (!connectorConfig.fixture) return false;
+        const address = kind === 'custom-api' ? JSON.parse(await secrets.get(DATA_SERVICE_SECRET_NAMES.connection) ?? '{}').url : undefined;
+        return fixtureSource(connectorConfig, kind, address);
+      }
+    });
+    await connectors.registerInstalledAdapters(connectorConfig);
     await connectors.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
     backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, connectorStore: connectors.store });
@@ -277,12 +292,12 @@ app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  void connectors?.shutdown();
-  if (!quitting && (backend?.active.size || deliveries.size)) {
+  if (!quitting && (backend?.active.size || deliveries.size || connectors?.busy)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.all([backend.stopAll(), ...[...deliveries.values()].map(d => d.done)]).finally(async () => { await store.save(); app.quit(); });
+    void Promise.all([backend?.stopAll(), connectors?.shutdown(), ...[...deliveries.values()].map(d => d.done)]).finally(async () => { await store.save(); app.quit(); });
   }
+  else if (!quitting) void connectors?.shutdown();
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('will-quit', () => { previews.close(); codex?.dispose(); });

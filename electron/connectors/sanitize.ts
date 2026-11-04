@@ -8,7 +8,7 @@ export function hasMarking(item: ContextItem): boolean {
     value.split(/\r?\n/).some(line => {
       const banner = line.trim().toUpperCase().replace(/^UNCLASSIFIED\s*\/\/\s*/, '');
       return bannerNames.some(name => banner === name || banner.startsWith(name + '//') || banner.startsWith(name + ' //') || banner.startsWith(name + ' '));
-    }) || /\((?:CUI(?:\/\/[^)\n]*)?|TS|S|C|FOUO)\)|\bNOFORN\b|\bREL TO USA\b/i.test(value)
+    }) || /\((?:CUI(?:\/\/[^)\n]*)?|TS|S|C|FOUO)\)/.test(value) || /\bNOFORN\b|\bREL TO USA\b/i.test(value)
   ));
 }
 export function redact(text: string): string {

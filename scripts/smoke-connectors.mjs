@@ -3,9 +3,12 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { startFixtureProvider } from './mock-provider.mjs';
 import { qualityFixtureProject } from './quality-fixture.mjs';
 import { assertContext } from '../dist-electron/electron/connectors/snapshot.js';
+import { startConnectorServers } from '../tests/fixtures/connector-servers.mjs';
+import { startDataServiceServer } from '../tests/fixtures/data-service-server.mjs';
 
 // Run after npm run build, on a host permitted to launch Electron, Chrome,
 // sandbox-exec and ps. No live model, account or data-service calls.
@@ -14,22 +17,66 @@ const root = await fs.mkdtemp(path.join(output, 'run-'));
 const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
 const stateDir = path.join(root, 'state');
 const fixture = await startFixtureProvider();
+const accounts = await startConnectorServers({ echoSecrets: true });
+const serviceKey = 'synthetic-smoke-service-' + randomUUID();
+const dataService = await startDataServiceServer({ key: serviceKey, mode: 'header', description: 'openapi' });
+const env = { ...process.env, FLEET_USER_DATA: stateDir, PI_CODING_AGENT_DIR: piDir, NODE_ENV: 'test', APPYARD_CONNECTOR_TEST_MODE: '1',
+  APPYARD_CONNECTOR_TEST_SERVERS: JSON.stringify({ accounts: accounts.base, dataService: dataService.origin }) };
+const errors = [], logs = [];
+function assertNoSecrets(value) {
+  for (const secret of [serviceKey, accounts.distinctive]) assert.equal(value.includes(secret), false, 'A synthetic credential escaped its encrypted store.');
+}
+async function scanSaved(directory) {
+  for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+    if (entry.name === 'auth.json' || entry.isSymbolicLink()) continue;
+    const file = path.join(directory, entry.name);
+    if (entry.isDirectory()) await scanSaved(file);
+    else if (entry.isFile()) assertNoSecrets((await fs.readFile(file)).toString());
+  }
+}
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': {
   baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
   models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
 } } }));
 let app;
-try {
-  app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: stateDir, PI_CODING_AGENT_DIR: piDir }, timeout: 45_000 });
-  const page = await app.firstWindow(), errors = [];
+async function launch() {
+  const application = await electron.launch({ args: ['.'], env, timeout: 45_000 });
+  application.on('console', message => logs.push(message.text()));
+  for (const stream of [application.process().stdout, application.process().stderr]) stream?.on('data', chunk => logs.push(chunk.toString()));
+  const page = await application.firstWindow();
   page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => logs.push(message.text()));
   await page.locator('.app-shell').waitFor();
+  return { application, page };
+}
+async function openConnectors(page) {
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   await page.getByRole('heading', { name: 'Connectors', exact: true }).waitFor();
+}
+async function question(card, label, value) {
+  const input = card.getByLabel(label); await input.waitFor();
+  if (await input.evaluate(element => element.tagName === 'SELECT')) await input.selectOption(value);
+  else await input.fill(value);
+  await card.getByRole('button', { name: 'Continue', exact: true }).click();
+}
+async function checkAndSave(card) {
+  const choices = card.locator('.connector-choices');
+  if (!(await choices.evaluate(element => element.open))) await choices.locator('summary').click();
+  await card.getByRole('button', { name: 'Check data', exact: true }).click();
+  await card.getByRole('heading', { name: 'Check it', exact: true }).waitFor();
+  const text = await card.locator('.connector-preview').innerText(); assertNoSecrets(text);
+  assert.match(text, /2 items ready/);
+  await card.getByRole('button', { name: 'Use this', exact: true }).click();
+  await card.locator('.connector-preview').waitFor({ state: 'hidden' });
+  await card.getByRole('status').filter({ hasText: 'Sample data ready: 2 items.' }).waitFor();
+}
+try {
+  let launched = await launch(); app = launched.application; let page = launched.page;
+  await openConnectors(page);
   assert.equal(await page.locator('.connector-card').count(), 7);
   for (const name of ['Gmail', 'Google Calendar', 'Google Drive', 'Outlook', 'Outlook Calendar', 'OneDrive', 'Your own data service']) {
     const card = page.getByRole('article', { name, exact: true });
-    assert.equal(await card.getByRole('button', { name: 'Connect', exact: true }).isDisabled(), true);
+    assert.equal(await card.getByRole('button', { name: 'Connect', exact: true }).isEnabled(), true);
     await card.getByRole('button', { name: 'Try sample data', exact: true }).click();
     await card.getByRole('heading', { name: 'Check it', exact: true }).waitFor();
     const preview = await card.locator('.connector-preview').innerText();
@@ -69,6 +116,59 @@ try {
   }, { module: pathToFileURL(path.resolve('dist-electron/electron/connectors/store.js')).href, root: path.join(root, 'native-storage-check') });
   assert.deepEqual(nativeStorage, { restored: true, encrypted: true, removed: true });
 
+  // All actions below go through the real screen, preload, IPC and adapters.
+  // Sign-in opens the ordinary system browser. The local provider redirects to
+  // the adapter's real loopback callback and checks its authorization proof.
+  let serviceCard = page.getByRole('article', { name: 'Your own data service', exact: true });
+  await serviceCard.getByLabel('Service address or documentation link').fill(dataService.origin + '/docs');
+  await serviceCard.getByRole('button', { name: 'Connect', exact: true }).click();
+  await question(serviceCard, 'Is this an internal service you want AppYard to read?', 'yes');
+  const keyLabel = 'This service needs a key. Paste it here.';
+  await serviceCard.getByLabel(keyLabel).waitFor();
+  assert.equal(await serviceCard.getByLabel(keyLabel).getAttribute('type'), 'password');
+  await serviceCard.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await serviceCard.locator('.connector-progress').waitFor({ state: 'hidden' });
+  assert.equal(await serviceCard.getByText('Connected. Choose what to include below.', { exact: true }).count(), 0);
+  await serviceCard.getByRole('status').filter({ hasText: 'Sample data ready: 2 items.' }).waitFor();
+  await serviceCard.getByRole('button', { name: 'Connect', exact: true }).click();
+  await question(serviceCard, 'Is this an internal service you want AppYard to read?', 'yes');
+  await question(serviceCard, keyLabel, serviceKey);
+  await serviceCard.getByText('Connected. Choose what to include below.', { exact: true }).waitFor();
+  assert.equal(await serviceCard.locator('input[type=password]').count(), 0);
+  dataService.setMode('leak');
+  await serviceCard.getByRole('button', { name: 'Check data', exact: true }).click();
+  await serviceCard.getByRole('heading', { name: 'Check it', exact: true }).waitFor();
+  const echoed = await serviceCard.locator('.connector-preview').innerText();
+  assert.match(echoed, /1 item ready/); assertNoSecrets(echoed);
+  await serviceCard.getByRole('button', { name: 'Cancel', exact: true }).click();
+  dataService.setMode('header'); await checkAndSave(serviceCard);
+  for (const name of ['Gmail', 'Outlook']) {
+    const card = page.getByRole('article', { name, exact: true });
+    await card.getByRole('button', { name: 'Connect', exact: true }).click();
+    if (name === 'Outlook') await question(card, 'Which Microsoft account?', 'commercial');
+    await card.getByText('Connected. Choose what to include below.', { exact: true }).waitFor({ timeout: 30_000 });
+    await checkAndSave(card);
+  }
+  assert.equal(accounts.state.pkceVerified, 2);
+  assert.ok(dataService.requests.some(request => request.path === '/openapi.json'));
+  assert.ok(dataService.requests.some(request => request.path === '/ships'));
+  assert.ok(dataService.requests.every(request => request.method === 'GET'));
+  const connectedIds = await page.evaluate(async () => (await window.fleetHarness.connectors.list()).filter(card => card.signedIn).map(card => ({ kind: card.kind, id: card.signedIn.id })));
+  assert.equal(connectedIds.length, 3);
+  // Restart the actual process, retaining native encrypted credentials.
+  await app.close(); app = undefined;
+  await scanSaved(stateDir); assertNoSecrets(JSON.stringify(logs));
+  launched = await launch(); app = launched.application; page = launched.page;
+  await openConnectors(page);
+  await page.waitForFunction(() => document.querySelectorAll('.connector-saved').length === 7);
+  assert.deepEqual(await page.evaluate(async () => (await window.fleetHarness.connectors.list()).filter(card => card.signedIn).map(card => ({ kind: card.kind, id: card.signedIn.id }))), connectedIds);
+  accounts.state.apiOnceStatus = 401;
+  await checkAndSave(page.getByRole('article', { name: 'Gmail', exact: true }));
+  assert.equal(accounts.state.refreshes, 1);
+  serviceCard = page.getByRole('article', { name: 'Your own data service', exact: true });
+  await checkAndSave(serviceCard);
+  assert.equal(accounts.state.pkceVerified, 2);
+
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('radio', { name: 'Pi Model providers' }).check();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
@@ -93,6 +193,7 @@ try {
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
   await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, { timeout: 120_000 });
   const final = await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id), id);
+  assertNoSecrets(JSON.stringify(final));
   assert.equal(final.status, 'review', final.error);
   assert.equal(final.report.passed, 1); assert.equal(final.connectedData.length, 4);
   assert.ok(final.runCheckpoint.connectedContextHash); await assertContext(final.workspace, final.runCheckpoint.connectedContextHash);
@@ -104,17 +205,27 @@ try {
   for (const selected of final.connectedData) {
     const context = JSON.parse(await fs.readFile(path.join(final.workspace, 'context', selected.id + '.json'), 'utf8'));
     assert.equal(context.digest, selected.digest); assert.equal(context.sample, true); assert.equal(context.items.length, 2);
+    assert.ok(selections.includes(context.source));
     const text = JSON.stringify(context);
+    assertNoSecrets(text);
+    if (context.source === 'Gmail') assert.match(text, /Synthetic maintenance/);
+    if (context.source === 'Your own data service') assert.match(text, /Sample Harbor/);
     for (const hidden of ['Synthetic banner check', 'training.desk@example.invalid', '202-555-0147', '000-12-3456']) assert.equal(text.includes(hidden), false);
   }
   assert.ok(fixture.requests.length > 0); assert.deepEqual(errors, []);
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
-  const gmail = page.getByRole('article', { name: 'Gmail', exact: true });
-  await gmail.getByRole('button', { name: 'Disconnect', exact: true }).click();
-  await page.waitForFunction(async () => !(await window.fleetHarness.connectors.list()).find(card => card.kind === 'gmail').connection);
-  const receipt = { passed: true, sampleCards: 7, selectedSources: 4, workspaceContext: true, nativeEncryption: nativeStorage, nativeProcessCleanup: true, fixtureBuild: final.status, rendererErrors: errors.length };
+  for (const name of ['Gmail', 'Outlook', 'Your own data service']) await page.getByRole('article', { name, exact: true }).getByRole('button', { name: 'Disconnect', exact: true }).click();
+  await page.waitForFunction(async () => (await window.fleetHarness.connectors.list()).filter(card => ['gmail', 'outlook', 'custom-api'].includes(card.kind)).every(card => !card.connection && !card.signedIn));
+  for (const { id } of connectedIds) {
+    for (const file of [path.join('secrets', id), path.join('connections', id + '.json'), path.join('snapshots', id + '.json')]) await assert.rejects(fs.access(path.join(stateDir, 'connectors', file)), { code: 'ENOENT' });
+  }
+  assert.equal(accounts.state.revocations, 1); assert.equal(accounts.state.revokedKnownToken, true);
+  await app.close(); app = undefined;
+  await scanSaved(stateDir); await scanSaved(final.workspace); assertNoSecrets(JSON.stringify({ logs, errors }));
+  assert.deepEqual(errors, []);
+  const receipt = { passed: true, sampleCards: 7, selectedSources: 4, workspaceContext: true, signIns: accounts.state.pkceVerified, dataService: true, restart: true, cancellation: true, noLeakedCredentials: true, nativeEncryption: nativeStorage, nativeProcessCleanup: true, fixtureBuild: final.status, rendererErrors: errors.length };
   await fs.writeFile(path.join(output, 'receipt.json'), JSON.stringify(receipt, null, 2));
   console.log(JSON.stringify(receipt, null, 2));
 } finally {
-  await app?.close(); await fixture.close(); await fs.rm(root, { recursive: true, force: true });
+  await app?.close(); await Promise.all([fixture.close(), accounts.close(), dataService.close()]); await fs.rm(root, { recursive: true, force: true });
 }

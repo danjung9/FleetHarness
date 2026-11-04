@@ -23,3 +23,7 @@
 .connected-data-section legend{font-size:14px;font-weight:600;padding:0 6px}
 .connected-data-section .connector-check{display:flex;align-items:center;gap:10px;font-size:13px;margin:10px 0}
 .connector-check input{width:18px;height:18px;flex-shrink:0;margin:0;accent-color:var(--accent)}
+.connector-progress{border:1px solid var(--line);padding:14px;margin-top:16px;border-radius:6px}
+.connector-progress form{margin:12px 0}
+.connector-progress button,.connector-choices button{margin-top:12px}
+.connector-address input,.connector-progress input,.connector-progress select,.connector-choices input,.connector-choices select{width:100%;box-sizing:border-box}

@@ -123,7 +123,10 @@ test('RPC handles correlation, timeouts and process death without hanging', asyn
   } finally { rpc.dispose(); }
 });
 
-test('the Codex engine runs every factory phase, domain tools and independent verification without a Pi session', { timeout: 15000 }, async t => {
+// This functional case launches the native verifier and four browser journeys.
+// Match the functional scheduling allowance in pi-backend.test.mjs; production
+// deadlines and all outcome, phase, tool and evidence assertions stay unchanged.
+test('the Codex engine runs every factory phase, domain tools and independent verification without a Pi session', { timeout: 60000 }, async t => {
   const root = await temp(t), store = new Store(root); await store.init();
   store.state.projects[0] = newProject(qualityFixtureProject);
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
