@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { challenges } from '../harness/catalog.js';
-import { packetFor, customPacket } from '../harness/planner.js';
+import { packetFor, customPacket, fleetStagePrompt } from '../harness/planner.js';
 import { getRecipe } from '../harness/recipes.js';
 import { sourceLines } from '../harness/norfolk.js';
 import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/integration.js';
@@ -88,11 +88,13 @@ function validPlan(): QualityPlan {
     schemaVersion: 1,
     criteria: [
       { criterionId: 'UCsample-1', disposition: 'implemented', expectedOutcome: 'A saved record is visible. Empty titles are rejected and the draft can be corrected.', journeyIds: ['create', 'recover'] },
-      { criterionId: 'USERsample-1', disposition: 'deferred', expectedOutcome: 'Users sign in through the approved identity service.', journeyIds: [], reason: 'real-system: The owner has not supplied an authorized identity integration. Live sign-in is withheld; the local synthetic review workflow remains demonstrable.' }
+      { criterionId: 'USERsample-1', disposition: 'deferred', expectedOutcome: 'Users sign in through the approved identity service.', journeyIds: [], reason: 'real-system: The owner has not supplied an authorized identity integration. Live sign-in is withheld; the local synthetic review workflow remains demonstrable.',
+        syntheticCoverage: { assumptions: 'Fictional local identity service, no real authentication or authorization.', journeyIds: ['synthetic-identity'], outputs: [{ sourceCriterionId: 'USERsample-1', name: 'identity service' }] } }
     ],
     journeys: [
       { id: 'create', title: 'Create a record', kind: 'primary', steps: [{ action: 'fill', selector: '#title', value: 'Inspect pump' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#result', text: 'Saved: Inspect pump' }] },
-      { id: 'recover', title: 'Correct a required field', kind: 'recovery', steps: [{ action: 'fill', selector: '#title', value: '' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#error', text: 'Enter a title.' }, { action: 'fill', selector: '#title', value: 'Inspect valve' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#result', text: 'Saved: Inspect valve' }] }
+      { id: 'recover', title: 'Correct a required field', kind: 'recovery', steps: [{ action: 'fill', selector: '#title', value: '' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#error', text: 'Enter a title.' }, { action: 'fill', selector: '#title', value: 'Inspect valve' }, { action: 'click', selector: '#save' }, { action: 'expectText', selector: '#result', text: 'Saved: Inspect valve' }] },
+      { id: 'synthetic-identity', title: 'Use fictional local identity service', kind: 'primary', steps: [{ action: 'select', selector: '#fictional-identity', value: 'sample-01' }, { action: 'click', selector: '#local-sign-in' }, { action: 'expectText', selector: '#session', text: 'Synthetic identity service: sample-01 signed in locally' }] }
     ]
   };
 }
@@ -149,6 +151,42 @@ test('deferrals preserve each declared real dependency and its synthetic workflo
     const plan = validPlan(); plan.criteria[1].reason = reason;
     assert.deepEqual(parseQualityPlan(plan, acceptance), plan);
   }
+});
+
+test('primary deferrals cannot pass with only generic recipe browser evidence', () => {
+  for (const provenance of [undefined, [],
+    ...(['requirement', 'deliverable', 'evaluation', 'user'] as const).map(kind => [{ kind, id: 'source-1', path: 'challenge.source[0]' }]),
+    [{ kind: 'recipe' as const, id: 'recipe-1', path: 'recipe.acceptance[0]' }, { kind: 'deliverable' as const, id: 'source-1', path: 'challenge.source[0]' }]
+  ]) {
+    const inventory = structuredClone(acceptance);
+    inventory[1].provenance = provenance;
+    const plan = validPlan();
+    delete plan.criteria[1].syntheticCoverage;
+    plan.journeys = plan.journeys.filter(item => item.id !== 'synthetic-identity');
+    assert.throws(() => parseQualityPlan(plan, inventory), /USERsample-1.*syntheticCoverage/);
+  }
+});
+
+test('factory prompts require source-linked examples in the requested input format', () => {
+  for (const stage of ['intake', 'plan', 'review', 'deliver']) {
+    const prompt = fleetStagePrompt(stage);
+    assert.match(prompt, /syntheticCoverage/);
+    assert.match(prompt, /requested input format/);
+    assert.match(prompt, /independent.*expected/i);
+    assert.match(prompt, /substitute.*incomplete/i);
+  }
+  assert.match(qualityContractGuide, /sourceCriterionId/);
+});
+
+test('recipe-only limitations keep the current reason-prefix policy without primary coverage', () => {
+  const inventory = structuredClone(acceptance);
+  inventory[1].provenance = [{ kind: 'recipe', id: inventory[1].id, path: 'recipe.acceptance[0]' }];
+  const plan = validPlan();
+  delete plan.criteria[1].syntheticCoverage;
+  plan.journeys.pop();
+  assert.deepEqual(parseQualityPlan(plan, inventory), plan);
+  plan.criteria[1].reason = 'Expert advice is missing.';
+  assert.throws(() => parseQualityPlan(plan, inventory), /deferral reason must start/);
 });
 
 test('browser contracts accept the full bounded action vocabulary and empty reset values', () => {
@@ -241,4 +279,84 @@ test('UX contracts require the complete task, screen, state and recovery specifi
     { ...validUx(), persistence: 'x'.repeat(4_001) }
   ];
   for (const spec of invalid) assert.throws(() => parseUxSpec(spec));
+});
+
+test('ID 12 generic-only baseline is rejected even with allowed real-data dependency reasons', async () => {
+  // Archived rejected plan, with current allowed reason prefixes added only in this test.
+  const plan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
+  const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
+  for (const criterion of plan.criteria) if (criterion.disposition === 'deferred') criterion.reason = 'real-data: Vetted reference records are unavailable; real-format validation is withheld.';
+  assert.deepEqual(plan.criteria.filter((item: any) => item.disposition === 'implemented').map((item: any) => item.criterionId), ['MSG-01', 'MSG-02', 'MSG-03']);
+  assert.throws(() => parseQualityPlan(plan, inventory), /UC12-1.*syntheticCoverage/);
+});
+
+async function syntheticId12Plan(): Promise<{ plan: QualityPlan; inventory: AcceptanceCriterion[] }> {
+  const plan: QualityPlan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
+  const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
+  const outputs = [
+    { sourceCriterionId: 'UC12-1', name: 'frequency plans' },
+    { sourceCriterionId: 'UC12-1', name: 'crypto change-over windows' },
+    { sourceCriterionId: 'UC12-1', name: 'flight quarters event times' },
+    { sourceCriterionId: 'DELIVERABLE12-1', name: '24-hour visual schedule' }
+  ];
+  plan.journeys.push({ id: 'synthetic-usmtf', title: 'Synthetic mock-USMTF extraction to named schedule outputs', kind: 'primary', steps: [
+    { action: 'fill', selector: '#source-input', value: 'SYNTHETIC MOCK USMTF\nFREQ/NET-A/09:00/10:00//\nCRYPTO/CHANGE/12:00/12:15//\nFLIGHT/QUARTERS/15:00//' },
+    { action: 'click', selector: '#parse-mock-usmtf' },
+    { action: 'expectText', selector: '#frequency-plans', text: 'Synthetic frequency plans: NET-A 09:00-10:00 UTC' },
+    { action: 'expectText', selector: '#crypto-windows', text: 'Synthetic crypto change-over windows: 12:00-12:15 UTC' },
+    { action: 'expectText', selector: '#flight-quarters', text: 'Synthetic flight quarters event times: 15:00 UTC' },
+    { action: 'expectText', selector: '#timeline', text: 'Synthetic 24-hour visual schedule: NET-A 09:00-10:00; CHANGE 12:00-12:15; QUARTERS 15:00 UTC' }
+  ] });
+  for (const criterion of plan.criteria) if (criterion.disposition === 'deferred') {
+    criterion.reason = 'real-data: Vetted reference records are unavailable; real-format validation is withheld.';
+    if (['UC12-1', 'DELIVERABLE12-1'].includes(criterion.criterionId)) {
+      criterion.reason = 'real-data: Validation against actual-format records requires vetted reference data. This fictional grammar demonstrates extraction and scheduling only, without real-format validation.';
+      criterion.syntheticCoverage = { assumptions: 'Synthetic FREQ, CRYPTO and FLIGHT grammar with fictional times and NET-A. No operational frequencies or crypto material. Not validated against real USMTF or operational rules.', journeyIds: ['synthetic-usmtf'], outputs: structuredClone(outputs) };
+    }
+  }
+  return { plan, inventory };
+}
+
+test('ID 12 primary deferrals retain unverified status with synthetic named-output journey evidence', async () => {
+  const { plan, inventory } = await syntheticId12Plan();
+  const original = structuredClone(plan), parsed = parseQualityPlan(plan, inventory);
+  assert.deepEqual(parsed, original);
+  assert.deepEqual(plan, original);
+  for (const criterion of parsed.criteria.filter(item => ['UC12-1', 'DELIVERABLE12-1'].includes(item.criterionId))) {
+    assert.equal(criterion.disposition, 'deferred');
+    assert.deepEqual(criterion.journeyIds, []);
+    assert.equal(criterion.syntheticCoverage?.outputs.length, 4);
+  }
+  plan.criteria[0].syntheticCoverage!.outputs[0].name = 'Changed';
+  assert.equal(parsed.criteria[0].syntheticCoverage!.outputs[0].name, 'frequency plans');
+});
+
+test('synthetic coverage cannot be replaced by generic journeys, labels, inputs or invented outputs', async () => {
+  const { plan: original, inventory } = await syntheticId12Plan();
+  const cases: Array<{ change: (plan: QualityPlan) => void; error: RegExp }> = [
+    { change: plan => { delete plan.criteria.at(-1)!.syntheticCoverage; }, error: /DELIVERABLE12-1.*syntheticCoverage/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds = []; }, error: /journeyIds.*1/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds = ['absent']; }, error: /known primary journeys/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds = ['invalid-source-recovery']; }, error: /known primary journeys/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds = ['trace-review-export']; }, error: /literal assertion/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.assumptions = ''; }, error: /assumptions/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.outputs = []; }, error: /outputs/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.outputs[0].name = 'generic EVENT record'; }, error: /quote text from a source/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.outputs[0].sourceCriterionId = 'MSG-01'; }, error: /quote text from a source/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.outputs = [plan.criteria[0].syntheticCoverage!.outputs.at(-1)!]; }, error: /own deferred source/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds.push('synthetic-usmtf'); }, error: /duplicates/ },
+    { change: plan => { plan.criteria[0].syntheticCoverage!.outputs.push(plan.criteria[0].syntheticCoverage!.outputs[0]); }, error: /duplicates/ },
+    { change: plan => { plan.criteria[1].syntheticCoverage = structuredClone(plan.criteria[0].syntheticCoverage); }, error: /allowed only for a deferred/ },
+    { change: plan => { plan.journeys.at(-1)!.steps = [
+      { action: 'fill', selector: '#source-input', value: original.criteria[0].syntheticCoverage!.outputs.map(output => output.name).join(', ') },
+      { action: 'click', selector: '#parse' }, { action: 'expectText', selector: '#result', text: 'Saved generic record' }
+    ]; }, error: /literal assertion/ },
+    { change: plan => { const steps = plan.journeys.at(-1)!.steps; plan.journeys.at(-1)!.steps = [steps[2], steps[1], ...steps.slice(3)]; }, error: /frequency plans.*literal assertion/ },
+    { change: plan => { plan.journeys.at(-1)!.steps[4] = { action: 'expectVisible', selector: '#flight-quarters' }; }, error: /flight quarters event times.*literal assertion/ },
+    { change: plan => { plan.journeys.at(-1)!.steps[2] = { action: 'expectDownload', selector: '#export', fileName: 'frequency plans.json' }; }, error: /frequency plans.*literal assertion/ }
+  ];
+  for (const { change, error } of cases) {
+    const plan = structuredClone(original); change(plan);
+    assert.throws(() => parseQualityPlan(plan, inventory), error);
+  }
 });

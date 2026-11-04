@@ -5,6 +5,8 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { qualityFixtureProject } from './quality-fixture.mjs';
+import { Store, newProject } from '../dist-electron/electron/storage.js';
 
 async function openBuild(page) {
   const legacyFlow = page.getByRole('button', { name: 'Flow — build pipeline', exact: true });
@@ -122,6 +124,8 @@ function denseDesign(project) {
 }
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-design-ui-'));
+const store = new Store(path.join(root, 'state')); await store.init();
+store.state.projects[0] = newProject(qualityFixtureProject); await store.save();
 const output = path.resolve('output/playwright'); await fs.mkdir(output, { recursive: true });
 const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
 const fixture = await startFixtureProvider(); fixture.setDelay(1000);

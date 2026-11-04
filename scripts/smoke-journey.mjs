@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { qualityFixtureProject } from './quality-fixture.mjs';
 
 // Run the real desktop workflow against the explicit local provider fixture.
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-journey-'));
@@ -78,8 +79,8 @@ try {
   await page.getByRole('button', { name: 'New challenge', exact: true }).click();
   const intake = page.getByRole('dialog', { name: 'New challenge', exact: true });
   await intake.getByLabel('Challenge title', { exact: true }).fill('Journey regression fixture');
-  await intake.getByLabel(/^Problem statement(?:\s|$)/).fill('Create a local synthetic message parser so a reviewer can inspect extracted tasks.');
-  await intake.getByLabel('Evaluation criteria (optional)', { exact: false }).fill('Parse a synthetic task and recover from empty input.');
+  await intake.getByLabel(/^Problem statement(?:\s|$)/).fill(qualityFixtureProject.description);
+  await intake.getByLabel('Evaluation criteria (optional)', { exact: false }).fill(qualityFixtureProject.criteria.join('\n'));
   await intake.getByRole('button', { name: 'Save challenge', exact: true }).click();
   await page.getByText('Challenge saved.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);

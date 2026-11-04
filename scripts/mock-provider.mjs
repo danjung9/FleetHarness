@@ -46,7 +46,11 @@ export async function startFixtureProvider() {
     }
     if (last?.role === 'user' && prompt.includes('You are the planning agent')) {
       const ids = /Acceptance IDs: ([^\n]+)/.exec(prompt)?.[1].split(', ').filter(Boolean) ?? [];
-      files.push(...Object.entries(qualityFixture(ids)));
+      try { files.push(...Object.entries(qualityFixture(ids))); }
+      catch (error) {
+        res.writeHead(422, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: { message: error.message, type: 'invalid_request_error' } }));
+        return;
+      }
     }
     const progress = (componentId, status) => ({ name: 'fleet_component_progress', arguments: JSON.stringify({ componentId, status, detail: status === 'building' ? 'Implementing the fixture component.' : 'Fixture implementation written. Independent tests still determine correctness.' }) });
     if (last?.role === 'user') {
