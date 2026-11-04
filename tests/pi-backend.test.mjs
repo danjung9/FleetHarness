@@ -7,17 +7,20 @@ import { Store, newProject, sourceHash } from '../dist-electron/electron/storage
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed } from '../dist-electron/electron/verification.js';
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
+import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 
 const resourcesRoot = path.resolve('.');
 const never = () => new Promise(() => {});
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const stageOf = prompt => prompt.includes('The independent test run failed') ? 'repair'
+  : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
   : prompt.includes('You are the intake agent') ? 'intake'
   : prompt.includes('You are the research agent') ? 'research'
   : prompt.includes('You are the implementation agent') ? 'build'
   : prompt.includes('You are the verification agent') ? 'verify' : 'plan';
 async function artifacts(cwd, stage, broken = false) {
   const files = stage === 'intake' ? { 'scope.md': 'Synthetic scope' }
+    : stage === 'synthetic-data' ? syntheticDataFiles
     : stage === 'research' ? { 'research.md': 'Local fixture research' }
     : stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
     : stage === 'build' ? { 'index.html': qualityFixtureHtml,
@@ -28,7 +31,10 @@ async function artifacts(cwd, stage, broken = false) {
     : stage === 'repair' ? { 'core.cjs': broken ? 'exports.parse = () => "still broken";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'verification.md': 'Repair completed; domain review still required' }
     : { 'verification.md': 'Task extraction and empty input are tested; domain review required' };
   if (stage === 'plan') Object.assign(files, qualityFixture(JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
-  for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(cwd, name), content);
+  for (const [name, content] of Object.entries(files)) {
+    await fs.mkdir(path.dirname(path.join(cwd, name)), { recursive: true });
+    await fs.writeFile(path.join(cwd, name), content);
+  }
 }
 
 async function harness(t, options = {}) {
@@ -93,12 +99,91 @@ test('builds accept optional criteria and hand resources and links to agents', {
   assert.deepEqual(packet.userScope.criteria, []);
   assert.equal(packet.userScope.resources, h.project.resources);
   assert.deepEqual(packet.userScope.links, h.project.links);
+  assert.equal(h.sessions.filter(session => session.stage === 'synthetic-data').length, 1, 'Resource notes and reference links do not count as connected data');
   assert.equal(reportPassed(h.project.report), true);
 });
 
+test('connected file and pasted inputs reach agents unchanged and skip the synthetic-data specialist', { timeout: 10000 }, async t => {
+  const h = await harness(t);
+  h.project.dataInputs = [
+    { name: 'messages.csv', kind: 'file', content: 'message\r\nTASK: inspect pump\r\n' },
+    { name: 'message-notes.txt', kind: 'text', content: '  TASK: check valve\n' }
+  ];
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  for (const [index, input] of h.project.dataInputs.entries()) {
+    assert.equal(await fs.readFile(path.join(h.project.workspace, 'inputs', `${String(index + 1).padStart(3, '0')}-${input.name}`), 'utf8'), input.content);
+  }
+  const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
+  assert.deepEqual(packet.userScope.dataInputs, h.project.dataInputs.map(({ name, kind, content }) => ({ name, kind, bytes: Buffer.byteLength(content, 'utf8') })));
+  assert.equal(packet.dataPolicy, 'user-provided-or-synthetic');
+  const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
+  assert.match(requirements, /messages\.csv/);
+  assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /inputs\/manifest\.json/);
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'data/synthetic-data.json')), /ENOENT/);
+});
+
+test('the no-data specialist finishes within intake before downstream agents receive its dataset', { timeout: 10000 }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage, project }) => {
+    if (stage === 'synthetic-data') {
+      assert.equal(project.stages.find(item => item.id === 'intake').status, 'active');
+      assert.equal(project.stages.find(item => item.id === 'research').status, 'queued');
+      await fs.access(path.join(cwd, 'scope.md'));
+    }
+    if (stage === 'research') assert.equal(JSON.parse(await fs.readFile(path.join(cwd, 'data/synthetic-data.json'), 'utf8')).classification, 'synthetic');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  const specialist = h.sessions.find(session => session.stage === 'synthetic-data');
+  assert.ok(specialist);
+  assert.notEqual(specialist, h.sessions[0], 'Data generation gets its own agent session');
+  assert.match(specialist.prompts[0], /requirements\.md/);
+  assert.match(specialist.prompts[0], /scope\.md/);
+  assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /data\/synthetic-data\.json/);
+  assert.equal(specialist.disposed, true);
+  assert.deepEqual(specialist.tools, ['read', 'write', 'edit', 'bash']);
+  assert.deepEqual(specialist.customTools, []);
+  assert.deepEqual(specialist.skills, ['fleet-data']);
+  assert.equal(h.project.stages.length, 7, 'The specialist does not add a user-facing build phase');
+});
+
+for (const recover of [true, false]) {
+  test(`invalid synthetic data ${recover ? 'gets one completion attempt' : 'blocks research after one completion attempt'}`, { timeout: 10000 }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+      if (stage !== 'synthetic-data') return false;
+      if (recover && session.prompts.length === 2) return false;
+      await fs.mkdir(path.join(cwd, 'data'), { recursive: true });
+      await fs.writeFile(path.join(cwd, 'data/synthetic-data.json'), JSON.stringify({ classification: 'synthetic', records: [] }));
+      await fs.writeFile(path.join(cwd, 'data/README.md'), 'Invented examples.');
+      return true;
+    } });
+    await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
+    assert.equal(h.sessions.find(session => session.stage === 'synthetic-data').prompts.length, 2);
+    if (!recover) {
+      assert.equal(h.sessions.some(session => session.stage === 'research'), false);
+      assert.equal(h.project.stages.find(item => item.id === 'intake').status, 'failed');
+      assert.equal(h.project.report, undefined);
+    }
+  });
+}
+
+for (const supplied of [false, true]) {
+  test(`downstream agents cannot change ${supplied ? 'connected inputs' : 'the generated synthetic dataset'}`, { timeout: 10000 }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+      if (stage === 'plan') await fs.appendFile(path.join(cwd, supplied ? 'inputs/001-messages.csv' : 'data/synthetic-data.json'), '\nChanged by the planner');
+      return false;
+    } });
+    if (supplied) h.project.dataInputs = [{ name: 'messages.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' }];
+    await h.run(); await h.assertSettled('failed');
+    assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+    assert.equal(h.project.report, undefined);
+    assert.match(h.project.error, /input|data|integrity|changed/i);
+  });
+}
+
 test('the complete workflow advances in order and persists real test evidence before human review', { timeout: 10000 }, async t => {
   const h = await harness(t); await h.run(); await h.assertSettled('review');
-  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
+  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
   for (const id of ['intake', 'research', 'plan', 'build', 'verify']) {
     const changes = h.snapshots.map(p => p.stages.find(s => s.id === id).status).filter((s, i, all) => !i || s !== all[i - 1]);
     assert.deepEqual(changes, ['queued', 'active', 'complete'], id);
@@ -122,6 +207,7 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.deepEqual(h.project.phasePlan, packet.stages);
   assert.deepEqual(h.project.globalTools, packet.globalTools);
   for (const session of h.sessions) {
+    if (session.stage === 'synthetic-data') continue;
     const phase = packet.stages.find(phase => phase.id === session.stage);
     assert.deepEqual(session.tools, [...packet.globalTools, ...phase.tools]);
     assert.deepEqual(session.skills.sort(), [...phase.skills].sort());
@@ -183,14 +269,14 @@ for (const brokenRepair of [false, true]) {
   test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: 10000 }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
-    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair']);
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', 'repair']);
     assert.equal(reportPassed(h.project.report), !brokenRepair);
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
     if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
-for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
+for (const blockedStage of ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify']) {
   test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: 10000 }, async t => {
     const h = await harness(t, { agentLimits: { idleMs: 200, timeoutMs: 3000 }, scenario: ({ stage }) => stage === blockedStage ? never() : false });
     await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /no progress/);
@@ -220,7 +306,7 @@ test('missing artifacts get one targeted completion prompt within the same stage
 test('an agent that keeps omitting artifacts cannot advance or loop forever', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.length, 3); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
+  assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
   assert.match(h.project.error, /after one completion attempt.*plan\.md/);
 });
 
@@ -252,7 +338,7 @@ test('the user guide is requested after implementation and checked before verifi
       await fs.access(path.join(cwd, 'app.test.cjs'));
       await assert.rejects(fs.access(path.join(cwd, 'README.md')), /ENOENT/);
       assert.match(session.prompts.at(-1), /actual screen, field and button names/);
-      assert.match(session.prompts.at(-1), /synthetic sample input and the expected output/);
+      assert.match(session.prompts.at(-1), /prepared input or synthetic sample data and the expected output, with accurate provenance/);
     }
     if (stage === 'verify') {
       assert.match(await fs.readFile(path.join(cwd, 'README.md'), 'utf8'), /Task parser/);
@@ -261,7 +347,7 @@ test('the user guide is requested after implementation and checked before verifi
     return false;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.deepEqual(steps, ['intake', 'research', 'plan', 'build', 'guide', 'verify']);
+  assert.deepEqual(steps, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'guide', 'verify']);
 });
 
 for (const recover of [true, false]) {
@@ -312,7 +398,7 @@ for (const target of ['requirements.md', '.fleet/README.md']) {
     const h = await harness(t, { scenario: async ({ cwd, stage }) => {
       if (stage === 'plan') await fs.appendFile(path.join(cwd, target), '\nChanged by agent'); return false;
     } });
-    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 3);
+    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 4);
     assert.match(h.project.error, /requirements changed|integrity failed/);
   });
 }

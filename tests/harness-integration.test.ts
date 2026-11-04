@@ -36,7 +36,7 @@ test('project import retains source identity and yields inputs accepted by deskt
     const input=toProjectInput(c.id);
     assert.equal(input.challengeId,c.id);assert.ok(input.title.length<=120);
     assert.ok(input.description.includes(c.sourceUrl));assert.deepEqual(input.criteria,c.evaluationCriteria);
-    assert.deepEqual(normalizeProjectInput(input),input);
+    assert.deepEqual(normalizeProjectInput(input),{...input,dataInputs:[]});
     assert.equal(input.resources,c.resources);assert.deepEqual(input.links,c.links);
   }
   const clone=getChallenge('11');clone.title='altered';assert.notEqual(getChallenge('11').title,'altered');

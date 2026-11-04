@@ -6,19 +6,23 @@ import path from 'node:path';
 import { Store, validateInput, safeFile, listArtifacts, sourceHash } from '../dist-electron/electron/storage.js';
 import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verification.js';
 import { PreviewServers } from '../dist-electron/electron/preview.js';
+import { normalizeDataInputs } from '../dist-electron/shared/project-input.js';
 
 const temp = () => fs.mkdtemp(path.join(os.tmpdir(), 'fleet-test-'));
 test('saved challenges survive reload and interrupted runs become stopped', async () => {
   const dir=await temp(); try {
     const store=new Store(dir);await store.init();
     assert.equal(store.state.projects.length,3);
-    Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], resources: 'Sample records', links: ['https://example.com/reference'] }));
+    const dataInputs = [{ name: 'messages.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' },
+      { name: 'review-notes.txt', kind: 'text', content: ' Retain spacing in the source input.\n' }];
+    Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], resources: 'Sample records', links: ['https://example.com/reference'], dataInputs }));
     store.state.projects[0].status='running';await store.save();
     const restored=new Store(dir);await restored.init();
     assert.equal(restored.state.projects[0].status,'stopped');
     assert.deepEqual(restored.state.projects[0].criteria,[]);
     assert.equal(restored.state.projects[0].resources,'Sample records');
     assert.deepEqual(restored.state.projects[0].links,['https://example.com/reference']);
+    assert.deepEqual(restored.state.projects[0].dataInputs, dataInputs);
     assert.equal(restored.state.projects[1].criteria.length,4);
   } finally { await fs.rm(dir,{recursive:true,force:true}); }
 });
@@ -31,13 +35,34 @@ test('corrupt state is preserved and reported instead of reset', async () => {
 });
 test('optional brief fields accept blanks, normalize supplied context and reject invalid data', () => {
   const input = {title:'A',description:'A'.repeat(30),criteria:[]};
-  assert.deepEqual(validateInput(input), {...input, resources:'', links:[], challengeId:undefined});
+  assert.deepEqual(validateInput(input), {...input, resources:'', links:[], dataInputs:[], challengeId:undefined});
   assert.deepEqual(validateInput({...input, criteria:['  ', ' Works offline. '], resources:' Sample records \n', links:[' ', ' https://example.com/reference ']}),
-    {...input, criteria:['Works offline.'], resources:'Sample records', links:['https://example.com/reference'], challengeId:undefined});
+    {...input, criteria:['Works offline.'], resources:'Sample records', links:['https://example.com/reference'], dataInputs:[], challengeId:undefined});
   for (const invalid of [{title:' '}, {description:'Too short'}, {criteria:['x'.repeat(2001)]}, {criteria:Array(101).fill('criterion')},
     {resources:123}, {resources:'x'.repeat(16001)}, {links:'https://example.com'}, {links:[null]}, {links:['javascript:alert(1)']},
     {links:['example.com']}, {links:Array(31).fill('https://example.com')}, {links:['https://example.com/'+'x'.repeat(2000)]}, {challengeId:'999'}]) {
     assert.throws(()=>validateInput({...input,...invalid}));
+  }
+});
+test('connected inputs preserve contents and normalize labels without mutating the source', () => {
+  const input = [{ name: ' records.csv ', kind: 'file', content: 'message\r\n TASK: inspect pump \r\n' },
+    { name: ' notes.txt ', kind: 'text', content: '  Check this example.\n\n' }];
+  assert.deepEqual(normalizeDataInputs(undefined), []);
+  const normalized = normalizeDataInputs(input);
+  assert.deepEqual(normalized, [{ ...input[0], name: 'records.csv' }, { ...input[1], name: 'notes.txt' }]);
+  assert.notEqual(normalized[0], input[0]);
+  assert.equal(input[0].name, ' records.csv ');
+  assert.equal(normalizeDataInputs([{ name: 'boundary.txt', kind: 'file', content: 'é'.repeat(128 * 1024) }])[0].content.length, 128 * 1024);
+});
+test('connected inputs reject malformed entries, unsafe filenames, binary content and oversized payloads', () => {
+  const entry = { name: 'records.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' };
+  for (const input of [null, {}, 'records.csv', [null], [42], [{ ...entry, name: '' }], [{ ...entry, name: 'a'.repeat(121) }],
+    [{ ...entry, name: '../records.csv' }], [{ ...entry, name: '/tmp/records.csv' }], [{ ...entry, name: 'folder\\records.csv' }],
+    [{ ...entry, name: 'program.exe' }], [{ ...entry, kind: 'url' }], [{ ...entry, content: '' }], [{ ...entry, content: ' \n ' }],
+    [{ ...entry, content: 42 }], [{ ...entry, content: 'a\0b' }], [{ ...entry, content: 'é'.repeat(128 * 1024 + 1) }],
+    Array.from({ length: 11 }, (_, i) => ({ ...entry, name: `records-${i}.csv` })),
+    Array.from({ length: 5 }, (_, i) => ({ ...entry, name: `records-${i}.csv`, content: 'x'.repeat(256 * 1024) }))]) {
+    assert.throws(() => normalizeDataInputs(input));
   }
 });
 test('artifact access rejects traversal and symlink escapes', async () => {

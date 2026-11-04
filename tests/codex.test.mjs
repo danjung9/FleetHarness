@@ -1,4 +1,5 @@
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
+import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -136,18 +137,22 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
       rpc.handler = async (method, params) => {
         if (method !== 'turn/start') return;
         const text = params.input[0].text;
-        phase ??= /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
+        phase ??= text.includes('You are the synthetic data agent') ? 'synthetic-data' : /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
         const guide = text.startsWith('Implementation is complete.');
         if (guide) {
           await fs.access(path.join(options.cwd, 'index.html'));
           await assert.rejects(fs.access(path.join(options.cwd, 'README.md')), /ENOENT/);
         }
         const files = guide ? { 'README.md': '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' }
+          : phase === 'synthetic-data' ? syntheticDataFiles
           : phase === 'intake' ? { 'scope.md': 'Scope' } : phase === 'research' ? { 'research.md': 'Research' } : phase === 'plan' ? { 'scope.md': 'Scope', 'research.md': 'Research', 'plan.md': 'Plan', 'test-matrix.md': 'Test mapping' }
           : phase === 'build' ? { 'index.html': qualityFixtureHtml, 'path-to-fleet.md': 'Domain review required', 'app.test.cjs': 'require("node:test")("sum",()=>require("node:assert/strict").equal(2+2,4));' }
           : { 'verification.md': 'Verified by the independent runner' };
         if (phase === 'plan') Object.assign(files, qualityFixture(JSON.parse(await fs.readFile(path.join(options.cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
-        for (const [file, content] of Object.entries(files)) await fs.writeFile(path.join(options.cwd, file), content);
+        for (const [file, content] of Object.entries(files)) {
+          await fs.mkdir(path.dirname(path.join(options.cwd, file)), { recursive: true });
+          await fs.writeFile(path.join(options.cwd, file), content);
+        }
         const tool = options.tools.find(t => t.name === (phase === 'plan' ? 'fleet_system_design' : 'fleet_component_progress'));
         const args = phase === 'plan' ? { title: 'Fixture', description: 'Application architecture', components: [{ id: 'app', label: 'App', description: 'Browser app', kind: 'interface', files: ['index.html'] }], connections: [] } : { componentId: 'app', status: 'generated', detail: 'Source written' };
         if (tool) await tool.execute('architecture', args);
@@ -160,6 +165,6 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
   backend.runtime = { getModel() { throw new Error('Pi model lookup must not run'); } };
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, 4);
-  assert.deepEqual(phases, ['intake', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
   assert.match(await fs.readFile(path.join(project.workspace, 'README.md'), 'utf8'), /Fixture guide/);
 });

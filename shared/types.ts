@@ -10,7 +10,8 @@ export interface TestReport {
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
   quality?: import('./quality.js').QualityReport;
 }
-export interface BriefContext { resources?: string; links?: string[] }
+export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
+export interface BriefContext { resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
 export interface Project extends BriefContext {
   qualityVersion?: 1;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };

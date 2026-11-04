@@ -20,25 +20,34 @@ export function toolsForPhase(phase: PhaseContract, globalTools: readonly string
   return phase.owner === 'agent' ? [...new Set([...globalTools, ...phase.tools])] : [];
 }
 
+/** A separate agent session within intake, only when the brief supplies no data. */
+export const syntheticDataPhase: PhaseContract = {
+  id: 'intake', role: 'Synthetic data specialist', owner: 'agent',
+  inputs: ['requirements.md', 'scope.md', '.fleet/packet.json', 'inputs/manifest.json'],
+  outputs: ['data/synthetic-data.json', 'data/README.md'],
+  exit: 'Use-case-specific fictional records match their documented schema, cover typical, edge and invalid scenarios, and disclose assumptions. The host validates and freezes the data before research.',
+  skills: ['fleet-data'], tools: [], hostTools: ['Validate synthetic records and scenarios', 'Freeze prepared data artifacts']
+};
+
 /** The same resolved contracts drive packets, Pi sessions and the phase inspector. */
 export function phasesForRecipe(recipe: Recipe): PhaseContract[] {
   const domain = recipe.skills.filter(skill => !['fleet-intake', 'fleet-evidence', 'fleet-delivery'].includes(skill));
   return [
     { id: 'intake', role: 'Requirements analyst', owner: 'agent',
-      inputs: ['requirements.md', '.fleet/packet.json'], outputs: ['scope.md'],
-      exit: 'The primary user task, source-linked requirements, evaluation criteria, deliverables, user criteria, data boundaries and unknowns are recorded before research begins.',
-      skills: ['fleet-intake'], tools: ['fleet_get_challenge'], hostTools: ['Save original requirements and challenge packet'] },
+      inputs: ['requirements.md', '.fleet/packet.json', 'inputs/manifest.json', 'Supplied data files, when attached'], outputs: ['scope.md', 'data/synthetic-data.json and data/README.md when no inputs are attached'],
+      exit: 'The primary user task, source-linked requirements, evaluation criteria, deliverables, user criteria, data boundaries and unknowns are recorded. With no supplied inputs, a dedicated synthetic data agent creates validated use-case fixtures before research begins.',
+      skills: ['fleet-intake'], tools: ['fleet_get_challenge'], hostTools: ['Save original requirements, challenge packet and attached inputs', 'Spawn a dedicated synthetic data agent when no inputs are attached', 'Validate and freeze prepared data'] },
     { id: 'research', role: 'Reuse researcher', owner: 'agent',
-      inputs: ['scope.md', 'Recipe candidates'], outputs: ['research.md'],
+      inputs: ['scope.md', 'Recipe candidates', 'inputs/manifest.json', 'Supplied inputs or validated synthetic data'], outputs: ['research.md'],
       exit: 'Reuse decisions and source limitations are documented. Unchecked versions, licenses and integrations remain explicit.',
       skills: ['fleet-research', 'fleet-evidence', ...domain], tools: ['fleet_search_evidence'], hostTools: [] },
     { id: 'plan', role: 'Implementation planner', owner: 'agent',
-      inputs: ['scope.md', 'research.md', 'Source-linked acceptance criteria', '.fleet/quality-contract.md'],
+      inputs: ['scope.md', 'research.md', 'inputs/manifest.json', 'Supplied inputs or data/synthetic-data.json and data/README.md', 'Source-linked acceptance criteria', '.fleet/quality-contract.md'],
       outputs: ['plan.md', 'test-matrix.md', 'system-design.json', 'acceptance-plan.json', 'ux-spec.json'],
       exit: 'Architecture, UX behavior and literal browser outcomes are planned for every implemented criterion; deferred criteria retain a reason. The host validates and freezes both JSON plans before implementation.',
       skills: ['fleet-planning', 'fleet-ux', 'fleet-evidence', ...domain], tools: ['fleet_system_design'], hostTools: ['Validate and freeze acceptance and UX plans'] },
     { id: 'build', role: 'Implementation agent', owner: 'agent',
-      inputs: ['plan.md', 'test-matrix.md', 'system-design.json', 'Frozen acceptance-plan.json', 'Frozen ux-spec.json', '.fleet/quality-contract.md', 'Synthetic fixtures'],
+      inputs: ['plan.md', 'test-matrix.md', 'system-design.json', 'Frozen acceptance-plan.json', 'Frozen ux-spec.json', '.fleet/quality-contract.md', 'inputs/manifest.json', 'Supplied inputs or validated data/synthetic-data.json fixtures'],
       outputs: ['index.html', 'Application modules', '*.test.cjs or *.test.mjs', 'README.md', 'path-to-fleet.md'],
       exit: 'The working application implements the frozen user tasks, selectors and expected outcomes; application tests exist and every component reports its implementation. README.md describes the finished application. The frozen plans remain unchanged.',
       skills: [...domain, 'fleet-ux', 'fleet-evidence', 'fleet-delivery'], tools: [...recipe.tools, 'fleet_component_progress'], hostTools: [] },

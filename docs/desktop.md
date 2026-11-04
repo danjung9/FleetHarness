@@ -10,12 +10,22 @@ The local build is ad-hoc signed. It is not Apple Developer ID signed or notariz
 
 1. Open **Model settings** and select a build engine. For subscription builds, choose **Codex · ChatGPT subscription**, sign in, select a model, and save. See [ChatGPT setup](chatgpt.md).
 2. For Pi, supply an API key, or reuse existing Pi authentication in ~/.pi/agent/auth.json. Provider environment variables are supported when inherited by the app. Pi-compatible custom endpoints in ~/.pi/agent/models.json are also loaded.
-3. Choose **New challenge** to import one of the 34 Norfolk catalog entries, use a sample brief, or write a custom problem. Review the acceptance criteria.
+3. Choose **New challenge** to import a Norfolk catalog entry, use a sample brief, or write a custom problem. Review the acceptance criteria. In **Data & inputs**, attach sample files or paste input records for the agents to use.
 4. Choose **Start build**. Intake, research, planning, implementation and verification roles execute sequentially in a dedicated folder. Up to three challenges can run concurrently.
 5. Inspect **Development**, **Agents**, and **Artifacts**. Reload the preview after the agent has written index.html.
 6. Review **Evidence & delivery**, enter review notes, and approve the prototype. Choose **Download executable** for a standalone app, or **Export app & evidence** to copy source, requirements, test output, and your review into a new destination folder.
 
 Pi agents have local read, write, edit, and shell tools. A separate project folder is **not an operating-system sandbox**. Only start runs you trust. The selected provider receives requirements and model/tool context and may charge for usage. There is no deployment or publishing integration.
+
+### Brief data and synthetic examples
+
+**Data & inputs** is available when creating or editing a brief. Attach UTF-8 CSV, TSV, JSON, NDJSON, GeoJSON, TXT, Markdown, XML, YAML, or log files, or paste named text inputs. Each brief accepts up to ten inputs, 256 KB per input and 1 MB in total. Saved inputs survive reopening the project; remove an input to exclude it from the next build. Resource descriptions and reference links remain background context, not connected datasets or automatic network access.
+
+When a build starts, AppYard copies supplied inputs into `inputs/` and writes `inputs/manifest.json`. Agents use those files for the workflow, implementation and tests. If no inputs were supplied, a dedicated **synthetic data agent** runs after scope discovery, within the intake phase, using the selected Codex or Pi model. It creates `data/synthetic-data.json` and `data/README.md` for this use case, with a field schema, fictional records, typical/edge/invalid scenarios, expected behavior and limitations. The host validates these artifacts before research and planning begin. Missing or invalid outputs receive one completion attempt; continued failure blocks the build.
+
+The input copies and validated synthetic artifacts are checked for changes after agent handoffs. They are inspectable in **Files** and included in the source/evidence export. Generated examples must remain labeled as synthetic in the resulting app. This prepares local samples; it does not establish a live connection to an external service.
+
+Run `npm run test:brief-data` to exercise file attachment, pasted-input drafts, persistence, removal, and both build paths in the desktop app using the local fixture provider.
 
 ## Current delivery contract
 

@@ -13,7 +13,7 @@ type BuildPhaseId = Exclude<StageId, 'review' | 'deliver'>;
 type PhaseState = StageStatus | 'stopped';
 
 const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]; next: string }[] = [
-  { id: 'intake', name: 'Understand brief', purpose: 'Define the app’s scope, constraints, and intended outcomes from your brief.', files: ['scope.md'], next: 'Research starts automatically once the scope is ready.' },
+  { id: 'intake', name: 'Understand brief', purpose: 'Define the app’s scope and prepare connected inputs or synthetic data for this use case.', files: ['scope.md', 'inputs/manifest.json', 'data/synthetic-data.json', 'data/README.md'], next: 'Research starts automatically once the scope and data are ready.' },
   { id: 'research', name: 'Research', purpose: 'Assess reusable approaches, source evidence, and integration risks.', files: ['research.md'], next: 'Planning starts automatically once the research is ready.' },
   { id: 'plan', name: 'Plan', purpose: 'Map the app’s components, user tasks, and acceptance checks before implementation.', files: ['plan.md', 'test-matrix.md', 'acceptance-plan.json', 'ux-spec.json'], next: 'Implementation starts automatically once the plan is ready.' },
   { id: 'build', name: 'Implement', purpose: 'Create the working app, its application tests, and a guide to using it.', files: ['index.html', 'README.md'], next: 'Testing starts automatically once the implementation is ready.' },
@@ -52,6 +52,7 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
   const selectedId = inspection?.key === runKey ? inspection.id : currentId;
   const selected = phases.find(phase => phase.id === selectedId)!;
   const selectedState = stateOf(project, selectedId);
+  const intakeStatus = selectedId === 'intake' && selectedState === 'active' ? project.stages.find(stage => stage.id === 'intake')?.detail : undefined;
   const activeId = project.stages.find(stage => stage.status === 'active')?.id;
   const contracts = useMemo(() => projectPhases(project), [project.phasePlan, project.challengeId, project.sourceChallenge]);
   const contract = contracts.find(phase => phase.id === selectedId);
@@ -112,7 +113,7 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
       <header className="build-detail-heading"><h2 id={detailId + '-title'}>{selected.name}</h2><span className={'build-detail-state ' + selectedState}>{stateLabel(selectedState, !!project.runId && project.status !== 'draft')}</span></header>
       <p className="build-purpose">{selected.purpose}</p>
       {blocked ? <div className="build-phase-problem" role="status"><strong>{selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{project.error && <p>{project.error}</p>}<p>Saved outputs remain available. Start a new build when you’re ready to try again.</p></div> :
-        <p className="build-next-phase">{repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next}</p>}
+        <p className="build-next-phase" role={intakeStatus ? 'status' : undefined}>{intakeStatus || (repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next)}</p>}
 
       <section className="build-phase-output" aria-labelledby={detailId + '-outputs'}>
         <div className="build-output-heading"><h3 id={detailId + '-outputs'}>{previousBuild ? 'Previous build outputs' : 'Outputs'}</h3>

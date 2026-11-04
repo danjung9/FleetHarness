@@ -1,4 +1,5 @@
 import { qualityFixture, qualityFixtureHtml } from './quality-fixture.mjs';
+import { syntheticDataFiles } from './data-fixture.mjs';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -40,6 +41,7 @@ export async function startFixtureProvider() {
         ['core.cjs', 'exports.parse = text => ({task:"intentional defect"});\n'],
         ['parser.test.cjs', 'const {test}=require("node:test");const assert=require("node:assert/strict");const {parse}=require("./core.cjs");test("extracts a task",()=>assert.deepEqual(parse("TASK: inspect pump"),{task:"inspect pump"}));\n']
       ];
+      else if (prompt.includes('You are the synthetic data agent')) files = Object.entries(syntheticDataFiles);
       else if (prompt.includes('You are the intake agent')) files = [['scope.md', '# Scope assessment\nSynthetic browser prototype only.\n']];
       else if (prompt.includes('You are the research agent')) files = [['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n']];
       else files = [['test-matrix.md', '# Test matrix\nTask extraction requires an application test.\n'], ['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n'], ['plan.md', '# Plan\nCreate a parser and one meaningful behavior test.\n']];
