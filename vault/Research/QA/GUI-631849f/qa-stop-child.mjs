@@ -5,7 +5,8 @@ import { promises as fs, constants as fsConstants, writeFileSync } from 'node:fs
 import path from 'node:path';
 import os from 'node:os';
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -32,6 +33,7 @@ const result = {
 const requests = [];
 let app, server, projectId, parentRecord, childRecord, page;
 let cleanupStarted = false;
+let commandIssued = false;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const quote = value => "'" + value.replaceAll("'", "'\\''") + "'";
 const readJSON = async file => JSON.parse(await fs.readFile(file, 'utf8'));
@@ -39,6 +41,27 @@ const exists = pid => {
   try { process.kill(pid, 0); return true; }
   catch (error) { if (error.code === 'ESRCH') return false; throw error; }
 };
+const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+async function manifest(directory) {
+  const files = [];
+  async function visit(relative) {
+    for (const entry of (await fs.readdir(path.join(directory, relative), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+      const item = path.join(relative, entry.name);
+      if (entry.isDirectory()) await visit(item);
+      else if (entry.isFile()) files.push({ path: item, sha256: digest(await fs.readFile(path.join(directory, item))) });
+      else throw new Error('Unexpected nonregular build artifact: ' + item);
+    }
+  }
+  await visit(''); return files;
+}
+function processState(record) {
+  if (!record || record.nonce !== nonce || !Number.isInteger(record.pid) || record.pid <= 1) return null;
+  if (!exists(record.pid)) return { pid: record.pid, present: false };
+  try {
+    // Inspect only our recorded PID. Do not collect arguments or environment.
+    return { pid: record.pid, present: true, ps: execFileSync('/bin/ps', ['-p', String(record.pid), '-o', 'pid=,ppid=,stat=,comm='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() };
+  } catch { return { pid: record.pid, present: exists(record.pid), psUnavailable: true }; }
+}
 async function heartbeat(name) {
   const text = await fs.readFile(path.join(control, name + '.ticks'), 'utf8');
   const rows = text.trim().split('\n').filter(Boolean);
@@ -47,6 +70,7 @@ async function heartbeat(name) {
 async function snapshot() {
   return {
     at: Date.now(), parentExists: exists(parentRecord.pid), childExists: exists(childRecord.pid),
+    parentProcess: processState(parentRecord), childProcess: processState(childRecord),
     parentHeartbeat: await heartbeat('parent'), childHeartbeat: await heartbeat('child'),
     requests: requests.length,
     status: await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id)?.status, projectId)
@@ -69,6 +93,9 @@ const watchdog = setTimeout(() => {
 try {
   result.commit = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   assert.equal(result.commit, expectedCommit, 'Unexpected source revision; do not run changed code implicitly.');
+  result.trackedChanges = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim();
+  assert.equal(result.trackedChanges, '', 'Tracked source changes need a new review.');
+  result.sourceTree = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
   await fs.access(path.join(repo, 'dist/index.html'));
   await fs.access(path.join(repo, 'dist-electron/electron/main.js'));
   const electronDirectory = path.join(repo, 'node_modules/electron');
@@ -76,6 +103,19 @@ try {
   const executablePath = path.resolve(electronDirectory, 'dist', relativeBinary);
   assert.ok(executablePath.startsWith(path.join(electronDirectory, 'dist') + path.sep));
   await fs.access(executablePath, fsConstants.X_OK); // Do not import electron's auto-installing loader.
+  result.provenance = {
+    scriptSha256: digest(await fs.readFile(fileURLToPath(import.meta.url))),
+    lockSha256: digest(await fs.readFile(path.join(repo, 'package-lock.json'))),
+    electronBinarySha256: digest(await fs.readFile(executablePath)),
+    dist: await manifest(path.join(repo, 'dist')),
+    distElectron: await manifest(path.join(repo, 'dist-electron')),
+    installedPackages: {},
+    limitation: 'Artifact hashes identify the executed bytes. Their derivation from pinned source relies on the separate build receipt; this script does not rebuild or attest every dependency file.'
+  };
+  for (const name of ['electron', 'playwright', '@earendil-works/pi-coding-agent']) {
+    const bytes = await fs.readFile(path.join(repo, 'node_modules', name, 'package.json'));
+    result.provenance.installedPackages[name] = { version: JSON.parse(bytes).version, packageJsonSha256: digest(bytes) };
+  }
   const { _electron: electron } = createRequire(path.join(repo, 'package.json'))('playwright');
 
   // Workers write only beneath control, exit on a separate cleanup marker, and
@@ -104,7 +144,6 @@ writeFileSync(path.join(root, 'parent.json'), JSON.stringify({ nonce, pid: proce
 tick('parent'); setInterval(() => tick('parent'), 100);
 `);
 
-  let commandIssued = false;
   server = createServer(async (req, res) => {
     try {
       if (req.method !== 'POST' || req.url !== '/v1/chat/completions') { res.writeHead(404).end(); return; }
@@ -122,6 +161,10 @@ tick('parent'); setInterval(() => tick('parent'), 100);
       const send = (delta, finish_reason = null) => res.write('data: ' + JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason }] }) + '\n\n');
       send({ role: 'assistant', content: '' });
       if (!commandIssued && tools.includes('bash')) {
+        const schema = body.tools.find(tool => tool.function?.name === 'bash').function.parameters;
+        assert.equal(schema?.properties?.command?.type, 'string', 'Advertised bash schema does not accept a string command.');
+        assert.ok((schema.required || []).every(name => name === 'command'), 'Bash requires additional parameters.');
+        result.bashSchemaAccepted = true;
         commandIssued = true;
         const deadline = Date.now() + result.limits.workerWatchdogMs;
         const command = [process.execPath, parentFile, control, nonce, String(deadline)].map(quote).join(' ');
@@ -132,7 +175,8 @@ tick('parent'); setInterval(() => tick('parent'), 100);
         send({}, 'stop');
       }
       res.end('data: [DONE]\n\n');
-    } catch {
+    } catch (error) {
+      result.fixtureError = String(error?.message || error).slice(0, 500);
       if (!res.headersSent) res.writeHead(500);
       res.end('Synthetic fixture error.');
     }
@@ -148,7 +192,7 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   } }));
   app = await electron.launch({ executablePath, args: [repo], cwd: repo, timeout: 45000, env: {
     PATH: process.env.PATH || '/usr/bin:/bin', LANG: 'en_US.UTF-8', TMPDIR: os.tmpdir(),
-    FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDirectory, CODEX_HOME: path.join(root, 'codex')
+    FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDirectory
   } });
   page = await app.firstWindow(); page.setDefaultTimeout(15000);
   await page.getByRole('heading', { name: 'Your workspace' }).waitFor();
@@ -157,7 +201,10 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-stop-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Home \u2014 challenge portfolio', exact: true }).click();
+  await page.getByRole('button', { name: 'Start a brief: Paperless Underway', exact: true }).click();
+  await page.getByRole('button', { name: 'Save challenge', exact: true }).click();
+  await page.getByRole('heading', { name: 'Build flow', exact: true }).waitFor();
   projectId = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('button', { name: 'Run Pi agents', exact: true }).click();
@@ -180,17 +227,19 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   await page.screenshot({ path: path.join(output, 'before-stop.png'), scale: 'css' });
   result.stopClickedAt = Date.now();
   await page.getByRole('button', { name: 'Stop run', exact: true }).click();
-  try {
-    await until(async () => (await snapshot()).status === 'stopped', result.limits.stopStatusMs, 'stopped state');
-    result.msToStopped = Date.now() - result.stopClickedAt;
-  } catch { result.msToStopped = null; }
-  await delay(Math.max(0, result.stopClickedAt + result.limits.settlingMs - Date.now()));
+  result.stopClickCompletedAt = Date.now();
+  result.clickActionDurationMs = result.stopClickCompletedAt - result.stopClickedAt;
+  const stoppedPromise = until(async () => (await snapshot()).status === 'stopped', result.limits.stopStatusMs, 'stopped state')
+    .then(() => { result.msToStopped = Date.now() - result.stopClickCompletedAt; })
+    .catch(() => { result.msToStopped = null; });
+  await delay(Math.max(0, result.stopClickCompletedAt + result.limits.settlingMs - Date.now()));
   result.observationStart = await snapshot();
   await delay(result.limits.observationMs);
   result.observationEnd = await snapshot();
+  await stoppedPromise;
   assert.ok(Date.now() < parentRecord.deadline - 2000, 'Worker watchdog could explain termination; classify inconclusive.');
   result.checks = {
-    stoppedWithinDeadline: result.msToStopped !== null,
+    stoppedWithinDeadline: result.msToStopped !== null && result.msToStopped <= result.limits.stopStatusMs,
     bothPidsAbsentAtObservationStart: !result.observationStart.parentExists && !result.observationStart.childExists,
     bothPidsAbsentAtObservationEnd: !result.observationEnd.parentExists && !result.observationEnd.childExists,
     parentHeartbeatStable: result.observationStart.parentHeartbeat.count === result.observationEnd.parentHeartbeat.count,
@@ -199,6 +248,7 @@ tick('parent'); setInterval(() => tick('parent'), 100);
     remainsStopped: result.observationEnd.status === 'stopped'
   };
   result.result = Object.values(result.checks).every(Boolean) ? 'PASS' : 'FAIL';
+  result.stopVerdict = result.result;
   result.verdictRecordedBeforeCleanup = true;
   await page.screenshot({ path: path.join(output, 'after-observation.png'), scale: 'css' });
 } catch (error) {
@@ -210,12 +260,24 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   cleanupStarted = true;
   result.cleanupStartedAt = Date.now();
   try { await fs.writeFile(cleanupFile, nonce); } catch {}
-  if (parentRecord && childRecord) {
+  // Recover partial startup records without treating unknown startup as cleanup success.
+  for (const name of ['parent', 'child']) {
     try {
-      await until(() => !exists(parentRecord.pid) && !exists(childRecord.pid), 3000, 'cooperative test cleanup');
+      const record = await readJSON(path.join(control, name + '.json'));
+      if (record.nonce === nonce && Number.isInteger(record.pid) && record.pid > 1) {
+        if (name === 'parent') parentRecord = record; else childRecord = record;
+      }
+    } catch {}
+  }
+  const knownPids = new Set([parentRecord?.pid, childRecord?.pid, parentRecord?.childPid].filter(pid => Number.isInteger(pid) && pid > 1));
+  if (!commandIssued) result.cleanupWorkersAbsent = true;
+  else if (parentRecord && childRecord) {
+    try {
+      await until(() => [...knownPids].every(pid => !exists(pid)), 3000, 'cooperative test cleanup');
       result.cleanupWorkersAbsent = true;
     } catch { result.cleanupWorkersAbsent = false; }
-  }
+  } else result.cleanupWorkersAbsent = null;
+  result.cleanupProcesses = { parent: processState(parentRecord), child: processState(childRecord), knownPids: [...knownPids] };
   if (app) {
     const timer = setTimeout(() => { try { app.process()?.kill('SIGKILL'); } catch {} }, 5000);
     try { await app.close(); } catch { result.appCloseError = true; }
@@ -228,7 +290,11 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   result.requests = requests;
   result.finishedAt = new Date().toISOString();
   result.cleanupSeparateFromVerdict = cleanupStarted && result.verdictRecordedBeforeCleanup === true;
-  if (result.cleanupWorkersAbsent === false) result.retainedTemporaryRoot = root;
+  result.cleanupOutcome = result.cleanupWorkersAbsent === true && !result.appCloseError ? 'PASS' : 'UNCONFIRMED';
+  if (result.cleanupOutcome !== 'PASS') {
+    result.retainedTemporaryRoot = root;
+    if (result.result === 'PASS') result.result = 'ERROR';
+  }
   else await fs.rm(root, { recursive: true, force: true });
   await fs.writeFile(path.join(output, 'result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ result: result.result, checks: result.checks, error: result.error, output, cleanupWorkersAbsent: result.cleanupWorkersAbsent }));

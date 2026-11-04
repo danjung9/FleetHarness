@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep one training draft and require current evidence before coding."
+summary: "Keep one training artifact, credit fixture evidence precisely and gate export work."
 ---
 
 # Engineering decisions
 
-[R] Keep the plan's four-request partial ID 11 training draft. Preserve the 3 PM access, 4 PM real-build and 6 PM useful-artifact gates. No second pilot, connector, framework replacement or general worker rewrite.
+[R] Keep four-request partial ID 11 and manual final-copy acceptance. The 3 PM access gate has passed without a supplied clearance receipt. Recommend checker scope now; the overseer must record its permitted workspace, implementation owner and execution decision. Keep the 4 PM factory cutoff and 6 PM useful-artifact gate.
 
-[E, feed-7 and snapshot-7] Code seats are disabled; no development reports or team QUESTIONS were supplied. [R] Queue export work for dev-1 after enablement. Keep dev-2, dev-3 and agentic-builder unassigned. Agentic-architect should close the review with the missing run-readiness decision.
+[E, snapshot-19] Code seats remain disabled; dev-1 is already queued. [R] Replace that assignment, do not duplicate it. Source-export work remains conditional on enablement, ownership and time that does not delay the artifact. Leave dev-2, dev-3 and agentic-builder idle.
 
-[E, mvp-gate.md and referenced log] At 50fcaea the runner reports 89 main plus 39 harness tests passing. This is not a live-build or delivered-app result. [R] Return older QA findings for current-revision confirmation. Use the plan's four-request fixture; the older QA plan's two-request example is supplementary.
+[E, Results-631849f-GUI] Six fixture smoke scripts pass; consent and U1/U2/U3 are observed. Stop passed during one model request, not child-process shutdown. [R] Assign one ten-minute readiness correction. Keep live readiness HOLD. Quality owns runtime checks; Dan owns frontend defects.
 
-[E, pinned main.ts and executable.ts] Source export still checks before the folder dialog and copies live files. Executable delivery has separate staging and hash checks. [R] Do not rewrite Dan's delivery system. Fix source export only within a small reviewed change; otherwise independently accept and hash the final copied artifact after generation stops.
+[E, Acceptance-Reconcile-631849f] Seven verification/export failures remain open despite 128 baseline passes. [R] Reuse E1/E2 reproducers; require accepted bytes or rejection, not another check before copying. Manual acceptance binds independent per-file digests and human review to final bytes.
 
-[R] Preserve Workbench and the build-then-README sequence. Quality should establish consent, Stop, review invalidation and delivered-byte behavior. Product should retain partial-scope and missing-sync disclosures. The overseer owns code enablement and live-run approval. Shared logs/status and the blocked content guard need the authorized handoff in [[Ops/Directors/Sprint/Engineering-Meeting-7]].
+[E, relay] Main d322b39 adds browser deployment; desktop remains 631849f. [R] Preserve Home/Flow and the separate web build. No publication authorization follows. Defer connectors, frameworks and broader acceptance systems. See [[Ops/Directors/Sprint/Engineering-Meeting-19]].

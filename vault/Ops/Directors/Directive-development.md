@@ -3,42 +3,44 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Gate code work, preserve the current interface and isolate one source-export correction."
+summary: "One conditional source-export task; prioritize the training artifact and preserve teammate changes."
 ---
 
 # Development instructions
 
-[R] This replaces prior development instructions. Work toward one accepted four-request synthetic training draft from [[Research/Plan/Plan]]. A functioning checker is the fallback. Do not expand to other pilots, connectors, recurrence, departmental negotiation, sync or new frameworks.
+[R] Replace prior instructions. Keep one four-request synthetic partial ID 11 artifact from [[Research/Plan/Plan]]. The training conflict checker is the fallback. No second pilot, connector, recurrence, departmental negotiation, synchronization, new framework or general worker rewrite.
 
-## Baseline and permission
+## Authority and teammate changes
 
-- [E, snapshot-7.md] Code-writing seats are disabled. [R] The task file is a queue, not permission to begin. Only the overseer can enable code seats. No repository execution or edits before that gate.
-- [E, relay] Target 631849f removes Studio/Workbench and retains one Home-to-Flow interface. Backend delivery and orchestration files are unchanged from 50fcaea. Local HEAD may be older. [R] Read both relay files before and after work. Use the assigned checkout; ask the coordinator to update it if needed. Do not restore deleted renderers, pull, reset, rebase, commit or push.
-- [R] Protect Dan's src/, studio/, workbench/, index.html, CSS and Workbench configuration/scripts. No frontend change is allocated here. Any indispensable new control needs a separate narrow assignment and the charter's FRONTEND explanation.
-- [R] Treat electron/main.ts, executable.ts, package-worker.ts, pi-backend.ts, storage.ts, preload, shared/types.ts, harness/phases.ts and package manifests as shared changes. Before touching an overlap, check the latest relay and obtain the overseer's ownership decision if another editor is active. Do not undo teammate work.
+- [E, snapshot-19 at 15:04:42 EST] Code seats are disabled; dev-1 is already queued. [R] Replace that queue item rather than add a duplicate. Start repository execution or edits only after overseer enablement and assigned-checkout confirmation. No commit, pull, reset, rebase, push, publication or external message.
+- [E, relay and QA reconciliation] Desktop mvp is 631849f. Home/Flow replaces Studio/Workbench; relevant backend files match 50fcaea. Main merged that tree at 2e30b4a, then d322b39 added browser deployment. [R] Read both relay files before work and before finishing. Report stale checkout or shared-file overlap for coordinator resolution; never undo teammate work.
+- [R] Dan owns src/, studio/, workbench/, index.html and CSS. No frontend work is allocated. Do not restore deleted renderers or assume saved-profile migration. Preserve application-first README generation, bounded repair and executable packaging. Any indispensable new control needs a separate narrow assignment and the charter's FRONTEND explanation.
+- [R] Preserve build:web, dist-web separation and deployment/package configuration when integrating later changes. Static hosting does not prove agent execution, local tests or generated-app previews. No deployment or main push is authorized. Before any later publication, the overseer must identify approval, monitoring, failure escalation, rollback and workflow-disable ownership.
 
-## Current work allocation
+## Dev-1, one conditional export slice
 
-[R] dev-1, after enablement: own only ordinary source export in electron/main.ts. Extract a small electron/source-export.ts helper and tests/source-export.test.mjs if needed. At 50fcaea, assertVerified runs before the destination dialog, then the live workspace is copied. [E, Research/QA/Runner/Harness-Coverage] BUG-E1/E2 now have targeted-function reproductions at that revision; native dialog behavior remains unverified. Reuse those cases before building another harness. [E, Sprint/Quality-Meeting-7 and corrected Static-Findings] The newline separators are valid. Cancel the older queued newline repair; it was based on a source-reading error.
+[R] After enablement, own ordinary source export only: electron/main.ts, optional electron/source-export.ts and tests/source-export.test.mjs. Confirm main.ts ownership first. Storage, shared types, manifests, orchestration and delivery files are shared changes; do not expand into them without reallocation. Preserve Dan's executable path, destination restrictions, cancellation and human review. No dependency or frontend change.
 
-[R] First confirm the existing changed-source export reproducer against the assigned revision. Then make delivery fail closed or copy exactly the reviewed source bytes, with a matching digest. A second hash check before a mutable copy alone is insufficient. Never mark delivery successful after a failed validation. Preserve destination restrictions, cancellation, human approval and Dan's executable path. No package dependency or frontend change.
+[R] Reuse BUG-E1/E2 in [[Research/QA/Runner/Harness-Coverage]] and ~/Documents/CDAO/fh-org/qa/qa-scenarios/verification-export-edges.mjs. Confirm source identity and reproduce dialog-time and copy-time mutation before changing code. Do not duplicate the QA harness or catalog sweep.
 
-[R] Limit investigation and implementation to 45 active minutes after enablement. If the fix needs broader architecture, stop and return the reproducer plus the smallest design. It must not delay the accepted artifact. Until a fix is accepted, terminate generation, independently inspect the final copied app, record its digest and describe this as a manual control.
+[R] Successful delivery must contain exactly the accepted payload or reject without delivered status. Establish identity with unambiguous paths, lengths and per-file digests. Another pre-copy hash check leaves copy-time mutation open; the existing source hash also has BUG-H1 ambiguity. A lock only excludes cooperating host actions. If establishing accepted-byte identity needs broader verification/approval changes, return the reproducer and smallest design without claiming a narrow fix.
 
-[R] dev-2, dev-3 and agentic-builder have no development task now. Do not duplicate dev-1, QA or Dan's packaging work. The next allocation depends on a real candidate or a reproduced blocking defect; ask for a concrete permitted artifact path before assigning generated-app edits.
+[R] Verify unchanged approved export, both mutation windows, cancellation, failed validation/copy and concurrent start/update. Incomplete output must not appear ready. Preserve E3 metadata substitution, E4 cleanup, E5 symlink omissions, H1 and V1 as open unless their original regressions pass after an allocated fix. The disproved newline repair is cancelled.
 
-[R] Return the broad snapshot/store/type changes proposed in [[Research/Agentic/04-Tested-Delivery]] for later work. Its estimate exceeds this task's timebox. Dev-1 may return a reproducer without implementation if exact-byte delivery cannot be repaired narrowly. New UX and Ideas cards are proposals, not an implementation queue: defer preserving settled events, new timelines and version branching. Optional equivalent-input and reviewer-understanding checks belong with Quality after required acceptance.
+[R] Limit this optional slice to 45 active minutes and finish or return evidence by 4 PM EST November 4. Do not start after that cutoff without a new allocation. The overseer must confirm this will not delay creating or accepting the task artifact. Dev-2, dev-3 and agentic-builder remain unassigned; no parallel export or packaging work.
 
-## Evidence required to finish
+## Proof and manual fallback
 
-[R] Exercise unchanged approved export, cancellation, mutation while the dialog is open, mutation during copying, failed validation and concurrent start/update. Any successful delivery must contain the reviewed bytes; otherwise it must reject without a delivered status. Report the base commit, changed files, commands, exit codes and remaining gaps.
+[R] Record base revision, changed files, expected/actual reproduction results, exact commands, exits and gaps. After a patch run node node_modules/typescript/bin/tsc -p electron/tsconfig.json and focused source-export/executable tests. If shared behavior changed, run node --test tests/*.test.mjs once. Request affected native-dialog smoke through Quality's existing runtime owner; unit stubs do not exercise native dialogs. Do not repeat unaffected suites for another green count.
 
-[R] After a patch, run the relevant direct compiler and test commands from the charter. Start with node node_modules/typescript/bin/tsc -p electron/tsconfig.json and node --test tests/source-export.test.mjs tests/executable.test.mjs. If shared IPC/storage changed, run node --test tests/*.test.mjs once. The runner owns Electron/browser smoke outside this sandbox. Request a source-export smoke from Quality with exact steps; do not imply unit tests exercised the UI.
+[E, supplied reports] The 128-pass baseline at 631849f, six fixture GUI smoke passes and 403/410 additional checks at 50fcaea are distinct. [[Research/QA/Acceptance-Reconcile-631849f]] leaves seven failures open. [R] Do not combine counts or claim live-build acceptance.
 
-[E, mvp-gate.md and log] Current baseline is 89 main and 39 harness tests passing at 631849f. [[Research/QA/Runner/Harness-Coverage]] separately reports seven failing verification/export scenarios at 50fcaea. [R] Do not combine counts or infer those failures were fixed. Reconcile source identity with Quality. Keep broader hash/test-gate fixes outside this slice unless the overseer reallocates them. Manual acceptance must independently check final bytes and a per-file manifest, not trust the existing source hash or test count alone. Keep Dan's UI defects as reproduction reports for his ownership.
+[R] Until an export fix is accepted: stop all candidate writers and verify termination; copy; independently exercise those exact bytes using [[Research/QA/Officer/Acceptance-11]]; record sorted paths, lengths, per-file digests, actual provenance and authoritative human review separately from mutable workspace metadata. Reject unsupported links or missing dependencies. Changed bytes require new review and affected acceptance. Executable delivery needs separate extracted-package, guide, recovery and cold-start proof. Label this manual acceptance, not enforced immutability.
 
-## Questions and controls
+## Answers and control points
 
-[E, feed-7.md] No development QUESTIONS were present. [R] Current decisions: code remains gated; source export and executable packaging are different paths; manual final-byte acceptance is allowed for this demonstration; general isolation work is deferred, not claimed complete.
+[E, feed-19 and snapshot-19] No development QUESTIONS or completed patch were supplied. [R] Answers: the overseer enables code; manual acceptance is allowed; source export and executable delivery are distinct; fixture smoke closes none of the seven edge failures. Quality keeps runtime ownership. U1/U2/U3 in [[Research/QA/Results-631849f-GUI]] are now reproduced defects for Dan, not assignments to these seats.
 
-[R] Use only synthetic/public inputs. Never enter credentials, publish, contact anyone, change official systems or imply operational approval. Human review gates the task contract, charged build, final artifact and submission. Monitor one run, elapsed time, tests and output changes. Failed checks, ambiguous constraints or failed Stop require escalation to the overseer; a live build requires a tested environment-level shutdown. Keep reports bounded to finished evidence and the next decision.
+[R] The 3 PM access gate elapsed without a supplied clearance receipt. Recommend checker scope now. The overseer must identify its permitted workspace, implementation owner and execution decision; no candidate path or approval is assumed. Keep the 4 PM factory cutoff, 6 PM useful-app/checker gate and Thursday 2 PM submission deadline.
+
+[R] Synthetic/public inputs only. Humans approve scope, charged execution, final bytes and submission. Never enter credentials, issue schedules, contact people or modify official systems. Monitor one run, elapsed time, available usage, output changes and failures. Stop and escalate prohibited data, ambiguous constraints, uncontrolled usage or failed shutdown; use an already tested environment shutdown. No operational authority, sync or benefit claim without evidence.
