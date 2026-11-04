@@ -1,7 +1,7 @@
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
-import { constants, promises as fs } from 'node:fs';
-import path from 'node:path';
+import { promises as fs } from 'node:fs';
+import { atomicHostWrite } from '../shared/host-files.js';
 import type { Project, StageId } from '../shared/types.js';
 import { parseSystemDefinition, type ComponentStatus } from '../shared/system-design.js';
 import { safeFile } from './storage.js';
@@ -36,8 +36,7 @@ export function createSystemDesignTools(project: Project, stage: StageId, signal
     async execute(_id, parameters) {
       check();
       const definition = parseSystemDefinition(parameters);
-      const file = await fs.open(path.join(project.workspace!, systemDesignFile), constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o600);
-      try { check(); await file.writeFile(JSON.stringify(definition, null, 2) + '\n'); } finally { await file.close(); }
+      await atomicHostWrite(project.workspace!, systemDesignFile, JSON.stringify(definition, null, 2) + '\n');
       check();
       const updatedAt = new Date().toISOString();
       project.systemDesign = { definition, updatedAt, progress: Object.fromEntries(definition.components.map(c => [c.id, { status: 'planned', detail: 'Waiting for implementation.', updatedAt }])) };

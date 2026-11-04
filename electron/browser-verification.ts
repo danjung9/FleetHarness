@@ -1,5 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
+import { atomicHostWrite } from '../shared/host-files.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { chromium, type Browser, type BrowserContext, type BrowserServer, type Page } from 'playwright';
 import { PreviewServers } from './preview.js';
@@ -198,13 +200,19 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           deadline.check();
           if (page && !page.isClosed()) {
             const screenshot = path.join(evidence.relative, stem + '.png');
-            await deadline.run(page.screenshot({ path: path.join(evidence.base, screenshot), timeout: Math.min(2000, deadline.remaining()), animations: 'disabled', fullPage: false }));
+            const bytes = await deadline.run(page.screenshot({ timeout: Math.min(2000, deadline.remaining()), animations: 'disabled', fullPage: false }));
+            await deadline.run(atomicHostWrite(evidence.base, screenshot, bytes));
             await deadline.run(keepArtifact(path.join(evidence.base, screenshot)));
             result.screenshot = screenshot.replaceAll(path.sep, '/');
           }
           if (context && tracing) {
             const trace = path.join(evidence.relative, stem + '.zip');
-            await deadline.run(context.tracing.stop({ path: path.join(evidence.base, trace) }));
+            const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-trace-'));
+            try {
+              const file = path.join(scratch, 'trace.zip');
+              await deadline.run(context.tracing.stop({ path: file }));
+              await deadline.run(atomicHostWrite(evidence.base, trace, await fs.readFile(file)));
+            } finally { await fs.rm(scratch, { recursive: true, force: true }); }
             await deadline.run(keepArtifact(path.join(evidence.base, trace)));
             result.trace = trace.replaceAll(path.sep, '/');
           }

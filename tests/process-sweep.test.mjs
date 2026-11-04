@@ -235,7 +235,15 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       assert.doesNotMatch(project.error, /Run stopped by you/);
     } else assert.doesNotMatch(project.error ?? '', /cleanup could not be confirmed/);
     const restored = new Store(root); await restored.init();
-    assert.equal(restored.project(project.id).status, project.status);
-    assert.equal(restored.project(project.id).error, project.error);
+    const recovered = restored.project(project.id);
+    if (outcome === 'cleanup-failure' && recovered.processScope.cleanup === 'confirmed') {
+      assert.equal(recovered.status, 'stopped');
+      assert.equal(owned.exited, true, 'Startup claimed cleanup while the worker remained live');
+      assert.match(recovered.error, /processes have been stopped/);
+    } else {
+      assert.equal(recovered.status, project.status);
+      assert.equal(recovered.error, project.error);
+      assert.equal(recovered.processScope.cleanup, project.processScope.cleanup);
+    }
   });
 }

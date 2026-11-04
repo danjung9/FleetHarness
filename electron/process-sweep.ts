@@ -8,6 +8,7 @@ import { performance } from 'node:perf_hooks';
 const current = new AsyncLocalStorage<RunProcessSweep>();
 type Identity = { pid: number; started: string };
 type SweepOptions = {
+  marker?: string;
   scan?: (marker: string) => Promise<Identity[]>;
   signal?: (pid: number, signal: NodeJS.Signals) => void;
   graceMs?: number;
@@ -94,11 +95,15 @@ async function scan(marker: string): Promise<Identity[]> {
  * needs an OS worker boundary. Unsupported inspection fails closed at launch.
  */
 export class RunProcessSweep {
-  private marker = randomUUID();
+  readonly marker: string;
   private used = false;
   private closed = false;
   private stopping?: Promise<void>;
-  constructor(private options: SweepOptions = {}) {}
+  constructor(private options: SweepOptions = {}) {
+    this.marker = options.marker ?? randomUUID();
+    if (!/^[a-zA-Z0-9-]{1,100}$/.test(this.marker)) throw new Error('Invalid saved run process marker.');
+    this.used = options.marker !== undefined;
+  }
   run<T>(work: () => T): T { return current.run(this, work); }
   environment(base: NodeJS.ProcessEnv) {
     if (this.closed) throw new Error('Run process scope is closed; no further processes may start.');

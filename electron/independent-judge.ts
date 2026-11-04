@@ -3,7 +3,7 @@ import { Type } from 'typebox';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { randomUUID } from 'node:crypto';
+import { atomicHostWrite } from '../shared/host-files.js';
 import type { AgentBackend, TestReport, StageTokenUsage } from '../shared/types.js';
 import { runAgentStage, tokenUsage, type AgentLimits, type StageEvent, type StageSession } from './agent-runner.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
@@ -34,12 +34,7 @@ interface Options {
 }
 const responseLimit = 100_000;
 async function writeEvidence(workspace: string, name: string, value: unknown) {
-  // Rename replaces a pre-existing symlink instead of following it into application source.
-  const temporary = path.join(workspace, '.judge-' + randomUUID());
-  try {
-    await fs.writeFile(temporary, JSON.stringify(value, null, 2), { flag: 'wx', mode: 0o600 });
-    await fs.rename(temporary, path.join(workspace, name));
-  } finally { await fs.rm(temporary, { force: true }); }
+  await atomicHostWrite(workspace, name, JSON.stringify(value, null, 2));
 }
 const invalid = (detail: string): Verdict => ({ verdict: 'NOT', gaps: [{ requirement: 'Independent judgment',
   evidence: detail, fix: 'Inspect the evaluation failure and produce a complete evidence-backed judgment. Do not infer acceptance.' }] });

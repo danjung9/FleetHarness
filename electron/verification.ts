@@ -24,6 +24,11 @@ export class VerificationShutdownError extends Error {
 export async function applicationTestFiles(root: string, includeEmpty = false) {
   return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
+const shellArgument = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
+export function portableTestCommand(files: string[]) {
+  if (!files.length) throw new Error('No application test files were verified.');
+  return 'node --test ' + files.map(file => shellArgument('./' + file)).join(' ');
+}
 export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
   return { total: count('tests'), passed: count('pass'), failed: count('fail'), skipped: count('skipped') + count('todo') };
@@ -128,9 +133,10 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
+    const environment = runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+      CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot });
     const child = spawn(command.runner, command.args, {
-      cwd: root, env: runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
-        CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot }),
+      cwd: root, env: environment,
       stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
     });
     let closed = false;
@@ -201,6 +207,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     if (signal?.aborted) throw new Error('Run stopped.');
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
+      portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment },
       exitCode: timedOut || overflow ? null : evidence.problem ? 1 : exitCode,
       total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
       registeredTests: evidence.registeredTests, output, durationMs: Math.round(performance.now() - started), sourceHash: hash };

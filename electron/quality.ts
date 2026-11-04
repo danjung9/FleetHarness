@@ -5,7 +5,7 @@ import type { ChildProcess } from 'node:child_process';
 import type { AcceptanceCriterion } from '../harness/types.js';
 import type { QualityPlan, UxSpec, QualityReport } from '../shared/quality.js';
 import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
-import { safeFile, sourceHash } from './storage.js';
+import { safeFile, sourceHash, artifactManifest } from './storage.js';
 import { verifyWorkspace, type VerificationOptions } from './verification.js';
 import { verifyBrowserJourneys } from './browser-verification.js';
 
@@ -33,6 +33,7 @@ export async function verifyApplication(root: string, executable: string, contra
   signal?: AbortSignal, options: Partial<ApplicationVerificationLimits> = {}, onProcess: (child: ChildProcess) => void = () => {}) {
   const started = performance.now();
   const { browserTimeoutMs, browserStepTimeoutMs, ...nodeLimits } = options;
+  await artifactManifest(root, { requireEntryPoint: true });
   await assertQualityContract(root, contract);
   const report = await verifyWorkspace(root, executable, onProcess, signal, nodeLimits);
   const before = await sourceHash(root, { excludeEvidence: true });
