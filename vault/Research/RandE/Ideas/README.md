@@ -29,9 +29,9 @@ summary: "Novelty scanning closed; feature proposals deferred; one partial ID 11
 
 ## Local session and ledger handoff
 
-[E, document review] Asked: close scanning and create one bounded evidence card. Done: card and this index. Verification: checked cited existing records, revision attribution, word count and local links. No fixture, pilot, software change, competitor search, external retrieval/contact or broader package was created. Next: await actual artifact evidence or a material change under [[Ops/Directors/Directive-rande]].
+[E, meeting 31 document review, 2026-11-04] Updated [[Research/RandE/Ideas/ID11-Evidence-Card]] with the completed modified `631849f` build, partial factory/CLI receipts and dated `d0f4c69` sandbox gate. Actual candidate evidence exists; exact-byte human acceptance and user benefit remain pending. Current AppYard mvp `d0f4c69`/main `8db53c3` and delivered candidates retain distinct identities. Next: main completes remaining acceptance and human review under [[Ops/Directors/Directive-rande]]. No new build or feature scan is assigned.
 
-[E, relay review] Read both assigned relay files before work and again after writing. The final analysis confirms the identical-tree merge at `2e30b4a`; no research restart or new test attribution is needed. The card is 298 whitespace-delimited words including frontmatter.
+[E, relay review] Meeting 31 supersedes the earlier `2e30b4a` relay attribution. Both current relays identify AppYard mvp `d0f4c69` merged into main `8db53c3`; older counts remain historical. The card is 304 whitespace-delimited words including frontmatter. Completion proof is in `.tmp/JOURNAL.md`.
 
 [E, local tools] Reused the command runner, zsh, ripgrep, system text readers, Python standard library and patch interface disclosed in [[Research/RandE/Ideas/Sprint/Review-Log]]. No new tool, dataset, library or outside service was adopted. Model runtime version and actual cost remain unavailable.
 

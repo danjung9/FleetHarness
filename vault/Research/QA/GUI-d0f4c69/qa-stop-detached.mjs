@@ -116,13 +116,20 @@ async function heartbeat(name) {
   return { count: rows.length, lastTick: rows.length ? Number(rows.at(-1)) : null };
 }
 async function snapshot() {
-  return {
+  const sample = {
     at: Date.now(), parentExists: exists(parentRecord.pid), childExists: exists(childRecord.pid), shellExists: exists(shellRecord.pid),
     parentProcess: processState(parentRecord), childProcess: processState(childRecord), shellProcess: processState(shellRecord),
     parentHeartbeat: await heartbeat('parent'), childHeartbeat: await heartbeat('child'),
     requests: requests.length,
     status: await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id)?.status, projectId)
   };
+  for (const [key, identity] of [['parentProcess', parentIdentity], ['childProcess', childIdentity], ['shellProcess', shellIdentity]]) {
+    if (identity && sample[key].present && !sameIdentity(identity, sample[key])) {
+      result.processIdentityError = 'Recorded process identity changed or became unavailable during sampling.';
+      throw new Error(result.processIdentityError);
+    }
+  }
+  return sample;
 }
 async function until(check, timeoutMs, label) {
   const deadline = Date.now() + timeoutMs;
@@ -317,6 +324,7 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   await delay(result.limits.observationMs);
   result.observationEnd = await snapshot();
   await stoppedPromise;
+  assert.ok(!result.processIdentityError, 'Process identity sampling was inconclusive.');
   assert.ok(Date.now() < parentRecord.deadline - 5000, 'Worker watchdog could explain termination; classify inconclusive.');
   await assert.rejects(fs.access(cleanupFile), { code: 'ENOENT' }, 'Cleanup must not precede observation.');
   for (const name of ['parent', 'child']) await assert.rejects(fs.access(path.join(control, name + '.exit.json')), { code: 'ENOENT' }, 'A worker self-exit cannot establish Stop.');

@@ -39,6 +39,8 @@ summary: "QA coordination, pinned source review, independent GUI receipt assessm
 
 ## Verification
 
+- [E, detached fixture handoff] Completed [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]] and qa-stop-detached.mjs for main's clean d0f4c69 GUI clone. Reviewed source selectors, independent worker deadlines, owned PID/session/group evidence, reuse checks, pre-cleanup verdict and separate cleanup. Main/generated-worker syntax and pure verdict/identity controls pass. The local process-inspection attempt was denied and not retried through another route. No app, server or synthetic worker was launched here. Actual detached-job outcome remains pending main execution.
+
 - [E, subsequent Auto receipt] The new report appeared after the initial absence check. Independently reviewed it against pinned source in [[Research/QA/Auto/Review-d0f4c69]]: 116 unit and 51 harness tests pass, five smoke failures are explained by stale assumptions, and downstream assertions remain open. Corrected the blanket fixture-only description in the companion review. U1 is superseded by redesign, U2 remains source-present with a recent-build mitigation, and U3 has a source fix pending targeted runtime closure.
 - [E, checker maintenance] After reviewing the corrected CLI receipt, changed unsupported invalid-input detail text to report the adapter's actual reason instead of claiming an import happened. Corrected the explicit Playwright timeout argument position. Syntax and pure evaluator checks pass. Existing receipts and frozen expected answers are unchanged; no additional browser run was requested for these reporting/API-signature corrections.
 

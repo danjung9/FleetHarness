@@ -12,6 +12,8 @@ Last updated 2026-11-04, after adapted ID 11 receipts and d0f4c69 source reconci
 
 ## Latest session
 
+- [E, preparation complete] [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]] and its script are ready for main's fixture execution. Source, generated-worker syntax and pure identity/verdict checks pass. The test proves distinct process group/session and advancing heartbeats before Stop, then records observations before separate cleanup. No detached-job runtime result is claimed yet.
+
 - [E, Auto receipt review] The 15:46 to 15:49 d0f4c69 Auto run reports compilation, 116 unit tests and 51 harness tests passing; five of nine smoke scripts fail on stale fixture, selector or layout assumptions. Their later assertions remain untested. The login smoke initiates/cancels a real protocol flow, so the whole suite is not fixture-only. U3 is corrected in source; Home still lacks direct Stop. See [[Research/QA/Auto/Review-d0f4c69]].
 
 - [E, independent receipt review] Pipeline-run1 passed all 17 numeric/outcome cases; CLI-route passed 13 with four form-boundary cases NOT CHECKED. Both pass actual fresh offline save/import. Corrected CLI receipt has 28 PASS, zero FAIL and 18 NOT CHECKED; its prior import failure was a checker dialog error. Pipeline's clock failure is a key/brief scope mismatch, not a demonstrated brief violation. It has a real contradictory exhausted-state explanation. Neither candidate is human accepted. See [[Research/QA/Acceptance/Review-Candidates]].
