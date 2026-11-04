@@ -65,3 +65,5 @@ Run unit and PostgreSQL tests, then exercise the deployed app:
 6. Check invalid credentials, expired sessions and provider limits produce actionable errors without secrets.
 
 Automated hosted tests use fixtures and do not spend OpenAI credits. The final deployed generation check must use a real account key entered by its owner.
+
+`npm run build:hosted` also cold-starts the emitted Workflow handler and checks workflow/step registration without network access. For a provisioned staging account, `scripts/smoke-hosted-live.mjs --check` checks readiness without starting a build. Run it with `--execute` only when ready to spend real provider usage: it demonstrates sign-out continuity, checkpoint pause/resume, verification, approval, export and an unauthenticated share. It requires the public Supabase key and an ignored mode-600 `output/hosted-demo-accounts.json` login file, and leaves its demo project available for inspection.
