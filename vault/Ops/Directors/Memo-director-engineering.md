@@ -3,21 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Finish shared pipeline integration and assign one bounded repair for a measured benchmark failure."
+summary: "Finish existing integration and judge the smaller experiment before assigning more work."
 ---
 
 # Engineering decisions
 
-## Bottom line
+[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, round-one scoreboard] Ten finished, nine automatic passes, zero satisfactory; nine negative judgments. [E, Round-101] The smaller experiment has three automatic passes, including ID 36 at 20/20 journeys, with judgments pending. Scratch-patch results are not shipped behavior.
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard read this meeting] Six finished, five automatic passes, zero satisfactory; ID 12 judged NOT. [R] Finish existing repairs before expanding scope.
+[R] Write an empty new-task list. Withdraw the stale ID 36 dispatch, keep research idle and finish existing work. Dev-5 retains primary-deferral repair; builder's overlapping implementation becomes input to that owner. Architect's expanding file proposal is not another allocation.
 
-[E, feed-77] Retry, telemetry and preflight work remains separated by repeated merge conflicts. [R] Main/runner retains serial integration. Return the extra unsandboxed registration execution; finish dev-3's verifier dependency first. Preserve retry checkpoints, bounded repairs, usage unknowns and preflight cancellation. Freeze competing edits to shared pipeline files until one writer receives them.
+[E, dev-1 journal] Combined recovery/sandbox integration is already active. [R] Keep that owner, incorporate dev-3's separated verifier, and serialize preflight and telemetry afterward. Dev-2 must prove actual Start behavior. Builder must correct turn-ID usage attribution and terminal persistence. Preserve all reviewed regressions and teammate assertions.
 
-[R] Replace the unstarted native-select recommendation for builder with one dev-5 task: repair guidance plus a real-browser regression pair. ID 36's malformed option survived label-only repair. Architect retains already routed primary-requirement and false-oracle diagnoses; no duplicate assignment or generated-app hand edit.
+[E, feed-118] Cleanup landed at c6ce52d; native discovery and detached Stop remain unverified. [R] Main owns that receipt and experiment execution. Retain round-one artifact limits; do not reopen resolved raw-copy work.
 
-[E, Auto/1d9eeee] 125 unit and 51 harness tests pass; Electron and Norfolk smokes fail. [R] Finish dev-3's reviewed smoke changes, then resolve Norfolk through its existing queue if unassigned. Preserve Dan's frontend.
+[R] Require narrative source coverage, complete synthetic outcomes and independent judgments before another full round. ID 16 shows why a true requirementsMet flag alone is insufficient. Preserve frozen failures and genuine missing-authority blockers.
 
-[R] Reconcile Windows e68e90e/4c49e85 test changes under one writer. New hosted relay 89874ce has no reported overlap; main owns obtaining exact integrated receipts through Quality. Neither establishes release readiness.
-
-[R] Keep detached Stop, benchmark cancellation and final-manifest defects open with main. Preserve Thursday noon freeze, independent judgments and human artifact/submission approval. No new deployment, connector or broad research work.
+[R] Protect Dan's 1d9eeee frontend, Windows 4c49e85 checks and hosted 5d2996f recovery coverage. Keep Thursday noon freeze and exact-byte human acceptance. No deployment or publication work.

@@ -3,54 +3,55 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Repair measured catalog failures without duplicating integration or weakening independent acceptance."
+summary: "Finish one source-linked primary-task repair and judge the current experiment without duplicate work."
 ---
 
 # Agentic development instructions
 
-## Bottom line
+## Current decision
 
-[P, [[Research/Agentic/Flow-Goals]]] Success is ten satisfactory catalog-card builds without human help during generation. [E, Scoreboard read this meeting] Six builds finished, five pass automatically and none is independently satisfactory. [R] Preserve failed artifacts and repair the factory; the older absent-scoreboard statement and blanket one-repair instruction are superseded.
+[P, [[Research/Agentic/Flow-Goals]]] Success remains ten satisfactory builds from unchanged catalog cards without human help during generation. [E, [[Research/QA/Ten/Scoreboard]]] Round one has nine automatic passes and zero satisfactory results. [E, [[Research/QA/Ten/Exp1/Round-101]]] Three of five experiment entries automatically pass; judgments are pending. No satisfaction or speed improvement is established.
 
-## Current owners and queue
+[R] This replaces the previous directive. New task JSON is empty. Existing routed work continues under current overseer ownership. Withdraw the old native-select dispatch: ID 36 now has a newer 20/20 automatic journey result, so compare and judge that artifact before allocating another repair. Keep the round-one failure and diagnosis as evidence.
 
-[R] Architect continues already routed failures; no new architect task is added. Builder finishes its existing review return and telemetry integration through the single shared-file owner in [[Ops/Directors/Directive-development]]. It must not start another retry, verifier or native-control implementation in parallel.
+## One implementation, existing owners
 
-[R] Transfer only the unstarted native-select recommendation in [[Research/Agentic/08-Native-Select-Repair]] from builder to dev-5. This creates one proposed task, not a launched seat. Runner first confirms code enablement, free ownership of skills/fleet-ux/SKILL.md and tests/browser-verification.test.mjs, and absence of an equivalent running or queued assignment. If one exists, coalesce into that owner and do not dispatch dev-5. Current reviews finish before unrelated work.
+[R] Dev-5 retains the canonical primary-deferral correction with source-linked syntheticCoverage and lifecycle fixture repair. Agentic-builder's overlapping prefix-only implementation is not a separate deliverable. Preserve useful intake/planning/evidence wording and reconcile it through dev-5 and the serial integrator. No silent schema rollback or duplicate parser.
 
-## ID 36: one concrete repair
+[R] Builder instead finishes its already returned telemetry work after file transfer: receipt turn IDs must match the measured turn; unknown usage stays null; report-write failure must not leave a running project or unfinished terminal metrics. Note budgets cannot remove source requirements or expected outcomes. Keep the review regressions and the shared sandbox prerequisite.
 
-[E, architecture diagnosis and QA traces] The local choice is missing because generated HTML contains a closing option tag where an opening tag belongs. Repair changed labels but retained malformed markup. Stub controls accepted arbitrary values; the real browser still failed four conflict cases, leaving 8/12 journeys passed and fifteen deferred criteria.
+[R] Architect continues queued diagnoses, but adds only new, decision-changing evidence to [[Research/Agentic/09-Primary-Task-Deferral]]. Its proposed owner and growing file list are recommendations, not new task allocation. Do not send every negative judgment back as another duplicate builder job. Consolidate the existing primary-task group, distinguish native-control and evidence-quality findings, and await the experiment's judgments before expanding repair scope.
 
-[R] Dev-5 changes only these two product files:
+## Answers to the findings
 
-| File | Required change |
+| Finding | Current ruling and proof needed |
 | --- | --- |
-| skills/fleet-ux/SKILL.md | Extend existing repair guidance to compare the frozen requested value with the parsed option collection and raw start/end tags. Fix malformed markup before relabeling. Source text and stub value assignments do not prove native option availability. Require the unchanged host journey rerun. |
-| tests/browser-verification.test.mjs | Add a synthetic pair using the real native select: malformed markup must reject local selection at desktop and narrow sizes; valid markup with a readable label different from its value must select local and trigger the expected change result at both sizes. Preserve e68e90e/4c49e85 budgets and negative recovery/export checks, including intended-step failures rather than incidental startup failure. |
+| ID 12 primary deferral | The enum-only bypass is reproduced and its exact working-source rejection is reported at 16:47 in Ten-Benchmark-Audit. Preserve that regression. A permitted dependency label alone is insufficient. Require a source-linked synthetic message-to-output case with literal values and category extraction, labeled as an assumed mock format. The new 31-test experiment result still needs independent semantic judgment. |
+| ID 16 omitted narrative | A true requirementsMet flag based on three recipe checks cannot cover missing narrative obligations. Intake/planning must inventory defining prose outcomes and bind them to source wording and acceptance cases. Send this into the existing deferral review, including a negative fixture whose structured rows pass while a narrative obligation is omitted. No new broad runtime rewrite. |
+| ID 11 false expected explanation | Preserve the rejected contract and failure. Independently establish the correct expected explanation, version the contract openly and regenerate/reverify. Do not silently soften an oracle or teach the app a false statement. Departmental negotiation, recurrence and optimization need their own synthetic expected outcomes; 20/20 planned experiment journeys alone do not establish them. |
+| ID 36 native option | The round-one parser lacked the local option; browser checks correctly caught it. Keep that diagnosis and four failed journeys. The new experiment reports 20/20, so no fresh dispatch now. If the same cause recurs, return one bounded factory-guidance/browser-fixture repair with parsed DOM evidence and preserved frozen steps, not a generated-app hand edit. |
+| IDs 8, 20, 32, 35 and 37 | Use the existing source-coverage repair and independent judges. Require the defining input-to-output workflow, not a routing-only substitute, generic advice, first-finding-only proposal or export filename. Preserve legitimate unmet dependencies. Do not fan this into new domain-skill assignments before the experiment identifies the smallest remaining shared failure. |
+| ID 10 missing engineering authority | Retain the original task as incomplete if essential formulas, limits or independently checked reference cases are unavailable. Do not invent constants, safety authority or claim a notebook meets the engineering task. Explicit synthetic assumptions can demonstrate software behavior, but cannot establish real-format compliance or operational correctness. |
 
-[R] Retain the malformed fixture's actual failure evidence before the valid fixture result. This verifies an existing gate; do not invent a production regression or claim the instruction fixes an app from fixture results alone. No browser-verifier rewrite, longer timeout, changed frozen step or generated-app hand edit. The permitted runner supplies browser receipts when the seat cannot launch a browser.
+[R] Completion accounting must keep real dependencies and deferred obligations visible. Synthetic stand-ins demonstrate bounded behavior; they do not erase missing live systems, human authority, deployment, synchronization or safety validation. Require primary outcomes before claiming the original task complete, with independent judgment separate from structural validation.
 
-[R] After exact-commit review, main schedules one fresh ID 36 factory run and Quality judges its exact saved artifact. All twelve planned journeys must pass before claiming the native-control defect repaired. Fifteen deferred criteria still require separate judgment; a corrected dropdown cannot establish full challenge satisfaction.
+## Evidence and experiment sequence
 
-## Answers to remaining architecture findings
+[R] Main retains the active five-challenge experiment. Do not launch another benchmark or revive a historical blanket hold against that authorized run. Do not schedule a further full ten until the current correction and independent judgments justify it; the eventual ten-of-ten goal remains unchanged.
 
-- [R] ID 12: support a concrete synthetic instance of the defining extraction task. Generic EVENT/TASK parsing plus an honest omission is useful partial work, but cannot count as the catalog outcome. Require card-to-criterion traceability before implementation; do not defer every defining outcome and then claim completion. No operational messages or nonpublic source formats.
-- [R] ID 11: preserve the original false-explanation failure and contract as evidence. Architect supplies a mathematically correct, independently checked negative case. A corrected contract must be versioned, reviewed and then regenerated/reverified; never silently relax the old frozen assertion or train the app to say something false. The older curated candidate's 0800/summary scope mismatch is a different finding.
-- [R] Semantic evidence: downloaded files must match current inputs and computed results, not just a filename or synthetic marker. Require complete assignment comparison and changed-input checks. Source-only concerns about same-revision acceptance or queued persistence remain hypotheses until reproduced; do not allocate speculative repairs ahead of measured failures.
+1. [R] Freeze each final artifact, contract, fixture and patch/revision identity. Retain original failures and known round-one normalized-copy limitations.
+2. [R] Quality judges exact saved artifacts against original card outcomes, including omitted prose. Existing automatic routing owns these judgments; no duplicate officer task.
+3. [R] Compare baseline and experiment by challenge: primary coverage, deferred outcomes, independent verdict, elapsed time, uncached input/output and repairs. More tests or fewer deferred rows alone are not a win.
+4. [R] Route only a reproduced remaining factory failure to one owner and one bounded reviewable change. Preserve full expected content, changed-input checks, citations and native interactions.
 
-## Integration and evidence discipline
+[R] Generated downloads must match all expected current values, identities and supporting citations. Capture each output once and inspect its whole record; repeated substring downloads add friction without proving completeness. Proposed actions and simulated acknowledgements must remain distinct from measured execution.
 
-[E, feed-77] Retry/resume and timing/usage patches have meaningful fixture receipts but repeated shared-file conflicts. [R] Keep their finished diffs and tests for serial integration. Dev-1's later bounded two-repair policy overrides older one-repair prose; preserve first-attempt recovery tests and total budgets across resume. Unknown token fields remain null. Note caps may not remove primary criteria, expected outcomes or browser journeys.
+[R] Keep independent expected outcomes outside builder authority. Use only synthetic/public data and label assumed rules. No external system changes, invented permission or operational input is required for these tests. Honest missing-dependency status is preferable to a false completion claim.
 
-[R] Return registration counting to the mandatory sandbox executor. No extra direct generated-test subprocess after verification. Require real registered-case evidence, zero-test rejection, retained post-build test-change history and fail-closed containment. Foreground-only prompts are guidance, not proof that detached jobs terminate.
+## Integration and finish
 
-[E, [[Research/QA/Ten-Benchmark-Audit]]] Main owns benchmark stop/cancellation and copied-manifest defects. [R] Do not launch another runner or judge an altered copy under an earlier digest. Main preserves full final manifests and records any normalization before hashing/testing; Quality binds judgments to those bytes. Round 1's scratch runtime is not shipped 1d9eeee behavior.
+[R] Follow [[Ops/Directors/Directive-development]] for exclusive ownership. Dev-1 already integrates the mandatory sandbox and registered-test evidence, preserving build-test history and bounded repairs across resume. Do not add another direct generated-test subprocess. Foreground prompts are guidance; native shutdown still requires main's receipt at the landed revision.
 
-[R] Compare speed and tokens only on matching real-run receipts with unchanged evidence requirements and independent quality judgments. Under eight minutes and 200,000 uncached-plus-output tokens remain targets, not observed improvements from local tests.
+[R] Preserve Dan's 1d9eeee frontend, Windows 4c49e85 test assertions and hosted 5d2996f mocked restoration case. The hosted test does not justify a prompt change or deployment claim. RandE ideas, imports and new connectors remain deferred.
 
-## Finish and boundaries
-
-[R] Preserve Dan's frontend and use the current Brief/Build/Review/Deliver journey in reports. Windows e68e90e/4c49e85 changes fixture allowances and requires intended-step negative failures; it does not change agent repair policy or explicit deadline cases. Hosted 89874ce changes routing, not evidence of orchestration success. No connector, new framework, deployment or broad optimization allocation.
-
-[R] Use synthetic/public data, keep prohibited actions visible, monitor progress and budgets, and escalate failed checks or shutdown. Human approval binds to accepted final bytes and remains required for submission. Preserve Thursday noon freeze. Report exact command/revision, failing and passing evidence, remaining NOT VERIFIED cases, and outcome/verification/next action in .tmp/JOURNAL.md.
+[R] Preserve monitoring, escalation, shutdown and final-byte human review. Thursday noon is the code freeze. Report exact evidence, open limitations and the next action in the journal. The current meeting allocates no new seat; queue coalescing and central log transfer remain runner/coordinator actions.
