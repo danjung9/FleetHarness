@@ -1,10 +1,11 @@
 import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
 import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
-import { Store, safeFile } from './storage.js';
+import { Store, safeFile, listArtifacts, sourceHash } from './storage.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
 import { loadQualityContract, assertQualityContract, verifyApplication, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
 import type { AcceptanceCriterion } from '../harness/types.js';
@@ -17,7 +18,29 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
+type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; buildTests?: Map<string, string>; lastTests?: Map<string, string>; testChanges?: string[] };
+
+// Per-file summaries are emitted by node:test only for registered tests, not its
+// synthetic file-completion passes. Keep this reporter in the host process and
+// use IPC so test stdout cannot impersonate registered-case evidence.
+const registeredTestReporter = 'data:text/javascript;base64,' + Buffer.from(`
+export default async function* (events) {
+  const files = [];
+  for await (const event of events) {
+    if (event.type === 'test:summary' && event.data.file) files.push(event.data);
+    if (event.type === 'test:stdout' || event.type === 'test:stderr') process.stdout.write(event.data.message);
+  }
+  process.send(files);
+}
+`).toString('base64');
+
+const backgroundShellCommand = /\b(?:nohup|disown|setsid|Start-Job|Start-Process)\b|(?<![&>\\])&(?![&>])/i;
+// Heuristic for visible shell launches, not process containment. Quoted data
+// and literal heredocs often contain ampersands while writing application HTML.
+function shellLaunchText(command: string) {
+  return command.replace(/<<-?\s*(['"])([A-Za-z_]\w*)\1[^\n]*\n[\s\S]*?\n\t*\2(?=\r?\n|$)/g, '')
+    .replace(/'[^']*'|"(?:\\.|[^"\\])*"|\\./gs, '');
+}
 interface BackendOptions {
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
@@ -112,6 +135,7 @@ export class FleetBackend {
   }
   private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[] }) {
     this.check(run);
+    let backgroundJob = false;
     const phase = run.phases!.find(phase => phase.id === stage)!;
     if (phase.owner !== 'agent') throw new Error('This phase is controlled by the human or host.');
     const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
@@ -146,6 +170,11 @@ export class FleetBackend {
         if (event.type === 'tool_execution_start') {
           const args = event.args as Record<string, unknown> | null;
           const target = args?.path ?? args?.file_path ?? args?.command;
+          const command = args?.command ?? args?.cmd;
+          if (['bash', 'shell', 'shell_command', 'exec_command'].includes(event.toolName) && typeof command === 'string' && backgroundShellCommand.test(shellLaunchText(command))) {
+            backgroundJob = true;
+            this.log(p, stage, 'error', 'Possible background job detected in a shell call. Stop tracks foreground calls only. An operator must inspect and stop any remaining jobs before a new run.');
+          }
           this.log(p, stage, 'tool', event.toolName + '\n' + JSON.stringify(event.args, null, 2).slice(0, 6000), {
             callId: event.toolCallId, name: event.toolName, phase: 'start',
             ...(typeof target === 'string' ? { target: target.slice(0, 1000) } : {})
@@ -163,12 +192,16 @@ export class FleetBackend {
         const check = () => { this.check(run); signal.throwIfAborted(); };
         const complete = async (text: string, required: string[]) => {
           await prompt(text);
-          check(); await this.checkInputs(p, run); check();
+          check();
+          if (backgroundJob) throw new Error('Possible background job detected; an operator must inspect and stop remaining jobs before continuing.');
+          await this.checkInputs(p, run); check();
           let missing = await this.missingFiles(p, run, stage, required, tests); check();
           if (missing.length) {
             this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
             await prompt('The stage is incomplete. Produce these missing or empty artifacts before finishing: ' + missing.join(', ') + '. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
-            check(); await this.checkInputs(p, run); check();
+            check();
+            if (backgroundJob) throw new Error('Possible background job detected; an operator must inspect and stop remaining jobs before continuing.');
+            await this.checkInputs(p, run); check();
             missing = await this.missingFiles(p, run, stage, required, tests); check();
           }
           if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
@@ -207,6 +240,78 @@ export class FleetBackend {
       throw new Error('The original requirements changed during the run. Review the artifacts and start a new run.');
     }
   }
+  private async testSnapshot(p: Project) {
+    const files = (await listArtifacts(p.workspace!)).filter(file => !/^\.fleet(?:\/|\\)/.test(file.path) && /\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(file.path));
+    const snapshot = new Map<string, string>();
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
+      snapshot.set(file.path, createHash('sha256').update(await fs.readFile(await safeFile(p.workspace!, file.path))).digest('hex'));
+    }
+    return snapshot;
+  }
+  private async recordTestChanges(p: Project, run: ActiveRun, step: string) {
+    const current = await this.testSnapshot(p), previous = run.lastTests!;
+    const changes = (before: Map<string, string>) => [...new Set([...before.keys(), ...current.keys()])].sort().flatMap(file =>
+      before.get(file) === current.get(file) ? [] : [(!before.has(file) ? 'added: ' : !current.has(file) ? 'removed: ' : 'modified: ') + file]);
+    const sinceBuild = changes(run.buildTests!), sincePrevious = changes(previous);
+    if (sincePrevious.length) {
+      const message = `Post-build test changes (${step}). Human review required. Since previous stage: ${sincePrevious.join('; ')}. Since build: ${sinceBuild.join('; ') || 'restored to build snapshot'}.`;
+      run.testChanges!.push(message);
+      this.log(p, 'verify', 'info', message);
+      await this.changed(p);
+    }
+    run.lastTests = current;
+  }
+  private async registeredTestError(p: Project, run: ActiveRun): Promise<string> {
+    this.check(run);
+    const files = await applicationTestFiles(p.workspace!);
+    if (!files.length) return 'No registered application tests: no application test files remain.';
+    const resolvedFiles = new Map(await Promise.all(files.map(async file => [file, await safeFile(p.workspace!, file)] as const)));
+    const timeoutMs = this.options.verificationLimits?.timeoutMs ?? 120_000;
+    const maxOutputBytes = this.options.verificationLimits?.maxOutputBytes ?? 2_000_000;
+    const child = spawn(this.executable, ['--test', '--test-reporter=' + registeredTestReporter, ...files.map(file => './' + file)], {
+      cwd: p.workspace!, env: { PATH: process.env.PATH, HOME: p.workspace!, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'], detached: process.platform !== 'win32'
+    });
+    const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };
+    let summaries: { file: string; success: boolean; counts: { tests: number; failed: number; skipped: number; todo: number; cancelled: number } }[] | undefined;
+    child.on('message', message => { if (Array.isArray(message)) summaries = message; });
+    const completed = new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
+    let interrupt!: () => void, problem = '', bytes = 0;
+    const interrupted = new Promise<null>(resolve => { interrupt = () => { stop(); resolve(null); }; });
+    const timer = setTimeout(() => { problem = 'Registered-test check exceeded the time limit.'; interrupt(); }, timeoutMs);
+    const collect = (chunk: Buffer) => { bytes += chunk.length; if (bytes > maxOutputBytes) { problem = 'Registered-test check exceeded the output limit.'; interrupt(); } };
+    child.stdout?.on('data', collect); child.stderr?.on('data', collect);
+    run.controller.signal.addEventListener('abort', interrupt, { once: true });
+    if (run.controller.signal.aborted) interrupt();
+    try {
+      const code = await Promise.race([completed, interrupted]);
+      this.check(run);
+      if (problem) return problem;
+      if (code !== 0 || !summaries) return 'Registered-test check did not complete successfully.';
+      const missing = files.filter(file => !summaries!.some(summary => resolvedFiles.get(file) === path.resolve(summary.file) && summary.success
+        && summary.counts.tests > 0 && summary.counts.failed === 0 && summary.counts.skipped === 0 && summary.counts.todo === 0 && summary.counts.cancelled === 0));
+      return missing.length ? 'No registered application tests passed in: ' + missing.join(', ') : '';
+    } finally {
+      clearTimeout(timer); run.controller.signal.removeEventListener('abort', interrupt);
+      stop(); child.stdout?.destroy(); child.stderr?.destroy();
+      if (child.connected) child.disconnect();
+    }
+  }
+  private async verify(p: Project, run: ActiveRun) {
+    const started = performance.now();
+    const report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+    // Preserve the existing verifier and browser gate. Only apparently passing
+    // Node evidence needs this additional registered-case check.
+    if (report.exitCode === 0 && report.passed > 0 && report.failed === 0 && report.skipped === 0) {
+      const problem = await this.registeredTestError(p, run);
+      if (report.sourceHash !== await sourceHash(p.workspace!)) throw new Error('Source files changed during registered-test verification. Run verification again before review.');
+      if (problem) { report.total = 0; report.passed = 0; report.failed = 0; report.exitCode = 1; report.output += '\n' + problem; }
+    }
+    if (run.testChanges!.length) report.output += '\n' + run.testChanges!.join('\n');
+    report.durationMs = Math.round(performance.now() - started);
+    return report;
+  }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
     try {
       await this.stage(p, 'intake', 'active');
@@ -229,12 +334,14 @@ export class FleetBackend {
           instruction: 'Implementation is complete. Now write README.md as a practical user guide for the software you just built. Inspect the actual index.html, application source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and quick start (open index.html in a browser, with no install or server required); numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using synthetic sample input and the expected output; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Write or update README.md only in this step. Preserve requirements.md, .fleet, application source and tests.',
           files: ['README.md']
         });
+      run.buildTests = await this.testSnapshot(p); run.lastTests = run.buildTests; run.testChanges = [];
       await this.stage(p, 'build', 'complete'); await this.stage(p, 'verify', 'active');
       await this.agent(p, run, 'verify', provider, model,
         'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested logic and index.html. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Keep index.html self-contained and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
       this.check(run);
       await this.checkInputs(p, run);
-      p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+      await this.recordTestChanges(p, run, 'verify');
+      p.report = await this.verify(p, run);
       this.log(p, 'verify', 'info', p.report.output);
       if (!reportPassed(p.report, true)) {
         await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
@@ -242,7 +349,8 @@ export class FleetBackend {
         await this.agent(p, run, 'verify', provider, model,
           'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Never edit acceptance-plan.json or ux-spec.json; the host checks their original hash. Keep index.html consistent with core source. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
         await this.checkInputs(p, run);
-        p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+        await this.recordTestChanges(p, run, 'repair');
+        p.report = await this.verify(p, run);
         this.log(p, 'verify', 'info', p.report.output);
       }
       this.check(run);
