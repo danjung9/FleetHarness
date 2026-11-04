@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Independent synthetic training acceptance. No candidate module is imported into Node.
-// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route]
+// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route|pipeline-run2]
 // Pure evaluator check: node accept-training.mjs --self-check
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -388,9 +388,9 @@ async function main() {
       flags[argv[n++]] = argv[n];
     } else positional.push(argv[n]);
   }
-  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route]');
+  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE] [--adapter pipeline-run1|cli-route|pipeline-run2]');
   if (flags['--adapter']) {
-    if (!['pipeline-run1', 'cli-route'].includes(flags['--adapter'])) throw new Error('Unknown explicit adapter');
+    if (!['pipeline-run1', 'cli-route', 'pipeline-run2'].includes(flags['--adapter'])) throw new Error('Unknown explicit adapter');
     explicitAdapter = await import('./adapters/' + flags['--adapter'] + '.mjs');
   }
   const candidateArgument = path.resolve(positional[0]);
@@ -653,6 +653,7 @@ async function main() {
       const importView = await observe(page);
       const upload = importControl(importView);
       if (upload && importBaseline?.judged.status === 'PASS' && importBaseline.entered.ok) {
+        if (explicitAdapter?.beforeImport) await explicitAdapter.beforeImport(page);
         await page.locator('input[type=file]').nth(upload.index).setInputFiles(savedFresh.target);
         if (explicitAdapter?.waitForImport) await explicitAdapter.waitForImport(page); else await sleep(300);
         const restored = await capture('fresh-context-after-import');
@@ -670,6 +671,7 @@ async function main() {
             const changed = replaceInput(savedBase.json, oldInputs[0].path, fresh.input);
             const editedImportControl = importControl(await observe(page));
             if (editedImportControl) {
+              if (explicitAdapter?.beforeImport) await explicitAdapter.beforeImport(page);
               await page.locator('input[type=file]').nth(editedImportControl.index).setInputFiles({ name: 'edited-previously-reviewed.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(changed)) });
               if (explicitAdapter?.waitForImport) await explicitAdapter.waitForImport(page); else await sleep(300);
               const edited = await capture('edited-reviewed-metadata-import');

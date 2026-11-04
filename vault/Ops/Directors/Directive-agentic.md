@@ -10,6 +10,10 @@ summary: "Return the unsandboxed registration rerun and consolidate trustworthy 
 
 [P, overseer notice; E, snapshot-51] Code seats are enabled. Dispatched tasks authorize allocated work; prior disabled-seat instructions are superseded. Follow [[Ops/Dev-Pattern]] and [[Ops/Directors/Directive-development]]. Keep five sequential phases, one repair, protected source packets, frozen contracts and Dan's browser gate. Finish current reviews before another task.
 
+[P, final Memo-overseer reread and [[Research/Agentic/Flow-Goals]]] The new goal is ten satisfactory live catalog builds from cards, one per recipe, without curated briefs or human help during generation. The benchmark owns execution and measurements; qa-officer judges, and failures route automatically to agentic-architect. Preserve current repair bounds for this consolidation; any later retry/resume improvement must follow benchmark evidence and a separate bounded assignment.
+
+[E, final read] The named Research/QA/Ten/Scoreboard.md and Ten directory do not yet exist in the available vault. [R] No invented benchmark status or numerical improvement claim. Prioritize recorded scoreboard failures once supplied. The current sandbox-bypass return is a prerequisite for trustworthy benchmark execution; no new research or performance redesign outranks it.
+
 ## Decision on the hardening report
 
 [E, feed-51 and builder source read] The reported seven added checks and 51 harness passes support useful work: reject empty test evidence, preserve post-build test-change history and discourage background jobs. However, electron/pi-backend.ts:272 directly spawns this.executable for an additional registered-test check after verifyApplication. That execution does not use dev-3's sandbox. Environment filtering and IPC do not establish filesystem containment.
@@ -32,7 +36,7 @@ summary: "Return the unsandboxed registration rerun and consolidate trustworthy 
 
 ## Architecture answer and generated-app findings
 
-[R] Agentic-architect's evidence reconciliation is complete for its dated inputs. No repeat status-writing task is assigned. Remain idle until an exact review question needs a decision. Its old V1-first sequence, disabled-seat statement and 96-only gate headline are superseded by these directives and the newer receipts below; do not dispatch work from those historical notes.
+[R] Agentic-architect's evidence reconciliation is complete for its dated inputs. No repeat status-writing task is assigned. Take automatically routed benchmark failures when they arrive: identify exact commit/card/run, first failed stage or independent outcome, retained evidence and the smallest factory instruction/skill/host correction. Distinguish infrastructure failure from generated-app behavior; propose files and a testable closure, without hand-editing the app or relaxing the judge. Until a failure arrives, remain idle. Its old V1-first sequence, disabled-seat statement and 96-only gate headline are superseded by these directives; do not dispatch from those historical notes.
 
 [E, QA reviews] Factory run1 records 33 PASS, one clock FAIL and 14 NOT CHECKED; latest CLI records 28 PASS and 18 NOT CHECKED. Both pass recorded fresh offline import. The clock key specifies 0800 while the supplied brief does not; readable-summary export has a similar scope difference. The actual factory defect is an exhausted headline paired with a claim of a complete conflict-free draft.
 
@@ -42,6 +46,6 @@ summary: "Return the unsandboxed registration rerun and consolidate trustworthy 
 
 ## Scope and human authority
 
-[R] No second task app, connector, redesign, acceptance store or general worker framework. Research ideas remain deferred. Dan retains src/, studio/, index.html and CSS. Preserve current branding, source snapshots and export guards; read both relays before and after work.
+[R] The authorized ten-challenge benchmark supersedes the old prohibition on a second challenge. It does not allocate an unrelated connector, redesign, acceptance store or general worker framework. Research ideas remain deferred. Seats do not launch extra model runs; benchmark measurements drive subsequent repairs. Dan retains src/, studio/, index.html and CSS. Preserve current branding, source snapshots and export guards; read both relays before and after work.
 
 [R] Keep 6 PM task and 7 PM final-copy evidence targets, Thursday noon code freeze and Thursday 2 PM deadline. Exact-byte acceptance, user trial and submission decisions remain human-owned on Product's morning list. No fabricated approval, usability or cost claim. Synthetic/public inputs only. Monitor execution, test edits, time, usage where available and shutdown; stop and escalate prohibited data, uncontrolled work or changed accepted bytes. No operational-system writes, real-person assignment, credential handling, messages or publication. Main owns permitted runtime execution and fallback shutdown; broader containment remains unverified until measured.

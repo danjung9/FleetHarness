@@ -23,6 +23,8 @@ summary: "Meeting 51 evidence, integration blockers and local disclosure for aut
 
 ## Tools, friction and prior work
 
+[E, final reread] Both relays were unchanged at mvp d0f4c69/main 8db53c3. Memo-overseer gained a new order at 15:50 directing ten satisfactory real catalog builds and scoreboard-led engineering. Read Research/Agentic/Flow-Goals.md; Research/QA/Ten/Scoreboard.md and its directory were absent. [R] Updated both directives and the memo to honor this newer priority. Existing curated runs are not ten-challenge results. The one consolidation task addresses a concrete verification prerequisite while benchmark evidence is unavailable; no new research or speculative speed project is assigned. Architect receives failed builds automatically, not a duplicate manual task.
+
 [E] Reused the local execution and patch interfaces, zsh/text readers, ripgrep 15.2.0 and Python standard library already recorded in Sprint/Tool-Disclosure-Log. No new tool, library, dataset or outside service was adopted. No product code or tests ran. No subagents, messages, commits or pushes were initiated.
 
 [E] Broad read output was truncated; decision-critical records and source sections were reread in bounded extracts. Central Sprint logs, Sessions and Team/Now are outside the permitted write folder. The prescribed fh.py tool command was not invoked because it would write outside that boundary. No new disclosure item requires it this turn. This local Sprint record stages friction, prior work and session status for an authorized coordinator; central updates are still pending.

@@ -72,6 +72,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Local shell/patch interfaces, versions unavailable | workspace tools | reads and journal | session environment | 2026-11-04 |
 | Session clarification interface, version unexposed | coordination | requested host-side verification | session platform | 2026-11-04 |
 | Runner scheduler audit probes revision 1 | Local diagnostic | Isolated in-memory checks of duplicate queueing, file-claim dispatch and review-return handling; no production runner execution | Sprint diagnostic using Python standard library | 2026-11-04 |
+| System Perl, version unavailable | local editing attempt | blocked before execution | Apple. | 2026-11-04 |
 
 ## Data and sources
 
