@@ -5,13 +5,19 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { plainError, recordProjectError } from '../dist-electron/electron/plain-errors.js';
 
-// Lock every standard Error producer, including dynamic arguments and subclasses.
-// The conservative lexical fingerprint extends through the next semicolon. It can
-// flag comments/formatting too: review a change rather than silently ignore a producer.
-const errorProducers = source => [...source.matchAll(/\b(?:new\s+)?(?:Error|EvalError|RangeError|ReferenceError|SyntaxError|TypeError|URIError|AggregateError)\s*\(/g)]
-  .map(match => source.slice(match.index, source.indexOf(';', match.index) < 0 ? source.length : source.indexOf(';', match.index) + 1));
+// Literal constructors lock their statement. A dynamic constructor also locks its
+// whole module: its inputs may originate in helper calls, assignments or fallbacks
+// anywhere in that module. This deliberately requires review of unrelated edits
+// there, rather than claiming a lexical scan proves data flow. Review each changed
+// message and its mapping before refreshing a signature.
+const errorProducers = source => {
+  const matches = [...source.matchAll(/\b(?:new\s+)?(?:Error|EvalError|RangeError|ReferenceError|SyntaxError|TypeError|URIError|AggregateError)\s*\(/g)];
+  const producers = matches.map(match => source.slice(match.index, source.indexOf(';', match.index) < 0 ? source.length : source.indexOf(';', match.index) + 1));
+  if (matches.some(match => !/^[\s]*['"`)]/.test(source.slice(match.index + match[0].length)))) producers.push('Dynamic message inputs:\n' + source);
+  return producers;
+};
 const errorInventory = {
-  "electron/pi-backend.ts": "6e6f7c0b8d003786d14865324355d441d1d364aa11b1d696138670a5b05720f5",
+  "electron/pi-backend.ts": "aa5a8e9bc9cbbba56fc16e4b8d68f54ebaca1dba9bdd13ce068cb943d7109969",
   "electron/storage.ts": "11065092edbad032fcdcef7cd31bcb8d77ad3ab4b5438e983c5df2ef58796edc",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
   "harness/norfolk.ts": "da08994d91c5fb94a96a7e154d39b42c232f4659c6848ecfe80e0c8ee1b478cb",
@@ -21,7 +27,7 @@ const errorInventory = {
   "harness/quality-contract.ts": "2ce9a2b4d3a3394c4b4963216cf3633f0692321d68ce56c7e574c41a1c83edea",
   "electron/browser-verification.ts": "cbbedbaa7c646ec2a33381d78327b060a39168c50b90b0333b9e4c97e5e76b38",
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
-  "electron/agent-runner.ts": "380adc0bf9e4ec058d99921eca0e8c3b3ba4b806c3644865dd9ced9d8d2ba0ac",
+  "electron/agent-runner.ts": "8fe2c7f45e5ca6b1efa0fa0ffce3dd1295df9d62f130a5a4400493c51968fe8f",
   "harness/integration.ts": "4b950ceeac0ddf7ff3764093ca3297b49e66c1c84b2596bd9638e22ebde54947",
   "harness/planner.ts": "d4277229e364ca18355db9c8bc6054e494c972a9e7d69f48e45ddd63e816aa31",
   "harness/tool-registry.ts": "4d4a49881e35b191d59801482244e17d08d543d0d48aafa904d00f59ebaa9169",
@@ -33,11 +39,14 @@ const errorInventory = {
   "harness/tools/readiness.ts": "75b22f00b2e461ee825c265fa610d575fa20297b3cf3df3a71cf846c851ebbe4",
   "electron/system-design.ts": "1e5acf572539828fc251c8af1e9dff1f4c9fc195e18074cf948376fcd5db6e5a",
   "shared/system-design.ts": "cd310003c4d1ef82fd9e3479a0e42210ebcb657ff6cff481fd539da86520040d",
-  "electron/codex-session.ts": "d01c4b134a986dcc4e329bfe17a176f9326dbcf5049f50f895f087f99ac88f3d",
-  "electron/codex-rpc.ts": "7e4c723f820d02277b322308ed89e053cd1860a7bad028cd9272617f06dbd2e9",
+  "electron/codex-session.ts": "c9e8076eeaf6d2bf02caa2b38dd6903f709dfcf9b00332b3e1ed69ad31d9b466",
+  "electron/codex-rpc.ts": "c28cc729b42d99dbb80f00a4c5060d7783334f4e20accf5c0e6a0d4d6178e48f",
   "electron/codex-account.ts": "1d211d112e169520ff44f6ac15498afb527fa8642011dac747e18257c49df545"
 };
-const errorLiterals = source => [...source.matchAll(/\b(?:new\s+)?(?:Error|EvalError|RangeError|ReferenceError|SyntaxError|TypeError|URIError)\s*\(\s*(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g)].map(match => match[2]);
+// fail(message) is the local agent-runner error wrapper. Its literal/template
+// inputs need the same mapping checks as direct constructors. Dynamic arguments
+// and changes to the helper itself are covered by the module signature above.
+const errorLiterals = source => [...source.matchAll(/\b(?:new\s+)?(?:Error|EvalError|RangeError|ReferenceError|SyntaxError|TypeError|URIError|fail)\s*\(\s*(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g)].map(match => match[2]);
 async function flowErrors(file = 'electron/pi-backend.ts', found = new Map()) {
   if (found.has(file)) return found;
   const source = await fs.readFile(file, 'utf8');
@@ -55,6 +64,18 @@ function assertInventory(files) {
   const inventory = Object.fromEntries([...files].filter(([, errors]) => errors.producers.length).map(([file, errors]) => [file, signature(errors.producers)]));
   assert.deepEqual(inventory, errorInventory, 'Raw errors changed: map each new error and review the inventory');
 }
+
+test('coverage rejects an unmapped message passed to an existing fail helper', async () => {
+  const file = 'electron/agent-runner.ts';
+  const source = await fs.readFile(file, 'utf8');
+  const mutated = source.replace('made no progress for', 'Synthetic unclassified fault for');
+  assert.notEqual(mutated, source);
+  const files = await flowErrors();
+  files.set(file, { producers: errorProducers(mutated), literals: errorLiterals(mutated) });
+  assert.throws(() => assertInventory(files), /Raw errors changed/);
+  assert.ok(errorLiterals(mutated).some(raw => raw.includes('Synthetic unclassified fault for')), 'Helper arguments must be checked for plain mappings');
+  assert.equal(plainError('example Synthetic unclassified fault for 5 seconds while waiting.').code, 'unknown');
+});
 
 for (const mutation of [
   'throw new Error("Synthetic unmapped readiness failure");',
@@ -79,7 +100,7 @@ test('every known local flow error has a plain instruction and new raw errors fa
   await flowErrors('electron/plain-errors.ts', files);
   assertInventory(files);
   for (const [file, errors] of files) for (const raw of errors.literals) {
-    const sample = raw.replace(/\$\{[^}]*\}/g, 'example');
+    const sample = raw.replace(/\\(['"`\\])/g, '$1').replace(/\$\{[^}]*\}/g, 'example');
     const result = plainError(new Error(sample));
     assert.notEqual(result.code, 'unknown', file + ': ' + raw);
     assert.match(result.message, /[.;]/);
@@ -136,6 +157,31 @@ test('dynamic error producers and raw external values never leak internal words'
 test('native cancellation gets the same plain stopped instruction', () => {
   const controller = new AbortController(); controller.abort();
   assert.equal(plainError(controller.signal.reason).code, 'stopped');
+});
+
+test('teammate cleanup, checkpoint and deferral errors retain plain recovery instructions', () => {
+  for (const [raw, code] of [
+    ['Process inspection returned no identities.', 'shutdown'],
+    ["Cannot inspect the current user's processes.", 'shutdown'],
+    ['Cannot inspect user process 123.', 'shutdown'],
+    ['Run process scope is closed; no further processes may start.', 'shutdown'],
+    ['Run process inspection is unavailable on this platform.', 'shutdown'],
+    ['Process cleanup refused an invalid run process identity.', 'shutdown'],
+    ['Process cleanup could not be confirmed: cannot inspect this run\'s processes.', 'shutdown'],
+    ['Run checkpoint is unavailable.', 'missing-files'],
+    ['Run workspace is unavailable.', 'missing-files'],
+    ['Checkpoint does not match this project, run, or model.', 'changed'],
+    ['Checkpoint files changed. Restore the saved checkpoint before resuming.', 'changed'],
+    ['Checkpoint quality contract changed. Start a new build.', 'changed'],
+    ['Checkpoint context changed. Start a new build.', 'changed'],
+    ['Saved verification no longer matches the source.', 'changed'],
+    ['Unsupported checkpoint phase.', 'settings'],
+    ['criteria[0] (C1): deferral reason must start with real-system:, real-data:, or human-authority: followed by a concrete dependency.', 'plan']
+  ]) {
+    const result = plainError(raw);
+    assert.equal(result.code, code, raw); assert.match(result.message, /;/);
+    assert.doesNotMatch(result.message, /checkpoint|stage|session|SDK|artifact/i);
+  }
 });
 
 test('unknown external failures stay out of the project error but remain in the log', () => {

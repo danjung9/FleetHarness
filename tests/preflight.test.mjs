@@ -6,7 +6,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { runPreflight, findVerificationBrowser, verificationBrowserCandidates, probeCodexSandbox, probeVerificationSandbox } from '../dist-electron/electron/preflight.js';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
+import { registerHooks } from 'node:module';
+import { pathToFileURL } from 'node:url';
 
 const model = (id = 'gpt-6.1-sol', extra = {}) => ({ id, provider: 'chatgpt', name: id, backend: 'codex', configured: true, ...extra });
 const settings = { backend: 'codex', provider: 'chatgpt', model: '', rememberKey: false };
@@ -43,6 +45,140 @@ async function backendFixture(t, { backend = 'pi', chosen = 'gpt-6.1-sol', probe
     settle: () => instance.active.get(project.id)?.done,
     errors: () => project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n') };
 }
+
+for (const backend of ['pi', 'codex']) for (const probe of ['browser', 'sandbox']) {
+  test(`production ${backend} ${probe} refusal and Stop stay bounded behind pending persistence`, async t => {
+    const h = await backendFixture(t, { backend, probes: { [probe]: async () => { throw new Error('Synthetic ' + probe + ' fault'); } } });
+    const saving = deferred(), release = deferred();
+    const save = h.store.save.bind(h.store);
+    h.store.save = async () => { saving.resolve(); await release.promise; await save(); };
+    const began = performance.now();
+    const pending = h.backend.start(h.project.id).catch(error => error);
+    await saving.promise;
+    const stopped = h.backend.stop(h.project.id);
+    let timer;
+    try {
+      const result = await Promise.race([Promise.all([pending, stopped]), new Promise(resolve => { timer = setTimeout(() => resolve(null), 1900); })]);
+      assert.ok(result, 'Start and Stop must settle even when persistence never settles');
+      assert.ok(performance.now() - began < 2000);
+      assert.match(result[0].message, probe === 'browser' ? /install Google Chrome/ : /restart AppYard/);
+      assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+      assert.match(h.errors(), /Saving .*pending/);
+    } finally {
+      clearTimeout(timer); release.resolve(); await pending; await stopped;
+      // Let the queued write finish before fixture removal.
+      await save();
+    }
+  });
+}
+
+test('a hanging probe plus slow saving still refuses Start within two seconds', async t => {
+  const h = await backendFixture(t, { probes: { sandbox: () => new Promise(() => {}) } });
+  const save = h.store.save.bind(h.store);
+  const release = deferred();
+  h.store.save = async () => { await release.promise; await save(); };
+  const began = performance.now();
+  const pending = h.backend.start(h.project.id).catch(error => error);
+  let timer;
+  try {
+    const result = await Promise.race([pending, new Promise(resolve => { timer = setTimeout(() => resolve(null), 1900); })]);
+    assert.ok(result, 'The readiness and persistence budgets must fit the full refusal deadline');
+    assert.ok(performance.now() - began < 2000); assert.match(result.message, /restart AppYard/);
+    assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+  } finally { clearTimeout(timer); release.resolve(); await pending; await save(); }
+});
+
+test('a late save rejection cannot alter a newer build after a bounded refusal', async t => {
+  const h = await backendFixture(t, { probes: { browser: async () => { throw new Error('Synthetic browser fault'); } } });
+  const release = deferred();
+  h.store.save = async () => { await release.promise; throw new Error('EACCES Synthetic late save fault'); };
+  const pending = h.backend.start(h.project.id).catch(error => error);
+  let timer;
+  try {
+    const result = await Promise.race([pending, new Promise(resolve => { timer = setTimeout(() => resolve(null), 1900); })]);
+    assert.ok(result, 'Refusal must not wait for the eventual save rejection');
+    h.project.status = 'running'; h.project.error = undefined; const logs = h.project.logs.length;
+    release.resolve(); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(h.project.status, 'running'); assert.equal(h.project.error, undefined);
+    assert.equal(h.project.logs.length, logs); assert.equal(h.calls(), 0);
+  } finally { clearTimeout(timer); release.resolve(); await pending; }
+});
+
+// Compile the real renderer and execute its component/event handlers with a small
+// state-hook harness. Browser layout and Electron IPC remain permitted-host checks.
+// API Start enters the real backend; no DOM library, credentials or model is used.
+async function rendererFixture(t, h) {
+  const folder = await fs.mkdtemp(path.resolve('.tmp/preflight-renderer-'));
+  execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json', '--noEmit', 'false', '--outDir', folder]);
+  const prefix = pathToFileURL(folder + path.sep).href;
+  const appUrl = pathToFileURL(path.join(folder, 'src/App.js')).href;
+  const key = '__syntheticPreflightRenderer_' + path.basename(folder).replace(/\W/g, '_');
+  const slots = [{ state: h.store.state, models: h.backend.models(), storagePath: h.root }, h.store.state, 'factory', h.project.id];
+  let cursor = 0, pending, settingsSaves = 0;
+  globalThis[key] = {
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = typeof initial === 'function' ? initial() : initial;
+      return [slots[index], value => { slots[index] = typeof value === 'function' ? value(slots[index]) : value; }];
+    },
+    api: { startRun(id) { pending = h.backend.start(id); return pending; }, saveSettings() { settingsSaves++; throw new Error('Unexpected Settings save'); } }
+  };
+  const hooks = registerHooks({
+    resolve(specifier, context, next) {
+      if (context.parentURL?.startsWith(prefix)) {
+        if (/\.(?:css|svg)$/.test(specifier)) return { shortCircuit: true, url: new URL(specifier, context.parentURL).href };
+        if (specifier === 'react' && context.parentURL === appUrl) return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`
+          export const useState = value => globalThis.${key}.useState(value);
+          export const useEffect = () => {};
+          export const useMemo = work => work();
+          export const useRef = value => ({ current: value });
+          export const useId = () => 'synthetic-id';`) };
+        if (specifier === './api') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`export const isDesktop = true; export const api = globalThis.${key}.api;`) };
+        if (specifier.startsWith('.')) return next(/\.[a-z]+$/i.test(specifier) ? specifier : specifier + '.js', context);
+      }
+      return next(specifier, context);
+    },
+    load(url, context, next) {
+      if (url.startsWith(prefix) && /\.(?:css|svg)$/.test(url)) return { shortCircuit: true, format: 'module', source: 'export default "";' };
+      return next(url, context);
+    }
+  });
+  t.after(async () => { hooks.deregister(); delete globalThis[key]; await fs.rm(folder, { recursive: true, force: true }); });
+  const { default: App } = await import(appUrl);
+  const render = () => { cursor = 0; return App(); };
+  const find = (node, predicate) => {
+    if (!node || typeof node !== 'object') return;
+    if (predicate(node)) return node;
+    for (const child of [node.props?.children].flat(Infinity)) { const match = find(child, predicate); if (match) return match; }
+  };
+  const text = node => typeof node === 'string' ? node : [node?.props?.children].flat(Infinity).map(child => child == null || typeof child === 'boolean' ? '' : text(child)).join('');
+  const clickStart = () => {
+    const header = find(render(), node => node.type?.name === 'JourneyHeader');
+    assert.ok(header, 'The challenge must show its real entry control');
+    const button = find(header.type(header.props), node => node.type === 'button' && /Start build/.test(text(node)));
+    assert.ok(button, 'A connected provider with no saved model must offer Start build');
+    button.props.onClick();
+  };
+  const confirmation = () => find(render(), node => node.type?.name === 'Modal' && node.props.title === 'Start build');
+  return { render, find, text, clickStart, confirmation, pending: () => pending, settingsSaves: () => settingsSaves };
+}
+
+for (const backend of ['pi', 'codex']) test(`the ${backend} Start entry gate reaches the automatic default without a Settings save`, async t => {
+  const h = await backendFixture(t, { backend, chosen: '' });
+  const ui = await rendererFixture(t, h);
+  ui.clickStart();
+  let modal = ui.confirmation(); assert.ok(modal); assert.match(ui.text(modal), /automatic selection/);
+  assert.equal(h.calls(), 0, 'Opening confirmation must not start inference');
+  ui.find(modal, node => node.type === 'button' && ui.text(node) === 'Cancel').props.onClick();
+  assert.equal(ui.confirmation(), undefined); assert.equal(h.calls(), 0);
+  ui.clickStart(); modal = ui.confirmation();
+  ui.find(modal, node => node.type === 'button' && /Start automatic build/.test(ui.text(node))).props.onClick();
+  await ui.pending(); await h.settle();
+  assert.equal(h.store.state.settings.model, 'gpt-6.1-sol'); assert.equal(h.calls(), 1);
+  assert.equal(ui.settingsSaves(), 0);
+  h.store.state.settings.model = 'missing-model';
+  assert.throws(ui.clickStart, /must offer Start build/, 'Invalid explicit selections must still route to Settings');
+});
 
 for (const backend of ['pi', 'codex']) {
   for (const [probe, instruction] of [['browser', /install Google Chrome/], ['sandbox', /restart AppYard/]]) {

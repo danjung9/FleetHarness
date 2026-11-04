@@ -16,7 +16,7 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
-import { runPreflight, probeVerificationSandbox, type PreflightOptions } from './preflight.js';
+import { runPreflight, probeVerificationSandbox, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
 import { plainError, recordProjectError } from './plain-errors.js';
 
 type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
@@ -50,14 +50,25 @@ export class FleetBackend {
     p.stages.find(s => s.id === id)!.status = status; await this.changed(p);
   }
   private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
-  private async finish(p: Project, run: ActiveRun) {
-    try { await this.changed(p); }
+  private async finish(p: Project, run: ActiveRun, saveTimeoutMs?: number) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const saving = this.changed(p).then(() => true);
+      // Store owns serialized writes. Keep the existing write queued, but release
+      // a refused startup even if persistence is stuck. Promise.race also handles
+      // a late rejection without mutating a subsequent run's status or errors.
+      const saved = saveTimeoutMs === undefined ? await saving : await Promise.race([
+        saving, new Promise<false>(resolve => { timer = setTimeout(() => resolve(false), saveTimeoutMs); })
+      ]);
+      if (!saved) this.log(p, 'intake', 'error', 'Saving build state is still pending; keep AppYard open and ask the app maintainer for help if this continues.');
+    }
     catch (error) {
       const previous = p.error;
       recordProjectError(p, error, detail => this.log(p, 'intake', 'error', 'Could not save run state: ' + detail));
       p.error = [previous, p.error].filter(Boolean).join('\n');
       if (p.status !== 'stopped') p.status = 'failed';
     } finally {
+      clearTimeout(timer);
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
       this.notify();
@@ -130,7 +141,7 @@ export class FleetBackend {
       p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       recordProjectError(p, error, detail => this.log(p, 'intake', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      await this.finish(p, run); throw new Error(plainError(error).message, { cause: error });
+      await this.finish(p, run, refusalSaveTimeoutMs); throw new Error(plainError(error).message, { cause: error });
     }
   }
   private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[] }) {

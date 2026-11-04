@@ -8,6 +8,8 @@ import { createCodexSession } from './codex-session.js';
 import { codexExecutable } from './codex-rpc.js';
 
 export const preflightTimeoutMs = 1500;
+// Leave room within the two-second refusal budget for notification and saving.
+export const refusalSaveTimeoutMs = 250;
 export const minimumFreeBytes = 256 * 1024 ** 2;
 export const preflightMessages = {
   engine: 'The build service is not connected; connect it in Model settings and try again.',
