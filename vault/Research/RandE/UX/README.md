@@ -3,31 +3,38 @@ type: research
 status: complete
 owner: mukul
 updated: 2026-11-04
-summary: "Current Home-to-Flow UX handoff for 631849f, with task acceptance still NOT RUN and earlier proposals preserved as history."
+summary: "Current AppYard walkthrough at d0f4c69, linked candidate receipts and pending human acceptance, with earlier interfaces retained as history."
 ---
 
-# UX handoff for the retained interface
+# UX handoff for AppYard
 
 ## Bottom line
 
-[R, proposed, Directive-rande] Prepare the factory through desktop Home -> catalog ID 11 -> brief -> Flow; begin the officer demo in the actual accepted task app. [E, source-only, pinned Git] Main merge `2e30b4a` has exactly the `631849f` tree, so existing tests retain their original attribution. [E, attributed report, Acceptance-11] Try example, conflict correction, fresh review and task save/reopen are all **NOT RUN** on an actual delivered app. [R, proposed, Directive-rande] Reuse those acceptance outcomes and the existing Quality gates, with no new importer, renderer, redesign or research round.
+[R, meeting 31] Prepare the factory through **Home -> New challenge -> Norfolk catalog -> search 11 -> select #11 -> review brief -> Save challenge -> Flow**. [E, source-only] Those labels and routing come from pinned `d0f4c69`; saving does not start generation. [E, existing receipts] The modified factory build and candidate checks have run, including fresh offline draft import on both candidates, so blanket task NOT RUN claims are obsolete. [R] Show the task first and its factory evidence second, retaining Pipeline-run1 as primary and CLI-route as backup; neither is human accepted.
 
 ## Current handoff
 
 | Note | Use and evidence status |
 | --- | --- |
-| [Delta for 631849f](Delta-631849f.md) | [E, source-only] Current preparation route, identical-tree merge, three persistence boundaries and the one conditional frontend blocker for Dan. Runtime reproduction NOT RUN. |
-| [Acceptance mapping](Test-Protocol.md) | [R, proposed] Maps the four retained outcomes to existing Quality gates and Acceptance-11; all task runtime results NOT RUN. No new test plan or participant study. |
-| [[Research/QA/Officer/Acceptance-11]] | [E, attributed report] Independently checked four-request arithmetic and the single actual-app acceptance record. App outcomes NOT RUN; no accepted artifact identity or decision supplied there. |
-| [Local session handoff](Sessions/2026-11-04-ux-631849f.md) and [research log](Sprint/Research-Log.md) | [E] Verification, tools, friction, prior work and pending central status transcription. |
+| [Delta for d0f4c69](Delta-d0f4c69.md) | [E, source-only and attributed receipts] Actual labels, browser prerequisites, desktop/hosted/task boundaries and three remaining operator checks. No launch or setup verification here. |
+| [Existing acceptance and trial handoff](Test-Protocol.md) | [R] Reuses Quality's records and trial; no duplicate matrix, participant protocol or runtime work. |
+| [[Research/Plan/Real-Build-Run1]] | [E, attributed report] Modified 631849f completed five phases at 15:24:21 with 22 generated-test passes. Credits the 4 PM build gate, not independent task acceptance or shipped containment. |
+| [Factory edf3150f receipt](../../QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/result.json) | [E, JSON read] 33 PASS, 1 FAIL, 14 NOT CHECKED; finished 15:38:15 EST. |
+| [CLI af6357a9 receipt](../../QA/Acceptance/Results/training-acceptance-af6357a9-6421-4d12-ba9b-21b462cd2b3c/result.json) | [E, JSON read] 28 PASS, zero FAIL, 18 NOT CHECKED; finished 15:43:09 EST. |
+| [[Research/QA/Acceptance/Review-Candidates]] | [E, Quality review] Pipeline has 17 numeric/outcome passes; CLI has 13 with four exact form-boundary variants not checked. Both have review invalidation and fresh offline import evidence. Counts above include infrastructure/review rows. |
+| [[Research/QA/Officer/Trial-Protocol]] and [[Research/QA/Officer/Burden-Claim]] | [R] Existing matched synthetic trial and claim limits. Authorized human arrangement and an accepted artifact are still required. |
 
-[R, proposed, [[Ops/Directors/Directive-rande]] and [[Ops/Directors/Directive-qa]]] The main QA lead owns actual acceptance and the organization runner owns permitted launches. Reuse their records; do not create another runner or fixture. Gate-631849f.md is assigned by Quality but was absent from the supplied Runner folder at this review. Its absence does not authorize a replacement. Use the directive's current gate mapping and the existing [[Research/QA/Test-Plan]] identifiers meanwhile.
+[E, receipt comparison] CLI af6357a9 has the same payload manifest as the earlier aaa1585f attempt. Quality attributes the failed import to the checker dismissing its confirmation; the corrected rerun passes. Meeting 31's reference to Review-Candidates' earlier rerun-pending sentence is historical only; the version read here already records success. No application repair is claimed or allocated.
 
-[E, attributed report] `org/reports/mvp-gate.md`, 14:42:27, reports 128 passes and zero failures at `631849f`; it does not supply a task-app, GUI, live-provider or packaging receipt. [[Research/QA/Acceptance-Reconcile-631849f]] keeps seven separate runner failures open, observed at `50fcaea` in unchanged backend files. [[Research/Plan/Test-Results]] remains historical evidence at `0f175a8` and `f72c5dc`. No counts are combined or credited to the merge as a new run.
+[E, attributed Quality review] The raw factory clock failure and missing readable-summary coverage remain. The 0800 key and separate summary expectation exceed the delivered relative-minute/portable-JSON brief. Quality owns this contract reconciliation and the concrete contradiction in factory exhaustion wording, plus residual review-binding and guide evidence. Keep the frozen oracle and raw receipts unchanged.
 
-[E, final relay and pinned Git, source-only] The final read reports main advancing again to `d322b39`, with five deployment/configuration files changed and no delta in `src/`, `electron/`, `harness/`, `shared/` or `scripts/`. LATEST-analysis still describes `2e30b4a`. This handoff stays pinned to `631849f`; no deployed-site success or new test pass is inferred. Details are in the delta note.
+[E, report read] The current `org/reports/mvp-gate.md` is **November 4, 15:46:40 EST: 147 pass/20 fail at d0f4c69 on dev/reviewed, inside the sandbox**. The relay's 15:29:35 **96/20** is history. The report attributes failures to sandbox limits and asserts outside-browser success without linking its execution receipt. Quality reconciles counts and causes; no runtime all-clear follows. [[Research/QA/Acceptance-Reconcile-d0f4c69]] retains original reproduction closure requirements; [[Research/Plan/Test-Results]] is older revision evidence.
 
-[R, proposed, Directive-rande and Acceptance-11] Missing artifact/run identity, final-file digests, human decision and task behavior keep the demonstration unaccepted. Use the disclosed conflict-checker fallback only if it passes the same applicable task checks. Static inspection does not establish usability, time saved, offline recovery, synchronization or full ID 11 completion. Keep the existing 3 PM access, 4 PM useful-build and 6 PM accepted-task gates; this handoff does not restart them.
+[R, meeting 31] No repair, acceptance, usability, time saving, full ID 11 completion or synchronization claim follows from this handoff. Preserve 6 PM useful-task and 7 PM evidence targets, Thursday noon code freeze and 1:15 PM submission target. Keep human review pending until recorded against final bytes. The outcome, verification and next action are in [.tmp/JOURNAL.md](.tmp/JOURNAL.md); local disclosures remain in [Sprint/Research-Log.md](Sprint/Research-Log.md).
+
+## Current sources
+
+[E] [[Ops/Directors/Directive-rande]], current director memos and [[Research/Plan/Review]] supersede older Plan/Findings where identified. Source paths, browser setup limits and operator evidence are in [Delta-d0f4c69](Delta-d0f4c69.md). The former [631849f handoff](Delta-631849f.md), its session note and the material below retain their historical revision and status; their unrun statements are not current candidate outcomes.
 
 ## Historical notes and retired scope
 

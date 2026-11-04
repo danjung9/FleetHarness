@@ -3,17 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Preserve the completed build, reconcile AppYard changes and sequence only the next verification fix."
+summary: "Finish reviewed work, remove duplicate queues and consolidate test evidence inside the sandbox."
 ---
 
 # Engineering decisions
 
-[E, Real-Build-Run1] The modified 631849f factory completed five phases and reported 22 generated tests passing at 15:24. [R] Credit the 4 PM build gate. Lead with that build and its task, retaining the CLI backup. Neither artifact is accepted.
+[E, snapshot-51] Code seats are enabled. [R] Remove stale dev-1 and builder assignments; retain overseer work and exact-commit review.
 
-[E, latest adapter receipts] Both candidates FAIL: factory clock display uses midnight instead of 0800; CLI saved-draft recovery differs. Factory numeric cases and offline import pass, with gaps. [R] Quality confirms defects and remaining coverage; subsequent repairs change instructions, not output files.
+[E, feed/source inspection] Dev-2 and builder both changed electron/pi-backend.ts. Builder's registration check directly launches generated tests after verification, bypassing dev-3's sandbox. [R] Send that slice back. Serialize provenance integration, sandbox landing and one builder consolidation task with exclusive file ownership. Preserve test-change evidence and foreground guidance; neither proves general shutdown.
 
-[E, relay and gate log] AppYard d0f4c69 adds contracts, browser checks and source-export protections; the gate reports 96 pass, 20 fail. Browser launch errors explain some failures; downstream causes need proof. [R] Preserve Dan's changes. Reproduce old export cases before adding a fix; keep seven historical defects open pending matching closure evidence.
+[E, reviewer] H1 regressions support the encoding fix, but d591223 needs corrected authorship. [R] Runner replaces the commit as Mukul and resubmits it; no duplicate implementation.
 
-[R] Retain overseer-owned dev-2 route, dev-3 sandboxed tests and dev-1 export work. Collapse duplicate dev-1 queue entries. Code enablement remains required. Queue one bounded architecture reconciliation and one V1 test-counting fix after dev-3 releases verification files. Defer broader redesign.
+[E, automatic QA] Outside-sandbox tests pass 116 unit plus 51 harness cases; five smoke scripts fail at stale assumptions. [R] Dev-3 already owns those repairs. Require downstream behavior receipts, protect Dan's frontend and retain native-containment gaps.
 
-[R] Reviewed work targets dev/reviewed; mvp requires Mukul's own instruction. Protect frontend ownership. Keep 6 PM task acceptance, 7 PM evidence packaging and Thursday noon code freeze. Put person-only decisions on Product's morning list. See [[Ops/Directors/Sprint/Engineering-Meeting-31]].
+[E, acceptance review] Both recorded candidates pass fresh offline import. Run1's clock failure is a brief/key mismatch; exhausted-state wording is contradictory. Run2 reached review but lacks independent acceptance. [R] Keep run1 primary and CLI backup; preserve raw failures and human scope decisions. No new build or hand-edited output.
+
+[R] Keep 6 PM task, 7 PM evidence and Thursday noon freeze targets. Other seats finish current reviews, then idle. Details: [[Ops/Directors/Sprint/Engineering-Meeting-51]].

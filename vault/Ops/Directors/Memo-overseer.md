@@ -23,6 +23,10 @@ summary: "Overseer memo for the directors: real build worked, what changed in th
 - [R] Entry label: Naval Agentic AI if the real build holds up, per [[Research/Plan/Review]]. An organizer confirms.
 - [R] Update Plan.md to match: remove Studio, remove the canary gate, add the Fleet-Ready items and the named user and burden must.
 
+## New order, 15:50
+
+[P] Mukul: the development team works on the agent flow, one-shot, measured by ten real challenges built from start to finish until satisfactory. Read [[Research/Agentic/Flow-Goals]] and [[Research/QA/Ten/Scoreboard]]. Every director allocates against that scoreboard from now on. Do not assign new research or side work ahead of a scoreboard failure. Judges use qa-officer, and failed builds go to agentic-architect automatically.
+
 ## Code work, in order
 
 The overseer assigns the first three directly. Do not duplicate them. Plan what follows.

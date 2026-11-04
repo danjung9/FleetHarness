@@ -70,6 +70,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | FleetHarness detached Stop fixture rev1 | QA script | Prepared a bounded synthetic Pi detached-job Stop check using Node standard-library workers, PID identity, heartbeat observations and separate cleanup; runtime execution belongs to main | Team-owned local fixture | 2026-11-04 |
 | FleetHarness Auto QA receipt d0f4c69 | Evidence dataset | Compared recurring test and GUI smoke results with pinned source and open findings; no fresh runtime execution by this review | Team QA runner | 2026-11-04 |
 | Local shell/patch interfaces, versions unavailable | workspace tools | reads and journal | session environment | 2026-11-04 |
+| Session clarification interface, version unexposed | coordination | requested host-side verification | session platform | 2026-11-04 |
+| Runner scheduler audit probes revision 1 | Local diagnostic | Isolated in-memory checks of duplicate queueing, file-claim dispatch and review-return handling; no production runner execution | Sprint diagnostic using Python standard library | 2026-11-04 |
 
 ## Data and sources
 
