@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
   bootstrap: () => ipcRenderer.invoke('fleet:bootstrap'),
+  refreshNorfolkCatalog: () => ipcRenderer.invoke('fleet:norfolk:refresh'),
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),
   updateProject: (id: string, input: NewProject) => ipcRenderer.invoke('fleet:update', id, input),
   startRun: (id: string) => ipcRenderer.invoke('fleet:start', id),

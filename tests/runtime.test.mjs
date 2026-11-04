@@ -12,10 +12,14 @@ test('saved challenges survive reload and interrupted runs become stopped', asyn
   const dir=await temp(); try {
     const store=new Store(dir);await store.init();
     assert.equal(store.state.projects.length,3);
+    Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], resources: 'Sample records', links: ['https://example.com/reference'] }));
     store.state.projects[0].status='running';await store.save();
     const restored=new Store(dir);await restored.init();
     assert.equal(restored.state.projects[0].status,'stopped');
-    assert.equal(restored.state.projects[0].criteria.length,5);
+    assert.deepEqual(restored.state.projects[0].criteria,[]);
+    assert.equal(restored.state.projects[0].resources,'Sample records');
+    assert.deepEqual(restored.state.projects[0].links,['https://example.com/reference']);
+    assert.equal(restored.state.projects[1].criteria.length,4);
   } finally { await fs.rm(dir,{recursive:true,force:true}); }
 });
 test('corrupt state is preserved and reported instead of reset', async () => {
@@ -25,9 +29,16 @@ test('corrupt state is preserved and reported instead of reset', async () => {
     assert.equal(await fs.readFile(path.join(dir,'state.json'),'utf8'),'{broken');
   } finally {await fs.rm(dir,{recursive:true,force:true});}
 });
-test('validation rejects empty criteria and unknown source IDs', () => {
-  assert.throws(()=>validateInput({title:'A',description:'A'.repeat(30),criteria:[]}));
-  assert.throws(()=>validateInput({title:'A',description:'A'.repeat(30),criteria:['valid'],challengeId:'999'}));
+test('optional brief fields accept blanks, normalize supplied context and reject invalid data', () => {
+  const input = {title:'A',description:'A'.repeat(30),criteria:[]};
+  assert.deepEqual(validateInput(input), {...input, resources:'', links:[], challengeId:undefined});
+  assert.deepEqual(validateInput({...input, criteria:['  ', ' Works offline. '], resources:' Sample records \n', links:[' ', ' https://example.com/reference ']}),
+    {...input, criteria:['Works offline.'], resources:'Sample records', links:['https://example.com/reference'], challengeId:undefined});
+  for (const invalid of [{title:' '}, {description:'Too short'}, {criteria:['x'.repeat(2001)]}, {criteria:Array(101).fill('criterion')},
+    {resources:123}, {resources:'x'.repeat(16001)}, {links:'https://example.com'}, {links:[null]}, {links:['javascript:alert(1)']},
+    {links:['example.com']}, {links:Array(31).fill('https://example.com')}, {links:['https://example.com/'+'x'.repeat(2000)]}, {challengeId:'999'}]) {
+    assert.throws(()=>validateInput({...input,...invalid}));
+  }
 });
 test('artifact access rejects traversal and symlink escapes', async () => {
   const dir=await temp();try {

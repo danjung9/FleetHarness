@@ -1,6 +1,6 @@
 ---
 name: fleet-workflows
-description: Build versioned records, queues and review-routing applications for FleetHarness administrative workflows, preserving source lineage and release authority.
+description: Build versioned records, queues and review-routing applications for AppYard administrative workflows, preserving source lineage and release authority.
 ---
 
 # Reviewed records and workflow

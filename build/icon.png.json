@@ -1,4 +1,4 @@
 {
-  "origin": "FleetHarness's existing SVG mark, drawn as native vector geometry in scripts/create-icon.swift; rasterized by AppKit for the macOS application icon.",
-  "authoring": "Original repository mark extended to a navy rounded square with orange linework. No generated or externally sourced imagery."
+  "origin": "AppYard's AY monogram, matching src/Mark.tsx and public/favicon.svg, drawn in scripts/create-icon.swift and rasterized by AppKit for the macOS application icon.",
+  "authoring": "Original geometric letterforms on a charcoal rounded square with peach linework. No generated or externally sourced imagery."
 }

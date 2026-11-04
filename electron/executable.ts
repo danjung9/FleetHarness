@@ -16,7 +16,7 @@ export function executableFileName(project: Pick<Project, 'title'>) {
 }
 export async function assertExecutableSource(project: Project) {
   if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this prototype before downloading the app.');
-  if (!project.workspace || !reportPassed(project.report)) throw new Error('Passing automated tests are required before delivery.');
+  if (!project.workspace || !reportPassed(project.report, project.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
   if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
 }
 

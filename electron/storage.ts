@@ -4,21 +4,18 @@ import { randomUUID, createHash } from 'node:crypto';
 import type { AppState, Project, NewProject, Artifact } from '../shared/types.js';
 import { stageDefinitions, starters } from '../shared/types.js';
 import { getChallenge } from '../harness/catalog.js';
+import { normalizeProjectInput } from '../shared/project-input.js';
+import type { Challenge } from '../harness/types.js';
 
-export function validateInput(input: NewProject): NewProject {
-  if (!input || typeof input.title !== 'string' || typeof input.description !== 'string' ||
-      !Array.isArray(input.criteria) || input.criteria.some(c => typeof c !== 'string')) throw new Error('Invalid challenge.');
-  const title = input.title.trim(), description = input.description.trim();
-  const criteria = input.criteria.map(c => c.trim()).filter(Boolean);
-  if (!title || title.length > 120 || description.length < 20 || description.length > 16000 ||
-      criteria.length < 1 || criteria.length > 30 || criteria.some(c => c.length > 2000)) {
-    throw new Error('Add a title, a problem statement (20–16,000 characters), and 1–30 acceptance criteria.');
-  }
-  if (input.challengeId !== undefined) getChallenge(input.challengeId);
-  return { title, description, criteria, challengeId: input.challengeId };
+export function validateInput(input: NewProject, catalog?: readonly Challenge[]): NewProject {
+  const normalized = normalizeProjectInput(input);
+  if (normalized.challengeId !== undefined) getChallenge(normalized.challengeId, catalog);
+  return normalized;
 }
-export function newProject(input: NewProject): Project {
-  return { ...validateInput(input), id: randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+export function newProject(input: NewProject, catalog?: readonly Challenge[]): Project {
+  const normalized = validateInput(input, catalog);
+  return { ...normalized, sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined,
+    id: randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     status: 'draft', stages: structuredClone(stageDefinitions), logs: [], feedback: '' };
 }
 export class Store {
@@ -33,7 +30,7 @@ export class Store {
       this.state = data;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-      this.state = { version: 1, projects: starters.map(newProject), settings: { provider: '', model: '', rememberKey: false } };
+      this.state = { version: 1, projects: starters.map(input => newProject(input)), settings: { provider: '', model: '', rememberKey: false } };
     }
     for (const p of this.state.projects) {
       if (p.executable?.status === 'packaging') {
@@ -81,10 +78,11 @@ export async function safeFile(root: string, relative: string) {
   if (!resolved.startsWith(base + path.sep)) throw new Error('Artifact must stay inside its workspace.');
   return resolved;
 }
-export async function sourceHash(root: string) {
+export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
   const hash = createHash('sha256');
   for (const file of await listArtifacts(root)) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
+    if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));
   }
