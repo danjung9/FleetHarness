@@ -88,3 +88,6 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:07 Astra fix-pi finished, exit 1. Report: `Research/Backend-Audit/fix-pi.md`
 - 18:08 Astra fixer finished, exit 1. Report: `Research/Backend-Audit/fixer.md`
 - 18:11 Astra conn-api finished, exit 1. Report: `Research/Backend-Audit/conn-api.md`
+- 18:13 Astra fix-approval started: Fix the four tests your batch fails outside the sandbox. This is commit 1af5235, already committed by the overseer. Same
+- 18:13 Astra fix-pi started: Fix the four tests your batch fails outside the sandbox. This is commit c73df61, already committed by the overseer. The 
+- 18:14 Astra fixer started: Fix the five tests your API-key batch fails outside the sandbox. This is commit 35eb921, already committed by the overse
