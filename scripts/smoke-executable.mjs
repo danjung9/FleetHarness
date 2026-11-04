@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { Store } from '../dist-electron/electron/storage.js';
 import { verifyWorkspace } from '../dist-electron/electron/verification.js';
+import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
+import { reportHash } from '../dist-electron/electron/delivery.js';
 
 const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-executable-smoke-')));
 const output = path.resolve('output/playwright'); await fs.mkdir(output, { recursive: true });
@@ -16,7 +18,13 @@ await fs.mkdir(project.workspace);
 await fs.writeFile(path.join(project.workspace, 'core.cjs'), 'exports.increment = value => value + 1;');
 await fs.writeFile(path.join(project.workspace, 'counter.test.cjs'), 'require("node:test")("increments a saved count", () => require("node:assert/strict").equal(require("./core.cjs").increment(7), 8));');
 await fs.writeFile(path.join(project.workspace, 'index.html'), `<!doctype html><html><head><title>Offline counter</title></head><body><h1>Offline counter</h1><button>Add one</button><output>0</output><script>const out=document.querySelector('output'); out.textContent=localStorage.getItem('count')||'0'; document.querySelector('button').onclick=()=>{out.textContent=Number(out.textContent)+1;localStorage.setItem('count',out.textContent)};</script></body></html>`);
-project.report = await verifyWorkspace(project.workspace, process.execPath, () => {});
+const processes = new RunProcessSweep();
+project.processScope = { runId: project.runId, marker: processes.marker, cleanup: 'pending' };
+await store.save();
+try { project.report = await processes.run(() => verifyWorkspace(project.workspace, process.execPath, () => {})); }
+finally { await processes.stop(); }
+project.processScope.cleanup = 'confirmed';
+project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
 project.status = 'review'; project.stages.forEach(s => { s.status = s.id === 'review' ? 'review' : s.id === 'deliver' ? 'queued' : 'complete'; });
 await store.save();
 let app, generated, generatedData;

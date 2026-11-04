@@ -3,26 +3,36 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { promises as disk } from 'original-fs';
 import { fileURLToPath } from 'node:url';
-import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash } from './storage.js';
+import { Store, newProject, validateInput, listArtifacts, safeFile } from './storage.js';
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
-import { reportPassed } from './verification.js';
+import { applicationTestFiles, portableTestCommand } from './verification.js';
 import { PreviewServers } from './preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
+import { atomicHostWrite } from '../shared/host-files.js';
+import { verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
 // Preserve existing workspaces and credentials when the display name changes.
 app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
 app.setName('AppYard');
+const ownsInstance = app.requestSingleInstanceLock();
+if (!ownsInstance) app.quit();
 let window: BrowserWindow | null = null;
+app.on('second-instance', () => {
+  if (!window) return;
+  if (window.isMinimized()) window.restore();
+  window.show(); window.focus();
+});
 let store: Store, backend: FleetBackend, codex: CodexAccount;
 const previews = new PreviewServers();
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Set<string>();
+const approvals = new Set<string>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
 const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenges;
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,9 +53,12 @@ const bootstrap = () => ({
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string) {
+  if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this build.');
   if (deliveries.has(id)) throw new Error('Wait for the app download to finish before changing this build.');
   if (backend.active.has(id) || startingRuns.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
-  return store.project(id);
+  const p = store.project(id);
+  if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed. Use Stop before changing this build.');
+  return p;
 }
 async function readArtifact(id: string, file: string) {
   const p = store.project(id);
@@ -53,12 +66,6 @@ async function readArtifact(id: string, file: string) {
   const target = await safeFile(p.workspace, file);
   if ((await fs.stat(target)).size > 2_000_000) throw new Error('This file is too large for the viewer. Open its workspace folder.');
   return fs.readFile(target, 'utf8');
-}
-async function assertVerified(id: string) {
-  const p = requireIdle(id);
-  if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
-  if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before approving or exporting.');
-  return p;
 }
 function registerIPC() {
   handle('fleet:bootstrap', bootstrap);
@@ -83,6 +90,7 @@ function registerIPC() {
     p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
     p.runCheckpoint = undefined;
+    p.verification = undefined; p.approval = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
     p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
   });
@@ -94,7 +102,11 @@ function registerIPC() {
     requireIdle(id); startingRuns.add(id);
     try { await backend.resume(id); } finally { startingRuns.delete(id); }
   });
-  handle('fleet:stop', (id: string) => backend.stop(id));
+  handle('fleet:stop', async (id: string) => {
+    const delivery = deliveries.get(id);
+    delivery?.controller.abort();
+    await Promise.all([backend.stop(id), delivery?.done]);
+  });
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
   handle('fleet:preview', async (id: string) => {
@@ -107,11 +119,26 @@ function registerIPC() {
   });
   handle('fleet:approve', async (id: string, feedback: string) => {
     if (typeof feedback !== 'string' || feedback.trim().length < 10 || feedback.length > 10000) throw new Error('Add a review note of at least 10 characters.');
-    const p = await assertVerified(id);
-    p.feedback = feedback.trim(); p.approvedAt = new Date().toISOString(); p.status = 'approved';
-    p.stages.find(s => s.id === 'review')!.status = 'complete';
-    await fs.writeFile(path.join(p.workspace!, 'review.json'), JSON.stringify({ approvedAt: p.approvedAt, feedback: p.feedback, scope: 'Prototype delivery only. Operational readiness is unverified.', sourceHash: p.report!.sourceHash }, null, 2));
-    await store.save(); notify();
+    const p = requireIdle(id);
+    approvals.add(id);
+    let wrote = false;
+    try {
+      await verifiedManifest(p);
+      const next = structuredClone(p);
+      next.feedback = feedback.trim(); next.approvedAt = new Date().toISOString(); next.status = 'approved';
+      next.stages.find(s => s.id === 'review')!.status = 'complete';
+      next.approval = { runId: next.runId!, approvedAt: next.approvedAt, feedback: next.feedback,
+        scope: 'Prototype delivery only. Operational readiness is unverified.', sourceHash: next.report!.sourceHash, reportHash: next.verification!.reportHash };
+      await atomicHostWrite(p.workspace!, 'review.json', evidenceJson(next.approval)); wrote = true;
+      await verifiedManifest(next, true);
+      await store.saveProject(next);
+    } catch (error) {
+      if (wrote) {
+        if (p.approval) await atomicHostWrite(p.workspace!, 'review.json', evidenceJson(p.approval)).catch(() => {});
+        else await fs.rm(path.join(p.workspace!, 'review.json'), { force: true }).catch(() => {});
+      }
+      throw error;
+    } finally { approvals.delete(id); notify(); }
   });
   handle('fleet:export', async (id: string) => {
     const project = requireIdle(id), p = structuredClone(project), controller = new AbortController();
@@ -120,40 +147,42 @@ function registerIPC() {
     deliveries.set(id, { controller, done });
     let destination: string | undefined, committed = false;
     try {
-      if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this prototype before export.');
-      if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
-      if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before exporting.');
+      await verifiedManifest(p, true);
       controller.signal.throwIfAborted();
       const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
       if (result.canceled) return null;
       controller.signal.throwIfAborted();
-      destination = await exportVerifiedBundle({ workspace: p.workspace, parent: result.filePaths[0], title: p.title,
-        verifiedHash: p.report!.sourceHash, deliveryMarkdown: [
+      destination = await exportVerifiedBundle({ workspace: p.workspace!, parent: result.filePaths[0], title: p.title,
+        verifiedHash: p.report!.sourceHash, evidence: deliveryEvidence(p), deliveryMarkdown: [
           '# ' + p.title, '', 'Open index.html in a browser to run the application.', '',
-          'Tests: install Node.js 22.19 or newer, then run: ' + p.report!.command, '',
+          'Tests: install Node.js 22.19 or newer, open a terminal in this folder, then run: ' + (p.report!.portableCommand ?? portableTestCommand(await applicationTestFiles(p.workspace!))), '',
+          'Original sandbox execution provenance is recorded separately in test-report.json (provenance).', '',
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
             'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have planned browser evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
-            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
+            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' - ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
           'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
-          'Generated by ' + (p.backend === 'codex' ? 'Codex' : 'Pi') + ' using ' + p.model + '. Run ' + p.runId
+          'Run ' + p.runId
         ].join('\n') }, controller.signal);
+      controller.signal.throwIfAborted();
       project.exportedTo = destination; project.status = 'delivered'; project.stages.find(s => s.id === 'deliver')!.status = 'complete';
-      await store.save(); committed = true;
+      await store.save(); controller.signal.throwIfAborted(); committed = true;
       notify(); shell.showItemInFolder(destination); return destination;
     } catch (error) {
       if (!committed) {
         project.exportedTo = p.exportedTo; project.status = p.status;
         project.stages.find(s => s.id === 'deliver')!.status = p.stages.find(s => s.id === 'deliver')!.status;
         if (destination) await fs.rm(destination, { recursive: true, force: true });
+        await store.save(); notify();
       }
       throw error;
     } finally { deliveries.delete(id); finish(); }
   });
   handle('fleet:download-executable', async (id: string) => {
     const p = requireIdle(id), controller = new AbortController();
+    const prior = structuredClone(p);
     let finish!: () => void;
     const done = new Promise<void>(resolve => { finish = resolve; });
     deliveries.set(id, { controller, done });
@@ -177,14 +206,20 @@ function registerIPC() {
       await runPackageWorker({ ...staged, archive, output: path.join(temporary, 'output'), electronVersion: process.versions.electron }, process.execPath, controller.signal);
       await assertExecutableSource(p);
       controller.signal.throwIfAborted();
-      const savedTo = await saveExecutable(archive, result.filePath, p.workspace!);
-      p.executable = { ...p.executable, status: 'ready', savedTo };
-      p.status = 'delivered'; p.stages.find(s => s.id === 'deliver')!.status = 'complete';
-      p.updatedAt = new Date().toISOString(); await store.save(); notify();
+      const savedTo = await saveExecutable(archive, result.filePath, p.workspace!, controller.signal, async target => {
+        controller.signal.throwIfAborted();
+        p.executable = { ...p.executable!, status: 'ready', savedTo: target };
+        p.status = 'delivered'; p.stages.find(s => s.id === 'deliver')!.status = 'complete';
+        p.updatedAt = new Date().toISOString(); await store.save();
+      });
+      notify();
       shell.showItemInFolder(savedTo); return savedTo;
     } catch (error) {
       if (packaging && p.executable) {
+        p.status = prior.status; p.updatedAt = prior.updatedAt;
+        p.stages.find(s => s.id === 'deliver')!.status = prior.stages.find(s => s.id === 'deliver')!.status;
         p.executable = { ...p.executable, status: 'failed', error: error instanceof Error ? error.message : String(error) };
+        delete p.executable.savedTo;
         await store.save(); notify();
       }
       throw error;
@@ -245,7 +280,7 @@ function createWindow() {
   else void window.loadFile(path.join(dirname, '../../dist/index.html'));
   window.on('closed', () => { window = null; });
 }
-app.whenReady().then(async () => {
+if (ownsInstance) app.whenReady().then(async () => {
   try {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));

@@ -304,6 +304,8 @@ for (const reason of ['Stop', 'timeout']) for (const reported of [false, true]) 
     await backend.finish(project, active);
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects[0];
     assert.equal(saved.status, reason === 'Stop' ? 'stopped' : 'failed');
+    assert.doesNotMatch(saved.error ?? '', /Process cleanup could not be confirmed/);
+    assert.equal(saved.processScope, undefined, 'Metrics fixtures must not fabricate persisted cleanup evidence');
     assert.equal(saved.stages.find(s => s.id === 'build').metrics.usage?.totalTokens ?? null, reported ? 30 : null);
     assert.equal(saved.report.stageMetrics.find(s => s.stage === 'build').usage?.totalTokens ?? null, reported ? 30 : null);
   });
@@ -339,5 +341,6 @@ for (const status of ['failed', 'stopped']) test(`review regression: report-writ
   assert.ok(saved.stages.find(stage => stage.id === 'verify').metrics.finishedAt);
   assert.deepEqual(saved.stages.find(stage => stage.id === 'verify').metrics.usage, expectedUsage);
   assert.match(saved.error, /Could not save.*report/);
+  assert.doesNotMatch(saved.error, /Process cleanup could not be confirmed/);
   assert.deepEqual(saved.report.stageMetrics, project.report.stageMetrics);
 });

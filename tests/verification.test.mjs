@@ -55,6 +55,7 @@ test('combined prerequisite: registered evidence comes from a single execution t
   assert.equal(report.registeredTests.length, 1);
   assert.equal(report.registeredTests[0].tests, 1);
   assert.equal(report.registeredTests[0].file, 'app.test.cjs');
+  assert.deepEqual(JSON.parse(JSON.stringify(report)), report, 'Persisted verification evidence must equal the in-memory report');
 });
 
 test('combined prerequisite: a zero-byte file beside real cases cannot pass verification', async t => {
@@ -78,6 +79,12 @@ test('combined prerequisite: production default obtains registered evidence thro
   assert.equal(calls.mock.callCount(), 1, 'No second direct execution may collect registered-test evidence');
   assert.equal(reportPassed(report), true, report.output);
   assert.deepEqual(report.registeredTests, [{ file: 'app.test.cjs', tests: 1 }]);
+  const [runner, args, options] = calls.mock.calls[0].arguments;
+  assert.equal(report.provenance.runner, runner);
+  assert.deepEqual(report.provenance.args, args);
+  assert.equal(report.provenance.cwd, root);
+  assert.deepEqual(report.provenance.environment, options.env);
+  assert.equal(report.portableCommand, "node --test './app.test.cjs'");
   assert.equal(report.output.match(/synthetic execution receipt/g).length, 1);
   assert.match(report.command, /^codex sandbox/);
 });

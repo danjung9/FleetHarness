@@ -21,6 +21,8 @@ export interface TestReport {
   stageMetrics?: (StageMetrics & { stage: StageId })[];
   quality?: import('./quality.js').QualityReport;
   registeredTests?: { file: string; tests: number }[];
+  portableCommand?: string;
+  provenance?: { runner: string; args: string[]; cwd: string; environment: Record<string, string | undefined> };
   testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
 export interface BriefContext { resources?: string; links?: string[] }
@@ -44,6 +46,9 @@ export interface RunCheckpoint {
   backgroundJob?: boolean;
 }
 export interface Project extends BriefContext {
+  processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };
+  verification?: { runId: string; reportHash: string };
+  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string };
   runCheckpoint?: RunCheckpoint;
   qualityVersion?: 1;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };

@@ -330,9 +330,9 @@ test('judge evidence cannot overwrite application source through a builder-creat
   const h = await fixture(t, [satisfactory]);
   const html = await fs.readFile(path.join(h.workspace, 'index.html'), 'utf8');
   await fs.symlink('index.html', path.join(h.workspace, 'judge.json'));
-  await h.run();
+  await assert.rejects(h.run(), /symlinks/);
   assert.equal(await fs.readFile(path.join(h.workspace, 'index.html'), 'utf8'), html);
-  assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), false);
+  assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), true);
 });
 
 test('fake-engine production workflow reaches review after two repairs with the final NOT and every gap saved', { timeout: 10000 }, async t => {

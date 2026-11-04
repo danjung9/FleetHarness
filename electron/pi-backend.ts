@@ -18,6 +18,8 @@ import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
+import { atomicHostWrite } from '../shared/host-files.js';
+import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
 type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId> };
@@ -94,14 +96,17 @@ export class FleetBackend {
   }
   private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
   private async finish(p: Project, run: ActiveRun) {
+    p.verification = undefined;
     try {
       await run.processes.stop();
+      if (p.processScope && p.processScope.marker === run.processes.marker && p.processScope.runId === p.runId) p.processScope.cleanup = 'confirmed';
       p.status = run.controller.signal.aborted ? 'stopped' : run.outcome ?? 'failed';
       if (p.status === 'stopped') {
         p.error = p.runCheckpoint?.writerState === 'unconfirmed' && p.error ? stoppedMessage + '\n' + p.error : stoppedMessage;
         p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       }
     } catch {
+      if (p.processScope) p.processScope.cleanup = 'unconfirmed';
       if (p.runCheckpoint) p.runCheckpoint.writerState = 'unconfirmed';
       p.status = 'failed';
       p.error = [run.controller.signal.aborted ? undefined : p.error, 'Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.'].filter(Boolean).join('\n');
@@ -112,17 +117,17 @@ export class FleetBackend {
     // Evidence-file errors must not prevent saving the terminal project state.
     if (p.report) {
       p.report.stageMetrics = p.stages.filter(s => s.metrics).map(s => ({ stage: s.id, ...structuredClone(s.metrics!) }));
-      const temporary = path.join(p.workspace!, '.report-' + randomUUID());
       try {
-        await fs.writeFile(temporary, JSON.stringify(p.report, null, 2), { flag: 'wx', mode: 0o600 });
-        await fs.rename(temporary, path.join(p.workspace!, 'test-report.json'));
+        await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(p.report, null, 2));
+        if (p.status === 'review' && p.processScope?.cleanup === 'confirmed') p.verification = { runId: p.runId!, reportHash: reportHash(p.report) };
       } catch (error) {
         p.error = [p.error, 'Could not save verification report: ' + String(error)].filter(Boolean).join('\n');
         if (p.status !== 'stopped') p.status = 'failed';
-      } finally { await fs.rm(temporary, { force: true }).catch(() => {}); }
+      }
     }
     try { await this.changed(p); }
     catch (error) {
+      p.verification = undefined;
       p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
       if (p.status !== 'stopped') p.status = 'failed';
       this.log(p, 'intake', 'error', p.error);
@@ -138,6 +143,7 @@ export class FleetBackend {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
+    if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed; writer shutdown was not confirmed. Use Stop to reconcile the previous run before starting new work.');
     if (resuming && !['failed', 'stopped'].includes(p.status)) throw new Error('Only a failed or stopped build can resume.');
     if (resuming && (!p.workspace || !p.runId || p.runCheckpoint?.version !== 1)) throw new Error('This build has no saved recovery checkpoint. Start a new run.');
     const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
@@ -161,6 +167,8 @@ export class FleetBackend {
         const first = p.stages.findIndex(s => s.status !== 'complete');
         p.stages.slice(first).forEach(s => { s.status = 'queued'; });
         p.status = 'running'; p.report = undefined; p.error = undefined;
+        p.verification = undefined; p.approval = undefined;
+        p.processScope = { runId: p.runId!, marker: run.processes.marker, cleanup: 'pending' };
         p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.feedback = '';
         p.backend = backend; p.model = provider + '/' + modelId;
         this.log(p, p.stages[first].id, 'info', 'Resuming in the saved workspace from ' + p.stages[first].label + '. Frozen inputs checked.');
@@ -169,6 +177,8 @@ export class FleetBackend {
         return;
       }
       p.runId = randomUUID();
+      p.processScope = { runId: p.runId, marker: run.processes.marker, cleanup: 'pending' };
+      p.verification = undefined; p.approval = undefined;
       p.workspace = path.join(this.store.root, 'workspaces', p.id, p.runId);
       p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
       p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
@@ -179,7 +189,7 @@ export class FleetBackend {
       p.model = (route?.provider ?? provider) + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
-      await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
+      await atomicHostWrite(p.workspace, 'requirements.md', [
         '# ' + p.title, '', p.description, '', '## Evaluation criteria',
         ...(p.criteria.length ? p.criteria.map((c, i) => (i + 1) + '. ' + c)
           : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
@@ -522,7 +532,7 @@ export class FleetBackend {
       if (!reportPassed(p.report, true) && p.runCheckpoint!.repairStopped) throw new Error('Verification did not pass. Repair made no source changes; start a new run before another fixing agent.');
       while (!reportPassed(p.report, true) && p.runCheckpoint!.repairAttempts < 2) {
         this.check(run);
-        await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
+        await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(p.report, null, 2));
         const attempt = p.runCheckpoint!.repairAttempts + 1;
         this.check(run);
         this.log(p, 'verify', 'info', 'Verification failed. Starting ' + (attempt === 1 ? 'one ' : '') + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt (' + attempt + '/2).');
@@ -544,7 +554,7 @@ export class FleetBackend {
         this.log(p, 'verify', 'info', p.report.output);
       }
       this.check(run);
-      await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
+      await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(p.report, null, 2));
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
       p.report = await runIndependentJudge({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, report: p.report,
         signal: run.controller.signal, limits: this.options.agentLimits,
@@ -573,7 +583,12 @@ export class FleetBackend {
     } finally { await this.finish(p, run); }
   }
   async stop(id: string) {
-    const run = this.active.get(id); if (!run) return;
+    const run = this.active.get(id);
+    if (!run) {
+      const p = this.store.project(id);
+      if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) { await this.store.reconcile(p); this.notify(); }
+      return;
+    }
     run.controller.abort(); await run.done;
   }
   async stopAll() { await Promise.all([...this.active.keys()].map(id => this.stop(id))); }

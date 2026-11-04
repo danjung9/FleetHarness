@@ -1,11 +1,11 @@
-import { promises as fs } from 'node:fs';
+import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import type { Project } from '../shared/types.js';
-import { safeFile, sourceHash } from './storage.js';
-import { reportPassed } from './verification.js';
+import { verifiedManifest } from './delivery.js';
+import { atomicHostWrite } from '../shared/host-files.js';
 
 export function executableName(project: Pick<Project, 'title'>) {
   // Prefix also avoids Windows reserved device names.
@@ -15,9 +15,7 @@ export function executableFileName(project: Pick<Project, 'title'>) {
   return `${executableName(project)}-${process.platform}-${process.arch}.zip`;
 }
 export async function assertExecutableSource(project: Project) {
-  if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this prototype before downloading the app.');
-  if (!project.workspace || !reportPassed(project.report, project.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
-  if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
+  return verifiedManifest(project, true);
 }
 
 // This is host-owned code. Generated code only runs inside the sandboxed renderer.
@@ -63,20 +61,18 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string }
 
 export async function stageExecutable(project: Project, root: string) {
-  await assertExecutableSource(project);
+  const manifest = await assertExecutableSource(project);
   const source = path.join(root, 'source');
   await fs.mkdir(source);
-  const file = await safeFile(project.workspace!, 'index.html');
-  const html = await fs.readFile(file);
+  const html = manifest.find(file => file.path === 'index.html')!.contents;
   if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs a self-contained index.html between 1 byte and 2 MB, matching the app preview.');
   const name = executableName(project);
   const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
   // An allowlist deliberately leaves out agent code, dependencies, sessions and credentials.
-  await fs.writeFile(path.join(source, 'index.html'), html);
-  await fs.writeFile(path.join(source, 'main.cjs'), standaloneMain(project.title, appId));
-  await fs.writeFile(path.join(source, 'package.json'), JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
+  await atomicHostWrite(source, 'index.html', html);
+  await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId));
+  await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);
-  if (!html.equals(await fs.readFile(await safeFile(project.workspace!, 'index.html')))) throw new Error('Application changed while preparing the download. Start a new run.');
   return { source, name, appId };
 }
 
@@ -114,14 +110,38 @@ export async function runPackageWorker(job: PackageJob, executable: string, sign
   });
 }
 
-export async function saveExecutable(archive: string, destination: string, workspace: string) {
+export async function saveExecutable(archive: string, destination: string, workspace: string, signal?: AbortSignal,
+  commit?: (target: string) => Promise<void>) {
+  signal?.throwIfAborted();
   const parent = await fs.realpath(path.dirname(destination)), base = await fs.realpath(workspace);
   if (parent === base || parent.startsWith(base + path.sep)) throw new Error('Save the download outside the agent workspace.');
   const target = path.join(parent, path.basename(destination));
-  const temporary = path.join(parent, '.' + randomUUID() + '.download');
+  const staging = await fs.mkdtemp(path.join(parent, '.appyard-download-'));
+  const temporary = path.join(staging, 'archive'), previous = path.join(staging, 'previous');
+  let backedUp = false, published = false, preserveBackup = false;
   try {
-    await fs.copyFile(archive, temporary);
+    await fs.copyFile(archive, temporary, constants.COPYFILE_EXCL);
+    signal?.throwIfAborted();
+    try {
+      if ((await fs.lstat(target)).isDirectory()) throw new Error('Choose an archive file, not a directory.');
+      await fs.rename(target, previous); backedUp = true;
+    }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    signal?.throwIfAborted();
     await fs.rename(temporary, target);
-  } finally { await fs.rm(temporary, { force: true }); }
+    published = true;
+    signal?.throwIfAborted();
+    await commit?.(target);
+    signal?.throwIfAborted();
+  } catch (error) {
+    try {
+      if (published) await fs.rm(target, { force: true });
+      if (backedUp) await fs.rename(previous, target);
+    } catch (restoreError) {
+      preserveBackup = backedUp;
+      throw new Error('Could not roll back the download.' + (backedUp ? ' The previous file is retained at ' + previous : ''), { cause: restoreError });
+    }
+    throw error;
+  } finally { if (!preserveBackup) await fs.rm(staging, { recursive: true, force: true }); }
   return target;
 }

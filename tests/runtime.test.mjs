@@ -35,14 +35,15 @@ test('runtime evidence fixtures explicitly launch each source revision exactly o
     }
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
-test('saved challenges survive reload and interrupted runs become stopped', async () => {
+test('saved challenges survive reload and interrupted runs without markers remain blocked', async () => {
   const dir=await temp(); try {
     const store=new Store(dir);await store.init();
     assert.equal(store.state.projects.length,3);
     Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], resources: 'Sample records', links: ['https://example.com/reference'] }));
     store.state.projects[0].status='running';await store.save();
     const restored=new Store(dir);await restored.init();
-    assert.equal(restored.state.projects[0].status,'stopped');
+    assert.equal(restored.state.projects[0].status,'failed');
+    assert.equal(restored.state.projects[0].processScope.cleanup,'unconfirmed');
     assert.deepEqual(restored.state.projects[0].criteria,[]);
     assert.equal(restored.state.projects[0].resources,'Sample records');
     assert.deepEqual(restored.state.projects[0].links,['https://example.com/reference']);
@@ -73,7 +74,7 @@ test('artifact access rejects traversal and symlink escapes', async () => {
     await fs.symlink(path.join(dir,'secret'),path.join(inner,'escape'));
     await assert.rejects(safeFile(inner,'../secret'));
     await assert.rejects(safeFile(inner,'escape'));
-    assert.deepEqual(await listArtifacts(inner),[]);
+    await assert.rejects(listArtifacts(inner), /symlinks/);
   } finally {await fs.rm(dir,{recursive:true,force:true});}
 });
 test('test evidence records actual failures, success, skipped cases and source changes', async () => {

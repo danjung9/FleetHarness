@@ -17,7 +17,7 @@ async function fixture(t) {
   await fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{"schemaVersion":1}');
   await fs.writeFile(path.join(workspace, '.quality-evidence', 'desktop.png'), 'Verified browser screenshot');
   await fs.writeFile(path.join(workspace, 'test-report.json'), '{"result":"host report"}');
-  return { root, workspace, parent, title: 'Approved app', verifiedHash: await sourceHash(workspace), deliveryMarkdown: '# Approved delivery\nBrowser evidence is included.' };
+  return { root, workspace, parent, title: 'Approved app', verifiedHash: await sourceHash(workspace), evidence: { report: '{"result":"host report"}', review: '{"approved":true}' }, deliveryMarkdown: '# Approved delivery\nBrowser evidence is included.' };
 }
 
 async function onlyExisting(parent) {
@@ -119,4 +119,32 @@ test('export destinations inside the workspace are rejected through symlink alia
   await assert.rejects(exportVerifiedBundle({ ...input, parent: alias }), /outside the agent workspace/);
   assert.equal(await sourceHash(input.workspace), input.verifiedHash);
   await onlyExisting(input.parent);
+});
+
+for (const target of ['page.html', 'node_modules/page.html']) test('an entry point symlink cannot bypass hashing or export: ' + target, async t => {
+  const input = await fixture(t);
+  await fs.mkdir(path.dirname(path.join(input.workspace, target)), { recursive: true });
+  await fs.writeFile(path.join(input.workspace, target), '<h1>Unverified page</h1>');
+  await fs.rm(path.join(input.workspace, 'index.html'));
+  await fs.symlink(target, path.join(input.workspace, 'index.html'));
+  await assert.rejects(sourceHash(input.workspace), /symlinks/);
+  await assert.rejects(exportVerifiedBundle(input), /symlinks/);
+  await onlyExisting(input.parent);
+});
+
+test('source export cannot succeed without a regular entry point', async t => {
+  const input = await fixture(t);
+  await fs.rm(path.join(input.workspace, 'index.html'));
+  input.verifiedHash = await sourceHash(input.workspace);
+  await assert.rejects(exportVerifiedBundle(input), /index.html entry point/);
+  await onlyExisting(input.parent);
+});
+
+test('workspace receipt edits cannot replace authoritative evidence', async t => {
+  const input = await fixture(t);
+  await fs.writeFile(path.join(input.workspace, 'test-report.json'), '{"passed":999}');
+  await fs.writeFile(path.join(input.workspace, 'review.json'), '{"feedback":"forged"}');
+  const destination = await exportVerifiedBundle(input);
+  assert.equal(await fs.readFile(path.join(destination, 'test-report.json'), 'utf8'), input.evidence.report);
+  assert.equal(await fs.readFile(path.join(destination, 'review.json'), 'utf8'), input.evidence.review);
 });
