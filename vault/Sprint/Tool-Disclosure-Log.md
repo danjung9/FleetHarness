@@ -93,6 +93,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Retained ID 37 artifacts | Synthetic review dataset | Diagnosis | Project benchmark. | 2026-11-04 |
 | macOS pkill, version unverified | process utility | unsuccessful stop attempt | Apple. | 2026-11-04 |
 | R101 synthetic benchmark records | evidence dataset | decision review | team. | 2026-11-04 |
+| Codex TUI task tools, session version unspecified | Local task coordination | Inspect and coordinate existing Fleethacker Codex tasks under the user management instruction | OpenAI | 2026-11-04 |
 
 ## Data and sources
 

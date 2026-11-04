@@ -40,3 +40,5 @@ Type is one of: policy, data, authority, infrastructure, acquisition, technical.
 | 2026-11-04, task-app browser acceptance | technical | [E] Both candidates use UI or schema representations outside the conservative generic detector; each first run recorded 27 NOT CHECKED and no scheduling pass. | Local acceptance tooling | Inspect actual UI source/captures, add explicit adapters without changing the frozen oracle, and rerun through main. Preserve missing feature and discovery limits separately |
 
 - [E, 2026-11-04 17:14 EST] Experiment records use Ten/Exp1, but scoreboard and judge task paths omit Exp1 and manifest prose points to fhten instead of fhexp. A missing promised summary path caused an incorrect not-started status; corrected from raw receipts. A ten-minute bridge request also timed out. Main received the correct namespace and completed-run evidence.
+
+- [E, 2026-11-04 17:18 EST] The runner started stale dev-3 verifier reapply task c3057e9 after its report handed that integration to dev-1. Recovery/verifier revision e6b5000 is already under review. Main notified to reconcile the duplicate assignment before it creates another integration cycle.
