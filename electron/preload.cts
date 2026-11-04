@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
+  connectors: {
+    list: () => ipcRenderer.invoke('fleet:connectors:list'),
+    preview: (kind: string, filters: unknown) => ipcRenderer.invoke('fleet:connectors:preview', kind, filters),
+    use: (id: string, digest: string) => ipcRenderer.invoke('fleet:connectors:use', id, digest),
+    cancel: (kind: string) => ipcRenderer.invoke('fleet:connectors:cancel', kind),
+    disconnect: (id: string) => ipcRenderer.invoke('fleet:connectors:disconnect', id)
+  },
   bootstrap: () => ipcRenderer.invoke('fleet:bootstrap'),
   refreshNorfolkCatalog: () => ipcRenderer.invoke('fleet:norfolk:refresh'),
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),

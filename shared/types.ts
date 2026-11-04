@@ -1,7 +1,7 @@
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'connectors';
 /** Token counts reported by the engine, never estimates. Reasoning is part of output. */
 export interface StageTokenUsage {
   inputTokens: number | null; cachedInputTokens: number | null; uncachedInputTokens: number | null;
@@ -22,13 +22,14 @@ export interface TestReport {
   quality?: import('./quality.js').QualityReport;
   registeredTests?: { file: string; tests: number }[];
 }
-export interface BriefContext { resources?: string; links?: string[] }
+export interface BriefContext { resources?: string; links?: string[]; connectedData?: import('./connectors.js').ConnectedDataSelection[] }
 export interface RunCheckpoint {
   version: 1;
   briefHash: string;
   requirementsHash: string;
   packetHash: string;
   context: string;
+  connectedContextHash?: string;
   qualityHash?: string;
   planHash?: string;
   repairAttempts: number;
@@ -68,6 +69,7 @@ export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath:
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
+  connectors?: import('./connectors.js').ConnectorsAPI;
   bootstrap(): Promise<Bootstrap>;
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;

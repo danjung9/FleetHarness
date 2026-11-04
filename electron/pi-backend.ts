@@ -18,10 +18,12 @@ import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
+import { assertContext, writeConnectedContext } from './connectors/snapshot.js';
+import type { ConnectorStore } from './connectors/store.js';
 
 type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId> };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
-const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null]));
+export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const foregroundPolicy = 'Do not start background or detached jobs. Keep shell commands in the foreground and wait for them to finish. Do not use nohup, disown, setsid, Start-Job, Start-Process or trailing &. Stop tracks foreground calls only; an operator must inspect and stop remaining jobs if background activity is detected.';
 const backgroundShellCommand = /\b(?:nohup|disown|setsid|Start-Job|Start-Process)\b|(?<![&>\\])&(?![&>])/i;
 // Visible-command heuristic only, not a process containment claim. Ignore
@@ -38,6 +40,7 @@ function transientFailure(error: unknown) {
 }
 
 interface BackendOptions {
+  connectorStore?: ConnectorStore;
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
@@ -177,13 +180,17 @@ export class FleetBackend {
       p.model = provider + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
+      if (p.connectedData?.length && !this.options.connectorStore) throw new Error('Connected data is unavailable. Choose sample data in Connectors.');
+      const connected = this.options.connectorStore ? await writeConnectedContext(this.options.connectorStore, p.workspace, p.connectedData, run.controller.signal) : undefined;
+      this.check(run);
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
         '# ' + p.title, '', p.description, '', '## Evaluation criteria',
         ...(p.criteria.length ? p.criteria.map((c, i) => (i + 1) + '. ' + c)
           : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
         ...(p.resources ? ['## Resources', '', p.resources, ''] : []),
         ...(p.links?.length ? ['## Reference links', '', ...p.links.map(link => '- ' + link), ''] : []),
-        'Use synthetic data only. Operational readiness requires independent domain review.'
+        'Use synthetic data only. Operational readiness requires independent domain review.',
+        ...(connected ? [connected.requirements] : [])
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
         criteria: p.criteria, resources: p.resources, links: p.links, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
@@ -191,7 +198,8 @@ export class FleetBackend {
       run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
-        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle' };
+        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', connectedContextHash: connected?.hash };
+      if (connected) this.log(p, 'intake', 'info', connected.activity);
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
       await this.changed(p);
@@ -419,6 +427,8 @@ export class FleetBackend {
     return missing;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
+    if (p.connectedData?.length && !p.runCheckpoint?.connectedContextHash) throw new Error('Connected data is missing. Start a new build.');
+    await assertContext(p.workspace!, p.runCheckpoint?.connectedContextHash);
     if (p.runCheckpoint && briefHash(p) !== p.runCheckpoint.briefHash) throw new Error('The brief changed during the run. Start a new run with the changed brief.');
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);

@@ -12,6 +12,8 @@ import { assertExecutableSource, executableFileName, stageExecutable, runPackage
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
+import { ConnectorService, registerConnectorIPC } from './connectors/index.js';
+import { ConnectorStore } from './connectors/store.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -20,6 +22,7 @@ app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.F
 app.setName('AppYard');
 let window: BrowserWindow | null = null;
 let store: Store, backend: FleetBackend, codex: CodexAccount;
+let connectors: ConnectorService;
 const previews = new PreviewServers();
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Set<string>();
@@ -61,6 +64,7 @@ async function assertVerified(id: string) {
   return p;
 }
 function registerIPC() {
+  registerConnectorIPC(handle, connectors);
   handle('fleet:bootstrap', bootstrap);
   handle('fleet:norfolk:refresh', () => {
     if (!norfolkRefresh) norfolkRefresh = (async () => {
@@ -80,6 +84,7 @@ function registerIPC() {
     const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
     const normalized = validateInput(input, catalog);
     Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
+    p.connectedData = normalized.connectedData;
     p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
     p.runCheckpoint = undefined;
@@ -250,8 +255,11 @@ app.whenReady().then(async () => {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));
     await store.init();
+    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), safeStorage));
+    await connectors.registerInstalledAdapters();
+    await connectors.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
-    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex });
+    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, connectorStore: connectors.store });
     await backend.init(); await codex.refresh();
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
@@ -269,6 +277,7 @@ app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
+  void connectors?.shutdown();
   if (!quitting && (backend?.active.size || deliveries.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();

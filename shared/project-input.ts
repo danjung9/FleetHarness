@@ -1,4 +1,5 @@
 import type { NewProject } from './types.js';
+import { validateSelections } from './connectors.js';
 
 /** Shared by the renderer and desktop boundary so both accept the same brief. */
 export function normalizeProjectInput(input: NewProject): NewProject {
@@ -28,5 +29,6 @@ export function normalizeProjectInput(input: NewProject): NewProject {
       if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error();
     } catch { throw new Error('Enter a complete http:// or https:// link on each line.'); }
   }
-  return { title, description, criteria, resources, links, challengeId: input.challengeId };
+  const connectedData = validateSelections(input.connectedData);
+  return { title, description, criteria, resources, links, challengeId: input.challengeId, ...(input.connectedData !== undefined ? { connectedData } : {}) };
 }
