@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OPTASK · Synthetic schedule studio</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#142b3a;background:#eef2f4;font-size:16px;line-height:1.5;--blue:#145d79;--muted:#4b6472;--border:#c4d2d9}*{box-sizing:border-box}body{margin:0}header{background:#102f40;color:#fff;padding:28px max(24px,calc((100vw - 1200px)/2))}header .eyebrow{color:#8ed4df;text-transform:uppercase;letter-spacing:.15em;font-size:.75rem;font-weight:750}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:10px 0}header p{color:#c5d8e2;margin:10px 0 0}.notice{background:#fff0ca;border-bottom:1px solid #d6b76b;padding:12px 24px;text-align:center;font-weight:650;font-size:.9rem}main{max-width:1250px;margin:auto;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}.panel{background:white;border:1px solid var(--border);border-radius:12px;padding:24px;min-width:0;box-shadow:0 3px 10px #15394a05}.wide{grid-column:1/-1}h2{font-size:1.25rem;margin:0 0 12px;letter-spacing:-.02em}h2 .step{display:inline-grid;place-items:center;background:#e4f0f4;color:#145d79;border-radius:50%;width:30px;height:30px;margin-right:8px;font-size:.85rem}h3{font-size:1rem;margin:20px 0 8px}p{margin:8px 0 14px}.subtle,small{color:var(--muted);font-size:.87rem}label{display:block;font-weight:650;margin:12px 0 6px}textarea,input[type=text],input[type=date]{width:100%;border:1px solid #8ca5b2;border-radius:6px;padding:10px;font:inherit;background:#fff;color:#142b3a}textarea{font:13px/1.65 ui-monospace,SFMono-Regular,monospace;min-height:245px;resize:vertical}button{border:1px solid #96adb9;border-radius:6px;background:#fff;color:#163f53;padding:10px 14px;font:inherit;font-size:.9rem;font-weight:650;cursor:pointer;min-height:42px}button:hover{background:#eaf2f5}button.primary{background:var(--blue);color:white;border-color:var(--blue)}button.primary:hover{background:#0b455d}button:disabled{opacity:.5;cursor:not-allowed}button.evidence{padding:4px 8px;min-height:32px;font-size:.8rem;font-weight:500}button.danger{color:#96301f}button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #dc8e00;outline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.error{color:#a6291e;font-weight:600}.status{padding:10px 12px;border-left:3px solid #229392;background:#eef8f7;margin:12px 0;font-size:.9rem}.check{display:flex;align-items:start;gap:9px;font-weight:500}.check input{margin-top:5px;width:18px;height:18px;flex-shrink:0}.event,.issue{padding:14px;border:1px solid var(--border);border-radius:8px;margin:12px 0}.event h3{margin:0 0 8px}.field{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-top:1px solid #e5ecef;padding:7px 0;font-size:.85rem}.field strong{min-width:70px}.token{overflow-wrap:anywhere}.issue{background:#fff9ee;border-color:#e5cd9c}.issue p{margin-bottom:8px}.inspector{background:#eef4f7;border:1px solid var(--border);padding:14px;border-radius:8px;margin-top:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}#schedule-day{width:auto;max-width:100%}.day-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.day-controls label{margin:0}.timeline-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin:18px 0}.timeline-inner{min-width:780px;padding:16px 20px}.axis{display:flex;justify-content:space-between;margin-left:190px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:6px}.track{display:grid;grid-template-columns:180px 1fr;gap:10px;align-items:center;margin:16px 0}.track-name{font-size:.85rem;font-weight:650}.lane{position:relative;min-height:48px;background:repeating-linear-gradient(to right,#f0f4f6 0,#f0f4f6 calc(100% / 24 - 1px),#cfdae0 calc(100% / 24 - 1px),#cfdae0 calc(100% / 24));border-radius:4px}.bar{position:absolute;min-width:3px;height:24px;top:8px;border-radius:4px;background:#176d91;color:white;font-size:11px;white-space:nowrap;padding:3px 4px;overflow:hidden}.bar.CRYPTO{background:#896121}.bar.FLIGHTQTRS{background:#67529b}.schedule-row{border-top:1px solid #dce5ea;padding:13px 0}.schedule-row p{margin:0}.schedule-detail{color:var(--muted);font-size:.8rem;margin-top:4px!important}.summary{font-weight:650}.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}details summary{cursor:pointer;font-weight:650}.history{font-size:.85rem;max-height:130px;overflow:auto}footer{padding:0 24px 28px;text-align:center;color:var(--muted);font-size:.8rem}dialog{max-width:460px;border:1px solid #819ca9;border-radius:12px;padding:26px}dialog::backdrop{background:#102f4077}[hidden]{display:none!important}@media(max-width:800px){main{grid-template-columns:minmax(0,1fr);padding:14px;gap:14px}.panel{padding:18px}.wide{grid-column:auto}header{padding:23px 18px}.notice{text-align:left;padding:12px 18px}.event,.issue{padding:12px}.actions button{flex-grow:1}}
+</style></head><body>
+<header><div class="eyebrow">Local training workspace / Challenge 12</div><h1>OPTASK schedule studio</h1><p>From fictional message traffic to a traceable daily picture.</p></header>
+<div class="notice">Synthetic only — not validated against actual USMTF formats or operational rules</div>
+<main>
+<section class="panel" aria-labelledby="source-heading"><h2 id="source-heading"><span class="step">1</span>Message and extraction</h2><p class="subtle">Start with the sample or paste fictional pipe-delimited text. Do not enter real tasking, personal data, credentials or crypto material.</p>
+<button id="load-sample">Load synthetic sample</button><label for="source-input">Synthetic OPTASK message</label><textarea id="source-input" spellcheck="false" aria-describedby="grammar-hint input-error" placeholder="No message yet. Load the synthetic sample to begin."></textarea>
+<p id="grammar-hint" class="subtle">Exact input is preserved in each extraction revision. Dates require seconds and an explicit timezone.</p><p id="input-error" class="error" role="alert"></p>
+<div class="actions"><button class="primary" id="parse">Parse message</button><button id="discard-draft">Discard changes</button></div><p id="parse-summary" class="status" aria-live="polite">No extraction yet.</p>
+<details><summary>Supported fictional grammar</summary><p class="subtle">One record per line, separated by LF or CRLF. Fields cannot contain pipes or newlines. Empty lines are ignored. Maximum 200,000 UTF-16 code units.</p><pre class="subtle">OPTASK|message-id|fictional vessel
+FREQPLAN|id|label|frequency|MHz or kHz|start|end
+CRYPTO|id|training placeholder transition|start|end
+FLIGHTQTRS|id|description|start|end</pre><p class="subtle">Use YYYY-MM-DDTHH:mm:ssZ or ±HH:mm. Supported years: 1900–9999. Correct an issue in the source and parse again, or explicitly exclude its record.</p></details>
+<details><summary>Preserved revisions</summary><div class="history" id="revision-history">No revisions.</div></details></section>
+<section class="panel" aria-labelledby="review-heading"><h2 id="review-heading"><span class="step">2</span>Review extraction</h2><p id="mapping-summary" class="subtle">FREQPLAN → Frequency Plan; CRYPTO → Crypto Change-over Window; FLIGHTQTRS → Flight Quarters</p><p class="subtle">These are fictional mappings for training. Inspect field evidence before confirming. Confirmation is a local review decision, not operational approval.</p>
+<div id="issues"></div><div id="events"><p class="subtle">Parsed events and evidence will appear here.</p></div>
+<div class="inspector" id="evidence-inspector" tabindex="-1" aria-label="Source evidence inspector" hidden><strong>Original field evidence</strong><pre id="evidence-text"></pre><p id="evidence-range" class="subtle"></p><p id="evidence-revision" class="subtle"></p></div>
+<label class="check"><input id="mapping-reviewed" type="checkbox">I reviewed the synthetic record-to-event mapping.</label><label class="check"><input id="events-reviewed" type="checkbox">I reviewed all events, source evidence and exclusions.</label><button id="commit-review" class="primary">Confirm reviewed revision</button><p id="review-error" class="error" role="alert"></p><p id="review-status" class="status" aria-live="polite">No extraction yet.</p></section>
+<section class="panel wide" aria-labelledby="schedule-heading"><div class="toolbar"><div><h2 id="schedule-heading"><span class="step">3</span>Synchronized 24-hour Visual Schedule</h2><p class="subtle">One shared UTC day. Overlaps stay visible; no events are moved.</p></div><div class="day-controls"><div><label for="schedule-day">UTC schedule day</label><input id="schedule-day" type="date" value="2026-11-04"></div><button id="show-day">Show day</button></div></div><p id="day-error" class="error" role="alert"></p><p id="schedule-state" class="subtle">Review a revision to prepare exports.</p><p id="day-summary" class="summary"></p>
+<div id="timeline" class="timeline-scroll" role="region" aria-label="24-hour visual schedule; scroll horizontally on narrow screens" tabindex="0"><div class="timeline-inner"><div id="axis" class="axis"></div><div id="tracks"></div></div></div><p id="overlap-summary" class="subtle"></p><div id="schedule-list"></div>
+<div class="actions"><button id="export-csv" class="primary" disabled>Export reviewed CSV</button><button id="export-json" disabled>Export traceability JSON</button></div><p id="export-reason" class="subtle"></p><p id="download-status" aria-live="polite" class="subtle"></p></section>
+<section class="panel"><h2>Synthetic comparison</h2><p class="subtle">Compare actual extraction with the planner-authored finite key: three supported events and two zero-event messages. This measures the supplied examples only.</p><button id="run-benchmark">Run synthetic comparison</button><p id="benchmark-counts"></p><p id="benchmark-scores"></p><p id="benchmark-review" class="subtle">Synthetic planner-authored key. Independent human review pending; operational accuracy unverified.</p><div id="benchmark-mismatches"></div></section>
+<section class="panel"><h2>Local session</h2><p id="storage-status" class="subtle" aria-live="polite">Stored only in this browser. No network services.</p><p class="subtle">Draft, source revisions, review decisions and day selection survive reload when local storage is available. Downloads remain under your control after reset.</p><div class="actions"><button id="reset" class="danger">Reset session</button><button id="stop-clear" class="danger">Stop and clear</button></div><p class="subtle">If you suspect real input, stop and clear this session. This app does not detect sensitive information automatically.</p></section>
+</main><footer>No operational integration · No OCR or handwriting recognition · No actual USMTF compliance · Independent review pending</footer>
+<dialog id="reset-dialog" aria-labelledby="reset-title"><h2 id="reset-title">Clear this local session?</h2><p>This removes the draft, preserved revisions and local review decisions. Downloaded files are not removed.</p><div class="actions"><button id="cancel-reset">Cancel</button><button id="confirm-reset" class="danger">Clear session</button></div></dialog>
+<script id="application-core">
+/* Application domain core. Embedded verbatim in index.html by build.cjs. No dependencies. */
+(function (root) {
+'use strict';
+const TYPES = Object.assign(Object.create(null), {FREQPLAN:'Frequency Plan',CRYPTO:'Crypto Change-over Window',FLIGHTQTRS:'Flight Quarters'});
+const GRAMMAR = 'synthetic-optask/v1';
+const NOTICE = 'Synthetic only — not validated against actual USMTF formats or operational rules';
+const SAMPLE = 'OPTASK|SYNTHETIC-DEMO-01|Fictional training vessel Meridian\nFREQPLAN|FP-01|Training Alpha|225.500|MHz|2026-11-04T06:00:00Z|2026-11-04T08:00:00Z\nCRYPTO|CW-01|TRAINING-KEY-A to TRAINING-KEY-B|2026-11-04T07:30:00Z|2026-11-04T07:45:00Z\nFLIGHTQTRS|FQ-01|Fictional deck drill|2026-11-04T23:30:00Z|2026-11-05T00:30:00Z';
+function timestampResult(value, name='Start') {
+ if (!/(Z|[+-]\d{2}:\d{2})$/.test(value)) return {error:name+' timestamp requires an explicit timezone.'};
+ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+ if (!m) return {error:'Invalid timestamp format.'};
+ const [y,mo,d,h,mi,s]=m.slice(1,7).map(Number);
+ const days=new Date(Date.UTC(y,mo,0)).getUTCDate();
+ if(y<1900 || mo<1 || mo>12 || d<1 || d>days) return {error:'Invalid calendar date.'};
+ if(h>23 || mi>59 || s>59 || (m[7]!=='Z' && (+m[9]>14 || +m[10]>59 || (+m[9]===14 && +m[10]!==0)))) return {error:'Invalid time or timezone offset.'};
+ const offset=m[7]==='Z'?0:(m[8]==='+'?1:-1)*(+m[9]*60 + +m[10]);
+ return {value:new Date(Date.UTC(y,mo-1,d,h,mi,s)-offset*60000).toISOString()};
+}
+function validateTimestamp(value) { return timestampResult(value).value || null; }
+function parseMessage(raw, revisionId=1) {
+ if(typeof raw!=='string' || !raw.trim()) throw Error('Enter a synthetic OPTASK message.');
+ if(raw.length>200000) throw Error('Message exceeds 200,000 UTF-16 code units. Shorten the message.');
+ const records=[],headers=[],issues=[];
+ let offset=0;
+ raw.split('\n').forEach((withCR,index)=>{
+  const text=withCR.endsWith('\r')?withCR.slice(0,-1):withCR;
+  const start=offset; offset+=withCR.length+1;
+  if(!text.trim())return;
+  const vals=text.split('|'),kind=vals[0],line=index+1;
+  const names=kind==='OPTASK'?['tag','id','vessel']:kind==='FREQPLAN'?['tag','id','label','frequency','unit','start','end']:['tag','id','label','start','end'];
+  let pos=start; const fields={};
+  vals.forEach((v,i)=>{fields[names[i]||'extra'+i]={value:v,sourceText:v,start:pos,end:pos+v.length,line};pos+=v.length+1;});
+  const record={kind,id:vals[1]||'',line,source:{start,end:start+text.length,text},fields,reasons:[]};
+  const bad=msg=>record.reasons.push(msg);
+  if(kind!=='OPTASK' && !TYPES[kind])bad('Unsupported record type.');
+  else if(vals.length!==names.length)bad('Incorrect field count for '+kind+'.');
+  else {
+   if(vals.some(v=>!v.trim()))bad('Required field is empty.');
+   if(!/^[A-Za-z0-9-]+$/.test(record.id))bad('Identifier must use letters, digits or hyphens.');
+   if(kind==='OPTASK')headers.push(record);
+   else {
+    if(kind==='FREQPLAN' && (!/^\d+(\.\d+)?$/.test(vals[3]) || !Number.isFinite(Number(vals[3])) || Number(vals[3])<=0 || !['MHz','kHz'].includes(vals[4])))bad('Frequency must be positive with unit MHz or kHz.');
+    const a=timestampResult(fields.start.value,'Start'),b=timestampResult(fields.end.value,'End');
+    if(a.error)bad(a.error); if(b.error)bad(b.error);
+    record.start=a.value||null;record.end=b.value||null;
+    if(a.value && b.value && a.value>=b.value)bad('Event end must be later than start.');
+   }
+  }
+  records.push(record);
+ });
+ const counts={}; records.filter(r=>TYPES[r.kind]).forEach(r=>{counts[r.id]=(counts[r.id]||0)+1;});
+ records.forEach(r=>{
+  if(TYPES[r.kind] && counts[r.id]>1)r.reasons.push('Duplicate identifier; every matching record requires review.');
+  if(r.kind==='OPTASK' && headers.length>1)r.reasons.push('Multiple OPTASK headers require review.');
+  if(r.reasons.length)issues.push({id:issues.length+1,line:r.line,code:r.kind, message:r.reasons[0],reasons:r.reasons,source:r.source,fields:r.fields,disposition:'unresolved',note:''});
+ });
+ const events=records.filter(r=>TYPES[r.kind] && !r.reasons.length).map(r=>({...r,type:TYPES[r.kind],label:r.fields.label.value,frequency:r.fields.frequency?.value||'',unit:r.fields.unit?.value||'',durationMinutes:(Date.parse(r.end)-Date.parse(r.start))/60000,derived:{type:{from:['tag'],transformation:'synthetic mapping'},start:{from:['start'],transformation:'explicit timezone to UTC'},end:{from:['end'],transformation:'explicit timezone to UTC'},duration:{from:['start','end'],transformation:'elapsed minutes'}}}));
+ return {id:revisionId,raw,grammar:GRAMMAR,offsetUnit:'UTF-16',records,headers,events,issues,review:{mapping:false,events:false,committed:false}};
+}
+function initialState(){return {version:1,draft:'',revisions:[],activeId:null,day:'2026-11-04'};}
+function active(state){return state.revisions.find(r=>r.id===state.activeId)||null;}
+function dirty(state){const r=active(state);return r ? state.draft!==r.raw : !!state.draft;}
+function parseDraft(state){const r=parseMessage(state.draft,state.revisions.length+1);state.revisions.push(r);state.activeId=r.id;return r;}
+function excludeIssue(state,id,note){const r=active(state);if(!r||dirty(state))throw Error('Parse or discard source changes before review.');if(r.review.committed)throw Error('Create a new revision to change committed review.');if(!note.trim())throw Error('Enter an exclusion reason.');const issue=r.issues.find(i=>i.id===id);if(!issue)throw Error('Issue not found.');issue.disposition='excluded';issue.note=note.trim();}
+function reviewRevision(state,mapping,events){
+ if(dirty(state))throw Error('Parse or discard source changes before review.');
+ const r=active(state);
+ if(!r || !mapping || !events || r.issues.some(i=>i.disposition!=='excluded'||!i.note.trim()))throw Error('Resolve all issues and confirm the mapping and events before review.');
+ r.review={mapping:true,events:true,committed:true};return r;
+}
+function exportGate(state){const r=active(state);if(dirty(state))return 'Source changes are unsaved. Parse or discard changes to export.';if(!r||!r.review.committed)return 'Confirm the reviewed revision before exporting.';if(r.issues.some(i=>i.disposition!=='excluded'))return 'Resolve all issues before exporting.';return '';}
+function buildDaySchedule(revision, day){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day) || !validateTimestamp(day+'T00:00:00Z'))throw Error('Choose a valid UTC day.');
+ const lo=Date.parse(day+'T00:00:00Z'),hi=lo+86400000;
+ const events=(revision?.events||[]).filter(e=>Date.parse(e.start)<hi && Date.parse(e.end)>lo).map(e=>{
+  const a=Math.max(lo,Date.parse(e.start)),b=Math.min(hi,Date.parse(e.end));
+  return {...e,dayStart:new Date(a).toISOString(),dayEnd:new Date(b).toISOString(),minutes:(b-a)/60000,left:(a-lo)/86400000*100,width:(b-a)/86400000*100,previous:Date.parse(e.start)<lo,next:Date.parse(e.end)>hi};
+ }).sort((a,b)=>a.start.localeCompare(b.start)||a.id.localeCompare(b.id));
+ const overlaps=[];
+ events.forEach((a,i)=>events.slice(i+1).forEach(b=>{const minutes=(Math.min(Date.parse(a.dayEnd),Date.parse(b.dayEnd))-Math.max(Date.parse(a.dayStart),Date.parse(b.dayStart)))/60000;if(minutes>0)overlaps.push({a:a.id,b:b.id,minutes});}));
+ return {day,events,overlaps,minutes:events.reduce((n,e)=>n+e.minutes,0)};
+}
+function csvCell(value){let s=String(value);if(/^[\s]*[=+@-]/.test(s))s="'"+s;return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function exportCsv(state){const error=exportGate(state);if(error)throw Error(error);const schedule=buildDaySchedule(active(state),state.day);return [['selected_date','event_id','event_type','label','frequency','unit','start_utc','end_utc','day_start_utc','day_end_utc','synthetic','review_status'],...schedule.events.map(e=>[state.day,e.id,e.type,e.label,e.frequency,e.unit,e.start,e.end,e.dayStart,e.dayEnd,'true','reviewed'])].map(row=>row.map(csvCell).join(',')).join('\r\n')+'\r\n';}
+function exportTraceability(state){const error=exportGate(state);if(error)throw Error(error);return JSON.stringify({synthetic:true,notice:NOTICE,grammar:GRAMMAR,selectedDay:state.day,activeRevision:state.activeId,revisions:state.revisions,schedule:buildDaySchedule(active(state),state.day),independentHumanReview:'pending'},null,2);}
+function restoreState(text){const s=JSON.parse(text);if(s.version!==1||!Array.isArray(s.revisions)||typeof s.draft!=='string'||s.draft.length>200000||typeof s.day!=='string')throw Error('Invalid stored session.');buildDaySchedule(null,s.day);
+ const ids=new Set();for(const r of s.revisions){if(!Number.isInteger(r.id)||ids.has(r.id)||typeof r.raw!=='string')throw Error('Invalid revision.');ids.add(r.id);const parsed=parseMessage(r.raw,r.id);if(JSON.stringify(parsed.events)!==JSON.stringify(r.events)||JSON.stringify(parsed.records)!==JSON.stringify(r.records)||JSON.stringify(parsed.headers)!==JSON.stringify(r.headers)||r.grammar!==parsed.grammar||r.offsetUnit!==parsed.offsetUnit||r.issues.length!==parsed.issues.length)throw Error('Stored evidence is corrupt.');r.issues.forEach((issue,i)=>{const p=parsed.issues[i];if(['id','line','code','message','reasons','source','fields'].some(key=>JSON.stringify(issue[key])!==JSON.stringify(p[key]))||!['unresolved','excluded'].includes(issue.disposition)||typeof issue.note!=='string'||(issue.disposition==='excluded'&&!issue.note.trim()))throw Error('Stored issue is corrupt.');});if(!r.review||typeof r.review.committed!=='boolean'||(r.review.committed&&(!r.review.mapping||!r.review.events||r.issues.some(i=>i.disposition!=='excluded'))))throw Error('Stored review is corrupt.');}if(s.activeId!==null&&!ids.has(s.activeId))throw Error('Missing active revision.');return s;}
+function compareBenchmark(fixtures){let expected=0,extracted=0,matched=0,fields=0,totalFields=0;const mismatches=[];
+ fixtures.cases.forEach((c,index)=>{const actual=parseMessage(c.raw).events;expected+=c.events.length;extracted+=actual.length;
+ c.events.forEach(key=>{totalFields+=key.values.length;const e=actual.find(e=>e.id===key.values[1]);const values=e?Object.values(e.fields).map(f=>f.value):[];key.values.forEach((v,i)=>{if(values[i]===v)fields++;else mismatches.push('Case '+(index+1)+' '+key.values[1]+' field '+i+' differs.');});if(e && JSON.stringify(values)===JSON.stringify(key.values)&&e.type===key.type&&e.start===key.start&&e.end===key.end)matched++;else mismatches.push('Case '+(index+1)+' '+key.values[1]+' event differs.');});actual.filter(e=>!c.events.some(k=>k.values[1]===e.id)).forEach(e=>mismatches.push('Unexpected event '+e.id));});
+ return {expected,extracted,matched,falsePositives:extracted-matched,missed:expected-matched,fields,totalFields,mismatches};
+}
+const api={TYPES,GRAMMAR,NOTICE,SAMPLE,validateTimestamp,parseMessage,initialState,active,dirty,parseDraft,excludeIssue,reviewRevision,exportGate,buildDaySchedule,exportCsv,exportTraceability,restoreState,compareBenchmark};
+if(typeof module==='object'&&module.exports)module.exports=api;else root.Optask=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script id="benchmark-data" type="application/json">{
+  "notice":"Synthetic planner-authored key. Independent human review pending; operational accuracy unverified.",
+  "cases":[
+    {"raw":"OPTASK|KEY-A|Fictional training vessel Lark\r\nFREQPLAN|KF-01|Training Bravo|310.250|MHz|2026-11-06T01:00:00-05:00|2026-11-06T07:00:00Z\r\nCRYPTO|KC-01|TRAINING-C to TRAINING-D|2026-11-06T06:30:00Z|2026-11-06T06:40:00Z\r\nFLIGHTQTRS|KQ-01|Fictional recovery drill|2026-11-06T23:45:00Z|2026-11-07T00:15:00Z", "events":[
+      {"values":["FREQPLAN","KF-01","Training Bravo","310.250","MHz","2026-11-06T01:00:00-05:00","2026-11-06T07:00:00Z"],"type":"Frequency Plan","start":"2026-11-06T06:00:00.000Z","end":"2026-11-06T07:00:00.000Z"},
+      {"values":["CRYPTO","KC-01","TRAINING-C to TRAINING-D","2026-11-06T06:30:00Z","2026-11-06T06:40:00Z"],"type":"Crypto Change-over Window","start":"2026-11-06T06:30:00.000Z","end":"2026-11-06T06:40:00.000Z"},
+      {"values":["FLIGHTQTRS","KQ-01","Fictional recovery drill","2026-11-06T23:45:00Z","2026-11-07T00:15:00Z"],"type":"Flight Quarters","start":"2026-11-06T23:45:00.000Z","end":"2026-11-07T00:15:00.000Z"}]},
+    {"raw":"OPTASK|KEY-B|Fictional training vessel NoEvents","events":[]},
+    {"raw":"NOTE fictional weather bulletin","events":[]}
+  ]
+}
+</script>
+<script>
+'use strict';
+const C=Optask, $=id=>document.getElementById(id), KEY='appyard-optask-v1';
+let state=C.initialState(),storageAvailable=true;
+try {const raw=localStorage.getItem(KEY);if(raw)state=C.restoreState(raw);}catch(e){storageAvailable=false;$('storage-status').textContent='Session only: local storage unavailable. Stored session could not be read or validated.';}
+function save(){if(!storageAvailable)return;try{localStorage.setItem(KEY,JSON.stringify(state));$('storage-status').textContent='Saved locally in this browser. No network services.';}catch(e){storageAvailable=false;$('storage-status').textContent='Session only: local storage unavailable.';}}
+function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+function text(id,value){$(id).textContent=value;}
+function gates(){const r=C.active(state),dirty=C.dirty(state),reason=C.exportGate(state);text('review-status',dirty?'Unsaved source changes. Parse to create a new revision or discard changes.':r?(r.review.committed?'Reviewed synthetic revision '+r.id+'.':'Synthetic revision '+r.id+' awaiting review.'):'No extraction yet.');$('export-csv').disabled=!!reason;$('export-json').disabled=!!reason;text('export-reason',reason||'Reviewed synthetic exports are prepared locally from revision '+r.id+'.');$('discard-draft').disabled=!r||!dirty;text('schedule-state',dirty?'Previous extraction shown; source changes are unsaved.':r?.review.committed?'Reviewed synthetic revision '+r.id+' · UTC display':'Unreviewed preview · confirm review before export.');}
+function render(){const r=C.active(state);$('source-input').value=state.draft;$('schedule-day').value=state.day;text('parse-summary',r?r.events.length+' events extracted; '+r.issues.length+' issues. Review required.':'No extraction yet.');$('mapping-reviewed').checked=!!r?.review.mapping;$('events-reviewed').checked=!!r?.review.events;$('mapping-reviewed').disabled=!!r?.review.committed;$('events-reviewed').disabled=!!r?.review.committed;
+ $('events').replaceChildren();$('issues').replaceChildren();$('evidence-inspector').hidden=true;
+ if(!r)$('events').append(el('p','Parsed events and evidence will appear here.','subtle'));
+ else {
+  if(!r.events.length)$('events').append(el('p','No valid events extracted. Review the source and any issues.','subtle'));
+  r.events.forEach(e=>{
+   const box=el('article',undefined,'event');box.append(el('h3',e.type+' · '+e.id),el('p',e.label,'subtle'));
+   Object.entries(e.fields).forEach(([name,f])=>{const row=el('div',undefined,'field');row.append(el('strong',name),el('span',f.value,'token'));const b=el('button','View source','evidence');b.id='evidence-'+e.id+'-'+name;b.setAttribute('aria-label','View '+e.id+' '+name+' source evidence');b.onclick=()=>inspect(f,r);row.append(b);box.append(row);});
+   const normalized=el('p',e.start,'subtle');normalized.id='normalized-'+e.id+'-start';box.append(el('small','Start normalized to UTC'),normalized);
+   const duration=el('p','Full interval: '+e.durationMinutes+' minutes','subtle');duration.id='duration-'+e.id;box.append(duration);$('events').append(box);
+  });
+  r.issues.forEach(issue=>{const box=el('article',undefined,'issue');const msg=el('p','Line '+issue.line+': '+issue.message);msg.id='issue-'+issue.id;box.append(msg);
+   const pre=el('pre',issue.source.text,'subtle');box.append(pre);
+   if(issue.reasons.length>1)box.append(el('p',issue.reasons.slice(1).join(' '),'subtle'));
+   const label=el('label','Reason to exclude record');label.htmlFor='issue-note-'+issue.id;const input=el('input');input.type='text';input.id=label.htmlFor;input.value=issue.note;input.disabled=r.review.committed;input.oninput=()=>{issue.draftNote=input.value;save();};if(issue.draftNote!==undefined)input.value=issue.draftNote;
+   const btn=el('button','Exclude record');btn.id='exclude-issue-'+issue.id;btn.disabled=r.review.committed;btn.onclick=()=>{try{C.excludeIssue(state,issue.id,input.value);text('review-error','');save();render();}catch(e){text('review-error',e.message);}};
+   const disposition=el('p',issue.disposition==='excluded'?'Excluded: '+issue.note:'Unresolved — correct source and reparse, or give an exclusion reason.','subtle');disposition.id='issue-disposition-'+issue.id;
+   box.append(label,input,btn,disposition);const evidence=el('button','Inspect original line','evidence');evidence.onclick=()=>inspect({sourceText:issue.source.text,...issue.source,line:issue.line},r);box.append(evidence);$('issues').append(box);
+  });
+ }
+ const history=$('revision-history');history.replaceChildren();if(!state.revisions.length)history.append(el('p','No revisions.'));state.revisions.forEach(rev=>{const detail=el('details');detail.append(el('summary','Revision '+rev.id+' · '+rev.events.length+' events · '+(rev.review.committed?'reviewed':'awaiting review')),el('pre',rev.raw));history.append(detail);});gates();renderSchedule();}
+function inspect(field,r){text('evidence-text',field.sourceText??field.text);text('evidence-range','UTF-16 ['+field.start+', '+field.end+'); line '+field.line);text('evidence-revision','Preserved revision '+r.id+' · exact original source');$('evidence-inspector').hidden=false;$('evidence-inspector').focus();}
+function hm(iso,end,day){return end && iso.slice(0,10)!==day?'24:00':iso.slice(11,16);}
+function renderSchedule(){let s;try{s=C.buildDaySchedule(C.active(state),state.day);}catch(e){text('day-error',e.message);return;}
+ text('day-summary',s.day+' UTC · '+s.events.length+' '+(s.events.length===1?'event':'events')+' · '+s.minutes+' displayed minutes');
+ $('axis').replaceChildren();for(let i=0;i<=24;i++)$('axis').append(el('span',String(i).padStart(2,'0')+':00'));
+ $('tracks').replaceChildren();Object.entries(C.TYPES).forEach(([kind,type])=>{const row=el('div',undefined,'track');row.append(el('div',type,'track-name'));const lane=el('div',undefined,'lane');const events=s.events.filter(e=>e.kind===kind);lane.style.minHeight=Math.max(48,events.length*30+12)+'px';events.forEach((e,i)=>{const bar=el('div',e.id,'bar '+kind);bar.style.left=e.left+'%';bar.style.width=e.width+'%';bar.style.top=(8+i*30)+'px';bar.title=e.id+' '+e.dayStart+' – '+e.dayEnd;bar.setAttribute('aria-label',bar.title);lane.append(bar);});row.append(lane);$('tracks').append(row);});
+ text('overlap-summary',s.overlaps.length?s.overlaps.map(o=>o.a+' and '+o.b+' overlap for '+o.minutes+' minutes.').join(' '):'No overlapping events for this day.');
+ $('schedule-list').replaceChildren();if(!s.events.length)$('schedule-list').append(el('p','No events for this day.','subtle'));
+ s.events.forEach(e=>{const row=el('article',undefined,'schedule-row');let label=e.type+' · '+e.id+' · '+e.label+(e.frequency?' · '+e.frequency+' '+e.unit:'')+' · '+hm(e.dayStart,false,s.day)+'–'+hm(e.dayEnd,true,s.day)+' UTC · '+e.minutes+' minutes'+(e.previous?' · continued from previous day':'')+(e.next?' · continues next day':'');const p=el('p',label);p.id='schedule-'+e.id;row.append(p,el('p','Full interval: '+e.start+' → '+e.end+' · '+e.durationMinutes+' minutes','schedule-detail'));$('schedule-list').append(row);});}
+$('source-input').oninput=()=>{state.draft=$('source-input').value;save();gates();text('review-error','');};
+$('load-sample').onclick=()=>{state.draft=C.SAMPLE;save();$('source-input').value=state.draft;gates();text('input-error','');$('source-input').focus();};
+$('parse').onclick=()=>{const b=$('parse');b.disabled=true;text('parse-summary','Parsing synthetic message');try{state.draft=$('source-input').value;C.parseDraft(state);text('input-error','');text('review-error','');save();render();}catch(e){text('input-error',e.message);render();}finally{b.disabled=false;}};
+$('discard-draft').onclick=()=>{const r=C.active(state);if(r){state.draft=r.raw;text('review-error','');text('input-error','');save();render();}};
+['mapping-reviewed','events-reviewed'].forEach(id=>$(id).onchange=()=>{const r=C.active(state);if(r&&!r.review.committed){r.review.mapping=$('mapping-reviewed').checked;r.review.events=$('events-reviewed').checked;save();}});
+$('commit-review').onclick=()=>{try{C.reviewRevision(state,$('mapping-reviewed').checked,$('events-reviewed').checked);text('review-error','');save();render();}catch(e){text('review-error',e.message);}};
+$('show-day').onclick=()=>{try{C.buildDaySchedule(C.active(state),$('schedule-day').value);state.day=$('schedule-day').value;text('day-error','');save();renderSchedule();}catch(e){text('day-error',e.message);}};
+function download(format){text('download-status','Preparing download');const button=$(format==='csv'?'export-csv':'export-json');button.disabled=true;try{const data=format==='csv'?C.exportCsv(state):C.exportTraceability(state);const blob=new Blob([data],{type:format==='csv'?'text/csv;charset=utf-8':'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=format==='csv'?'reviewed-schedule.csv':'extraction-review.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);text('download-status','Prepared local synthetic '+format.toUpperCase()+' export.');}catch(e){text('download-status','Download failed: '+e.message+' Retry export; reviewed data is retained.');}finally{gates();}}
+$('export-csv').onclick=()=>download('csv');$('export-json').onclick=()=>download('json');
+function resetPrompt(){ $('reset-dialog').showModal();$('cancel-reset').focus(); }
+$('reset').onclick=resetPrompt;$('stop-clear').onclick=resetPrompt;
+$('cancel-reset').onclick=()=>{$('reset-dialog').close();$('reset').focus();};$('reset-dialog').addEventListener('cancel',()=>setTimeout(()=>$('reset').focus(),0));
+$('confirm-reset').onclick=()=>{try{localStorage.removeItem(KEY);}catch(e){storageAvailable=false;}state=C.initialState();$('reset-dialog').close();['input-error','review-error','download-status','benchmark-counts','benchmark-scores','day-error'].forEach(id=>text(id,''));$('benchmark-mismatches').replaceChildren();text('storage-status',storageAvailable?'Local session cleared. No network services.':'Session only: local storage unavailable.');render();$('source-input').focus();};
+$('run-benchmark').onclick=()=>{const b=$('run-benchmark');b.disabled=true;try{const fixtures=JSON.parse($('benchmark-data').textContent),r=C.compareBenchmark(fixtures);text('benchmark-counts','Expected events: '+r.expected+'; extracted events: '+r.extracted+'; matched events: '+r.matched+'; false positives: '+r.falsePositives+'; missed events: '+r.missed+'.');const pct=(n,d)=>d?Math.round(n/d*100)+'% ('+n+'/'+d+')':'N/A (0/0)';text('benchmark-scores','Event precision: '+pct(r.matched,r.extracted)+'; recall: '+pct(r.matched,r.expected)+'; exact fields: '+pct(r.fields,r.totalFields)+'.');$('benchmark-mismatches').replaceChildren();r.mismatches.forEach(m=>$('benchmark-mismatches').append(el('p',m,'error')));if(!r.mismatches.length)$('benchmark-mismatches').append(el('p','No discrepancies in this finite synthetic key.','subtle'));}catch(e){text('benchmark-counts','Comparison failed: '+e.message);}finally{b.disabled=false;}};
+render();
+</script></body></html>

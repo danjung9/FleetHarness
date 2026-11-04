@@ -1,0 +1,11 @@
+{
+  "notice":"Synthetic planner-authored key. Independent human review pending; operational accuracy unverified.",
+  "cases":[
+    {"raw":"OPTASK|KEY-A|Fictional training vessel Lark\r\nFREQPLAN|KF-01|Training Bravo|310.250|MHz|2026-11-06T01:00:00-05:00|2026-11-06T07:00:00Z\r\nCRYPTO|KC-01|TRAINING-C to TRAINING-D|2026-11-06T06:30:00Z|2026-11-06T06:40:00Z\r\nFLIGHTQTRS|KQ-01|Fictional recovery drill|2026-11-06T23:45:00Z|2026-11-07T00:15:00Z", "events":[
+      {"values":["FREQPLAN","KF-01","Training Bravo","310.250","MHz","2026-11-06T01:00:00-05:00","2026-11-06T07:00:00Z"],"type":"Frequency Plan","start":"2026-11-06T06:00:00.000Z","end":"2026-11-06T07:00:00.000Z"},
+      {"values":["CRYPTO","KC-01","TRAINING-C to TRAINING-D","2026-11-06T06:30:00Z","2026-11-06T06:40:00Z"],"type":"Crypto Change-over Window","start":"2026-11-06T06:30:00.000Z","end":"2026-11-06T06:40:00.000Z"},
+      {"values":["FLIGHTQTRS","KQ-01","Fictional recovery drill","2026-11-06T23:45:00Z","2026-11-07T00:15:00Z"],"type":"Flight Quarters","start":"2026-11-06T23:45:00.000Z","end":"2026-11-07T00:15:00.000Z"}]},
+    {"raw":"OPTASK|KEY-B|Fictional training vessel NoEvents","events":[]},
+    {"raw":"NOTE fictional weather bulletin","events":[]}
+  ]
+}

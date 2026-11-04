@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenges 8, 10, 11, 12, 20, 32 and 35 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
+summary: "Challenges 8, 10, 11, 12, 16, 20, 32 and 35 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id16-mordecai]] records NOT. The readable simulation implements changed winners and halt but omits user-defined onboarding and continuous mismatch quarantine. The guide discloses limits; requirementsMet true covers only three reduced criteria. Retained receipts report 15 tests and ten browser executions passing. All requested screenshots and actual tests were inspected; no fresh app run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id16-mordecai]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id16-mordecai]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id32-readiness]] records NOT. The readable timing exercise does not connect targets to mission capabilities or recommend a useful first action. The app discloses its omissions; substantive tests and the retained 26-test/12-browser-pass report establish only the reduced workflow. All three requested images were inspected; no fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id32-readiness]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id32-readiness]].
 
