@@ -15,5 +15,9 @@ export default defineConfig(({ mode, command }) => ({
   }],
   base: '/',
   define: { 'import.meta.env.VITE_HOSTED': JSON.stringify('true') },
-  nitro: { serverDir: './', serverAssets: [{ baseName: 'worker', dir: './dist-worker-asset' }] },
+  nitro: {
+    ...(command === 'build' ? { preset: 'vercel' } : {}),
+    serverDir: './',
+    serverAssets: [{ baseName: 'worker', dir: './dist-worker-asset' }]
+  },
 }));

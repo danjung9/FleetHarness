@@ -1,10 +1,10 @@
 import { defineEventHandler } from 'nitro/h3';
-import { handleApi } from '../server/api.js';
-import { errorResponse } from '../server/http.js';
-import { proxyModel } from '../server/model-proxy.js';
-import { startRun, pauseRun } from '../server/build-control.js';
-import { previewUrl } from '../server/preview.js';
-import { appOrigin } from '../server/sandbox.js';
+import { handleApi } from '../../server/api.js';
+import { errorResponse } from '../../server/http.js';
+import { proxyModel } from '../../server/model-proxy.js';
+import { startRun, pauseRun } from '../../server/build-control.js';
+import { previewUrl } from '../../server/preview.js';
+import { appOrigin } from '../../server/sandbox.js';
 
 export default defineEventHandler(async ({ req }) => {
   try {

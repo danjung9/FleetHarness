@@ -17,7 +17,7 @@
   },
   "include": [
     "server",
-    "api",
+    "routes",
     "workflows",
     "vite.hosted.config.ts"
   ]
