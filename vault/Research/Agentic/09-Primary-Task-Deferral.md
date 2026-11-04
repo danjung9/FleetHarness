@@ -3,14 +3,65 @@ type: research
 status: proposed
 owner: mukul
 updated: 2026-11-04
-summary: "Group nine rejected challenges under primary-task substitution; add the missing starting-tool gate to dev-5's existing source-coverage correction."
+summary: "Round 101 adds format substitution to the shared primary-task failure; dev-5 must require independently checked examples in the requested format before build."
 ---
 
-# Primary-task deferral, round 1
+# Primary-task deferral and substitution
 
 ## Bottom line
 
-[R] Fold challenge **37** into **dev-5's existing source-linked primary-task correction**, as directed by [[Ops/Directors/Directive-agentic]]; no second builder job is proposed. Require the supplied starting tool and a testable fielding journey before building, and leave the unchanged task blocked when essential prerequisites are missing. Group **8, 10, 11, 12, 16, 20, 32, 35 and 37** under primary-task substitution: eight plans explicitly defer defining outcomes, while ID 16 omits narrative outcomes from acceptance. Challenge 37 contributes a concrete prerequisite case: documenting an absent tool and its barriers cannot satisfy delivering that tool. Preserve legitimate authority and deployment dependencies, independent judgment and the active experiment; a correct blocked result proves the guard, not challenge completion.
+[R] Extend **dev-5's existing source-linked primary-task correction** with a required-format check before generation, as directed by [[Ops/Directors/Directive-agentic]]. [E] Round 101 challenge 12 extracts all three event categories but implements an invented pipe-delimited grammar while marking the original USMTF requirement passed. [R] Require independently checked synthetic examples that preserve the requested format, with source provenance, literal expected results and a protected validation record; missing evidence leaves that requirement incomplete and blocks build. Group this with challenge 8's round-101 format substitution and the existing nine-challenge primary-task group, while retaining challenge 37's missing-tool prerequisite. This is one correction under the existing owner, not a new builder assignment or a claim that synthetic examples establish operational authority.
+
+## Current decision: round 101 challenge 12
+
+[R] **Code seat: dev-5**, reconciled by the serial integrator after shared-file release. Add this bounded format case to the canonical source-linked `syntheticCoverage` correction. Keep agentic-builder on its directed telemetry work. This section supplies the current format decision; the challenge 37 prerequisite below remains part of the same cause. Do not expand the old domain-skill backlog or hand-edit the generated app.
+
+### Evidence that changes the decision
+
+[E, retained artifacts and judge] The assigned `Research/QA/Ten/R101/id12-optask/` path is absent. The evidence is at `Research/QA/Ten/Exp1/R101/id12-optask/`, also identified by [[Research/QA/Officer/JUDGE-R101-id12-optask]]. [[Research/QA/Ten/Exp1/Round-101]] identifies the experiment as `1d9eeee` plus scratch runtime and extra patches, not an unmodified mvp run. Supplied current mvp `7a4c6cc` is a different source identity.
+
+[E, JSON read] At `2026-11-04T21:51:51.926Z`, `final.json.report` equals `test-report.json`: 31/31 Node tests, 12/12 browser executions, six passed criteria and one unverified. `UC12-1` and `DELIVERABLE12-1` are passed; only independent human review `MSG-04` is unverified. Thus `quality.status` is passed and `requirementsMet` remains false. This is recorded execution, not a new run. Unlike round 1, the primary outcomes are no longer explicitly deferred.
+
+[E, matching contract and source] `acceptance-plan.json` calls the USMTF requirement implemented but specifies fictional pipe-delimited input. `core.cjs:25-35` splits lines on pipes and recognizes the invented record tags. `benchmark-fixtures.json` and the answer-key journey exercise that grammar. The Markdown reading copies locate the first substitution in intake (`scope.md:19,33-35`), then freeze it in planning (`plan.md:25,56`); `README.md:144` acknowledges the missing actual parser. These notes support the stage diagnosis, while the matching contract and code establish the defect independently of their normalized text.
+
+[E, manifest check] All 44 manifest files exist; 37 hashes match. Seven Markdown copies differ: `README.md`, `path-to-fleet.md`, `plan.md`, `research.md`, `scope.md`, `test-matrix.md` and `verification.md`. The manifest explains normalized vault Markdown and a separate frozen output. This review did not inspect that external copy. Matching requirements, contract, code, fixture data and report support this finding; full copied-packet identity is not claimed.
+
+[E, source read] The inspected dev-5 checkout at `7b44f18` tells intake, planning and evidence to invent a labeled grammar when a specification is absent and not treat that absence as a blocker. Its inspected parser has no `syntheticCoverage` field. Integration `f662d81` has the prefix-only variant. Separately, [[Research/QA/Ten-Benchmark-Audit]] reports the working source-linked check rejecting the enum-only baseline at 16:47. These are distinct observations; presence of the canonical correction in either inspected checkout or the experiment's exact prepared source is not established here. The generic message skill at pinned `1d9eeee` supplies EVENT/TASK grammar and a mapping suggestion, not independently checked USMTF examples.
+
+[R] Correct the acceptance meaning: synthetic values must preserve a required input language and its supported structure. An invented grammar, even with the right category names and a disclaimer, cannot satisfy that language requirement. A separately authored key for the invented grammar can check implementation consistency but cannot validate the original task. Format evidence and final human review are separate dependencies; leaving MSG-04 unverified does not justify passing UC12-1.
+
+### Exact implementation files
+
+[R] Use the existing planning/evidence skills as the acceptance guidance. No separate acceptance skill or new schema family is needed. These eleven existing paths were checked in integration `f662d81`; rebase the change onto the canonical correction under one writer.
+
+| Exact repository path | Bounded change [R] |
+| --- | --- |
+| `skills/fleet-intake/SKILL.md` | Preserve named input/output formats as defining obligations. Replace the blanket instruction that missing specifications never block with a distinction between synthetic values and substituted structure. Identify missing format evidence before building; do not reinterpret it as an approved scope reduction. |
+| `skills/fleet-planning/SKILL.md` | Before generation, require independent validation of format-conforming synthetic examples and literal expected outputs for every defining format obligation, including items labeled implemented. Bind source criterion, format/version or supported subset, evidence source, fixture identity and primary journey. No planner self-assertion can close this check. |
+| `skills/fleet-evidence/SKILL.md` | Compare the original requirement with the actual format and independently checked expectations. An implemented label, passing invented-format tests, disclaimer or absence of primary deferrals is insufficient. Keep format gaps visible in completion accounting and require a new versioned plan when the frozen one substitutes the task. |
+| `skills/fleet-messages/SKILL.md` | Require challenge 12 examples in the requested format, covering all three event types and a mixed message. Generic EVENT/TASK or pipe-delimited examples remain toolkit demonstrations unless separately established as the requested format. Preserve offsets, review, malformed-input and time-boundary checks. Never invent a format specification or real message data. |
+| `harness/quality-contract.ts`, `shared/quality.ts` | Extend the canonical source-linked coverage representation with format evidence references for relevant criteria, regardless of disposition. Update both parser and generated contract guidance. Preserve original wording and reject missing, mismatched or merely relabeled coverage. Retain the enum-only regression and legitimate external dependencies. Structural parsing alone cannot decide semantic format conformance. |
+| `electron/quality.ts` | At existing `loadQualityContract`, resolve references against evaluator-controlled validation records bound to source, format evidence, fixture and expected-result digests. Reject missing, stale, negative or builder-supplied validation before build. Include those identities in contract integrity and recheck before final verification; a legacy contract without this proof cannot gain primary-format completion from browser results. Use existing failure handling, containment and resume checks. |
+| `tests/harness-quality.test.ts`, `tests/quality.test.mjs`, `tests/pi-backend.test.mjs` | Add the failing-first cases below in the existing suites. Prove format substitution is rejected even with implemented primary rows, genuine external deferrals remain visible, validation cannot be forged through candidate files, and failed preflight starts no build or repair. Preserve the original lifecycle assertions. |
+| `scripts/quality-fixture.mjs` | Update affected lifecycle fixture contracts to the canonical schema and explicit test-only validation records. Preserve cancel, resume, failure and review assertions; fixture stubs must not become a production acceptance bypass. |
+
+### Minimum evidence and closure
+
+[R] The independent record must identify the unchanged source obligation, requested format and supported subset/version, a permitted public reference or independently checked synthetic specification with its validation limits, example bytes, literal expected fields/events and review status. Freeze public calibration cases before generation; keep additional evaluator cases and their answers outside builder access. The validator must check both grammar fidelity and expected results independently of the proposed parser. An opaque digest or a second generator repeating the first one's invented rules is insufficient. No authoritative format reference or validated USMTF example was established by this diagnosis.
+
+[R] If the requested format cannot be established from permitted evidence, retain an unmet-format prerequisite and stop before build through the existing error route. Do not spend implementation repair on making the easier grammar pass. Missing operational access or final human approval can remain separately deferred where synthetic testing is valid; neither can excuse changing the required syntax. A blocked result proves the guard only. It earns no satisfactory challenge verdict.
+
+| Failing-first case | Required result after the change [R] |
+| --- | --- |
+| Retained R101 ID 12 plan, all three event categories and primary rows marked implemented | Reject before build: the invented grammar has no independent evidence satisfying the requested format. Preserve its real 31/31 and 12/12 history. |
+| Same plan with different IDs, renamed grammar, a human-authority deferral or a forged local validation record | Still reject using source-linked obligations and protected validation identity, not an ID list, keyword or allowed enum. |
+| Valid independently checked synthetic examples in the requested format | Permit the structurally complete plan without treating this as final app acceptance; verify each type, mixed input, changed values, non-events, invalid input and cross-midnight expected results on the actual generated app. Do not label an invented positive fixture USMTF. |
+| Missing evidence, negative review, changed fixture/key/source or stale validation on resume | Reject before build or invalidate final verification as applicable; no build, success transition or repair for an unmet prerequisite. |
+| Generic-format application returns all expected labels but cannot consume evaluator examples | Independent acceptance fails UC12-1 and the deliverable, even if generated tests pass. Inspect full exported records and source spans, not only label substrings. |
+| Genuine final human review pending after format evidence is established | Preserve MSG-04 as unverified and requirementsMet false; no fabricated approval or operational-validity claim. |
+
+[R] Dev-5 supplies exact failing-before/passing-after receipts through the existing development pattern. Main owns any authorized regeneration, with independent judgment on frozen output. Preserve checkpoint/resume, hosted requested-demo scope, Windows checks, sandboxed verification, bounded repairs and final-byte human review. No frontend change, new benchmark launch, external message or production action is proposed by this diagnosis.
+
 
 ## Current decision and exact files for challenge 37
 
