@@ -6,6 +6,7 @@ import path from 'node:path';
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed } from '../dist-electron/electron/verification.js';
+import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 const resourcesRoot = path.resolve('.');
 const never = () => new Promise(() => {});
@@ -19,13 +20,14 @@ async function artifacts(cwd, stage, broken = false) {
   const files = stage === 'intake' ? { 'scope.md': 'Synthetic scope' }
     : stage === 'research' ? { 'research.md': 'Local fixture research' }
     : stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
-    : stage === 'build' ? { 'index.html': '<!doctype html><title>Task parser</title><main>Local workflow fixture</main>',
+    : stage === 'build' ? { 'index.html': qualityFixtureHtml,
       'path-to-fleet.md': 'Domain review required',
       'core.cjs': broken ? 'exports.parse = () => "defect";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;',
       'app.test.cjs': 'const test = require("node:test"), assert = require("node:assert/strict"), {parse} = require("./core.cjs"); test("extract task", () => assert.equal(parse("TASK: inspect pump"), "inspect pump")); test("empty input", () => assert.equal(parse(""), null));' }
-    : stage === 'guide' ? { 'README.md': '# Task parser\n\nOpen index.html in a browser to see the local workflow fixture. No installation is required. This fixture displays a static page; it has no input controls or persistence.\n\nFor developers: install Node and run `node --test app.test.cjs`. The core parses `TASK: inspect pump` into `inspect pump` and returns null for empty input.\n\nSee [verification notes](verification.md) and [field validation](path-to-fleet.md).' }
+    : stage === 'guide' ? { 'README.md': '# Task parser\n\nOpen index.html in a browser. No installation is required. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input shows Enter a message; replace it with a task to recover.\n\nFor developers: install Node and run `node --test app.test.cjs`. The core parses `TASK: inspect pump` into `inspect pump` and returns null for empty input.\n\nSee [verification notes](verification.md) and [field validation](path-to-fleet.md).' }
     : stage === 'repair' ? { 'core.cjs': broken ? 'exports.parse = () => "still broken";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'verification.md': 'Repair completed; domain review still required' }
     : { 'verification.md': 'Task extraction and empty input are tested; domain review required' };
+  if (stage === 'plan') Object.assign(files, qualityFixture(JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
   for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(cwd, name), content);
 }
 
@@ -36,7 +38,7 @@ async function harness(t, options = {}) {
   const project = store.state.projects[0], sessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
-    verificationLimits: options.verificationLimits,
+    verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
@@ -77,14 +79,36 @@ async function harness(t, options = {}) {
   return { root, store, project, backend, sessions, snapshots, run, settle, assertSettled };
 }
 
+test('builds accept optional criteria and hand resources and links to agents', { timeout: 10000 }, async t => {
+  const h = await harness(t);
+  h.project.criteria = [];
+  h.project.resources = 'Synthetic task messages and a blank report template.';
+  h.project.links = ['https://example.com/reference'];
+  await h.run(); await h.assertSettled('review');
+  const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
+  assert.match(requirements, /No evaluation criteria supplied/);
+  assert.ok(requirements.includes(h.project.resources));
+  assert.ok(requirements.includes(h.project.links[0]));
+  const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
+  assert.deepEqual(packet.userScope.criteria, []);
+  assert.equal(packet.userScope.resources, h.project.resources);
+  assert.deepEqual(packet.userScope.links, h.project.links);
+  assert.equal(reportPassed(h.project.report), true);
+});
+
 test('the complete workflow advances in order and persists real test evidence before human review', { timeout: 10000 }, async t => {
   const h = await harness(t); await h.run(); await h.assertSettled('review');
-  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
   for (const id of ['intake', 'research', 'plan', 'build', 'verify']) {
     const changes = h.snapshots.map(p => p.stages.find(s => s.id === id).status).filter((s, i, all) => !i || s !== all[i - 1]);
     assert.deepEqual(changes, ['queued', 'active', 'complete'], id);
   }
   assert.equal(reportPassed(h.project.report), true); assert.equal(h.project.report.passed, 2);
+  assert.equal(h.project.qualityVersion, 1);
+  assert.equal(h.project.report.quality.status, 'passed');
+  assert.equal(h.project.report.quality.journeys.length, 4);
+  assert.equal(h.project.report.quality.requirementsMet, false);
+  assert.ok(h.project.report.quality.criteria.some(criterion => criterion.status === 'unverified'));
   assert.equal(h.project.report.sourceHash, await sourceHash(h.project.workspace));
   assert.deepEqual(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')), h.project.report);
   assert.equal(h.project.stages.find(s => s.id === 'review').status, 'review');
@@ -104,6 +128,55 @@ test('the complete workflow advances in order and persists real test evidence be
     assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools].sort());
     assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
   }
+});
+
+for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: 30000 }, async t => {
+  const h = await harness(t, { verificationLimits: { browserStepTimeoutMs: 1000 }, scenario: async ({ cwd, stage }) => {
+    if (stage === 'build') {
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main>');
+      return true;
+    }
+    if (stage === 'repair' && repair) await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
+    return false;
+  } });
+  await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
+  assert.equal(h.project.report.passed, 2);
+  assert.equal(h.project.report.failed, 0);
+  assert.equal(reportPassed(h.project.report, true), repair);
+  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
+  assert.equal(h.project.report.quality.status, repair ? 'passed' : 'failed');
+  assert.ok(h.project.logs.some(log => log.text.includes('Browser journeys: 0/4 passed')));
+});
+
+test('builder cannot weaken a planned browser expectation', { timeout: 10000 }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (stage !== 'build') return false;
+    await artifacts(cwd, stage);
+    const file = path.join(cwd, 'acceptance-plan.json');
+    const plan = JSON.parse(await fs.readFile(file, 'utf8'));
+    plan.journeys[0].steps[2].text = 'incorrect result';
+    await fs.writeFile(file, JSON.stringify(plan));
+    return true;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /changed after planning/);
+  assert.equal(h.project.report, undefined);
+  assert.ok(!h.sessions.some(session => session.stage === 'verify'));
+});
+
+test('invalid acceptance coverage gets one planning completion attempt before build is blocked', { timeout: 10000 }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (stage !== 'plan') return false;
+    await artifacts(cwd, stage);
+    const file = path.join(cwd, 'acceptance-plan.json');
+    const plan = JSON.parse(await fs.readFile(file, 'utf8')); plan.criteria.pop();
+    await fs.writeFile(file, JSON.stringify(plan)); return true;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 2);
+  assert.match(h.project.error, /quality contract/);
+  assert.ok(!h.sessions.some(session => session.stage === 'build'));
 });
 
 for (const brokenRepair of [false, true]) {

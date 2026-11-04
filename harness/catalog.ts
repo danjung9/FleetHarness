@@ -1,4 +1,8 @@
 import type { Challenge, RecipeId } from './types.js';
+import { catalogFromNorfolk, fetchNorfolkSnapshot, type NorfolkCatalog } from './norfolk.js';
+import { norfolkSnapshot } from './norfolk-snapshot.js';
+import type { NewProject } from '../shared/types.js';
+import { normalizeProjectInput } from '../shared/project-input.js';
 
 const base = 'https://cdao.hackathon.maximus.com/event/norfolk/use-cases';
 const enterprise = 'The Autonomous Shipboard Enterprise';
@@ -16,9 +20,9 @@ function challenge(id: number, title: string, category: string | null, recipe: R
 }
 
 // Titles, IDs and categories were read from the authenticated event page. Summaries
-// and requirements are paraphrases; recipe selection is FleetHarness's interpretation.
+// and requirements are paraphrases; recipe selection is AppYard's interpretation.
 // null means the source card did not display a category, not "Open Innovation".
-export const challenges: Challenge[] = [
+const routingCatalog: Challenge[] = [
   challenge(40, 'ANCHOR: Authoritative Naval Communications Hub for Official Records', null, 'workflow',
     'Give official messages one searchable, integrity-checked home with subscriptions, acknowledgement and revision status.',
     ['Preserve message release authority and CAC/PKI access.', 'Track amendments, cancellations, expiry and supersession.', 'Support intermittent connectivity and EMCON.'],
@@ -157,13 +161,25 @@ export const challenges: Challenge[] = [
     ['Synthetic record sizes, priorities and link traces', 'Approved prioritization policy'], [36, 44])
 ];
 
-export function getChallenge(id: string): Challenge {
-  const found = challenges.find(c => c.id === id);
+export const challenges = catalogFromNorfolk(norfolkSnapshot, routingCatalog);
+export const bundledNorfolkCatalog: NorfolkCatalog = { fetchedAt: norfolkSnapshot.fetchedAt, challenges };
+
+export async function refreshNorfolkCatalog(fetcher: typeof fetch = fetch): Promise<NorfolkCatalog> {
+  const snapshot = await fetchNorfolkSnapshot(fetcher);
+  const updated = catalogFromNorfolk(snapshot, routingCatalog);
+  for (const challenge of updated) normalizeProjectInput(toProjectInput(challenge.id, updated));
+  return { fetchedAt: snapshot.fetchedAt, challenges: updated };
+}
+
+export function getChallenge(id: string, catalog: readonly Challenge[] = challenges): Challenge {
+  const found = catalog.find(c => c.id === id);
   if (!found) throw new Error(`Unknown Norfolk challenge: ${id}`);
   return structuredClone(found);
 }
 
-export function toProjectInput(id: string) {
-  const c = getChallenge(id);
-  return { title: c.title.slice(0, 120), description: `${c.summary}\n\nSource: ${c.sourceUrl}\nData required: ${c.dataNeeds.join('; ')}.\nSynthetic prototype; operational validation remains separate.`, criteria: c.requirements, challengeId: c.id };
+export function toProjectInput(id: string, catalog: readonly Challenge[] = challenges): NewProject {
+  const c = getChallenge(id, catalog);
+  const description = [c.description, c.requirements.length ? 'Requirements\n' + c.requirements.join('\n') : '',
+    c.expectedDeliverables ? 'Expected deliverables\n' + c.expectedDeliverables : '', `Source: ${c.sourceUrl}`].filter(Boolean).join('\n\n');
+  return { title: c.title.slice(0, 120), description, criteria: c.evaluationCriteria ?? [], resources: c.resources ?? '', links: c.links ?? [c.sourceUrl], challengeId: c.id };
 }

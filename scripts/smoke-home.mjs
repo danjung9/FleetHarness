@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
+import { challenges } from '../dist-electron/harness/catalog.js';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-home-'));
 const output = path.resolve('output/playwright/home');
@@ -13,20 +14,26 @@ try {
   const page = await app.firstWindow();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.getByRole('heading', { name: 'Your workspace' }).waitFor();
+  await page.getByRole('heading', { name: 'AppYard', exact: true }).waitFor();
   await page.evaluate(() => document.fonts.ready);
   assert.equal(await page.getByRole('navigation', { name: 'Primary', exact: true }).isVisible(), true);
-  assert.equal(await page.locator('.home-results').textContent(), '34 challenges to make a difference');
+  assert.equal(await page.locator('.home-example').count(), 3);
+  assert.equal(await page.locator('.home-mark svg').isVisible(), true);
+  const centered = await page.evaluate(() => {
+    const main = document.querySelector('.home-main').getBoundingClientRect();
+    return ['.home-heading h1', '.home-mark'].every(selector => {
+      const box = document.querySelector(selector).getBoundingClientRect();
+      return Math.abs(box.x + box.width / 2 - main.x - main.width / 2) < 2;
+    });
+  });
+  assert.equal(centered, true);
   await page.screenshot({ path: path.join(output, 'home-desktop.png'), scale: 'css' });
-  await page.getByLabel('Search challenges', { exact: true }).fill('not-a-real-challenge-zzz');
-  await page.getByRole('heading', { name: 'No matching challenges' }).waitFor();
-  await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
-  await page.getByRole('button', { name: 'Scheduling', exact: true }).click();
-  assert.equal(await page.locator('.home-card').count(), 1);
-  await page.getByLabel('More categories', { exact: true }).selectOption('cyber');
-  assert.ok(await page.locator('.home-card').count() > 0);
-  assert.match(await page.locator('.home-results').textContent(), /Cyber resilience/);
-  await page.getByRole('button', { name: 'All challenges', exact: true }).click();
+  await page.getByRole('region', { name: 'Home workspace', exact: true }).getByRole('button', { name: 'New challenge', exact: true }).click();
+  await page.getByRole('button', { name: `Norfolk catalog · ${challenges.length}`, exact: true }).click();
+  assert.equal(await page.locator('.catalog-results>button').count(), challenges.length);
+  await page.getByPlaceholder('Search title, category, or challenge ID').fill('Paperless');
+  assert.equal(await page.locator('.catalog-results>button').count(), 1);
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
   await page.getByRole('button', { name: 'Start a brief: Paperless Underway', exact: true }).click();
   assert.equal(await page.getByLabel('Challenge title', { exact: true }).inputValue(), 'Paperless Underway');
   assert.match(await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?').inputValue(), /offline/i);
@@ -38,18 +45,29 @@ try {
   await page.screenshot({ path: path.join(output, 'flow-desktop.png'), scale: 'css' });
   await page.getByRole('button', { name: 'Home — challenge portfolio', exact: true }).click();
   await page.getByRole('button', { name: 'My builds 4', exact: true }).click();
+  await page.getByLabel('Search your builds', { exact: true }).fill('not-a-real-build-zzz');
+  await page.getByRole('heading', { name: 'No builds match that search' }).waitFor();
+  await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+  assert.equal(await page.locator('.home-build-list>button').count(), 4);
+  await page.getByRole('button', { name: 'Back to home', exact: true }).click();
+  assert.equal(await page.locator('.home-example').count(), 3);
+  await page.getByRole('button', { name: 'My builds 4', exact: true }).click();
   await page.getByLabel('Search your builds', { exact: true }).fill('Paperless');
   assert.equal(await page.locator('.home-build-list>button').count(), 1);
   await page.locator('.home-build-list>button').click();
   assert.equal(await page.locator('.run-title h1').textContent(), 'Paperless Underway');
   await page.reload();
-  await page.getByRole('heading', { name: 'Your workspace' }).waitFor();
+  await page.getByRole('heading', { name: 'AppYard', exact: true }).waitFor();
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects.length, 4);
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
   await page.screenshot({ path: path.join(output, 'home-minimum.png'), scale: 'css' });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  assert.equal(await page.evaluate(() => {
+    const main = document.querySelector('.home-main');
+    return main.scrollHeight > main.clientHeight;
+  }), false);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, homepageDefault: true, searchAndFilters: true, catalogBriefToBuild: true, resumeBuild: true, persistence: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, centeredBrand: true, threeExamples: true, fullCatalogAccess: true, catalogBriefToBuild: true, resumeBuild: true, persistence: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close();
   await fs.rm(root, { recursive: true, force: true });

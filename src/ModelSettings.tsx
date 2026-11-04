@@ -35,6 +35,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
       updated(await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined)); setKey('');
     }, 'Model settings saved.');
   }}>
+    {!desktop && <div className="desktop-setup-notice"><h3>Builds run in the desktop app</h3><p>This browser preview lets you explore AppYard and save briefs. To run a build, open the AppYard desktop app, add your brief, then connect a model in Settings.</p><p>Briefs saved here stay in this browser; they do not sync to the desktop app.</p></div>}
     <fieldset className="engine-selector" disabled={disabled || connecting}>
       <legend>Build engine</legend>
       <div className="engine-options">
@@ -54,12 +55,12 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
       {account?.error && <p className="connection-error" role="alert">{account.error}</p>}
       <div className="connection-actions">
         {connecting ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.cancelChatGPTLogin()))}>Cancel sign-in</button>
-          : connected ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'ChatGPT signed out of FleetHarness.')}>Sign out</button>
+          : connected ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'ChatGPT signed out of AppYard.')}>Sign out</button>
           : <button className="button primary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT()))}>Continue with ChatGPT <ArrowRight size={16}/></button>}
         {!connecting && <button className="button secondary" type="button" disabled={busy || !desktop} onClick={() => void action(async () => updated(await api.refreshChatGPT()))}><RefreshCw size={14}/>Refresh connection</button>}
       </div>
       {connected && <div className="subscription-usage">{account.limits?.length ? account.limits.map((limit, i) => <div key={i}><span>{limit.label}</span><strong>{Math.round(limit.usedPercent)}% used</strong>{limit.resetsAt && <small>Resets {new Date(limit.resetsAt * 1000).toLocaleString()}</small>}</div>) : <p>Usage details are currently unavailable.</p>}</div>}
-      <p className="connection-note">Sign-in opens OpenAI in your browser. FleetHarness keeps its Codex login locally, separate from your other Codex apps. No API key is needed.</p>
+      <p className="connection-note">Sign-in opens OpenAI in your browser. AppYard keeps its Codex login locally, separate from your other Codex apps. No API key is needed.</p>
     </div> : <>
       <label>Provider<select aria-label="Provider" value={provider} disabled={disabled} onChange={e => { setProvider(e.target.value); setModel(''); }}><option value="">Select a provider</option>{providers.map(p => <option key={p} value={p}>{p}{allModels.find(m => m.provider === p)?.configured ? ' · connected' : ''}</option>)}</select></label>
       <label>API key <span className="field-hint">Leave blank to use existing Pi credentials.</span><input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>
@@ -68,7 +69,6 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
     <label>Model<select aria-label="Model" value={backend === 'codex' && !connected ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !connected)} onChange={e => setModel(e.target.value)}><option value="" disabled>{backend === 'codex' && !connected ? 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
     {backend === 'codex' && connected && <p className="connection-note">Model access depends on your plan and workspace.</p>}
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
-    {!desktop && <p className="connection-note">Open the FleetHarness desktop app to connect an account and run agents.</p>}
     <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !connected)} type="submit">Save model settings <ArrowRight size={16}/></button>
   </form>;
 }

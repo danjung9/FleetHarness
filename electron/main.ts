@@ -10,14 +10,20 @@ import { reportPassed } from './verification.js';
 import { PreviewServers } from './preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
+import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
+import { exportVerifiedBundle } from './source-export.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-if (process.env.FLEET_USER_DATA) app.setPath('userData', path.resolve(process.env.FLEET_USER_DATA));
+// Preserve existing workspaces and credentials when the display name changes.
+app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
+app.setName('AppYard');
 let window: BrowserWindow | null = null;
 let store: Store, backend: FleetBackend, codex: CodexAccount;
 const previews = new PreviewServers();
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Set<string>();
+let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
+const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenges;
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
 const notify = () => {
   if (emitTimer) return;
@@ -49,17 +55,30 @@ async function readArtifact(id: string, file: string) {
 }
 async function assertVerified(id: string) {
   const p = requireIdle(id);
-  if (!p.workspace || !reportPassed(p.report)) throw new Error('Passing automated tests are required before delivery.');
+  if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
   if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before approving or exporting.');
   return p;
 }
 function registerIPC() {
   handle('fleet:bootstrap', bootstrap);
+  handle('fleet:norfolk:refresh', () => {
+    if (!norfolkRefresh) norfolkRefresh = (async () => {
+      const catalog = await refreshNorfolkCatalog();
+      const previous = store.state.norfolkCatalog;
+      store.state.norfolkCatalog = catalog;
+      try { await store.save(); } catch (error) { store.state.norfolkCatalog = previous; throw error; }
+      notify(); return catalog;
+    })().finally(() => { norfolkRefresh = undefined; });
+    return norfolkRefresh;
+  });
   handle('fleet:create', async (input: NewProject) => {
-    const p = newProject(input); store.state.projects.unshift(p); await store.save(); notify(); return p;
+    const p = newProject(input, currentCatalog()); store.state.projects.unshift(p); await store.save(); notify(); return p;
   });
   handle('fleet:update', async (id: string, input: NewProject) => {
-    const p = requireIdle(id); Object.assign(p, validateInput(input));
+    const p = requireIdle(id);
+    const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
+    const normalized = validateInput(input, catalog);
+    Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
     p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
@@ -89,28 +108,43 @@ function registerIPC() {
     await store.save(); notify();
   });
   handle('fleet:export', async (id: string) => {
-    const p = await assertVerified(id);
-    if (!p.approvedAt) throw new Error('Review and approve this prototype before export.');
-    const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
-    if (result.canceled) return null;
-    const parent = await fs.realpath(result.filePaths[0]);
-    if (parent === p.workspace || parent.startsWith(p.workspace! + path.sep)) throw new Error('Choose a folder outside the agent workspace.');
-    const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'challenge';
-    const destination = await fs.mkdtemp(path.join(parent, 'FleetHarness-' + slug + '-'));
-    for (const file of await listArtifacts(p.workspace!)) {
-      const source = await safeFile(p.workspace!, file.path);
-      await fs.mkdir(path.dirname(path.join(destination, file.path)), { recursive: true });
-      await fs.copyFile(source, path.join(destination, file.path));
-    }
-    await fs.writeFile(path.join(destination, 'DELIVERY.md'), [
-      '# ' + p.title, '', 'Open index.html in a browser to run the application.', '',
-      'Tests: install Node.js 22.19 or newer, then run: ' + p.report!.command, '',
-      'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
-      'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
-      'Generated by ' + (p.backend === 'codex' ? 'Codex' : 'Pi') + ' using ' + p.model + '. Run ' + p.runId
-    ].join('\n'));
-    p.exportedTo = destination; p.status = 'delivered'; p.stages.find(s => s.id === 'deliver')!.status = 'complete';
-    await store.save(); notify(); shell.showItemInFolder(destination); return destination;
+    const project = requireIdle(id), p = structuredClone(project), controller = new AbortController();
+    let finish!: () => void;
+    const done = new Promise<void>(resolve => { finish = resolve; });
+    deliveries.set(id, { controller, done });
+    let destination: string | undefined, committed = false;
+    try {
+      if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this prototype before export.');
+      if (!p.workspace || !reportPassed(p.report, p.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
+      if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before exporting.');
+      controller.signal.throwIfAborted();
+      const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
+      if (result.canceled) return null;
+      controller.signal.throwIfAborted();
+      destination = await exportVerifiedBundle({ workspace: p.workspace, parent: result.filePaths[0], title: p.title,
+        verifiedHash: p.report!.sourceHash, deliveryMarkdown: [
+          '# ' + p.title, '', 'Open index.html in a browser to run the application.', '',
+          'Tests: install Node.js 22.19 or newer, then run: ' + p.report!.command, '',
+          'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
+          ...(p.report!.quality ? [
+            'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
+            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have planned browser evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
+            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
+          ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
+          'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
+          'Generated by ' + (p.backend === 'codex' ? 'Codex' : 'Pi') + ' using ' + p.model + '. Run ' + p.runId
+        ].join('\n') }, controller.signal);
+      project.exportedTo = destination; project.status = 'delivered'; project.stages.find(s => s.id === 'deliver')!.status = 'complete';
+      await store.save(); committed = true;
+      notify(); shell.showItemInFolder(destination); return destination;
+    } catch (error) {
+      if (!committed) {
+        project.exportedTo = p.exportedTo; project.status = p.status;
+        project.stages.find(s => s.id === 'deliver')!.status = p.stages.find(s => s.id === 'deliver')!.status;
+        if (destination) await fs.rm(destination, { recursive: true, force: true });
+      }
+      throw error;
+    } finally { deliveries.delete(id); finish(); }
   });
   handle('fleet:download-executable', async (id: string) => {
     const p = requireIdle(id), controller = new AbortController();
@@ -183,7 +217,7 @@ function registerIPC() {
 }
 function createWindow() {
   window = new BrowserWindow({
-    width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'FleetHarness',
+    width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'AppYard',
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
     webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false }
   });
@@ -210,12 +244,12 @@ app.whenReady().then(async () => {
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.error('Saved credential could not be loaded. Reconnect in Model settings.'); }
     registerIPC();
     Menu.setApplicationMenu(Menu.buildFromTemplate([
-      { label: 'FleetHarness', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'quit' }] },
+      { label: 'AppYard', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'quit' }] },
       { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' }
     ]));
     createWindow();
     app.on('activate', () => { if (!window) createWindow(); });
-  } catch (error) { dialog.showErrorBox('FleetHarness could not start', String(error)); app.quit(); }
+  } catch (error) { dialog.showErrorBox('AppYard could not start', String(error)); app.quit(); }
 });
 let quitting = false;
 app.on('before-quit', event => {

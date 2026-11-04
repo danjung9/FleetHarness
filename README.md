@@ -1,14 +1,14 @@
-# FleetHarness
+# AppYard
 
 **An AI-powered software factory for turning operational challenges into working, testable software.**
 
 ## Desktop application
 
-FleetHarness has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
+AppYard has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
 
-The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 34-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
+The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
-**Apple Silicon build:** open release/mac-arm64/FleetHarness.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
+**Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
@@ -16,11 +16,11 @@ Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challe
 
 ## Overview
 
-FleetHarness is a project for the **Norfolk FleetHacker hackathon**. Its goal is to systematically build solutions for the **34 published use cases**, spanning naval operations, readiness, maintenance, cybersecurity, document processing, scheduling, and decision support.
+AppYard is a project for the **Norfolk FleetHacker hackathon**. Its goal is to systematically build solutions for the **39 published use cases**, spanning naval operations, readiness, maintenance, cybersecurity, document processing, scheduling, and decision support.
 
-Instead of building 34 disconnected demos by hand—or forcing every problem into one generic AI agent—we want a repeatable process that takes a challenge from **problem statement to running application**.
+Instead of building 39 disconnected demos by hand—or forcing every problem into one generic AI agent—we want a repeatable process that takes a challenge from **problem statement to running application**.
 
-FleetHarness is primarily a **software development system**, not a common runtime that every resulting app must use. Each solution can have its own architecture, tools, and deployment model, while reusing components when that genuinely helps.
+AppYard is primarily a **software development system**, not a common runtime that every resulting app must use. Each solution can have its own architecture, tools, and deployment model, while reusing components when that genuinely helps.
 
 ## The Problem
 
@@ -98,10 +98,10 @@ For each supported challenge, the desired output is:
 - Automated tests and a reproducible end-to-end demonstration.
 - A short report describing what works, what failed, and what remains unverified.
 
-A dashboard may track progress across all 34 use cases, but **the number of generated repositories is not the measure of success**. The real measure is how many distinct challenges can be solved correctly, reproducibly, and with minimal unnecessary human effort.
+A dashboard may track progress across all 39 use cases, but **the number of generated repositories is not the measure of success**. The real measure is how many distinct challenges can be solved correctly, reproducibly, and with minimal unnecessary human effort.
 
 ## Success Criteria
 
-FleetHarness succeeds if it demonstrates that the same development process can repeatedly turn different FleetHacker challenge descriptions into **functional, verifiable applications**, while reducing engineering effort and preserving the domain-specific rigor each problem requires.
+AppYard succeeds if it demonstrates that the same development process can repeatedly turn different FleetHacker challenge descriptions into **functional, verifiable applications**, while reducing engineering effort and preserving the domain-specific rigor each problem requires.
 
 **Long-term vision:** a reusable system for rapidly translating operational needs into field-testable software—not simply a hackathon demo generator.

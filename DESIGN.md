@@ -1,5 +1,5 @@
 ---
-name: FleetHarness
+name: AppYard
 description: An inspectable desktop software factory with navy navigation and cool white work surfaces.
 colors:
   ink: "#003b4f"
@@ -133,13 +133,13 @@ components:
     height: "104px"
 ---
 
-# Design System: FleetHarness
+# Design System: AppYard
 
 ## Overview
 
 **Creative North Star: "Inspectable software factory"**
 
-FleetHarness is a dense, practical desktop workspace. A deep navy navigation rail frames cool white surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; gold marks attention and selection without replacing the navy action hierarchy.
+AppYard is a dense, practical desktop workspace. A deep navy navigation rail frames cool white surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; gold marks attention and selection without replacing the navy action hierarchy.
 
 The interface makes agent work inspectable. DM Serif Display establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.
 
@@ -229,7 +229,7 @@ Work surfaces are flat and separated by cool tonal changes and thin borders. Sha
 
 Large work sheets and list surfaces have square corners. Graph stages have a slight curve, ordinary fields and icon controls a small curve, and primary/secondary buttons a slightly softer curve. Project selection and dialogs use the larger recorded radii; status badges are pills. These distinctions are deliberate parts of the incumbent hierarchy, not one universal card radius.
 
-Borders are generally (1px). SVG icons provide consistent line-based symbols; the FleetHarness mark is a custom SVG. A circular state icon inside a rectangular graph stage connects node status to the badge vocabulary.
+Borders are generally (1px). SVG icons provide consistent line-based symbols; the AppYard mark is a custom SVG AY monogram. A circular state icon inside a rectangular graph stage connects node status to the badge vocabulary.
 
 ## Components
 
@@ -281,3 +281,11 @@ Logs use divided rows, monospaced metadata, wrapping output, and red error text.
 - **Don't** use a successful test tint to imply human approval or operational readiness.
 
 Existing compact graph and metadata text reaches (8–10px), and uppercase section labels occur in the source. These are recorded implementation details, not a recommended minimum type size or permission to add decorative kickers. They have not been repaired or generalized during this preservation handoff.
+
+## Home entry point
+
+Home follows the current charcoal, ivory, and peach implementation recorded in `docs/desktop-home-direction.md`. The AppYard AY monogram and name are centered above exactly three curated examples: message parsing, training scheduling, and offline workflow. The brand title uses 48px DM Serif Display, reducing to 38px on narrow screens. Examples retain the incumbent 12px radius, with 14px titles and 12px supporting text.
+
+The shared rail and toolbar remain available. A centered primary New challenge button below the introduction opens the existing intake. Home omits catalog search, category filters, badges, and technical metadata to keep the first choice simple; the searchable full catalog and custom briefs remain under New challenge. My builds opens the saved-project list with search and a return to Home. Examples stack below 800px.
+
+Verified with the production build and `scripts/smoke-home.mjs`: centered branding, three examples, complete catalog access, example-to-brief creation, saved-build search and resume, and persistence. Visual review covers desktop, 1120×720, and a 390px browser viewport; captures are in `output/playwright/home/`.

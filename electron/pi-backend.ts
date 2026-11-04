@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto';
 import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { Store, safeFile } from './storage.js';
-import { applicationTestFiles, reportPassed, verifyWorkspace, type VerificationLimits } from './verification.js';
+import { applicationTestFiles, reportPassed } from './verification.js';
+import { loadQualityContract, assertQualityContract, verifyApplication, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
+import type { AcceptanceCriterion } from '../harness/types.js';
 import { runAgentStage, stoppedMessage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
 import { phasePrompt, toolsForPhase, type PhaseContract } from '../harness/phases.js';
@@ -15,13 +17,13 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string };
+type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
 interface BackendOptions {
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
-  verificationLimits?: Partial<VerificationLimits>;
+  verificationLimits?: Partial<ApplicationVerificationLimits>;
 }
 export class FleetBackend {
   runtime!: ModelRuntime;
@@ -78,18 +80,23 @@ export class FleetBackend {
       p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
       p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
       p.report = undefined; p.error = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.feedback = '';
+      p.qualityVersion = 1;
       p.backend = backend;
       p.model = provider + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
-        '# ' + p.title, '', p.description, '', '## Acceptance criteria',
-        ...p.criteria.map((c, i) => (i + 1) + '. ' + c), '',
+        '# ' + p.title, '', p.description, '', '## Evaluation criteria',
+        ...(p.criteria.length ? p.criteria.map((c, i) => (i + 1) + '. ' + c)
+          : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
+        ...(p.resources ? ['## Resources', '', p.resources, ''] : []),
+        ...(p.links?.length ? ['## Reference links', '', ...p.links.map(link => '- ' + link), ''] : []),
         'Use synthetic data only. Operational readiness requires independent domain review.'
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
-        criteria: p.criteria, challengeId: p.challengeId, resourcesRoot: this.resourcesRoot });
+        criteria: p.criteria, resources: p.resources, links: p.links, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
       run.context = packet.context; run.phases = packet.phases; run.globalTools = packet.globalTools; p.globalTools = [...packet.globalTools]; p.phasePlan = structuredClone(packet.phases); run.packetHash = packet.packetHash;
+      run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
@@ -113,7 +120,7 @@ export class FleetBackend {
     await runAgentStage({
       label: engine + ' ' + stage + ' agent', signal: run.controller.signal, limits: this.options.agentLimits,
       create: async signal => {
-        const customTools = [...createFleetTools(allowedTools), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))];
+        const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))];
         if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
           home: this.options.codex!.home, cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
         });
@@ -122,7 +129,7 @@ export class FleetBackend {
           cwd: p.workspace!, agentDir: path.join(this.store.root, 'pi'), settingsManager,
           noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, additionalSkillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill)),
           agentsFilesOverride: () => ({ agentsFiles: [] }),
-          systemPromptOverride: base => (base || '') + '\n\nYou are a FleetHarness software-factory agent. Work only inside the current working directory. Never access credentials or unrelated files, publish, deploy, or contact external operational systems. Use synthetic examples. Write actual working artifacts and report limitations honestly. Use only the tools assigned to the current phase. This is a dedicated working directory, not an OS sandbox.'
+          systemPromptOverride: base => (base || '') + '\n\nYou are a AppYard software-factory agent. Work only inside the current working directory. Never access credentials or unrelated files, publish, deploy, or contact external operational systems. Use synthetic examples. Write actual working artifacts and report limitations honestly. Use only the tools assigned to the current phase. This is a dedicated working directory, not an OS sandbox.'
         });
         await loader.reload();
         signal.throwIfAborted();
@@ -157,16 +164,16 @@ export class FleetBackend {
         const complete = async (text: string, required: string[]) => {
           await prompt(text);
           check(); await this.checkInputs(p, run); check();
-          let missing = await this.missingFiles(p, stage, required, tests); check();
+          let missing = await this.missingFiles(p, run, stage, required, tests); check();
           if (missing.length) {
             this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
             await prompt('The stage is incomplete. Produce these missing or empty artifacts before finishing: ' + missing.join(', ') + '. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
             check(); await this.checkInputs(p, run); check();
-            missing = await this.missingFiles(p, stage, required, tests); check();
+            missing = await this.missingFiles(p, run, stage, required, tests); check();
           }
           if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
         };
-        await complete([run.context, phasePrompt(phase, run.globalTools), fleetStagePrompt(stage), instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files);
+        await complete([run.context, 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), fleetStagePrompt(stage), instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files);
         if (followUp) {
           this.log(p, stage, 'info', 'Application implementation is ready. Writing README.md with a user guide before verification.');
           await complete(followUp.instruction, [...files, ...followUp.files]);
@@ -174,7 +181,7 @@ export class FleetBackend {
       }
     });
   }
-  private async missingFiles(p: Project, stage: StageId, files: string[], tests = false) {
+  private async missingFiles(p: Project, run: ActiveRun, stage: StageId, files: string[], tests = false) {
     const missing: string[] = [];
     for (const file of files) {
       try {
@@ -186,11 +193,16 @@ export class FleetBackend {
     if (tests && !(await applicationTestFiles(p.workspace!)).length) missing.push('application *.test.cjs or *.test.mjs files');
     if (['plan', 'build', 'verify'].includes(stage) && !p.systemDesign) missing.push('system-design.json (publish the application architecture with fleet_system_design)');
     if (tests && incompleteComponents(p).length) missing.push('component progress: call fleet_component_progress for ' + incompleteComponents(p).join(', '));
+    if (stage === 'plan' && !missing.some(file => ['acceptance-plan.json', 'ux-spec.json'].includes(file))) {
+      try { await loadQualityContract(p.workspace!, run.acceptance!); }
+      catch (error) { missing.push('valid quality contract: ' + (error instanceof Error ? error.message : String(error))); }
+    }
     return missing;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);
+    if (run.quality) await assertQualityContract(p.workspace!, run.quality);
     if (await fs.readFile(await safeFile(p.workspace!, 'requirements.md'), 'utf8') !== run.requirements) {
       throw new Error('The original requirements changed during the run. Review the artifacts and start a new run.');
     }
@@ -207,36 +219,38 @@ export class FleetBackend {
       await this.stage(p, 'research', 'complete');
       await this.stage(p, 'plan', 'active');
       await this.agent(p, run, 'plan', provider, model,
-        'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json']);
+        'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'acceptance-plan.json', 'ux-spec.json']);
+      run.quality = await loadQualityContract(p.workspace!, run.acceptance!);
+      this.log(p, 'plan', 'info', 'Acceptance plan and UX specification validated and frozen. Browser journeys will verify the delivered application at desktop and narrow sizes.');
       await this.stage(p, 'plan', 'complete');
       await this.stage(p, 'build', 'active');
       await this.agent(p, run, 'build', provider, model,
-        'You are the implementation agent. Read requirements.md, research.md, and plan.md, then implement the complete usable application. Deliver a self-contained index.html with inline CSS and classic JS (no imports, CDNs, or network dependencies), path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. Keep the tested core and inline app logic consistent. No placeholder controls or fake test results. Include synthetic sample data, empty states, validation, and accessible controls. Document limitations. Use no package dependencies. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'path-to-fleet.md'], true, {
+        'You are the implementation agent. Read requirements.md, research.md, plan.md, acceptance-plan.json and ux-spec.json, then implement the complete usable application. Treat the validated browser steps, selectors and expected results as a frozen contract. Implement the specified first-run flow, feedback, recovery, keyboard operation and narrow layout. Do not edit acceptance-plan.json or ux-spec.json. Use one application implementation for browser and Node tests, for example by extracting the actual marked inline core in tests; avoid copied test-only logic. Deliver a self-contained index.html with inline CSS and classic JS (no imports, CDNs, or network dependencies), path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. Keep the tested core and inline app logic consistent. No placeholder controls or fake test results. Include synthetic sample data, empty states, validation, and accessible controls. Document limitations. Use no package dependencies. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'path-to-fleet.md'], true, {
           instruction: 'Implementation is complete. Now write README.md as a practical user guide for the software you just built. Inspect the actual index.html, application source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and quick start (open index.html in a browser, with no install or server required); numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using synthetic sample input and the expected output; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Write or update README.md only in this step. Preserve requirements.md, .fleet, application source and tests.',
           files: ['README.md']
         });
       await this.stage(p, 'build', 'complete'); await this.stage(p, 'verify', 'active');
       await this.agent(p, run, 'verify', provider, model,
-        'You are the verification agent. Inspect requirements.md, plan.md, application source, tests, and README.md. Improve coverage for edge cases and consistency between the tested logic and index.html. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Keep index.html self-contained and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
+        'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested logic and index.html. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Keep index.html self-contained and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
       this.check(run);
       await this.checkInputs(p, run);
-      p.report = await verifyWorkspace(p.workspace!, this.executable, () => {}, run.controller.signal, this.options.verificationLimits);
+      p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
       this.log(p, 'verify', 'info', p.report.output);
-      if (!reportPassed(p.report)) {
+      if (!reportPassed(p.report, true)) {
         await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
         this.log(p, 'verify', 'info', 'Verification failed. Starting one ' + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt.');
         await this.agent(p, run, 'verify', provider, model,
-          'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Keep index.html consistent with core source. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
+          'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Never edit acceptance-plan.json or ux-spec.json; the host checks their original hash. Keep index.html consistent with core source. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
         await this.checkInputs(p, run);
-        p.report = await verifyWorkspace(p.workspace!, this.executable, () => {}, run.controller.signal, this.options.verificationLimits);
+        p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
         this.log(p, 'verify', 'info', p.report.output);
       }
       this.check(run);
       await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
-      if (!reportPassed(p.report)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
+      if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');
       this.check(run);
-      p.status = 'review'; this.log(p, 'review', 'info', 'Automated tests passed. Inspect the preview, acceptance criteria, and limitations before approving delivery.');
+      p.status = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
       p.error = error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';

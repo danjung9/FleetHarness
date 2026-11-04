@@ -1,10 +1,10 @@
-# FleetHarness desktop
+# AppYard desktop
 
-FleetHarness is an Electron application backed by **Codex 0.166.0 or Pi SDK 1.5.0**. It runs real model sessions with local coding tools; an idle workspace does not contain simulated agents or invented test results.
+AppYard is an Electron application backed by **Codex 0.166.0 or Pi SDK 1.5.0**. It runs real model sessions with local coding tools; an idle workspace does not contain simulated agents or invented test results.
 
 ## Run the packaged app
 
-On Apple Silicon, open release/mac-arm64/FleetHarness.app, or install from release/FleetHarness-0.1.0-arm64.dmg.
+On Apple Silicon, open release/mac-arm64/AppYard.app, or install from release/AppYard-0.1.0-arm64.dmg.
 
 The local build is ad-hoc signed. It is not Apple Developer ID signed or notarized for public distribution.
 
@@ -23,15 +23,15 @@ The first release targets a dependency-free, self-contained index.html applicati
 
 ### Standalone app downloads
 
-After a build passes verification and you approve it, **Download executable** opens a save dialog and packages the verified application for the build machine's OS and processor. The ZIP contains a macOS `.app`, a Windows `.exe` with its supporting files, or a Linux executable with its supporting files, plus `START-HERE.txt`. Extract the whole ZIP before opening the app. The end user needs neither FleetHarness nor Node.js nor an AI account.
+After a build passes verification and you approve it, **Download executable** opens a save dialog and packages the verified application for the build machine's OS and processor. The ZIP contains a macOS `.app`, a Windows `.exe` with its supporting files, or a Linux executable with its supporting files, plus `START-HERE.txt`. Extract the whole ZIP before opening the app. The end user needs neither AppYard nor Node.js nor an AI account.
 
-FleetHarness uses [Electron Packager](https://electron.github.io/packager/main/) with the same Electron version as its host. The first download may need network access to obtain the runtime; subsequent downloads reuse Electron's cache. Packaging runs separately with a ten-minute limit. Closing FleetHarness interrupts packaging; reopening shows a retry action. Editing requirements or starting another run clears the previous download state. Source fingerprints are checked before packaging and again before saving; source changes require a new verified build.
+AppYard uses [Electron Packager](https://electron.github.io/packager/main/) with the same Electron version as its host. The first download may need network access to obtain the runtime; subsequent downloads reuse Electron's cache. Packaging runs separately with a ten-minute limit. Closing AppYard interrupts packaging; reopening shows a retry action. Editing requirements or starting another run clears the previous download state. Source fingerprints are checked before packaging and again before saving; source changes require a new verified build.
 
-Only the self-contained `index.html` and a host-controlled desktop wrapper enter the application. Agent scripts, dependencies, test files, sessions, and FleetHarness credentials are excluded. The wrapper preserves offline browser storage under a stable, project-specific application-data directory and disables Node integration, external requests, navigation, popups, and permissions. Preview data is separate from the standalone app's data.
+Only the self-contained `index.html` and a host-controlled desktop wrapper enter the application. Agent scripts, dependencies, test files, sessions, and AppYard credentials are excluded. The wrapper preserves offline browser storage under a stable, project-specific application-data directory and disables Node integration, external requests, navigation, popups, and permissions. Preview data is separate from the standalone app's data.
 
 macOS packages are ad-hoc signed, not Developer ID signed or notarized. Windows packages have no publisher signature. OS approval may therefore be required; this is a prototype distribution path. Cross-compilation, installers, automatic updates, and public-release signing are not provided. The executable smoke test has been run on macOS Apple Silicon; Windows and Linux need validation on their own build machines.
 
-Run `npm run test:executable` to verify approval, save cancellation, packaging, ZIP extraction, standalone launch, local persistence, renderer isolation, concurrent-change protection, and stale-source rejection. To test the packaged FleetHarness host, run `FLEET_EXECUTABLE=/absolute/path/to/FleetHarness.app/Contents/MacOS/FleetHarness node scripts/smoke-executable.mjs` after `npm run pack`. The fixture is independently tested and requires no model credentials.
+Run `npm run test:executable` to verify approval, save cancellation, packaging, ZIP extraction, standalone launch, local persistence, renderer isolation, concurrent-change protection, and stale-source rejection. To test the packaged AppYard host, run `FLEET_EXECUTABLE="/absolute/path/to/AppYard.app/Contents/MacOS/AppYard" node scripts/smoke-executable.mjs` after `npm run pack`. The fixture is independently tested and requires no model credentials.
 
 After implementing the app, the build agent writes `README.md` in a dedicated follow-up step within the same session and time/turn budget. This user guide explains quick start, the main workflows, a synthetic example with expected results, input formats, data persistence, troubleshooting, limitations, and developer test commands. Open `README.md` in **Artifacts / Files** or in the exported source folder. Verification and repair keep the guide aligned with the final application before the host records its source fingerprint. A missing or empty guide blocks completion.
 
@@ -45,7 +45,7 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 - Each agent phase inherits global `read`, `write`, `edit` and `bash` tools, then adds only its assigned phase tools. The `.fleet` packet records both levels and the skills allotted to each phase. Select a phase in **Build flow** to inspect the assignment, outputs and completion gate.
 - Each role has a 30-minute ceiling, including session setup and artifact completion. Pi also has a 40-model-turn ceiling; Codex reports user turns rather than its internal model iterations. Five minutes without model, tool, retry, or compaction activity fails the stage with its last activity recorded. These limits settle the host run even if Pi's prompt or abort promise never returns.
 - Missing or empty outputs get one targeted completion prompt per step within the same stage budget, including the post-implementation user guide. Requirements and packet integrity are checked after every agent handoff. A recovered provider retry can continue normally.
-- FleetHarness executes generated tests independently using the Node runtime bundled with Electron.
+- AppYard executes generated tests independently using the Node runtime bundled with Electron.
 - A failed test run gets one repair attempt and one repeat execution.
 - Test runs have a 120-second and 2 MB output limit.
 - Empty suites, failures, skipped tests, and incomplete results block approval.
@@ -59,7 +59,7 @@ Tests are agent-authored and must be reviewed for meaningful coverage. Passing t
 
 On macOS the default application state is under ~/Library/Application Support/fleetharness/ (the exact path appears in Model settings). State writes use a temporary file and rename. Previous run folders and Pi JSONL sessions remain on disk.
 
-An entered key is held in memory unless **Remember this key** is selected. Remembered keys use Electron safeStorage encryption and a private file; API keys are never included in the bootstrap payload sent to the UI. Existing Pi credentials remain managed by Pi. Disabling remembered storage removes FleetHarness's encrypted key file but keeps the current in-memory key until the app exits.
+An entered key is held in memory unless **Remember this key** is selected. Remembered keys use Electron safeStorage encryption and a private file; API keys are never included in the bootstrap payload sent to the UI. Existing Pi credentials remain managed by Pi. Disabling remembered storage removes AppYard's encrypted key file but keeps the current in-memory key until the app exits.
 
 No credentials are included in delivery exports. The app does not reset corrupt state automatically.
 
@@ -71,7 +71,7 @@ The original dashboard uses an 84px icon rail with short labels: Home, Flow, Pre
 
 Challenge descriptions expand under **Challenge brief**. Select a flow stage, or use the panel icon, to inspect its owner, output, criteria, and activity. The Preview toolbar toggles activity and the review checklist independently. Test output expands on demand and opens automatically when verification fails. Approval, export, execution permissions, and readiness limitations remain explicit.
 
-The original dashboard is the sole FleetHarness interface.
+The original dashboard is the sole AppYard interface.
 
 Use Node.js 22.19 or newer for Pi SDK compatibility; the packaged app has its own Node 24 runtime.
 

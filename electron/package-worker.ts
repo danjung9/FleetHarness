@@ -42,7 +42,7 @@ async function main(job: PackageJob) {
     : `Run ./${job.name} from the extracted folder. Keep all extracted files together.`;
   await fs.writeFile(path.join(output, 'START-HERE.txt'), [
     'Unzip the entire download first.', launch, '',
-    'FleetHarness, Node.js, and an AI account are not needed to use this app.',
+    'AppYard, Node.js, and an AI account are not needed to use this app.',
     'This app runs offline. Its local data stays on this computer.',
     `Built for ${process.platform} ${process.arch}.`, '',
     process.platform === 'darwin' ? 'This prototype is ad-hoc signed, not Apple Developer ID signed or notarized. macOS may require approval in System Settings > Privacy & Security.'

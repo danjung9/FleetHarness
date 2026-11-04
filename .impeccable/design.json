@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-04T16:43:53.659757+00:00",
-  "title": "Design System: FleetHarness",
+  "title": "Design System: AppYard",
   "extensions": {
     "colorMeta": {
       "ink": {
@@ -463,7 +463,7 @@
   ],
   "narrative": {
     "northStar": "Inspectable software factory",
-    "overview": "FleetHarness is a dense, practical desktop workspace. A deep navy navigation rail frames warm paper surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; orange marks attention and selection without replacing the navy action hierarchy.\n\nThe interface makes agent work inspectable. Manrope establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.",
+    "overview": "AppYard is a dense, practical desktop workspace. A deep navy navigation rail frames warm paper surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; orange marks attention and selection without replacing the navy action hierarchy.\n\nThe interface makes agent work inspectable. Manrope establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.",
     "keyCharacteristics": [
       "Persistent navy navigation and warm paper work surfaces.",
       "Compact controls, thin borders, and flat work areas.",

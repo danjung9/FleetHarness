@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { listArtifacts, sourceHash } from './storage.js';
 import type { TestReport } from '../shared/types.js';
+export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
 export async function applicationTestFiles(root: string) {
@@ -56,7 +57,4 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
   return { time: new Date().toISOString(), command: 'node ' + args.map(arg => JSON.stringify(arg)).join(' '),
     exitCode: timedOut || overflow ? null : exitCode, ...summarizeTap(output), output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
-}
-export function reportPassed(report?: TestReport) {
-  return !!report && report.exitCode === 0 && report.total > 0 && report.passed > 0 && report.failed === 0 && report.skipped === 0 && report.passed === report.total;
 }

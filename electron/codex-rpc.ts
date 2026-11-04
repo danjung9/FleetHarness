@@ -31,7 +31,7 @@ export class CodexRpc {
     });
     // Drain stderr without forwarding potentially sensitive process diagnostics to the renderer.
     child.stderr.resume();
-    child.on('error', () => this.fail(new Error('Could not start bundled Codex. Reinstall FleetHarness and retry.')));
+    child.on('error', () => this.fail(new Error('Could not start bundled Codex. Reinstall AppYard and retry.')));
     child.stdin.on('error', () => this.fail(new Error('The Codex connection closed. Reconnect in Settings.')));
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
@@ -43,7 +43,7 @@ export class CodexRpc {
     }));
   }
   async initialize() {
-    await this.request('initialize', { clientInfo: { name: 'fleetharness', title: 'FleetHarness', version: '0.1.0' }, capabilities: { experimentalApi: true } });
+    await this.request('initialize', { clientInfo: { name: 'fleetharness', title: 'AppYard', version: '0.1.0' }, capabilities: { experimentalApi: true } });
     this.send({ method: 'initialized', params: {} });
   }
   request(method: string, params: unknown = {}): Promise<any> {

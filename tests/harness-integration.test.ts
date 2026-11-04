@@ -12,15 +12,20 @@ import { createFleetTools } from '../harness/pi-tools.js';
 import { toolRegistry } from '../harness/tool-registry.js';
 import { fixtures } from '../harness/fixtures.js';
 import { globalAgentTools, toolsForPhase } from '../harness/phases.js';
+import { normalizeProjectInput } from '../shared/project-input.js';
+import { norfolkSnapshot } from '../harness/norfolk-snapshot.js';
 
 const resourcesRoot=process.cwd();
 async function temporary(t: any) {const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-pipeline-'));t.after(() => fs.rm(root,{recursive:true,force:true}));return root;}
 
-test('all 34 actual challenge IDs route to valid recipes and source URLs without inventing categories', () => {
-  assert.equal(challenges.length,34);assert.equal(new Set(challenges.map(c => c.id)).size,34);
+test('every captured Norfolk challenge routes to a valid recipe and official source URL', () => {
+  assert.equal(challenges.length,39);assert.equal(new Set(challenges.map(c => c.id)).size,39);
   for (const c of challenges) {
     assert.ok(recipes[c.recipe]);assert.equal(new URL(c.sourceUrl).pathname,`/event/norfolk/use-cases/${c.id}`);
-    assert.ok(c.requirements.length);assert.ok(c.dataNeeds.length);
+    assert.equal(c.sourceScope,'detail');
+    const source = norfolkSnapshot.useCases.find(source => String(source.id) === c.id)!;
+    assert.equal(c.description,source.description);assert.equal(c.resources,source.resources);
+    assert.equal(c.expectedDeliverables,source.expected_deliverables);assert.equal(c.category,source.category?.name ?? null);
   }
   assert.deepEqual(challenges.filter(c => c.pilot).map(c => c.id).sort(),['11','12','36']);
   assert.equal(getChallenge('40').category,null);
@@ -30,9 +35,35 @@ test('project import retains source identity and yields inputs accepted by deskt
   for (const c of challenges) {
     const input=toProjectInput(c.id);
     assert.equal(input.challengeId,c.id);assert.ok(input.title.length<=120);
-    assert.ok(input.description.includes(c.sourceUrl));assert.deepEqual(input.criteria,c.requirements);
+    assert.ok(input.description.includes(c.sourceUrl));assert.deepEqual(input.criteria,c.evaluationCriteria);
+    assert.deepEqual(normalizeProjectInput(input),input);
+    assert.equal(input.resources,c.resources);assert.deepEqual(input.links,c.links);
   }
   const clone=getChallenge('11');clone.title='altered';assert.notEqual(getChallenge('11').title,'altered');
+});
+test('the linked challenge imports official evaluation criteria, deliverables and resources while absent fields stay optional', () => {
+  const input = toProjectInput('37');
+  assert.match(input.description,/A reusable fielding playbook/);
+  assert.ok(input.criteria.some(c => c.includes('Calculations verified against a hand-computed answer key')));
+  assert.match(input.resources!,/Surf observation worksheet rules/);
+  assert.ok(input.links!.includes('https://cdao.hackathon.maximus.com/event/norfolk/use-cases/37'));
+  assert.deepEqual(toProjectInput('51').criteria,[]);
+  assert.match(toProjectInput('51').description,/Centralized Customer Service Portal/);
+  assert.equal(toProjectInput('24').resources,'');
+});
+test('a newly refreshed source survives workspace handoff and agent tool lookup', async t => {
+  const workspace=await temporary(t);
+  const sourceChallenge={...getChallenge('37'),id:'99',title:'Newly published challenge',description:'The newly published source description.'};
+  const input=toProjectInput('99',[sourceChallenge]);
+  await prepareFleetWorkspace({workspace,resourcesRoot,...input,sourceChallenge});
+  const packet=JSON.parse(await fs.readFile(path.join(workspace,'.fleet/packet.json'),'utf8'));
+  assert.deepEqual(packet.challenge,sourceChallenge);
+  assert.deepEqual(packet.userScope.criteria,input.criteria);assert.deepEqual(packet.userScope.links,input.links);
+  assert.equal(packet.userScope.resources,input.resources);
+  const tool=createFleetTools(['fleet_get_challenge'],[sourceChallenge])[0];
+  const result=await tool.execute('new-source',{id:'99'},undefined,undefined,{} as any);
+  assert.deepEqual(JSON.parse((result.content[0] as any).text).challenge,sourceChallenge);
+  await assert.rejects(prepareFleetWorkspace({workspace,resourcesRoot,...input,challengeId:'37',sourceChallenge}),/does not match/);
 });
 test('every recipe skill exists with valid frontmatter and every tool reference resolves', async () => {
   for (const recipe of Object.values(recipes)) {
