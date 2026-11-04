@@ -30,9 +30,10 @@
     "test:models": "npm run build && node scripts/smoke-model-selector.mjs",
     "test:executable": "npm run build && node scripts/smoke-executable.mjs",
     "build:worker": "node scripts/build-worker.mjs",
-    "build:hosted": "npm run build:worker && node scripts/stage-worker.mjs && tsc && tsc -p tsconfig.hosted.json && vite build --config vite.hosted.config.ts",
+    "build:hosted": "npm run build:worker && node scripts/stage-worker.mjs && tsc && tsc -p tsconfig.hosted.json && vite build --config vite.hosted.config.ts && npm run test:hosted-build",
     "dev:hosted": "vite --config vite.hosted.config.ts --host 127.0.0.1",
-    "test:hosted": "npm run build:worker && node --test tests/hosted-*.test.mjs src/hosted-client.test.mjs"
+    "test:hosted": "npm run build:worker && node --test tests/hosted-*.test.mjs src/hosted-client.test.mjs",
+    "test:hosted-build": "node scripts/check-hosted-workflow.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.5.0",
@@ -44,6 +45,7 @@
     "@openai/codex": "0.166.0",
     "@supabase/supabase-js": "2.119.0",
     "@vercel/sandbox": "3.9.1",
+    "lru-cache": "10.4.3",
     "lucide-react": "1.68.0",
     "nitro": "3.0.261103-rc",
     "playwright": "1.64.1",
@@ -60,6 +62,7 @@
     "@types/react-dom": "19.3.0",
     "@types/yazl": "3.3.1",
     "@vitejs/plugin-react": "6.2.1",
+    "acorn": "8.16.0",
     "concurrently": "10.0.6",
     "cross-env": "10.1.0",
     "electron": "45.2.2",

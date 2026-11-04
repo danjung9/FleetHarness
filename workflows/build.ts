@@ -1,5 +1,5 @@
 import { sleep } from 'workflow';
-import { prepareBuild, pollBuild, prepareVerification, pollVerification, failBuild } from '../server/build-control.js';
+import { prepare, progress, verify, verificationProgress, failure } from './steps.js';
 
 export async function buildWorkflow(runId: string, epoch: number) {
   'use workflow';
@@ -21,8 +21,3 @@ export async function buildWorkflow(runId: string, epoch: number) {
     await failure(runId, epoch);
   } catch { await failure(runId, epoch); }
 }
-async function prepare(runId: string, epoch: number) { 'use step'; return prepareBuild(runId, epoch); }
-async function progress(runId: string, epoch: number) { 'use step'; return pollBuild(runId, epoch); }
-async function verify(runId: string, epoch: number) { 'use step'; return prepareVerification(runId, epoch); }
-async function verificationProgress(runId: string, epoch: number) { 'use step'; return pollVerification(runId, epoch); }
-async function failure(runId: string, epoch: number) { 'use step'; return failBuild(runId, epoch); }
