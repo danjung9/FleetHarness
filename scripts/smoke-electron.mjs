@@ -57,7 +57,7 @@ try {
   assert.equal(await child.evaluate(()=>localStorage.getItem('lastParse')),'saved');
   assert.equal(await child.evaluate(()=>{try {void parent.document.body;return 'accessible';}catch{return 'blocked';}}),'blocked');
   await page.screenshot({path:path.join(output,'development-desktop.png'),scale:'css'});
-  await page.getByRole('button',{name:'Evidence & delivery',exact:true}).first().click();
+  await page.getByRole('button',{name:'Review — evidence & delivery',exact:true}).first().click();
   await page.getByLabel('Review notes').fill('Inspected the fixture preview and test output. This is an integration test only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
   await page.getByRole('button',{name:'Approve prototype',exact:true}).click();

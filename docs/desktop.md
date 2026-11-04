@@ -29,7 +29,7 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 
 - All logs and badges reflect actual Pi events and saved state.
 - Pi receives selected domain skills and tools from the prepared .fleet packet.
-- Each role has a 40-turn and 15-minute ceiling.
+- Each role has a 40-turn and 30-minute ceiling.
 - FleetHarness executes generated tests independently using the Node runtime bundled with Electron.
 - A failed test run gets one Pi repair attempt and one repeat execution.
 - Test runs have a 120-second and 2 MB output limit.
@@ -49,6 +49,14 @@ An entered key is held in memory unless **Remember this key** is selected. Remem
 No credentials are included in delivery exports. The app does not reset corrupt state automatically.
 
 ## Development
+
+### Compact dashboard
+
+The original dashboard uses an 84px icon rail with short labels: Home, Flow, Preview, Agents, Review, Brief, and Files. Search and new-challenge controls sit beside the primary build action. Icons have accessible names and hover/focus tooltips; Escape dismisses a tooltip.
+
+Challenge descriptions expand under **Challenge brief**. Select a flow stage, or use the panel icon, to inspect its owner, output, criteria, and activity. The Preview toolbar toggles activity and the review checklist independently. Test output expands on demand and opens automatically when verification fails. Approval, export, execution permissions, and readiness limitations remain explicit.
+
+This refinement applies only to the original dashboard. FleetHarness Studio keeps its separate renderer and design.
 
 Use Node.js 22.19 or newer for Pi SDK compatibility; the packaged app has its own Node 24 runtime.
 

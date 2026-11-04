@@ -51,6 +51,7 @@ function registerIPC() {
   handle('fleet:update', async (id: string, input: NewProject) => {
     const p = requireIdle(id); Object.assign(p, validateInput(input));
     p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.error = undefined;
+    p.systemDesign = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
     p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
   });

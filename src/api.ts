@@ -17,7 +17,7 @@ const desktopOnly = async (): Promise<never> => { throw new Error('Open the Flee
 export const api: FleetAPI = window.fleetHarness || {
   bootstrap: async () => ({ state: structuredClone(browserState), models: [], storagePath: 'Browser preview — local to this browser', credentialStatus: 'Desktop app required for Pi', runtime: 'Browser preview' }),
   createProject: async input => { const p = makeProject(input); browserState.projects.unshift(p); save(); return p; },
-  updateProject: async (id, input) => { const p = browserState.projects.find(p => p.id === id)!; Object.assign(p, input); save(); return p; },
+  updateProject: async (id, input) => { const p = browserState.projects.find(p => p.id === id)!; Object.assign(p, input); p.systemDesign = undefined; save(); return p; },
   startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
   onState: fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }

@@ -3,21 +3,30 @@ export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review'
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
 export type View = 'portfolio' | 'factory' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'artifacts' | 'settings';
 export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
-export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string }
+export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
+export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string; tool?: ToolEvent }
 export interface TestReport {
   time: string; command: string; exitCode: number | null; passed: number; failed: number;
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
 }
 export interface Project {
+  backend?: AgentBackend;
+  systemDesign?: import('./system-design.js').SystemDesign;
   challengeId?: string;
   id: string; title: string; description: string; criteria: string[]; createdAt: string; updatedAt: string;
   status: RunStatus; stages: Stage[]; logs: LogEntry[]; runId?: string; workspace?: string;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
-export interface AgentModel { id: string; provider: string; name: string; configured: boolean }
-export interface Settings { provider: string; model: string; rememberKey: boolean }
+export type AgentBackend = 'pi' | 'codex';
+export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean }
+export interface ChatGPTAccount {
+  status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
+  email?: string; plan?: string; error?: string;
+  limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
+}
 export interface AppState { version: 1; projects: Project[]; settings: Settings }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount }
 export interface NewProject { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
@@ -33,13 +42,17 @@ export interface FleetAPI {
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
+  connectChatGPT(): Promise<Bootstrap>;
+  cancelChatGPTLogin(): Promise<Bootstrap>;
+  disconnectChatGPT(): Promise<Bootstrap>;
+  refreshChatGPT(): Promise<Bootstrap>;
   onState(callback: (state: AppState) => void): () => void;
 }
 export const stageDefinitions: Stage[] = [
   { id: 'intake', label: 'Challenge intake', detail: 'Problem & constraints', status: 'complete' },
   { id: 'research', label: 'Research', detail: 'Reuse & architecture', status: 'queued' },
   { id: 'plan', label: 'Plan', detail: 'Tasks & acceptance tests', status: 'queued' },
-  { id: 'build', label: 'Build', detail: 'Pi implementation agent', status: 'queued' },
+  { id: 'build', label: 'Build', detail: 'Implementation agent', status: 'queued' },
   { id: 'verify', label: 'Verify', detail: 'Tests & repair', status: 'queued' },
   { id: 'review', label: 'Human review', detail: 'Evidence & decision', status: 'queued' },
   { id: 'deliver', label: 'Deliver', detail: 'Source & evidence bundle', status: 'queued' }

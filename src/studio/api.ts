@@ -22,7 +22,7 @@ export const api: FleetAPI = window.fleetHarness || {
   createProject: async input => { const p = makeProject(input); save({ ...state, projects: [p, ...state.projects] }); return structuredClone(p); },
   updateProject: async (id, input) => {
     const old = state.projects.find(p => p.id === id); if (!old) throw new Error('This build could not be found.');
-    const p: Project = { ...old, ...input, status: 'draft', updatedAt: new Date().toISOString(), stages: structuredClone(stageDefinitions), report: undefined, approvedAt: undefined, exportedTo: undefined, error: undefined };
+    const p: Project = { ...old, ...input, status: 'draft', updatedAt: new Date().toISOString(), stages: structuredClone(stageDefinitions), report: undefined, approvedAt: undefined, exportedTo: undefined, error: undefined, systemDesign: undefined };
     save({ ...state, projects: state.projects.map(item => item.id === id ? p : item) }); return structuredClone(p);
   },
   startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly,

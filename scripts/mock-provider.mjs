@@ -1,6 +1,16 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
+export const fixtureSystemDesign = {
+  title: 'Synthetic message parser', description: 'A local browser interface sends synthetic messages to a parser and presents structured tasks for review.',
+  components: [
+    { id: 'review-ui', label: 'Message review', description: 'Paste a synthetic message and inspect extracted tasks.', kind: 'interface', files: ['index.html'] },
+    { id: 'parser', label: 'Task extraction', description: 'Extract a task from the synthetic message format.', kind: 'logic', files: ['core.cjs'] },
+    { id: 'local-history', label: 'Local history', description: 'Remember that a parse was saved using browser storage.', kind: 'data', files: ['index.html'] }
+  ],
+  connections: [{ from: 'review-ui', to: 'parser', label: 'Synthetic message text' }, { from: 'review-ui', to: 'local-history', label: 'Save parse history locally' }, { from: 'parser', to: 'review-ui', label: 'Structured task for review' }]
+};
+
 // An explicit local test fixture, never registered by production code.
 export async function startFixtureProvider() {
   const requests = [];
@@ -13,7 +23,9 @@ export async function startFixtureProvider() {
     if (delayMs) await new Promise(resolve=>setTimeout(resolve,delayMs));
     const last = body.messages.at(-1);
     const prompt = body.messages.filter(m => m.role === 'user').map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('\n');
-    let files = [];
+    let files = [], extraCalls = [];
+    const implementation = prompt.includes('You are the implementation agent');
+    const verification = prompt.includes('You are the verification agent') || prompt.includes('The independent test run failed');
     if (last?.role === 'user') {
       if (prompt.includes('The independent test run failed')) files = [
         ['core.cjs', 'exports.parse = text => ({task:text.replace(/^TASK: /,"")});\n'],
@@ -27,12 +39,20 @@ export async function startFixtureProvider() {
       ];
       else files = [['scope.md', '# Scope assessment\nSynthetic browser prototype only.\n'], ['test-matrix.md', '# Test matrix\nTask extraction requires an application test.\n'], ['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n'], ['plan.md', '# Plan\nCreate a parser and one meaningful behavior test.\n']];
     }
+    const progress = (componentId, status) => ({ name: 'fleet_component_progress', arguments: JSON.stringify({ componentId, status, detail: status === 'building' ? 'Implementing the fixture component.' : 'Fixture implementation written. Independent tests still determine correctness.' }) });
+    if (last?.role === 'user') {
+      if (implementation || verification) extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'building'));
+      else extraCalls = [{ name: 'fleet_system_design', arguments: JSON.stringify(fixtureSystemDesign) }];
+    } else if ((implementation || verification) && !body.messages.some(m => m.tool_calls?.some(c => c.function?.name === 'fleet_component_progress' && JSON.parse(c.function.arguments).status === 'generated'))) {
+      extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'generated'));
+    }
+    const calls = [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
     const base = { id: 'chatcmpl-' + randomUUID(), object: 'chat.completion.chunk', created: Math.floor(Date.now()/1000), model:'fixture-model' };
     function send(delta, finish_reason = null) { res.write('data: ' + JSON.stringify({ ...base, choices: [{index:0, delta, finish_reason}] }) + '\n\n'); }
     send({role:'assistant', content:''});
-    if (files.length) {
-      send({tool_calls:files.map(([path, content], index) => ({index,id:'call_'+randomUUID().replaceAll('-',''),type:'function',function:{name:'write',arguments:JSON.stringify({path,content})}}))});
+    if (calls.length) {
+      send({tool_calls:calls.map((call, index) => ({index,id:'call_'+randomUUID().replaceAll('-',''),type:'function',function:call}))});
       send({}, 'tool_calls');
     } else { send({content:'Local fixture stage completed. No live model was called.'}); send({}, 'stop'); }
     res.end('data: [DONE]\n\n');

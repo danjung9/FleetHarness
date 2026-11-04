@@ -5,6 +5,7 @@ import { recipes } from '../../harness/recipes';
 import type { Challenge, RecipeId } from '../../harness/types';
 import type { AppState, Artifact, Bootstrap, Project } from '../../shared/types';
 import { api, isDesktop } from './api';
+import { SystemDesign } from '../SystemDesign';
 import { blankBrief, briefForChallenge, fromProject, sections, toProject, validateBrief, type Brief } from './brief';
 
 type Route = { page: 'discover' | 'builds' | 'settings' } | { page: 'challenge'; id: string } | { page: 'brief'; id?: string; challengeId?: string } | { page: 'build'; id: string };
@@ -141,8 +142,9 @@ function Builds({ projects, open, edit, create }: { projects: Project[]; open: (
 }
 
 function BuildWorkspace({ project: p, busy, connected, work, edit, settings, back }: { project: Project; busy: boolean; connected: boolean; work: Work; edit: () => void; settings: () => void; back: () => void }) {
-  const [tab, setTab] = useState('activity'), [artifacts, setArtifacts] = useState<Artifact[]>([]), [preview, setPreview] = useState<string | null>(null), [content, setContent] = useState(''), [file, setFile] = useState(''), [feedback, setFeedback] = useState(p.feedback), [checked, setChecked] = useState(false), [loadError, setLoadError] = useState('');
+  const [tab, setTab] = useState('design'), [artifacts, setArtifacts] = useState<Artifact[]>([]), [preview, setPreview] = useState<string | null>(null), [content, setContent] = useState(''), [file, setFile] = useState(''), [feedback, setFeedback] = useState(p.feedback), [checked, setChecked] = useState(false), [loadError, setLoadError] = useState('');
   const fileRequest = useRef(0);
+  useEffect(() => { if (p.status === 'running') setTab('design'); }, [p.runId]);
   useEffect(() => { let active = true; Promise.all([api.artifacts(p.id), api.preview(p.id)]).then(([a, url]) => { if (active) { setArtifacts(a); setPreview(url); setLoadError(''); } }).catch(e => { if (active) setLoadError(String(e)); }); return () => { active = false; }; }, [p.id, p.runId, p.status]);
   const brief = fromProject(p);
   const report = p.report;
@@ -151,14 +153,15 @@ function BuildWorkspace({ project: p, busy, connected, work, edit, settings, bac
     {!isDesktop && <div className="browser-note"><Code2 size={18}/><p>Brief saved in this browser. To run agents, launch the separate desktop Studio with <code>npm run studio</code>. Download your brief from Edit brief, then import it in Pi settings.</p></div>}
     {p.error && <div className="notice error" role="alert"><XCircle size={17}/><span>{p.error}</span></div>}
     <ol className="pipeline" aria-label="Build progress">{p.stages.map((s, i) => <li key={s.id} className={s.status} aria-current={s.status === 'active' ? 'step' : undefined}><span className="stage-bullet">{s.status === 'complete' ? <Check size={13}/> : s.status === 'active' ? <Loader2 size={13} className="spin"/> : s.status === 'failed' ? <X size={13}/> : i + 1}</span><span>{s.label}</span></li>)}</ol>
-    <div className="workspace-layout"><section className="workspace-content"><div className="workspace-tabs" role="tablist" aria-label="Build views">{[['activity', 'Agent activity'], ['preview', 'App preview'], ['files', 'Files'], ['evidence', 'Review & delivery']].map(([id, label]) => <button key={id} role="tab" id={'build-tab-' + id} aria-controls="build-panel" aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onKeyDown={event => {
-        const ids = ['activity', 'preview', 'files', 'evidence'];
+    <div className="workspace-layout"><section className="workspace-content"><div className="workspace-tabs" role="tablist" aria-label="Build views">{[['design', 'System design'], ['activity', 'Agent activity'], ['preview', 'App preview'], ['files', 'Files'], ['evidence', 'Review & delivery']].map(([id, label]) => <button key={id} role="tab" id={'build-tab-' + id} aria-controls="build-panel" aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} onKeyDown={event => {
+        const ids = ['design', 'activity', 'preview', 'files', 'evidence'];
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const index = event.key === 'Home' ? 0 : event.key === 'End' ? ids.length - 1 : (ids.indexOf(id) + (event.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
         setTab(ids[index]); document.getElementById('build-tab-' + ids[index])?.focus();
       }} onClick={() => setTab(id)}>{label}{id === 'files' && artifacts.length > 0 && <span>{artifacts.length}</span>}</button>)}</div><div className="workspace-tabpanel" id="build-panel" role="tabpanel" aria-labelledby={'build-tab-' + tab} tabIndex={0}>
       {loadError && <p className="notice error" role="alert">{loadError}</p>}
+      {tab === 'design' && <SystemDesign project={p} studio/>}
       {tab === 'activity' && (p.logs.length ? <div className="activity-log">{p.logs.map(log => <article className={'activity-entry ' + log.kind} key={log.id}><div><span>{log.kind === 'tool' ? <Terminal size={14}/> : <Code2 size={14}/>} {log.stage} <span className="muted">/ {log.kind}</span></span><time>{new Date(log.time).toLocaleTimeString()}</time></div><pre>{log.text}</pre></article>)}</div> : <Empty title="Ready when you are">{isDesktop ? 'Start a build to see the agents research, plan, write software, and test it. Every tool call and result will appear here.' : 'Agent activity will appear in the desktop app after you connect Pi and start a build.'}</Empty>)}
       {tab === 'preview' && <><div className="pane-toolbar"><span>{preview ? 'Generated application · isolated preview' : 'No application generated yet'}</span><button className="text-link" onClick={() => void work(async () => { setPreview(await api.preview(p.id)); }, 'Preview refreshed.')}>Refresh <ArrowRight size={14}/></button></div>{preview ? <iframe key={p.runId} title="Generated application preview" src={preview} sandbox="allow-scripts allow-forms allow-same-origin allow-downloads"/> : <Empty title="Your application will appear here">The build agent must produce index.html before there is anything to preview.</Empty>}</>}
       {tab === 'files' && (artifacts.length ? <div className="files-layout"><div className="file-tree">{artifacts.map(a => <button key={a.path} aria-pressed={a.path === file} onClick={() => { const request = ++fileRequest.current; setFile(a.path); setContent('Loading file…'); void work(async () => { const text = await api.readArtifact(p.id, a.path); if (request === fileRequest.current) setContent(text); }); }}><FileCode2 size={14}/><span>{a.path}</span></button>)}</div><pre className="file-content">{content || 'Choose a file to inspect its contents.'}</pre></div> : <Empty title="A workspace for the actual work">Source files, plans, tests, and reports will be available after a build starts.</Empty>)}

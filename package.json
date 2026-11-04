@@ -19,6 +19,7 @@
     "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
     "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
     "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
+    "test:activity": "npm run build && node scripts/smoke-activity.mjs",
     "studio": "npm run build:electron && node scripts/studio.mjs",
     "studio:web": "vite --config vite.studio.config.ts --host 127.0.0.1",
     "build:studio": "tsc && vite build --config vite.studio.config.ts",

@@ -130,9 +130,10 @@ try {
   await app.keyboard.press('End');
   assert.equal(await app.getByRole('tab', { name: 'Review & delivery' }).getAttribute('aria-selected'), 'true');
   await app.keyboard.press('Home');
-  assert.equal(await activityTab.getAttribute('aria-selected'), 'true');
+  assert.equal(await app.getByRole('tab', { name: 'System design' }).getAttribute('aria-selected'), 'true');
   await app.keyboard.press('ArrowLeft');
   assert.equal(await app.getByRole('tab', { name: 'Review & delivery' }).getAttribute('aria-selected'), 'true');
+  await app.keyboard.press('ArrowRight');
   await app.keyboard.press('ArrowRight');
   await app.keyboard.press('ArrowRight');
   assert.equal(await app.getByRole('tab', { name: 'App preview' }).getAttribute('aria-selected'), 'true');
