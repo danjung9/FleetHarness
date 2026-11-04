@@ -7,6 +7,7 @@ import { searchEvidence } from './tools/evidence.js';
 import { analyzeDependencies } from './tools/readiness.js';
 import { getChallenge, challenges } from './catalog.js';
 import { getRecipe } from './recipes.js';
+import type { Challenge } from './types.js';
 
 const id = Type.String({minLength:1,maxLength:200});
 const num = Type.Integer({minimum:0,maximum:1_000_000_000});
@@ -21,7 +22,7 @@ export interface FleetTool {
 }
 
 export const toolRegistry: FleetTool[] = [
-  {name:'fleet_get_challenge', description:'Read an official Norfolk challenge snapshot and its FleetHarness recipe. Omit id to list the catalog. No live website request.',
+  {name:'fleet_get_challenge', description:'Read an official Norfolk challenge snapshot and its AppYard recipe. Omit id to list the catalog. No live website request.',
     parameters:obj({id:Type.Optional(id)}), run:({id}) => id ? {challenge:getChallenge(id),recipe:getRecipe(getChallenge(id).recipe)} : challenges.map(c => ({id:c.id,title:c.title,recipe:c.recipe,pilot:c.pilot}))},
   {name:'fleet_extract_messages', description:'Parse the documented synthetic EVENT/TASK grammar with exact source spans and ambiguity flags. Not a full USMTF parser.',
     parameters:obj({sourceId:id,text:Type.String({maxLength:200000})}),run:extractMessages},
@@ -40,11 +41,17 @@ export const toolRegistry: FleetTool[] = [
     parameters:obj({deadline:num,targets:ids,nodes:list(obj({id,dependencies:ids,duration:Type.Union([num,Type.Null()]),readyAt:num,source:Type.String({minLength:1,maxLength:2000})}),200)}),run:analyzeDependencies}
 ];
 
-export function invokeFleetTool(name: string, input: unknown, signal?: AbortSignal): unknown {
+export function invokeFleetTool(name: string, input: unknown, signal?: AbortSignal, catalog?: readonly Challenge[]): unknown {
   const tool = toolRegistry.find(t => t.name === name);
-  if (!tool) throw new Error(`Unknown FleetHarness tool: ${name}`);
+  if (!tool) throw new Error(`Unknown AppYard tool: ${name}`);
   if (signal?.aborted) throw new Error('Tool call cancelled.');
   if (JSON.stringify(input)?.length > 2_000_000) throw new Error('Tool input exceeds the 2 MB text limit. Use a smaller fixture batch.');
   if (!Check(tool.parameters, input)) throw new Error(`Invalid input for ${name}; see its JSON Schema in .fleet/tool-schemas.json.`);
+  if (name === 'fleet_get_challenge' && catalog) {
+    const { id } = input as { id?: string };
+    if (!id) return catalog.map(c => ({ id: c.id, title: c.title, recipe: c.recipe, pilot: c.pilot }));
+    const challenge = getChallenge(id, catalog);
+    return { challenge, recipe: getRecipe(challenge.recipe) };
+  }
   return tool.run(input, signal);
 }

@@ -1,8 +1,10 @@
-# FleetHarness challenge pipeline
+# AppYard challenge pipeline
 
-FleetHarness now connects the Norfolk challenge catalog to Pi planning, implementation, verification and reviewed delivery. The pipeline chooses domain-specific skills and deterministic tools; each generated application keeps its own architecture.
+AppYard now connects the Norfolk challenge catalog to Pi planning, implementation, verification and reviewed delivery. The pipeline chooses domain-specific skills and deterministic tools; each generated application keeps its own architecture.
 
-The catalog contains all **34 challenge IDs** visible on the [Norfolk use-case page](https://cdao.hackathon.maximus.com/event/norfolk/use-cases), captured November 4, 2026. The site required an authenticated browser. Titles and displayed categories were retained; summaries and requirement interpretations were paraphrased. Challenges 11, 12 and 36 were additionally checked against their detail-page requirements. `sourceScope` records that distinction, and missing category badges remain `null`. Recipe assignments and acceptance tests are FleetHarness engineering decisions, not statements by the event organizers.
+The bundled catalog contains all **39 challenge IDs** returned by the [official Norfolk API](https://cdao.hackathon.maximus.com/api/events/norfolk/combined/), captured November 4, 2026. Each record comes from its official detail endpoint, including descriptions, requirements, expected deliverables, evaluation criteria, resources and links. Missing optional fields remain blank; missing categories remain `null`. Curated summaries, recipe assignments, data-needs suggestions and proposed acceptance tests are AppYard engineering decisions, separate from the official source.
+
+Choose **Refresh from Norfolk** in the desktop catalog picker to import the current index and every detail record. The complete import is validated before replacing the saved catalog; offline or invalid responses leave the previous copy available. Saved projects retain their source snapshot, and refresh does not rewrite existing briefs. To update the bundled fallback for a release, run `npm run sync:norfolk` and `npm run test:norfolk`.
 
 ## Run it
 
@@ -25,7 +27,9 @@ npm run --silent harness -- fixture fleet_extract_messages > /tmp/fleet-message.
 npm run --silent harness -- tool fleet_extract_messages --input /tmp/fleet-message.json
 ```
 
-In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Separate intake, research and planning sessions write the scope, reuse decisions, implementation plan and test matrix; implementation produces a standalone browser application and testable core; verification inspects and tests it. The host independently runs Node tests and allows one repair attempt. The operator reviews the result before exporting a package.
+Browser verification requires a browser runtime in addition to Node. From a source checkout, run `npm run setup:browser` once to install Playwright Chromium. The runner tries installed Playwright Chromium first, then installed Google Chrome. Packaged users need Google Chrome installed. Builds do not download a browser; a missing runtime produces an actionable verification failure.
+
+In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Separate intake, research and planning sessions write the scope, reuse decisions, architecture, implementation plan and acceptance journeys. The host validates and freezes the acceptance and UX plans before implementation produces a working browser application and testable core. Verification runs Node tests and the planned browser journeys on desktop and narrow viewports. Either gate failing uses the same one-repair budget. The operator reviews the result and remaining requirements before exporting a package.
 
 ## Pipeline contracts
 
@@ -33,14 +37,15 @@ In the desktop app, create a challenge from the catalog, review its scope, conne
 flowchart LR
   C[Source challenge] --> I[Intake and scope]
   I --> R[Reuse research]
-  R --> P[Plan and acceptance matrix]
-  P --> B[Pi implementation]
+  R --> P[Plan user tasks and expected outcomes]
+  P --> F[Host validates and freezes plans]
+  F --> B[Pi implementation]
   G[Global workspace tools] --> I
   G --> R
   G --> P
   G --> B
   G --> V
-  B --> V[Independent test runner]
+  B --> V[Host Node and browser checks]
   V -->|failure, one repair| B
   V -->|passing evidence| H[Human review]
   H -->|same verified source| D[Source and evidence package]
@@ -48,17 +53,31 @@ flowchart LR
 
 | Stage | Required output | Exit condition |
 |---|---|---|
-| Intake | Original requirements, `.fleet/packet.json`, derived `scope.md` | Source requirements, requested slice, data boundary and unknowns are explicit |
+| Intake | Original requirements, `.fleet/packet.json`, derived `scope.md` | Audience, primary task, source requirements, evaluation criteria, deliverables, user criteria, data boundary and unknowns are explicit |
 | Research | `research.md` | Primary-source leads and adopt/adapt/reject decisions; untested integrations labeled |
-| Plan | `plan.md`, `test-matrix.md` | Task dependencies and a test/manual check or explicit gap for every criterion |
-| Build | `index.html`, core modules, tests, `README.md` user guide | Runnable vertical slice, followed by a guide to setup, workflows, sample inputs and results, data handling, troubleshooting and limitations |
-| Verify | `verification.md`, host-owned test report | Actual tests pass and the guide matches the final application; missing/skipped tests and changed source cannot claim verification |
-| Review | Host-recorded decision | Human inspects the exact verified revision and limitations |
+| Plan | `plan.md`, `test-matrix.md`, `system-design.json`, `acceptance-plan.json`, `ux-spec.json` | Architecture and intended user behavior are defined; every criterion is implemented with browser journeys or explicitly deferred with a reason; host validates and freezes both JSON plans |
+| Build | `index.html`, core modules, tests, `README.md` user guide | Working task flows implement the frozen selectors and outcomes, followed by a guide to the actual application; plans remain unchanged |
+| Verify | `verification.md`, host-owned test report, screenshots and traces | Node tests and every implemented browser check pass on desktop and narrow viewports; deferred criteria remain unverified and the guide matches the application |
+| Review | Host-recorded decision | Human inspects the exact verified prototype revision, task evidence and remaining requirements |
 | Deliver | Source/evidence bundle, `path-to-fleet.md` | Source still matches verification and approval; setup and remaining dependencies documented |
 
-The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the application architecture before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has a process timeout; failed verification remains visible.
+The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the architecture and quality plans before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has process and browser timeouts; failed verification remains visible.
 
 Once implementation artifacts exist, the build session receives a dedicated prompt to write the application's `README.md` user guide. The guide must exist before verification starts, and missing/empty output gets one completion attempt within the build session's original budget. Verification and repair update the guide to match the actual application before independent tests bind the final source revision. The guide is available with the run's artifacts and is included in delivery exports.
+
+### Acceptance and user experience contracts
+
+Acceptance criteria retain IDs and provenance from challenge requirements, evaluation criteria, expected deliverables and user criteria. Recipe checks supplement those sources. Scope decisions cannot silently replace a source requirement with a smaller demonstration.
+
+The host writes `.fleet/quality-contract.md` with the exact JSON formats. The planner writes `acceptance-plan.json` with each criterion's implemented/deferred disposition, expected outcome and journey references; a deferral requires a reason. Journeys contain declarative CSS-selector steps and literal expected results, with intentional primary and recovery tasks. The accompanying `ux-spec.json` records the audience, primary task, recognizable success outcome, screens and their primary actions, empty/loading/error/success states, persistence, recovery and keyboard behavior. Selectors and expected behavior form a build contract, rather than being derived from whatever the application happens to do.
+
+The host validates and freezes both JSON files immediately after planning. Builder and repair agents can fix implementation and application tests, but cannot rewrite expected results, turn a failure into a deferral or weaken the UX contract. These expectations come from a separate planning agent; their protection reduces implementation drift, but does not make them independently validated SME ground truth. Domain facts and operational acceptance still need appropriate evidence.
+
+The browser runner exercises the shipped application at desktop and narrow widths and records per-journey results. It captures screenshots and traces under `.quality-evidence/<contract hash>-<run>/<journey>-<viewport>.png` and `.zip`, referenced by the host's `test-report.json`. Agents initially have no dedicated browser tool and must not claim visual inspection they did not perform. They can use returned failure evidence for the one bounded repair; the host reruns both Node and browser checks afterward.
+
+Every implemented check must pass before prototype review. The report tracks criterion and journey status and reports `requirementsMet` separately: deferred requirements stay unverified even if all scoped prototype checks pass. Human review evaluates whether the task flow is understandable and useful; browser automation does not establish complete usability, accessibility or operational readiness.
+
+The UX guidance targets complete interactions, including recovery. For example, a review flow must distinguish unsaved edits from the committed revision being approved; a conflict flow must let users compare competing values and deliberately choose or edit the merged result. A static mockup, a preserved revision graph or a source-string assertion alone cannot demonstrate those tasks.
 
 ## Challenge families
 
@@ -79,7 +98,7 @@ Related IDs are retained rather than collapsed: an umbrella challenge and a narr
 
 ## Included skills and tools
 
-Fourteen skills live under `skills/`: intake, research, planning, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills; each agent session loads only the skills allotted to its phase. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+Fifteen skills live under `skills/`: intake, research, planning, UX, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills; each agent session loads only the skills allotted to its phase. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
 
 ### Tool hierarchy
 
@@ -91,13 +110,13 @@ Fourteen skills live under `skills/`: intake, research, planning, evidence, mess
 |---|---|---|
 | Intake | Intake | `fleet_get_challenge` |
 | Research | Research, evidence, recipe domain skills | `fleet_search_evidence` |
-| Plan | Planning, evidence, recipe domain skills | `fleet_system_design` |
-| Build | Recipe domain skills, evidence, delivery | Recipe domain tools, `fleet_component_progress` |
-| Verify / repair | Evidence, recipe domain skills | Recipe domain tools, `fleet_component_progress` |
+| Plan | Planning, UX, evidence, recipe domain skills | `fleet_system_design` |
+| Build | Recipe domain skills, UX, evidence, delivery | Recipe domain tools, `fleet_component_progress` |
+| Verify / repair | Evidence, UX, recipe domain skills | Recipe domain tools, `fleet_component_progress` |
 | Human review | Evidence guidance | No agent tools; preview, evidence and approval controls |
 | Deliver | Delivery guidance | No agent tools; host integrity check and export |
 
-For example, a scheduling build adds `fleet_solve_schedule`; a message build adds `fleet_extract_messages` and `fleet_search_evidence`. The host independently runs tests during verification. A repair stays within verification's allocation and is limited to one attempt.
+For example, a scheduling build adds `fleet_solve_schedule`; a message build adds `fleet_extract_messages` and `fleet_search_evidence`. The host runs Node and browser tests during verification. There is no dedicated browser tool in the initial agent allocation. A repair stays within verification's allocation and is limited to one shared attempt across both gates.
 
 The build flow in both interfaces exposes global tools, phase-specific tools, skills, inputs, outputs and the completion gate. Each run persists its assignments with the source packet. Older runs without saved assignments show the proposed assignments for the next run explicitly.
 
@@ -124,7 +143,7 @@ All tools are local, deterministic transformations of supplied data. Input schem
 - `harness/tool-registry.ts`: input schemas and a shared invocation path for Pi and the CLI.
 - `harness/tools/`: reusable deterministic primitives without Pi dependencies.
 
-The host retains `packetHash` outside the agent workspace and rechecks context integrity before accepting verification. Changing a skill, source packet or reference toolkit invalidates that context, even if the editable manifest hash is forged. Original requirements are checked separately by the desktop host. Verification and export bind evidence to source hashes. These checks catch changes during the trusted local workflow; they are not an adversarial OS sandbox or a cryptographic government identity system.
+The host retains `packetHash` outside the agent workspace and rechecks context integrity before accepting verification. Changing a skill, source packet or reference toolkit invalidates that context, even if the editable manifest hash is forged. Original requirements and the post-planning frozen contracts are checked separately by the desktop host. Verification and export bind evidence to source hashes. These checks catch changes during the trusted local workflow; they are not an adversarial OS sandbox or a cryptographic government identity system.
 
 ## Reuse decisions
 
@@ -146,6 +165,6 @@ Selection still requires version/license review and a task-specific spike. The s
 
 Start with **12 → 11 → 36**. This tests three different engineering problems: preserving evidence while extracting fields, finding feasible constrained schedules, and reconciling disconnected state. Compare each generated app against independently reviewed expectations before expanding to adjacent challenges.
 
-The catalog and pipeline cover all 34 challenges; they are not 34 finished applications. Important external requirements remain explicit: approved USMTF mappings, handwritten scan accuracy, SFTRM/fatigue rules, true device persistence/encryption, authorized data connectors, real identity/PKI, engineering formulae, operational owners and deployment authorization. No hosted model-quality evaluation is implied by the offline toolkit or local fixture-provider tests.
+The catalog and pipeline cover all 39 challenges; they are not 39 finished applications. Important external requirements remain explicit: approved USMTF mappings, handwritten scan accuracy, SFTRM/fatigue rules, true device persistence/encryption, authorized data connectors, real identity/PKI, engineering formulae, operational owners and deployment authorization. No hosted model-quality evaluation is implied by the offline toolkit or local fixture-provider tests.
 
 To extend the system, add a source-linked challenge or recipe, provide a discriminating skill, register a typed tool only when deterministic behavior is useful, and test it against independent expected outcomes. Add integration capabilities as separately reviewed adapters rather than hiding them inside a language-model prompt.

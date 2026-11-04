@@ -28,7 +28,7 @@ export async function createCodexSession(options: {
     }
     try {
       const tool = tools.find(t => t.name === params.tool);
-      if (!tool) throw new Error('Unknown FleetHarness tool: ' + params.tool);
+      if (!tool) throw new Error('Unknown AppYard tool: ' + params.tool);
       const result = await tool.execute(params.callId, params.arguments, controller.signal);
       controller.signal.throwIfAborted();
       rpc.send({ id: message.id, result: { contentItems: result.content.filter(c => c.type === 'text').map(c => ({ type: 'inputText', text: c.text || '' })), success: true } });
@@ -71,7 +71,7 @@ export async function createCodexSession(options: {
       cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'workspace-write',
       config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled' },
       developerInstructions: [
-        'You are a FleetHarness software-factory agent. Work only inside the provided workspace. Never access credentials or unrelated files, publish, deploy, or contact operational systems. Use synthetic examples. Write working artifacts and report limitations honestly. Use the fleet tools for domain logic and architecture updates. Do not spawn other agents. This is an unattended build: resolve routine choices yourself and document limitations.',
+        'You are a AppYard software-factory agent. Work only inside the provided workspace. Never access credentials or unrelated files, publish, deploy, or contact operational systems. Use synthetic examples. Write working artifacts and report limitations honestly. Use the fleet tools for domain logic and architecture updates. Do not spawn other agents. This is an unattended build: resolve routine choices yourself and document limitations.',
         ...skills
       ].join('\n\n'),
       dynamicTools: tools.map(tool => ({ type: 'function', name: tool.name, description: tool.description, inputSchema: tool.parameters }))

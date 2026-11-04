@@ -32,7 +32,7 @@ export class CodexAccount {
       rpc.onClose(error => {
         if (this.rpc === rpc) { this.rpc = undefined; this.clearLogin(); this.models = []; this.account = { status: 'unavailable', error: error.message }; }
       });
-      try { await rpc.initialize(); if (this.disposed) throw new Error('FleetHarness is closing.'); this.rpc = rpc; return rpc; }
+      try { await rpc.initialize(); if (this.disposed) throw new Error('AppYard is closing.'); this.rpc = rpc; return rpc; }
       catch (error) { rpc.dispose(); throw error; }
     })();
     try { return await this.opening; } finally { this.opening = undefined; }

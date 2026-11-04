@@ -2,25 +2,31 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
-import { createPacket, customPacket } from './planner.js';
+import { createPacket, customPacket, packetFor } from './planner.js';
+import type { Challenge } from './types.js';
 import { fixtures } from './fixtures.js';
 import { toolRegistry } from './tool-registry.js';
 import { compareText } from './tools/validation.js';
+import type { BriefContext } from '../shared/types.js';
+import { qualityContractGuide } from './quality-contract.js';
 export { fleetStagePrompt } from './planner.js';
 
-export interface PrepareFleetWorkspaceInput {
+export interface PrepareFleetWorkspaceInput extends BriefContext {
+  sourceChallenge?: Challenge;
   workspace:string; challengeId?:string; title:string; description:string; criteria:string[]; resourcesRoot:string;
 }
 export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
-  const packet = input.challengeId ? createPacket(input.challengeId) : customPacket(input);
+  if (input.sourceChallenge && input.sourceChallenge.id !== input.challengeId) throw new Error('The saved Norfolk source does not match this challenge.');
+  const packet = input.sourceChallenge ? packetFor(input.sourceChallenge, input.criteria) : input.challengeId ? createPacket(input.challengeId, input.criteria) : customPacket(input);
   const workspace = await fs.realpath(input.workspace);
   const target = path.join(workspace,'.fleet');
   const files = new Map<string,string>();
   const json = (data:unknown) => JSON.stringify(data,null,2)+'\n';
-  files.set('packet.json',json({...packet,userScope:{title:input.title,description:input.description,criteria:input.criteria}}));
+  files.set('packet.json',json({...packet,userScope:{title:input.title,description:input.description,criteria:input.criteria,resources:input.resources ?? '',links:input.links ?? []}}));
   files.set('fixtures.json',json({classification:'synthetic',scope:'toolkit-reference-inputs',fixtures}));
   files.set('tool-schemas.json',json(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters}))));
-  files.set('README.md',`# FleetHarness challenge packet\n\nSource: ${packet.challenge.sourceUrl || 'User-supplied problem'}\nRecipe: ${packet.recipe.title}\n\nAll fixture data is synthetic. Source requirements and prototype scope are separate in packet.json.\n\nRead the selected skills before implementation. toolkit/ contains dependency-free JavaScript calculation primitives; these do not supply production persistence, transport, identity or complete applications. Do not edit this directory during the run.\n\nToolkit tests are not evidence that the generated application works. Write application tests against its actual code.\n`);
+  files.set('quality-contract.md',qualityContractGuide);
+  files.set('README.md',`# AppYard challenge packet\n\nSource: ${packet.challenge.sourceUrl || 'User-supplied problem'}\nRecipe: ${packet.recipe.title}\n\nAll fixture data is synthetic. Source requirements and prototype scope are separate in packet.json.\n\nRead the selected skills before implementation. toolkit/ contains dependency-free JavaScript calculation primitives; these do not supply production persistence, transport, identity or complete applications. Do not edit this directory during the run.\n\nToolkit tests are not evidence that the generated application works. Write application tests against its actual code.\n`);
   files.set('toolkit/package.json',json({type:'module',private:true}));
   for (const name of ['validation','messages','scheduling','offline','evidence','readiness']) {
     const source = fileURLToPath(new URL(`./tools/${name}.js`,import.meta.url));
@@ -59,8 +65,8 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
       await fs.rename(temporary,target);
     } finally { await fs.rm(temporary,{recursive:true,force:true}); }
   }
-  return {challengeId:input.challengeId,packetHash:hash,phases:packet.stages,globalTools:packet.globalTools,skillPaths:skills.map(skill => path.join(target,'skills',skill)),
-    context:`FleetHarness packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md. Use only the skills and tools assigned to the current phase.\nData boundary: synthetic-only. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}`};
+  return {challengeId:input.challengeId,packetHash:hash,acceptance:packet.acceptance,phases:packet.stages,globalTools:packet.globalTools,skillPaths:skills.map(skill => path.join(target,'skills',skill)),
+    context:`AppYard packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md and .fleet/quality-contract.md. Use only the skills and tools assigned to the current phase.\nData boundary: synthetic-only. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}`};
 }
 
 /** Compare against a hash retained by the host, not a hash chosen by generated code. */

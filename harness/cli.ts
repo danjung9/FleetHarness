@@ -19,7 +19,7 @@ function option(name:string): string|undefined {
 }
 async function main() {
   if (!command || command==='help' || command==='--help') {
-    process.stdout.write(`FleetHarness challenge pipeline\n\n  catalog                         List 34 source-linked challenges\n  plan <id> [--out <directory>]    Print a packet or prepare an isolated workspace\n  tools                           List tool schemas\n  fixture <tool>                  Print a synthetic input\n  tool <tool> --input <json-file>  Run a validated local tool\n  demo [--out <new-directory>]    Run reproducible toolkit scenarios without a model\n\nDesktop Pi runs use the same packets, selected skills and tools.\n`);return;
+    process.stdout.write(`AppYard challenge pipeline\n\n  catalog                         List 34 source-linked challenges\n  plan <id> [--out <directory>]    Print a packet or prepare an isolated workspace\n  tools                           List tool schemas\n  fixture <tool>                  Print a synthetic input\n  tool <tool> --input <json-file>  Run a validated local tool\n  demo [--out <new-directory>]    Run reproducible toolkit scenarios without a model\n\nDesktop Pi runs use the same packets, selected skills and tools.\n`);return;
   }
   if (command==='catalog') {print(challenges);return;}
   if (command==='tools') {print(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters})));return;}

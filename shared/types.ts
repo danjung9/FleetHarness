@@ -8,14 +8,18 @@ export interface LogEntry { id: string; time: string; stage: StageId; kind: 'inf
 export interface TestReport {
   time: string; command: string; exitCode: number | null; passed: number; failed: number;
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
+  quality?: import('./quality.js').QualityReport;
 }
-export interface Project {
+export interface BriefContext { resources?: string; links?: string[] }
+export interface Project extends BriefContext {
+  qualityVersion?: 1;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
   backend?: AgentBackend;
   systemDesign?: import('./system-design.js').SystemDesign;
   challengeId?: string;
+  sourceChallenge?: import('../harness/types.js').Challenge;
   id: string; title: string; description: string; criteria: string[]; createdAt: string; updatedAt: string;
   status: RunStatus; stages: Stage[]; logs: LogEntry[]; runId?: string; workspace?: string;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
@@ -28,12 +32,13 @@ export interface ChatGPTAccount {
   email?: string; plan?: string; error?: string;
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
-export interface AppState { version: 1; projects: Project[]; settings: Settings }
+export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
 export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount }
-export interface NewProject { title: string; description: string; criteria: string[]; challengeId?: string }
+export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
   bootstrap(): Promise<Bootstrap>;
+  refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;
   updateProject(id: string, input: NewProject): Promise<Project>;
   startRun(id: string): Promise<void>;

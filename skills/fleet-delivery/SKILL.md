@@ -1,6 +1,6 @@
 ---
 name: fleet-delivery
-description: Package a reviewed FleetHarness prototype with reproducible setup, source-bound evidence, limitations, and a concrete path-to-fleet handoff.
+description: Package a reviewed AppYard prototype with reproducible setup, source-bound evidence, limitations, and a concrete path-to-fleet handoff.
 ---
 
 # Reproducible delivery

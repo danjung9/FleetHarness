@@ -4,6 +4,11 @@ export interface Challenge {
   title: string;
   category: string | null;
   summary: string;
+  description?: string;
+  expectedDeliverables?: string;
+  evaluationCriteria?: string[];
+  resources?: string;
+  links?: string[];
   recipe: RecipeId;
   related: string[];
   requirements: string[];
@@ -18,6 +23,11 @@ export interface AcceptanceCriterion {
   requirement: string;
   method: 'automated' | 'human' | 'integration';
   scenario: string;
+  provenance?: Array<{
+    kind: 'requirement' | 'evaluation' | 'deliverable' | 'user' | 'recipe';
+    id: string;
+    path: string;
+  }>;
 }
 export interface Recipe {
   id: RecipeId;

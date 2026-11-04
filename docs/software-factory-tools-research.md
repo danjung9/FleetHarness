@@ -1,6 +1,6 @@
 # Tools for an automatic software factory
 
-Research date: November 4, 2026. Scope: taking a requirement through research, implementation, verification, delivery, and subsequent maintenance. This is a capability assessment and implementation recommendation, not a benchmark or an integration claim. Recommendations below are engineering judgments based on the inspected FleetHarness working tree and linked primary documentation.
+Research date: November 4, 2026. Scope: taking a requirement through research, implementation, verification, delivery, and subsequent maintenance. This is a capability assessment and implementation recommendation, not a benchmark or an integration claim. Recommendations below are engineering judgments based on the inspected AppYard working tree and linked primary documentation.
 
 **Recommendation:** extend the existing harness with browser verification, source-backed research, isolated execution, reproducible application environments, and Git/CI integration. Add durable recovery and release operations as the factory becomes unattended. Keep domain tools selective. A reliable factory needs both tools agents can invoke and host services that enforce completion and preserve evidence.
 
@@ -17,7 +17,7 @@ Research date: November 4, 2026. Scope: taking a requirement through research, i
 | Backend-specific execution controls | Pi's prompt explicitly says its workspace is not an OS sandbox. The in-progress [Codex adapter](/Users/danieljung/Projects/hackathons/FleetHarness/electron/codex-session.ts) requests workspace-write sandboxing, disables network access, and disables web search. These are code settings, not verified isolation evidence. Host verification and custom tools need their own boundaries regardless of backend. |
 | Review and local export | [Desktop handlers](/Users/danieljung/Projects/hackathons/FleetHarness/electron/main.ts) bind approval/export to verified source. There is no complete repository/PR/CI or deployment/health/rollback workflow here. |
 
-**Tools to add first.** The order reflects expected value for FleetHarness, not measured performance. Effort is relative: small means an adapter to an existing API/CLI; medium adds sessions, artifacts, and UI support; large changes execution or delivery architecture.
+**Tools to add first.** The order reflects expected value for AppYard, not measured performance. Effort is relative: small means an adapter to an existing API/CLI; medium adds sessions, artifacts, and UI support; large changes execution or delivery architecture.
 
 | Priority | Capability and candidate | Why it is needed | Suggested integration and effort |
 | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ Research date: November 4, 2026. Scope: taking a requirement through research, i
 | P2 | Deployment, health checks, and rollback | Turn a tested artifact into an observable release and recover failed releases. [GitHub environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) can enforce deployment rules; [OIDC](https://docs.github.com/en/actions/concepts/security/openid-connect) provides short-lived cloud credentials. | Select one explicit deployment target; implement preview, promotion, health/log inspection, and rollback for that target. Environment protection availability varies by repository visibility and plan. Large. |
 | P1 metrics; P2 operations | Tracing and operational feedback: OpenTelemetry | Measure tool failures, repair loops, time and usage; later connect deployed errors to reproducible regression cases. [OpenTelemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) supplies traces, metrics and logs, but needs a storage/viewing backend. | Instrument the harness and keep artifact links per run now. Add a backend when cross-run analysis or deployed services warrant one. Small–medium initially. |
 
-The recommended browser starting point is the existing Playwright dependency with a thin adapter and host test runner. Microsoft's [MCP repository](https://github.com/microsoft/playwright-mcp) also describes CLI-plus-skills as suitable for coding agents and MCP as useful for persistent exploratory sessions. That is a documented design tradeoff, not a measured advantage in FleetHarness. Compare the interfaces on the same tasks before choosing.
+The recommended browser starting point is the existing Playwright dependency with a thin adapter and host test runner. Microsoft's [MCP repository](https://github.com/microsoft/playwright-mcp) also describes CLI-plus-skills as suitable for coding agents and MCP as useful for persistent exploratory sessions. That is a documented design tradeoff, not a measured advantage in AppYard. Compare the interfaces on the same tasks before choosing.
 
 Screenshot support also needs a transport check: the current Codex custom-tool adapter forwards text content only. Adding a screenshot-producing tool will not by itself deliver pixels to that model. Verify image handling end to end for each backend, with structured page inspection available when image input is unavailable.
 

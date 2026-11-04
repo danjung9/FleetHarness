@@ -1,13 +1,13 @@
 ---
 name: fleet-intake
-description: Turn a Norfolk FleetHacker challenge or custom FleetHarness problem into a scoped specification, data contract, and traceable acceptance matrix before implementation.
+description: Turn a Norfolk FleetHacker challenge or custom AppYard problem into a scoped specification, data contract, and traceable acceptance matrix before implementation.
 ---
 
 # Fleet challenge intake
 
 Read `.fleet/packet.json` when running in a prepared workspace. Its `challenge` records the source interpretation; `userScope` records the builder's requested slice. Keep both visible. Recipe selection is an engineering recommendation, not a requirement published by the event.
 
-Keep the host-written `requirements.md` unchanged. Write `scope.md` with the user journey, inputs, outputs, operating environment, explicit exclusions and outstanding owner questions. Preserve each source criterion ID in `test-matrix.md`; map it to an automated check, a manual review, an integration check or an unimplemented remainder. Do not turn an entire challenge into a generic chat UI.
+Keep the host-written `requirements.md` unchanged. Write `scope.md` with the audience, primary task, observable success outcome, inputs, outputs, operating environment, recovery needs, explicit exclusions and outstanding owner questions. Preserve the packet's acceptance IDs and provenance across source requirements, evaluation criteria, expected deliverables and user criteria. Distinguish a scoped prototype outcome from a deferred source requirement; do not silently drop either. Planning will map every criterion to implemented browser journeys or a reasoned deferral. Do not turn an entire challenge into a generic chat UI.
 
 The installed toolkit uses synthetic data. Do not pull operational records into a provider session merely because an original challenge mentions them. The packet's data needs identify missing integrations, not permissions to access them.
 

@@ -1,6 +1,6 @@
 # ChatGPT subscription builds
 
-FleetHarness includes Codex 0.166.0 as a second build engine alongside Pi. The desktop dashboard exposes the account controls.
+AppYard includes Codex 0.166.0 as a second build engine alongside Pi. The desktop dashboard exposes the account controls.
 
 1. Open **Settings**, then select **Codex · ChatGPT subscription** under **Build engine**.
 2. Choose **Continue with ChatGPT** and complete sign-in in the browser. Settings updates when OpenAI confirms the login. Use **Cancel sign-in** to stop a pending attempt.
@@ -15,10 +15,10 @@ Choose **Pi · model providers** to continue using existing Pi credentials and A
 
 - The pinned `@openai/codex` dependency includes its native platform package. Electron Builder unpacks that executable so packaged apps do not depend on a globally installed CLI.
 - The main process starts `codex app-server --listen stdio://` and performs the initialize/initialized handshake. `account/login/start` returns an OpenAI authorization URL, which the main process validates and opens. The renderer never receives that URL, OAuth tokens, or API keys.
-- Codex handles the callback, token storage, and refresh. Its `CODEX_HOME` is `<FleetHarness userData>/codex`, separate from the user's other Codex installations. Credentials use Codex's file credential store inside the private local directory; this is distinct from Electron's encrypted Pi API-key storage. **Sign out** clears this FleetHarness Codex login only.
+- Codex handles the callback, token storage, and refresh. Its `CODEX_HOME` is `<AppYard userData>/codex`, separate from the user's other Codex installations. Credentials use Codex's file credential store inside the private local directory; this is distinct from Electron's encrypted Pi API-key storage. **Sign out** clears this AppYard Codex login only.
 - Stage processes use that isolated login and explicitly require a ChatGPT account. Inherited `OPENAI_API_KEY`, `CODEX_API_KEY`, and `OPENAI_BASE_URL` values are removed. The thread explicitly selects the OpenAI provider and requested model.
-- Each stage gets its own Codex thread with the resolved phase skills and FleetHarness domain/architecture tools registered through the experimental dynamic-tool protocol. The dependency is pinned and its generated schema was checked for the `type: "function"` descriptor.
-- Codex uses workspace-write permissions, no approval escalation, and no external network access for shell commands. FleetHarness's independent verification runner still executes generated tests as local processes. Prompt instructions are not a substitute for OS isolation.
+- Each stage gets its own Codex thread with the resolved phase skills and AppYard domain/architecture tools registered through the experimental dynamic-tool protocol. The dependency is pinned and its generated schema was checked for the `type: "function"` descriptor.
+- Codex uses workspace-write permissions, no approval escalation, and no external network access for shell commands. AppYard's independent verification runner still executes generated tests as local processes. Prompt instructions are not a substitute for OS isolation.
 - The stdio client correlates requests, bounds RPC waits, handles process loss, translates text/tool events into the activity stream, and terminates the stage process on cancellation or disposal. Existing stage inactivity/deadline limits and artifact checks apply to both engines.
 
 ## Validation

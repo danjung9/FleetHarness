@@ -1,6 +1,6 @@
 # Live system design
 
-Every new build asks the planning agent to publish the application architecture early through `fleet_system_design`. The tool validates 1–12 major components, their source files, and up to 24 directed, labeled connections. It saves `system-design.json` in the run workspace and publishes the same definition to the UI. Components describe the application being built, rather than FleetHarness's build pipeline.
+Every new build asks the planning agent to publish the application architecture early through `fleet_system_design`. The tool validates 1–12 major components, their source files, and up to 24 directed, labeled connections. It saves `system-design.json` in the run workspace and publishes the same definition to the UI. Components describe the application being built, rather than AppYard's build pipeline.
 
 The implementation and verification agents call `fleet_component_progress` as they work. Each update is broadcast through the existing application state subscription and persisted locally. Statuses are **Planned**, **Building**, **Generated**, and **Blocked**. Interrupted work displays **Stopped** or **Blocked**, depending on the run outcome. A new run or an edited brief clears the old design.
 
