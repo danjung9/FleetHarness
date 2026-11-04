@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, coordination at 17:21] Existing QA task was idle and received a bounded assignment to close the detached Pi Stop defect against the landed process-sweep revision. Main retains native execution; QA prepares the exact rerun and judges its receipt. No new agents or competing GUI.
+
 - [E, experiment receipt at 17:14] [[Research/QA/Ten/Exp1/Scoreboard]] records five finished automatic passes and five independent NOT verdicts. It ran 16:39 to 17:09 on 1d9eeee plus scratch changes. The earlier absence claim was a wrong-path error. All 324 raw manifest entries match. Matched time and token cost increased; no satisfactory improvement yet. [[Research/QA/Ten-Benchmark-Audit]] distinguishes this run from the newer-head verifier patch blocker.
 
 - [E, coordinator scope clarification] Round-one manifest differences are retained as the stated limit. Main reports exact frozen output outside the vault for first-open and driver STOP/3.5-hour cancellation from round two. QA now prioritizes findings that alter build outcomes; dev-3 owns the sandbox verifier's injectable launcher first and smoke task next. The separate measured Pi detached-child defect remains open.
