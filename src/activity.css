@@ -29,9 +29,9 @@
 .activity-row{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:14px;padding:19px 0}
 .activity-row:not(:last-child)::before{content:'';position:absolute;top:46px;bottom:-18px;left:13px;width:1px;background:var(--line)}
 .activity-marker{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--muted);background:var(--paper);border:1px solid var(--line);border-radius:50%}
-.message .activity-marker{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.message .activity-marker{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .running .activity-marker{color:var(--active-ink);background:var(--active);border-color:var(--active-ink)}
-.failed .activity-marker,.error .activity-marker{color:#9b3022;background:#f3d8d3;border-color:#9b3022}
+.failed .activity-marker,.error .activity-marker{color:var(--danger);background:var(--danger-surface);border-color:var(--danger)}
 .activity-meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);margin-bottom:7px;font-variant-numeric:tabular-nums;line-height:1.5}
 .activity-meta>span:first-child{font-weight:600;color:var(--ink)}
 .activity-meta time{margin-left:auto}
@@ -54,8 +54,8 @@
 .activity-chevron{margin-left:auto;flex:none;transition:transform 160ms ease-out}
 .activity-action[open] .activity-chevron{transform:rotate(90deg)}
 .activity-state{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:var(--muted)}
-.activity-state.complete{color:#286348}
-.activity-state.failed,.activity-error-title{color:#9b3022}
+.activity-state.complete{color:var(--complete-ink)}
+.activity-state.failed,.activity-error-title{color:var(--danger)}
 .activity-state.running{color:var(--active-ink)}
 .activity-target{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font:11px/1.7 var(--mono);margin-top:5px}
 .activity-action-body{border-top:1px solid var(--line);margin-top:5px;padding-top:12px}

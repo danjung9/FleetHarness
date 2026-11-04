@@ -9,12 +9,3 @@
 .phase-resources code{font:11px/1.7 var(--mono,monospace);color:inherit}
 .phase-details .phase-gate{border-top:1px solid var(--line);padding-top:18px}
 .phase-details .phase-note{padding-bottom:16px;border-bottom:1px solid var(--line)}
-.studio-phase{padding:24px 28px}
-.studio-phase>h2{margin:0 0 8px;font-size:24px}
-.studio-phase>p{color:var(--muted);font-size:13px}
-.studio-phase .phase-details{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
-.studio-phase .phase-gate,.studio-phase .phase-note{grid-column:1 / -1}
-.pipeline li>button{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid transparent;background:none;border-radius:5px;text-align:left;font:inherit;color:inherit}
-.pipeline li>button:hover{background:var(--raised,var(--ground))}
-.pipeline li>button[aria-pressed=true]{border-color:currentColor;color:var(--ink,var(--paper))}
-@media(max-width:660px){.studio-phase{padding:22px 17px}.studio-phase .phase-details{display:block}.pipeline li>button{padding:4px}}

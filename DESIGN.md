@@ -154,7 +154,7 @@ This is a scan of the implemented system in `src/styles.css`, `src/App.tsx`, and
 
 ## Colors
 
-The palette pairs dark blue structure with cool white materials, a restrained gold attention color, and semantic state tints. The original desktop palette draws on the [U.S. Navy design guide](https://usnavy.github.io/Navy-Design-Guide/brand-colors.html), with darker gold for accessible focus on light surfaces. Studio and Workbench retain their own palettes. Frontmatter values are normative; the sidecar's synthesized tonal ramps are swatch previews, not additional application tokens.
+The palette pairs dark blue structure with cool white materials, a restrained gold attention color, and semantic state tints. The original desktop palette draws on the [U.S. Navy design guide](https://usnavy.github.io/Navy-Design-Guide/brand-colors.html), with darker gold for accessible focus on light surfaces. Frontmatter values are normative; the sidecar's synthesized tonal ramps are swatch previews, not additional application tokens.
 
 ### Primary
 
@@ -187,15 +187,15 @@ The palette pairs dark blue structure with cool white materials, a restrained go
 
 ## Typography
 
-**Display Font:** DM Serif Display, with Georgia and serif fallbacks, shared with the Studio design.
+**Display Font:** DM Serif Display, with Georgia and serif fallbacks.
 **Body Font:** DM Sans, with a sans-serif fallback.
 **Label/Mono Font:** IBM Plex Mono, with a monospace fallback, for execution data.
 
-The pairing gives compact operational screens a clear hierarchy without making ordinary instructions resemble a terminal. Fonts are bundled locally. DM Serif Display uses its native 400 weight from the same bundled font asset as Studio; DM Sans weights 400–700 and IBM Plex Mono weights 400–600 are imported.
+The pairing gives compact operational screens a clear hierarchy without making ordinary instructions resemble a terminal. Fonts are bundled locally. DM Serif Display uses its native 400 weight from `src/fonts/dm-serif-display.ttf`; DM Sans weights 400–700 and IBM Plex Mono weights 400–600 are imported.
 
 ### Hierarchy
 
-- **Display:** Page titles use the display token. The Home portfolio borrows Studio’s homepage contrast with a 36–54px fluid serif title and 19px serif challenge names; operational panels retain their compact scale.
+- **Display:** Page titles use the display token. The Home portfolio uses a 36–54px fluid serif title and 19px serif challenge names; operational panels retain their compact scale.
 - **Headline:** The persistent challenge title uses the headline token; it contracts to (21px) at the narrow desktop breakpoint. Dialog titles also use (23px), with their own slightly tighter tracking.
 - **Title:** Section headings use the title token, with contextual (14–16px) headings inside dense panels and sheets.
 - **Body:** Page descriptions use the body token; instructions and checklist text also use (12px). Page introductions are limited to (76ch), while empty-state text is limited to (52ch).

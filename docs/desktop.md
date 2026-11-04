@@ -71,7 +71,7 @@ The original dashboard uses an 84px icon rail with short labels: Home, Flow, Pre
 
 Challenge descriptions expand under **Challenge brief**. Select a flow stage, or use the panel icon, to inspect its owner, output, criteria, and activity. The Preview toolbar toggles activity and the review checklist independently. Test output expands on demand and opens automatically when verification fails. Approval, export, execution permissions, and readiness limitations remain explicit.
 
-This refinement applies only to the original dashboard. FleetHarness Studio keeps its separate renderer and design.
+The original dashboard is the sole FleetHarness interface.
 
 Use Node.js 22.19 or newer for Pi SDK compatibility; the packaged app has its own Node 24 runtime.
 

@@ -1,9 +1,8 @@
 .system-design {
   --sd-bg: var(--paper); --sd-node: var(--sheet, #fbfaf6); --sd-ink: var(--ink); --sd-muted: var(--muted);
-  --sd-line: var(--line); --sd-focus: var(--focus, #b64020); --sd-active: var(--active-ink, #9e361a); --sd-done: #286348; --sd-blocked: #9b3022;
+  --sd-line: var(--line); --sd-focus: var(--focus, #b64020); --sd-active: var(--active-ink, #9e361a); --sd-done: var(--complete-ink, #286348); --sd-blocked: var(--danger, #9b3022);
   background: var(--sd-bg); color: var(--sd-ink); min-width: 0; font-size: 13px;
 }
-.system-design-studio { --sd-bg: var(--surface); --sd-node: var(--base); --sd-ink: var(--paper); --sd-focus: var(--accent); --sd-active: var(--accent); --sd-done: var(--green); --sd-blocked: var(--danger); }
 .sd-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px 16px; }
 .sd-heading h2 { font: var(--display-weight, 700) 17px/1.4 var(--display, 'Manrope', sans-serif); margin: 0; letter-spacing: -.02em; }
 .sd-heading p { color: var(--sd-muted); font-size: 12px; margin: 4px 0 0; overflow-wrap: anywhere; }

@@ -35,9 +35,15 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
       updated(await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined)); setKey('');
     }, 'Model settings saved.');
   }}>
-    <label>Build engine<select aria-label="Build engine" value={backend} disabled={disabled || connecting} onChange={e => { setBackend(e.target.value as AgentBackend); setModel(''); setKey(''); }}>
-      <option value="codex">Codex · ChatGPT subscription</option><option value="pi">Pi · model providers</option>
-    </select></label>
+    <fieldset className="engine-selector" disabled={disabled || connecting}>
+      <legend>Build engine</legend>
+      <div className="engine-options">
+        {([{ id: 'codex', name: 'Codex', description: 'ChatGPT subscription' }, { id: 'pi', name: 'Pi', description: 'Model providers' }] as const).map(engine => <label className="engine-option" key={engine.id}>
+          <input type="radio" name="build-engine" value={engine.id} checked={backend === engine.id} onChange={() => { setBackend(engine.id); setModel(''); setKey(''); }}/>
+          <span><strong>{engine.name}</strong><small>{engine.description}</small></span>
+        </label>)}
+      </div>
+    </fieldset>
     {backend === 'codex' ? <div className="chatgpt-connection">
       <h3>ChatGPT account</h3>
       <p>Use the Codex allowance included with your ChatGPT plan. Availability and usage limits depend on your account.</p>
