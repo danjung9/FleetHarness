@@ -106,3 +106,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:23 Astra fix-pi started: Four tests still fail outside the sandbox on your batch, commit 3be61f1, with the real sandbox and ps available. Unit 28
 - 18:23 Astra conn-core started: Connectors, next batch: wire it all together and finish. The overseer merged the Google and Microsoft connectors and the
 - 18:23 Automatic QA at 6228623 on dev/reviewed: failures: unit tests, smoke-electron, smoke-norfolk. Fixture provider only. `Research/QA/Auto/6228623.md`
+- 18:26 `16a6940` pushed: approval and export fixes, atomic host writes, single instance, restart cleanup, evidence stored outside the workspace, process cleanup tolerant of load. Unit 331 of 332, harness 80 of 80; the one failure is a 200 ms page-load limit under load and passed 3 of 3 alone.
+- 18:26 Team branch: mvp now 16a6940
+- 18:27 Astra fix-pi finished, exit 0. Report: `Research/Backend-Audit/fix-pi.md`
+- 18:27 Astra fix-pi started: The overseer started a merge of the team's mvp (commit 16a6940, the approval, export and evidence fixes plus the coverag

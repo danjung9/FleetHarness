@@ -34,3 +34,17 @@ Both TypeScript checks passed. All 42 containment, secrets and runner tests pass
 Native validation remains unavailable: sandbox startup is denied and `ps` cannot run. Backend results were 4 passed, 92 failed at sandbox preflight; SDK/audit results were 1 passed, 5 failed, 2 existing skips. The revised retry and SDK workflows need the overseer’s native rerun. Chrome could not run here.
 
 COMMIT: Fix Pi workspace aliases and stabilize timeout retry regression
+
+## 18:27 report
+
+Left changes uncommitted:
+
+- Four recovery fixtures now trigger timeouts only after entering the intended build stall. All original assertions and timeout values remain.
+- Added five passing regressions proving both prompt and abort must settle, and unconfirmed shutdown blocks retry and persisted recovery even after a late write.
+- Production recovery behavior is unchanged.
+
+Both TypeScript checks passed. All 47 focused tests passed. The full backend suite recorded 4 passes and 92 sandbox-preflight failures.
+
+I could not validate the four revised pipeline cases with a working native sandbox, `ps`, or Chrome here. They need the overseer’s native rerun.
+
+COMMIT: Make Pi recovery timeout fixtures deterministic and verify writer shutdown gates
