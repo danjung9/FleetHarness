@@ -91,3 +91,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:13 Astra fix-approval started: Fix the four tests your batch fails outside the sandbox. This is commit 1af5235, already committed by the overseer. Same
 - 18:13 Astra fix-pi started: Fix the four tests your batch fails outside the sandbox. This is commit c73df61, already committed by the overseer. The 
 - 18:14 Astra fixer started: Fix the five tests your API-key batch fails outside the sandbox. This is commit 35eb921, already committed by the overse
+- 18:15 Astra conn-accounts finished, exit 1. Report: `Research/Backend-Audit/conn-accounts.md`
+- 18:15 Astra fix-approval finished, exit 0. Report: `Research/Backend-Audit/fix-approval.md`
+- 18:16 `6228623` pushed: repairs can no longer weaken tests, prose requirements stay in coverage, evaluator failures retry without spending repairs, one download serves many checks. Unit 295 of 295, harness 80 of 80, outside the sandbox.
+- 18:17 Team branch: mvp now 6228623

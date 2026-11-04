@@ -18,3 +18,16 @@ Both requested TypeScript checks passed. Touched tests: **132 passed, one `ps` p
 Native cleanup, Electron instance locking, browser journeys, packaged execution, and the full external suite remain unverified here. No frontend edits or commits. Details: [handoff](~/Documents/CDAO/fh-org/astra-a1/audit/lifecycle/backend-fix-handoff.md).
 
 COMMIT: Fix approval transactions, delivery evidence and interrupted run cleanup
+
+## 18:15 report
+
+Fixed both causes:
+
+- Missing process scope caused a TypeError that mislabeled successful cleanup as failure. All three Stop regressions now pass.
+- Undefined environment values are omitted before launch and provenance recording, preserving report equality through JSON persistence.
+
+No assertions weakened. Both TypeScript checks passed. Focused tests: **90 passed, zero failed, one native `ps` test skipped**.
+
+The original full-workflow test remains blocked here by Chrome startup. Native validation and the full external suite require the overseer. Changes are uncommitted.
+
+COMMIT: Preserve stopped outcomes and serialize verification provenance consistently
