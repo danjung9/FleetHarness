@@ -3,14 +3,14 @@ type: research
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Round 3 challenges 12 and 36 fail during final process cleanup; the flow discards the diagnostic reason. Dev-4 owns the bounded correction."
+summary: "Round 3 challenges 12, 36 and 11 fail during final process cleanup; the flow discards the diagnostic reason. Dev-4 owns the bounded correction."
 ---
 
 # Stop that ends local work
 
 ## Bottom line
 
-[E, R3 ID 12 and ID 36 receipts and pinned source] Generation and automatic verification finished successfully, but the final process sweep rejected before either run could settle at human review. The cleanup catch changes review to failed and discards the underlying reason. [R] Return both receipts to **dev-4**, the existing cleanup owner, with the same three-file correction below. [E] The retained evidence proves the failure boundary, but cannot establish whether processes survived, inspection failed or cleanup ran out of time. A specific native scanner repair is not yet supported by the evidence.
+[E, R3 ID 12, ID 36 and ID 11 receipts and pinned source] Generation and automatic verification finished successfully, but the final process sweep rejected before these runs could settle at human review. The cleanup catch changes review to failed and discards the underlying reason. [R] Return all three receipts to **dev-4**, the existing cleanup owner, with the same three-file correction below. [E] The retained evidence proves the failure boundary, but cannot establish whether processes survived, inspection failed or cleanup ran out of time. A specific native scanner repair is not yet supported by the evidence.
 
 ## Round 3 challenge 12: exact failure path
 
@@ -36,9 +36,19 @@ summary: "Round 3 challenges 12 and 36 fail during final process cleanup; the fl
 
 [E, SHA-256 comparison] All 43 manifest paths exist; 36 hashes match. Seven Markdown copies differ: `README.md`, `path-to-fleet.md`, `plan.md`, `research.md`, `scope.md`, `test-matrix.md` and `verification.md`. The manifest warns that vault synchronization normalizes Markdown dashes. Application files, tests, frozen contracts and the test report match; the diagnosis uses the matching report and retained final/log evidence. Final JSON SHA-256: `709e1bc96f4465d4bebd01f223e3c72f2fe9029ade003b06318439994e0a1bb0`. Log-tail SHA-256: `38b20c1c475e4aff08ef91d5cf79cf4679c201063b1c6fc84d256b56232a11d2`. No generated code or native process scan was executed for this check.
 
+## Round 3 challenge 11: same failure boundary
+
+[E, retained JSON and log read] `Research/QA/Ten/R3/id11-training/final.json.report` equals `test-report.json`, timestamp `2026-11-04T22:26:19.292Z`: exit 0, 15/15 Node tests, no skips, 16/16 browser executions and no quality errors. Four criteria pass; UC11-1, SCH-04 and SCH-05 remain unverified, so requirementsMet is false. Intake through verify are complete, review is failed and delivery queued. `log-tail.txt:88` records the successful-check handoff; line 89 records the cleanup error. `first-open.json` separately reports no page, console or click errors, no outside requests, a nonblank page and no narrow overflow.
+
+[E, matched to f662d81 source] This is the same `execute()` finally block calling `finish()` and `run.processes.stop()`, followed by the exception-discarding catch at `electron/pi-backend.ts:59-63`. The earlier unavailable-personnel fixture mismatch was repaired before the saved passing report. Neither that earlier browser failure nor the three deferred requirements caused the terminal cleanup exception. The exact supported flow cause is cleanup rejection after verification; the native reason is unavailable because the host replaced it with a generic message.
+
+[R] Add ID 11 to the existing dev-4 correction in `electron/process-sweep.ts`, `electron/pi-backend.ts` and `tests/process-sweep.test.mjs`. Preserve categorized, bounded cleanup diagnostics and add the missing successful-build-to-review regression, then let main capture native evidence to select the functional cleanup fix. No additional model repair or application edit is justified by this failure. Keep cleanup mandatory, the three unverified obligations visible and final artifact approval with a person.
+
+[E, SHA-256 comparison] All 79 manifest paths exist; 74 hashes match. Five Markdown reading copies differ: `README.md`, `plan.md`, `research.md`, `test-matrix.md` and `verification.md`. The manifest documents dash normalization during vault sync. Application files, tests, frozen contracts and the test report match. Final JSON SHA-256: `952bd8400a10d65df9b0786cc668efa995f9689bdf5ab16d7c00197905f55ab8`; log-tail SHA-256: `fc5ac8e0a987cca8095f10e8ab4ff49dad3d4c669638944d9f2da4890aefa37f`. These checks read retained data and pinned source; no generated code or process scanner was run.
+
 ## Smallest correction and code seat
 
-[R] **Owner: dev-4**, as specified for new cleanup failures in [[Ops/Directors/Directive-development]]. This is a handoff recommendation, not a new dispatch. Coordinate `electron/pi-backend.ts` with the current integration/judge work before editing. No frontend or generated-app change is needed.
+[R] **Owner: dev-4**, the cleanup implementation owner recorded in `org/reports/feed-118.md`. The current [[Ops/Directors/Directive-development]] keeps native investigation with main and routes proved cleanup defects back to the existing owner after current work and file handoff. This is a handoff recommendation, not a new dispatch. Coordinate `electron/pi-backend.ts` with the current integration/judge work before editing. No frontend or generated-app change is needed.
 
 | File | Smallest justified change [R] |
 | --- | --- |
@@ -56,9 +66,9 @@ summary: "Round 3 challenges 12 and 36 fail during final process cleanup; the fl
 
 [E, ID 12] Forty of 45 retained manifest entries match SHA-256, with none missing. The five differences are `README.md`, `plan.md`, `test-matrix.md`, `user-guide.md` and `verification.md`. The app, test source, frozen acceptance plan and test report match. Final-report equality and the log order establish this diagnosis without relying on those differing Markdown copies. Final JSON SHA-256: `b7c973841ffa5126c3d8085f60653db50bd9fdced9b6b09d816e404e07b374d2`; log-tail SHA-256: `3088baf3361bf3ea704a587deb2bca8103de87591d403dddcdc3de887269d84f`.
 
-[E] ID 12 was the first cleanup rejection recorded here; ID 36 is now grouped with it. The shared cause remains separate from [[Research/Agentic/09-Primary-Task-Deferral]] and [[Research/Agentic/08-Native-Select-Repair]]. The earlier measured detached Pi survivor is a separate receipt, not proof of the native cause in either R3 run. No repository program, browser, process scanner or model build was executed for this review. Native failure reason, a functional repair and independent satisfactory judgment remain unverified.
+[E] ID 12 was the first cleanup rejection recorded here; IDs 36 and 11 are now grouped with it. The shared cause remains separate from [[Research/Agentic/09-Primary-Task-Deferral]] and [[Research/Agentic/08-Native-Select-Repair]]. The earlier measured detached Pi survivor is a separate receipt, not proof of the native cause in these R3 runs. No repository program, browser, process scanner or model build was executed for this review. Native failure reason, a functional repair and independent satisfactory judgment remain unverified.
 
-[E] Current sources: `Research/QA/Ten/R3/id12-optask/{final.json,log-tail.txt,test-report.json,first-open.json,MANIFEST.json}` and the same five files in `Research/QA/Ten/R3/id36-paperless/`; [[Research/QA/Ten/Round-3]]; local pinned source at https://github.com/danjung9/FleetHarness/tree/f662d81; `org/reports/feed-118.md`, `snapshot-158.md`; [[Ops/Directors/Directive-development]] and [[Ops/Directors/Directive-agentic]]. Repository URL is a revision reference, not a remote retrieval.
+[E] Current sources: `Research/QA/Ten/R3/id12-optask/{final.json,log-tail.txt,test-report.json,first-open.json,MANIFEST.json}` and the same five files in `Research/QA/Ten/R3/id36-paperless/` and `Research/QA/Ten/R3/id11-training/`; [[Research/QA/Ten/Round-3]]; local pinned source at https://github.com/danjung9/FleetHarness/tree/f662d81; `org/reports/feed-118.md`, `snapshot-158.md`; [[Ops/Directors/Directive-development]] and [[Ops/Directors/Directive-agentic]]. Repository URL is a revision reference, not a remote retrieval.
 
 [E, ID 12 closeout relay] LATEST then named mvp 0da7ce9; LATEST-analysis then covered hosted hash alignment at 5a9d7d1. These are historical relay observations.
 

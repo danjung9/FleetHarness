@@ -1,14 +1,32 @@
 ---
 type: qa-review
-status: pending-runtime
+status: blocked-native-verification
 owner: mukul
 updated: 2026-11-04
-summary: "The integrated process sweep has a pinned regression fixture; native detached Pi Stop closure awaits its receipt."
+summary: "Three R3 builds fail cleanup; source review identifies a likely macOS ps option-mode defect, while native Stop closure remains pending."
 ---
 
 # Detached Pi Stop regression at 0da7ce9
 
 [E] **The defect remains open pending a native rerun.** The earlier d0f4c69 receipt proves that the detached child continued working after Stop. The new integrated source addresses that mechanism, but source and injected-discovery tests do not establish native macOS shutdown. Main owns execution; this preparation launched no app, provider, worker or process scanner.
+
+## Live R3 blocker
+
+[E, R3 receipts reviewed after the pinned fixture handoff] The first three completed builds at reported f662d81 plus scratch patches all fail during final cleanup, after their verify stage completed. ID 12 reports 27 passing tests and 14 passing journeys; ID 36 reports 24 and 14; ID 11 reports 15 and 16. Their final.json files all retain the same generic cleanup warning and status failed. These are real factory failures, not candidate test failures, and not proof that a process survived.
+
+[E] `~/fhten/app/electron/process-sweep.ts` is byte-identical to the reviewed 0da7ce9 sweep, SHA-256 `43ebf41d731bb8cac977b84bd6017b79e8454d8cf78e52c3c58a77fae60e3626`. The compiled process-sweep.js contains the same scanner argument vector and failure paths. The running app is a source copy without a Git directory; its reported head comes from the benchmark receipt. No process environment or credential content was inspected.
+
+[E/V, source evidence] The scanner begins its argument vector with `ww` or `eww`, then `-u`, a numeric user ID, and `-o`. Apple's ps source changes to legacy option mode when the first argument lacks a leading hyphen. In that mode `-u` selects a display format and does not consume a user ID. A remaining numeric token becomes a PID request, and a following `-o` can trigger illegal-argument failure. The local ps manual also distinguishes modern and legacy `-u` behavior. [Apple ps.c](https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/ps.c), specifically PS_ARGS, case u, trailing-argument processing and kludge_oldps_options; local `/usr/share/man/man1/ps.1:628-639`.
+
+[A] **Likely cause: mixed legacy and modern ps options make native inspection fail.** This source-based diagnosis explains why injected-discovery and parser tests miss the problem. It has not been reproduced against the installed binary here. No ps command was invoked, including any environment expansion.
+
+[E] The current finalizer catches every sweep exception and replaces it with one generic warning. Inspection errors, invalid identities, surviving owned PIDs and failure to obtain two empty snapshots become indistinguishable in the final receipts. The raw R3 receipts therefore cannot establish the specific cause or clear the original detached-child defect.
+
+[R] The runtime owner should keep new benchmark launches paused until owned cleanup is confirmed. The implementation owner should use one explicit macOS option mode, for example `-ww` with optional `-E` and `-U <uid>`, and validate both argument vectors through the native launcher. First verify option parsing with environment expansion omitted and all output discarded, retaining only status codes. Preserve the original FAILs. Do not dump command lines or environments to diagnose the issue.
+
+[R] Preserve a safe structured cleanup reason such as inspection-command-failed, snapshot-unstable, survivor-present or not-quiescent. Retain allowed numeric exit/signal/timing data and verified owned PID identities only; do not propagate raw execFile errors, stdout or stderr. Add an argument-vector regression plus a native synthetic ownership check that finds the marked detached worker and leaves an unrelated synthetic worker alone. Then run the unchanged GUI Stop expectations on the exact newly integrated revision. Neither bypassing the sweep nor changing cleanup failure to review is an acceptable repair.
+
+[E] Receipts: `Research/QA/Ten/R3/id12-optask/final.json`, `Research/QA/Ten/R3/id36-paperless/final.json`, `Research/QA/Ten/R3/id11-training/final.json`, their log-tail.txt files, and [[Research/QA/Ten/Round-3]]. Existing pinned fixture below remains a regression deliverable; a corrected product revision needs its own explicit pin before execution.
 
 ## Source review
 

@@ -96,6 +96,9 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Codex TUI task tools, session version unspecified | Local task coordination | Inspect and coordinate existing Fleethacker Codex tasks under the user management instruction | OpenAI | 2026-11-04 |
 | Detached Pi Stop fixture, pinned 0da7ce9 revision | QA tool | Reuse the measured detached-worker case with the integrated revision pin and current UI selectors; syntax and pure validation only here, native runtime owned by main | Team-created fixture, reusing the d0f4c69 regression | 2026-11-04 |
 | R3 challenge 12 packet | synthetic benchmark evidence | failure diagnosis | project benchmark. | 2026-11-04 |
+| R3 synthetic benchmark records | evidence dataset | engineering prioritization | project benchmark. | 2026-11-04 |
+| Runner scheduler audit probes revision 2 | Local diagnostic | Reproduce conflict-retry ownership loss and verify a reviewable scheduler patch with synthetic queue state | Project-local Python tooling | 2026-11-04 |
+| Apple adv_cmds ps source, main read 2026-11-04 | Public source reference | Read option parsing and environment rendering to diagnose the native process-sweep argument vector; no source compiled or executed | Apple Open Source Distributions on GitHub | 2026-11-04 |
 
 ## Data and sources
 

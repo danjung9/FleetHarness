@@ -10,7 +10,7 @@ summary: "Ten-challenge benchmark, round 3 at f662d81: 3 of 10 finished, 0 passe
 
 [P] Mukul's measure of success: real challenges built from the catalog card with no human help, start to finish, until satisfactory.
 
-[E, automatic, code `f662d81` plus scratch patch to codex-session.ts, electron/codex-account.ts, electron/codex-rpc.ts, electron/codex-session.ts, verification.ts, started 17:11, in progress EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
+[E, automatic, code `f662d81` plus scratch patch to codex-session.ts, electron/codex-account.ts, electron/codex-rpc.ts, electron/codex-session.ts, verification.ts, started 17:11, finished 17:35 EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
 
 **Automatic bar:** reached review alone; generated tests pass with none skipped; every planned browser journey passes; first open offline shows no page errors, no outside requests and a non-blank page. **Satisfactory:** that bar plus an independent judge's verdict, in `Research/QA/Officer/JUDGE-R<round>-<challenge>.md`.
 

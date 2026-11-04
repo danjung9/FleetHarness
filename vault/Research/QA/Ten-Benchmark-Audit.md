@@ -99,3 +99,5 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 [E/R] Sent an urgent blocked message to main to pause new launches and establish owned-process cleanup. Assigned the existing QA task to prioritize this evidence in its native Stop review. The running process-sweep source is at ~/fhten/app/electron/process-sweep.ts. No process census was available to this audit and no environment values were read or printed.
 
 [E, bridge metadata] Both runtime-target questions timed out. The bridge read markers show all messages consumed by 17:29, but neither question has a corresponding reply; the last recorded answer is 16:38. This is an unanswered coordination request, not a lost inbox delivery. No confirmation of a runtime pause is claimed.
+
+[E, control observation at 17:35 EST] STOP now exists and the R3 driver records stopped entries for remaining builds at 17:35. Its known error-swallowing path means these lines establish requests, not confirmed process cleanup. Existing QA reports a source diagnosis involving macOS ps legacy-mode flags; native validation and the resulting repair remain pending.
