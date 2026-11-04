@@ -76,3 +76,8 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:52 Astra fix-truth started: Backend fixer: coverage and repair truth.
 - 17:58 Mukul added data connectors (Gmail, Outlook, calendars, Drive, OneDrive, custom APIs), Model settings tabs and GenAI.mil. Design: `Research/Connectors/Design.md`. These start when the Codex API-key sign-in lands.
 - 17:59 Mukul: GenAI.mil gets the UI and framework only for now, its API is tested later. Everything else fully tested.
+- 18:01 Connector writers started early, on separate files, with the outdated smoke script fix.
+- 18:01 Astra conn-core started: Connectors core: service, sample data, snapshot, pipeline and screen.
+- 18:01 Astra conn-accounts started: Connectors accounts: sign-in and the Google and Microsoft connectors.
+- 18:01 Astra conn-api started: Connectors data service: connect any custom API with almost no effort.
+- 18:01 Astra fix-smoke started: Fix the outdated GUI smoke scripts.

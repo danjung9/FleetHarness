@@ -3,31 +3,31 @@ type: research
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Automatic QA at f5fec32 on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only."
+summary: "Automatic QA at acee4fa on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only."
 ---
 
-# Automatic QA at f5fec32
+# Automatic QA at acee4fa
 
-[E, automatic run, 17:41 to 17:47 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
+[E, automatic run, 17:56 to 18:02 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
 
 | Step | Exit | Seconds | Counts |
 | --- | --- | --- | --- |
 | typecheck | 0 | 1 |  |
 | electron compile | 0 | 0 |  |
-| web build | 0 | 1 |  |
-| unit tests | 0 | 66 | tests 125, pass 125, fail 0 |
+| web build | 0 | 2 |  |
+| unit tests | 0 | 67 | tests 125, pass 125, fail 0 |
 | harness compile | 0 | 0 |  |
 | harness tests | 0 | 2 | tests 51, pass 51, fail 0 |
 | smoke-activity | 0 | 14 |  |
-| smoke-chatgpt | 0 | 11 |  |
+| smoke-chatgpt | 0 | 13 |  |
 | smoke-electron | 1 | 33 |  |
-| smoke-home | 0 | 2 |  |
-| smoke-journey | 0 | 11 |  |
-| smoke-model-selector | 0 | 5 |  |
-| smoke-norfolk | 1 | 12 |  |
-| smoke-phases | 0 | 7 |  |
+| smoke-home | 0 | 3 |  |
+| smoke-journey | 0 | 14 |  |
+| smoke-model-selector | 0 | 6 |  |
+| smoke-norfolk | 1 | 13 |  |
+| smoke-phases | 0 | 5 |  |
 | smoke-quality | 0 | 2 |  |
-| smoke-system-design | 0 | 31 |  |
+| smoke-system-design | 0 | 29 |  |
 
 ## smoke-electron
 

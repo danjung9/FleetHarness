@@ -31,3 +31,7 @@ summary: "Frontend defects seen in the running app at 631849f, for Dan to decide
 - [E] A plain `git pull` fetches every branch, including `mukul-dev`, which carried about 272 MB of test screenshots and browser traces. Those files are now out of the branch's latest commit and new ones are no longer added, but they stay in its history. `git pull origin mvp` fetches only your branch.
 - [E] `c4f6ac9` made every real build on a Mac that got past tests end as failed, because a `ps` flag this Mac rejects made process cleanup fail. `f5fec32` fixes it. Pull before you push: org commits now land on `mvp` directly.
 - [E] Known failure on `mvp`: tests/pi-backend.test.mjs "the complete workflow advances in order" gets an extra `bash` tool. It fails before and after `f5fec32` and is being fixed.
+
+## 2026-11-04 18:01 EST: new screens coming
+
+- [P] Mukul ordered data connectors and more sign-in tabs. Coming to `mvp` once tested: a new Connectors screen (new files `src/Connectors.tsx` and `src/connectors.css`, one rail entry, one section in the brief) and tabs in `src/ModelSettings.tsx` (ChatGPT, API key, GenAI.mil, Other providers). Changes to existing frontend lines are kept to the minimum and will be listed here.
