@@ -70,16 +70,19 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.m
 
 ## Retained candidate outcomes
 
-[E, reporting revision 3] Both explicit Run1 adapters are ready. They already drive input, solve, rendered assignments/totals/outcomes, review, actual save and fresh offline import. The new reporting distinguishes established form limitations from missing observations, with no change to the 17 cases, evaluator, golden key or acceptance contract. Historical receipts below retain their original labels and counts; no new runtime receipt is claimed for this reporting revision.
+[E, reporting revision 3] All three explicit candidate adapters are ready. They already drive input, solve, rendered assignments/totals/outcomes, review, actual save and fresh offline import. The new reporting distinguishes established form limitations from missing observations, with no change to the 17 cases, evaluator, golden key or acceptance contract. Historical receipts below retain their original labels and counts; no new runtime receipt is claimed for this reporting revision.
 
 | Candidate and adapter | Existing stopped-writer receipt | Known input limitation |
 | --- | --- | --- |
 | `Research/TaskApp/Pipeline-run1`, `--adapter pipeline-run1` | `Research/QA/Acceptance/Receipts/Pipeline-run1-writers-stopped.md` | [E, later receipt] All 17 exact outcome inputs were exercised through its JSON editor. |
 | `Research/TaskApp/CLI-route`, `--adapter cli-route` | `Research/QA/Acceptance/Receipts/CLI-route-writers-stopped.md` | [E, inspected form and retained observations] G08 duplicate IDs, G09 quoted numeric types, G11 removal of an availability window and V14 room reassignment cannot be entered exactly through this form. New receipts label these UI LIMITATION. |
+| `Research/TaskApp/Pipeline-run2`, `--adapter pipeline-run2` | `Research/QA/Acceptance/Receipts/Pipeline-run2-writers-stopped.md` | [E, inspected form and retained observations] G07 empty qualifications, G08 duplicate IDs, G09 quoted numeric types and V14 room reassignment cannot be entered exactly through this form. New receipts label these UI LIMITATION; missing input observations remain NOT CHECKED. |
 
 [E] CLI portable import exists, and its behavior for those four exact variants was not tested. The form finding does not establish app-wide inability. V14 also changes the fixed room assignment in the supplied brief, so it is an additional evaluation variant rather than an established brief violation. Missing or ambiguous controls still yield NOT CHECKED.
 
-[E, supplied briefs] Separate readable-summary export is absent from Pipeline `requirements.md` and CLI `BRIEF.md`; both require portable save/import of inputs and draft. Each adapter records the reviewed brief digest, and a future receipt labels READABLE-SUMMARY as OUT OF BRIEF only if that exact file matches the copied payload manifest. A changed or missing brief leaves scope NOT CHECKED. The frozen additional summary expectation and historical results are unchanged.
+[E] Run2 exposes file and JSON-text import; its four exact form-limited variants remain untested through those alternate boundaries. Its two-step replacement preview is handled through the public controls. The frozen oracle is unchanged, including the empty-qualification expectation.
+
+[E, supplied briefs] Separate readable-summary export is absent from both Pipeline `requirements.md` files and CLI `BRIEF.md`; all require portable save/import of inputs and draft. Each adapter records its reviewed brief digest, and a future receipt labels READABLE-SUMMARY as OUT OF BRIEF only if that exact file matches the copied payload manifest. A changed or missing brief leaves scope NOT CHECKED. The frozen additional summary expectation and historical results are unchanged.
 
 [E, preparation verification] Node syntax and pure evaluator/reporting checks pass. The frozen oracle/evaluator region SHA-256 remains `ee6dc9643add11efdde38b6ec69ec4c6e061e10755dfbd4b4038fcaff1fb8aa4`; both contract files also match their prior digests. Main owns any fresh browser run.
 

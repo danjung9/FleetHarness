@@ -1,6 +1,10 @@
 // Public form, rendered-result and portable-file adapter for Pipeline-run2.
 // No candidate functions, solver, private state or browser storage are accessed.
 export const id = 'pipeline-run2';
+export const readableSummaryScope = {
+  file: 'requirements.md', sha256: '52a090ea86791fec4c23de2af0407d1f9ed67f81d74360eb53e784b924b3cab8',
+  detail: 'The reviewed public brief requires portable save/import of exact inputs and draft, but no separate readable-summary export. Its absence is out of brief, not a product failure.'
+};
 export const names = {
   check: /^Generate draft$/, save: /^Save portable draft$/,
   summary: null, review: /^Mark current draft reviewed$/
@@ -185,6 +189,9 @@ export function formSupport(input, current) {
 export async function applyInput(page, input) {
   const priorObservation = await inspect(page), unsupported = formSupport(input, priorObservation.candidateInput);
   if (unsupported.length) return { ok: false, reason: unsupported.join(' '), unsupported,
+    limitation: shape(input) && shape(priorObservation.candidateInput) ? {
+      boundary: 'editable-form', alternativeBoundary: 'Portable file and JSON-text import exist; these exact variants were not exercised through them, so this finding does not establish app-wide inability.'
+    } : undefined,
     kind: 'Unsupported exact Run2 form input; no coercion attempted', priorObservation };
   if (!await page.locator('#advanced').isVisible()) await page.locator('#advanced-toggle').click();
   const fields = [['operating-windows', input.windows.map(w => w.start + '-' + w.end).join(';')], ['max-nodes', String(input.maxNodes)]];

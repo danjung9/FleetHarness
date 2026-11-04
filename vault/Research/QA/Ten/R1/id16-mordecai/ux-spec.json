@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and evaluators acting as synthetic oversight operators; the console grants no operational authority.",
+  "primaryTask": "Inspect synthetic agent eligibility, announce intents, resolve a shared resource request using visible demonstration policy, review who won and why, then halt all simulated execution.",
+  "successOutcome": "Specific eligibility failures are recoverable; competing agents produce an order-independent, explained exclusive lease or an explicit tie escalation; halt prevents pending and future actions while retaining completed history.",
+  "screens": [
+    {
+      "name": "Oversight console",
+      "purpose": "Show simulation boundary, t=100 clock, saved session status, sorted roster, current condition, policy and global halt above the task controls.",
+      "primaryAction": "Halt all simulated agents"
+    },
+    {
+      "name": "Intent and authority workspace",
+      "purpose": "Announce an agent request for pump-1, inspect pending work, set synthetic condition or repair promotion, resolve a batch and review competing scores before execution. This is a section of the same page.",
+      "primaryAction": "Resolve batch"
+    },
+    {
+      "name": "Decision and action review",
+      "purpose": "Show winner or escalation, lease owner and expiry, policy snapshot, rejection history, completed actions and halt acknowledgements. Secondary synthetic scenario controls support repeatable eligibility exercises.",
+      "primaryAction": "Execute approved action"
+    }
+  ],
+  "states": {
+    "empty": "A fresh context contains registered repair and sensor, no intents, no decisions and executed count 0. Explain Announce intent and Queue competing requests. Missing results display None; never invent an action.",
+    "loading": "All local transitions are synchronous; guard handlers against duplicate dispatch and announce completion through a polite live region. During snapshot restoration show Restoring local session and disable mutations until validation completes. No network loading.",
+    "error": "Show specific field or eligibility reasons, preserve drafts and prior history, and move focus to the error summary after failed submission. Ties show both agents and scores with No lease granted; provide a promotion input for deliberate recovery. Storage failure shows Session not saved and keeps the current in-memory work. Invalid restored data starts a locked safe view with an explicit discard recovery.",
+    "success": "Show Pending after accepted announcement, a literal winner/reason and exclusive lease after resolution, and an action report only after Execute approved action. Display Saved locally after committed transitions. Halt stays prominent with acknowledgements, canceled pending work and unchanged completed history."
+  },
+  "persistence": "Persist a validated versioned snapshot after each committed local transition, including halt, clock, roster, policy, intents, decisions and action reports. Persist unfinished promotion input separately as a draft; show Unsaved promotion until Save promotion or Discard promotion. Condition selection is a draft until Apply condition; require save or discard before resolving with different committed content. Browser file storage may vary: disclose local-only persistence, expose JSON export, and show unsaved storage errors. Reload must restore halt and completed history in the host browser. No runtime resume; reset requires a separate explicit confirmed new-session action and never executes queued work.",
+  "recovery": "Secondary eligibility controls load labeled synthetic missing, expired or stale scenarios, preserve audit history and are unavailable while halted. Repair eligibility explicitly registers ghost or renews repair, without executing rejected work; resubmit deliberately. Clear batch cancels pending/granted work and releases its lease without erasing completed actions. For ties show competing values, allow a bounded repair promotion, require Save promotion and Resolve batch again. A condition or promotion commit invalidates previous decisions and requires re-resolution. New-session reset requires explicit confirmation and creates a separate session; ordinary controls never clear halt.",
+  "keyboard": "Use labeled native selects, inputs and buttons, logical Tab order, visible focus and Enter/Space activation. Keep halt early in tab order. Errors receive focus with readable recovery instructions; status updates use live regions without stealing focus on success. Responsive single-column sections at narrow widths, wrapping reasons and no clipped action buttons. No color-only status or hover-only content."
+}

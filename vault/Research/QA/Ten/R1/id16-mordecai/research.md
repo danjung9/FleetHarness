@@ -1,0 +1,70 @@
+# MORDECAI reuse research
+
+Research date: 2026-11-04. Phase: research only. Data boundary: synthetic-only.
+
+## Finding and evidence boundary
+
+**Adapt the supplied oversight protocol recipe; retain OPA as a conditional policy-evaluation candidate, without selecting or installing it for this prototype.** No supplied component provides a finished arbitration engine, governance runtime, or enforced operator halt. A local deterministic policy evaluator is a concrete alternative for the synthetic demonstration, but would be new application work, not a reused or validated dependency. Selecting between these options belongs to planning.
+
+Read: `requirements.md`, `scope.md`, `.fleet/packet.json`, `.fleet/README.md`, `.fleet/quality-contract.md`, and the assigned fleet-research, fleet-evidence and fleet-governance skills. Also inspected the supplied toolkit sources, package metadata, manifest and reference fixtures. Requirements and scope are preserved. No application, implementation plan, acceptance contracts or tests were created in this phase.
+
+Primary-source leads:
+
+- [Challenge 16](https://cdao.hackathon.maximus.com/event/norfolk/use-cases/16): source URL recorded by the packet, captured on 2026-11-04. The supplied narrative was inspected locally; the live page was not fetched or checked.
+- [OPA documentation](https://www.openpolicyagent.org/docs): the sole external component link in `recipe.components[0]`. This is an unchecked lead, not inspected documentation or evidence of current capabilities, release status, license, or compatibility.
+- Local primary evidence: `.fleet/packet.json`, `.fleet/README.md`, `.fleet/toolkit/package.json`, `.fleet/toolkit/*.js`, and `.fleet/fixtures.json`. These establish only the supplied packet and source contents, not upstream provenance or successful execution.
+
+No browser or external research was used. No dependencies were installed, no connectors exercised, and no toolkit or application tests run. Public links, upstream licenses, supported versions and operational integrations remain unverified.
+
+## Traceable supplied evidence
+
+Packet revision: `schemaVersion: 1`; `challenge.capturedOn: 2026-11-04`; SHA-256 of the inspected packet: `7c3a9177cef7fee9cdaa8d3107b6a45e840a2082769ba5f9509f72e847b08c3f`. Schema version is not an upstream software version. No source publication or last-modified timestamp is supplied.
+
+Used `fleet_search_evidence` on two caller-supplied documents: `packet-recipe` (the recipe object serialized with two-space JSON indentation, Unicode preserved) and `packet-challenge` (the exact decoded challenge description). `approved: true` means included in this local research corpus, not approval of an authority policy. The retrieval timestamp `2026-11-04T00:00:00Z` represents the packet capture date normalized to midnight, not a known source update time. Searches were as of the same timestamp with the default 90-day freshness window; returned excerpts were marked non-stale. That status cannot establish upstream freshness. Offsets below are half-open UTF-16 string indices in those supplied document texts.
+
+| Evidence ID | Source and exact locator | Exact excerpt | Interpretation limit |
+| --- | --- | --- | --- |
+| E1 | `packet-recipe`, `.fleet/packet.json#/recipe/components/0/rationale` | `Candidate for policy decisions independent of the proposing agent.` | Packet rationale for considering OPA; no inspected OPA capability evidence. Search `OPA governance runtime` returned recipe excerpt [358,758), containing this text. |
+| E2 | `packet-challenge`, `.fleet/packet.json#/challenge/description`, search excerpt [555,955) | `Intents publish to a shared bus before execution; contested resources are managed as leases; policy lives as data, not code.` | Source narrative expectation, not an available implementation. Search: `manifest heartbeat leases halt`. |
+| E3 | `packet-recipe`, `.fleet/packet.json#/recipe/limitations/0` | `Recipe and tests-to-build only; no governance runtime or real actuator integration is included.` | Explicit absence of runtime; decision based on inspected packet field, not an inference from lexical ranking. |
+| E4 | `packet-recipe`, `.fleet/packet.json#/recipe/limitations/1` | `Cryptographic identity and authority policy require separately validated infrastructure.` | No supplied identity or policy approval. |
+| E5 | `.fleet/README.md`, opening toolkit paragraph, no independent revision/update timestamp supplied | `toolkit/ contains dependency-free JavaScript calculation primitives; these do not supply production persistence, transport, identity or complete applications.` | Local documentation only; not a dependency test or license grant. |
+| E6 | `.fleet/fixtures.json`, top-level `classification` and `scope`, no independent revision/update timestamp supplied | `"classification": "synthetic"` and `"scope": "toolkit-reference-inputs"` | Fixtures are reference inputs, not governance acceptance evidence. |
+
+The corpus search is lexical retrieval, not fact checking. The unrelated synthetic training-note fixture was not used as governance evidence. No excluded, future-dated or stale document supported a current claim.
+
+## Component decisions
+
+| Relevant component | Decision and fit | Integration effort and concrete risks | Version, license and compatibility evidence |
+| --- | --- | --- | --- |
+| Supplied governance recipe and assigned protocol guidance | **Adapt.** Fits synthetic registration, heartbeat, intent, lease, decision receipt, action report and halt acknowledgement. Preserve policy as explicit operator-owned data and explanations tied to actual decisions. | Substantial application work remains: lifecycle state, eligibility, exclusive ownership, time semantics, arbitration, unresolved conflicts and halt enforcement. The recipe is not executable governance code. Heartbeats establish liveness only; mock manifests must never imply verified identity. | Packet schema 1 and local skill text inspected; no standalone recipe software release or license supplied. Runtime compatibility unverified. |
+| OPA, the only external recipe component | **Adapt, conditional.** Conceptual fit for policy decisions separate from proposing agents (E1). Keep as a candidate rather than claiming adoption readiness. | Added evaluation boundary, policy representation, input/output validation, failure behavior and decision explanation mapping would need investigation. Browser packaging versus a separate evaluator is unresolved. A policy result alone cannot own leases, serialize state changes, stop pending actions, authenticate agents or implement acknowledgements. Integration effort is unestimated beyond these known obligations because no distribution or API was inspected. | No OPA binary, source distribution, package lock, pinned version, license/NOTICE or compatibility test is supplied. All unverified; do not infer a license from product familiarity. Documentation URL unchecked. |
+| Local `validation.js` helpers | **Adapt, limited utility reuse candidate.** Inspected source exposes structural checks, unique-ID validation, explicit-zone timestamp parsing, canonical serialization and code-unit text comparison. | Application-specific ranges, reference integrity, timestamp equality rules, policy schema and domain errors remain necessary. Source-level deterministic comparison does not establish deterministic arbitration. Treat timestamps as synthetic inputs; a parser does not provide a trustworthy clock. | Local source inspected, not executed. Toolkit package says only `"type": "module"` and `"private": true`; no package version, license or engine range. Browser/Node integration untested. |
+| Toolkit scheduling, readiness, message extraction, offline reconciliation and upload primitives | **Reject for governance decision/enforcement reuse.** Inspected functions address scheduling, dependency timing, synthetic message grammar, record merging and upload budgets. None is the required governance runtime. | Schedule resource collisions are not authority-ranked leases; record conflicts are not intent arbitration; upload priority is not operator authority. Substituting these concepts would conceal missing requirements. Rejecting them avoids unnecessary domain coupling. | Same unversioned local toolkit package; license and compatibility unverified. No execution performed. |
+| `fleet_search_evidence` and local evidence helper | **Adopt for this research's retrieval only; reject as a governance authority or application-verification substitute.** Used on supplied packet texts above. | Caller controls corpus and approval flags; lexical relevance does not verify claims, signatures, authority or applicability. No operational data source connected. | Assigned tool interface and local helper inspected; no upstream release/license evidence. Tool use is not application testing. |
+| Supplied fixtures | **Reject as governance acceptance fixtures; adapt only the explicitly synthetic labeling convention.** No supplied manifests, authority matrix, governance leases or halt scenarios were found in the reference fixture collection. | New invented governance examples will require independent expected outcomes. Toolkit input/output agreement cannot demonstrate a user workflow. Avoid treating training-note or schedule examples as authority data. | Fixture classification/scope verified from local JSON; revision and license unspecified. No fixture run performed. |
+
+The local manifest reports `version: 1`, a packet hash and file inventory. It does not establish an OPA version, an approved license, a signed provenance chain or a tested dependency. No license file appeared in the inspected workspace inventory; absence of license evidence is not a conclusion about upstream license terms.
+
+## Concrete options and unresolved integration questions
+
+Option A is a local deterministic evaluator over visible synthetic policy data, with no external policy dependency. It best avoids an unverified external runtime for this bounded demonstration, but requires application logic and meaningful tests; it has no preexisting governance assurance. Option B retains OPA as a separately evaluated policy component if subsequent authorized research establishes a pinned distribution, license obligations, browser/runtime compatibility and a usable decision/explanation contract. It still leaves the simulation lifecycle and enforcement responsibilities unresolved. These are reuse options, not an implementation sequence or selected architecture.
+
+Planning needs explicit synthetic assumptions or owner answers for:
+
+- Rank direction, class modifiers, field-promotion precedence, condition changes, ties and non-overridable constraints. No approved authority matrix is supplied. Do not turn arbitrary ID ordering into an authority rule without declaring that choice; unresolved ties may require escalation.
+- Manifest validity, allowed actions, quarantine and reinstatement; heartbeat freshness and exact expiry boundaries. “Expired lease” is an eligibility/authorization case, not cryptographic proof of expired identity.
+- Simultaneous-batch membership, duplicate intent behavior, lease ownership, expiry, renewal, release and recovery. Reversing insertion order must not change intended authority outcomes. A decision can become invalid between evaluation and simulated action if condition or eligibility changes.
+- Halt behavior for pending and already-issued work, acknowledgement visibility and reset/resume. Halt must prevent future simulated actions through an enforced state transition; a status label or agent text does not establish preemption. History must distinguish completed work from pending work.
+- Policy version retention and decision input snapshots so the displayed reason can be traced to the result. Persistence/export and operator controls remain undecided; local controls confer no real-world authority.
+- Whether the three source demos (thirteenth-agent onboarding, condition flip, repair-agent promotion) are included or explicitly deferred. Scope retains them; the three recipe criteria do not silently replace the complete narrative.
+
+## Acceptance implications and handoff limits
+
+Canonical criteria are GOV-01 (`recipe.acceptance[0]`, integration), GOV-02 (`recipe.acceptance[1]`, integration), and GOV-03 (`recipe.acceptance[2]`, human). The packet's canonical `acceptance` entries preserve that recipe provenance. No source evaluation rubric, explicit deliverables, additional challenge requirement entries or user criteria were supplied.
+
+GOV-01 needs distinct missing-manifest, expired-lease and stale-heartbeat rejection evidence, plus malformed telemetry, exact expiry boundaries and recovery. GOV-02 needs simultaneous contenders in reversed arrival order under the same time/policy, with rank ties, duplicate intents, exclusivity and condition changes considered. GOV-03 needs pending and newly attempted actions after halt, unchanged post-halt execution count, visible already-issued work and halt acknowledgements. These are evidence gaps and coverage considerations, not literal acceptance outcomes or a test implementation plan.
+
+Planning owns `test-matrix.md`, the acceptance/UX contracts and concrete independently established outcomes. Later verification must call actual application functions and exercise the UI on desktop and narrow viewports. Preserve GOV-03's human review requirement alongside automated evidence. Deferred source obligations remain unverified even if every implemented prototype check passes. Missing browser verification cannot be replaced by toolkit results.
+
+Status: research artifact generated and reviewed against supplied local sources. No application generated, run, tested, reviewer-accepted or operationally validated. No identity, operational authority, government connection, actuator safety or cognitive-burden improvement is established. Licensing, external versions, runtime compatibility and all operational integrations remain unverified. This phase ends with reuse decisions and limitations; it does not authorize deployment or real agents.

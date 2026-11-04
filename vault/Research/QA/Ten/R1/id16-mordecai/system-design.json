@@ -1,0 +1,112 @@
+{
+  "title": "MORDECAI synthetic oversight console",
+  "description": "Offline, single-browser simulation of registration, eligibility, exclusive leases, deterministic contention and enforced operator halt. All authority and identity data are invented; no real agents or actuators.",
+  "components": [
+    {
+      "id": "console",
+      "label": "Operator console",
+      "description": "Roster, intent composer, batch decisions, action history and always-visible halt control.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "registry",
+      "label": "Manifest and liveness registry",
+      "description": "Validates synthetic manifests, allowed actions, expiry and heartbeat; reports eligibility without cryptographic claims.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "policy",
+      "label": "Synthetic operator policy",
+      "description": "Visible demo-v1 ranks, condition modifiers, promotion values and explicit tie escalation policy.",
+      "kind": "data",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "arbiter",
+      "label": "Intent and lease arbiter",
+      "description": "Validates announced batches, rejects duplicates, calculates authority, grants exclusive expiring leases and records decision snapshots.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "runtime",
+      "label": "Simulated executor and halt hooks",
+      "description": "Local state transitions only; revalidates leases and eligibility before simulated execution, cancels pending work and records halt acknowledgements.",
+      "kind": "integration",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "audit",
+      "label": "Local session and audit",
+      "description": "Versioned browser-local snapshot with explicit unsaved drafts, durable halt, readable receipts and JSON export; no external service.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "console",
+      "to": "registry",
+      "label": "Register and refresh synthetic manifests"
+    },
+    {
+      "from": "registry",
+      "to": "arbiter",
+      "label": "Eligibility and allowed-action checks"
+    },
+    {
+      "from": "policy",
+      "to": "arbiter",
+      "label": "Versioned authority inputs"
+    },
+    {
+      "from": "console",
+      "to": "arbiter",
+      "label": "Announce intents and resolve batch"
+    },
+    {
+      "from": "arbiter",
+      "to": "runtime",
+      "label": "Decision receipt and exclusive lease"
+    },
+    {
+      "from": "console",
+      "to": "runtime",
+      "label": "Execute or global halt"
+    },
+    {
+      "from": "runtime",
+      "to": "audit",
+      "label": "Action reports, cancellations and acknowledgements"
+    },
+    {
+      "from": "arbiter",
+      "to": "audit",
+      "label": "Immutable decision input snapshots"
+    },
+    {
+      "from": "audit",
+      "to": "console",
+      "label": "Restore session and display history"
+    }
+  ]
+}

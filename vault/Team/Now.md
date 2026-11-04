@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, three-candidate comparison] Run1 remains the provisional coverage leader with 17 independent outcome cases versus 13 each for CLI and Run2. Run2's observed G10 exhaustion wording is correct, and its adapter is ready with the same frozen oracle and clearer limitation/scope reporting. No human acceptance or new browser result is claimed. See [[Research/QA/Acceptance/Review-Candidates]] and [[Research/QA/Acceptance/Review-Run2]].
+
 - [E, candidate comparison confirmed] [[Research/QA/Acceptance/Review-Candidates]] explicitly reconciles the original adapter receipts and corrected CLI rerun. Pipeline leads on independent coverage, 17 versus 13 outcome cases. Both original FAILs arise from the acceptance contract/checker; Pipeline's contradictory exhaustion explanation is a separate real defect. Candidate change recommendations are recorded, with no silent key revision or app edits.
 
 - [E, verified at 16:30] Eight benchmark builds finished, seven meet the automatic bar and none is independently satisfactory. ID 11 and ID 12 miss central requirements. Two newest raw captures pass all 69 manifest hashes. Verifier commit eadfea1 is authored Mukul and awaits review. Recovery repairs remain blocked by reproduced late writes and Resume budget bypass. See [[Research/QA/Ten-Benchmark-Audit]] and [[Research/QA/Review-Queue-Notes]].

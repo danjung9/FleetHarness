@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenges 8, 11 and 12 round 1 judgments are NOT; passing narrow tests do not establish original-task completion."
+summary: "Challenges 8, 11, 12 and 20 round 1 judgments are NOT; passing narrow tests do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id20-contact-brief]] records NOT. Clear sample lookup and real tests do not establish the requested immutable, fully cited brief. The app candidly discloses its synthetic records and missing capabilities. Ten tests and eight browser executions pass in the retained receipt, while both original requirements remain unverified. No fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id20-contact-brief]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id20-contact-brief]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id08-casrep]] records NOT. The app implements return, revision, ordered review and simulated release, but omits required CASREP formatting and all report types except INITIAL. It discloses those limits. The saved receipt reports 15 substantive tests and eight browser executions passing, with requirementsMet false. Source and retained screenshots were inspected; no fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id08-casrep]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id08-casrep]].
 

@@ -1,0 +1,86 @@
+verify text The existing 13 tests pass, including the tests comparing the embedded UI core with `core.cjs`. I found a gap in restored-session validation: it checks some references but does not fully verify that a lease, decision, and intent describe the same grant. I’ll add adversarial tests and use the bounded repair to tighten that validation. Browser journeys still await the host runner.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> browser-core.test.cjs <<'EOF'\n\ntest('both actual cores reject inconsistent restored grant ownership and receipts',()=>{\n for(const api of [C,B]){\n  let granted=api.transition(api.transition(api.initial(),{type:'queue'}),{type:'resolve'});\n  const corruptions=[\n   s=>{s.resourceLeases[0].resourceId='other-resource';},\n   s=>{s.resourceLeases[0].batc
+verify error bash failed
+"✔ actual inline browser core and CommonJS core produce equivalent behavioral states (12.448958ms)\n✖ both actual cores reject inconsistent restored grant ownership and receipts (0.533208ms)\n✖ both cores retain rejection receipts when authorization disappears before resolution (0.112375ms)\n✔ GOV-01 distinct eligibility failures and deliberate repair, no automatic execution (2.103792m
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('core.cjs');s=p.read_text()\npos=s.index(' if(s.currentDecision')\ns=s[:pos]+''' // Restored receipts must link the same intent, resource, batch and authority snapshot.\n for(const l of s.resourceLeases){\n  const i=s.intents.find(i=>i.id===l.intentId),d=s.decisions.find(d=>d.leaseId===l.id);\n  if(\"'!i||!d||l.
+verify tool bash completed
+"✔ actual inline browser core and CommonJS core produce equivalent behavioral states (11.581458ms)\n✔ both actual cores reject inconsistent restored grant ownership and receipts (1.546833ms)\n✔ both cores retain rejection receipts when authorization disappears before resolution (0.19325ms)\n✔ GOV-01 distinct eligibility failures and deliberate repair, no automatic execution (2.01254
+verify text The new tests reproduced two defects: inconsistent restored grants were accepted, and resolution threw an exception when an announced agent’s authorization was absent. The bounded repair now rejects those inconsistent snapshots and records the authorization failure without granting work. All 15 Node tests pass, with none skipped. I’m documenting the evidence; desktop and narrow browser checks rema
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"rg -n 'function validate|Restored receipts|case .resolve|case .execute|case .halt|function render|function dispatch|test\\\\(' core.cjs browser-core.test.cjs core.test.cjs index.html && cat test-matrix.md\""
+}
+verify tool bash completed
+"browser-core.test.cjs:4:test('actual inline browser core and CommonJS core produce equivalent behavioral states',()=>{\nbrowser-core.test.cjs:18:test('both actual cores reject inconsistent restored grant ownership and receipts',()=>{\nbrowser-core.test.cjs:37:test('both cores retain rejection receipts when authorization disappears before resolution',()=>{\ncore.test.cjs:5:test('GOV
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nPath('verification.md').write_text('''# Verification evidence - 2026-11-04\n\nPhase: verify; synthetic-only. Reviewed requirements.md, plan.md, packet acceptance/provenance, frozen acceptance-plan.json and ux-spec.json, system-design.json, core.cjs, inline implementation and handlers in index.html, both test suites, RE
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "console",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Operator console: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "registry",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Manifest and liveness registry: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "policy",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic operator policy: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "arbiter",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Intent and lease arbiter: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "runtime",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated executor and halt hooks: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "audit",
+  "status": "generated",
+  "detail": "Mapped files exist; review and one bounded core repair complete. 15 Node application tests pass; host desktop/narrow browser verification remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local session and audit: generated. The live diagram has been updated."}]
+verify text Fixed two defects within the single bounded repair: inconsistent restored grants and missing-authorization handling. All 15 Node tests pass; none skipped.
+
+Updated verification.md, test-matrix.md, and README.md. Frozen plans remain unchanged. All six components are reported generated.
+
+Desktop/narrow browser journeys, screenshots, and traces await the host runner, so verification has not passed it
+verify info TAP version 13
+# Subtest: actual inline browser core and CommonJS core produce equivalent behavioral states
+ok 1 - actual inline browser core and CommonJS core produce equivalent behavioral states
+  ---
+  duration_ms: 12.347667
+  type: 'test'
+  ...
+# Subtest: both actual cores reject inconsistent restored grant ownership and receipts
+ok 2 - both actual cores reject inconsistent restored grant owne
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.
