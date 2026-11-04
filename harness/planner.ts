@@ -2,6 +2,7 @@ import { getChallenge } from './catalog.js';
 import { globalAgentTools, phasesForRecipe } from './phases.js';
 import { getRecipe } from './recipes.js';
 import { sourceLines } from './norfolk.js';
+import { primaryDeferralPolicy } from './quality-contract.js';
 import type { AcceptanceCriterion, Challenge, PipelinePacket, RecipeId } from './types.js';
 
 export { phasesForRecipe } from './phases.js';
@@ -58,7 +59,7 @@ const prompts: Record<string,string> = {
   deliver:'Prepare README.md, DELIVERY.md and path-to-fleet.md with install/run instructions, evidence scope, data restrictions, rollback/update path, hosting candidates and unresolved owners/authorizations. A local prototype delivery does not claim operational readiness.'
 };
 export function fleetStagePrompt(stage: string): string {
-  const prompt = prompts[stage];
+  const prompt = prompts[stage] && (prompts[stage] + (['intake', 'plan', 'review', 'deliver'].includes(stage) ? ' ' + primaryDeferralPolicy : ''));
   if (!prompt) throw new Error(`Unknown pipeline stage: ${stage}`);
   return prompt;
 }

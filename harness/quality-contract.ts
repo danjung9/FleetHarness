@@ -3,6 +3,8 @@ import type { BrowserJourney, BrowserStep, QualityPlan, UxSpec } from '../shared
 
 const limits = { criteria: 512, journeys: 12, steps: 40, screens: 12, description: 4_000, selector: 512, value: 10_000 };
 
+export const primaryDeferralPolicy = `Report Primary deferrals first, by canonical ID, concrete allowed dependency, withheld action and demonstrated synthetic workflow, or state none. Follow the existing real-system:, real-data: or human-authority: reason policy. Every primary deferral needs syntheticCoverage with explicit assumptions, source-quoted output names and primary browser assertions, while retaining deferred disposition and empty journeyIds. Use labeled synthetic examples in the requested input format, with independent expected outputs fixed before implementation. A substitute input format or generic EVENT/TASK demonstration remains incomplete even when its own tests pass. Missing specifications or experts require explicit synthetic assumptions, never invented real-format validation. The independent judge must assess format fidelity, every named output and the complete workflow; structural validation cannot establish semantic adequacy. Keep human approval, prohibited actions, monitoring, escalation and shutdown visible.`;
+
 function object(value: unknown, name: string, keys: readonly string[]): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value) || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) {
     throw new Error(`${name} must be an object.`);
@@ -85,6 +87,58 @@ function journey(value: unknown, name: string): BrowserJourney {
   return { id, title, kind: entry.kind, steps };
 }
 
+function isPrimary(criterion: AcceptanceCriterion): boolean {
+  return !criterion.provenance?.length || criterion.provenance.some(item => item.kind !== 'recipe');
+}
+
+// Compare source phrases, not inferred domain meaning. Completeness belongs to the independent judge.
+function phrase(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function syntheticCoverage(value: unknown, name: string, criterionId: string,
+  acceptance: AcceptanceCriterion[], journeys: BrowserJourney[]): NonNullable<QualityPlan['criteria'][number]['syntheticCoverage']> {
+  const coverage = object(value, `${name} (${criterionId}).syntheticCoverage`, ['assumptions', 'journeyIds', 'outputs']);
+  const assumptions = text(coverage.assumptions, `${name}.syntheticCoverage.assumptions`);
+  const ids = array(coverage.journeyIds, `${name}.syntheticCoverage.journeyIds`, 1, limits.journeys)
+    .map((value, i) => identifier(value, `${name}.syntheticCoverage.journeyIds[${i}]`));
+  if (new Set(ids).size !== ids.length) throw new Error(`${name}.syntheticCoverage.journeyIds contains duplicates.`);
+  const primaryJourneys = ids.map(id => {
+    const result = journeys.find(item => item.id === id);
+    if (!result || result.kind !== 'primary') throw new Error(`${name}.syntheticCoverage must reference known primary journeys: ${id}.`);
+    return result;
+  });
+  const outputs = array(coverage.outputs, `${name}.syntheticCoverage.outputs`, 1, limits.criteria).map((value, i) => {
+    const label = `${name}.syntheticCoverage.outputs[${i}]`;
+    const output = object(value, label, ['sourceCriterionId', 'name']);
+    const sourceCriterionId = identifier(output.sourceCriterionId, `${label}.sourceCriterionId`);
+    const outputName = text(output.name, `${label}.name`, 200).trim();
+    const source = acceptance.find(item => item.id === sourceCriterionId);
+    if (!source || !isPrimary(source) || !phrase(source.requirement).includes(phrase(outputName))) {
+      throw new Error(`${label}: named output must quote text from a source criterion, not a generic recipe or invented output.`);
+    }
+    // Titles, input values, selectors and pre-interaction assertions are not output evidence.
+    const asserted = primaryJourneys.some(item => {
+      let interacted = false;
+      return item.steps.some(step => {
+        if (['click', 'press', 'check', 'select', 'expectDownload'].includes(step.action)) interacted = true;
+        const literal = step.action === 'expectText' || step.action === 'expectDownload' ? step.text
+          : step.action === 'expectValue' ? step.value : undefined;
+        return interacted && literal !== undefined && phrase(literal).includes(phrase(outputName));
+      });
+    });
+    if (!asserted) throw new Error(`${label}: named output ${outputName} needs a literal assertion after interaction in a synthetic primary journey.`);
+    return { sourceCriterionId, name: outputName };
+  });
+  if (new Set(outputs.map(output => output.sourceCriterionId + '\0' + phrase(output.name))).size !== outputs.length) {
+    throw new Error(`${name}.syntheticCoverage.outputs contains duplicates.`);
+  }
+  if (!outputs.some(output => output.sourceCriterionId === criterionId)) {
+    throw new Error(`${name}.syntheticCoverage must name an output from its own deferred source criterion ${criterionId}.`);
+  }
+  return { assumptions, journeyIds: ids, outputs };
+}
+
 /** Parse the complete host-owned acceptance inventory into a bounded browser test contract. */
 export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion[]): QualityPlan {
   const plan = object(value, 'acceptance-plan.json', ['schemaVersion', 'criteria', 'journeys']);
@@ -98,7 +152,7 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
   const seen = new Set<string>(), referenced = new Set<string>();
   const criteria: QualityPlan['criteria'] = array(plan.criteria, 'criteria', 1, limits.criteria).map((value, i) => {
     const name = `criteria[${i}]`;
-    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason']);
+    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason', 'syntheticCoverage']);
     const criterionId = identifier(entry.criterionId, `${name}.criterionId`);
     if (!inventory.has(criterionId)) throw new Error(`${name} names an unknown criterion: ${criterionId}.`);
     if (seen.has(criterionId)) throw new Error(`Duplicate criterion: ${criterionId}.`);
@@ -118,13 +172,24 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
       if (!ids.length) throw new Error(`${name}: an implemented criterion must map to at least one journey.`);
       ids.forEach(id => referenced.add(id));
     }
-    return { criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids, ...(reason !== undefined ? { reason } : {}) };
+    let synthetic: QualityPlan['criteria'][number]['syntheticCoverage'];
+    if (Object.hasOwn(entry, 'syntheticCoverage')) {
+      if (entry.disposition !== 'deferred') throw new Error(`${name}.syntheticCoverage is allowed only for a deferred criterion; do not relabel partial work as implemented.`);
+      synthetic = syntheticCoverage(entry.syntheticCoverage, name, criterionId, acceptance, journeys);
+      synthetic.journeyIds.forEach(id => referenced.add(id));
+    }
+    return { criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids, ...(reason !== undefined ? { reason } : {}), ...(synthetic ? { syntheticCoverage: synthetic } : {}) };
   });
   const missing = [...inventory].filter(id => !seen.has(id));
   if (missing.length) throw new Error(`Missing acceptance criteria: ${missing.join(', ')}.`);
   if (!criteria.some(criterion => criterion.disposition === 'implemented')) throw new Error('At least one acceptance criterion must be implemented.');
+  for (const criterion of criteria) {
+    if (criterion.disposition === 'deferred' && isPrimary(acceptance.find(item => item.id === criterion.criterionId)!) && !criterion.syntheticCoverage) {
+      throw new Error(`${criterion.criterionId}: a primary deferral requires syntheticCoverage with assumptions, named source outputs and primary journey evidence. Generic recipe implementation is insufficient.`);
+    }
+  }
   const unused = [...journeyIds].filter(id => !referenced.has(id));
-  if (unused.length) throw new Error(`Every journey must map to an implemented criterion. Unmapped journeys: ${unused.join(', ')}.`);
+  if (unused.length) throw new Error(`Every journey must map to an implemented criterion or deferred syntheticCoverage. Unmapped journeys: ${unused.join(', ')}.`);
   return { schemaVersion: 1, criteria, journeys };
 }
 
@@ -153,6 +218,12 @@ Write acceptance-plan.json and ux-spec.json during planning, before application 
 
 Include every canonical ID from packet.json acceptance exactly once in criteria. Each entry has criterionId, disposition (implemented or deferred), expectedOutcome (an independently established complete outcome), journeyIds (array of journey IDs), and optional reason. An implemented criterion needs at least one journey. A deferred criterion needs a nonempty reason and an empty journeyIds array. At least one criterion must be implemented. Provenance identifies repeated source entries combined under one canonical ID; do not add alias IDs as separate criteria.
 
+${primaryDeferralPolicy}
+
+Deferred primary criteria also require syntheticCoverage: {"assumptions":"Fictional inputs, grammar, data and rules; no real-format validation","journeyIds":["synthetic-primary"],"outputs":[{"sourceCriterionId":"UCcustom-1","name":"exact output phrase from that source requirement"}]}. Treat every non-recipe provenance, merged source/recipe criterion and criterion without provenance as primary. Each output name must quote its source requirement (case and whitespace insensitive, at most 200 characters), include at least one output from the deferred criterion itself and have a literal expectText, expectValue or expectDownload.text assertion after interaction in a referenced primary journey. IDs must be unique known primary journeys, and output source/name pairs must be unique. Input values, titles, selectors, filenames and visibility alone are insufficient evidence. Only deferred criteria may carry syntheticCoverage. Recipe-only deferrals retain the existing reason-prefix rule without requiring syntheticCoverage. Every journey must be referenced by an implemented criterion or syntheticCoverage; all journeys still execute at both widths.
+
+Structural limits: source phrases and literal assertions do not establish that the dependency is genuine, the examples match the requested format, the output list is exhaustive, the values are correct or the workflow actually transforms the input. The independent judge checks those against the card and the independent answer key. Do not relabel missing or partial behavior implemented to evade this check. Old plans missing required coverage need a new planning run, never edits to a frozen plan.
+
 A primary requirement or expected deliverable may be deferred only when it truly requires real systems, real data or a person's authority. Lack of an official specification, format mapping or domain expert is never a reason to defer it. Build a clearly labeled synthetic stand-in that demonstrates the whole requested workflow in the challenge's own vocabulary, with realistic invented sample data and the actual named outputs. Document the invented grammar, assumptions and answer key; state plainly in the UI, sample data, exports and evidence: synthetic, not validated against the real format. Never invent operational rules, claim real-format validation or imply that synthetic behavior proves operational readiness. A generic substitute that omits the defining behaviors is incomplete.
 
 For example, mock USMTF extraction must demonstrate frequency plans, crypto change-over windows and flight quarters on a 24-hour timeline using an explicitly invented grammar, not just generic EVENT/TASK records. A departmental-agent challenge needs a synthetic demonstration of the named departments, negotiation and resulting schedule, not merely a manual form. These are synthetic workflows, with no real messages, cryptographic material, personnel or system access.
@@ -161,7 +232,7 @@ For every deferral, start reason with exactly one allowed category followed by a
 
 Put a Primary deferrals section first in scope.md, plan.md, verification.md, the user guide and the review summary. List every deferred primary requirement and expected deliverable by canonical ID, original wording, allowed dependency, withheld action and demonstrated stand-in, or explicitly state none. Keep the full inventory in test-matrix.md. A deferred criterion remains unverified and prevents a claim that all requirements are met. Preserve source meaning: implemented synthetic prototype behavior must cover all named behaviors and outputs under an explicit synthetic scope. A partial demonstration cannot count as the whole requirement, and a requirement explicitly demanding real integration, real data validation or approval remains deferred until that dependency is satisfied. Do not rewrite or drop a requirement to manufacture completion.
 
-Include 2–12 journeys. Each has a unique id, title, kind (primary or recovery), and 2–40 ordered steps. Include both primary and recovery journeys; every journey must be referenced by an implemented criterion. Each journey must interact via click, press, check, select or expectDownload and then assert the outcome. Filling a field and reading its value alone does not establish a working application. A primary journey must assert a literal result with expectText, expectValue or expectDownload with text; expectVisible alone is insufficient. Choose narrow result selectors and independent expected values. A recovery journey should induce invalid input or another failure, observe it, then recover and verify success. All journeys run at desktop and narrow widths against the delivered application.
+Include 2 to 12 journeys. Each has a unique id, title, kind (primary or recovery), and 2 to 40 ordered steps. Include both primary and recovery journeys; every journey must be referenced by an implemented criterion or deferred syntheticCoverage. Each journey must interact via click, press, check, select or expectDownload and then assert the outcome. Filling a field and reading its value alone does not establish a working application. A primary journey must assert a literal result with expectText, expectValue or expectDownload with text; expectVisible alone is insufficient. Choose narrow result selectors and independent expected values. A recovery journey should induce invalid input or another failure, observe it, then recover and verify success. All journeys run at desktop and narrow widths against the delivered application.
 
 Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"fill","selector":"#title","value":"Inspect pump"}

@@ -7,10 +7,28 @@ export const qualityFixtureProject = {
 };
 
 export function qualityFixture(criterionIds) {
+  const recipeOutcomes = {
+    'WFL-01': 'Reject invalid state transitions and stale approvals.',
+    'WFL-02': 'Retain record lineage and conflicts.',
+    'WFL-03': 'Complete the owner-specific workflow.',
+    'MSG-01': 'Every extracted field has exact source offsets.',
+    'MSG-02': 'Do not invent ambiguous timestamps.',
+    'MSG-03': 'Normalize time zones without shifting the event.',
+    'MSG-04': 'Review output against an independent answer key.',
+    'MSG-05': 'Keep the timeline usable offline.'
+  };
+  // A parser lifecycle run cannot establish unrelated starter or catalog outcomes.
+  if (!criterionIds.length || new Set(criterionIds).size !== criterionIds.length ||
+    criterionIds.some(id => !['R1', 'UCcustom-1', 'UCcustom-2', ...Object.keys(recipeOutcomes)].includes(id))) {
+    throw new Error('qualityFixture only supports the synthetic task parser inventory; use a separate fixture for catalog outcomes.');
+  }
   const plan = { schemaVersion: 1,
-    criteria: criterionIds.map((criterionId, index) => index === 0
+    criteria: criterionIds.map(criterionId => ['R1', 'UCcustom-1'].includes(criterionId)
       ? { criterionId, disposition: 'implemented', expectedOutcome: 'Parse a synthetic task and recover from empty input.', journeyIds: ['parse-task', 'recover-empty'] }
-      : { criterionId, disposition: 'deferred', expectedOutcome: 'Owner approval is required before publication; the synthetic review draft does not grant it.', journeyIds: [], reason: 'human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated. Other recipe outcomes are not evaluated by this lifecycle fixture.' }),
+      : criterionId === 'UCcustom-2'
+        ? { criterionId, disposition: 'deferred', expectedOutcome: 'Owner approval is required before publication; the synthetic review draft does not grant it.', journeyIds: [], reason: 'human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated.',
+          syntheticCoverage: { assumptions: 'Fictional local review only; no publication, real reviewer identity or operational authority.', journeyIds: ['parse-task'], outputs: [{ sourceCriterionId: criterionId, name: 'synthetic review draft' }] } }
+        : { criterionId, disposition: 'deferred', expectedOutcome: recipeOutcomes[criterionId], journeyIds: [], reason: 'human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.' }),
     journeys: [
       { id: 'parse-task', title: 'Parse a synthetic task', kind: 'primary', steps: [
         { action: 'fill', selector: '#message', value: 'TASK: inspect pump' }, { action: 'click', selector: '#parse' },

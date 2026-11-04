@@ -25,6 +25,11 @@ export interface QualityPlan {
     expectedOutcome: string;
     journeyIds: string[];
     reason?: string;
+    syntheticCoverage?: {
+      assumptions: string;
+      journeyIds: string[];
+      outputs: Array<{ sourceCriterionId: string; name: string }>;
+    };
   }>;
   journeys: BrowserJourney[];
 }
