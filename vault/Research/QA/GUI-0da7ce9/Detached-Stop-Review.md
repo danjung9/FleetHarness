@@ -84,3 +84,9 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/GUI-0da7ce9/qa-stop-detached
 [E] Baseline and detailed fixture semantics: [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]]. Runtime receipt and final closure judgment are pending.
 
 [E, handoff status] The native execution request received no answer within the bridge's ten-minute wait. The later R3 diagnosis was delivered separately with a request to relay it to the implementation owner. No new runtime receipt was returned. Preparation and source diagnosis are complete; the remaining dependency is a corrected integrated revision, matching build receipt and native owned-worker evidence from the existing runtime owner. No new approval is being requested from Mukul.
+
+## Backend branch relay e27ad6a
+
+[E, exact Git comparison] dan/backend-improvements at e27ad6a58e21b02fc5ad0988bde56fb2a28cc8b3 branches from 7a4c6cc, before the process sweep landed. Its two new commits do not edit process-sweep.ts or its tests; those files are absent from the branch. Their apparent deletion versus 0da7ce9 is branch divergence, not a new Stop repair. The e27ad6a commit itself changes only harness/quality-contract.ts and shared/quality.ts.
+
+[R] Keep the QA checkout and existing fixture pinned. Integration must preserve the sweep, corrected native option handling and its tests while adding the conditional synthetic-data session. Extend later integrated QA to cancellation during that new session, both with supplied inputs and without them. The original detached-worker assertions remain required. No branch execution, repository mutation or native closure is claimed.

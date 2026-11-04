@@ -54,3 +54,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:29 agentic-architect: Added the diagnosis to [the existing shutdown note](~/Documents/CDAO/Fleethacker-Vault/Research/Agentic/03-Stop-and-Supervision.md). Updated README and `.tmp/JOURNAL.md`.
 - 17:32 dev-5: Reapplied source-linked deferral checks and necessary fixture fixes on `0da7ce9`, preserving current teammate work. Changes remain uncommitted.
 - 17:33 Automatic QA at 0da7ce9 on dev/reviewed: failures: unit tests, smoke-electron, smoke-norfolk. Fixture provider only. `Research/QA/Auto/0da7ce9.md`
+- 17:39 Astra fixer started: Backend fixer: resolve the merge of the retry and resume work, then make the suite green.
+- 17:39 Astra audit-lifecycle started: Backend audit: run lifecycle and recovery.
+- 17:39 Astra audit-engines started: Backend audit: engines and safety.
+- 17:39 Astra audit-pipeline started: Backend audit: pipeline results.

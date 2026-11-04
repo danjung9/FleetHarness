@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, backend relay QA] e27ad6a diverges before the process sweep and does not close Stop. QA remains pinned; integration must retain shutdown protections and cover cancellation during the new data-preparation session. See [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]].
+
 - [E, bounded QA handoff] Detached Stop fixture preparation and R3 cleanup diagnosis are complete in [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]]. The native rerun request timed out after ten minutes without an answer. Diagnosis was delivered separately; no Stop closure or corrected-runtime result is claimed.
 
 - [E/A, R3 cleanup diagnosis] Three completed R3 receipts fail final cleanup after passing their generated tests and journeys. The running sweep matches 0da7ce9. Apple source identifies a likely mixed legacy/modern ps option bug; no native reproduction or survivor proof is claimed. [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]] records the repair and unchanged closure bar.

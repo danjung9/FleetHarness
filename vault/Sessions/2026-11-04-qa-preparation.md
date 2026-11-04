@@ -39,6 +39,8 @@ summary: "QA coordination, pinned source review, independent GUI receipt assessm
 
 ## Verification
 
+- [E, e27ad6a relay] Read the relay analysis and exact branch objects. Common base is 7a4c6cc; the new branch lacks the later sweep rather than repairing it. Retained the QA pin and regression fixture, and added preservation of shutdown protections plus cancellation during conditional data preparation to integrated QA. Source-only check; no runtime or repository changes.
+
 - [E, runtime handoff limit] Main bridge returned no answer after ten minutes for the pinned native rerun request. The R3 source diagnosis was delivered separately. No receipt closes the detached Stop defect. The remaining work belongs to the existing implementation/runtime owners, followed by independent receipt review; no duplicate runner, source edit or native execution was started.
 
 - [E/A, live R3 follow-up] Independently read the first three failed final receipts and current running sweep source/compiled module. All generic cleanup failures follow completed verification. The sweep matches 0da7ce9 exactly. Local ps documentation and Apple primary source show the first unhyphenated argument switches to legacy parsing, incompatible with the later user-selection argument. Recorded this as a source-based likely cause, not a native reproduction or proof of survivors. Recommended explicit option mode and safe structured cleanup diagnostics; no ps command, runtime or process environment inspection occurred. Main was asked to route the finding to the implementation owner.
