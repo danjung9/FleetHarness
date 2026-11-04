@@ -10,7 +10,7 @@ import './activity.css';
 import './build-flow.css';
 
 type BuildPhaseId = Exclude<StageId, 'review' | 'deliver'>;
-type PhaseState = StageStatus | 'stopped';
+type PhaseState = StageStatus | 'stopped' | 'waiting';
 
 const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]; next: string }[] = [
   { id: 'intake', name: 'Understand brief', purpose: 'Define the app’s scope and prepare connected inputs or synthetic data for this use case.', files: ['scope.md', 'inputs/manifest.json', 'data/synthetic-data.json', 'data/README.md'], next: 'Research starts automatically once the scope and data are ready.' },
@@ -22,16 +22,17 @@ const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]
 
 function stateOf(project: Project, id: BuildPhaseId): PhaseState {
   if (project.status === 'draft') return 'queued';
+  if (project.status === 'running' && project.conversation?.questions.some(question => question.status === 'pending' && question.runId === project.runId && question.phase === id)) return 'waiting';
   const state = project.stages.find(stage => stage.id === id)?.status ?? 'queued';
   return project.status === 'stopped' && (state === 'active' || state === 'failed') ? 'stopped' : state;
 }
 
 function stateLabel(state: PhaseState, started: boolean) {
-  return state === 'complete' ? 'Complete' : state === 'active' ? 'Working now' : state === 'failed' ? 'Needs attention' : state === 'stopped' ? 'Stopped' : started ? 'Coming up' : 'Not started';
+  return state === 'waiting' ? 'Waiting for your answer' : state === 'complete' ? 'Complete' : state === 'active' ? 'Working now' : state === 'failed' ? 'Needs attention' : state === 'stopped' ? 'Stopped' : started ? 'Coming up' : 'Not started';
 }
 
 function PhaseMarker({ state, number }: { state: PhaseState; number: number }) {
-  return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : state === 'stopped' ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
+  return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : state === 'stopped' || state === 'waiting' ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
 }
 
 export function BuildFlow({ project, developerMode = false, onPreview, onArtifact, onReview, onEditBrief }: {
@@ -46,7 +47,7 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
   const runKey = project.id + ':' + (project.runId ?? 'new') + (project.status === 'draft' ? ':draft' : '');
   const stageRevision = project.stages.map(stage => stage.id + ':' + stage.status).join('|');
   const currentId = (project.status === 'draft' ? 'intake' :
-    phases.find(phase => ['active', 'failed', 'stopped'].includes(stateOf(project, phase.id)))?.id ??
+    phases.find(phase => ['active', 'waiting', 'failed', 'stopped'].includes(stateOf(project, phase.id)))?.id ??
     phases.find(phase => stateOf(project, phase.id) !== 'complete')?.id ?? 'verify') as BuildPhaseId;
   const [inspection, setInspection] = useState<{ key: string; id: BuildPhaseId } | null>(null);
   const selectedId = inspection?.key === runKey ? inspection.id : currentId;
@@ -105,7 +106,7 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
           </li>;
         })}
       </ol>
-      <p className="build-sequence-note">These phases run automatically.<br/>Your review follows testing.</p>
+      <p className="build-sequence-note">Research and planning may ask for your input.<br/>Your review follows testing.</p>
     </section>
 
     <section className="build-phase-detail" id={detailId} aria-labelledby={detailId + '-title'}>
@@ -113,7 +114,7 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
       <header className="build-detail-heading"><h2 id={detailId + '-title'}>{selected.name}</h2><span className={'build-detail-state ' + selectedState}>{stateLabel(selectedState, !!project.runId && project.status !== 'draft')}</span></header>
       <p className="build-purpose">{selected.purpose}</p>
       {blocked ? <div className="build-phase-problem" role="status"><strong>{selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{project.error && <p>{project.error}</p>}<p>Saved outputs remain available. Start a new build when you’re ready to try again.</p></div> :
-        <p className="build-next-phase" role={intakeStatus ? 'status' : undefined}>{intakeStatus || (repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next)}</p>}
+        <p className="build-next-phase" role={intakeStatus || selectedState === 'waiting' ? 'status' : undefined}>{selectedState === 'waiting' ? 'Open Project lead to answer the question. This phase continues after your answer.' : intakeStatus || (repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next)}</p>}
 
       <section className="build-phase-output" aria-labelledby={detailId + '-outputs'}>
         <div className="build-output-heading"><h3 id={detailId + '-outputs'}>{previousBuild ? 'Previous build outputs' : 'Outputs'}</h3>

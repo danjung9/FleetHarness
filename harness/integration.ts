@@ -27,7 +27,7 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   const json = (data:unknown) => JSON.stringify(data,null,2)+'\n';
   const hasInputs = !!input.dataInputs?.length;
   files.set('packet.json',json({...packet, dataPolicy: hasInputs ? 'user-provided-or-synthetic' : packet.dataPolicy,
-    userScope:{title:input.title,description:input.description,criteria:input.criteria,resources:input.resources ?? '',links:input.links ?? [],
+    userScope:{title:input.title,description:input.description,criteria:input.criteria,inputs:input.inputs ?? '',outputs:input.outputs ?? '',resources:input.resources ?? '',links:input.links ?? [],
       dataInputs:(input.dataInputs ?? []).map(({name,kind,content}) => ({name,kind,bytes:Buffer.byteLength(content,'utf8')})),
       inputManifest:'inputs/manifest.json'}}));
   files.set('fixtures.json',json({classification:'synthetic',scope:'toolkit-reference-inputs',fixtures}));

@@ -115,6 +115,26 @@ test('evaluation keys are sealed outside implementation workspace and restored w
   await assertQualityContract(root, contract);
 });
 
+test('sealing preserves the public protocol but rejects implementation changes to its vocabulary', async t => {
+  const { root } = await computationWorkspace(t);
+  const host = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-protocol-host-'));
+  t.after(() => fs.rm(host, { recursive: true, force: true }));
+  const file = path.join(root, 'solution-contract.json');
+  const solution = JSON.parse(await fs.readFile(file, 'utf8'));
+  solution.invocation = { input: 'Object with values: finite number[].', output: 'Exactly {total: number}.', rules: ['Sum values; empty array totals zero.'] };
+  const body = JSON.stringify(solution);
+  await fs.writeFile(file, body);
+  const contract = await loadQualityContract(root, acceptance, true);
+  await sealEvaluationPlan(root, contract, path.join(host, 'keys.json'));
+  assert.deepEqual(JSON.parse(await fs.readFile(file, 'utf8')).invocation, contract.solution.invocation);
+  await assert.rejects(fs.access(path.join(root, 'evaluation-plan.json')), /ENOENT/);
+  solution.invocation.output = 'Exactly {answer: number}.';
+  await fs.writeFile(file, JSON.stringify(solution));
+  await assert.rejects(assertQualityContract(root, contract), /changed after planning/);
+  await fs.writeFile(file, body);
+  await assertQualityContract(root, contract);
+});
+
 function v2Report() {
   const runtime = { profile: 'browser', filesHash: 'verified-files', runtime: 'node', environmentNames: [] };
   return { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, quality: {

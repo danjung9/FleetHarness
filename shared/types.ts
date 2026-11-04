@@ -11,8 +11,9 @@ export interface TestReport {
   quality?: import('./quality.js').QualityReport;
 }
 export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
-export interface BriefContext { resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
+export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
 export interface Project extends BriefContext {
+  conversation?: import('./conversation.js').ProjectConversation;
   qualityVersion?: 1 | 2;
   runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
@@ -42,6 +43,11 @@ export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath:
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
+  sendMessage(id: string, text: string): Promise<void>;
+  cancelMessage(id: string): Promise<void>;
+  answerClarification(id: string, questionId: string, answer: string | import('./conversation.js').ClarificationAnswer): Promise<void>;
+  applyConversationAction(id: string, actionId: string): Promise<void>;
+  dismissConversationAction(id: string, actionId: string): Promise<void>;
   bootstrap(): Promise<Bootstrap>;
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;

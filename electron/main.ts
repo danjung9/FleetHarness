@@ -12,6 +12,10 @@ import { assertExecutableSource, executableFileName, stageExecutable, runPackage
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
+import { ProjectLead, briefHash, projectBrief } from './conversation.js';
+import { ClarificationBroker } from './clarifications.js';
+import type { ClarificationAnswer } from '../shared/conversation.js';
+import { randomUUID } from 'node:crypto';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -23,9 +27,11 @@ if (!app.requestSingleInstanceLock()) app.exit(0);
 let window: BrowserWindow | null = null;
 app.on('second-instance', () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } });
 let store: Store, backend: FleetBackend, codex: CodexAccount;
+let lead: ProjectLead, clarifications: ClarificationBroker;
+const conversationActions = new Map<string, Promise<void>>();
 const previews = new ApplicationPreviews(process.execPath);
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
-const startingRuns = new Set<string>();
+const startingRuns = new Map<string, Promise<void>>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
 const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenges;
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
@@ -45,10 +51,35 @@ const bootstrap = () => ({
   credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' && codex.account.planUsageEnabled ? 'Using ChatGPT plan' : 'Connect your ChatGPT plan to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
-function requireIdle(id: string) {
+function requireIdle(id: string, fromConversation = false) {
+  if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
   if (deliveries.has(id)) throw new Error('Wait for the app download to finish before changing this build.');
   if (backend.active.has(id) || startingRuns.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
   return store.project(id);
+}
+async function updateProject(id: string, input: NewProject, fromConversation = false) {
+  const p = requireIdle(id, fromConversation);
+  const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
+  const normalized = validateInput(input, catalog);
+  const previous = structuredClone({ ...projectBrief(p), sourceChallenge: p.sourceChallenge, status: p.status, runtimeProfile: p.runtimeProfile,
+    report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error,
+    systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt });
+  Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
+  p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+  p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+  p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
+  p.updatedAt = new Date().toISOString();
+  try { await store.save(); }
+  catch (error) { Object.assign(p, previous); notify(); throw error; }
+  notify(); return p;
+}
+async function startRun(id: string, fromConversation = false) {
+  if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
+  requireIdle(id, fromConversation);
+  let resolve!: () => void;
+  const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+  try { await backend.start(id); }
+  finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
   const p = store.project(id);
@@ -64,6 +95,51 @@ async function assertVerified(id: string) {
   return p;
 }
 function registerIPC() {
+  handle('fleet:conversation:send', (id: string, text: string) => {
+    if (quitting) throw new Error('AppYard is closing. Reopen it to continue the conversation.');
+    if (conversationActions.has(id)) throw new Error('Wait for the project action to finish before sending a message.');
+    return lead.send(id, text);
+  });
+  handle('fleet:conversation:cancel', (id: string) => lead.cancel(id));
+  handle('fleet:conversation:answer', (id: string, questionId: string, answer: string | ClarificationAnswer) => {
+    if (conversationActions.has(id)) throw new Error('The project is changing. Wait for the action to finish.');
+    return clarifications.answer(id, questionId, answer);
+  });
+  handle('fleet:conversation:dismiss', (id: string, actionId: string) => {
+    if (conversationActions.has(id)) throw new Error('This action is already being applied.');
+    return lead.dismiss(id, actionId);
+  });
+  handle('fleet:conversation:apply', async (id: string, actionId: string) => {
+    if (conversationActions.has(id) || deliveries.has(id) || startingRuns.has(id)) throw new Error('Wait for the current project operation to finish.');
+    const p = store.project(id), action = p.conversation?.actions.find(item => item.id === actionId);
+    if (!action || action.status !== 'proposed') throw new Error('This proposal is no longer available.');
+    if (action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal belongs to an older brief or build. Ask the project lead for an updated proposal.');
+    if (action.type === 'start' && backend.active.has(id)) throw new Error('This build is already running.');
+    if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build is no longer running.');
+    if (quitting) throw new Error('AppYard is closing. Reopen it to apply this proposal.');
+    let resolve!: () => void;
+    const done = new Promise<void>(r => { resolve = r; }); conversationActions.set(id, done);
+    const record = (text: string) => p.conversation!.messages.push({ id: randomUUID(), role: 'system', text, createdAt: new Date().toISOString(), runId: p.runId });
+    try {
+      await lead.cancel(id);
+      if (quitting) throw new Error('AppYard is closing. This proposal was not applied.');
+      if (p.conversation?.actions.find(item => item.id === actionId) !== action || action.status !== 'proposed'
+        || action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal changed while the reply was finishing. Ask for an updated proposal.');
+      if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build finished before the stop action was applied.');
+      if (action.type === 'stop') { await backend.stop(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
+      else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
+      else if (action.type === 'revise' && action.brief) {
+        const revised = validateInput({ ...projectBrief(p), ...action.brief }, p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog());
+        if (backend.active.has(id)) await backend.stop(id);
+        await updateProject(id, revised, true); action.status = 'applied';
+        record('Brief updated. Previous test results and approval were reset.');
+        await startRun(id, true); record('Started a fresh build with the revised brief. Previous run files are preserved.');
+      } else throw new Error('Invalid project action.');
+    } catch (error) {
+      if (action.status === 'applied') record('The brief was updated, but the fresh build could not start: ' + (error instanceof Error ? error.message : String(error)));
+      throw error;
+    } finally { try { await store.save(); } finally { conversationActions.delete(id); resolve(); notify(); } }
+  });
   handle('fleet:bootstrap', bootstrap);
   handle('fleet:norfolk:refresh', () => {
     if (!norfolkRefresh) norfolkRefresh = (async () => {
@@ -78,20 +154,8 @@ function registerIPC() {
   handle('fleet:create', async (input: NewProject) => {
     const p = newProject(input, currentCatalog()); store.state.projects.unshift(p); await store.save(); notify(); return p;
   });
-  handle('fleet:update', async (id: string, input: NewProject) => {
-    const p = requireIdle(id);
-    const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
-    const normalized = validateInput(input, catalog);
-    Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
-    p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
-    p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
-    p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
-    p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
-  });
-  handle('fleet:start', async (id: string) => {
-    requireIdle(id); startingRuns.add(id);
-    try { await backend.start(id); } finally { startingRuns.delete(id); }
-  });
+  handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
+  handle('fleet:start', (id: string) => startRun(id));
   handle('fleet:stop', (id: string) => backend.stop(id));
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
@@ -195,7 +259,7 @@ function registerIPC() {
       finally { deliveries.delete(id); finish(); }
     }
   });
-  const requireNoRuns = () => { if (backend.active.size || startingRuns.size) throw new Error('Stop active runs before changing accounts or providers.'); };
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
   const chatGPTAccountId = (value: unknown) => {
     if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Choose a valid saved ChatGPT account.');
     return value;
@@ -260,8 +324,10 @@ app.whenReady().then(async () => {
     store = new Store(app.getPath('userData'));
     await store.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
-    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex });
+    clarifications = new ClarificationBroker(store, notify);
+    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications });
     await backend.init(); await codex.refresh();
+    lead = new ProjectLead(store, backend.runtime, notify, { codex });
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
       const { provider, key } = JSON.parse(safeStorage.decryptString(encrypted));
@@ -278,10 +344,13 @@ app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && (backend?.active.size || deliveries.size)) {
+  if (!quitting && (backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.all([backend.stopAll(), ...[...deliveries.values()].map(d => d.done)]).finally(async () => { await store.save(); app.quit(); });
+    void Promise.allSettled([backend.stopAll(), lead.stopAll(), ...startingRuns.values(), ...conversationActions.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+      try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
+      app.quit();
+    });
   }
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

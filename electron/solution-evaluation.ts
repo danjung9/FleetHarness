@@ -19,6 +19,50 @@ function equal(actual: JsonValue, expected: JsonValue, tolerance = 0): boolean {
   }
   return false;
 }
+
+/** Describe structure only; frozen answer values never enter the diagnostic. */
+function mismatchDetail(actual: JsonValue, expected: JsonValue, tolerance?: number): string {
+  const maxDepth = 16, maxPathLength = 400;
+  const type = (value: JsonValue) => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+  const describe = (path: string, reason: string) => ` First mismatch at ${path}: ${reason}.`;
+  const childPath = (path: string, key: string | number): string | undefined => {
+    // Omit unsafe/long names whole: escaping or truncating a credential-bearing key
+    // could prevent the runtime's subsequent exact-secret redaction from matching it.
+    const segment = typeof key === 'number' ? `[${key}]` : /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/.test(key) ? `.${key}` : '[property name omitted]';
+    return path.length + segment.length <= maxPathLength ? path + segment : undefined;
+  };
+  const visit = (actual: JsonValue, expected: JsonValue, path: string, depth: number): string | undefined => {
+    if (type(actual) !== type(expected)) return describe(path, 'type mismatch');
+    if (typeof actual === 'number' && typeof expected === 'number') {
+      if (finite(actual) && finite(expected) && Math.abs(actual - expected) <= (tolerance ?? 0)) return;
+      return describe(path, tolerance === undefined ? 'value mismatch' : 'numeric difference exceeds tolerance');
+    }
+    if (actual === expected) return;
+    if (Array.isArray(actual) && Array.isArray(expected)) {
+      if (actual.length !== expected.length) return describe(path, 'array length mismatch');
+      for (let i = 0; i < expected.length; i++) {
+        if (equal(actual[i], expected[i], tolerance)) continue;
+        const next = childPath(path, i);
+        return depth >= maxDepth || !next ? describe(path, 'nested value mismatch (path limit reached)') : visit(actual[i], expected[i], next, depth + 1);
+      }
+      return;
+    }
+    if (record(actual) && record(expected)) {
+      const actualObject = actual as Record<string, JsonValue>, expectedObject = expected as Record<string, JsonValue>;
+      const expectedKeys = Object.keys(expected).sort(), actualKeys = Object.keys(actual).sort();
+      for (const key of expectedKeys) if (!Object.hasOwn(actual, key)) return describe(childPath(path, key) ?? path, 'missing key');
+      for (const key of actualKeys) if (!Object.hasOwn(expected, key)) return describe(childPath(path, key) ?? path, 'unexpected key');
+      for (const key of expectedKeys) {
+        if (equal(actualObject[key], expectedObject[key], tolerance)) continue;
+        const next = childPath(path, key);
+        return depth >= maxDepth || !next ? describe(path, 'nested value mismatch (path limit reached)') : visit(actualObject[key], expectedObject[key], next, depth + 1);
+      }
+      return;
+    }
+    return describe(path, 'value mismatch');
+  };
+  return visit(actual, expected, '$', 0) ?? '';
+}
 const scored = (passed: boolean, detail: string): Score => ({ score: passed ? 1 : 0, detail });
 const invalid = (detail: string): Score => ({ score: 0, detail, fatal: true });
 
@@ -92,8 +136,14 @@ function retrieval(input: unknown, output: unknown, expected: unknown): Score {
 
 export function scoreSolutionOutput(evaluation: Pick<SolutionEvaluation, 'evaluator' | 'tolerance'>, input: JsonValue, output: JsonValue, expected: JsonValue): Score {
   switch (evaluation.evaluator) {
-    case 'exact': return scored(equal(output, expected), equal(output, expected) ? 'Output matches the frozen JSON answer.' : 'Output differs from the frozen JSON answer.');
-    case 'numeric': return scored(equal(output, expected, evaluation.tolerance ?? 0), 'Compared matching JSON structure with absolute numeric tolerance ' + (evaluation.tolerance ?? 0) + '.');
+    case 'exact': {
+      const passed = equal(output, expected);
+      return scored(passed, passed ? 'Output matches the frozen JSON answer.' : 'Output differs from the frozen JSON answer.' + mismatchDetail(output, expected));
+    }
+    case 'numeric': {
+      const tolerance = evaluation.tolerance ?? 0, passed = equal(output, expected, tolerance);
+      return scored(passed, 'Compared matching JSON structure with absolute numeric tolerance ' + tolerance + '.' + (passed ? '' : mismatchDetail(output, expected, tolerance)));
+    }
     case 'classification': {
       const labels = Array.isArray(expected) ? expected : [expected], actual = Array.isArray(output) ? output : [output];
       if (Array.isArray(output) !== Array.isArray(expected) || actual.length !== labels.length || !labels.length) return invalid('Classification output must preserve the answer-key label shape.');

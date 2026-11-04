@@ -16,6 +16,7 @@
     "test": "npm run build:electron && node --test --test-concurrency=4 tests/*.test.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
+    "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
     "sync:norfolk": "node scripts/sync-norfolk.mjs",

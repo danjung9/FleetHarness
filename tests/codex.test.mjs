@@ -82,6 +82,39 @@ test('Codex streams activity, invokes Fleet tools and waits for successful termi
   assert.equal(events[1].assistantMessageEvent.delta, 'Working');
   const second = value.prompt('Finish'); await tick(); rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await second;
 });
+test('the conversational Codex coordinator stays read-only and retains its narrow tool policy after credential refresh', async t => {
+  let token = 'conversation-token', calls = 0;
+  const processes = [];
+  const instructions = 'Explain project evidence and propose actions. Never edit files or apply an action yourself.';
+  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture-coordinator', signal: new AbortController().signal,
+    conversationInstructions: instructions,
+    getCredentials: async () => ({ accessToken: token, expiresAt: Date.now() + 3600_000 }),
+    tools: [{ name: 'fleet_propose_action', description: 'Propose an action for review', parameters: { type: 'object' }, async execute() { calls++; return { content: [{ type: 'text', text: 'Proposed, not applied.' }] }; } }],
+    launch: () => { const rpc = new FakeRpc(); processes.push(rpc); return rpc; }
+  });
+  t.after(() => value.dispose());
+  const original = processes[0].calls.find(call => call.method === 'thread/start').params;
+  assert.equal(original.sandbox, 'read-only'); assert.equal(original.approvalPolicy, 'never');
+  assert.equal(original.developerInstructions, instructions);
+  assert.equal(original.config.web_search, 'disabled');
+  assert.equal(original.config['sandbox_workspace_write.network_access'], false);
+  for (const feature of ['shell_tool', 'view_image', 'multi_agent', 'apps', 'plugins', 'hooks', 'browser_use', 'in_app_browser', 'computer_use', 'image_generation', 'code_mode_tool_search']) assert.equal(original.config[`features.${feature}`], false, feature);
+  assert.deepEqual(original.dynamicTools.map(tool => tool.name), ['fleet_propose_action']);
+  const first = value.prompt('Suggest a safer scope.'); await tick();
+  processes[0].emit('item/tool/call', { threadId: 'thread-1', tool: 'bash', callId: 'denied', arguments: { command: 'touch file.txt' } }, 90); await tick();
+  assert.equal(processes[0].sent.at(-1).result.success, false); assert.equal(calls, 0);
+  processes[0].emit('item/commandExecution/requestApproval', { threadId: 'thread-1' }, 91); await tick();
+  assert.equal(processes[0].sent.at(-1).error.code, -32601);
+  processes[0].emit('item/tool/call', { threadId: 'thread-1', tool: 'fleet_propose_action', callId: 'allowed', arguments: {} }, 92); await tick();
+  assert.equal(calls, 1); assert.equal(processes[0].sent.at(-1).result.success, true);
+  processes[0].emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await first;
+  token = 'refreshed-conversation-token';
+  const next = value.prompt('Explain that proposal.'); await tick();
+  const resumed = processes[1].calls.find(call => call.method === 'thread/resume').params;
+  assert.equal(resumed.sandbox, 'read-only');
+  assert.equal(resumed.developerInstructions, instructions); assert.deepEqual(resumed.config, original.config);
+  processes[1].emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await next;
+});
 for (const status of ['failed', 'interrupted']) test(`Codex ${status} turns never count as successful stages`, async t => {
   const { value, rpc } = await session(t); const prompt = value.prompt('Build'); await tick();
   rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status, error: { message: 'Usage limit reached' } } });
@@ -163,7 +196,7 @@ test('RPC handles correlation, timeouts and process death without hanging', asyn
   } finally { rpc.dispose(); }
 });
 
-test('bundled Codex uses SIWC HTTP transport and restores history and dynamic tools after token rotation', { timeout: 15000 }, async () => {
+for (const conversationMode of [false, true]) test(conversationMode ? 'bundled Codex project lead disables command and edit tools across credential rotation' : 'bundled Codex uses SIWC HTTP transport and restores history and dynamic tools after token rotation', { timeout: 15000 }, async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-siwc-transport-'));
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -186,6 +219,7 @@ test('bundled Codex uses SIWC HTTP transport and restores history and dynamic to
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     let accessToken = 'synthetic-first-token';
     value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: new AbortController().signal,
+      ...(conversationMode ? { conversationInstructions: 'You are a read-only project conversation. Use only fleet_siwc_fixture.' } : {}),
       getCredentials: async () => ({ accessToken, expiresAt: Date.now() + 3600_000 }),
       tools: [{ name: 'fleet_siwc_fixture', description: 'Synthetic fixture tool', parameters: { type: 'object', properties: {} }, async execute() { return { content: [] }; } }],
       launch: (directory, credentials) => {
@@ -203,6 +237,10 @@ test('bundled Codex uses SIWC HTTP transport and restores history and dynamic to
       assert.equal(body.store, false); assert.equal(body.stream, true);
       assert.ok(JSON.stringify(body).includes('fleet_siwc_fixture'));
       assert.equal(JSON.stringify(body).includes('"type":"tool_search"'), false);
+      if (conversationMode) {
+        const toolNames = (body.tools ?? []).flatMap(tool => tool.type === 'namespace' ? tool.tools.map(nested => nested.name) : [tool.name]);
+        for (const name of ['exec_command', 'shell', 'shell_command', 'write_stdin', 'apply_patch', 'view_image']) assert.equal(toolNames.includes(name), false, `${name} must be absent from the actual model request: ${toolNames.join(', ')}`);
+      }
     }
     assert.ok(requests[1].body.input.length > requests[0].body.input.length);
     assert.ok(JSON.stringify(requests[1].body.input).includes('First synthetic fixture turn.'));

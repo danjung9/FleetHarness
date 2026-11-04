@@ -35,6 +35,8 @@ export interface SolutionContract {
   objective: string;
   capabilities: SolutionCapability[];
   runtime: RuntimeManifest;
+  /** Public wire protocol, frozen with the solution; legacy saved contracts may omit it. */
+  invocation?: { input: string; output: string; rules: string[] };
 }
 
 export interface DatasetDescriptor {

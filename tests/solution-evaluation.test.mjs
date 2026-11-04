@@ -98,6 +98,95 @@ test('numeric checker requires the expected structure and tolerates only bounded
   assert.equal(scoreSolutionOutput(options, null, { answer: [2], extra: true }, { answer: [2] }).score, 0);
 });
 
+test('exact mismatches locate string and type defects without revealing inputs or expected values', () => {
+  const input = { confidential: 'private-input-must-not-appear' }, expectedSecret = 'frozen-answer-must-not-appear';
+  const cases = [
+    [{ status: 'resolved' }, { status: expectedSecret }, '$.status: value mismatch'],
+    [{ errors: ['title'] }, { errors: [expectedSecret] }, '$.errors[0]: value mismatch'],
+    [{ result: null }, { result: { status: expectedSecret } }, '$.result: type mismatch'],
+    [{ result: '3' }, { result: 3 }, '$.result: type mismatch'],
+    [true, false, '$: value mismatch']
+  ];
+  for (const [actual, expected, diagnostic] of cases) {
+    const result = scoreSolutionOutput({ evaluator: 'exact' }, input, actual, expected);
+    assert.equal(result.score, 0);
+    assert.ok(result.detail.includes(diagnostic), result.detail);
+    assert.equal(result.detail.includes(expectedSecret), false);
+    assert.equal(result.detail.includes(input.confidential), false);
+    assert.equal(result.detail.includes('resolved'), false, 'The detail should not duplicate actual output values either');
+  }
+});
+
+test('object diagnostics distinguish missing and unexpected keys and ignore key ordering', () => {
+  const score = (actual, expected) => scoreSolutionOutput({ evaluator: 'exact' }, null, actual, expected);
+  assert.equal(score({ beta: 2, alpha: { second: 2, first: 1 } }, { alpha: { first: 1, second: 2 }, beta: 2 }).score, 1);
+  assert.match(score({ task: {} }, { task: { status: 'secret answer' } }).detail, /\$\.task\.status: missing key/);
+  assert.match(score({ task: { status: 'ready', extra: 'private actual' } }, { task: { status: 'ready' } }).detail, /\$\.task\.extra: unexpected key/);
+  assert.match(score({ task: { state: 'ready' } }, { task: { status: 'ready' } }).detail, /\$\.task\.status: missing key/);
+  const first = score({ beta: 4, alpha: 3 }, { beta: 2, alpha: 1 });
+  const reordered = score({ alpha: 3, beta: 4 }, { alpha: 1, beta: 2 });
+  assert.equal(first.detail, reordered.detail);
+  assert.match(first.detail, /\$\.alpha: value mismatch/);
+});
+
+test('array diagnostics identify length defects and the first differing nested element', () => {
+  const score = (actual, expected) => scoreSolutionOutput({ evaluator: 'exact' }, null, actual, expected);
+  assert.match(score({ tasks: [1] }, { tasks: [1, 2] }).detail, /\$\.tasks: array length mismatch/);
+  assert.match(score({ tasks: [{ id: 'same' }, { id: 'actual' }] }, { tasks: [{ id: 'same' }, { id: 'expected' }] }).detail, /\$\.tasks\[1\]\.id: value mismatch/);
+  assert.match(score({ tasks: [1, '2'] }, { tasks: [1, 2] }).detail, /\$\.tasks\[1\]: type mismatch/);
+  assert.match(score([1, 2], [2, 1]).detail, /\$\[0\]: value mismatch/);
+});
+
+test('numeric diagnostics separate nested tolerance failures from structural and text failures', () => {
+  const score = (actual, expected) => scoreSolutionOutput({ evaluator: 'numeric', tolerance: 0.01 }, null, actual, expected);
+  const expected = { results: [{ total: 2 }, { total: 3 }], unit: 'm' };
+  assert.equal(score({ results: [{ total: 2.005 }, { total: 3 }], unit: 'm' }, expected).score, 1);
+  const outside = score({ results: [{ total: 2.005 }, { total: 3.02 }], unit: 'm' }, expected);
+  assert.equal(outside.score, 0);
+  assert.match(outside.detail, /\$\.results\[1\]\.total: numeric difference exceeds tolerance/);
+  assert.match(score({ ...expected, unit: 'km' }, expected).detail, /\$\.unit: value mismatch/);
+  assert.match(score({ results: [{ total: 2 }, { total: '3' }], unit: 'm' }, expected).detail, /\$\.results\[1\]\.total: type mismatch/);
+  assert.equal(score({ result: 1 }, { result: 987654321 }).detail.includes('987654321'), false);
+});
+
+test('diagnostic paths omit unsafe or long property names and remain bounded at depth and length limits', () => {
+  const score = (actual, expected) => scoreSolutionOutput({ evaluator: 'exact' }, null, actual, expected);
+  for (const key of ['control\nname', 'quote"name', 'back\\slash', 'unicode\u202ename', 'secret'.repeat(20_000)]) {
+    const result = score({ [key]: 'actual' }, { [key]: 'hidden answer' });
+    assert.equal(result.score, 0);
+    assert.match(result.detail, /\$\[property name omitted\]: value mismatch/);
+    assert.equal(result.detail.includes(key), false);
+    assert.equal(result.detail.includes(JSON.stringify(key)), false);
+    assert.ok(result.detail.length < 200);
+    assert.equal(/[\r\n\u202e]/.test(result.detail), false);
+  }
+  for (const key of ['nested', 'property_name_'.repeat(4)]) {
+    let actual = 'actual', expected = 'hidden answer';
+    for (let i = 0; i < 30; i++) { actual = { [key]: actual }; expected = { [key]: expected }; }
+    const result = score(actual, expected);
+    assert.equal(result.score, 0);
+    assert.match(result.detail, /nested value mismatch \(path limit reached\)/);
+    assert.ok(result.detail.length < 550);
+    assert.equal(result.detail.includes('hidden answer'), false);
+  }
+});
+
+test('mismatch property paths receive runtime credential redaction before evidence retention', async t => {
+  const secret = 'FLEET_SECRET_IDENTIFIER_FOR_DIAGNOSTIC';
+  process.env.FLEET_DIAGNOSTIC_SECRET = secret; t.after(() => delete process.env.FLEET_DIAGNOSTIC_SECRET);
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-diagnostic-test-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.writeFile(path.join(root, 'engine.mjs'), 'console.log(JSON.stringify({[process.env.FLEET_DIAGNOSTIC_SECRET]:"actual"}));');
+  const runtime = await prepareSolutionRuntime(root, { ...manifest, requiredEnv: ['FLEET_DIAGNOSTIC_SECRET'] }, process.execPath);
+  t.after(() => runtime.close());
+  const item = evaluation({ trials: 1, cases: [{ id: 'mismatch', input: { value: 'private input' }, expected: { [secret]: 'private expected answer' } }] });
+  const report = await runSolutionEvaluation(runtime, solution, { schemaVersion: 1, evaluations: [item] });
+  assert.equal(report.status, 'failed');
+  assert.match(report.evaluations[0].cases[0].detail, /\$\.\[redacted\]: value mismatch/);
+  assert.deepEqual(report.evaluations[0].cases[0].output, { '[redacted]': 'actual' });
+  for (const omitted of [secret, 'private input', 'private expected answer']) assert.equal(JSON.stringify(report).includes(omitted), false);
+});
+
 test('classification measures label accuracy against the frozen labels and baseline', async t => {
   const cases = [{ id: 'a', input: [1, -1], expected: ['yes', 'no'] }, { id: 'b', input: [-1, 2], expected: ['no', 'yes'] }];
   const report = await evaluate(t, 'console.log(JSON.stringify(input.map(value=>value>0?"yes":"no")));', evaluation({ evaluator: 'classification', cases, baseline: 0.5 }));

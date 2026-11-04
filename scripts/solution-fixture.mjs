@@ -10,12 +10,13 @@ export function solutionFixture(ids) {
   files['acceptance-plan.json'] = JSON.stringify(plan, null, 2);
   files['solution-contract.json'] = JSON.stringify({ schemaVersion: 1,
     objective: 'Extract a task from a supplied synthetic message.',
+    invocation: { input: 'A JSON string containing a message.', output: 'A JSON string or null, without an envelope.', rules: ['If the message starts with TASK: followed by one space, return the remaining text. Otherwise return null.'] },
     runtime: { profile: 'browser', entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] }, files: ['index.html', 'evaluate.cjs', 'core.cjs'], requiredEnv: [] },
     capabilities: [{ id: 'parse', kind: 'algorithm', description: 'Extract task text using the delivered browser parser.', criterionIds: [ids[0]], required: true, evaluationIds: ['parse-cases'] }]
   }, null, 2);
   files['evaluation-plan.json'] = JSON.stringify({ schemaVersion: 1, evaluations: [{ id: 'parse-cases', capabilityId: 'parse', description: 'Independent synthetic extraction examples.',
     dataset: { name: 'task-parser', version: '1', provenance: 'synthetic' }, evaluator: 'exact', threshold: 1, trials: 1,
-    cases: [{ id: 'pump', input: 'TASK: inspect pump', expected: 'inspect pump' }, { id: 'valve', input: 'TASK: close valve', expected: 'close valve' }, { id: 'empty', input: '', expected: null }]
+    cases: [{ id: 'pump', input: 'TASK: inspect pump', expected: 'inspect pump' }, { id: 'valve', input: 'TASK: close valve', expected: 'close valve' }, { id: 'empty', input: '', expected: null }, { id: 'not-task', input: 'STATUS: ready', expected: null }]
   }] }, null, 2);
   return files;
 }

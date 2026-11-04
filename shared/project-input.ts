@@ -38,12 +38,15 @@ export function normalizeDataInputs(value: unknown): BriefDataInput[] {
 export function normalizeProjectInput(input: NewProject): NewProject {
   if (!input || typeof input.title !== 'string' || typeof input.description !== 'string' ||
       !Array.isArray(input.criteria) || input.criteria.some(c => typeof c !== 'string') ||
+      (input.inputs !== undefined && typeof input.inputs !== 'string') ||
+      (input.outputs !== undefined && typeof input.outputs !== 'string') ||
       (input.resources !== undefined && typeof input.resources !== 'string') ||
       (input.links !== undefined && (!Array.isArray(input.links) || input.links.some(link => typeof link !== 'string')))) {
     throw new Error('Invalid challenge.');
   }
   const title = input.title.trim(), description = input.description.trim();
   const criteria = input.criteria.map(c => c.trim()).filter(Boolean);
+  const inputs = input.inputs?.trim() ?? '', outputs = input.outputs?.trim() ?? '';
   const resources = input.resources?.trim() ?? '';
   const links = (input.links ?? []).map(link => link.trim()).filter(Boolean);
   const dataInputs = normalizeDataInputs(input.dataInputs);
@@ -53,6 +56,7 @@ export function normalizeProjectInput(input: NewProject): NewProject {
   if (criteria.length > 100 || criteria.some(c => c.length > 2000)) {
     throw new Error('Use up to 100 evaluation criteria, with no more than 2,000 characters per line.');
   }
+  if (inputs.length > 16000 || outputs.length > 16000) throw new Error('Keep inputs and outputs to 16,000 characters or fewer each.');
   if (resources.length > 16000) throw new Error('Keep resources to 16,000 characters or fewer.');
   if (links.length > 30 || links.some(link => link.length > 2000)) {
     throw new Error('Use up to 30 links, with no more than 2,000 characters per link.');
@@ -63,5 +67,5 @@ export function normalizeProjectInput(input: NewProject): NewProject {
       if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error();
     } catch { throw new Error('Enter a complete http:// or https:// link on each line.'); }
   }
-  return { title, description, criteria, resources, links, dataInputs, challengeId: input.challengeId };
+  return { title, description, criteria, inputs, outputs, resources, links, dataInputs, challengeId: input.challengeId };
 }

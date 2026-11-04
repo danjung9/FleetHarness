@@ -10,6 +10,7 @@ import { qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { foundationRuntime } from '../dist-electron/harness/foundations.js';
+import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
 
 const resourcesRoot = path.resolve('.');
 // Each workflow prepares independent packages and launches real browser contexts.
@@ -47,13 +48,16 @@ async function harness(t, options = {}) {
   const store = new Store(root); await store.init();
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
   const project = store.state.projects[0], sessions = [], snapshots = [];
+  const broker = options.clarifications ? new ClarificationBroker(store, () => snapshots.push(structuredClone(project))) : undefined;
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
+    clarifications: broker,
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
-      const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false,
+      const disposal = deferred();
+      const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false, whenDisposed: disposal.promise,
         subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
         emit(event) { for (const listener of listeners) listener(event); },
         async prompt(text) {
@@ -71,7 +75,7 @@ async function harness(t, options = {}) {
           this.emit({ type: 'turn_end' });
         },
         abort() { this.aborts++; return never(); },
-        dispose() { this.disposed = true; }
+        dispose() { this.disposed = true; disposal.resolve(); }
       };
       sessions.push(s); return { session: s };
     }
@@ -87,24 +91,146 @@ async function harness(t, options = {}) {
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
     assert.equal(saved.status, status); assert.equal(saved.error, project.error);
   };
-  return { root, store, project, backend, sessions, snapshots, run, settle, assertSettled };
+  return { root, store, project, backend, broker, sessions, snapshots, run, settle, assertSettled };
 }
 
-test('builds accept optional criteria and hand resources and links to agents', { timeout: workflowTimeout }, async t => {
+test('clarification-enabled automatic builds do not create extra model sessions or prompts', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { clarifications: true });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  assert.deepEqual(h.sessions.map(session => session.prompts.length), [1, 1, 1, 2, 1]);
+  for (const session of h.sessions) {
+    const enabled = ['research', 'plan'].includes(session.stage);
+    assert.equal(session.customTools.some(tool => tool.name === 'fleet_request_clarification'), enabled);
+    assert.equal(session.tools.includes('fleet_request_clarification'), enabled, 'The Pi active tool allowlist includes the registered clarification tool');
+  }
+  assert.equal(h.project.conversation?.questions.length ?? 0, 0);
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'clarifications.json')), /ENOENT/);
+});
+
+test('research and planning resume with recorded answers before contracts freeze, including an immediate answer', { timeout: workflowTimeout }, async t => {
+  const question = { question: 'Which audience comes first?', context: 'This determines workflow detail.', options: ['Operator', 'Analyst'], recommendation: 'Operator' };
+  const waiting = deferred();
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ stage, session, sessions, project }) => {
+    if (['research', 'plan'].includes(stage) && sessions.filter(item => item.stage === stage).length === 1) {
+      await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [question] });
+      const q = project.conversation.questions.at(-1);
+      if (stage === 'research') waiting.resolve();
+      // Planning exercises an answer arriving before disposal and wait() registration.
+      else await h.broker.answer(project.id, q.id, 'Keep the existing task list workflow');
+      return true;
+    }
+    if (['research', 'plan', 'build', 'verify'].includes(stage)) {
+      assert.match(session.prompts[0], /User clarification answers for this run/);
+      assert.match(session.prompts[0], /Operator/);
+    }
+    if (stage === 'build') assert.match(session.prompts[0], /Keep the existing task list workflow/);
+    return false;
+  } });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.backend.start(h.project.id); await waiting.promise;
+  await h.sessions.at(-1).whenDisposed;
+  assert.equal(h.sessions.at(-1).disposed, true);
+  assert.equal(h.project.status, 'running');
+  await h.broker.answer(h.project.id, h.project.conversation.questions[0].id, 'Operator');
+  await h.settle(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'research', 'plan', 'plan', 'build', 'verify']);
+  assert.ok(h.sessions.every(session => session.disposed));
+  assert.equal(h.sessions.filter(session => ['research', 'plan'].includes(session.stage)).every(session => session.prompts.length === 1), true, 'Asking does not invoke an artifact completion retry');
+  const recorded = JSON.parse(await fs.readFile(path.join(h.project.workspace, 'clarifications.json'), 'utf8'));
+  assert.equal(recorded.questions.length, 2);
+  assert.ok(recorded.questions.every(question => question.status === 'answered'));
+  assert.equal(h.project.conversation.messages.filter(message => message.role === 'user').length, 2);
+  const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
+  assert.equal(requirements.includes('Which audience comes first?'), false);
+});
+
+test('human clarification waits outlive agent idle and total deadlines; Stop cancels and releases the run', { timeout: workflowTimeout }, async t => {
+  const entered = deferred();
+  const h = await harness(t, { clarifications: true, agentLimits: { idleMs: 200, timeoutMs: 300 }, scenario: async ({ stage, session }) => {
+    if (stage !== 'research') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+    entered.resolve(); return true;
+  } });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.backend.start(h.project.id); await entered.promise;
+  await new Promise(resolve => setTimeout(resolve, 450));
+  assert.equal(h.project.status, 'running');
+  assert.equal(h.sessions.at(-1).disposed, true);
+  assert.equal(h.sessions.at(-1).prompts.length, 1);
+  assert.equal(h.project.stages.find(stage => stage.id === 'plan').status, 'queued');
+  const q = h.project.conversation.questions[0];
+  await h.backend.stop(h.project.id); await h.assertSettled('stopped');
+  assert.equal(q.status, 'cancelled');
+  await assert.rejects(h.broker.answer(h.project.id, q.id, 'Operator'), /no longer waiting/);
+});
+
+test('a model failure after requesting clarification cancels pending questions', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { clarifications: true, scenario: async ({ stage, session }) => {
+    if (stage !== 'research') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+    throw new Error('Provider disconnected after asking');
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /Provider disconnected/);
+  assert.equal(h.project.conversation.questions[0].status, 'cancelled');
+  assert.equal(h.sessions.some(session => session.stage === 'plan'), false);
+});
+
+test('clarification rounds are bounded and never freeze unanswered planning contracts', { timeout: workflowTimeout }, async t => {
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ stage, session, project }) => {
+    if (stage !== 'plan') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Which workflow is primary?', context: 'A required planning decision.' }] });
+    await h.broker.answer(project.id, project.conversation.questions.at(-1).id, 'The existing task list');
+    return true;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /two clarification rounds/);
+  assert.equal(h.sessions.filter(session => session.stage === 'plan').length, 3);
+  assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+  assert.deepEqual(h.project.conversation.questions.map(question => question.round), [1, 2]);
+  await assert.rejects(fs.access(path.join(h.root, 'evaluations', h.project.runId + '.json')), /ENOENT/);
+});
+
+test('downstream agents cannot overwrite the recorded user answers', { timeout: workflowTimeout }, async t => {
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ cwd, stage, session, sessions, project }) => {
+    if (stage === 'research' && sessions.filter(item => item.stage === 'research').length === 1) {
+      await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+      await h.broker.answer(project.id, project.conversation.questions.at(-1).id, 'Operator'); return true;
+    }
+    if (stage === 'build') await fs.writeFile(path.join(cwd, 'clarifications.json'), '{"answer":"invented"}');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /clarification answers changed/);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+});
+
+test('builds accept optional criteria and hand input/output descriptions, resources and links to agents', { timeout: workflowTimeout }, async t => {
   const h = await harness(t);
   h.project.criteria = [];
+  h.project.inputs = 'Synthetic operational messages';
+  h.project.outputs = 'Structured tasks, events and deadlines';
   h.project.resources = 'Synthetic task messages and a blank report template.';
   h.project.links = ['https://example.com/reference'];
   await h.run(); await h.assertSettled('review');
   const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
   assert.match(requirements, /No evaluation criteria supplied/);
+  assert.ok(requirements.includes('## Inputs\n\n' + h.project.inputs));
+  assert.ok(requirements.includes('## Outputs\n\n' + h.project.outputs));
   assert.ok(requirements.includes(h.project.resources));
   assert.ok(requirements.includes(h.project.links[0]));
   const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
   assert.deepEqual(packet.userScope.criteria, []);
+  assert.equal(packet.userScope.inputs, h.project.inputs);
+  assert.equal(packet.userScope.outputs, h.project.outputs);
   assert.equal(packet.userScope.resources, h.project.resources);
   assert.deepEqual(packet.userScope.links, h.project.links);
-  assert.equal(h.sessions.filter(session => session.stage === 'synthetic-data').length, 1, 'Resource notes and reference links do not count as connected data');
+  assert.equal(h.sessions.filter(session => session.stage === 'synthetic-data').length, 1, 'Input/output descriptions, resource notes and reference links do not count as connected data');
   assert.equal(reportPassed(h.project.report), true);
 });
 
@@ -220,6 +346,39 @@ test('the complete workflow advances in order and persists real test evidence be
     assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
   }
 });
+
+for (const recover of [true, false]) {
+  test(`new planning ${recover ? 'repairs' : 'rejects'} a missing public invocation protocol before sealing answers`, { timeout: workflowTimeout }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+      if (stage === 'plan') {
+        await artifacts(cwd, stage);
+        if (!recover || session.prompts.length === 1) {
+          const file = path.join(cwd, 'solution-contract.json');
+          const contract = JSON.parse(await fs.readFile(file, 'utf8'));
+          delete contract.invocation;
+          await fs.writeFile(file, JSON.stringify(contract));
+        }
+        return true;
+      }
+      if (stage === 'build') {
+        const contract = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
+        assert.match(contract.invocation.rules[0], /TASK:/);
+        await assert.rejects(fs.access(path.join(cwd, 'evaluation-plan.json')), /ENOENT/);
+      }
+      return false;
+    } });
+    await h.run();
+    await h.assertSettled(recover ? 'review' : 'failed');
+    const planner = h.sessions.find(session => session.stage === 'plan');
+    assert.equal(planner.prompts.length, 2);
+    assert.match(planner.prompts[1], /requires invocation/);
+    if (!recover) {
+      assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+      await fs.access(path.join(h.project.workspace, 'evaluation-plan.json'));
+      await assert.rejects(fs.access(path.join(h.root, 'evaluations', h.project.runId + '.json')), /ENOENT/);
+    }
+  });
+}
 
 test('the host materializes a service foundation before implementation and verifies its shared backend', { timeout: 45000 }, async t => {
   let sawFoundation = false;

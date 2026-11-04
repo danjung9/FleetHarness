@@ -146,7 +146,7 @@ function runtime(value: unknown): RuntimeManifest {
 
 /** Parse a planned solution against the host-owned acceptance inventory. */
 export function parseSolutionContract(value: unknown, acceptance: AcceptanceCriterion[]): SolutionContract {
-  const entry = object(value, 'solution-contract.json', ['schemaVersion', 'objective', 'capabilities', 'runtime']);
+  const entry = object(value, 'solution-contract.json', ['schemaVersion', 'objective', 'capabilities', 'runtime', 'invocation']);
   version(entry.schemaVersion, 'solution-contract.json');
   const inventory = new Set(acceptance.map(item => item.id));
   if (!inventory.size || inventory.size !== acceptance.length || inventory.size > 512) throw new Error('The acceptance inventory must have 1–512 unique criterion IDs.');
@@ -165,7 +165,16 @@ export function parseSolutionContract(value: unknown, acceptance: AcceptanceCrit
   unique(capabilities.map(cap => cap.id), 'Capability IDs');
   unique(capabilities.flatMap(cap => cap.evaluationIds), 'Capability evaluation IDs');
   if (!capabilities.some(cap => cap.required)) throw new Error('At least one core capability must be required.');
-  return { schemaVersion: 1, objective: text(entry.objective, 'objective'), capabilities, runtime: runtime(entry.runtime) };
+  const result: SolutionContract = { schemaVersion: 1, objective: text(entry.objective, 'objective'), capabilities, runtime: runtime(entry.runtime) };
+  if (Object.hasOwn(entry, 'invocation')) {
+    const protocol = object(entry.invocation, 'invocation', ['input', 'output', 'rules']);
+    result.invocation = {
+      input: text(protocol.input, 'invocation.input', 12_000),
+      output: text(protocol.output, 'invocation.output', 12_000),
+      rules: array(protocol.rules, 'invocation.rules', 1, 64).map((rule, i) => text(rule, `invocation.rules[${i}]`, 2_000))
+    };
+  }
+  return result;
 }
 
 function json(value: unknown, name: string): JsonValue {
@@ -277,11 +286,14 @@ Before implementation write solution-contract.json and evaluation-plan.json besi
 {
   "schemaVersion": 1,
   "objective": "Calculate the total workload from supplied durations",
+  "invocation": {"input":"Object with durations: array of finite nonnegative numbers, and unit: nonblank string.","output":"Object with exactly total: number and unit: string. No extra fields.","rules":["total is the sum of durations; an empty array totals zero.","Return the supplied unit unchanged. Reject malformed inputs with a runtime error."]},
   "capabilities": [{"id":"workload","kind":"algorithm","description":"Sum valid task durations and preserve the supplied unit","criterionIds":["R1"],"required":true,"evaluationIds":["workload-cases"]}],
   "runtime": {"profile":"browser","entrypoint":"index.html","files":["index.html","engine.mjs","evaluate.mjs"],"requiredEnv":[],"evaluator":{"runtime":"node","entrypoint":"evaluate.mjs","args":[]}}
 }
 
 Replace R1 with real canonical IDs. Maximum 32 capabilities; IDs start with a letter and use letters, digits, underscores or hyphens (80 characters). Every capability needs a description, one or more criterionIds, an explicit required boolean, and evaluationIds. Required capabilities need at least one evaluation. Every evaluation is owned by exactly one capability. At most 64 evaluations. Objective and descriptions are nonempty, at most 4,000 characters.
+
+New builds must include invocation, the public wire protocol that stays visible to the builder when evaluation-plan.json is sealed. It has exactly input and output (nonempty strings, maximum 12,000 characters each) and rules (1–64 nonempty strings, maximum 2,000 characters each). Describe every action/discriminator, field name, type, optional/default/null behavior, output envelope, status and error vocabulary, error precedence, and array ordering. Write every literal status/error string used by exact evaluation here; never say "see evaluation cases" for interface details. Define general computational rules, not evaluation input/answer pairs or case-specific answers. Derive independent cases from this public protocol, using held-out values. The protocol is frozen with the solution and cannot be changed during repair. Older saved contracts without invocation remain readable, but cannot be used as a new plan.
 
 Runtime profiles:
 - browser: entrypoint is index.html; evaluator is a node command over a shared browser-compatible JavaScript/WASM core. requiredEnv must be empty: a static browser has no runtime environment or model credential channel. Use service or cli for Python or runtime model/API settings. The UI and evaluator MUST call the same computational module. A duplicate test-only implementation or hardcoded fixture results is not acceptable. Put index.html, the shared module and evaluator entrypoint in files. Browser and core checks independently verify the planned outputs; they do not prove structural code identity or untested UI behavior.
@@ -300,7 +312,7 @@ requiredEnv lists uppercase environment variable NAMES (maximum 32), never crede
     "id":"workload-cases","capabilityId":"workload","description":"Independent sums include ordinary and boundary cases",
     "dataset":{"name":"workload-reference","version":"1","provenance":"synthetic","description":"Expected totals calculated from the specification before implementation"},
     "evaluator":"numeric","threshold":1,"trials":1,"baseline":0.5,"tolerance":0,
-    "cases":[{"id":"ordinary","input":{"durations":[10,20,5]},"expected":{"total":35}},{"id":"empty","input":{"durations":[]},"expected":{"total":0}}]
+    "cases":[{"id":"ordinary","input":{"durations":[10,20,5],"unit":"minutes"},"expected":{"total":35,"unit":"minutes"}},{"id":"empty","input":{"durations":[],"unit":"hours"},"expected":{"total":0,"unit":"hours"}}]
   }]
 }
 

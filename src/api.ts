@@ -21,6 +21,11 @@ function save(nextState: AppState) {
 }
 const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to run coding agents and access local artifacts.'); };
 export const api: FleetAPI = window.fleetHarness || {
+  sendMessage: desktopOnly,
+  cancelMessage: desktopOnly,
+  answerClarification: desktopOnly,
+  applyConversationAction: desktopOnly,
+  dismissConversationAction: desktopOnly,
   bootstrap: async () => ({ state: structuredClone(browserState), models: [], storagePath: 'Browser preview — local to this browser', credentialStatus: 'Desktop app required', runtime: 'Browser preview' }),
   refreshNorfolkCatalog: desktopOnly,
   createProject: async input => { const p = makeProject(input); save({ ...browserState, projects: [p, ...browserState.projects] }); return p; },

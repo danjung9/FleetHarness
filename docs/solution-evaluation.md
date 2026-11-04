@@ -14,7 +14,7 @@ All contract objects reject unknown fields. Expected answers, thresholds, criter
 
 ## Required files
 
-- `solution-contract.json`: objective, required capabilities, runtime and file allowlist.
+- `solution-contract.json`: objective, required capabilities, public invocation protocol, runtime and file allowlist.
 - `evaluation-plan.json`: versioned reference datasets, input/expected pairs and host evaluators.
 - `acceptance-plan.json`, version 2: every canonical acceptance criterion mapped to capability and/or browser evidence.
 - `ux-spec.json`, version 1: audience, user task, states, recovery and interaction design.
@@ -29,6 +29,11 @@ Replace `R1` with a canonical criterion ID from the challenge packet.
 {
   "schemaVersion": 1,
   "objective": "Sum supplied task durations",
+  "invocation": {
+    "input": "Object with values: an array of finite numbers.",
+    "output": "Object with exactly total: a finite number.",
+    "rules": ["Sum all values, including negative values; an empty array totals zero. Reject malformed inputs with a runtime error."]
+  },
   "capabilities": [{
     "id": "total",
     "kind": "algorithm",
@@ -45,6 +50,8 @@ Replace `R1` with a canonical criterion ID from the challenge packet.
   }
 }
 ```
+
+New plans must include `invocation` with nonempty `input` and `output` descriptions (up to 12,000 characters each) and 1–64 `rules` (up to 2,000 characters each). This public protocol stays available after answer keys are sealed. Specify every action, field type, optional/default/null behavior, exact status/error string, error precedence and array ordering. The builder must not need the sealed cases to discover the interface. Keep held-out input/answer pairs in the evaluation plan; describe general rules in the public protocol. It is frozen with the solution contract. Older saved contracts without this field remain readable.
 
 `kind` is one of `algorithm`, `optimization`, `prediction`, `retrieval`, `generation`, `workflow`, `stateful`. At least one capability must be required. Required capabilities need evaluation IDs and cannot map to deferred criteria. Every evaluation has exactly one owning capability; both directions of the references are checked.
 
@@ -200,3 +207,7 @@ node scripts/benchmark-factory.mjs --live --provider PROVIDER --model MODEL_ID -
 Only the first synthetic example is attached as development data. After the generated application's own quality gate passes, the benchmark runs its declared runtime against the remaining independently authored cases retained by the benchmark host. The result distinguishes `pipelineAccepted`, `holdoutAccepted` and combined `accepted`; it also records requirement coverage, repair attempts, completed status and elapsed time. These are small public fixtures, not a secret production holdout. They still provide a check separate from the generated planner's answer keys.
 
 Cost is reported as `null` because the backend does not expose trustworthy provider usage cost. Consult provider billing rather than interpreting missing telemetry as zero. This mode may consume paid model calls and runtime inference calls; it runs only when explicitly invoked. The implementation's automated tests never execute this live mode.
+
+## Diagnosing a failed core
+
+Open `.quality-evidence/core-report.json` in the saved build workspace. Each evaluation identifies its failing cases and actual output. Exact and numeric mismatch details include a bounded path to the first differing field or array element, without revealing expected values. Compare that path with the public invocation protocol. A correct calculation can still fail if response keys, status strings, error messages or array order violate the planned interface. Repair the shared implementation and test complete responses on new inputs; do not weaken the evaluator or frozen cases.

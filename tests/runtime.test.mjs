@@ -17,15 +17,20 @@ test('saved challenges survive reload and interrupted runs become stopped', asyn
     assert.equal(store.state.projects.length,3);
     const dataInputs = [{ name: 'messages.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' },
       { name: 'review-notes.txt', kind: 'text', content: ' Retain spacing in the source input.\n' }];
-    Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], resources: 'Sample records', links: ['https://example.com/reference'], dataInputs }));
+    Object.assign(store.state.projects[0], validateInput({ title: 'Optional context', description: 'Build a local workflow for synthetic records.', criteria: [], inputs: 'Images', outputs: 'Classification of images', resources: 'Sample records', links: ['https://example.com/reference'], dataInputs }));
+    delete store.state.projects[1].inputs; delete store.state.projects[1].outputs;
     store.state.projects[0].status='running';await store.save();
     const restored=new Store(dir);await restored.init();
     assert.equal(restored.state.projects[0].status,'stopped');
     assert.deepEqual(restored.state.projects[0].criteria,[]);
+    assert.equal(restored.state.projects[0].inputs,'Images');
+    assert.equal(restored.state.projects[0].outputs,'Classification of images');
     assert.equal(restored.state.projects[0].resources,'Sample records');
     assert.deepEqual(restored.state.projects[0].links,['https://example.com/reference']);
     assert.deepEqual(restored.state.projects[0].dataInputs, dataInputs);
     assert.equal(restored.state.projects[1].criteria.length,4);
+    assert.equal(restored.state.projects[1].inputs,undefined);
+    assert.equal(restored.state.projects[1].outputs,undefined);
   } finally { await fs.rm(dir,{recursive:true,force:true}); }
 });
 test('corrupt state is preserved and reported instead of reset', async () => {
@@ -37,10 +42,13 @@ test('corrupt state is preserved and reported instead of reset', async () => {
 });
 test('optional brief fields accept blanks, normalize supplied context and reject invalid data', () => {
   const input = {title:'A',description:'A'.repeat(30),criteria:[]};
-  assert.deepEqual(validateInput(input), {...input, resources:'', links:[], dataInputs:[], challengeId:undefined});
-  assert.deepEqual(validateInput({...input, criteria:['  ', ' Works offline. '], resources:' Sample records \n', links:[' ', ' https://example.com/reference ']}),
-    {...input, criteria:['Works offline.'], resources:'Sample records', links:['https://example.com/reference'], dataInputs:[], challengeId:undefined});
+  assert.deepEqual(validateInput(input), {...input, inputs:'', outputs:'', resources:'', links:[], dataInputs:[], challengeId:undefined});
+  assert.deepEqual(validateInput({...input, criteria:['  ', ' Works offline. '], inputs:' Images \n', outputs:' Classification of images \n', resources:' Sample records \n', links:[' ', ' https://example.com/reference ']}),
+    {...input, criteria:['Works offline.'], inputs:'Images', outputs:'Classification of images', resources:'Sample records', links:['https://example.com/reference'], dataInputs:[], challengeId:undefined});
+  const cleared = validateInput({...input, inputs:' \n ', outputs:'\t'});
+  assert.equal(cleared.inputs,''); assert.equal(cleared.outputs,'');
   for (const invalid of [{title:' '}, {description:'Too short'}, {criteria:['x'.repeat(2001)]}, {criteria:Array(101).fill('criterion')},
+    {inputs:123}, {inputs:null}, {outputs:[]}, {outputs:null}, {inputs:'x'.repeat(16001)}, {outputs:'x'.repeat(16001)},
     {resources:123}, {resources:'x'.repeat(16001)}, {links:'https://example.com'}, {links:[null]}, {links:['javascript:alert(1)']},
     {links:['example.com']}, {links:Array(31).fill('https://example.com')}, {links:['https://example.com/'+'x'.repeat(2000)]}, {challengeId:'999'}]) {
     assert.throws(()=>validateInput({...input,...invalid}));

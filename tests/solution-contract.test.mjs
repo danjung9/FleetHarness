@@ -42,6 +42,23 @@ test('a required core capability cannot be omitted, disconnected from acceptance
   assert.throws(() => parseSolutionContract(solution(), [...acceptance, ...acceptance]), /acceptance inventory/);
 });
 
+test('a public invocation protocol is validated and copied while legacy solutions remain readable', () => {
+  const value = solution();
+  value.invocation = { input: 'Object containing values: finite number[].', output: 'Exactly {total: number}.', rules: ['Sum all values; empty input totals zero.'] };
+  const parsed = parseSolutionContract(value, acceptance);
+  assert.deepEqual(parsed.invocation, value.invocation);
+  value.invocation.rules.push('Changed after parsing.');
+  assert.equal(parsed.invocation.rules.length, 1);
+  assert.equal(Object.hasOwn(parsedSolution(), 'invocation'), false);
+  for (const invocation of [null, {}, { input: 'values', output: 'total', rules: [] },
+    { input: 'values', output: ' ', rules: ['sum'] },
+    { input: 'values', output: 'total', rules: ['sum'], expected: { total: 3 } },
+    { input: 'x'.repeat(12_001), output: 'total', rules: ['sum'] },
+    { input: 'values', output: 'total', rules: ['x'.repeat(2_001)] }]) {
+    invalidSolution(value => { value.invocation = invocation; }, /invocation/);
+  }
+});
+
 test('capability/evaluation references must be complete, unique and owned by the named capability', () => {
   invalidPlan(value => { value.evaluations[0].capabilityId = 'missing'; }, /unknown capability/);
   invalidPlan(value => { value.evaluations[0].id = 'unplanned'; }, /must be referenced/);
