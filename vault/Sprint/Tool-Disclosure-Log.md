@@ -99,6 +99,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | R3 synthetic benchmark records | evidence dataset | engineering prioritization | project benchmark. | 2026-11-04 |
 | Runner scheduler audit probes revision 2 | Local diagnostic | Reproduce conflict-retry ownership loss and verify a reviewable scheduler patch with synthetic queue state | Project-local Python tooling | 2026-11-04 |
 | Apple adv_cmds ps source, main read 2026-11-04 | Public source reference | Read option parsing and environment rendering to diagnose the native process-sweep argument vector; no source compiled or executed | Apple Open Source Distributions on GitHub | 2026-11-04 |
+| Round 3 cleanup receipts, first three completed builds | Evidence dataset | Read final status and verification summaries for ID 12, ID 36 and ID 11 alongside the running sweep source; distinguish cleanup confirmation failure from proven surviving work | Team benchmark runner, reported f662d81 plus scratch patches | 2026-11-04 |
 
 ## Data and sources
 

@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, bounded QA handoff] Detached Stop fixture preparation and R3 cleanup diagnosis are complete in [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]]. The native rerun request timed out after ten minutes without an answer. Diagnosis was delivered separately; no Stop closure or corrected-runtime result is claimed.
+
 - [E/A, R3 cleanup diagnosis] Three completed R3 receipts fail final cleanup after passing their generated tests and journeys. The running sweep matches 0da7ce9. Apple source identifies a likely mixed legacy/modern ps option bug; no native reproduction or survivor proof is claimed. [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]] records the repair and unchanged closure bar.
 
 - [E, runtime escalation at 17:32] [[Research/QA/Ten/Scoreboard]] is now R3/f662d81, started 17:11, and HOLD is absent. First three builds fail at review because process cleanup is unconfirmed despite passing application checks. Driver continues launching. Main received an urgent request to pause new launches and verify cleanup; QA now prioritizes this native failure. At 17:35 STOP is present and the driver records stop requests; cleanup remains unconfirmed. QA identified a likely macOS ps flag defect. Earlier HOLD statements are historical.

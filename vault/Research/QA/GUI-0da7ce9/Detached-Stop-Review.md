@@ -82,3 +82,5 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/GUI-0da7ce9/qa-stop-detached
 5. [R] Close only this bounded Pi shell, ordinary parent and detached-child case if that evidence passes. A stopped badge alone, injected discovery, unit counts or successful fixture cleanup cannot close it. Post-click status timing is not exact descendant termination latency.
 
 [E] Baseline and detailed fixture semantics: [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]]. Runtime receipt and final closure judgment are pending.
+
+[E, handoff status] The native execution request received no answer within the bridge's ten-minute wait. The later R3 diagnosis was delivered separately with a request to relay it to the implementation owner. No new runtime receipt was returned. Preparation and source diagnosis are complete; the remaining dependency is a corrected integrated revision, matching build receipt and native owned-worker evidence from the existing runtime owner. No new approval is being requested from Mukul.

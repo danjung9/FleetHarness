@@ -39,6 +39,8 @@ summary: "QA coordination, pinned source review, independent GUI receipt assessm
 
 ## Verification
 
+- [E, runtime handoff limit] Main bridge returned no answer after ten minutes for the pinned native rerun request. The R3 source diagnosis was delivered separately. No receipt closes the detached Stop defect. The remaining work belongs to the existing implementation/runtime owners, followed by independent receipt review; no duplicate runner, source edit or native execution was started.
+
 - [E/A, live R3 follow-up] Independently read the first three failed final receipts and current running sweep source/compiled module. All generic cleanup failures follow completed verification. The sweep matches 0da7ce9 exactly. Local ps documentation and Apple primary source show the first unhyphenated argument switches to legacy parsing, incompatible with the later user-selection argument. Recorded this as a source-based likely cause, not a native reproduction or proof of survivors. Recommended explicit option mode and safe structured cleanup diagnostics; no ps command, runtime or process environment inspection occurred. Main was asked to route the finding to the implementation owner.
 
 - [E, integrated Stop follow-up] Inspected c4f6ac9 implementation, c6ce52d corrected negative tests and pinned 0da7ce9 integration. Prepared GUI-0da7ce9 fixture and review, changing only revision/path and five source-checked UI selectors. Reverse transformation exactly restores the original failing fixture. Main/generated-worker syntax and pure controls pass; no runtime, repository edits, installs or new agents. Exact build/rerun instructions and closure requirements are ready for the existing runtime owner.
