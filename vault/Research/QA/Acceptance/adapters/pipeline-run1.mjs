@@ -57,12 +57,20 @@ export async function prepareReview(page) {
 }
 export async function inspect(page) {
   const raw = await page.evaluate(() => {
-    const text = selector => document.querySelector(selector)?.innerText?.trim() ?? null;
+    const visible = el => {
+      if (!el || !el.getClientRects().length || el.closest('[aria-hidden="true"]')) return false;
+      for (let node = el; node; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+      }
+      return true;
+    };
+    const text = selector => { const el = document.querySelector(selector); return visible(el) ? el.innerText?.trim() ?? null : null; };
     return {
       title: text('#statusTitle'), detail: text('#statusDetail'), review: text('#reviewStatus'), message: text('#message'),
       inputText: document.querySelector('#inputText')?.value ?? null,
-      sessions: [...document.querySelectorAll('#days .session')].map(el => ({ id: el.querySelector('strong')?.innerText?.trim(), identity: el.querySelector('span')?.innerText?.trim(), time: el.querySelector('time')?.innerText?.trim() })),
-      loads: [...document.querySelectorAll('#loading > div')].map(el => ({ who: el.querySelector('h3')?.innerText?.trim(), total: el.querySelector('p')?.innerText?.trim() })),
+      sessions: [...document.querySelectorAll('#days .session')].filter(visible).map(el => ({ id: el.querySelector('strong')?.innerText?.trim(), identity: el.querySelector('span')?.innerText?.trim(), time: el.querySelector('time')?.innerText?.trim() })),
+      loads: [...document.querySelectorAll('#loading > div')].filter(visible).map(el => ({ who: el.querySelector('h3')?.innerText?.trim(), total: el.querySelector('p')?.innerText?.trim() })),
       explanations: text('#explanations')
     };
   });

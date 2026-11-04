@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 const SCRIPT = fileURLToPath(import.meta.url);
 const CONTRACT = path.resolve(path.dirname(SCRIPT), '../Officer/Acceptance-11.md');
 const KEY = path.resolve(path.dirname(SCRIPT), '../Officer/11-Training-Golden.md');
+let explicitAdapter = null;
 const clone = value => structuredClone(value);
 const sha = value => createHash('sha256').update(value).digest('hex');
 const canonical = value => JSON.stringify(value, function (_key, v) {
@@ -157,6 +158,10 @@ function inputShape(v) {
     Object.hasOwn(v, 'maxNodes');
 }
 function findInputs(value, prefix = [], found = []) {
+  if (explicitAdapter && prefix.length === 0) {
+    const decoded = explicitAdapter.decodeInput(value);
+    return decoded ? [{ path: [], value: decoded }] : [];
+  }
   if (prefix.length > 12 || !value || typeof value !== 'object') return found;
   if (inputShape(value)) found.push({ path: prefix, value });
   else for (const [k, v] of Object.entries(value)) findInputs(v, [...prefix, k], found);
@@ -166,6 +171,7 @@ function inputFields(value) {
   return Object.fromEntries(['windows', 'people', 'requests', 'maxNodes'].map(k => [k, value[k]]));
 }
 function replaceInput(document, keys, input) {
+  if (explicitAdapter) return explicitAdapter.replaceSavedInput(document, input);
   if (!keys.length) return clone(input);
   const next = clone(document); let cursor = next;
   for (const key of keys.slice(0, -1)) cursor = cursor[key];
@@ -239,7 +245,7 @@ async function resolvedFuture(target) {
 }
 
 async function observe(page) {
-  return page.evaluate(() => {
+  const observation = await page.evaluate(() => {
     const visible = el => {
       if (!el.getClientRects().length || el.closest('[aria-hidden="true"]')) return false;
       for (let node = el; node; node = node.parentElement) {
@@ -271,6 +277,8 @@ async function observe(page) {
     const busy = [...document.querySelectorAll('[aria-busy="true"]')].some(visible);
     return { url: location.href, body: capped(document.body.innerText), editors, buttons, outputs, tables, review, statusTexts, imports, busy };
   });
+  if (explicitAdapter) Object.assign(observation, await explicitAdapter.inspect(page));
+  return observation;
 }
 function tableAssignments(tables) {
   const candidates = [];
@@ -300,6 +308,7 @@ function tableResult(observation) {
   return assignments ? { status: statuses[0], assignments, source: 'visible table with numeric-minute columns' } : null;
 }
 function renderedResult(observation) {
+  if (Object.hasOwn(observation, 'candidateResult')) return observation.candidateResult;
   const found = [];
   for (const output of observation.outputs) {
     try {
@@ -319,6 +328,10 @@ function renderedResult(observation) {
   return unique[0] || fromTable;
 }
 function chooseButton(observation, pattern) {
+  if (explicitAdapter) {
+    const key = pattern === CHECK ? 'check' : pattern === SAVE ? 'save' : pattern === SUMMARY ? 'summary' : pattern === REVIEW ? 'review' : null;
+    if (key) { pattern = explicitAdapter.names[key]; if (!pattern) return null; }
+  }
   const options = observation.buttons.filter(b => b.visible && !b.disabled && pattern.test(b.name));
   return options.length === 1 ? options[0] : null;
 }
@@ -327,6 +340,7 @@ const SAVE = /^(?:save|export|download) (?:draft|json|draft json|schedule json)$
 const SUMMARY = /^(?:save|export|download) (?:summary|readable summary|text summary)$/i;
 const REVIEW = /^(?:mark (?:as )?reviewed|review draft|approve draft|mark draft reviewed)$/i;
 function reviewState(observation) {
+  if (Object.hasOwn(observation, 'candidateReview')) return observation.candidateReview;
   const checkboxes = observation.review.filter(c => c.visible && /reviewed|review complete|i (?:have )?reviewed/i.test(c.label));
   const texts = observation.statusTexts.map(s => s.trim().toLowerCase());
   const values = texts.flatMap(s => /^(reviewed|approved|review complete)$/.test(s) ? [true] : /^(not reviewed|unreviewed|needs review|awaiting review|review required)$/.test(s) ? [false] : []);
@@ -346,6 +360,7 @@ function importControl(observation) {
   return options.length === 1 ? options[0] : null;
 }
 function displayedTotals(observation) {
+  if (Object.hasOwn(observation, 'candidateTotals')) return observation.candidateTotals;
   const found = [];
   for (const table of observation.tables) {
     if (!table.length) continue;
@@ -369,11 +384,15 @@ async function main() {
   const positional = [], flags = {};
   for (let n = 0; n < argv.length; n++) {
     if (argv[n].startsWith('--')) {
-      if (!['--deps', '--chrome', '--writers-stopped-evidence'].includes(argv[n]) || !argv[n + 1] || argv[n + 1].startsWith('--')) throw new Error('Unknown or missing option');
+      if (!['--deps', '--chrome', '--writers-stopped-evidence', '--adapter'].includes(argv[n]) || !argv[n + 1] || argv[n + 1].startsWith('--')) throw new Error('Unknown or missing option');
       flags[argv[n++]] = argv[n];
     } else positional.push(argv[n]);
   }
   if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE]');
+  if (flags['--adapter']) {
+    if (!['pipeline-run1', 'cli-route'].includes(flags['--adapter'])) throw new Error('Unknown explicit adapter');
+    explicitAdapter = await import('./adapters/' + flags['--adapter'] + '.mjs');
+  }
   const candidateArgument = path.resolve(positional[0]);
   if ((await fs.lstat(candidateArgument)).isSymbolicLink()) throw new Error('Candidate root must not be a symlink');
   const candidate = await fs.realpath(candidateArgument);
@@ -421,6 +440,7 @@ async function main() {
   }
   let adapter;
   async function discoverAdapter() {
+    if (explicitAdapter) return await explicitAdapter.detect(page) ? { kind: 'explicit-ui', name: explicitAdapter.id } : null;
     const observation = await observe(page), edit = editor(observation);
     if (edit) return { kind: 'canonical-json-editor', index: edit.index };
     const upload = importControl(observation);
@@ -432,6 +452,7 @@ async function main() {
   }
   async function applyInput(input, label) {
     if (!adapter) return { ok: false, reason: 'No unambiguous supported input boundary' };
+    if (adapter.kind === 'explicit-ui') return explicitAdapter.applyInput(page, input);
     if (adapter.kind === 'canonical-json-editor') {
       const locator = page.locator('textarea').nth(adapter.index);
       await locator.fill(JSON.stringify(input, null, 2)); await locator.blur();
@@ -461,7 +482,7 @@ async function main() {
       }
       return { entered, ...rejectionEvidence, judged: { status: 'NOT CHECKED', detail: 'Invalid import did not roundtrip; rejection versus coercion cannot be disambiguated', observed: rejection } };
     }
-    if (!entered.ok) return { entered, ...before, judged: { status: entered.mismatch ? 'FAIL' : 'NOT CHECKED', detail: entered.mismatch ? 'Known canonical input roundtrip differs from submitted values' : 'Input roundtrip could not be established' } };
+    if (!entered.ok) return { entered, ...before, judged: { status: entered.mismatch ? 'FAIL' : 'NOT CHECKED', detail: entered.mismatch ? 'Known canonical input roundtrip differs from submitted values' : entered.reason || 'Input roundtrip could not be established' } };
     const button = chooseButton(before.observation, CHECK);
     if (!button) return { entered, ...before, judged: { status: 'NOT CHECKED', detail: 'No unique actual check/solve control' } };
     await click(button);
@@ -487,6 +508,7 @@ async function main() {
     return { entered, ...after, judged };
   }
   async function markReviewed() {
+    if (explicitAdapter?.prepareReview) await explicitAdapter.prepareReview(page);
     const observation = await observe(page), button = chooseButton(observation, REVIEW);
     if (button) await click(button);
     else {
@@ -536,6 +558,7 @@ async function main() {
       const bytes = await fs.readFile(evidence);
       record('STOPPED-WRITERS-ATTESTATION', 'PASS', 'Operator supplied this evidence reference; shutdown was not independently observed by this browser script', { path: evidence, sha256: sha(bytes), size: bytes.length });
     } else record('STOPPED-WRITERS-ATTESTATION', 'NOT CHECKED', 'No stopped-writer evidence supplied; matching file hashes alone do not prove writers were stopped');
+    if (explicitAdapter) receipt.explicitAdapter = { id: explicitAdapter.id, sha256: sha(await fs.readFile(new URL('./adapters/' + explicitAdapter.id + '.mjs', import.meta.url))) };
     receipt.cases = cases;
     const staged = path.join(output, 'payload');
     receipt.payloadBefore = await payload(candidate, staged);
@@ -574,6 +597,7 @@ async function main() {
       record(c.id, run.judged.status, run.judged.detail, { input: c.input, expected: c.expected, entered: run.entered, observed: run.judged.observed, independentArithmetic: run.judged.arithmetic, evidence: run.evidence });
       if (c.expected.status === 'feasible' && run.judged.status === 'PASS') {
         const actual = displayedTotals(run.observation), expected = run.judged.arithmetic.totals;
+        if (c.id === 'G01' && explicitAdapter?.id === 'pipeline-run1') record('CLOCK-DISPLAY', 'FAIL', 'Observed base board uses midnight for minute zero; the frozen officer key expects 0800. Numeric-minute acceptance is recorded separately.', { observed: run.observation.extraEvidence?.sessions, evidence: run.evidence });
         record(c.id + '-VISIBLE-TOTALS', actual ? (equal(actual, expected) ? 'PASS' : 'FAIL') : 'NOT CHECKED', actual ? 'Visible numeric personnel totals compared separately' : 'No unique visible personnel-total table; calculated totals do not establish displayed totals', { actual, expected, evidence: run.evidence });
       }
       if (c.expected.status !== 'feasible') {
