@@ -2,6 +2,18 @@
 
 **An AI-powered software factory for turning operational challenges into working, testable software.**
 
+## Desktop application
+
+FleetHarness has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
+
+The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 34-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
+
+**Apple Silicon build:** open release/mac-arm64/FleetHarness.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
+
+For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
+
+Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
+
 ## Overview
 
 FleetHarness is a project for the **Norfolk FleetHacker hackathon**. Its goal is to systematically build solutions for the **34 published use cases**, spanning naval operations, readiness, maintenance, cybersecurity, document processing, scheduling, and decision support.

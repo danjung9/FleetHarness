@@ -1,0 +1,122 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { setImmediate } from 'node:timers/promises';
+import { runAgentStage } from '../dist-electron/electron/agent-runner.js';
+
+const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+const never = () => new Promise(() => {});
+const assistant = (stopReason = 'stop', errorMessage) => ({ type: 'message_end', message: { role: 'assistant', stopReason, errorMessage } });
+function session(handler = never) {
+  const listeners = new Set();
+  return {
+    prompts: [], aborts: 0, disposals: 0,
+    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    emit(event) { for (const listener of listeners) listener(event); },
+    async prompt(text) { this.prompts.push(text); await handler(this); },
+    abort() { this.aborts++; return never(); }, // Deliberately ignores cancellation.
+    dispose() { this.disposals++; },
+    get listeners() { return listeners.size; }
+  };
+}
+function run(s, overrides = {}) {
+  return runAgentStage({ label: 'Test agent', signal: new AbortController().signal,
+    limits: { idleMs: 100, timeoutMs: 1000, maxTurns: 3 }, create: async () => s,
+    work: prompt => prompt('Complete the stage'), onEvent() {}, ...overrides });
+}
+
+test('a silent prompt times out and releases a session whose abort never settles', { timeout: 3000 }, async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const s = session();
+  const rejected = assert.rejects(run(s), /no progress.*waiting for the model/);
+  await setImmediate(); t.mock.timers.tick(100); await rejected;
+  assert.equal(s.aborts, 1); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+});
+
+test('initialization is bounded and a session arriving after timeout is disposed without prompting', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const pending = deferred(), s = session();
+  const rejected = assert.rejects(run(s, { create: () => pending.promise }), /initializing/);
+  t.mock.timers.tick(100); await rejected;
+  pending.resolve(s); await setImmediate();
+  assert.equal(s.aborts, 1); assert.equal(s.disposals, 1); assert.equal(s.prompts.length, 0);
+});
+
+test('thinking and tool activity refresh inactivity without exhausting a productive stage', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const pending = deferred(), s = session(() => pending.promise);
+  const completion = run(s); await setImmediate();
+  for (const event of [
+    { type: 'message_update', assistantMessageEvent: { type: 'thinking_delta', delta: 'reasoning' } },
+    { type: 'tool_execution_start', toolName: 'bash' },
+    { type: 'tool_execution_update', toolName: 'bash' },
+    { type: 'tool_execution_end', toolName: 'bash' },
+    { type: 'compaction_start', reason: 'threshold' },
+    { type: 'compaction_end', reason: 'threshold' }
+  ]) { t.mock.timers.tick(90); s.emit(event); }
+  pending.resolve(); await completion;
+  t.mock.timers.tick(2000);
+  assert.equal(s.aborts, 0); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+});
+
+test('continuous activity cannot bypass the absolute deadline', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const s = session();
+  const rejected = assert.rejects(run(s), /exceeded.*minute limit/); await setImmediate();
+  for (let i = 0; i < 11; i++) { t.mock.timers.tick(90); s.emit({ type: 'tool_execution_update' }); }
+  t.mock.timers.tick(10); await rejected;
+  assert.equal(s.aborts, 1); assert.equal(s.disposals, 1);
+});
+
+test('a looping agent is terminated at its turn budget even if prompt and abort hang', async () => {
+  const s = session(); const rejected = assert.rejects(run(s), /3-turn limit/); await setImmediate();
+  for (let i = 0; i < 4; i++) s.emit({ type: 'turn_start' });
+  await rejected; assert.equal(s.aborts, 1); assert.equal(s.listeners, 0);
+});
+
+test('the last allowed turn may finish successfully', async () => {
+  const s = session(s => { for (let i = 0; i < 3; i++) { s.emit({ type: 'turn_start' }); s.emit(assistant()); s.emit({ type: 'turn_end' }); } });
+  await run(s); assert.equal(s.aborts, 0);
+});
+
+test('user cancellation settles immediately and late events cannot update the run', async () => {
+  const controller = new AbortController(), s = session(), events = [];
+  const rejected = assert.rejects(run(s, { signal: controller.signal, onEvent: e => events.push(e) }), /stopped by you/);
+  await setImmediate(); controller.abort(); await rejected;
+  s.emit(assistant()); assert.deepEqual(events, []); assert.equal(s.disposals, 1);
+});
+
+test('cancellation during setup releases a late session; an already cancelled stage never initializes', async () => {
+  const pending = deferred(), controller = new AbortController(), s = session();
+  const rejected = assert.rejects(run(s, { signal: controller.signal, create: () => pending.promise }), /stopped by you/);
+  controller.abort(); await rejected; pending.resolve(s); await setImmediate();
+  assert.equal(s.prompts.length, 0); assert.equal(s.disposals, 1);
+  await assert.rejects(run(s, { signal: controller.signal, create: () => assert.fail('Must not initialize') }), /stopped by you/);
+});
+
+test('a recovered provider error does not poison a successful stage', async () => {
+  const s = session(s => {
+    s.emit(assistant('error', '503 overloaded'));
+    s.emit({ type: 'auto_retry_start', attempt: 1, maxAttempts: 2 });
+    s.emit(assistant()); s.emit({ type: 'auto_retry_end', success: true });
+  });
+  await run(s); assert.equal(s.aborts, 0);
+});
+
+for (const [reason, expected] of [['error', /provider unavailable/], ['aborted', /stopped before completing/], ['length', /response limit/]]) {
+  test(`a terminal ${reason} response fails instead of advancing`, async () => {
+    const s = session(s => s.emit(assistant(reason, 'provider unavailable')));
+    await assert.rejects(run(s), expected); assert.equal(s.disposals, 1);
+  });
+}
+
+test('artifact completion shares the original deadline and turn budget', async () => {
+  const s = session(s => { s.emit({ type: 'turn_start' }); s.emit({ type: 'turn_start' }); });
+  await assert.rejects(run(s, { work: async prompt => { await prompt('Initial'); await prompt('Missing artifacts'); } }), /3-turn limit/);
+  assert.equal(s.prompts.length, 2);
+});
+
+test('prompt rejection and invalid limits fail clearly without leaking listeners', async () => {
+  const s = session(() => { throw new Error('Transport failed'); });
+  await assert.rejects(run(s), /Transport failed/); assert.equal(s.listeners, 0); assert.equal(s.disposals, 1);
+  await assert.rejects(run(s, { limits: { idleMs: 0 } }), /Invalid agent limit/);
+});

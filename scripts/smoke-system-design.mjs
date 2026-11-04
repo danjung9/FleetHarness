@@ -1,0 +1,96 @@
+import { chromium, _electron as electron } from 'playwright';
+import { preview } from 'vite';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import assert from 'node:assert/strict';
+import { startFixtureProvider } from './mock-provider.mjs';
+
+const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-design-ui-'));
+const output = path.resolve('output/playwright'); await fs.mkdir(output, { recursive: true });
+const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
+const fixture = await startFixtureProvider(); fixture.setDelay(500);
+await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': { baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] } } }));
+let app, browser, server;
+try {
+  app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDir }, timeout: 45000 });
+  const page = await app.firstWindow(); await page.locator('.app-shell').waitFor();
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  const id = await page.evaluate(async () => {
+    const api = window.fleetHarness;
+    await api.saveSettings({ provider: 'fleet-fixture', model: 'fixture-model', rememberKey: false });
+    const p = (await api.bootstrap()).state.projects[0];
+    window.designSnapshots = [];
+    api.onState(state => { const p = state.projects[0]; window.designSnapshots.push({ status: p.status, progress: p.systemDesign?.progress, report: p.report }); });
+    return p.id;
+  });
+  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Start build', exact: true }).click();
+  await page.getByRole('button', { name: 'Run Pi agents', exact: true }).click();
+  await page.getByRole('heading', { name: 'Designing your system' }).waitFor();
+  await page.getByRole('button', { name: 'Message review: Planned', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Task extraction: Building', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Task extraction: Building', exact: true }).click();
+  await page.locator('.sd-detail-title h3').filter({ hasText: 'Task extraction' }).waitFor();
+  await page.screenshot({ path: path.join(output, 'system-design-building.png'), scale: 'css' });
+  await page.locator('.run-header .badge.review, .run-header .badge.failed').waitFor({ timeout: 90000 });
+  const final = await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id), id);
+  assert.equal(final.status, 'review', final.error);
+  assert.ok(Object.values(final.systemDesign.progress).every(p => p.status === 'generated'));
+  assert.equal(final.report.passed, 1);
+  const states = await page.evaluate(() => window.designSnapshots);
+  assert.ok(states.some(s => s.progress && Object.values(s.progress).every(p => p.status === 'planned')));
+  assert.ok(states.some(s => s.progress?.parser.status === 'building' && !s.report));
+  assert.ok(states.some(s => s.progress?.parser.status === 'building' && s.report?.failed === 1), 'Repair must return affected component to building');
+  await page.getByRole('button', { name: 'Message review: Generated', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  assert.match(await page.locator('.sd-relationships').innerText(), /Synthetic message text/);
+  await page.screenshot({ path: path.join(output, 'system-design-desktop.png'), scale: 'css' });
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
+  await page.screenshot({ path: path.join(output, 'system-design-minimum.png'), scale: 'css' });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  await page.getByRole('button', { name: 'App preview', exact: true }).click();
+  await page.frameLocator('iframe').getByRole('button', { name: 'Parse message' }).click();
+  await page.reload(); await page.locator('.app-shell').waitFor();
+  await page.getByRole('button', { name: 'Preview — development workspace', exact: true }).click();
+  await page.getByRole('button', { name: 'System design', exact: true }).click();
+  assert.equal(await page.locator('.sd-node.generated').count(), 3, 'Saved design survives reload');
+  await page.evaluate(id => window.fleetHarness.updateProject(id, { title: 'Revised parser', description: 'A revised application brief should clear the previous system architecture.', criteria: ['Publish a new design.'] }), id);
+  await page.getByRole('heading', { name: 'Your system design will appear here' }).waitFor();
+  assert.deepEqual(errors, []);
+  // Check interrupted states in the retained browser renderer using the real fixture result.
+  server = await preview({ preview: { host: '127.0.0.1', port: 0, strictPort: false } });
+  browser = await chromium.launch({ headless: true, channel: process.env.FLEET_BROWSER_CHANNEL || 'chrome' });
+  const renderer = await browser.newPage({ viewport: { width: 1120, height: 720 }, reducedMotion: 'reduce' });
+  renderer.on('pageerror', e => errors.push(e.message));
+  await renderer.goto(`http://127.0.0.1:${server.httpServer.address().port}/`);
+  const seed = async project => {
+    await renderer.evaluate(project => localStorage.setItem('fleet-browser-preview', JSON.stringify({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: [project] })), project);
+    await renderer.reload();
+    await renderer.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+    await renderer.getByRole('button', { name: 'System design', exact: true }).click();
+    await renderer.locator('.sd-node').first().waitFor();
+  };
+  const interrupted = structuredClone(final);
+  interrupted.status = 'stopped'; interrupted.systemDesign.progress.parser.status = 'building';
+  await seed(interrupted);
+  assert.equal(await renderer.locator('.sd-node.building').count(), 0);
+  assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Stopped' }).count(), 1);
+  interrupted.status = 'failed'; await seed(interrupted);
+  assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Blocked' }).count(), 1);
+  assert.deepEqual(errors, []);
+  console.log(JSON.stringify({ passed: true, planning: true, liveProgress: true, repair: true, sourceReferences: true, persistence: true, staleDesignCleared: true, interruptedStates: true, rendererErrors: 0, screenshots: output }, null, 2));
+} catch (error) {
+  if (app) {
+    const page = await app.firstWindow();
+    console.error(await page.evaluate(async () => ({
+      projects: (await window.fleetHarness.bootstrap()).state.projects.map(p => ({ status: p.status, error: p.error, progress: p.systemDesign?.progress })),
+      snapshots: window.designSnapshots
+    })));
+  }
+  throw error;
+} finally {
+  await browser?.close(); await app?.close(); await fixture.close();
+  await server?.close();
+  await fs.rm(root, { recursive: true, force: true });
+}

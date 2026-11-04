@@ -1,0 +1,88 @@
+{
+  "name": "fleetharness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An AI-assisted software factory for operational challenges",
+  "main": "dist-electron/electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run build:electron && concurrently -k \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "dev:web": "vite --host 127.0.0.1",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "build": "tsc && vite build && npm run build:electron",
+    "start": "electron .",
+    "preview": "vite preview",
+    "test": "npm run build:electron && node --test tests/*.test.mjs",
+    "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --mac --arm64",
+    "harness:build": "tsc -p harness/tsconfig.json",
+    "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
+    "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
+    "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
+    "test:system-design": "npm run build && node scripts/smoke-system-design.mjs",
+    "test:activity": "npm run build && node scripts/smoke-activity.mjs",
+    "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
+    "test:executable": "npm run build && node scripts/smoke-executable.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.5.0",
+    "@electron/packager": "20.3.0",
+    "@fontsource/dm-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/manrope": "5.3.0",
+    "@openai/codex": "0.166.0",
+    "lucide-react": "1.68.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typebox": "1.3.27",
+    "yazl": "3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/yazl": "3.3.1",
+    "@vitejs/plugin-react": "6.2.1",
+    "concurrently": "10.0.6",
+    "cross-env": "10.1.0",
+    "electron": "45.2.2",
+    "electron-builder": "26.18.0",
+    "playwright": "1.64.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "wait-on": "9.5.1"
+  },
+  "build": {
+    "appId": "dev.fleetharness.desktop",
+    "productName": "FleetHarness",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "skills/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "artifactName": "FleetHarness-${version}-${arch}.${ext}",
+    "npmRebuild": false,
+    "asarUnpack": [
+      "node_modules/**/*",
+      "dist-electron/electron/package-worker.js",
+      "package.json"
+    ]
+  },
+  "author": "FleetHarness"
+}
