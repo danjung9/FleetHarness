@@ -45,3 +45,7 @@ summary: "Three queued commits reviewed; assigned review adds reproduced recover
 [E, exact diff] Stop replacement 44faa80 fixes a test whose failing assertion was thrown inside a callback where production cleanup catches exceptions. It now records signal attempts and asserts afterward for both PID reuse and lost ownership. No new native Stop success is inferred from the corrected test.
 
 [E, assigned review] 1cd427d still requires production wiring, broader local error-producer coverage and a Stop regression synchronized on actual readiness entry. Its existing helper checks alone do not establish the intended Start/Resume behavior.
+
+## Integration follow-up at 17:15 EST
+
+[E, working judge and telemetry sources] The new internal judge uses host-owned immutable reads, a fresh read-only Codex thread and a two-repair limit. No runtime approval is inferred. Its usage is stored separately under independentJudge.attempts; the stage metrics hook is not called by this path. The benchmark currently totals persisted Codex token_count session logs, while the new judge requests ephemeral threads. [R] Bind complete judge and repair cost into one cumulative receipt, including cache accounting or explicit unknown, before claiming an efficiency gain. Sent this integration risk to main; no new run has demonstrated an undercount yet.
