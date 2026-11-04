@@ -1,6 +1,6 @@
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
-export type RunStatus = 'draft' | 'running' | 'pausing' | 'paused' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
+export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
 export type View = 'portfolio' | 'factory' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'artifacts' | 'settings';
 export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
 export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
@@ -22,7 +22,6 @@ export interface Project extends BriefContext {
   sourceChallenge?: import('../harness/types.js').Challenge;
   id: string; title: string; description: string; criteria: string[]; createdAt: string; updatedAt: string;
   status: RunStatus; stages: Stage[]; logs: LogEntry[]; runId?: string; workspace?: string;
-  checkpointStage?: StageId; canResume?: boolean;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
 export type AgentBackend = 'pi' | 'codex';
@@ -44,7 +43,6 @@ export interface FleetAPI {
   updateProject(id: string, input: NewProject): Promise<Project>;
   startRun(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
-  resumeRun?(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;
@@ -53,8 +51,6 @@ export interface FleetAPI {
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
-  removeKey?(): Promise<Bootstrap>;
-  shareProject?(id: string): Promise<string>;
   connectChatGPT(): Promise<Bootstrap>;
   cancelChatGPTLogin(): Promise<Bootstrap>;
   disconnectChatGPT(): Promise<Bootstrap>;

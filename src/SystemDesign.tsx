@@ -7,8 +7,8 @@ import './system-design.css';
 const kinds = ['interface', 'logic', 'data', 'integration'] as const;
 const kindNames = { interface: 'Interface', logic: 'Application logic', data: 'Data', integration: 'Integrations' };
 const icons = { interface: Monitor, logic: Code2, data: Database, integration: Plug };
-const statusLabels = { planned: 'Planned', building: 'Building', generated: 'Generated', blocked: 'Blocked', stopped: 'Stopped', paused: 'Paused' };
-type DisplayStatus = ComponentStatus | 'stopped' | 'paused';
+const statusLabels = { planned: 'Planned', building: 'Building', generated: 'Generated', blocked: 'Blocked', stopped: 'Stopped' };
+type DisplayStatus = ComponentStatus | 'stopped';
 function StatusIcon({ status }: { status: DisplayStatus }) {
   const Icon = status === 'generated' ? Check : status === 'building' ? Activity : status === 'blocked' ? XCircle : Circle;
   return <Icon size={14} aria-hidden="true"/>;
@@ -21,7 +21,7 @@ export function SystemDesign({ project }: { project: Project }) {
   const planning = project.status === 'running' && !design;
   if (!design) return <section className="system-design" aria-label="System design">
     <div className="sd-empty"><GitBranch size={28} aria-hidden="true"/><h2>{planning ? 'Designing your system' : 'Your system design will appear here'}</h2>
-      <p>{planning ? 'The planning agent is mapping the application’s components and how they connect. The diagram will appear as soon as it publishes the design.' : project.status === 'pausing' ? 'Stopping the active phase and keeping the latest checkpoint.' : project.canResume ? 'Resume the build to continue planning. The diagram will appear when the planning agent publishes the design.' : project.status === 'stopped' || project.status === 'failed' || project.status === 'paused' ? 'The run ended before a system design was published. Start a new run to generate the architecture.' : project.runId && project.status !== 'draft' ? 'This earlier run has no system design. New runs publish a live architecture diagram during planning.' : 'Start a build to see the planned components, their connections, and progress as the agents implement them.'}</p>
+      <p>{planning ? 'The planning agent is mapping the application’s components and how they connect. The diagram will appear as soon as it publishes the design.' : project.status === 'stopped' || project.status === 'failed' ? 'The run ended before a system design was published. Start a new run to generate the architecture.' : project.runId && project.status !== 'draft' ? 'This earlier run has no system design. New runs publish a live architecture diagram during planning.' : 'Start a build to see the planned components, their connections, and progress as the agents implement them.'}</p>
       {planning && <span className="sd-status building" role="status"><Activity size={14}/>Planning in progress</span>}
     </div>
   </section>;
@@ -30,7 +30,6 @@ export function SystemDesign({ project }: { project: Project }) {
   const active = components.find(c => c.id === selected) || components[0];
   const statusOf = (c: SystemComponent): DisplayStatus => {
     const status = design.progress[c.id]?.status || 'planned';
-    if (status === 'building' && (project.status === 'paused' || project.status === 'pausing')) return 'paused';
     if (status === 'building' && project.status !== 'running') return project.status === 'failed' ? 'blocked' : 'stopped';
     return status;
   };
@@ -50,7 +49,7 @@ export function SystemDesign({ project }: { project: Project }) {
   const progress = design.progress[active.id];
   return <section className="system-design" aria-label="System design">
     <header className="sd-heading"><div><h2>System design</h2><p>{title}</p></div><span className="sd-live"><Layers size={15}/>{project.status === 'running' ? 'Live build' : 'Saved design'}</span></header>
-    <div className="sd-summary"><span role="status" aria-live="polite">{generated} of {components.length} components generated{building > 0 ? ` · ${building} building` : ''}</span><span>{project.status === 'paused' ? 'Build paused' : project.status === 'pausing' ? 'Saving checkpoint' : project.status === 'stopped' ? 'Run stopped' : project.status === 'failed' ? 'Run needs attention' : verifying ? 'Verification in progress' : passed ? 'Application tests passed' : 'Tests not yet passed'}</span></div>
+    <div className="sd-summary"><span role="status" aria-live="polite">{generated} of {components.length} components generated{building > 0 ? ` · ${building} building` : ''}</span><span>{project.status === 'stopped' ? 'Run stopped' : project.status === 'failed' ? 'Run needs attention' : verifying ? 'Verification in progress' : passed ? 'Application tests passed' : 'Tests not yet passed'}</span></div>
     <p className="sd-description">{description}</p>
     <div className="sd-graph-scroll" tabIndex={0} aria-label="System architecture diagram. Scroll to explore, then select a component for details.">
       <div className="sd-graph" style={{ width, height }}>
@@ -77,7 +76,7 @@ export function SystemDesign({ project }: { project: Project }) {
     </div>
     <div className="sd-detail" id={uid + '-detail'}>
       <div className="sd-detail-title"><h3>{active.label}</h3><span className={'sd-status ' + statusOf(active)}><StatusIcon status={statusOf(active)}/>{statusLabels[statusOf(active)]}</span></div>
-      <p>{active.description}</p><p className="sd-progress-note">{statusOf(active) === 'paused' ? 'Resume continues from the latest completed phase checkpoint. ' : statusOf(active) === 'stopped' ? 'Work was interrupted. ' : ''}{statusOf(active) === 'blocked' && progress?.status === 'building' ? 'The run ended while this component was in progress. ' : ''}{progress?.detail}</p>
+      <p>{active.description}</p><p className="sd-progress-note">{statusOf(active) === 'stopped' ? 'Work was interrupted. ' : ''}{statusOf(active) === 'blocked' && progress?.status === 'building' ? 'The run ended while this component was in progress. ' : ''}{progress?.detail}</p>
       <div className="sd-files"><span>Source files</span>{active.files.map(file => <code key={file}>{file}</code>)}</div>
       {related.length > 0 && <ul className="sd-relationships" aria-label={'Connections for ' + active.label}>{related.map(edge => <li key={edge.from + edge.to}><span>{components.find(c => c.id === edge.from)?.label}</span><ArrowRight size={13} aria-hidden="true"/><span>{components.find(c => c.id === edge.to)?.label}</span><em>{edge.label}</em></li>)}</ul>}
     </div>

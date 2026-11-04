@@ -1,5 +1,0 @@
-{
-  "extends": "../electron/tsconfig.json",
-  "compilerOptions": { "outDir": "../dist-worker", "rootDir": ".." },
-  "include": ["*.ts", "../harness/tools/*.ts"]
-}

@@ -13,7 +13,7 @@ const examples = [
   const challenge = challenges.find(c => c.id === example.id);
   return challenge ? [{ ...example, challenge }] : [];
 });
-const statusNames: Record<Project['status'], string> = { draft: 'Brief saved', running: 'Building', pausing: 'Saving checkpoint', paused: 'Paused', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered' };
+const statusNames: Record<Project['status'], string> = { draft: 'Brief saved', running: 'Building', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered' };
 
 function BuildRow({ project, open }: { project: Project; open: (id: string) => void }) {
   return <button onClick={() => open(project.id)}>

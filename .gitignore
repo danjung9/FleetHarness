@@ -13,11 +13,3 @@ build/icon.iconset/
 .vercel
 .env*
 dist-web/
-dist-worker/
-dist-worker.tar.gz
-dist-worker-asset/
-.output/
-.nitro/
-.workflow-data/
-.hosted-*/
-/.swc
