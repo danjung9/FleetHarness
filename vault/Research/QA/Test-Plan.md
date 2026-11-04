@@ -10,7 +10,7 @@ summary: "Active acceptance coverage for the unified Home/Flow app, with histori
 
 ## Bottom line
 
-[E] The latest source reviewed, `631849f`, consolidates the app into one Home/Flow interface; Studio and Workbench are removed. [E] The dedicated QA checkout remains at `50fcaea`, where compilation and all three historical UI builds pass, but the first fixture was blocked by sandbox loopback denial; see [[Research/QA/Results-50fcaea]]. [R] Use the active four-row matrix below for the retained app and preserve the older interface matrices only as history. [R] Test both the factory and the exact app it produces against fixed synthetic answers. [R] Record partial capability honestly and keep live generation dependent on the owner-configured event connection and permitted execution scope.
+[E] The latest source reviewed, `631849f`, consolidates the app into one Home/Flow interface; Studio and Workbench are removed. [E] Compilation and all three historical UI builds passed at `50fcaea`, but the first fixture was blocked by sandbox loopback denial; see [[Research/QA/Results-50fcaea]]. [E] Main subsequently advanced the dedicated QA checkout to clean, detached `631849f`; local GUI work remains stopped. [R] Use the active four-row matrix below and check the exact delivered app against fixed synthetic answers. [R] Record partial capability honestly and keep live generation dependent on the owner-configured event connection and permitted execution scope.
 
 ## Active target: unified interface at 631849f
 
@@ -27,7 +27,7 @@ summary: "Active acceptance coverage for the unified Home/Flow app, with histori
 
 [R] New Home checks: search by the exact visible card title, select a card and verify its catalog ID survives, return from Home to a running build and locate Stop, resume through My builds, refresh into the default Home page, inspect empty-state recovery and operate the new model radio controls by keyboard. Existing headless results do not establish these behaviors. Alternate-profile data migration is not demonstrated; do not claim old Studio/Workbench browser or desktop data appears automatically in the retained app.
 
-[E] The loopback denial is an execution-environment block, not a failure of Home. [R] Do not advance or modify `qa-lead` independently; ask the sole coordinator to allocate the next pinned revision. The commands at the end are the historical `50fcaea` batch, already attempted only as recorded. They must not be reused for the removed interfaces at `631849f`.
+[E] The loopback denial is an execution-environment block, not a failure of Home. Main has advanced `qa-lead` to `631849f`, removed stale alternate output folders and independently assigned itself a fixture-only GUI pass. [R] Do not advance or modify the checkout independently. Rebuild current source before any later permitted app launch; old output is not proof of the new UI. The commands at the end are the historical `50fcaea` batch and must not be reused for removed interfaces. Review main's actual GUI receipt when available; do not convert a planned run into a pass.
 
 ## Scope, ownership and evidence
 
