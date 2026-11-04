@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { randomUUID, createHash } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
+import { createSourceHash } from '../shared/source-hash.js';
 import type { AppState, Project, NewProject, Artifact } from '../shared/types.js';
 import { stageDefinitions, starters } from '../shared/types.js';
 import { getChallenge } from '../harness/catalog.js';
@@ -80,12 +81,14 @@ export async function safeFile(root: string, relative: string) {
   return resolved;
 }
 export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
-  const hash = createHash('sha256');
+  const hash = createSourceHash();
   for (const file of await listArtifacts(root)) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-    hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));
+    const contents = await fs.readFile(await safeFile(root, file.path));
+    if (contents.length > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
+    hash.update(file.path, contents);
   }
-  return hash.digest('hex');
+  return hash.digest();
 }
