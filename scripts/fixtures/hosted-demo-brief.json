@@ -1,0 +1,11 @@
+{
+  "title": "Shift task parser",
+  "description": "Build a self-contained offline browser app for reviewing one synthetic task message formatted TASK: <text>. A labeled message field and Parse button display the task text and exact original message. Invalid or blank input shows a clear inline error; correcting it and parsing succeeds. Preserve the last successful result across reloads. Use no external services.",
+  "criteria": [
+    "TASK: inspect pump displays inspect pump and the exact source message.",
+    "Empty input, TASK: without task text, or a missing prefix shows an inline error, and a valid correction succeeds.",
+    "Reload restores the last successful result; the app is keyboard usable and fits a 390px narrow screen."
+  ],
+  "resources": "Use synthetic task messages only. Deliver one self-contained index.html with no package dependencies or network requests.",
+  "links": []
+}
