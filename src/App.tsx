@@ -1,3 +1,4 @@
+import { ExecutableDownload } from './ExecutableDownload';
 import { ModelSettings } from './ModelSettings';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
@@ -84,7 +85,7 @@ function Factory({ project, selected, select, navigate }: { project: Project; se
 }
 function Portfolio({ projects, open, create, query, setQuery }: { projects: Project[]; open: (id: string) => void; create: () => void; query: string; setQuery: (q: string) => void }) {
   const filtered = projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase()));
-  return <div className="page"><div className="page-heading"><div><h1>Challenges</h1></div><button className="primary" onClick={create}><Plus size={16}/> New challenge</button></div>
+  return <div className="page portfolio-page"><div className="page-heading"><div><h1>Challenges</h1></div><button className="primary" onClick={create}><Plus size={16}/> New challenge</button></div>
     <div className="portfolio-summary"><span><strong>{projects.length}</strong> saved challenges</span><span><strong>{projects.filter(p => p.status === 'running').length}</strong> active runs</span><span><strong>{projects.filter(p => p.report && p.report.exitCode === 0).length}</strong> tested prototypes</span><span><strong>{projects.filter(p => p.status === 'delivered').length}</strong> deliveries</span></div>
     <div className="list-heading"><h2>Your workspace</h2><label className="filter-input"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter challenges" aria-label="Filter challenges"/></label></div>
     <div className="project-list">{filtered.map((p, i) => <button key={p.id} onClick={() => open(p.id)}><span className={'monogram tone-' + i % 3}>{short(p.title)}</span><span className="project-copy"><strong>{p.title}</strong><small>{p.criteria.length} criteria · {p.runId ? date(p.updatedAt) : 'Not started'}</small></span><Badge status={p.status}/><ArrowRight size={18}/></button>)}</div>
@@ -153,7 +154,8 @@ function Evidence({ project, action, busy }: { project: Project; action: Action;
         <label>Review notes<textarea rows={5} maxLength={10000} value={feedback} disabled={!!project.approvedAt} onChange={e => setFeedback(e.target.value)} placeholder="What did you try? What worked, and what still needs domain validation?"/></label>
         {!project.approvedAt && <label className="checkbox"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/>I inspected the application, test evidence, and limitations.</label>}
         {project.approvedAt ? <p className="approval-note"><ShieldCheck size={17}/>Approved for prototype delivery · {date(project.approvedAt)}</p> : <button className="primary full-width" disabled={!passed || !reviewed || feedback.trim().length < 10 || busy || project.status === 'running'} onClick={() => void action(() => api.approve(project.id, feedback), 'Prototype approved for delivery.')}><ShieldCheck size={16}/> Approve prototype</button>}
-        <button className="secondary full-width" disabled={!project.approvedAt || busy} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/> Export app & evidence</button>
+        <ExecutableDownload project={project} api={api} busy={busy} action={action} buttonClassName="primary full-width"/>
+        <button className="secondary full-width" disabled={!project.approvedAt || busy || project.executable?.status === 'packaging'} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/> Export app & evidence</button>
         {project.exportedTo && <p className="path-note">{project.exportedTo}</p>}
       </div></div>
       <div className="readiness-note"><ShieldCheck size={19}/><p><strong>Operational readiness: unverified.</strong> Synthetic fixtures and prototype review do not validate production integrations, security accreditation, or field performance.</p></div>

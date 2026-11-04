@@ -32,3 +32,5 @@ Browser briefs can be downloaded as JSON and imported in Studio's Pi settings. B
 ## Generation scope
 
 The shared backend produces self-contained browser prototypes using synthetic data, actual source files, Node tests, an independent test run, one repair attempt, human review, and export. It does not automatically provide production integrations or establish operational readiness across all 34 use cases. A live provider must be connected for real model generation; the integration test uses an explicitly labeled local fixture.
+
+After approval, **Download executable** in **Review & delivery** packages a standalone app for the current computer. Extract the downloaded ZIP to run it without FleetHarness or developer tools. Source and evidence export remains a separate action. See [standalone app downloads](desktop.md#standalone-app-downloads) for platform support, caching, and signing limitations.

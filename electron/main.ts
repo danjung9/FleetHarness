@@ -1,12 +1,14 @@
 import { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, Menu, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import { promises as disk } from 'original-fs';
 import { fileURLToPath } from 'node:url';
 import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash } from './storage.js';
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { reportPassed } from './verification.js';
 import { PreviewServers } from './preview.js';
+import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,6 +16,8 @@ if (process.env.FLEET_USER_DATA) app.setPath('userData', path.resolve(process.en
 let window: BrowserWindow | null = null;
 let store: Store, backend: FleetBackend, codex: CodexAccount;
 const previews = new PreviewServers();
+const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
+const startingRuns = new Set<string>();
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
 const notify = () => {
   if (emitTimer) return;
@@ -31,7 +35,11 @@ const bootstrap = () => ({
   credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? 'ChatGPT connected' : 'Sign in with ChatGPT to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
-function requireIdle(id: string) { if (backend.active.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.'); return store.project(id); }
+function requireIdle(id: string) {
+  if (deliveries.has(id)) throw new Error('Wait for the app download to finish before changing this build.');
+  if (backend.active.has(id) || startingRuns.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
+  return store.project(id);
+}
 async function readArtifact(id: string, file: string) {
   const p = store.project(id);
   if (!p.workspace) throw new Error('Start a run to create artifacts.');
@@ -52,12 +60,15 @@ function registerIPC() {
   });
   handle('fleet:update', async (id: string, input: NewProject) => {
     const p = requireIdle(id); Object.assign(p, validateInput(input));
-    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.error = undefined;
+    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
     p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
   });
-  handle('fleet:start', (id: string) => backend.start(id));
+  handle('fleet:start', async (id: string) => {
+    requireIdle(id); startingRuns.add(id);
+    try { await backend.start(id); } finally { startingRuns.delete(id); }
+  });
   handle('fleet:stop', (id: string) => backend.stop(id));
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
@@ -100,6 +111,47 @@ function registerIPC() {
     ].join('\n'));
     p.exportedTo = destination; p.status = 'delivered'; p.stages.find(s => s.id === 'deliver')!.status = 'complete';
     await store.save(); notify(); shell.showItemInFolder(destination); return destination;
+  });
+  handle('fleet:download-executable', async (id: string) => {
+    const p = requireIdle(id), controller = new AbortController();
+    let finish!: () => void;
+    const done = new Promise<void>(resolve => { finish = resolve; });
+    deliveries.set(id, { controller, done });
+    let temporary: string | undefined, packaging = false;
+    try {
+      await assertExecutableSource(p);
+      const fileName = executableFileName(p);
+      const result = await dialog.showSaveDialog(window!, {
+        title: 'Download standalone app', defaultPath: path.join(app.getPath('downloads'), fileName),
+        filters: [{ name: 'Application ZIP', extensions: ['zip'] }]
+      });
+      if (result.canceled || !result.filePath) return null;
+      controller.signal.throwIfAborted();
+      const parent = await fs.realpath(path.dirname(result.filePath)), workspace = await fs.realpath(p.workspace!);
+      if (parent === workspace || parent.startsWith(workspace + path.sep)) throw new Error('Save the download outside the agent workspace.');
+      p.executable = { status: 'packaging', platform: process.platform, arch: process.arch, fileName };
+      packaging = true; await store.save(); notify();
+      temporary = await fs.mkdtemp(path.join(app.getPath('temp'), 'fleet-executable-'));
+      const staged = await stageExecutable(p, temporary);
+      const archive = path.join(temporary, fileName);
+      await runPackageWorker({ ...staged, archive, output: path.join(temporary, 'output'), electronVersion: process.versions.electron }, process.execPath, controller.signal);
+      await assertExecutableSource(p);
+      controller.signal.throwIfAborted();
+      const savedTo = await saveExecutable(archive, result.filePath, p.workspace!);
+      p.executable = { ...p.executable, status: 'ready', savedTo };
+      p.status = 'delivered'; p.stages.find(s => s.id === 'deliver')!.status = 'complete';
+      p.updatedAt = new Date().toISOString(); await store.save(); notify();
+      shell.showItemInFolder(savedTo); return savedTo;
+    } catch (error) {
+      if (packaging && p.executable) {
+        p.executable = { ...p.executable, status: 'failed', error: error instanceof Error ? error.message : String(error) };
+        await store.save(); notify();
+      }
+      throw error;
+    } finally {
+      try { if (temporary) await disk.rm(temporary, { recursive: true, force: true, maxRetries: 3 }); }
+      finally { deliveries.delete(id); finish(); }
+    }
   });
   const requireNoRuns = () => { if (backend.active.size) throw new Error('Stop active runs before changing accounts or providers.'); };
   handle('fleet:chatgpt:connect', async () => { requireNoRuns(); await codex.login(); return bootstrap(); });
@@ -167,9 +219,10 @@ app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && backend?.active.size) {
+  if (!quitting && (backend?.active.size || deliveries.size)) {
     event.preventDefault(); quitting = true;
-    void backend.stopAll().finally(async () => { await store.save(); app.quit(); });
+    for (const delivery of deliveries.values()) delivery.controller.abort();
+    void Promise.all([backend.stopAll(), ...[...deliveries.values()].map(d => d.done)]).finally(async () => { await store.save(); app.quit(); });
   }
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

@@ -11,3 +11,4 @@ output/
 .fleet-runs/
 build/icon.iconset/
 dist-studio/
+dist-workbench/

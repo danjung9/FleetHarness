@@ -51,12 +51,14 @@ flowchart LR
 | Intake | Original requirements, `.fleet/packet.json`, derived `scope.md` | Source requirements, requested slice, data boundary and unknowns are explicit |
 | Research | `research.md` | Primary-source leads and adopt/adapt/reject decisions; untested integrations labeled |
 | Plan | `plan.md`, `test-matrix.md` | Task dependencies and a test/manual check or explicit gap for every criterion |
-| Build | `index.html`, core modules, tests, README | Runnable vertical slice with real inputs, outputs and failure states |
-| Verify | `verification.md`, host-owned test report | Actual tests pass; missing/skipped tests and changed source cannot claim verification |
+| Build | `index.html`, core modules, tests, `README.md` user guide | Runnable vertical slice, followed by a guide to setup, workflows, sample inputs and results, data handling, troubleshooting and limitations |
+| Verify | `verification.md`, host-owned test report | Actual tests pass and the guide matches the final application; missing/skipped tests and changed source cannot claim verification |
 | Review | Host-recorded decision | Human inspects the exact verified revision and limitations |
 | Deliver | Source/evidence bundle, `path-to-fleet.md` | Source still matches verification and approval; setup and remaining dependencies documented |
 
 The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the application architecture before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has a process timeout; failed verification remains visible.
+
+Once implementation artifacts exist, the build session receives a dedicated prompt to write the application's `README.md` user guide. The guide must exist before verification starts, and missing/empty output gets one completion attempt within the build session's original budget. Verification and repair update the guide to match the actual application before independent tests bind the final source revision. The guide is available with the run's artifacts and is included in delivery exports.
 
 ## Challenge families
 

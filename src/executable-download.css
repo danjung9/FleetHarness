@@ -1,0 +1,8 @@
+.executable-download { display: grid; gap: 8px; margin: 16px 0; }
+.executable-download p { margin: 0; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.executable-download button { justify-self: start; }
+.executable-download .full-width { justify-self: stretch; }
+.executable-path { display: block; overflow-wrap: anywhere; }
+.executable-spinner { animation: executable-spin 1s linear infinite; }
+@keyframes executable-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .executable-spinner { animation: none; } }

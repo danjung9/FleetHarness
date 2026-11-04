@@ -36,6 +36,10 @@ export class Store {
       this.state = { version: 1, projects: starters.map(newProject), settings: { provider: '', model: '', rememberKey: false } };
     }
     for (const p of this.state.projects) {
+      if (p.executable?.status === 'packaging') {
+        p.executable.status = 'failed';
+        p.executable.error = 'Packaging was interrupted. Download the app again to retry.';
+      }
       if (p.status === 'running') {
         p.status = 'stopped'; p.error = 'The previous run was interrupted. Start a new run to continue from the saved requirements.';
         p.stages.filter(s => s.status === 'active').forEach(s => { s.status = 'failed'; });

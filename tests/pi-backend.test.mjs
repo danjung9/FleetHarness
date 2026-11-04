@@ -20,9 +20,10 @@ async function artifacts(cwd, stage, broken = false) {
     : stage === 'research' ? { 'research.md': 'Local fixture research' }
     : stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
     : stage === 'build' ? { 'index.html': '<!doctype html><title>Task parser</title><main>Local workflow fixture</main>',
-      'README.md': 'Run node --test', 'path-to-fleet.md': 'Domain review required',
+      'path-to-fleet.md': 'Domain review required',
       'core.cjs': broken ? 'exports.parse = () => "defect";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;',
       'app.test.cjs': 'const test = require("node:test"), assert = require("node:assert/strict"), {parse} = require("./core.cjs"); test("extract task", () => assert.equal(parse("TASK: inspect pump"), "inspect pump")); test("empty input", () => assert.equal(parse(""), null));' }
+    : stage === 'guide' ? { 'README.md': '# Task parser\n\nOpen index.html in a browser to see the local workflow fixture. No installation is required. This fixture displays a static page; it has no input controls or persistence.\n\nFor developers: install Node and run `node --test app.test.cjs`. The core parses `TASK: inspect pump` into `inspect pump` and returns null for empty input.\n\nSee [verification notes](verification.md) and [field validation](path-to-fleet.md).' }
     : stage === 'repair' ? { 'core.cjs': broken ? 'exports.parse = () => "still broken";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'verification.md': 'Repair completed; domain review still required' }
     : { 'verification.md': 'Task extraction and empty input are tested; domain review required' };
   for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(cwd, name), content);
@@ -48,8 +49,10 @@ async function harness(t, options = {}) {
             title: 'Task parser', description: 'Local fixture application',
             components: [{ id: 'parser', label: 'Parser', description: 'Extract task text', kind: 'logic', files: ['core.cjs'] }], connections: []
           });
-          const handled = await options.scenario?.({ cwd, stage: this.stage, session: this, sessions, project, store });
-          if (!handled) await artifacts(cwd, this.stage, options.brokenBuild && (this.stage === 'build' || options.brokenRepair));
+          if (text.startsWith('Implementation is complete.')) this.writingGuide = true;
+          const step = this.writingGuide ? 'guide' : this.stage;
+          const handled = await options.scenario?.({ cwd, stage: step, session: this, sessions, project, store });
+          if (!handled) await artifacts(cwd, step, options.brokenBuild && (this.stage === 'build' || options.brokenRepair));
           if (['build', 'verify', 'repair'].includes(this.stage)) await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
           this.emit({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop' } });
           this.emit({ type: 'turn_end' });
@@ -87,6 +90,8 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.equal(h.project.stages.find(s => s.id === 'review').status, 'review');
   assert.equal(h.project.stages.find(s => s.id === 'deliver').status, 'queued');
   assert.equal(h.project.approvedAt, undefined); assert.ok(h.sessions.every(s => s.disposed));
+  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2);
+  assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /No installation is required/);
   assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
   assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash']);
   const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
@@ -160,7 +165,73 @@ test('missing application tests are recovered before verification starts', { tim
     await artifacts(cwd, stage); if (session.prompts.length === 1) await fs.rm(path.join(cwd, 'app.test.cjs')); return true;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
+  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 3); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
+});
+
+test('the user guide is requested after implementation and checked before verification', { timeout: 10000 }, async t => {
+  const steps = [];
+  const h = await harness(t, { scenario: async ({ cwd, stage, session, project }) => {
+    steps.push(stage);
+    if (stage === 'guide') {
+      assert.equal(project.stages.find(s => s.id === 'build').status, 'active');
+      assert.equal(project.stages.find(s => s.id === 'verify').status, 'queued');
+      await fs.access(path.join(cwd, 'index.html'));
+      await fs.access(path.join(cwd, 'app.test.cjs'));
+      await assert.rejects(fs.access(path.join(cwd, 'README.md')), /ENOENT/);
+      assert.match(session.prompts.at(-1), /actual screen, field and button names/);
+      assert.match(session.prompts.at(-1), /synthetic sample input and the expected output/);
+    }
+    if (stage === 'verify') {
+      assert.match(await fs.readFile(path.join(cwd, 'README.md'), 'utf8'), /Task parser/);
+      assert.match(session.prompts[0], /update README.md/);
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(steps, ['intake', 'research', 'plan', 'build', 'guide', 'verify']);
+});
+
+for (const recover of [true, false]) {
+  test(`an empty user guide ${recover ? 'gets one completion attempt' : 'blocks verification after one completion attempt'}`, { timeout: 10000 }, async t => {
+    let attempts = 0;
+    const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+      if (stage !== 'guide') return false;
+      if (++attempts === 2 && recover) return false;
+      await fs.writeFile(path.join(cwd, 'README.md'), ' \n\t'); return true;
+    } });
+    await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
+    assert.equal(attempts, 2);
+    assert.match(h.sessions.find(s => s.stage === 'build').prompts[2], /README.md/);
+    if (!recover) {
+      assert.match(h.project.error, /after one completion attempt.*README.md/);
+      assert.equal(h.project.report, undefined);
+      assert.equal(h.project.stages.find(s => s.id === 'verify').status, 'queued');
+    }
+  });
+}
+
+test('stopping while writing the user guide aborts the build and never starts verification', { timeout: 10000 }, async t => {
+  const entered = deferred();
+  const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'guide') { entered.resolve(); return never(); } return false; } });
+  await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
+  await h.assertSettled('stopped');
+  assert.equal(h.sessions.at(-1).stage, 'build'); assert.equal(h.sessions.at(-1).aborts, 1);
+  assert.equal(h.project.report, undefined);
+});
+
+test('repair updates the user guide before independent verification fingerprints the source', { timeout: 10000 }, async t => {
+  const h = await harness(t, { brokenBuild: true, scenario: async ({ cwd, stage, session }) => {
+    if (stage === 'repair') {
+      assert.match(session.prompts[0], /Update README.md.*repaired application/);
+      await fs.appendFile(path.join(cwd, 'README.md'), '\nThe repaired core handles empty input.');
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /repaired core/);
+  assert.equal(h.project.report.sourceHash, await sourceHash(h.project.workspace));
+  await fs.appendFile(path.join(h.project.workspace, 'README.md'), '\nChanged after verification.');
+  assert.notEqual(h.project.report.sourceHash, await sourceHash(h.project.workspace));
 });
 
 for (const target of ['requirements.md', '.fleet/README.md']) {

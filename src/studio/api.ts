@@ -25,7 +25,7 @@ export const api: FleetAPI = window.fleetHarness || {
     const p: Project = { ...old, ...input, status: 'draft', updatedAt: new Date().toISOString(), stages: structuredClone(stageDefinitions), report: undefined, approvedAt: undefined, exportedTo: undefined, error: undefined, systemDesign: undefined, phasePlan: undefined, globalTools: undefined };
     save({ ...state, projects: state.projects.map(item => item.id === id ? p : item) }); return structuredClone(p);
   },
-  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly,
+  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly,
   openWorkspace: desktopOnly, readArtifact: desktopOnly, saveSettings: desktopOnly,
   artifacts: async () => [], preview: async () => null,
   connectChatGPT: desktopOnly, cancelChatGPTLogin: desktopOnly, disconnectChatGPT: desktopOnly, refreshChatGPT: desktopOnly,

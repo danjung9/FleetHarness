@@ -1,0 +1,545 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T19:24:10.964221+00:00",
+  "title": "Design System: FleetHarness Field Workspace · UI version 3",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.1736 262.46)",
+          "oklch(26% 0.1736 262.46)",
+          "oklch(38% 0.1736 262.46)",
+          "oklch(49% 0.1736 262.46)",
+          "oklch(61% 0.1736 262.46)",
+          "oklch(72% 0.1736 262.46)",
+          "oklch(84% 0.1736 262.46)",
+          "oklch(95% 0.1736 262.46)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.1506 261.37)",
+          "oklch(26% 0.1506 261.37)",
+          "oklch(38% 0.1506 261.37)",
+          "oklch(49% 0.1506 261.37)",
+          "oklch(61% 0.1506 261.37)",
+          "oklch(72% 0.1506 261.37)",
+          "oklch(84% 0.1506 261.37)",
+          "oklch(95% 0.1506 261.37)"
+        ]
+      },
+      "selected-surface": {
+        "role": "primary",
+        "displayName": "Selected Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0161 262.75)",
+          "oklch(26% 0.0161 262.75)",
+          "oklch(38% 0.0161 262.75)",
+          "oklch(49% 0.0161 262.75)",
+          "oklch(61% 0.0161 262.75)",
+          "oklch(72% 0.0161 262.75)",
+          "oklch(84% 0.0161 262.75)",
+          "oklch(95% 0.0161 262.75)"
+        ]
+      },
+      "nav-selected-surface": {
+        "role": "primary",
+        "displayName": "Nav Selected Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0233 264.46)",
+          "oklch(26% 0.0233 264.46)",
+          "oklch(38% 0.0233 264.46)",
+          "oklch(49% 0.0233 264.46)",
+          "oklch(61% 0.0233 264.46)",
+          "oklch(72% 0.0233 264.46)",
+          "oklch(84% 0.0233 264.46)",
+          "oklch(95% 0.0233 264.46)"
+        ]
+      },
+      "nav-selected-ink": {
+        "role": "primary",
+        "displayName": "Nav Selected Ink",
+        "tonalRamp": [
+          "oklch(15% 0.1765 263.47)",
+          "oklch(26% 0.1765 263.47)",
+          "oklch(38% 0.1765 263.47)",
+          "oklch(49% 0.1765 263.47)",
+          "oklch(61% 0.1765 263.47)",
+          "oklch(72% 0.1765 263.47)",
+          "oklch(84% 0.1765 263.47)",
+          "oklch(95% 0.1765 263.47)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.00)",
+          "oklch(26% 0.0000 0.00)",
+          "oklch(38% 0.0000 0.00)",
+          "oklch(49% 0.0000 0.00)",
+          "oklch(61% 0.0000 0.00)",
+          "oklch(72% 0.0000 0.00)",
+          "oklch(84% 0.0000 0.00)",
+          "oklch(95% 0.0000 0.00)"
+        ]
+      },
+      "slate-rail": {
+        "role": "neutral",
+        "displayName": "Slate Rail",
+        "tonalRamp": [
+          "oklch(15% 0.0057 264.53)",
+          "oklch(26% 0.0057 264.53)",
+          "oklch(38% 0.0057 264.53)",
+          "oklch(49% 0.0057 264.53)",
+          "oklch(61% 0.0057 264.53)",
+          "oklch(72% 0.0057 264.53)",
+          "oklch(84% 0.0057 264.53)",
+          "oklch(95% 0.0057 264.53)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0045 258.32)",
+          "oklch(26% 0.0045 258.32)",
+          "oklch(38% 0.0045 258.32)",
+          "oklch(49% 0.0045 258.32)",
+          "oklch(61% 0.0045 258.32)",
+          "oklch(72% 0.0045 258.32)",
+          "oklch(84% 0.0045 258.32)",
+          "oklch(95% 0.0045 258.32)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0359 255.38)",
+          "oklch(26% 0.0359 255.38)",
+          "oklch(38% 0.0359 255.38)",
+          "oklch(49% 0.0359 255.38)",
+          "oklch(61% 0.0359 255.38)",
+          "oklch(72% 0.0359 255.38)",
+          "oklch(84% 0.0359 255.38)",
+          "oklch(95% 0.0359 255.38)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0322 258.37)",
+          "oklch(26% 0.0322 258.37)",
+          "oklch(38% 0.0322 258.37)",
+          "oklch(49% 0.0322 258.37)",
+          "oklch(61% 0.0322 258.37)",
+          "oklch(72% 0.0322 258.37)",
+          "oklch(84% 0.0322 258.37)",
+          "oklch(95% 0.0322 258.37)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.0127 255.51)",
+          "oklch(26% 0.0127 255.51)",
+          "oklch(38% 0.0127 255.51)",
+          "oklch(49% 0.0127 255.51)",
+          "oklch(61% 0.0127 255.51)",
+          "oklch(72% 0.0127 255.51)",
+          "oklch(84% 0.0127 255.51)",
+          "oklch(95% 0.0127 255.51)"
+        ]
+      },
+      "field-line": {
+        "role": "neutral",
+        "displayName": "Field Line",
+        "tonalRamp": [
+          "oklch(15% 0.0223 256.74)",
+          "oklch(26% 0.0223 256.74)",
+          "oklch(38% 0.0223 256.74)",
+          "oklch(49% 0.0223 256.74)",
+          "oklch(61% 0.0223 256.74)",
+          "oklch(72% 0.0223 256.74)",
+          "oklch(84% 0.0223 256.74)",
+          "oklch(95% 0.0223 256.74)"
+        ]
+      },
+      "button-line": {
+        "role": "neutral",
+        "displayName": "Button Line",
+        "tonalRamp": [
+          "oklch(15% 0.0204 257.48)",
+          "oklch(26% 0.0204 257.48)",
+          "oklch(38% 0.0204 257.48)",
+          "oklch(49% 0.0204 257.48)",
+          "oklch(61% 0.0204 257.48)",
+          "oklch(72% 0.0204 257.48)",
+          "oklch(84% 0.0204 257.48)",
+          "oklch(95% 0.0204 257.48)"
+        ]
+      },
+      "button-ink": {
+        "role": "neutral",
+        "displayName": "Button Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0446 257.42)",
+          "oklch(26% 0.0446 257.42)",
+          "oklch(38% 0.0446 257.42)",
+          "oklch(49% 0.0446 257.42)",
+          "oklch(61% 0.0446 257.42)",
+          "oklch(72% 0.0446 257.42)",
+          "oklch(84% 0.0446 257.42)",
+          "oklch(95% 0.0446 257.42)"
+        ]
+      },
+      "button-hover": {
+        "role": "neutral",
+        "displayName": "Button Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0091 258.34)",
+          "oklch(26% 0.0091 258.34)",
+          "oklch(38% 0.0091 258.34)",
+          "oklch(49% 0.0091 258.34)",
+          "oklch(61% 0.0091 258.34)",
+          "oklch(72% 0.0091 258.34)",
+          "oklch(84% 0.0091 258.34)",
+          "oklch(95% 0.0091 258.34)"
+        ]
+      },
+      "support-surface": {
+        "role": "neutral",
+        "displayName": "Support Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0045 258.32)",
+          "oklch(26% 0.0045 258.32)",
+          "oklch(38% 0.0045 258.32)",
+          "oklch(49% 0.0045 258.32)",
+          "oklch(61% 0.0045 258.32)",
+          "oklch(72% 0.0045 258.32)",
+          "oklch(84% 0.0045 258.32)",
+          "oklch(95% 0.0045 258.32)"
+        ]
+      },
+      "starter-surface": {
+        "role": "primary",
+        "displayName": "Starter Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0267 262.34)",
+          "oklch(26% 0.0267 262.34)",
+          "oklch(38% 0.0267 262.34)",
+          "oklch(49% 0.0267 262.34)",
+          "oklch(61% 0.0267 262.34)",
+          "oklch(72% 0.0267 262.34)",
+          "oklch(84% 0.0267 262.34)",
+          "oklch(95% 0.0267 262.34)"
+        ]
+      },
+      "starter-ink": {
+        "role": "primary",
+        "displayName": "Starter Ink",
+        "tonalRamp": [
+          "oklch(15% 0.1132 257.59)",
+          "oklch(26% 0.1132 257.59)",
+          "oklch(38% 0.1132 257.59)",
+          "oklch(49% 0.1132 257.59)",
+          "oklch(61% 0.1132 257.59)",
+          "oklch(72% 0.1132 257.59)",
+          "oklch(84% 0.1132 257.59)",
+          "oklch(95% 0.1132 257.59)"
+        ]
+      },
+      "status-neutral": {
+        "role": "semantic",
+        "displayName": "Status Neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0367 255.69)",
+          "oklch(26% 0.0367 255.69)",
+          "oklch(38% 0.0367 255.69)",
+          "oklch(49% 0.0367 255.69)",
+          "oklch(61% 0.0367 255.69)",
+          "oklch(72% 0.0367 255.69)",
+          "oklch(84% 0.0367 255.69)",
+          "oklch(95% 0.0367 255.69)"
+        ]
+      },
+      "status-active": {
+        "role": "semantic",
+        "displayName": "Status Active",
+        "tonalRamp": [
+          "oklch(15% 0.1535 260.57)",
+          "oklch(26% 0.1535 260.57)",
+          "oklch(38% 0.1535 260.57)",
+          "oklch(49% 0.1535 260.57)",
+          "oklch(61% 0.1535 260.57)",
+          "oklch(72% 0.1535 260.57)",
+          "oklch(84% 0.1535 260.57)",
+          "oklch(95% 0.1535 260.57)"
+        ]
+      },
+      "status-review": {
+        "role": "semantic",
+        "displayName": "Status Review",
+        "tonalRamp": [
+          "oklch(15% 0.1028 68.45)",
+          "oklch(26% 0.1028 68.45)",
+          "oklch(38% 0.1028 68.45)",
+          "oklch(49% 0.1028 68.45)",
+          "oklch(61% 0.1028 68.45)",
+          "oklch(72% 0.1028 68.45)",
+          "oklch(84% 0.1028 68.45)",
+          "oklch(95% 0.1028 68.45)"
+        ]
+      },
+      "status-complete": {
+        "role": "semantic",
+        "displayName": "Status Complete",
+        "tonalRamp": [
+          "oklch(15% 0.0951 158.37)",
+          "oklch(26% 0.0951 158.37)",
+          "oklch(38% 0.0951 158.37)",
+          "oklch(49% 0.0951 158.37)",
+          "oklch(61% 0.0951 158.37)",
+          "oklch(72% 0.0951 158.37)",
+          "oklch(84% 0.0951 158.37)",
+          "oklch(95% 0.0951 158.37)"
+        ]
+      },
+      "status-failed": {
+        "role": "semantic",
+        "displayName": "Status Failed",
+        "tonalRamp": [
+          "oklch(15% 0.1378 31.58)",
+          "oklch(26% 0.1378 31.58)",
+          "oklch(38% 0.1378 31.58)",
+          "oklch(49% 0.1378 31.58)",
+          "oklch(61% 0.1378 31.58)",
+          "oklch(72% 0.1378 31.58)",
+          "oklch(84% 0.1378 31.58)",
+          "oklch(95% 0.1378 31.58)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page headings; responsive sizes are recorded in DESIGN.md."
+      },
+      "detail-title": {
+        "displayName": "Detail Title",
+        "purpose": "Selected challenge title."
+      },
+      "section-title": {
+        "displayName": "Section Title",
+        "purpose": "Supporting section headings."
+      },
+      "row-title": {
+        "displayName": "Row Title",
+        "purpose": "Readable catalog task titles after the final CSS override."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Ordinary explanatory task copy."
+      },
+      "detail-body": {
+        "displayName": "Detail Body",
+        "purpose": "Long selected-challenge descriptions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Button and compact control text."
+      },
+      "row-summary": {
+        "displayName": "Row Summary",
+        "purpose": "Truncated catalog description."
+      },
+      "status": {
+        "displayName": "Status",
+        "purpose": "Compact state label paired with an icon."
+      },
+      "identifier": {
+        "displayName": "Identifier",
+        "purpose": "Challenge identifiers; technical output uses related mono sizes."
+      }
+    },
+    "shadows": [
+      {
+        "name": "toast",
+        "value": "0 6px 23px #1b2f5326",
+        "purpose": "Transient floating confirmation only; ordinary panels remain flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "background-color .16s ease-out, color .16s ease-out",
+        "purpose": "Subtle button hover state changes without movement."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none !important; transition: none !important; scroll-behavior: auto !important",
+        "purpose": "Applied to every element and pseudo-element under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1600px"
+      },
+      {
+        "name": "medium-max",
+        "value": "1200px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1000px"
+      },
+      {
+        "name": "compact-min",
+        "value": "761px"
+      },
+      {
+        "name": "mobile-max",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A compact cobalt action for saving, creating, trying, or approving a tool.",
+      "html": "<button class=\"ds-button ds-primary\">Save request<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 13px;border:1px solid #ced7e4;border-radius:6px;background:#fff;color:#34445b;font:500 12px/1.5 \"DM Sans\",sans-serif;text-decoration:none;cursor:pointer;transition:background-color .16s ease-out,color .16s ease-out}.ds-button:hover{background:#f0f4fa;border-color:#aebed3}.ds-button:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}.ds-button:disabled{cursor:not-allowed;opacity:.48}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}.ds-primary{background:var(--blue,#275ac3);border-color:var(--blue,#275ac3);color:#fff}.ds-primary:hover{background:#19489f;border-color:#19489f}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A white bordered action for edits, refreshes, and alternate downloads.",
+      "html": "<button class=\"ds-button\">Edit request</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 13px;border:1px solid #ced7e4;border-radius:6px;background:#fff;color:#34445b;font:500 12px/1.5 \"DM Sans\",sans-serif;text-decoration:none;cursor:pointer;transition:background-color .16s ease-out,color .16s ease-out}.ds-button:hover{background:#f0f4fa;border-color:#aebed3}.ds-button:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}.ds-button:disabled{cursor:not-allowed;opacity:.48}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "search",
+      "description": "One shared focus boundary around an icon, editable query, and shortcut hint.",
+      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4 4\"/></svg><input aria-label=\"Search challenges\" placeholder=\"Search a task or problem…\"/><kbd>/</kbd></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid #c7d1df;border-radius:6px;min-height:39px;background:#fff;color:#69788d;max-width:440px}.ds-search:focus-within{outline:2px solid var(--blue,#275ac3);outline-offset:2px}.ds-search input{min-width:0;width:100%;border:0;border-radius:0;padding:8px 0;background:transparent;outline:0;color:var(--ink,#202d3e);font:400 13px/1.5 \"DM Sans\",sans-serif;caret-color:var(--blue,#275ac3)}.ds-search input::placeholder{color:#687588}.ds-search kbd{font:11px \"IBM Plex Mono\",monospace;padding:0 5px;border:1px solid var(--line,#dfe5ed);border-radius:3px;color:var(--muted,#5b6779)}"
+    },
+    {
+      "name": "Active navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "A labeled destination with a count; compact mode must preserve its accessible name.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a href=\"#catalog\" aria-current=\"page\" aria-label=\"Find a solution (34)\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"5\" height=\"5\" rx=\"1\"/><path d=\"M12 5h9M12 9h9M3 15h5M3 19h5M12 15h9M12 19h9\"/></svg><span>Find a solution</span><span class=\"ds-count\">34</span></a></nav>",
+      "css": ".ds-nav{width:188px;background:#f4f6fa;padding:8px}.ds-nav a{display:flex;gap:11px;align-items:center;min-height:42px;padding:11px 10px;border-radius:6px;text-decoration:none;font:500 12px \"DM Sans\",sans-serif;color:#536074}.ds-nav a:hover{background:#e9eef6;color:#203f7a}.ds-nav a[aria-current=page]{background:#e3ebfb;color:#214fba}.ds-nav a:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}.ds-count{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Starter tag",
+      "kind": "chip",
+      "refersTo": "starter-tag",
+      "description": "A noninteractive tag identifying starter challenges.",
+      "html": "<span class=\"ds-starter\">Starter challenge</span>",
+      "css": ".ds-starter{display:inline-flex;padding:1px 5px;border-radius:3px;background:#dfe9fb;color:#315d9c;font:400 10px/1.5 \"DM Sans\",sans-serif}"
+    },
+    {
+      "name": "Supporting card",
+      "kind": "card",
+      "refersTo": "support-card",
+      "description": "A flat, pale container for automated-check context.",
+      "html": "<aside class=\"ds-card\"><h2>Automated checks</h2><p>No checks have run yet. Create your tool to generate test results.</p></aside>",
+      "css": ".ds-card{padding:23px;border-radius:8px;background:#f7f9fc;color:var(--ink,#202d3e);font-family:\"DM Sans\",sans-serif;max-width:300px}.ds-card h2{font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.02em;margin:0 0 12px}.ds-card p{font-size:12px;line-height:1.65;color:var(--muted,#5b6779);margin:0}"
+    },
+    {
+      "name": "Selected challenge row",
+      "kind": "custom",
+      "refersTo": "challenge-row-selected",
+      "description": "The desktop selection combines pale fill, a one-pixel indicator, and a labeled button state.",
+      "html": "<button class=\"ds-row\" aria-pressed=\"true\"><span class=\"ds-id\">12</span><span class=\"ds-row-copy\"><span class=\"ds-meta\">Documents &amp; messages</span><strong>Turn messages into a daily timeline</strong><span class=\"ds-summary\">Keep tasks and source references in one daily timeline.</span></span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-row{position:relative;display:flex;align-items:center;gap:14px;padding:19px 17px;width:100%;min-height:113px;border:0;border-bottom:1px solid #e7ecf3;background:#fff;color:var(--ink,#202d3e);text-align:left;cursor:pointer;font-family:\"DM Sans\",sans-serif}.ds-row:hover{background:#f7f9fd}.ds-row[aria-pressed=true]{background:#edf3fe}.ds-row[aria-pressed=true]::before{content:\"\";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--blue,#275ac3)}.ds-row:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}.ds-row>svg{color:var(--blue,#275ac3);flex-shrink:0}.ds-id{align-self:flex-start;margin-top:3px;width:23px;flex-shrink:0;color:#66758a;font:400 11px/1.5 \"IBM Plex Mono\",monospace}.ds-row-copy{display:block;flex:1;min-width:0}.ds-meta{display:block;font-size:12px;line-height:1.4;color:#60718a;margin-bottom:7px}.ds-row-copy strong{display:block;font-size:14px;line-height:1.45;font-weight:600;margin-bottom:6px;overflow-wrap:anywhere}.ds-summary{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.5;color:var(--muted,#5b6779)}"
+    },
+    {
+      "name": "Workspace tabs",
+      "kind": "nav",
+      "refersTo": "workspace-tab-selected",
+      "description": "Underlined task views; application code supplies arrow-key and Home/End navigation.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Tool views\"><button role=\"tab\" aria-selected=\"true\">Your request</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">Try your tool</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">Review &amp; download</button></div>",
+      "css": ".ds-tabs{display:flex;gap:25px;border-bottom:1px solid var(--line,#dfe5ed);overflow:auto}.ds-tabs button{background:none;border:0;padding:12px 2px 15px;font:400 12px \"DM Sans\",sans-serif;color:var(--muted,#5b6779);white-space:nowrap;cursor:pointer}.ds-tabs button:hover{color:var(--blue,#275ac3)}.ds-tabs button[aria-selected=true]{color:var(--blue,#275ac3);box-shadow:inset 0 -2px var(--blue,#275ac3);font-weight:600}.ds-tabs button:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}"
+    },
+    {
+      "name": "Labeled states",
+      "kind": "custom",
+      "refersTo": "status",
+      "description": "A state always combines an icon and readable words with semantic color.",
+      "html": "<div class=\"ds-states\"><span class=\"ds-status ds-complete\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\"/></svg>Approved</span><span class=\"ds-status ds-review\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z\"/></svg>Ready to try</span><span class=\"ds-status ds-failed\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v6m0 3v1\"/></svg>Needs help</span></div>",
+      "css": ".ds-states{display:flex;gap:20px;flex-wrap:wrap}.ds-status{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font:500 11px/1.5 \"DM Sans\",sans-serif;color:#5a697d}.ds-status svg{width:13px;height:13px}.ds-complete{color:#28734e}.ds-review{color:#93601e}.ds-failed{color:#ab4534}"
+    },
+    {
+      "name": "Next action banner",
+      "kind": "custom",
+      "refersTo": "next-action",
+      "description": "The current task and action are grouped; review and approved variants use functional tints.",
+      "html": "<section class=\"ds-next ds-review\"><div><h2>Your tool is ready to try.</h2><p>Try it with sample data. Check that it solves your problem, then review it.</p></div><button class=\"ds-button ds-primary\">Try your tool</button></section>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 13px;border:1px solid #ced7e4;border-radius:6px;background:#fff;color:#34445b;font:500 12px/1.5 \"DM Sans\",sans-serif;text-decoration:none;cursor:pointer;transition:background-color .16s ease-out,color .16s ease-out}.ds-button:hover{background:#f0f4fa;border-color:#aebed3}.ds-button:focus-visible{outline:2px solid var(--blue,#275ac3);outline-offset:3px}.ds-button:disabled{cursor:not-allowed;opacity:.48}@media(prefers-reduced-motion:reduce){.ds-button{transition:none}}.ds-primary{background:var(--blue,#275ac3);border-color:var(--blue,#275ac3);color:#fff}.ds-primary:hover{background:#19489f;border-color:#19489f}.ds-next{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:21px 24px;background:#f0f5ff;border:1px solid #dce6fa;border-radius:8px;font-family:\"DM Sans\",sans-serif}.ds-next h2{font-size:17px;line-height:1.4;font-weight:600;letter-spacing:-.02em;color:#294b82;margin:0 0 6px}.ds-next p{font-size:12px;line-height:1.6;color:#4a638c;margin:0;max-width:68ch}.ds-next>.ds-button{flex-shrink:0}.ds-next.ds-review{background:#fbf7ed;border-color:#ebe1c7}.ds-next.ds-review h2{color:#795b22}.ds-next.ds-review p{color:#75623e}.ds-next.ds-approved{background:#f0f8f3;border-color:#d9e8df}.ds-next.ds-approved h2{color:#2a654a}.ds-next.ds-approved p{color:#486a57}@media(max-width:760px){.ds-next{display:block;padding:19px}.ds-next>.ds-button{margin-top:17px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Workspace",
+    "overview": "The Field Workspace gives frontline personnel a calm place to describe a problem and judge a resulting tool. Cool white work surfaces sit beside a pale slate rail; ink text, restrained cobalt actions, divided rows, and aligned columns make a dense interface readable. The tone is practical and direct.\n\nThis record describes the implemented V3 world only. Plain-language requests, progress, trying the tool, and review lead the interface. Technical output remains available through disclosure. It does not change the original Desktop or Studio identities.",
+    "keyCharacteristics": [
+      "Cool white surfaces and a pale slate navigation rail.",
+      "Compact divided lists with adjacent detail on desktop.",
+      "DM Sans for the interface; IBM Plex Mono for identifiers and technical output.",
+      "Restrained cobalt for actions, selection, and keyboard focus.",
+      "Visible text and icons accompany status color."
+    ],
+    "rules": [
+      {
+        "name": "The Action Accent Rule",
+        "body": "Use cobalt to identify an action, selection, or focus state. Keep broad work surfaces white or pale slate.",
+        "section": "colors"
+      },
+      {
+        "name": "The Labeled State Rule",
+        "body": "Pair state color with readable words and a recognizable icon; a colored dot alone does not carry the state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Plain Task Rule",
+        "body": "Use sentence-case task language in the main workflow. Reserve monospace for identifiers, file paths, code, and execution output.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Workspace Rule",
+        "body": "Use borders and tonal changes for working surfaces. Reserve the diffuse floating shadow for transient notifications.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do preserve visible focus, accessible control names, and text alongside status icons.",
+      "Do keep task copy readable using the final type overrides: row titles are 14px; row summaries and desktop row metadata are 12px.",
+      "Do use the adjacent detail pattern on desktop and an explicit drill-in with a return control on mobile.",
+      "Do keep request, creation, trial, and review actions prominent while technical information remains secondary.",
+      "Do use inline SVG icons and the existing geometric brand mark; the V3 interface ships no raster imagery.",
+      "Do preserve the original Desktop and Studio interfaces and their separate design records."
+    ],
+    "donts": [
+      "Don’t make status depend on color alone or remove accessible names when compact navigation hides visible labels.",
+      "Don’t replace the working list with decorative cards, a promotional hero, or ornamental imagery.",
+      "Don’t use monospace for primary task titles or ordinary instructions.",
+      "Don’t apply the toast shadow to ordinary panels or turn the one-pixel selection indicator into a decorative accent stripe.",
+      "Don’t treat small footer, identifier, or tag typography as the default for instructions or required task information.",
+      "Don’t infer operational readiness from a green check or an approved prototype state."
+    ]
+  }
+}
