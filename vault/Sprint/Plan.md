@@ -52,3 +52,8 @@ Score candidates from [[UseCases/README]] against [[Event/Judging]]:
 A use case with few teams is not automatically better, but it does leave more room to stand out. Counts are in [[UseCases/README]].
 
 Organizers say teams may extend existing tools and do not have to start from scratch [P]. If we do, log it in [[Sprint/Prior-Work-Log]].
+
+## Queued after the backend merge, 2026-11-04 18:23 EST
+
+- [P] Mukul approved: prove delivered apps work with wifi off, add a Compose file to delivered apps so Ark's packaging can take them into UDS, add change requests after a build, and test building with a local model on one challenge.
+- [R] For the team, not agents: one Sailor trial with a stopwatch, and run two of the ten challenges through Ark for a real comparison.

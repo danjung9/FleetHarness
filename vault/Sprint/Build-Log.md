@@ -99,3 +99,10 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:18 Astra fix-pi finished, exit 0. Report: `Research/Backend-Audit/fix-pi.md`
 - 18:19 Astra fixer finished, exit 0. Report: `Research/Backend-Audit/fixer.md`
 - 18:19 Astra conn-core finished, exit 1. Report: `Research/Backend-Audit/conn-core.md`
+- 18:22 Teammate push: codex/fh-008-build-budgets a5e0bcf Codex feat: enforce whole-build budgets and persist usage (FH-008)
+- 18:22 Teammate push: [exited with code 0]
+- 18:23 Mukul approved the follow-ups after the merge: wifi-off proof, Compose file for Ark packaging, change requests after a build, one-challenge local model test. Recorded in `Sprint/Plan.md`.
+- 18:23 Astra fix-approval finished, exit 0. Report: `Research/Backend-Audit/fix-approval.md`
+- 18:23 Astra fix-pi started: Four tests still fail outside the sandbox on your batch, commit 3be61f1, with the real sandbox and ps available. Unit 28
+- 18:23 Astra conn-core started: Connectors, next batch: wire it all together and finish. The overseer merged the Google and Microsoft connectors and the
+- 18:23 Automatic QA at 6228623 on dev/reviewed: failures: unit tests, smoke-electron, smoke-norfolk. Fixture provider only. `Research/QA/Auto/6228623.md`

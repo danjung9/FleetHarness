@@ -31,3 +31,21 @@ No assertions weakened. Both TypeScript checks passed. Focused tests: **90 passe
 The original full-workflow test remains blocked here by Chrome startup. Native validation and the full external suite require the overseer. Changes are uncommitted.
 
 COMMIT: Preserve stopped outcomes and serialize verification provenance consistently
+
+## 18:23 report
+
+Resolved both merge conflicts, preserving both sides. No Git writes; the overseer must stage the resolutions.
+
+Cleanup now retries transient inspection failures, uses five-second kill and `ps` timeouts, and requires two consecutive clean snapshots. Inspection errors reset that count. Unconfirmed cleanup still fails closed.
+
+Added five passing regressions. No assertions weakened. Extended the cleanup-failure test allowance to cover session abort plus the longer recovery window.
+
+Validation:
+- Both requested TypeScript checks passed.
+- Focused tests: 113 passed, one `ps` permission failure, one native restart skip.
+- Harness: 80 passed.
+- Additional backend tests: 120 passed, 11 blocked by Chrome startup.
+
+Could not validate native cleanup under parallel load, Chrome workflows, or sandbox-exec enforcement here.
+
+COMMIT: Resolve backend merge and retry transient process cleanup failures
