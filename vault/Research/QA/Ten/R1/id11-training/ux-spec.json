@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "PB4T training coordinators and departmental reviewers exploring a small synthetic week offline; no operational use or approved fatigue/SFTRM policy is implied.",
+  "primaryTask": "Review competing departmental drill requests, save explicit synthetic constraints, find a feasible schedule, inspect changed times and personnel loading, and record a revision-specific local review.",
+  "successOutcome": "Both synthetic requests appear within their permitted windows with zero independent audit violations, numeric personnel loads and an explicit current revision/review state. Infeasible and search-limit outcomes remain distinct and cannot be accepted.",
+  "screens": [
+    {
+      "name": "Weekly planning board",
+      "purpose": "A single responsive page: week and synthetic-only banner, saved/draft status, competing requests, proposed weekly allocations and current/last review. Monday through Sunday are identifiable; empty days are explicit. Before/after values are visible side by side or stacked on narrow screens.",
+      "primaryAction": "Find feasible schedule"
+    },
+    {
+      "name": "Inputs and constraint details",
+      "purpose": "Inline labeled forms for requests, exact assigned people, required qualifications, shared exclusive resources, operational windows, availability, rest and horizon duty. Advanced search budget and minute-offset editing have clear epoch/help text. Show validation and competing values without requiring raw JSON.",
+      "primaryAction": "Save inputs"
+    },
+    {
+      "name": "Proposal review and loading",
+      "purpose": "Show complete allocation audit, numeric/color loading with a legend, changed times, previous accepted proposal, and unmet review requirements. Local acceptance is explicitly not operational approval. No automatic policy relaxation.",
+      "primaryAction": "Accept local proposal"
+    }
+  ],
+  "states": {
+    "empty": "Initially no requests or proposal; explain synthetic-only use and offer Load synthetic week. Empty days read No drills. Do not imply an empty schedule is a successful mandatory training plan.",
+    "loading": "On local save or search, show Saving inputs or Finding feasible schedule in a live status region and prevent duplicate submissions. Yield a paint before bounded synchronous search, cap instances to 12 requests/20 starts each and search to 200000 nodes. Return to enabled controls on every outcome.",
+    "error": "Show field-specific validation and focus the first error while preserving draft values. Render invalid input, finite-model infeasibility and inconclusive search exhaustion separately. No partial or stale proposal can be accepted. Explain specific observed constraints without claiming a minimal unsatisfiable core.",
+    "success": "Show Feasible: all 2 requests scheduled. for the planned sample, allocated times, zero-audit summary, loads and review requirement. Accept local proposal requires a current audited proposal, saved inputs and the Review board and personnel loads checkbox. Display Locally accepted revision N; not operational approval."
+  },
+  "persistence": "Explicit Save inputs creates a new revision only if content changed. Load synthetic week on an empty store creates revision 1; loading over work opens a visible confirm/cancel prompt. Draft edits autosave separately from committed inputs. Restore both on reload when localStorage is available; disclose device-local storage. Last accepted proposal remains labeled historical after edits or failed search. Save/discard is required before review; exporting a current proposal downloads pb4t-proposal.json with synthetic classification. Storage failures show Work is not saved on this device and retain in-memory work with export available.",
+  "recovery": "Correct fields without losing other draft values, or choose Discard changes to restore committed inputs. Save invalidates current proposal and prior acceptance; recalculate, audit and review anew. Show original and proposed times, people and resources before accepting. A failed search preserves the historical accepted proposal but says No current proposal to review. Retry with a larger explicit search budget or edit candidate allocations. No hard constraints are silently relaxed. Confirm replacement before loading the sample over any work.",
+  "keyboard": "Use native labeled inputs, buttons, selects and checkbox with visible focus and logical Tab order: sample, editor, save/discard, search, allocations, review, export. Enter/Space activates native buttons; Escape cancels replacement confirmation and returns focus. Errors use role alert and aria-describedby; result status uses aria-live polite. Color is supplemented by text and numeric loads. Narrow layout stacks cards without hiding controls or requiring page-level horizontal scrolling."
+}

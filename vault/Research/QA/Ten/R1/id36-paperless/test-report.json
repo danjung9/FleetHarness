@@ -1,0 +1,251 @@
+{
+  "time": "2026-11-04T21:08:23.757Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\" \"./storage.test.cjs\" \"./ui.test.cjs\"",
+  "exitCode": 0,
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: Node: real date and duration boundaries\nok 1 - Node: real date and duration boundaries\n  ---\n  duration_ms: 1.782375\n  type: 'test'\n  ...\n# Subtest: Node: replay preserves full state, pending work and audit\nok 2 - Node: replay preserves full state, pending work and audit\n  ---\n  duration_ms: 1.353375\n  type: 'test'\n  ...\n# Subtest: Node: opposite orders converge with two unresolved heads\nok 3 - Node: opposite orders converge with two unresolved heads\n  ---\n  duration_ms: 0.783042\n  type: 'test'\n  ...\n# Subtest: Node: concurrent edit retained and resolution references all heads\nok 4 - Node: concurrent edit retained and resolution references all heads\n  ---\n  duration_ms: 0.558041\n  type: 'test'\n  ...\n# Subtest: Node: concurrent delete retained and resolution references all heads\nok 5 - Node: concurrent delete retained and resolution references all heads\n  ---\n  duration_ms: 0.249292\n  type: 'test'\n  ...\n# Subtest: Node: malformed histories fail atomically and retain queue\nok 6 - Node: malformed histories fail atomically and retain queue\n  ---\n  duration_ms: 0.186375\n  type: 'test'\n  ...\n# Subtest: Node: review exact revision, dirty gate, queue and receipt idempotence\nok 7 - Node: review exact revision, dirty gate, queue and receipt idempotence\n  ---\n  duration_ms: 0.275958\n  type: 'test'\n  ...\n# Subtest: inline browser: real date and duration boundaries\nok 8 - inline browser: real date and duration boundaries\n  ---\n  duration_ms: 0.169834\n  type: 'test'\n  ...\n# Subtest: inline browser: replay preserves full state, pending work and audit\nok 9 - inline browser: replay preserves full state, pending work and audit\n  ---\n  duration_ms: 0.555625\n  type: 'test'\n  ...\n# Subtest: inline browser: opposite orders converge with two unresolved heads\nok 10 - inline browser: opposite orders converge with two unresolved heads\n  ---\n  duration_ms: 0.235417\n  type: 'test'\n  ...\n# Subtest: inline browser: concurrent edit retained and resolution references all heads\nok 11 - inline browser: concurrent edit retained and resolution references all heads\n  ---\n  duration_ms: 0.274417\n  type: 'test'\n  ...\n# Subtest: inline browser: concurrent delete retained and resolution references all heads\nok 12 - inline browser: concurrent delete retained and resolution references all heads\n  ---\n  duration_ms: 0.169\n  type: 'test'\n  ...\n# Subtest: inline browser: malformed histories fail atomically and retain queue\nok 13 - inline browser: malformed histories fail atomically and retain queue\n  ---\n  duration_ms: 0.177167\n  type: 'test'\n  ...\n# Subtest: inline browser: review exact revision, dirty gate, queue and receipt idempotence\nok 14 - inline browser: review exact revision, dirty gate, queue and receipt idempotence\n  ---\n  duration_ms: 0.221625\n  type: 'test'\n  ...\n# Subtest: inline and Node execute identical domain outcomes\nok 15 - inline and Node execute identical domain outcomes\n  ---\n  duration_ms: 0.230417\n  type: 'test'\n  ...\n# Subtest: actual persistence adapter commits complete envelope before acknowledging\nok 16 - actual persistence adapter commits complete envelope before acknowledging\n  ---\n  duration_ms: 5.071291\n  type: 'test'\n  ...\n# Subtest: actual persistence adapter abort retains prior state and draft\nok 17 - actual persistence adapter abort retains prior state and draft\n  ---\n  duration_ms: 0.301584\n  type: 'test'\n  ...\n# Subtest: actual persistence adapter denied retains prior state and draft\nok 18 - actual persistence adapter denied retains prior state and draft\n  ---\n  duration_ms: 0.194125\n  type: 'test'\n  ...\n# Subtest: actual UI discard during conflict restores local fields and permits resolution\nok 19 - actual UI discard during conflict restores local fields and permits resolution\n  ---\n  duration_ms: 8.66075\n  type: 'test'\n  ...\n# Subtest: actual UI peer merge retains unfinished draft in committed envelope\nok 20 - actual UI peer merge retains unfinished draft in committed envelope\n  ---\n  duration_ms: 1.067666\n  type: 'test'\n  ...\n# Subtest: actual UI edit conflict recovers from route rejection through approval\nok 21 - actual UI edit conflict recovers from route rejection through approval\n  ---\n  duration_ms: 1.277167\n  type: 'test'\n  ...\n# Subtest: actual UI delete conflict recovers from route rejection through approval\nok 22 - actual UI delete conflict recovers from route rejection through approval\n  ---\n  duration_ms: 1.066917\n  type: 'test'\n  ...\n1..22\n# tests 22\n# suites 0\n# pass 22\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 101.614959\n\nBrowser journeys: 8/12 passed.\nedit-conflict (desktop): Step 12: Browser step exceeded its 5-second limit.\nedit-conflict (narrow): Step 12: Browser step exceeded its 5-second limit.\ndelete-conflict (desktop): Step 12: Browser step exceeded its 5-second limit.\ndelete-conflict (narrow): Step 12: Browser step exceeded its 5-second limit.\nRequirements: 3 demonstrated, 2 failed, 15 unverified.",
+  "durationMs": 28346,
+  "sourceHash": "b137758027436fd973905b66c7dbf778ebbf34fc4fbbc58714e238b4f1d218e2",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "0b4aa74c84c88429bbe95df7185eb7016ca3724434d070272945c8f875209845",
+    "status": "failed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC36-1",
+        "requirement": "Offline-first with clean sync",
+        "status": "unverified",
+        "detail": "Local IndexedDB save/reload and simulated reconnect are planned, but authenticated transport, offline provisioning and operational clean sync are absent."
+      },
+      {
+        "criterionId": "UC36-2",
+        "requirement": "Human review before anything is submitted",
+        "status": "failed",
+        "detail": "Required browser evidence did not pass: review-route, validation-recovery, edit-conflict. "
+      },
+      {
+        "criterionId": "UC36-3",
+        "requirement": "Audit trail",
+        "status": "unverified",
+        "detail": "A persisted synthetic action history is planned; authenticated attribution, tamper resistance and owner-defined audit retention are absent. A partial local history does not establish the broad source audit requirement."
+      },
+      {
+        "criterionId": "UC36-4",
+        "requirement": "Runs on government devices and existing low-code platforms where possible",
+        "status": "unverified",
+        "detail": "No designated government device, browser policy or existing low-code target is supplied; compatibility and security need authorized platform evaluation."
+      },
+      {
+        "criterionId": "UC36-5",
+        "requirement": "Synthetic data only; no personal information",
+        "status": "passed",
+        "detail": "All supplied records and fictional actors are synthetic. The workspace displays “Synthetic demonstration only. Do not enter personal or operational information.” No personal information or operational source is supplied or contacted. — demonstrated by delivery-order, review-route at both viewport sizes."
+      },
+      {
+        "criterionId": "UC36-6",
+        "requirement": "Fleet-Ready Definition of Done (all solutions): runs offline; keeps humans in authority; cites sources; logs auditable actions; syncs on reconnect; includes a one-page path to fleet.",
+        "status": "unverified",
+        "detail": "The slice includes local offline entry, human review, a source label, local history and a path-to-fleet document; real synchronization and fleet-ready deployment remain unverified."
+      },
+      {
+        "criterionId": "OFF-01",
+        "requirement": "Replaying an operation has no duplicate effect.",
+        "status": "passed",
+        "detail": "Applying the identical peer revision twice leaves the complete canonical state, pending operations and domain audit unchanged after the first application; the browser still displays 2 revisions, one peer effect and First aid drill. — demonstrated by replay at both viewport sizes."
+      },
+      {
+        "criterionId": "OFF-02",
+        "requirement": "Concurrent edits and deletes remain visible.",
+        "status": "failed",
+        "detail": "Required browser evidence did not pass: edit-conflict, delete-conflict. "
+      },
+      {
+        "criterionId": "OFF-03",
+        "requirement": "Converge independent of delivery order.",
+        "status": "passed",
+        "detail": "Merging the same immutable operations in either delivery order produces identical canonical revisions, record heads and conflict values: Pump drill and First aid drill, two unresolved heads. — demonstrated by delivery-order at both viewport sizes."
+      },
+      {
+        "criterionId": "OFF-04",
+        "requirement": "Resume transfers within a bounded link budget.",
+        "status": "unverified",
+        "detail": "Attachment transfer is outside the minimum slice. No interrupted-photo receiver, acknowledged byte offsets or bounded-link transport is implemented; merge logic is insufficient."
+      },
+      {
+        "criterionId": "OFF-05",
+        "requirement": "Persist across device restart and review before routing.",
+        "status": "unverified",
+        "detail": "Browser reload persistence and review are planned, but actual device restart, eviction resilience and durable device storage require integration evidence beyond a reload."
+      },
+      {
+        "criterionId": "EVAL36-1",
+        "requirement": "Extraction accuracy against an answer key",
+        "status": "unverified",
+        "detail": "No supplied scans, extraction implementation or independently approved answer key; manual synthetic entry is not extraction accuracy."
+      },
+      {
+        "criterionId": "EVAL36-2",
+        "requirement": "Errors caught before submission",
+        "status": "unverified",
+        "detail": "Synthetic validation catches a zero-minute log before review; official form rules, seeded domain errors and SME-approved coverage are missing, so the full evaluation is deferred."
+      },
+      {
+        "criterionId": "EVAL36-3",
+        "requirement": "Time per packet against a manual baseline [baseline to be set with Fleet SME]",
+        "status": "unverified",
+        "detail": "No SME manual baseline, equivalent packet workload or timing protocol is supplied; do not invent savings."
+      },
+      {
+        "criterionId": "EVAL36-4",
+        "requirement": "Complete offline operation and conflict-free sync",
+        "status": "unverified",
+        "detail": "Simulated peer reconciliation is only a slice; complete offline provisioning, durable device operation and authenticated reconnect are not implemented."
+      },
+      {
+        "criterionId": "EVAL36-5",
+        "requirement": "Ease of use judged by a Sailor panel",
+        "status": "unverified",
+        "detail": "No Sailor panel or approved usability protocol is available. Browser assertions cannot establish panel acceptance."
+      },
+      {
+        "criterionId": "EVAL36-6",
+        "requirement": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+        "status": "unverified",
+        "detail": "Official judges must apply Warfighting 30%, Speed to Fleet 20%, Scalability 20%, Barrier Removal 15%, Judges’ Discretion 15%; no self-score is evidence."
+      },
+      {
+        "criterionId": "DELIVERABLE36-1",
+        "requirement": "Sailor hours returned to maintenance, training and watchstanding",
+        "status": "unverified",
+        "detail": "Hours returned require representative fleet workloads and an SME baseline; neither is supplied."
+      },
+      {
+        "criterionId": "DELIVERABLE36-2",
+        "requirement": "Fewer errors and less rework",
+        "status": "unverified",
+        "detail": "Reduced errors and rework require a measured comparison with an approved baseline; synthetic rule demonstrations do not establish improvement."
+      },
+      {
+        "criterionId": "DELIVERABLE36-3",
+        "requirement": "Forms completed and routed without connectivity",
+        "status": "unverified",
+        "detail": "The form can be queued locally for simulated routing. Actual disconnected routing, recipient authority and authoritative receipt semantics are unspecified and absent."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "review-route",
+        "title": "Save offline, reload, review and route deliberately",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 25 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/review-route-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/review-route-desktop.zip"
+      },
+      {
+        "id": "review-route",
+        "title": "Save offline, reload, review and route deliberately",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 25 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/review-route-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/review-route-narrow.zip"
+      },
+      {
+        "id": "validation-recovery",
+        "title": "Correct a rejected synthetic log without losing the draft",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/validation-recovery-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/validation-recovery-desktop.zip"
+      },
+      {
+        "id": "validation-recovery",
+        "title": "Correct a rejected synthetic log without losing the draft",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/validation-recovery-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/validation-recovery-narrow.zip"
+      },
+      {
+        "id": "replay",
+        "title": "Replay a peer operation without duplicating its effect",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 13 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/replay-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/replay-desktop.zip"
+      },
+      {
+        "id": "replay",
+        "title": "Replay a peer operation without duplicating its effect",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 13 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/replay-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/replay-narrow.zip"
+      },
+      {
+        "id": "edit-conflict",
+        "title": "Retain concurrent edits and resolve the reviewed heads",
+        "viewport": "desktop",
+        "status": "failed",
+        "detail": "Step 12: Browser step exceeded its 5-second limit.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/edit-conflict-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/edit-conflict-desktop.zip"
+      },
+      {
+        "id": "edit-conflict",
+        "title": "Retain concurrent edits and resolve the reviewed heads",
+        "viewport": "narrow",
+        "status": "failed",
+        "detail": "Step 12: Browser step exceeded its 5-second limit.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/edit-conflict-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/edit-conflict-narrow.zip"
+      },
+      {
+        "id": "delete-conflict",
+        "title": "Keep edit and delete visible until a deliberate decision",
+        "viewport": "desktop",
+        "status": "failed",
+        "detail": "Step 12: Browser step exceeded its 5-second limit.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delete-conflict-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delete-conflict-desktop.zip"
+      },
+      {
+        "id": "delete-conflict",
+        "title": "Keep edit and delete visible until a deliberate decision",
+        "viewport": "narrow",
+        "status": "failed",
+        "detail": "Step 12: Browser step exceeded its 5-second limit.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delete-conflict-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delete-conflict-narrow.zip"
+      },
+      {
+        "id": "delivery-order",
+        "title": "Compare both peer delivery orders",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 6 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delivery-order-desktop.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delivery-order-desktop.zip"
+      },
+      {
+        "id": "delivery-order",
+        "title": "Compare both peer delivery orders",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 6 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delivery-order-narrow.png",
+        "trace": ".quality-evidence/4f6bea891e7e-95726a67-9bcb-4db4-a746-28ceb086c4b6/delivery-order-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

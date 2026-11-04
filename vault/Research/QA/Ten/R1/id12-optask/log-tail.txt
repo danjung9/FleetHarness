@@ -1,0 +1,86 @@
+verify error bash failed
+"✔ actual inline core and Node adapter execute frozen journey inputs with matching behavior (7.302375ms)\n✔ MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields (3.95675ms)\n✔ MSG-02: exact recovery messages and unknown dates (0.893208ms)\n✔ MSG-02: duplicate IDs flag every occurrence; malformed and reversed intervals block review (0.4715ms)\n✔ MSG-01: draft and c
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('index.html');s=p.read_text()\ns=s.replace(\\\"const tok=line.endsWith('//')?\\\", \\\"if(line.includes('\\\\\\\\r')){out.issues.push(\"'`Line ${i+1}: unsupported message structure.`);return;}'\"\\\\n const tok=line.endsWith('//')?\\\")\ns=s.replace('r.end<=r.start','Date.parse(r.end)<=Date.parse(r.start)')\ns=s
+verify tool bash completed
+"✔ actual inline core and Node adapter execute frozen journey inputs with matching behavior (9.554375ms)\n✔ MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields (3.779042ms)\n✔ MSG-02: exact recovery messages and unknown dates (0.787625ms)\n✔ MSG-02: duplicate IDs flag every occurrence; malformed and reversed intervals block review (0.680666ms)\n✔ MSG-01: draft
+verify text The repaired application passes all 11 tests, including new regressions for failed parses, year-boundary intervals, embedded carriage returns, and selector collisions. The frozen plans and architecture are unchanged. Browser journeys, downloads, layout, and keyboard behavior still need the host runner; Node results alone cannot pass the verification gate.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> core.test.cjs <<'EOF'\ntest('README sample walkthrough has independently specified reviewed rows and export evidence',()=>{\n const text=event+'\\\\nTASK/T1/2026-11-04T16:00Z/TEAM/Review briefing//';const s=C.createSession();s.draft=text;C.commit(s);\n assert.equal(s.snapshot.issues.length,0);C.setCategory(s,1,'frequency');C.setCategory(s,2,'other');asser
+verify tool bash completed
+"✔ actual inline core and Node adapter execute frozen journey inputs with matching behavior (22.775458ms)\n✔ MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields (7.917708ms)\n✔ MSG-02: exact recovery messages and unknown dates (1.025458ms)\n✔ MSG-02: duplicate IDs flag every occurrence; malformed and reversed intervals block review (0.964875ms)\n✔ MSG-01: draf
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md');s=p.read_text().replace('Numeric offsets extend through ±14:00.', 'Numeric offsets extend through ±14:00. UTC normalization may cross the input year boundary; intervals are compared as instants.')\ns=s.replace('The recorded build-stage run passed all seven tests with no failures or skips. No additio
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > verification.md <<'EOF'\n# Verification evidence - 2026-11-04\n\nStatus: generated application; application core runnable and locally tested. Browser verification gate remains pending and cannot be claimed passed. \"'`requirementsMet: false`. Reviewer acceptance and operational validation are unverified. Synthetic-only boundary applies throughout.\n\nRead 
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "capture",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Message capture: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "parser",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Deterministic extraction and validation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Source evidence and review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "schedule",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"UTC daily schedule: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "session",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local session state: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "export",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Verification repair complete; 12 application Node tests pass with no skips. Desktop/narrow host browser checks remain pending; generated is not a correctness claim."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Reviewed schedule download: generated. The live diagram has been updated."}]
+verify text Completed the bounded repair and expanded regression coverage: **12 tests passed, none skipped**.
+
+Updated README, test matrix, and [verification.md](verification.md). Frozen plans and architecture remain unchanged; all six components are reported generated.
+
+Browser journeys, screenshots, and traces remain pending with the host runner. Deferred criteria remain unverified, so `requirementsMet` is 
+verify info TAP version 13
+# Subtest: actual inline core and Node adapter execute frozen journey inputs with matching behavior
+ok 1 - actual inline core and Node adapter execute frozen journey inputs with matching behavior
+  ---
+  duration_ms: 5.363042
+  type: 'test'
+  ...
+# Subtest: MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields
+ok 2 - MSG-01: all tokens preserve UTF-16 offsets, m
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

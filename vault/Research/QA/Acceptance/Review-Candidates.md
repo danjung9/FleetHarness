@@ -17,6 +17,8 @@ summary: "Pipeline leads on observed coverage; the clock failure is a brief/key 
 
 [E, Pipeline G10 DOM] One actual clarity defect remains: the exhausted headline says no complete draft and unknown feasibility, while Constraint observations says “No conflicts in the complete current draft.” Both apps lack a separate readable-summary export; that is an acceptance-key extension absent from the supplied brief, not a portable-JSON failure.
 
+[E, subsequent Run2 receipt] Run2 passes 13 outcome cases and exact offline file recovery: 28 PASS, zero FAIL, 18 NOT CHECKED. Its form leaves G07/G08/G09/V14 unsupported; exhaustion wording is consistent. See [[Research/QA/Acceptance/Review-Run2]]. The current mission is ten catalog challenges; this ID 11 comparison does not downselect that benchmark.
+
 [R] Next-build instruction changes at `d0f4c69`:
 
 - `skills/fleet-ux/SKILL.md` and `skills/fleet-scheduling/SKILL.md`: require headline, explanation, totals and review state to agree. Exhaustion means unknown feasibility; never describe an absent draft as complete.

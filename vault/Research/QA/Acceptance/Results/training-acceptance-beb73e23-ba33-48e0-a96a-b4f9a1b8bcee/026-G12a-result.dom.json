@@ -1,0 +1,321 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-beb73e23-ba33-48e0-a96a-b4f9a1b8bcee/payload/index.html",
+  "body": "LOCAL PLANNING WORKSPACE / 01\nTraining draft\n\nFour practice sessions. Explicit constraints. A draft you can inspect.\n\nSynthetic practice only — not an issued schedule.\n1. Prepare the requests\n\nMinutes from Day 1 minute 0. Day 2 starts at 1440. People, rooms and required qualifications stay fixed.\n\n4 requests retained: A, B, C, D\n\nSession A\nP01 | Room-1 | Q-A\nDuration (minutes)\nAllowed starts (minutes)\nSession B\nP01 | Room-1 | Q-A\nDuration (minutes)\nAllowed starts (minutes)\nSession C\nP02 | Room-2 | Q-B\nDuration (minutes)\nAllowed starts (minutes)\nSession D\nP02 | Room-2 | Q-B\nDuration (minutes)\nAllowed starts (minutes)\n2. Check the supplied rules\nOperating windows\nWindow format: 0-240;1440-1680. Entire sessions must fit.\nP01 · whole-horizon limits\nSupplied qualifications\nAvailability windows\nMaximum minutes, both days\nMinimum rest (minutes)\nP02 · whole-horizon limits\nSupplied qualifications\nAvailability windows\nMaximum minutes, both days\nMinimum rest (minutes)\nEvaluator settings\nSearch allowance (candidate attempts)\n1–200000 nodes. A stopped search cannot prove infeasibility.\n3. Inspect the draft\nGenerate draft\n\nInfeasible — no permitted combination satisfies all constraints.\n\nObserved search conflicts (not a minimal cause): B: shared-room collision. D: outside operating windows.\n\nNo current complete draft. All four requests remain editable.\n\nFeasibility covers supplied starts and constraints only. Intervals are half-open; rest is checked separately. Budgets cover both days combined.\n\nMark current draft reviewed\n\nNot reviewed — current inputs need review.\n\nGenerate a checked feasible draft before reviewing.\n4. Save and recover\n\nLocal browser storage and portable synthetic JSON. No account or remote storage.\n\nSave portable draft\n\nUnsaved changes — save a new portable checkpoint.\n\nImport snapshot file (.json)\nOr paste snapshot JSON\nCheck import\n\nCurrent work stays in place until you confirm replacement.\n\nRead limitations\nSynthetic-only prototype · Offline calculation · No operational integrations",
+  "editors": [
+    {
+      "index": 0,
+      "visible": true,
+      "readOnly": false,
+      "disabled": false,
+      "label": "Or paste snapshot JSON",
+      "value": ""
+    }
+  ],
+  "buttons": [
+    {
+      "index": 0,
+      "visible": true,
+      "disabled": false,
+      "name": "Evaluator settings"
+    },
+    {
+      "index": 1,
+      "visible": true,
+      "disabled": false,
+      "name": "Generate draft"
+    },
+    {
+      "index": 2,
+      "visible": true,
+      "disabled": true,
+      "name": "Mark current draft reviewed"
+    },
+    {
+      "index": 3,
+      "visible": true,
+      "disabled": false,
+      "name": "Save portable draft"
+    },
+    {
+      "index": 4,
+      "visible": true,
+      "disabled": false,
+      "name": "Check import"
+    },
+    {
+      "index": 5,
+      "visible": false,
+      "disabled": false,
+      "name": "Save current work"
+    },
+    {
+      "index": 6,
+      "visible": false,
+      "disabled": false,
+      "name": "Replace current work"
+    },
+    {
+      "index": 7,
+      "visible": false,
+      "disabled": false,
+      "name": "Cancel"
+    },
+    {
+      "index": 8,
+      "visible": true,
+      "disabled": false,
+      "name": "Read limitations"
+    },
+    {
+      "index": 9,
+      "visible": false,
+      "disabled": false,
+      "name": "Download user guide"
+    }
+  ],
+  "outputs": [],
+  "tables": [],
+  "review": [],
+  "statusTexts": [
+    "Infeasible — no permitted combination satisfies all constraints.\n\nObserved search conflicts (not a minimal cause): B: shared-room collision. D: outside operating windows.",
+    "Infeasible — no permitted combination satisfies all constraints.",
+    "Not reviewed — current inputs need review.",
+    "Generate a checked feasible draft before reviewing.",
+    "Unsaved changes — save a new portable checkpoint.",
+    "Current work stays in place until you confirm replacement."
+  ],
+  "imports": [
+    {
+      "index": 0,
+      "label": "Import snapshot file (.json)",
+      "accept": ".json,application/json",
+      "multiple": false,
+      "disabled": false
+    }
+  ],
+  "busy": false,
+  "candidateResult": {
+    "status": "infeasible",
+    "assignments": [],
+    "source": "Run2 current visible status and assignment cards",
+    "diagnostics": {
+      "text": "Observed search conflicts (not a minimal cause): B: shared-room collision. D: outside operating windows.",
+      "errors": []
+    }
+  },
+  "candidateTotals": null,
+  "candidateReview": false,
+  "candidateInput": {
+    "windows": [
+      {
+        "start": 0,
+        "end": 240
+      },
+      {
+        "start": 1440,
+        "end": 1499
+      }
+    ],
+    "people": [
+      {
+        "id": "P01",
+        "qualifications": [
+          "Q-A"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 30
+      },
+      {
+        "id": "P02",
+        "qualifications": [
+          "Q-B"
+        ],
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "maxMinutes": 120,
+        "restMinutes": 0
+      }
+    ],
+    "requests": [
+      {
+        "id": "A",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "B",
+        "duration": 60,
+        "starts": [
+          0,
+          90
+        ],
+        "people": [
+          "P01"
+        ],
+        "resources": [
+          "Room-1"
+        ],
+        "qualifications": [
+          "Q-A"
+        ]
+      },
+      {
+        "id": "C",
+        "duration": 60,
+        "starts": [
+          0
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      },
+      {
+        "id": "D",
+        "duration": 60,
+        "starts": [
+          1440
+        ],
+        "people": [
+          "P02"
+        ],
+        "resources": [
+          "Room-2"
+        ],
+        "qualifications": [
+          "Q-B"
+        ]
+      }
+    ],
+    "maxNodes": 50000
+  },
+  "extraEvidence": {
+    "status": "Infeasible — no permitted combination satisfies all constraints.",
+    "diagnostics": "Observed search conflicts (not a minimal cause): B: shared-room collision. D: outside operating windows.",
+    "review": "Not reviewed — current inputs need review.",
+    "importNotice": "Current work stays in place until you confirm replacement.",
+    "operating": "0-240;1440-1499",
+    "maxNodes": "50000",
+    "requests": [
+      {
+        "heading": "Session A",
+        "identity": "P01 | Room-1 | Q-A",
+        "durationId": "duration-A",
+        "duration": "60",
+        "startsId": "starts-A",
+        "starts": "0"
+      },
+      {
+        "heading": "Session B",
+        "identity": "P01 | Room-1 | Q-A",
+        "durationId": "duration-B",
+        "duration": "60",
+        "startsId": "starts-B",
+        "starts": "0, 90"
+      },
+      {
+        "heading": "Session C",
+        "identity": "P02 | Room-2 | Q-B",
+        "durationId": "duration-C",
+        "duration": "60",
+        "startsId": "starts-C",
+        "starts": "0"
+      },
+      {
+        "heading": "Session D",
+        "identity": "P02 | Room-2 | Q-B",
+        "durationId": "duration-D",
+        "duration": "60",
+        "startsId": "starts-D",
+        "starts": "1440"
+      }
+    ],
+    "people": [
+      {
+        "heading": "P01 · whole-horizon limits",
+        "fields": [
+          {
+            "id": "qualifications-P01",
+            "value": "Q-A"
+          },
+          {
+            "id": "availability-P01",
+            "value": "0-240;1440-1680"
+          },
+          {
+            "id": "budget-P01",
+            "value": "120"
+          },
+          {
+            "id": "rest-P01",
+            "value": "30"
+          }
+        ]
+      },
+      {
+        "heading": "P02 · whole-horizon limits",
+        "fields": [
+          {
+            "id": "qualifications-P02",
+            "value": "Q-B"
+          },
+          {
+            "id": "availability-P02",
+            "value": "0-240;1440-1680"
+          },
+          {
+            "id": "budget-P02",
+            "value": "120"
+          },
+          {
+            "id": "rest-P02",
+            "value": "0"
+          }
+        ]
+      }
+    ],
+    "results": [],
+    "loads": [],
+    "errors": [],
+    "previewVisible": false,
+    "importRejected": false,
+    "clockConvention": "Rendered intervals are raw integer minutes from Day 1 minute 0; no 0800 clock display is claimed.",
+    "inputTypeLimit": "Form readback follows the documented integer syntax. Actual portable JSON is required to establish serialized types.",
+    "portableReviewPolicy": "Saved snapshots omit review; successful imports require fresh review.",
+    "summaryCapability": "Download user guide is static documentation, not a current schedule summary."
+  }
+}

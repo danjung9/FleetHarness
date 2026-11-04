@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Synthetic originator (Sailor/LPO), Division Officer, Department Head, CHENG, XO and CO personas, and prototype reviewers. No real personnel or operational records.",
+  "primaryTask": "Draft one synthetic INITIAL equipment-casualty report, return it for revision, review the corrected content through the notional chain and export a locally simulated release.",
+  "successOutcome": "Revision 2 shows Simulated release, the return reason and original text remain readable, and a local text export contains the approved corrected content and review history. No transmission occurs.",
+  "screens": [
+    {
+      "name": "Report workspace",
+      "purpose": "Show synthetic-only notice, equipment and casualty fields, INITIAL type, clearly non-authoritative demonstration category, saved/draft status, persona and current holder. Start as Originator with empty fields.",
+      "primaryAction": "Save draft; then Submit for review."
+    },
+    {
+      "name": "Review and history",
+      "purpose": "Review committed content, current revision, ordered six-role routing, comments, prior versions and revision-specific decisions. Always show the next required role.",
+      "primaryAction": "Approve and forward; Return for revision with a reason; CO uses Simulate release."
+    },
+    {
+      "name": "Competing amendments",
+      "purpose": "Secondary panel explicitly labeled Synthetic competing-edit simulation. Display both amendment texts and their base, require a chosen or edited resolution and retain both original revisions.",
+      "primaryAction": "Resolve amendments after reviewing both contents."
+    },
+    {
+      "name": "Simulated release",
+      "purpose": "Show the immutable approved snapshot, release actor and history. Explain that export is local, unofficial and not NWP validated.",
+      "primaryAction": "Export synthetic report."
+    }
+  ],
+  "states": {
+    "empty": "Explain how to enter a synthetic equipment name and casualty description; empty editor offers Save draft, not a misleading released record. No fixture is committed until user saves.",
+    "loading": "All local operations are synchronous or briefly pending; announce Saving or Resolving and prevent duplicate actions until persistence succeeds. Restore the workspace on initial load before showing saved status. No network spinner or connection claim.",
+    "error": "Show field-level Enter a casualty description. or equipment error, preserve draft. Denied transitions use a visible action error without mutating state. Storage/read errors must explain local recovery without erasing data or claiming Saved. Conflicts show competing texts and block review/release.",
+    "success": "Saved revision N follows a successful durable write. Show Draft, Returned to Originator, Awaiting role, or Simulated release with revision. Clear resolved errors after successful action and announce changes via live region."
+  },
+  "persistence": "Use a versioned localStorage envelope and commit state atomically before Saved. Persist committed reports, DAG, audit and unfinished draft buffer across reload; persona changes and panel navigation retain edits. Store locally only, unencrypted, with no identity assurance. Released snapshot is immutable. Export provides a readable copy, not a validated reimport backup. Storage failure preserves in-memory work and permits copy/export without asserting durability.",
+  "recovery": "Invalid fields retain inputs. Unsaved changes block submission, approval, return and release until Save draft or Discard changes is chosen. Discard restores committed text deliberately; ordinary role changes never discard. Revising under review resets every current approval. Return requires a comment. Conflict resolution requires explicit nonempty content and both reviewed heads; reload never selects a winner. No reset of stored data without deliberate confirmation. Corrupt storage must not be silently overwritten.",
+  "keyboard": "Use labeled native inputs/selects/buttons in logical Tab order with visible focus, Enter/Space activation and no keyboard traps. Associate field errors with controls; focus first invalid field and announce status. Panels remain reachable and narrow layouts stack controls with wrapping text and no essential horizontal scrolling. Disabled actions explain prerequisites; #release remains an actionable validation control for frozen rejection checks, while download is unavailable before simulated release."
+}

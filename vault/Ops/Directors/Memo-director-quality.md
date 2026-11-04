@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Credit the completed build, correct stale acceptance claims and assign two bounded evidence reviews."
+summary: "Judge the first catalog result, reconcile runtime evidence and preserve independent acceptance."
 ---
 
 # Quality decisions
 
-[E, Real-Build-Run1] The modified 631849f factory completed five phases at 15:24 with 22 generated tests passing. [R] Credit the 4 PM build gate. Keep its task first and the CLI backup; neither is accepted.
+[P, overseer and Flow-Goals] Ten satisfactory catalog builds govern QA. [E, closing scoreboard read] First result: ID 12, 12 tests/eight journeys passing, one repair, 9.7 minutes and 232,070 tokens. Zero judged satisfactory. The run used patched d0f4c69; four criteria remain unverified, including the central card requirement. [R] Assign qa-officer its independent judgment first. Coalesce any automatic assignment; no duplicate judge or build. Curated ID 11 results cannot count toward this benchmark.
 
-[E, retained acceptance receipts] Factory: 33 PASS, one clock-display FAIL, 14 NOT CHECKED. CLI's 15:42 rerun: 28 PASS, 18 NOT CHECKED. Its payload manifest equals the earlier failed run; the adapter changed and offline import now passes. [R] Supersede Engineering's CLI recovery-defect claim with that narrower result. Preserve the 0800 oracle and missing coverage.
+[E, completed QA reviews] Runner reconciled 147 pass/20 fail inside the sandbox. Auto reports 116 unit plus 51 harness passes outside it, with five stale-assumption smoke failures. [R] Assign runner one exact-case evidence crosswalk; dev-3 retains smoke repairs. Do not repeat triage or weaken assertions.
 
-[E, relay/gate] AppYard d0f4c69 changes verification and export; 96 tests pass and 20 fail. [R] Assign qa-runner one failure triage, distinguishing browser launch barriers from unproved downstream causes. Seven historical verification/export failures remain open pending matching reproduction, without assuming unchanged backend code.
+[E, candidate review] Both ID 11 candidates pass fresh offline import. Clock/summary expectations exceed their briefs; factory exhaustion wording is contradictory. [R] Answer Agentic with that distinction, preserve raw failures/key and repair the factory through existing owners. Human acceptance remains pending.
 
-[R] Accept the previous receipt correction and trial preparation. Assign qa-officer the remaining candidate evidence review, including explanations, review binding, readable summary and Fleet-Ready gaps. Main retains browser execution, adapter corrections and final acceptance. No duplicate runtime or golden key.
+[R] Main retains benchmark execution, detached Stop, native containment and final-byte acceptance. Engineering retains overlapping code fixes. Ordinary-child success cannot close broader shutdown gaps.
 
-[R] Preserve Dan's frontend and route product defects through existing reports. Repairs belong in agent instructions, not hand-edited output. Keep 6 PM task acceptance, 7 PM evidence packaging and Thursday noon freeze. Product owns the person's morning decisions and user trial. See [[Ops/Directors/Directive-qa]].
+[E, final relay] Windows branch 5e78e5b caps test-file concurrency; mvp remains d0f4c69. [R] Protect Dan's frontend. Require revision-specific Windows receipts before release claims; prioritize benchmark failures. Keep Thursday noon freeze.

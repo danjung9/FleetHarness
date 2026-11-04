@@ -1,0 +1,92 @@
+verify tool bash completed
+"{\"type\":\"before\",\"callId\":\"tava@2486\",\"startTime\":689321.527,\"class\":\"BrowserContext\",\"method\":\"newPage\",\"params\":{}}\n{\"type\":\"after\",\"callId\":\"tava@2486\",\"endTime\":689415.734,\"result\":{\"page\":\"<Page>\"}}\n{\"type\":\"before\",\"callId\":\"tava@2493\",\"startTime\":689416.781,\"class\":\"Frame\",\"method\":\"goto\",\"params\":{\"url\":\"http://12
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport zipfile,json\np='.quality-evidence/4f6bea891e7e-dcb0fb8e-560b-471c-9043-4b7a9fd6c14a/edit-conflict-desktop.zip'\nwith zipfile.ZipFile(p) as z:\n s=z.read('resources/b4bde720e080ffbc12fb0ea9d4e68af464aa4d25.html').decode()\n i=s.find('resolution-choice');print(s[i-100:i+650])\nPY\""
+}
+verify tool bash completed
+" history. Confirm a value to create a new revision referencing every competing head.</p><label for=\"resolution-choice\">Value to keep</label><select id=\"resolution-choice\"><option value=\"\">Choose a resolution</option value=\"local\">Keep local value</option><option value=\"peer\">Keep peer value (may delete)</option><option value=\"custom\">Write a custom value</option></selec
+verify text The trace shows the selector is visible and enabled, but the runner cannot match the option `local`. I’ll make the option’s visible label match that frozen value and keep its explanation beside the control. I’ll also test both conflict journeys through rejection, resolution, approval, and routing using the actual UI handlers.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='index.html'\ns=open(p).read().replace('<select id=\\\"resolution-choice\\\">','<p id=\\\"resolution-help\\\" class=\\\"muted\\\">local keeps the value saved on this device; peer keeps the competing value (including deletion); custom uses the training-log fields.</p><select id=\\\"resolution-choice\\\" aria-describedby=\\\"resolution-help\\\"
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> ui.test.cjs <<'EOF'\nfor(const type of ['edit','delete'])test('actual UI '+type+' conflict recovers from route rejection through approval',async()=>{\n const a=app();\n a.run(\\\"state=C.save(state,{...C.sample,activity:'Pump drill'},'local');render(true)\\\");\n await a.node(type==='edit'?'peer-concurrent-edit':'peer-concurrent-delete').onclick();\n asse
+verify tool bash completed
+"✔ Node: real date and duration boundaries (1.796291ms)\n✔ Node: replay preserves full state, pending work and audit (1.311208ms)\n✔ Node: opposite orders converge with two unresolved heads (0.575083ms)\n✔ Node: concurrent edit retained and resolution references all heads (0.499125ms)\n✔ Node: concurrent delete retained and resolution references all heads (0.204541ms)\n✔ Node: malfo
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\np='verification.md';s=open(p).read();s=s.replace('**20 Node tests passed, 0 failed, 0 skipped**','**22 Node tests passed, 0 failed, 0 skipped**').replace('Browser verification: **NOT RUN / unverified**','Browser verification: **host baseline 8/12 passed; repaired revision awaiting host rerun**')\na=s.index('All six frozen journeys 
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "capture",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and were inspected. Component retained; local application tests pass. Generated does not assert browser or operational verification."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Training log workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "domain",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and were inspected. Component retained; local application tests pass. Generated does not assert browser or operational verification."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Validation and revision graph: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and were inspected. Component retained; local application tests pass. Generated does not assert browser or operational verification."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local transaction store: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Bounded repair complete: resolution option labels match frozen selection values; explanations retained; 22 Node tests pass. Host browser rerun pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Conflict and human review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "simulator",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and were inspected. Component retained; local application tests pass. Generated does not assert browser or operational verification."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated second replica and routing: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "audit",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and were inspected. Component retained; local application tests pass. Generated does not assert browser or operational verification."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Action history and export: generated. The live diagram has been updated."}]
+verify text Repaired conflict option labels to match the frozen browser selections, retaining explanatory help. Updated README and verification evidence.
+
+All 22 Node tests pass with no skips. Frozen plans and host evidence remain unchanged.
+
+Browser rerun is pending; the prior run passed 8/12 cases. Fifteen deferred criteria remain unverified, so `requirementsMet` remains false.
+verify info TAP version 13
+# Subtest: Node: real date and duration boundaries
+ok 1 - Node: real date and duration boundaries
+  ---
+  duration_ms: 1.782375
+  type: 'test'
+  ...
+# Subtest: Node: replay preserves full state, pending work and audit
+ok 2 - Node: replay preserves full state, pending work and audit
+  ---
+  duration_ms: 1.353375
+  type: 'test'
+  ...
+# Subtest: Node: opposite orders converge with two 
+verify error Verification did not pass. Inspect the actual test output; delivery remains blocked.

@@ -1,0 +1,71 @@
+diff --git a/electron/codex-account.ts b/electron/codex-account.ts
+index 45c2baa..2fa18b7 100644
+--- a/electron/codex-account.ts
++++ b/electron/codex-account.ts
+@@ -52,7 +52,7 @@ export class CodexAccount {
+       const rpc = await this.connection();
+       if (this.connecting) return;
+       const { account } = await rpc.request('account/read', { refreshToken: false });
+-      this.account = account?.type === 'chatgpt' ? { status: 'connected', email: account.email, plan: account.planType } : { status: 'disconnected' };
++      this.account = account?.type === 'chatgpt' ? { status: 'connected', email: account.email, plan: account.planType } : account?.type === 'apiKey' ? { status: 'connected', email: 'Event API key' } : { status: 'disconnected' };
+       this.models = [];
+       let cursor: string | null = null;
+       do {
+diff --git a/electron/codex-rpc.ts b/electron/codex-rpc.ts
+index 5093251..aa841c5 100644
+--- a/electron/codex-rpc.ts
++++ b/electron/codex-rpc.ts
+@@ -38,7 +38,7 @@ export class CodexRpc {
+   static launch(home: string) {
+     const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home };
+     delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
+-    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'forced_login_method="chatgpt"', '-c', 'cli_auth_credentials_store="file"'], {
++    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'cli_auth_credentials_store="file"'], {
+       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
+     }));
+   }
+diff --git a/electron/codex-session.ts b/electron/codex-session.ts
+index 8359a3a..608a8eb 100644
+--- a/electron/codex-session.ts
++++ b/electron/codex-session.ts
+@@ -65,11 +65,11 @@ export async function createCodexSession(options: {
+   try {
+     options.signal.throwIfAborted(); await rpc.initialize(); options.signal.throwIfAborted();
+     const { account } = await rpc.request('account/read', { refreshToken: false });
+-    if (account?.type !== 'chatgpt') throw new Error('Sign in with ChatGPT in Model settings before running Codex.');
++    if (account?.type !== 'chatgpt' && account?.type !== 'apiKey') throw new Error('Sign in with ChatGPT in Model settings before running Codex.');
+     const skills = await Promise.all((options.skillPaths ?? []).map(async dir => fs.readFile(path.join(dir, 'SKILL.md'), 'utf8')));
+     const result = await rpc.request('thread/start', {
+-      cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'workspace-write',
+-      config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled' },
++      cwd: options.cwd, model: options.model, modelProvider: 'openai', approvalPolicy: 'never',
++      config: { web_search: 'disabled' },
+       developerInstructions: [
+         'You are a AppYard software-factory agent. Work only inside the provided workspace. Never access credentials or unrelated files, publish, deploy, or contact operational systems. Use synthetic examples. Write working artifacts and report limitations honestly. Use the fleet tools for domain logic and architecture updates. Do not spawn other agents. This is an unattended build: resolve routine choices yourself and document limitations.',
+         ...skills
+diff --git a/electron/verification.ts b/electron/verification.ts
+index 3a4eab2..cca5066 100644
+--- a/electron/verification.ts
++++ b/electron/verification.ts
+@@ -1,6 +1,7 @@
+ import { spawn, type ChildProcess } from 'node:child_process';
+ import { performance } from 'node:perf_hooks';
+ import { listArtifacts, sourceHash } from './storage.js';
++import { codexExecutable } from './codex-rpc.js';
+ import type { TestReport } from '../shared/types.js';
+ export { reportPassed } from '../shared/verification.js';
+ 
+@@ -24,7 +25,12 @@ export async function verifyWorkspace(root: string, executable: string, onProces
+   const beforeHash = await sourceHash(root);
+   if (signal?.aborted) throw new Error('Run stopped.');
+   const args = ['--test', '--test-reporter=tap', ...files.map(file => './' + file)];
+-  const child = spawn(executable, args, {
++  const sandboxed = process.env.FLEET_TEST_SANDBOX === '1';
++  const child = sandboxed
++    ? spawn(codexExecutable(), ['sandbox', '-P', 'run', '--', '/opt/homebrew/bin/node', ...args], {
++        cwd: root, env: { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, CODEX_HOME: process.env.FLEET_TEST_CODEX_HOME },
++        stdio: ['ignore', 'pipe', 'pipe'], detached: true })
++    : spawn(executable, args, {
+     cwd: root, env: { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
+     stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
+   });

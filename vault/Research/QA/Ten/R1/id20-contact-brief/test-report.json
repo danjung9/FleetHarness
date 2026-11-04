@@ -1,0 +1,125 @@
+{
+  "time": "2026-11-04T21:17:51.620Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./app.test.cjs\"",
+  "exitCode": 0,
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata\nok 1 - RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata\n  ---\n  duration_ms: 2.837667\n  type: 'test'\n  ...\n# Subtest: RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots\nok 2 - RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots\n  ---\n  duration_ms: 0.370042\n  type: 'test'\n  ...\n# Subtest: RET-01: Unicode and markup remain exact literal source data\nok 3 - RET-01: Unicode and markup remain exact literal source data\n  ---\n  duration_ms: 0.153416\n  type: 'test'\n  ...\n# Subtest: Identity is exact and ambiguous names are never merged\nok 4 - Identity is exact and ambiguous names are never merged\n  ---\n  duration_ms: 0.883959\n  type: 'test'\n  ...\n# Subtest: RET-02: stale and missing evidence produce UNKNOWN, recoverable input yields a new result\nok 5 - RET-02: stale and missing evidence produce UNKNOWN, recoverable input yields a new result\n  ---\n  duration_ms: 0.227333\n  type: 'test'\n  ...\n# Subtest: RET-02: exact freshness boundary and invalid clocks cannot support current facts\nok 6 - RET-02: exact freshness boundary and invalid clocks cannot support current facts\n  ---\n  duration_ms: 0.224542\n  type: 'test'\n  ...\n# Subtest: Conflicting current values stay unknown with inspectable evidence\nok 7 - Conflicting current values stay unknown with inspectable evidence\n  ---\n  duration_ms: 7.753709\n  type: 'test'\n  ...\n# Subtest: RET-02: impossible calendar dates are invalid rather than normalized\nok 8 - RET-02: impossible calendar dates are invalid rather than normalized\n  ---\n  duration_ms: 0.123583\n  type: 'test'\n  ...\n# Subtest: RET-01: incomplete provenance and missing spans fail closed\nok 9 - RET-01: incomplete provenance and missing spans fail closed\n  ---\n  duration_ms: 0.311875\n  type: 'test'\n  ...\n# Subtest: RET-01: candidate selection cannot escape the matching identity set\nok 10 - RET-01: candidate selection cannot escape the matching identity set\n  ---\n  duration_ms: 0.225875\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 109.610875\n\nBrowser journeys: 8/8 passed.\nRequirements: 2 demonstrated, 0 failed, 3 unverified.",
+  "durationMs": 6010,
+  "sourceHash": "2ba5010ed5799ed89758a8a7a01056d450469c0c0f931effd980312894278db7",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "3d090c7f64352ac8a902138fdbe3273b480e7819f4d996916c272c70ffa8fa8e",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC20-1",
+        "requirement": "Open-Source Grounding: Ingest unclassified commercial and open maritime feeds (AIS, IMO ship registries, OFAC/EU sanctions).",
+        "status": "unverified",
+        "detail": "Synthetic-only boundary; approved public snapshots, rights, connectors and operational validation are absent. The planned local registry/AIS/sanctions representations demonstrate no real ingestion."
+      },
+      {
+        "criterionId": "UC20-2",
+        "requirement": "Zero Hallucination Tolerance: 100% of claims must link to an immutable captured source snapshot; unresolved queries must declare \"Unknown\".",
+        "status": "unverified",
+        "detail": "Local retained synthetic text and exact-span links demonstrate traceability and UNKNOWN behavior only. Immutability authority, archival infrastructure and universal claim assurance are absent; finite prototype checks cannot establish the full requirement."
+      },
+      {
+        "criterionId": "RET-01",
+        "requirement": "Every result cites an exact permitted source span.",
+        "status": "passed",
+        "detail": "Every returned synthetic evidence result resolves to an exact eligible source span with document ID, revision, locator and timestamps; the excluded document that would rank first is absent from results and citations. Ambiguous names require explicit candidate selection without merging identities. — demonstrated by inspect-evidence, resolve-identity at both viewport sizes."
+      },
+      {
+        "criterionId": "RET-02",
+        "requirement": "Expose stale and missing evidence.",
+        "status": "passed",
+        "detail": "An outdated record is explicitly labeled STALE and cannot support a current fact. Missing facts and absent identities display UNKNOWN. Empty input produces a specific error and can be corrected without resetting the workflow. — demonstrated by stale-evidence, recover-lookup at both viewport sizes."
+      },
+      {
+        "criterionId": "RET-03",
+        "requirement": "Measure relevance and latency with the owner.",
+        "status": "unverified",
+        "detail": "No owner, owner-labeled held-out set, metric agreement or representative corpus/hardware evaluation is supplied. Synthetic tests and toolkit timings do not complete owner-led evaluation."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "inspect-evidence",
+        "title": "Inspect an eligible flag citation while excluding the stronger match",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 17 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/inspect-evidence-desktop.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/inspect-evidence-desktop.zip"
+      },
+      {
+        "id": "inspect-evidence",
+        "title": "Inspect an eligible flag citation while excluding the stronger match",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 17 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/inspect-evidence-narrow.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/inspect-evidence-narrow.zip"
+      },
+      {
+        "id": "resolve-identity",
+        "title": "Recover from ambiguous names by choosing the supported contact",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/resolve-identity-desktop.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/resolve-identity-desktop.zip"
+      },
+      {
+        "id": "resolve-identity",
+        "title": "Recover from ambiguous names by choosing the supported contact",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/resolve-identity-narrow.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/resolve-identity-narrow.zip"
+      },
+      {
+        "id": "stale-evidence",
+        "title": "Distinguish historical evidence from a current fact",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/stale-evidence-desktop.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/stale-evidence-desktop.zip"
+      },
+      {
+        "id": "stale-evidence",
+        "title": "Distinguish historical evidence from a current fact",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/stale-evidence-narrow.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/stale-evidence-narrow.zip"
+      },
+      {
+        "id": "recover-lookup",
+        "title": "Correct empty input and recover from an absent contact",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/recover-lookup-desktop.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/recover-lookup-desktop.zip"
+      },
+      {
+        "id": "recover-lookup",
+        "title": "Correct empty input and recover from an absent contact",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/recover-lookup-narrow.png",
+        "trace": ".quality-evidence/959626d05e0d-0c52664c-66c8-49b7-b8b5-ccac598bd8df/recover-lookup-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

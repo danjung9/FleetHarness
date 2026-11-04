@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tasking review · Synthetic workspace</title>
+<style>
+:root{font:16px/1.5 system-ui,sans-serif;color:#192f40;background:#edf2f5}*{box-sizing:border-box}body{margin:0}header{background:#142f42;color:white;padding:28px max(20px,calc((100vw - 1120px)/2))}h1{margin:4px 0;font-size:2rem}h2{font-size:1.3rem;margin-top:0}p{margin:10px 0}main{max-width:1160px;margin:auto;padding:24px 20px}section{background:white;border:1px solid #cad7df;border-radius:12px;padding:24px;margin-bottom:20px}.badge{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#aee4dc}.notice{border-left:4px solid #c48929;padding:10px 16px;background:#fff4db;margin-bottom:20px}.muted{color:#516674;font-size:.92rem}label{display:block;font-weight:600;margin:12px 0 6px}textarea,input,select,button{font:inherit}textarea,input,select{border:1px solid #8d9eaa;border-radius:5px;padding:10px;max-width:100%;background:white;color:#192f40}textarea{width:100%;min-height:150px;font:14px/1.6 ui-monospace,monospace}button{border:1px solid #285f74;background:#20566b;color:white;border-radius:6px;padding:10px 16px;cursor:pointer}button.secondary{background:white;color:#20566b}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:3px solid #d48b12;outline-offset:3px}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}.record{border-top:1px solid #d4dfe5;padding:16px 0;overflow-wrap:anywhere}.record h3{margin:0;font-size:1.05rem}.columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}code,pre{overflow-wrap:anywhere;white-space:pre-wrap}#issues{color:#8c351e;white-space:pre-line}#review-status{font-weight:600}#draft-status{color:#89501b}#evidence-panel{background:#f0f5f7;padding:16px;border-radius:8px}#evidence-fields p{font-family:ui-monospace,monospace;font-size:.85rem}.axis{display:flex;justify-content:space-between;font-size:.8rem;color:#516674}.track{height:18px;background:repeating-linear-gradient(to right,#e8eff3 0,#e8eff3 calc(100% / 24 - 1px),#c7d5de calc(100% / 24 - 1px),#c7d5de calc(100% / 24));position:relative;margin:10px 0}.bar{position:absolute;height:18px;background:#247e86;border-radius:3px;min-width:4px}.schedule-item{border-top:1px solid #d4dfe5;padding:15px 0;overflow-wrap:anywhere}details{margin-top:12px}summary{cursor:pointer;font-weight:600}footer{color:#516674;padding:10px 0 30px}@media(max-width:650px){.columns{grid-template-columns:1fr}section{padding:16px}h1{font-size:1.6rem}main{padding:16px 12px}header{padding:22px 16px}}
+</style>
+<header><div class="badge">Local synthetic workspace · 12</div><h1>Tasking review & daily schedule</h1><p>Preserve the message. Review the evidence. Build the day.</p></header>
+<main><div class="notice"><strong>Synthetic data only.</strong> This prototype parses EVENT/TASK examples, not USMTF. No operational decisions or integrations. Not saved across reload — export reviewed work before leaving.</div>
+<section><h2>1. Capture message</h2><p>Paste synthetic text, then parse to commit a source snapshot. Parsing replaces the prior extraction and clears its approval.</p><label for="source-input">Synthetic message text</label><textarea id="source-input" spellcheck="false" placeholder="Enter synthetic message text."></textarea><div class="actions"><button id="parse">Parse message</button><button id="sample" class="secondary">Use synthetic sample</button><button id="discard-draft" class="secondary">Discard draft</button></div><p id="draft-status" role="status">No parsed snapshot yet.</p><p id="operation" role="status"></p><details><summary>Supported grammar</summary><pre>EVENT/id/2026-11-04T09:00Z/2026-11-04T10:00Z/owner/description//
+TASK/id/2026-11-04T16:00Z/owner/description//</pre><p>One record per line. No slashes inside fields. All fields required; dates require an explicit timezone. Up to 200,000 UTF-16 code units.</p></details></section>
+<section><h2>2. Review extraction</h2><p id="issues" role="alert">Enter synthetic message text.</p><p id="extraction-count"></p><p class="muted">Synthetic category annotation — not a reviewed USMTF mapping. Choose each category yourself. Correct uncertain values in the source and parse again.</p><div id="records"></div><div class="actions"><button id="approve">Approve valid records</button></div><p id="review-status" role="status">Awaiting extraction and review.</p><details id="evidence-details"><summary>Source evidence</summary><div id="evidence-panel"><label for="original-source">Original parsed source (read only)</label><textarea id="original-source" readonly></textarea><p class="muted">Half-open UTF-16 offsets [start, end). Category annotations are reviewer choices, not extracted fields.</p><div id="evidence-fields"></div></div></details></section>
+<section><h2>3. Daily schedule</h2><div class="actions"><label for="schedule-day">UTC day</label><input id="schedule-day" type="date" value="2026-11-04"><button id="show-day" class="secondary">Show day</button></div><p id="day-error" role="alert"></p><p id="schedule-summary">No reviewed records for this day.</p><div class="axis"><span>00:00 UTC</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00 UTC</span></div><div id="schedule"></div><button id="export" disabled>Export reviewed schedule</button><p id="export-reason" class="muted">Approve valid records before export.</p></section><footer>Session only · No server, account, OCR, synchronization or government-system connection.</footer></main>
+<script id="application-core">
+/* Adapted from supplied fleet toolkit message/validation primitives; synthetic grammar only. */
+var SyntheticCore = (() => {
+'use strict';
+const categories=Object.freeze({frequency:'Frequency plan',crypto:'Crypto change-over',flight:'Flight quarters',other:'Other synthetic'});
+function normalizeTimestamp(v){
+ if(typeof v!=='string')return null;
+ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})$/.exec(v);
+ if(!m)return null;
+ const [,y,mo,d,h,n,s='0',f,z]=m;
+ if(+y<1900||+mo<1||+mo>12||+d<1||+d>new Date(Date.UTC(+y,+mo,0)).getUTCDate()||+h>23||+n>59||+s>59)return null;
+ if(z!=='Z'&&(+z.slice(1,3)>14||+z.slice(4)>59||(+z.slice(1,3)===14&&+z.slice(4)!==0)))return null;
+ const t=Date.parse(v);return Number.isFinite(t)?new Date(t).toISOString():null;
+}
+function freeze(v){if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v);}return v;}
+function parseSource({sourceId='synthetic-message',sourceText}){
+ if(typeof sourceId!=='string'||!sourceId.trim()||sourceId.length>200)throw Error('Source ID must contain 1–200 characters.');
+ if(typeof sourceText!=='string'||sourceText.length>200000)throw Error('Message must contain at most 200,000 UTF-16 code units.');
+ const out={grammar:'fleet-synthetic-message/v1',offsetUnit:'UTF-16',sourceId,sourceText,records:[],issues:[]};
+ if(!sourceText.trim())out.issues.push('Enter synthetic message text.');
+ let offset=0;
+ sourceText.split('\n').forEach((raw,i)=>{const line=raw.endsWith('\r')?raw.slice(0,-1):raw;const start=offset;offset+=raw.length+1;if(!line.trim())return;
+ if(line.includes('\r')){out.issues.push(`Line ${i+1}: unsupported message structure.`);return;}
+ const tok=line.endsWith('//')?line.slice(0,-2).split('/'):[];const kind=tok[0];
+ if(!((kind==='EVENT'&&tok.length===6)||(kind==='TASK'&&tok.length===5))){out.issues.push(`Line ${i+1}: unsupported message structure.`);return;}
+ const names=kind==='EVENT'?['kind','id','start','end','owner','description']:['kind','id','due','owner','description'];
+ const r={key:i+1,kind,id:tok[1],owner:tok.at(-2),description:tok.at(-1),source:{start,end:start+line.length,sourceText:line},line:i+1,raw:{},fieldSpans:{},start:null,end:null,due:null,issues:[]};let pos=start;
+ const issue=x=>r.issues.push(`Line ${i+1}: ${x}`);
+ names.forEach((name,j)=>{r.raw[name]=tok[j];r.fieldSpans[name]={start:pos,end:pos+tok[j].length,sourceText:tok[j]};pos+=tok[j].length+1;if(!tok[j].trim())issue(`${name} is required.`);});
+ for(const name of kind==='EVENT'?['start','end']:['due']){r[name]=normalizeTimestamp(r.raw[name]);if(!r[name])issue(`${name} requires a valid timestamp with an explicit timezone.`);}
+ if(r.start&&r.end&&Date.parse(r.end)<=Date.parse(r.start))issue('end must be later than start.');out.records.push(r);
+ });
+ for(const r of out.records){if(out.records.filter(x=>x.id===r.id).length>1)r.issues.push(`Line ${r.line}: duplicate identifier ${r.id}.`);out.issues.push(...r.issues);}
+ return freeze(out);
+}
+function buildDay(records,day){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!normalizeTimestamp(day+'T00:00Z'))throw Error('Choose a valid UTC day.');
+ const a=Date.parse(day+'T00:00Z'),b=a+86400000;
+ return records.flatMap(r=>{if(r.kind==='TASK'){const t=Date.parse(r.due);return t>=a&&t<b?[{record:r,start:t,end:t,point:true,dayStart:a}]:[];}const s=Date.parse(r.start),e=Date.parse(r.end);return s<b&&e>a?[{record:r,start:Math.max(s,a),end:Math.min(e,b),point:false,dayStart:a}]:[];}).sort((x,y)=>x.start-y.start||x.record.key-y.record.key);
+}
+function recordSuffix(records,r){return /^[A-Za-z][A-Za-z0-9_-]*$/.test(r.id)&&!r.id.startsWith('line-')&&!['kind','id','start','end','due','owner','description','fields','panel','details'].includes(r.id)&&records.filter(x=>x.id===r.id).length===1?r.id:'line-'+r.key;}
+function createSession(){return {draft:'',snapshot:null,categories:{},approved:false};}
+function dirty(s){return !!s.snapshot&&s.draft!==s.snapshot.sourceText;}
+function commit(s){s.approved=false;const p=parseSource({sourceText:s.draft});s.snapshot=p;s.categories={};s.approved=false;return p;}
+function setCategory(s,key,value){s.categories[key]=value;s.approved=false;}
+function approve(s){if(dirty(s))return 'Approval unavailable while source changes are unsaved.';if(!s.snapshot||s.snapshot.issues.length||!s.snapshot.records.length)return 'Resolve extraction issues before approval.';if(s.snapshot.records.some(r=>!Object.hasOwn(categories,s.categories[r.key])))return 'Choose a category for every record before approval.';s.approved=true;return reviewStatus(s);}
+function reviewStatus(s){return s.approved?`Reviewed: ${s.snapshot.records.length} record${s.snapshot.records.length===1?'':'s'}`:'Awaiting review.';}
+function discard(s){if(s.snapshot)s.draft=s.snapshot.sourceText;return reviewStatus(s);}
+function exportReason(s,day){if(dirty(s))return 'Parse changes or discard draft before export.';if(!s.approved)return 'Approve valid records before export.';try{if(!buildDay(s.snapshot.records,day).length)return 'No reviewed records for this day.';}catch(e){return e.message;}return '';}
+function buildExport(s,day){const reason=exportReason(s,day);if(reason)throw Error(reason);return {schemaVersion:1,syntheticOnly:true,grammar:s.snapshot.grammar,offsetUnit:'UTF-16',sourceId:s.snapshot.sourceId,sourceText:s.snapshot.sourceText,selectedDay:day,timezone:'UTC',reviewStatus:'reviewed',records:buildDay(s.snapshot.records,day).map(v=>({...v.record,category:s.categories[v.record.key],reviewStatus:'reviewed',segment:{start:new Date(v.start).toISOString(),end:new Date(v.end).toISOString(),point:v.point}}))};}
+function time(t,a){return t===a+86400000?'24:00':new Date(t).toISOString().split('T')[1].slice(0,5);}
+function rowText(v,category){return `${categories[category]} | ${v.record.description} | ${time(v.start,v.dayStart)}${v.point?'':'–'+time(v.end,v.dayStart)} UTC | Reviewed`;}
+return {recordSuffix,categories,normalizeTimestamp,parseSource,buildDay,createSession,dirty,commit,setCategory,approve,reviewStatus,discard,exportReason,buildExport,rowText};
+})();
+</script>
+<script>
+'use strict';
+const C=SyntheticCore,s=C.createSession(),$=id=>document.getElementById(id);let day='2026-11-04',busy=false;
+function el(tag,text,parent,id){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(id)e.id=id;if(parent)parent.append(e);return e;}
+function suffix(r){return C.recordSuffix(s.snapshot.records,r);}
+function draftUI(){const dirty=C.dirty(s);$('draft-status').textContent=dirty?'Unsaved source changes. Parse changes or discard draft before approval or export.':s.snapshot?'Parsed source committed for this session.':'No parsed snapshot yet.';$('discard-draft').disabled=!dirty;downloadUI();}
+function downloadUI(){const why=C.exportReason(s,day);$('export').disabled=!!why;$('export-reason').textContent=why||'Ready to download reviewed source, full intervals and field evidence.';}
+function schedule(){const holder=$('schedule');holder.replaceChildren();let items=[];try{if(s.approved)items=C.buildDay(s.snapshot.records,day);}catch(e){$('day-error').textContent=e.message;}
+ $('schedule-summary').textContent=items.length?`${items.length} reviewed record${items.length===1?'':'s'} for ${day} · UTC`:'No reviewed records for this day.';
+ for(const v of items){const r=v.record,id=suffix(r),box=el('div',undefined,holder);box.className='schedule-item';el('div',C.rowText(v,s.categories[r.key]),box,'schedule-row-'+id);const track=el('div',undefined,box);track.className='track';track.setAttribute('aria-hidden','true');const bar=el('div',undefined,track);bar.className='bar';bar.style.left=((v.start-v.dayStart)/86400000*100)+'%';bar.style.width=((v.end-v.start)/86400000*100)+'%';el('p',v.point?'Point task — no duration':`Full duration: ${(Date.parse(r.end)-Date.parse(r.start))/60000} minutes`,box,'duration-'+id);el('p',v.point?r.due:`Full interval: ${r.start} → ${r.end}`,box).className='muted';}downloadUI();}
+function evidence(r){$('evidence-details').open=true;const root=$('evidence-fields');root.replaceChildren();el('h3',`Line ${r.line} · ${r.id}`,root);for(const [name,f] of Object.entries(r.fieldSpans))el('p',`${f.sourceText} | [${f.start}, ${f.end}) | ${s.snapshot.sourceText.slice(f.start,f.end)}`,root,'evidence-'+name);}
+function render(){const p=s.snapshot;$('original-source').value=p?p.sourceText:'';$('issues').textContent=p?(p.issues.join('\n')||'No extraction issues.'):'Enter synthetic message text.';$('extraction-count').textContent=p?`${p.records.length} extracted record${p.records.length===1?'':'s'} · approval is a separate step`:'';
+ $('records').replaceChildren();$('evidence-fields').replaceChildren();$('evidence-details').open=false;
+ if(p)for(const r of p.records){const id=suffix(r),box=el('article',undefined,$('records'));box.className='record';el('h3',`${r.kind} · ${r.id||'Missing ID'} · ${r.description}`,box);el('p',`Owner: ${r.owner||'Missing'} · Source line ${r.line}`,box).className='muted';const cols=el('div',undefined,box);cols.className='columns';const left=el('div',undefined,cols);el('span',r.kind==='EVENT'?'Normalized start (UTC)':'Normalized due (UTC)',left).className='muted';el('div',r.start||r.due||'Unknown — correct source',left,'normalized-start-'+id);if(r.kind==='EVENT')el('div','End: '+(r.end||'Unknown — correct source'),left);const right=el('div',undefined,cols);const lab=el('label','Synthetic category for '+(r.id||'line '+r.line),right);lab.htmlFor='category-'+id;const select=el('select',undefined,right,'category-'+id);el('option','Choose category',select).value='';for(const [value,label]of Object.entries(C.categories))el('option',label,select).value=value;select.value=s.categories[r.key]||'';select.onchange=()=>{C.setCategory(s,r.key,select.value);$('review-status').textContent=C.reviewStatus(s);schedule();};const button=el('button','Inspect source evidence',box,'evidence-'+id);button.className='secondary';button.onclick=()=>evidence(r);}
+ $('review-status').textContent=p?C.reviewStatus(s):'Awaiting extraction and review.';draftUI();schedule();}
+$('source-input').oninput=()=>{s.draft=$('source-input').value;draftUI();};
+$('parse').onclick=()=>{if(busy)return;busy=true;$('parse').disabled=true;$('operation').textContent='Parsing';try{s.draft=$('source-input').value;C.commit(s);render();$('operation').textContent='Extraction complete. Inspect source evidence and choose categories.';}catch(e){render();$('issues').textContent=e.message;$('operation').textContent='Parsing could not complete. Correct the draft and retry.';}finally{busy=false;$('parse').disabled=false;}};
+$('sample').onclick=()=>{s.draft='EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//\nTASK/T1/2026-11-04T16:00Z/TEAM/Review briefing//';$('source-input').value=s.draft;draftUI();$('source-input').focus();};
+$('discard-draft').onclick=()=>{$('review-status').textContent=C.discard(s);$('source-input').value=s.draft;draftUI();};
+$('approve').onclick=()=>{$('review-status').textContent=C.approve(s);draftUI();schedule();};
+$('show-day').onclick=()=>{try{C.buildDay([],$('schedule-day').value);day=$('schedule-day').value;$('day-error').textContent='';schedule();}catch(e){$('day-error').textContent=e.message;}};
+$('export').onclick=()=>{if(busy)return;busy=true;$('operation').textContent='Preparing download';try{const data=C.buildExport(s,day),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='reviewed-schedule.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('operation').textContent='Reviewed schedule download prepared.';}catch(e){$('export-reason').textContent=e.message;}finally{busy=false;}};
+render();
+</script></html>

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Training coordinators inspecting four synthetic practice sessions offline; no operational authority is implied.",
+  "primaryTask": "Edit explicit synthetic constraints, generate and inspect a complete four-session draft and personnel loads, correct errors, review the current draft, and save/import it.",
+  "successOutcome": "All four checked assignments and whole-horizon totals appear, or a distinct actionable failure preserves the problem. The exact saved draft can be recovered offline and deliberately reviewed.",
+  "screens": [
+    {
+      "name": "Training draft",
+      "purpose": "Edit request durations and candidate starts, supplied roster constraints and windows; see fixed assignments and results.",
+      "primaryAction": "Generate draft"
+    },
+    {
+      "name": "Review and portable recovery",
+      "purpose": "Review the current checked draft, distinguish saved/unsaved work, download snapshots and stage replacement imports.",
+      "primaryAction": "Save portable draft"
+    },
+    {
+      "name": "Limitations and evaluator settings",
+      "purpose": "Disclose omissions and show advanced bounded-search allowance when requested.",
+      "primaryAction": "Read limitations"
+    }
+  ],
+  "states": {
+    "empty": "First open loads the supplied four-request example with no result and a Generate draft action. Empty required fields receive actionable errors.",
+    "loading": "Announce Checking current inputs during local generation/import validation; prevent duplicate actions and review, retain requests. Immediate operations still announce final status.",
+    "error": "Distinct invalid, infeasible and search-limit messages retain all inputs. Show field errors and observed conflicts, never a minimal-cause claim. Hide stale assignments as current and disable review until a checked feasible draft exists.",
+    "success": "Show all four intervals and fixed assignments, two whole-horizon load totals, result status, review and saved state separately. Feasibility only covers supplied candidates and constraints."
+  },
+  "persistence": "Save portable draft downloads version-1 synthetic JSON and stores exact inputs/draft locally for reload. Preserve unfinished raw form text separately when storage works. Expose storage failure and retain portable download. Import supports a file and equivalent labeled JSON text; the runner uses text because its schema has no upload action. Preserve structured values and candidate order exactly; never trust imported review. No remote storage or reconnect synchronization.",
+  "recovery": "Valid edits recompute on change/blur after initial generation and immediately clear review; invalid edits retain text and block stale review. Failed import leaves work intact. Stage valid imports with current and incoming values visible, then require deliberate Replace current work or Cancel; offer Save current work. Restored drafts require fresh review. No silent constraint relaxation.",
+  "keyboard": "Native labeled controls, logical Tab order, visible focus, Enter/Space buttons and associated field errors. Tab after a changed field triggers recomputation. Announce status changes politely and focus first invalid field on Generate. Restore disclosure focus; stack cards at narrow widths; avoid hover-only or color-only information."
+}

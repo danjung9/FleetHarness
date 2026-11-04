@@ -65,6 +65,20 @@ Should, only if the factory is shown:
 - [E, fixture, [[Research/QA/Results-631849f-GUI]]] Stop ended a running Pi shell command and its ordinary child within the observation window, with no later requests. Detached background jobs and the Codex engine remain unmeasured, so finding 14 stays open for those.
 - [E, fixture] U1, U2 and U3 reproduce in the running app.
 
+## Runner review
+
+[E, independent review with throwaway reproductions, finished about 16:00] The org runner had real holes, now fixed. Code seats had already started when the review finished, because the reviewed branch can no longer touch `mvp`. A read-only scan found no sign any hole was used.
+
+| Severity | Issue | Fix |
+| --- | --- | --- |
+| Blocker | A seat could get code run outside its sandbox through a nested git repository or an npm setting | Nested repositories and control files are refused; dependencies install in a runner-owned folder |
+| Blocker | A quoted approval line could land rejected work | Only one exact verdict line counts, and any disagreement means changes |
+| Blocker | The test gate ran in a tree the seat could write | The gate tests the exact staged files in a fresh folder |
+| Blocker | A symlink could copy any file into the shared vault, and the sanitizer could fail open | Links are skipped, and a sanitizer failure stops that sync |
+| Should | Restart could leave a seat held forever, `land --yes` ignored the gate, some failures were silent | Fixed or now raise a blocker |
+
+[E] The runner's two test suites, 27 and 56 checks, pass on the fixed code. [A] One hole remains by design: a test that prints a fake pass count can still beat the count check, and the reviewer seat is the backstop.
+
 ## Not verified
 
 Runtime behavior of Stop for detached jobs and the Codex engine. Credential file format and encryption. Team state, form fields, pitch length. Organizational limits on a personal sign-in. Whether rule 11's final submission binds Thursday.

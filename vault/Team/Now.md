@@ -8,9 +8,13 @@ summary: "Current sprint status, blockers and next actions."
 
 # Now
 
-Last updated 2026-11-04, after adapted ID 11 receipts and d0f4c69 source reconciliation.
+Last updated 2026-11-04, during coordinated execution against the ten-challenge factory goal. Dated entries below preserve history; current direction is in Research/Agentic/Flow-Goals.
 
 ## Latest session
+
+- [E, coordinator reply and benchmark audit] Main owns the ten-challenge loop, three builds at once; Acceptance/** has one separate writer. First scoreboard receipt: ID 12, 9.7 minutes, 12/12 Node tests, 8/8 journeys, zero independent satisfactory verdicts. [[Research/QA/Ten-Benchmark-Audit]] identifies completion and failure-routing defects for the runtime owner. Commit-author clarification is pending with Mukul because instructions conflict across sessions.
+
+- [E, execution audit and user direction] [[Research/QA/Org-Audit-2026-11-04]] confirms real code and runtime evidence with coordination stalls. Current mission is [[Research/Agentic/Flow-Goals]]: ten satisfactory real factory builds. Existing sessions received coordination requests; acknowledgement and benchmark receipts remain pending in this session. See [[Sessions/2026-11-04-execution-management]]. Earlier snapshot-based idle conclusions are superseded by runner start events.
 
 - [E, preparation complete] [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]] and its script are ready for main's fixture execution. Source, generated-worker syntax and pure identity/verdict checks pass. The test proves distinct process group/session and advancing heartbeats before Stop, then records observations before separate cleanup. No detached-job runtime result is claimed yet.
 
@@ -46,14 +50,14 @@ Last updated 2026-11-04, after adapted ID 11 receipts and d0f4c69 source reconci
 
 ## Blocking
 
-- [E, portal My Team page, rechecked about 10:38 AM] **The portal shows no team for Mukul.** Team formation was scheduled for 8:45 to 9:30 AM, and the Google environment needs a team link.
-- [E, live Codex run] Codex works on the event key with `gpt-6.1-sol`, but **its hooks are waiting for Mukul's approval**. See [[Setup/Hooks]].
-- [P, Mukul] **The team project is FleetHarness** (private repo `danjung9/FleetHarness`, cloned to `~/Documents/CDAO/FleetHarness`, on branch `mvp`).
-- [E, pinned Git source, 2026-11-04] Branch `mvp` resolved to `0f175a8` for the delta review. The app offers Pi or ChatGPT-backed Codex, five sequential agent phases, one repair and a 34-entry catalog. The baseline scout and delta review are in `Research/FleetHarness-MVP`. The three council recommendations in `Research/Council` predate inspection of this implementation.
+- [E, execution review about 16:09] Ten independently satisfactory builds are not yet established. [[Research/QA/Ten/Scoreboard]] is the current measured record; passing development tests alone does not satisfy the mission.
+- [E, main-session confirmation and local Git] Reviewed integration remains at `d0f4c69` pending worker reviews and coordinator repairs. Main is draining the organization runner for a repaired restart. The benchmark runs separately on a disclosed scratch patch; do not describe that patch as shipped behavior.
+- [E, source and reviewer evidence] Generated-test containment and registered-test counting require one integrated implementation. The extra unsandboxed test execution in the returned hardening change remains a real blocker. See [[Research/QA/Org-Audit-2026-11-04]].
+- [E, historical access checks] Portal team membership was absent at 10:38 AM and has not been rechecked here. Earlier hook approval notes predate successful live builds and are not a current instruction to suspend already-authorized execution. Portal/team confirmation remains a person-owned submission item.
 
 ## Needs a decision
 
-[E] The user directed continuation after the concrete fixture/UI proposal. This QA environment blocks loopback listening; main independently owns GUI execution in its permitted context. Live-key builds and standalone packaging remain unverified. The reported GUI suite initiated and cancelled login but did not complete sign-in. Mukul set aside the Google sheet question for now, and the tool ledger answers how tools get listed.
+[P] Mukul directed full coordination and completion. [E] Main owns real generation, benchmark and browser execution; the other QA thread owns Acceptance/**; AUDIT-MANAGER independently audits results and does not edit those shared files. Real event-key builds have receipts, while standalone packaging and full challenge acceptance require their own evidence. A single clarification is pending with Mukul because this chat requires commit author Mukul and the coordinator reports a later divinedev111 instruction. Human artifact acceptance, portal eligibility and submission approval remain separate decisions. The Google sheet question remains set aside as previously directed.
 
 ## Not captured yet
 
@@ -68,7 +72,7 @@ Last updated 2026-11-04, after adapted ID 11 receipts and d0f4c69 source reconci
 
 ## Next
 
-1. Join or create a team in the portal.
-2. Approve the Codex hooks, per [[Setup/Hooks]].
-3. Review the research and choose which use cases FleetHarness demos.
-4. Complete independent browser acceptance and the officer checklist for both ID 11 candidates, coordinate changes through the sole runner, and retain all open frontend and verification/export defects. Other QA seats own golden examples and catalog coverage.
+1. Main completes the repaired runner restart and exact-commit review/integration of existing fixes. Do not duplicate their implementation or revive superseded holds.
+2. Run the existing ten-challenge benchmark and route each failed primary task or verification outcome to one factory repair owner. Preserve failures and compare the next tested revision.
+3. Independent QA judges exact saved artifacts and retains untested steps; no generated-app hand edits or relaxed acceptance to manufacture success.
+4. Prepare the human acceptance and submission decisions with concrete evidence, including portal/team confirmation, category and disclosed omissions. No new outward-facing action is inferred from the coordination instruction.

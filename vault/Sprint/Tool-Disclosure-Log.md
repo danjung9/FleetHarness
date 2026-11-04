@@ -73,6 +73,10 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Session clarification interface, version unexposed | coordination | requested host-side verification | session platform | 2026-11-04 |
 | Runner scheduler audit probes revision 1 | Local diagnostic | Isolated in-memory checks of duplicate queueing, file-claim dispatch and review-return handling; no production runner execution | Sprint diagnostic using Python standard library | 2026-11-04 |
 | System Perl, version unavailable | local editing attempt | blocked before execution | Apple. | 2026-11-04 |
+| Round-1 ID 12 receipts | evidence dataset | judgment handoff | team benchmark. | 2026-11-04 |
+| Codex 0.166.0 | local schema generator | verified usage and effort protocol fields | OpenAI | 2026-11-04 |
+| Independent ID 11 Run2 browser adapter rev1 | QA adapter | Mapped actual Run2 form, visible results and two-step saved-file import to unchanged independent expectations; runtime receipt reviewed | Team-owned local QA | 2026-11-04 |
+| Ten-challenge round 1 source and evidence pack | Evidence dataset | Read-only audit of ID 12, ID 11 and ID 36 code, generated tests and retained browser reports for semantic gaps and factory improvements | Team benchmark runner | 2026-11-04 |
 
 ## Data and sources
 

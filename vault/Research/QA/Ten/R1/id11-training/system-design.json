@@ -1,0 +1,96 @@
+{
+  "title": "Synthetic PB4T feasibility planner",
+  "description": "Offline weekly planning demonstration with deterministic hard constraints and local proposal review. No operational integrations, departmental agents, SFTRM engine or global optimization.",
+  "components": [
+    {
+      "id": "editor",
+      "label": "Weekly request and policy editor",
+      "description": "Labeled synthetic roster, availability, operating windows, requests and candidate-time controls; saved and unsaved state.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Bounded feasibility engine",
+      "description": "Deterministic explicit-candidate search with fixed personnel, qualifications, exclusive resources, rest and horizon duty limits. Standalone classic-script core embedded in HTML; Node adapter exposes the same actual functions.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "scheduler-core.cjs"
+      ]
+    },
+    {
+      "id": "audit",
+      "label": "Independent schedule audit",
+      "description": "Independently checks all interval pairs, constraint boundaries, required-request coverage and duty totals before a result is reviewable.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "scheduler-core.cjs",
+        "scheduler.test.cjs"
+      ]
+    },
+    {
+      "id": "board",
+      "label": "Weekly board and personnel loading",
+      "description": "Original competing requests beside proposed allocations; editable candidate selection, numeric loading and heatmap legend; honest failure and search-limit states.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local draft and review record",
+      "description": "Versioned synthetic draft and last proposal in localStorage when available. Explicit save/discard, stale-review protection, local acceptance and JSON export; no server or identity integration.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "editor",
+      "to": "core",
+      "label": "Saved explicit candidates and synthetic constraints"
+    },
+    {
+      "from": "core",
+      "to": "audit",
+      "label": "Status and complete proposed assignments"
+    },
+    {
+      "from": "audit",
+      "to": "board",
+      "label": "Verified allocation, violations and numeric loads"
+    },
+    {
+      "from": "editor",
+      "to": "board",
+      "label": "Original times and competing people/resources"
+    },
+    {
+      "from": "editor",
+      "to": "store",
+      "label": "Explicit save or discard draft revision"
+    },
+    {
+      "from": "store",
+      "to": "editor",
+      "label": "Restore local synthetic work"
+    },
+    {
+      "from": "board",
+      "to": "store",
+      "label": "Revision-bound local review and export"
+    },
+    {
+      "from": "board",
+      "to": "editor",
+      "label": "Edit a request and revalidate"
+    }
+  ]
+}

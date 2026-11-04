@@ -1,0 +1,83 @@
+{
+  "title": "Cited Contact Brief — synthetic evidence review",
+  "description": "Offline identifier-to-brief workflow with permitted local snapshots, deterministic evidence selection, explicit UNKNOWN states, and human interpretation. All source integrations are simulated; no live feeds or immutable archival guarantee.",
+  "components": [
+    {
+      "id": "query",
+      "label": "Contact lookup and identity selection",
+      "description": "Labeled name/IMO/MMSI lookup; explicit ambiguous candidates and validation recovery.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "corpus",
+      "label": "Synthetic snapshot corpus",
+      "description": "Inline synthetic registry/AIS/sanctions representations with revisions, timestamps, exact text and eligibility fixtures. Simulated integrations only.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "retrieval",
+      "label": "Eligibility and lexical evidence core",
+      "description": "Filter before ranking; exact identity scoping, lexical ranking, offset validation, freshness and unsupported-fact abstention.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "brief",
+      "label": "Contact brief",
+      "description": "Concise factual fields with citations, UNKNOWN and stale notices; separate human interpretation guidance.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "viewer",
+      "label": "Snapshot inspection",
+      "description": "Local source panel exposes retained permitted text, exact cited span, revision and source/capture timestamps.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "query",
+      "to": "retrieval",
+      "label": "Validated identifier and optional candidate selection"
+    },
+    {
+      "from": "corpus",
+      "to": "retrieval",
+      "label": "Snapshot text, identity keys and eligibility metadata"
+    },
+    {
+      "from": "retrieval",
+      "to": "brief",
+      "label": "Supported spans, stale historical evidence or UNKNOWN"
+    },
+    {
+      "from": "brief",
+      "to": "viewer",
+      "label": "Selected citation reference"
+    },
+    {
+      "from": "corpus",
+      "to": "viewer",
+      "label": "Revalidated permitted snapshot and exact excerpt"
+    },
+    {
+      "from": "viewer",
+      "to": "brief",
+      "label": "Return to unchanged brief"
+    }
+  ]
+}

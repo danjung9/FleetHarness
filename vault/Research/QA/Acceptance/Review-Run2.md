@@ -1,0 +1,23 @@
+---
+type: review
+status: complete
+owner: mukul
+updated: 2026-11-04
+summary: "Run2 independently passes 13 outcome cases and exact offline file recovery; four cases and human acceptance remain unverified."
+---
+
+# Run2 independent review
+
+[E, retained browser receipt] [Run beb73e23](Results/training-acceptance-beb73e23-ba33-48e0-a96a-b4f9a1b8bcee/result.json), 16:04:28 to 16:04:45 EST, records **28 PASS, zero FAIL and 18 NOT CHECKED**, overall INCOMPLETE. Thirteen of 17 frozen numeric/outcome cases pass. G07 empty qualifications, G08 duplicate IDs, G09 quoted numeric types and V14 room reassignment cannot be represented faithfully through this form. G11's single availability window passes. The independent subset does not establish the invalid-input outcome, because its two malformed-input cases were not exercised.
+
+[E, exact file recovery] Saved file 044 and re-exported file 049 are byte-identical, SHA-256 `eaabf4064234c211fb291bcb97b4653917f8f518dedf0a494e22e51fbd362b7f`. The fresh offline context first shows distinct G01, then imports the actual G02 download. Capture 048 shows A 30 to 90, B 120 to 180, C 0 to 60 and D 1440 to 1500, correct people/rooms, both totals 120 and cleared review. All canonical inputs and numeric types match. The executed adapter validates the selected file and clicks the public Replace current work control. Its returned action description was not retained separately; the hashed source path and resulting state support the action, without a standalone preview screenshot or click trace.
+
+[E, review and rejection] Captures 038, 040, 042 and 043 establish reviewed G01, immediate clearing after edit, G02 remaining unreviewed after recalculation, and explicit fresh review. Capture 053 rejects G02 inputs paired with old G01 assignments, preserving the unchanged reviewed G01. Its export matches baseline file 039. Saved files omit review metadata, so this proves stale-draft rejection, not imported approval binding. G10 correctly says feasibility is unknown and asks the operator to increase the allowance or inspect starts; Run1's contradictory complete-draft explanation is absent.
+
+[E, artifact identity] All 69 file entries match before/after and in the staged copy. Manifest SHA-256 is `3c6fc13649e232487cd0364527ee196d93cac701585b56c36d788a02d102c2cd`; app SHA-256 is `25b9af0dc61dba721b1aa2d3ac044c96601bd28e42e2a4b4dfbfe62a26a8dc18`. The [operator receipt](Receipts/Pipeline-run2-writers-stopped.md) reports writers stopped at 15:47:36 and copying at 15:48. Main attributes README/verification digest drift from the older manifest to vault Markdown dash normalization. These are attributed provenance statements; shutdown was not independently measured by the browser checker. Acceptance identifies the stable normalized copy actually tested.
+
+[E, host evidence] The separate host report records 21 Node tests and 22 browser checks passing, with 12 passed and three deferred criteria. Full departmental negotiation/SFTRM, recurrence and weekly optimization boards remain unverified; `requirementsMet` is false. All 22 screenshots and 22 traces are available under copied `quality-evidence/`; the report's original paths begin `.quality-evidence/`. Each trace's HTML resource matches the current app. The host portable journey imports fixed JSON after a same-context reload, so it did not establish the exact downloaded-file recovery now supplied by the independent receipt. Its search-limit screenshot shows the final restored feasible state, not the intermediate exhaustion assertion.
+
+[E, guide and scope] Download user guide exports an older embedded guide, as the disk README discloses. Its developer command omits ui.test.cjs while the disk guide includes it. Full guide consistency and an officer's walkthrough remain untested. No current-draft readable-summary export exists. The frozen key's separate summary and 0800 clock convention exceed the supplied eight-criterion brief; preserve that distinction instead of changing expected answers.
+
+[R] Retain the 18 NOT CHECKED items, especially explanation quality, durable review binding and human decision. This is one partial ID 11 candidate, not completion of the newly expanded ten-challenge mission. No officer usability, operational approval, factory Stop or packaging acceptance follows from this browser subset. No app, browser or candidate code ran during this receipt review.

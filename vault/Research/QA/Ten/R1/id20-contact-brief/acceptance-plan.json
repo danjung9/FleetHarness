@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC20-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Ingest unclassified AIS, IMO registry and OFAC/EU sanctions feeds and retain source-grounded records usable in a vessel brief.",
+      "journeyIds": [],
+      "reason": "Synthetic-only boundary; approved public snapshots, rights, connectors and operational validation are absent. The planned local registry/AIS/sanctions representations demonstrate no real ingestion."
+    },
+    {
+      "criterionId": "UC20-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Every factual claim links to an immutable captured source snapshot with exact timestamps, and every unresolved query declares Unknown.",
+      "journeyIds": [],
+      "reason": "Local retained synthetic text and exact-span links demonstrate traceability and UNKNOWN behavior only. Immutability authority, archival infrastructure and universal claim assurance are absent; finite prototype checks cannot establish the full requirement."
+    },
+    {
+      "criterionId": "RET-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every returned synthetic evidence result resolves to an exact eligible source span with document ID, revision, locator and timestamps; the excluded document that would rank first is absent from results and citations. Ambiguous names require explicit candidate selection without merging identities.",
+      "journeyIds": [
+        "inspect-evidence",
+        "resolve-identity"
+      ]
+    },
+    {
+      "criterionId": "RET-02",
+      "disposition": "implemented",
+      "expectedOutcome": "An outdated record is explicitly labeled STALE and cannot support a current fact. Missing facts and absent identities display UNKNOWN. Empty input produces a specific error and can be corrected without resetting the workflow.",
+      "journeyIds": [
+        "stale-evidence",
+        "recover-lookup"
+      ]
+    },
+    {
+      "criterionId": "RET-03",
+      "disposition": "deferred",
+      "expectedOutcome": "The owner reviews a held-out question set with relevance and source-coverage results, corpus size, hardware, sample count and measured p50/p95 retrieval latency.",
+      "journeyIds": [],
+      "reason": "No owner, owner-labeled held-out set, metric agreement or representative corpus/hardware evaluation is supplied. Synthetic tests and toolkit timings do not complete owner-led evaluation."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "inspect-evidence",
+      "title": "Inspect an eligible flag citation while excluding the stronger match",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": "Synthetic Lumen"
+        },
+        {
+          "action": "click",
+          "selector": "#lookup"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity",
+          "text": "Synthetic Lumen \u2014 SYN-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-value",
+          "text": "TEST-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#destination-value",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-count",
+          "text": "1 permitted result"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-doc-id",
+          "text": "reg-a"
+        },
+        {
+          "action": "click",
+          "selector": "#flag-citation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-id",
+          "text": "reg-a"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-revision",
+          "text": "r1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-locator",
+          "text": "synthetic://registry/reg-a/r1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-source-time",
+          "text": "2026-11-01T09:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-captured-time",
+          "text": "2026-11-01T10:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-span",
+          "text": "Synthetic Lumen flag: TEST-A."
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-offsets",
+          "text": "[0, 29) UTF-16 code units"
+        },
+        {
+          "action": "click",
+          "selector": "#close-source"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-value",
+          "text": "TEST-A"
+        }
+      ]
+    },
+    {
+      "id": "resolve-identity",
+      "title": "Recover from ambiguous names by choosing the supported contact",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": "Synthetic Twin"
+        },
+        {
+          "action": "click",
+          "selector": "#lookup"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "Ambiguous name: choose a contact. No brief has been generated."
+        },
+        {
+          "action": "expectText",
+          "selector": "#candidate-a",
+          "text": "Synthetic Twin \u2014 SYN-C \u2014 IMO 9000003 (synthetic)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#candidate-b",
+          "text": "Synthetic Twin \u2014 SYN-D \u2014 IMO 9000004 (synthetic)"
+        },
+        {
+          "action": "click",
+          "selector": "#candidate-b"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity",
+          "text": "Synthetic Twin \u2014 SYN-D"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-value",
+          "text": "TEST-D"
+        },
+        {
+          "action": "click",
+          "selector": "#flag-citation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-id",
+          "text": "reg-d"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-span",
+          "text": "Synthetic Twin flag: TEST-D."
+        }
+      ]
+    },
+    {
+      "id": "stale-evidence",
+      "title": "Distinguish historical evidence from a current fact",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": "Synthetic Ember"
+        },
+        {
+          "action": "click",
+          "selector": "#lookup"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity",
+          "text": "Synthetic Ember \u2014 SYN-B"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-value",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#freshness-notice",
+          "text": "STALE \u2014 source dated 2026-01-01T09:00:00Z; current flag UNKNOWN."
+        },
+        {
+          "action": "expectText",
+          "selector": "#historical-flag",
+          "text": "Historical flag: TEST-B"
+        },
+        {
+          "action": "click",
+          "selector": "#flag-citation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-id",
+          "text": "reg-b"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-span",
+          "text": "Synthetic Ember flag: TEST-B."
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-source-time",
+          "text": "2026-01-01T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "recover-lookup",
+      "title": "Correct empty input and recover from an absent contact",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#lookup"
+        },
+        {
+          "action": "expectText",
+          "selector": "#lookup-error",
+          "text": "Enter a vessel name, IMO or MMSI."
+        },
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": "Synthetic Missing"
+        },
+        {
+          "action": "press",
+          "selector": "#identifier",
+          "key": "Enter"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "UNKNOWN \u2014 no permitted identity matches this identifier."
+        },
+        {
+          "action": "fill",
+          "selector": "#identifier",
+          "value": "Synthetic Lumen"
+        },
+        {
+          "action": "press",
+          "selector": "#identifier",
+          "key": "Enter"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity",
+          "text": "Synthetic Lumen \u2014 SYN-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-value",
+          "text": "TEST-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#destination-value",
+          "text": "UNKNOWN"
+        }
+      ]
+    }
+  ]
+}

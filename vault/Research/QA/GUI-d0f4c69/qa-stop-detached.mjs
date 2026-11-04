@@ -34,7 +34,16 @@ if (process.argv[2] === '--validate-only') {
   assert.equal(Object.values(check(observation, 2)).every(Boolean), false);
   assert.equal(Object.values(check(observation, 1, null)).every(Boolean), false);
   assert.equal(sameIdentity({ pid: 2, started: 'a' }, { pid: 2, started: 'b', present: true, owned: true }), false);
-  console.log(JSON.stringify({ validationOnly: true, passed: true, generatedSyntax: Object.keys(programs), pureVerdictCases: ['absent/stable', 'surviving detached child', 'provider request after Stop', 'missing stopped state', 'PID start identity change'], workerSha256: Object.fromEntries(Object.entries(programs).map(([role, text]) => [role, createHash('sha256').update(text).digest('hex')])) }, null, 2));
+  const shell = { pid: 27681, pgid: 27681, session: '0', stat: 'Ss' };
+  const parent = { pid: 27682, pgid: 27681, session: '0', stat: 'S' };
+  const child = { pid: 27683, pgid: 27683, session: '0', stat: 'Ss' };
+  assert.equal(detachmentEvidence(parent, shell, child, 'darwin').sessionProof, 'distinct session leaders');
+  assert.throws(() => detachmentEvidence(parent, shell, { ...child, pgid: shell.pgid }, 'darwin'));
+  assert.throws(() => detachmentEvidence(parent, shell, { ...child, stat: 'S' }, 'darwin'));
+  assert.throws(() => detachmentEvidence(parent, { ...shell, stat: 'S' }, child, 'darwin'));
+  assert.equal(detachmentEvidence({ ...parent, session: '27681' }, { ...shell, session: '27681' }, { ...child, session: '27683' }, 'linux').sessionProof, 'distinct session identifiers');
+  assert.throws(() => detachmentEvidence({ ...parent, session: '27681' }, { ...shell, session: '27681' }, { ...child, session: '27681' }, 'linux'));
+  console.log(JSON.stringify({ validationOnly: true, passed: true, generatedSyntax: Object.keys(programs), pureVerdictCases: ['absent/stable', 'surviving detached child', 'provider request after Stop', 'missing stopped state', 'PID start identity change', 'macOS zero sess fields with distinct session leaders', 'same group or missing leader rejected', 'Linux session identifiers'], workerSha256: Object.fromEntries(Object.entries(programs).map(([role, text]) => [role, createHash('sha256').update(text).digest('hex')])) }, null, 2));
   process.exit(0);
 }
 function stopChecks(start, end, beforeRequests, afterRequests, msToStopped, stopStatusMs) {
@@ -50,6 +59,29 @@ function stopChecks(start, end, beforeRequests, afterRequests, msToStopped, stop
 }
 function sameIdentity(expected, current) {
   return !!(expected && current?.present && current.owned && expected.pid === current.pid && expected.started === current.started && expected.commandSha256 === current.commandSha256 && expected.pgid === current.pgid && expected.session === current.session);
+}
+function detachmentEvidence(parent, shell, child, platform) {
+  assert.equal(parent.pgid, shell.pgid, 'Parent must remain in the tool shell group.');
+  assert.equal(shell.pgid, shell.pid, 'Tool shell must lead its process group.');
+  assert.equal(child.pgid, child.pid, 'Detached child must lead its group.');
+  assert.notEqual(child.pgid, shell.pgid, 'Child must have a separate process group.');
+  const zeroSessions = [parent, shell, child].every(p => /^(?:0x)?0+$/i.test(p.session));
+  if (platform === 'darwin' && zeroSessions) {
+    // This Mac returned sess=0 for every owned PID. BSD ps documents stat 's'
+    // as session leader. Distinct leader PIDs establish separate sessions;
+    // zero-valued sess columns themselves provide no session identity evidence.
+    assert.ok(shell.stat?.slice(1).includes('s'), 'Tool shell must be an observed session leader.');
+    assert.ok(child.stat?.slice(1).includes('s'), 'Detached child must be an observed session leader.');
+    return { sessionProof: 'distinct session leaders', source: 'macOS ps stat s flags plus distinct owned PIDs and PGIDs', rawSessionIdentifiersUnavailable: true };
+  }
+  assert.ok([parent, shell, child].every(p => typeof p.session === 'string' && p.session.length && !/^(?:0x)?0+$/i.test(p.session)), 'Session identifiers unavailable or inconsistent.');
+  if (platform === 'linux') {
+    assert.equal(Number(shell.session), shell.pid, 'Tool shell must lead its session.');
+    assert.equal(Number(child.session), child.pid, 'Detached child must lead its session.');
+  }
+  assert.equal(parent.session, shell.session, 'Parent must remain in the tool shell session.');
+  assert.notEqual(child.session, shell.session, 'Detached child must have a separate session.');
+  return { sessionProof: 'distinct session identifiers', source: platform === 'darwin' ? 'macOS ps sess' : 'ps sid', rawSessionIdentifiersUnavailable: false };
 }
 if (!process.argv[2] || !process.argv[3]) throw new Error('Supply the pinned repository and an output directory.');
 const repo = await fs.realpath(path.resolve(process.argv[2]));
@@ -298,11 +330,7 @@ tick('parent'); setInterval(() => tick('parent'), 100);
   assert.equal(result.beforeStop.shellExists, true);
   parentIdentity = result.beforeStop.parentProcess; childIdentity = result.beforeStop.childProcess; shellIdentity = result.beforeStop.shellProcess;
   for (const identity of [parentIdentity, childIdentity, shellIdentity]) assert.equal(identity.owned, true, 'Recorded PID identity must match nonce and worker path.');
-  assert.equal(parentIdentity.pgid, shellIdentity.pgid);
-  assert.equal(parentIdentity.session, shellIdentity.session);
-  assert.equal(childIdentity.pgid, childRecord.pid, 'Detached child must lead its group.');
-  assert.notEqual(childIdentity.pgid, shellIdentity.pgid);
-  assert.notEqual(childIdentity.session, shellIdentity.session, 'Detached child must have a separate session.');
+  result.detachmentEvidence = detachmentEvidence(parentIdentity, shellIdentity, childIdentity, process.platform);
   await delay(400);
   const advancing = await snapshot();
   assert.ok(advancing.parentHeartbeat.count > result.beforeStop.parentHeartbeat.count && advancing.childHeartbeat.count > result.beforeStop.childHeartbeat.count, 'Both workers must progress before Stop.');
