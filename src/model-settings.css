@@ -24,3 +24,7 @@
 .model-settings-form .subscription-usage>div{display:grid;gap:4px;font-size:12px}
 .model-settings-form .subscription-usage strong{font-size:17px;font-variant-numeric:tabular-nums}
 .model-settings-form .subscription-usage small{color:var(--muted,#626c72)}
+.desktop-setup-notice{margin:0 0 28px;padding:20px;border:1px solid var(--field-border);border-radius:6px;background:var(--selected)}
+.desktop-setup-notice h3{margin:0 0 10px;font-size:20px}
+.desktop-setup-notice p{font-size:13px;line-height:1.65;max-width:65ch;margin:0}
+.desktop-setup-notice p+p{margin-top:10px;color:var(--muted)}

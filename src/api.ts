@@ -26,7 +26,11 @@ export const api: FleetAPI = window.fleetHarness || {
     const p = browserState.projects.find(p => p.id === id)!;
     const normalized = normalizeProjectInput(input);
     const sourceChallenge = normalized.challengeId ? p.sourceChallenge?.id === normalized.challengeId ? p.sourceChallenge : getChallenge(normalized.challengeId, browserState.norfolkCatalog?.challenges) : undefined;
-    Object.assign(p, normalized, { sourceChallenge }); p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined; save(); return p;
+    Object.assign(p, normalized, { sourceChallenge, updatedAt: new Date().toISOString() });
+    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+    p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+    p.stages.forEach(stage => { stage.status = stage.id === 'intake' ? 'complete' : 'queued'; });
+    save(); return p;
   },
   startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
