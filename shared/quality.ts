@@ -18,12 +18,14 @@ export interface BrowserJourney {
 }
 
 export interface QualityPlan {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   criteria: Array<{
     criterionId: string;
     disposition: 'implemented' | 'deferred';
     expectedOutcome: string;
     journeyIds: string[];
+    /** Required in version 2; references the frozen solution contract. */
+    capabilityIds?: string[];
     reason?: string;
   }>;
   journeys: BrowserJourney[];
@@ -46,6 +48,16 @@ export interface CriterionResult {
   requirement: string;
   status: 'passed' | 'failed' | 'unverified';
   detail: string;
+  capabilityIds?: string[];
+}
+
+export interface CapabilityResult {
+  id: string;
+  required: boolean;
+  criterionIds: string[];
+  evaluationIds: string[];
+  status: 'passed' | 'failed' | 'unverified';
+  detail: string;
 }
 
 export interface JourneyResult {
@@ -59,11 +71,14 @@ export interface JourneyResult {
 }
 
 export interface QualityReport {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   contractHash: string;
   status: 'passed' | 'failed';
   requirementsMet: boolean;
   criteria: CriterionResult[];
   journeys: JourneyResult[];
   errors: string[];
+  /** Version 2 records the expected count so omitted browser checks cannot pass. */
+  expectedJourneys?: number;
+  capabilities?: CapabilityResult[];
 }

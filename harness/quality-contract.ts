@@ -1,5 +1,6 @@
 import type { AcceptanceCriterion } from './types.js';
 import type { BrowserJourney, BrowserStep, QualityPlan, UxSpec } from '../shared/quality.js';
+import type { SolutionContract } from '../shared/solution.js';
 
 const limits = { criteria: 512, journeys: 12, steps: 40, screens: 12, description: 4_000, selector: 512, value: 10_000 };
 
@@ -85,20 +86,22 @@ function journey(value: unknown, name: string): BrowserJourney {
   return { id, title, kind: entry.kind, steps };
 }
 
-/** Parse the complete host-owned acceptance inventory into a bounded browser test contract. */
-export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion[]): QualityPlan {
+/** Parse the complete host-owned acceptance inventory into a bounded evidence contract. */
+export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion[], solution?: SolutionContract): QualityPlan {
   const plan = object(value, 'acceptance-plan.json', ['schemaVersion', 'criteria', 'journeys']);
-  version(plan.schemaVersion, 'acceptance-plan.json');
+  if (plan.schemaVersion !== 1 && plan.schemaVersion !== 2) throw new Error('acceptance-plan.json.schemaVersion must be 1 or 2.');
+  if (plan.schemaVersion === 2 && !solution) throw new Error('A version 2 acceptance plan requires solution-contract.json.');
+  if (solution && plan.schemaVersion !== 2) throw new Error('A solution contract requires acceptance-plan.json schemaVersion 2 with capabilityIds.');
   const inventory = new Set(acceptance.map(criterion => criterion.id));
   if (!inventory.size || inventory.size !== acceptance.length || inventory.size > limits.criteria) throw new Error('The acceptance inventory must have 1–512 unique criterion IDs.');
-  const journeys = array(plan.journeys, 'journeys', 2, limits.journeys).map((value, i) => journey(value, `journeys[${i}]`));
+  const journeys = array(plan.journeys, 'journeys', plan.schemaVersion === 1 ? 2 : 0, limits.journeys).map((value, i) => journey(value, `journeys[${i}]`));
   const journeyIds = new Set(journeys.map(item => item.id));
   if (journeyIds.size !== journeys.length) throw new Error('Journey IDs must be unique.');
-  if (!journeys.some(item => item.kind === 'primary') || !journeys.some(item => item.kind === 'recovery')) throw new Error('Include at least one primary journey and one recovery journey.');
+  if (journeys.length && (!journeys.some(item => item.kind === 'primary') || !journeys.some(item => item.kind === 'recovery'))) throw new Error('Include at least one primary journey and one recovery journey.');
   const seen = new Set<string>(), referenced = new Set<string>();
   const criteria: QualityPlan['criteria'] = array(plan.criteria, 'criteria', 1, limits.criteria).map((value, i) => {
     const name = `criteria[${i}]`;
-    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason']);
+    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason', ...(plan.schemaVersion === 2 ? ['capabilityIds'] : [])]);
     const criterionId = identifier(entry.criterionId, `${name}.criterionId`);
     if (!inventory.has(criterionId)) throw new Error(`${name} names an unknown criterion: ${criterionId}.`);
     if (seen.has(criterionId)) throw new Error(`Duplicate criterion: ${criterionId}.`);
@@ -108,21 +111,36 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
     const ids = array(entry.journeyIds, `${name}.journeyIds`, 0, limits.journeys).map((value, j) => identifier(value, `${name}.journeyIds[${j}]`));
     if (new Set(ids).size !== ids.length) throw new Error(`${name}.journeyIds contains duplicates.`);
     for (const id of ids) if (!journeyIds.has(id)) throw new Error(`${name} references an unknown journey: ${id}.`);
+    const capabilityIds = plan.schemaVersion === 2
+      ? array(entry.capabilityIds, `${name}.capabilityIds`, 0, 64).map((value, j) => identifier(value, `${name}.capabilityIds[${j}]`)) : [];
+    if (new Set(capabilityIds).size !== capabilityIds.length) throw new Error(`${name}.capabilityIds contains duplicates.`);
+    for (const id of capabilityIds) {
+      const capability = solution?.capabilities.find(item => item.id === id);
+      if (!capability) throw new Error(`${name} references an unknown capability: ${id}.`);
+      if (!capability.criterionIds.includes(criterionId)) throw new Error(`${name} references capability ${id} without its criterion mapping in the solution contract.`);
+    }
     const reason = Object.hasOwn(entry, 'reason') ? text(entry.reason, `${name}.reason`) : undefined;
     if (entry.disposition === 'deferred') {
-      if (!reason || ids.length) throw new Error(`${name}: a deferred criterion requires a nonempty reason and no journeyIds.`);
+      if (!reason || ids.length || capabilityIds.length) throw new Error(`${name}: a deferred criterion requires a nonempty reason and no journeyIds or capabilityIds.`);
     } else {
-      if (!ids.length) throw new Error(`${name}: an implemented criterion must map to at least one journey.`);
+      if (!ids.length && !capabilityIds.length) throw new Error(`${name}: an implemented criterion must map to at least one journey or capability.`);
       ids.forEach(id => referenced.add(id));
     }
-    return { criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids, ...(reason !== undefined ? { reason } : {}) };
+    return { criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids,
+      ...(plan.schemaVersion === 2 ? { capabilityIds } : {}), ...(reason !== undefined ? { reason } : {}) };
   });
   const missing = [...inventory].filter(id => !seen.has(id));
   if (missing.length) throw new Error(`Missing acceptance criteria: ${missing.join(', ')}.`);
   if (!criteria.some(criterion => criterion.disposition === 'implemented')) throw new Error('At least one acceptance criterion must be implemented.');
   const unused = [...journeyIds].filter(id => !referenced.has(id));
   if (unused.length) throw new Error(`Every journey must map to an implemented criterion. Unmapped journeys: ${unused.join(', ')}.`);
-  return { schemaVersion: 1, criteria, journeys };
+  for (const capability of solution?.capabilities ?? []) for (const criterionId of capability.criterionIds) {
+    const criterion = criteria.find(item => item.criterionId === criterionId)!;
+    if (capability.required && (criterion.disposition !== 'implemented' || !criterion.capabilityIds?.includes(capability.id))) {
+      throw new Error(`Required capability ${capability.id} must be implemented and mapped by criterion ${criterionId}; core capabilities cannot be deferred.`);
+    }
+  }
+  return { schemaVersion: plan.schemaVersion, criteria, journeys };
 }
 
 export function parseUxSpec(value: unknown): UxSpec {
