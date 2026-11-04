@@ -8,7 +8,7 @@ summary: "Finish existing corrections, reject task substitution and keep researc
 
 # Product decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern allocation. [E, current boards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 has four of five finished: all four pass automatically and all four are NOT satisfactory.
+[P, Flow-Goals] Ten satisfactory catalog builds govern allocation. [E, current boards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 finished five: all pass automatically, four are NOT satisfactory and ID 20 awaits judgment.
 
 [R] Return format substitution, preset scheduling and simulated delivery to dev-5's existing source-coverage correction. Include omitted narrative obligations and missing starting artifacts. Preserve the now-reproduced rejection of the old ID 12 label-only bypass; it does not establish semantic completeness. No competing parser or generated-app hand edits.
 

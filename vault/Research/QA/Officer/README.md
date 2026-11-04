@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 8 round 101 is NOT: real routing does not enforce required CASREP formatting; earlier judgments retained."
+summary: "Challenge 20 round 101 is NOT: usable sample briefing lacks source ingestion and immutable capture."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id20-contact-brief]] records NOT for Ten/Exp1/R101/id20-contact-brief. Real citation review, UNKNOWN answers and export support the sample, but no interface accepts new sources and immutable capture is absent. Limits are disclosed and requirementsMet is false. The latest receipt reports 18 tests and 18 browser runs passing, superseding stale guide wording. All requested screenshots and actual tests were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id20-contact-brief]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id20-contact-brief]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id08-casrep]] records NOT for Ten/Exp1/R101/id08-casrep. Return, revision, six-role routing and downloads are substantive, but the required message format is replaced with assumptions while requirementsMet is true. Saved receipts report eleven tests and fourteen browser executions passing. All requested screenshots and actual tests were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id08-casrep]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id08-casrep]].
 
