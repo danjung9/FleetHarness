@@ -2,9 +2,9 @@ name: Check hosted application
 
 on:
   pull_request:
-    branches: [main]
+    branches: [prod]
   push:
-    branches: [deployment-infra]
+    branches: [prod]
   workflow_dispatch:
 
 permissions:

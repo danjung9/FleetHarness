@@ -6,7 +6,7 @@ Each account owns its projects and encrypted OpenAI connection. Signing out or c
 
 ## Deployment
 
-Work on `deployment-infra` and test staging before merging to `main`. The existing production GitHub Actions workflow deploys pushes to `main` to `fleetharness-studio`. The hosted branch changes `vercel.json` to run `npm run build:hosted`; Nitro produces the Vercel Build Output API directory automatically.
+Keep hosted changes on branches based on `prod` and test staging before merging into `prod`. The production GitHub Actions workflow deploys only pushes to `prod` to `fleetharness-studio`. The `main` branch retains the local Electron application and static browser preview. On `prod`, `vercel.json` runs `npm run build:hosted`; Nitro produces the Vercel Build Output API directory automatically.
 
 The current Vercel Hobby project belongs to George. For this private repository, commits authored by other teammates are blocked even when GitHub Actions uses `vercel deploy --prebuilt`. A successful build or a triggered workflow does not confirm deployment. Team-wide automatic deployment requires an appropriate Vercel team plan and contributor access; see [Vercel's project collaboration rules](https://vercel.com/docs/deployments/troubleshoot-project-collaboration). The verified George-authored staging deployment remains usable for the demo.
 
@@ -20,7 +20,7 @@ vercel link --project fleetharness-staging
 vercel deploy --prod
 ```
 
-Here `--prod` selects the staging project's stable URL. Confirm the linked project before using it. To promote to the existing live site, merge the reviewed branch into `main` after configuring production's own environment.
+Here `--prod` selects the staging project's stable URL. Confirm the linked project before using it. To promote to the existing live site, merge the reviewed hosted changes into `prod`. Production and staging currently share one Supabase backend for the private demo, so database/schema changes affect both sites.
 
 ## Configuration
 
