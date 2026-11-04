@@ -3,10 +3,52 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { qualityFixture } from '../scripts/quality-fixture.mjs';
+import { runInNewContext } from 'node:vm';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 import { loadQualityContract, assertQualityContract } from '../dist-electron/electron/quality.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
+
+test('shared parser fixture preserves primary approval deferral with synthetic journey evidence', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-fixture-contract-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const acceptance = [
+    { id: 'UCcustom-1', requirement: 'Parse a synthetic task and recover from empty input.', method: 'integration', scenario: 'Parse and reload a task.' },
+    { id: 'UCcustom-2', requirement: 'Publication of the synthetic review draft requires owner approval.', method: 'integration', scenario: 'Review a local draft without publishing it.' }
+  ];
+  assert.deepEqual(qualityFixtureProject.criteria, acceptance.map(item => item.requirement));
+  for (const [name, body] of Object.entries(qualityFixture(acceptance.map(item => item.id)))) await fs.writeFile(path.join(root, name), body);
+  const { plan } = await loadQualityContract(root, acceptance);
+  assert.equal(plan.criteria[1].disposition, 'deferred');
+  assert.deepEqual(plan.criteria[1].journeyIds, []);
+  assert.match(plan.criteria[1].reason, /^human-authority:/);
+  const expected = 'Synthetic review draft: inspect pump. Publication requires owner approval.';
+  assert.ok(plan.journeys.some(journey => journey.kind === 'primary' && journey.steps.some(step => step.action === 'expectText' && step.text === expected)), 'The deferred publication needs a checked synthetic review draft.');
+
+  // Run the delivered fixture script with a tiny DOM/storage adapter, without a browser claim.
+  const storage = new Map();
+  const load = () => {
+    const elements = Object.fromEntries(['message', 'parse', 'result', 'review', 'review-result'].map(id => [id, { value: '', textContent: '' }]));
+    const script = /<script>([\s\S]*?)<\/script>/.exec(qualityFixtureHtml)[1];
+    runInNewContext(script, { document: { getElementById: id => elements[id] }, localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) } });
+    return elements;
+  };
+  let app = load();
+  app.message.value = 'TASK: inspect pump'; app.parse.onclick();
+  assert.equal(app.result.textContent, 'inspect pump');
+  app.review.onclick(); assert.equal(app['review-result'].textContent, expected);
+  app = load(); assert.equal(app.result.textContent, 'inspect pump');
+  assert.equal(app['review-result'].textContent, expected);
+  app.message.value = 'TASK: inspect valve'; app.parse.onclick();
+  assert.equal(app.result.textContent, 'inspect valve');
+  assert.equal(app['review-result'].textContent, '', 'Changing a task invalidates the old review.');
+  app.review.onclick();
+  assert.equal(app['review-result'].textContent, 'Synthetic review draft: inspect valve. Publication requires owner approval.');
+  app.message.value = ''; app.parse.onclick();
+  assert.equal(app.result.textContent, 'Enter a message.');
+  assert.equal(app['review-result'].textContent, '');
+  app.review.onclick(); assert.equal(app['review-result'].textContent, '', 'Invalid input cannot create a review draft.');
+});
 
 test('frozen quality contract rejects changed expected outcomes and UX behavior', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-quality-')); t.after(() => fs.rm(root, { recursive: true, force: true }));
