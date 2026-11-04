@@ -4,12 +4,17 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { challenges } from '../dist-electron/harness/catalog.js';
+import { starters } from '../dist-electron/shared/types.js';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-home-'));
 const output = path.resolve('output/playwright/home');
 await fs.mkdir(output, { recursive: true });
 let app;
 try {
+  // Check the centered welcome layout before creating the returning user's builds.
+  const stateDir = path.join(root, 'state');
+  await fs.mkdir(stateDir);
+  await fs.writeFile(path.join(stateDir, 'state.json'), JSON.stringify({ version: 1, projects: [], settings: { provider: '', model: '', rememberKey: false } }));
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: path.join(root, 'pi') } });
   const page = await app.firstWindow();
   const errors = [];
@@ -19,6 +24,24 @@ try {
   assert.equal(await page.getByRole('navigation', { name: 'Primary', exact: true }).isVisible(), true);
   assert.equal(await page.locator('.home-example').count(), 3);
   assert.equal(await page.locator('.home-mark img').isVisible(), true);
+  const centered = await page.evaluate(() => {
+    const main = document.querySelector('.home-main').getBoundingClientRect();
+    return ['.home-heading h1', '.home-mark'].every(selector => {
+      const box = document.querySelector(selector).getBoundingClientRect();
+      return Math.abs((box.left + box.width / 2) - (main.left + main.width / 2)) < 10;
+    });
+  });
+  assert.equal(centered, true);
+  assert.equal(await page.locator('.home-returning').count(), 0);
+  await page.screenshot({ path: path.join(output, 'home-fresh.png'), scale: 'css' });
+  await page.evaluate(async starters => {
+    for (const starter of starters) await window.fleetHarness.createProject(starter);
+  }, starters);
+  await page.reload();
+  await page.getByRole('region', { name: 'Recent builds', exact: true }).waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.locator('.home-returning').count(), 1);
+  assert.equal(await page.locator('.home-example').count(), 3);
   assert.equal(await page.getByRole('region', { name: 'Recent builds', exact: true }).isVisible(), true);
   assert.equal(await page.locator('.home-recent .home-build-list>button').count(), 3);
   await page.screenshot({ path: path.join(output, 'home-desktop.png'), scale: 'css' });
@@ -62,7 +85,7 @@ try {
     return main.scrollHeight > main.clientHeight;
   }), false);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, recentBuilds: true, threeExamples: true, fullCatalogAccess: true, catalogBriefToBuild: true, resumeBuild: true, persistence: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, centeredBrand: true, recentBuilds: true, threeExamples: true, fullCatalogAccess: true, catalogBriefToBuild: true, resumeBuild: true, persistence: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close();
   await fs.rm(root, { recursive: true, force: true });
