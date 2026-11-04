@@ -9,9 +9,10 @@ function makeProject(input: NewProject): Project {
     id: crypto.randomUUID(), status: 'draft', stages: structuredClone(stageDefinitions),
     logs: [], feedback: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
-const empty = (): AppState => ({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: starters.map(makeProject) });
+const empty = (): AppState => ({ version: 1, settings: { provider: '', model: '', rememberKey: false, developerMode: false }, projects: starters.map(makeProject) });
 let browserState: AppState;
 try { browserState = JSON.parse(localStorage.getItem('fleet-browser-preview') || 'null') || empty(); } catch { browserState = empty(); }
+browserState.settings.developerMode = browserState.settings.developerMode === true;
 const listeners = new Set<(state: AppState) => void>();
 function save() {
   localStorage.setItem('fleet-browser-preview', JSON.stringify(browserState));
@@ -34,6 +35,14 @@ export const api: FleetAPI = window.fleetHarness || {
   },
   startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
+  setDeveloperMode: async enabled => {
+    if (typeof enabled !== 'boolean') throw new Error('Developer mode must be enabled or disabled.');
+    const nextState = { ...browserState, settings: { ...browserState.settings, developerMode: enabled } };
+    localStorage.setItem('fleet-browser-preview', JSON.stringify(nextState));
+    browserState = nextState;
+    for (const fn of listeners) fn(structuredClone(browserState));
+    return api.bootstrap();
+  },
   connectChatGPT: desktopOnly, cancelChatGPTLogin: desktopOnly, disconnectChatGPT: desktopOnly, refreshChatGPT: desktopOnly,
   onState: fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }
 };

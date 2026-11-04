@@ -28,10 +28,11 @@ async function assertCompactNavigation(page) {
     assert.equal(await progress.getByRole('button', { name, exact: true }).count(), 1);
   }
   const utilities = page.getByRole('navigation', { name: 'Primary', exact: true });
-  assert.equal(await utilities.getByRole('button').count(), 4, 'The utility rail must not repeat journey navigation');
+  assert.equal(await utilities.getByRole('button').count(), 4, 'The default utility rail excludes developer-only system design');
   for (const name of ['Home — challenge portfolio', 'Preview — generated app', 'Activity — agent work', 'Files — artifacts']) {
     assert.equal(await utilities.getByRole('button', { name, exact: true }).count(), 1);
   }
+  assert.equal(await page.locator('.system-design').count(), 0, 'System design stays hidden throughout the non-developer journey');
 }
 
 async function captureCompact(page, name) {
@@ -67,7 +68,8 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.locator('.app-shell').waitFor({ timeout: 45000 });
 
-  await page.getByRole('button', { name: 'Model settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  assert.equal(await page.getByRole('switch', { name: 'Developer mode', exact: true }).isChecked(), false, 'Developer mode is off by default');
   await page.getByRole('radio', { name: 'Pi Model providers' }).check();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
@@ -198,7 +200,7 @@ try {
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: true, automaticBuildAndRepair: true, reviewDraftRetained: true,
     reviewDraftSurvivesReload: true, revisedBriefClearsApproval: true,
-    approvalToDelivery: true, truthfulSourceExport: true, milestones: 4, utilityEntries: 4,
+    approvalToDelivery: true, truthfulSourceExport: true, milestones: 4, utilityEntries: 4, developerModeOff: true,
     minimumWindow: '1120x720', rendererErrors: errors.length, providerRequests: fixture.requests.length, screenshots: output }, null, 2));
 } catch (error) {
   if (page && !page.isClosed()) {

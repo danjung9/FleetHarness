@@ -30,8 +30,9 @@ export class Store {
       this.state = data;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-      this.state = { version: 1, projects: starters.map(input => newProject(input)), settings: { provider: '', model: '', rememberKey: false } };
+      this.state = { version: 1, projects: starters.map(input => newProject(input)), settings: { provider: '', model: '', rememberKey: false, developerMode: false } };
     }
+    this.state.settings.developerMode = this.state.settings.developerMode === true;
     for (const p of this.state.projects) {
       if (p.executable?.status === 'packaging') {
         p.executable.status = 'failed';

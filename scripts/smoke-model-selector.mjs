@@ -40,7 +40,7 @@ try {
   await selector.waitFor();
   assert.equal(await selector.inputValue(), '');
   await selector.selectOption('settings');
-  await page.getByRole('heading', { name: 'Model settings', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
   await page.getByRole('radio', { name: 'Pi Model providers' }).check();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByLabel('Model', { exact: true }).selectOption('fixture-a');
@@ -64,7 +64,7 @@ try {
   await capture(page, 'home-desktop.png');
 
   await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
-  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Model settings', 'Home — challenge portfolio'];
+  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Settings', 'Home — challenge portfolio'];
   for (const screen of screens) {
     const navigation = ['Build', 'Review', 'Brief', 'Deliver'].includes(screen) ? page.getByRole('navigation', { name: 'Challenge progress', exact: true }) : page;
     await navigation.getByRole('button', { name: screen, exact: true }).click();
@@ -90,6 +90,13 @@ try {
   assert.match(await selector.getAttribute('title'), /Stop active builds/);
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].model, 'fleet-fixture/fixture-b');
   await assert.rejects(page.evaluate(() => window.fleetHarness.saveSettings({ backend: 'pi', provider: 'fleet-fixture', model: 'fixture-a', rememberKey: false })), /Stop active runs/);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const developerMode = page.getByRole('switch', { name: 'Developer mode', exact: true });
+  assert.equal(await developerMode.isEnabled(), true, 'Developer mode remains available during a build');
+  await developerMode.click();
+  await page.getByRole('switch', { name: 'Developer mode', exact: true, checked: true }).waitFor();
+  assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true);
+  assert.equal(await selector.isDisabled(), true, 'Changing developer mode does not unlock the build model');
   await page.evaluate(id => window.fleetHarness.stopRun(id), id);
   await page.waitForFunction(() => !document.querySelector('[aria-label="Build model"]').disabled);
 
@@ -130,9 +137,9 @@ try {
   await unavailable.waitFor();
   assert.match(await unavailable.locator('option:checked').textContent(), /fixture-b · not connected/);
   await unavailable.selectOption('settings');
-  await empty.getByRole('heading', { name: 'Model settings', exact: true }).waitFor();
+  await empty.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, allScreens: screens.length, modelAndProviderSwitching: true, settingsSync: true, persistence: true, keyboardFocus: true, runningBuildLock: true, failedSavePreservesModel: true, unavailableModelSetup: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, allScreens: screens.length, modelAndProviderSwitching: true, settingsSync: true, persistence: true, keyboardFocus: true, runningBuildLock: true, developerModeDuringBuild: true, failedSavePreservesModel: true, unavailableModelSetup: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close(); await browser?.close(); await server?.close(); await fixture.close();
   await fs.rm(root, { recursive: true, force: true });
