@@ -52,7 +52,9 @@ export function markedPsProcesses(plain: string, expanded: string, marker: strin
 
 async function ps(environment: boolean) {
   return new Promise<string>((resolve, reject) => {
-    execFile('/bin/ps', [...(environment ? ['eww'] : ['ww']), '-u', String(process.getuid!()), '-o', 'pid=,lstart=,stat=,command='],
+    // A BSD-style first word (ww, eww) puts macOS ps in its legacy parser, where -u is a
+    // bare flag and everything after it is refused. -U selects by user in both parsers.
+    execFile('/bin/ps', [...(environment ? ['eww'] : ['ww']), '-U', String(process.getuid!()), '-o', 'pid=,lstart=,stat=,command='],
       { env: { ...process.env, LC_ALL: 'C' }, encoding: 'utf8', timeout: 1500, maxBuffer: 16 * 1024 * 1024 }, (error, stdout) => {
         // execFile errors can contain process environments. Do not forward them.
         if (error) reject(new Error('Cannot inspect the current user\'s processes.'));
@@ -135,7 +137,9 @@ export class RunProcessSweep {
       await delay(50);
     } while (performance.now() - started <= deadline);
     const remaining = await inspect();
-    // A single empty snapshot at the deadline is not verified quiescence.
+    // Two consecutive empty snapshots are verified quiescence, even when slow inspection used
+    // the whole deadline. A single empty snapshot at the deadline is not.
+    if (!remaining.length && empty) return;
     throw new Error('Process cleanup could not be confirmed' + (remaining.length ? ': run PIDs ' + remaining.map(p => p.pid).join(', ') + ' remain.' : ': processes did not settle before the deadline.') + ' Use the operator shutdown procedure.');
   }
 }
