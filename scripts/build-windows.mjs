@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { windowsVersion } from './windows-version.mjs';
+import { checkPackagedIntegrity } from './check-packaged-integrity.mjs';
 
 if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Build and validate this installer on Windows x64.');
 const args = process.argv.slice(2);
@@ -45,6 +46,7 @@ await build({
   }
 });
 const installer = `AppYard-${version}-windows-x64-setup.exe`;
+checkPackagedIntegrity(path.join(output, 'win-unpacked', 'resources', 'app.asar'));
 const sha256 = createHash('sha256').update(await fs.readFile(path.join(output, installer))).digest('hex');
 await fs.writeFile(path.join(output, 'SHA256SUMS.txt'), `${sha256}  ${installer}\n`);
 await fs.writeFile(path.join(output, 'windows-build.json'), JSON.stringify({ ...buildInfo, installer, sha256 }, null, 2) + '\n');

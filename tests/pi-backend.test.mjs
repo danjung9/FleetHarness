@@ -180,11 +180,13 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
 });
 
 for (const brokenRepair of [false, true]) {
-  test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: 10000 }, async t => {
+  // Two real Node/browser verification passes need scheduling room on Windows;
+  // this outer test budget does not change agent or verification deadlines.
+  test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: 60000 }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
-    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair']);
-    assert.equal(reportPassed(h.project.report), !brokenRepair);
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair'], JSON.stringify(h.project.logs));
+    assert.equal(reportPassed(h.project.report), !brokenRepair, JSON.stringify(h.project.report));
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
     if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });

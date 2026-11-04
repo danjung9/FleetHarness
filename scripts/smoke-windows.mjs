@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { checkPackagedIntegrity } from './check-packaged-integrity.mjs';
 
 // Run on a disposable Windows account/runner. NSIS registration uses the real
 // application identity, so refuse to touch an existing AppYard installation.
@@ -26,9 +27,12 @@ const installers = {
   candidate: await installerPath(values.installer, 'release'),
 };
 const candidateMetadata = JSON.parse(await fs.readFile(path.join(path.dirname(installers.candidate), 'windows-build.json'), 'utf8'));
+const previousMetadata = JSON.parse(await fs.readFile(path.join(path.dirname(installers.previous), 'windows-build.json'), 'utf8'));
 assert.equal(candidateMetadata.installer, path.basename(installers.candidate), 'Candidate metadata must describe the installer being validated.');
+assert.equal(previousMetadata.installer, path.basename(installers.previous), 'Previous metadata must describe the installer being validated.');
 for (const installer of Object.values(installers)) assert.ok((await fs.stat(installer)).isFile(), installer);
 assert.equal(createHash('sha256').update(await fs.readFile(installers.candidate)).digest('hex'), candidateMetadata.sha256, 'Candidate installer checksum differs from build metadata.');
+assert.equal(createHash('sha256').update(await fs.readFile(installers.previous)).digest('hex'), previousMetadata.sha256, 'Previous installer checksum differs from build metadata.');
 assert.notEqual(installers.previous, installers.candidate, 'Upgrade validation needs two distinct installers.');
 const output = path.resolve(values.output ?? 'output/windows-smoke');
 await fs.mkdir(output, { recursive: true });
@@ -74,6 +78,7 @@ async function install(installer) {
   installed = true;
   await command(installer, ['/S', '/currentuser', '/D=' + installDir], { windowsVerbatimArguments: true, timeout: 300_000 });
   await fs.access(binary);
+  checkPackagedIntegrity(path.join(installDir, 'resources', 'app.asar'));
   const records = await registration();
   assert.equal(records.length, 1, 'Exactly one AppYard uninstall registration must exist.');
   const record = records[0];
@@ -82,9 +87,11 @@ async function install(installer) {
   return record;
 }
 async function launch() {
-  app = await electron.launch({ executablePath: binary, args: [], env: childEnv, timeout: 60_000 });
+  // Isolate Chromium even if a module-load failure occurs before main.ts can
+  // apply FLEET_USER_DATA. A broken package must not open the user's profile.
+  app = await electron.launch({ executablePath: binary, args: ['--user-data-dir=' + stateDir], env: childEnv, timeout: 60_000 });
   app.process().stderr?.on('data', data => { void fs.appendFile(path.join(output, 'electron-stderr.log'), data).catch(() => {}); });
-  page = await app.firstWindow();
+  page = await app.firstWindow({ timeout: 60_000 });
   page.on('pageerror', error => rendererErrors.push(error.message));
   await page.locator('.app-shell').waitFor({ timeout: 60_000 });
   stateCreated = true;
@@ -150,8 +157,8 @@ async function exportExecutable(id) {
     `Expand-Archive -LiteralPath '${archive.replaceAll("'", "''")}' -DestinationPath '${extracted.replaceAll("'", "''")}'`]);
   const executable = (await fs.readdir(extracted)).find(name => name.endsWith('.exe'));
   assert.ok(executable, 'Generated export must contain a Windows executable.');
-  generated = await electron.launch({ executablePath: path.join(extracted, executable), args: [], env: childEnv, timeout: 60_000 });
-  const standalone = await generated.firstWindow();
+  generated = await electron.launch({ executablePath: path.join(extracted, executable), args: ['--user-data-dir=' + path.join(root, 'generated-bootstrap')], env: childEnv, timeout: 60_000 });
+  const standalone = await generated.firstWindow({ timeout: 60_000 });
   const data = await generated.evaluate(({ app }) => ({ root: app.getPath('appData'), data: app.getPath('userData') }));
   const expectedName = 'dev.fleetharness.generated.' + createHash('sha256').update(id).digest('hex').slice(0, 24);
   assert.equal(data.data.toLowerCase(), path.join(data.root, expectedName).toLowerCase());
@@ -187,6 +194,9 @@ try {
   result.previousRegistration = await install(installers.previous);
   result.previous = await launch();
   result.previous.buildInfo = (await boot()).buildInfo ?? null;
+  for (const key of ['version', 'revision', 'sourceUrl', 'buildId']) {
+    assert.equal(result.previous.buildInfo?.[key], previousMetadata[key], 'Installed previous provenance mismatch: ' + key);
+  }
   check('installed A starts from ASAR with isolated saved-state root');
   const beforeSettings = await boot();
   await assert.rejects(page.evaluate(id => window.fleetHarness.startRun(id), beforeSettings.state.projects[0].id), /Choose a model/);

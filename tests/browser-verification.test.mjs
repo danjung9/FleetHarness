@@ -80,11 +80,13 @@ test('passing core tests cannot hide a wrong rendered result', { timeout: 20_000
   assert.ok(result.journeys[0].screenshot);
 });
 
-test('a correct primary flow does not conceal broken error recovery or incorrect export contents', { timeout: 20_000 }, async t => {
+test('a correct primary flow does not conceal broken error recovery or incorrect export contents', { timeout: 40_000 }, async t => {
   const root = await workspace(t, application.replace("error.textContent='Enter a task.'", "error.textContent='Unknown error'").replace('JSON.stringify({task:task.value})', 'JSON.stringify({task:"wrong task"})'));
-  const result = await verify(root, { stepTimeoutMs: 250 });
-  assert.ok(result.journeys.filter(j => j.id === 'save').every(j => j.status === 'failed' && /Downloaded content/.test(j.detail)));
-  assert.ok(result.journeys.filter(j => j.id === 'recover').every(j => j.status === 'failed'));
+  // Exercise the bad content/recovery assertions after normal browser actions;
+  // Windows runner startup and actionability are not the behavior under test.
+  const result = await verify(root, { timeoutMs: 30_000, stepTimeoutMs: 2500 });
+  assert.ok(result.journeys.filter(j => j.id === 'save').every(j => j.status === 'failed' && /Downloaded content/.test(j.detail)), JSON.stringify(result));
+  assert.ok(result.journeys.filter(j => j.id === 'recover').every(j => j.status === 'failed'), JSON.stringify(result));
 });
 
 test('the preview supports native form events without permitting external form navigation', { timeout: 40_000 }, async t => {

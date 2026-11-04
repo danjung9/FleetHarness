@@ -37,7 +37,13 @@ jobs:
         run: npm test
       - name: Harness regression checks
         run: npm run test:harness
-      - name: Package lower version A for the upgrade test
+      - name: Fetch the latest successful Windows installer as upgrade baseline
+        id: baseline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/fetch-windows-baseline.mjs
+      - name: Package first-release version A when no published release exists
+        if: steps.baseline.outputs.synthetic == 'true'
         run: npm run dist:win:baseline
       - name: Package candidate B from this exact commit
         run: npm run dist:win
