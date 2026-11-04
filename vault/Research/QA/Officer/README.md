@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Factory and corrected CLI receipt review, frozen four-request keys and unperformed human acceptance/trial."
+summary: "Challenge 12 round 1 judged NOT; earlier training-draft evidence and frozen keys retained."
 ---
 
 # Synthetic pilot answer keys
+
+[E, current benchmark review] [[Research/QA/Officer/JUDGE-R1-id12-optask]] records NOT: the generic sample and manual category choices leave the original mock-USMTF task unmet. Twelve passing tests and eight reported passing browser journeys cover the reduced workflow. Evidence limits and disclosure are in [[Research/QA/Officer/Sprint/Judge-R1-id12-optask]]. This current assignment supersedes the older ID 12 backlog status below; earlier training-draft findings remain historical.
 
 ## Bottom line
 

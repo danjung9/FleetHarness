@@ -1,0 +1,91 @@
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"sed -n '6,33p' index.html; sed -n '110,125p' index.html; cat test-matrix.md; cat verification.md\""
+}
+verify tool bash completed
+"<header><div class=\"brand\">WATCHDESK / OFFLINE LAB</div><h1>Evidence to reviewed handoff</h1><p>Investigate a training configuration. Prepare a change for human review.</p><nav aria-label=\"Workbench sections\"><a href=\"#evidence\">01 Evidence</a><a href=\"#proposal\">02 Proposal & review</a><a href=\"#handoff\">03 Analyst handoff</a></nav></header>\n<main><div class=\"notice\">
+verify text The existing 18 tests pass against both the CommonJS core and the core embedded in `index.html`. I found a review-binding gap: validation checks the digest and revision but not the review’s proposal ID. I’ll add an adversarial test and use the bounded repair to reject that mismatch. Browser journeys remain pending with the host.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='core.test.cjs'\ns=open(p).read(); pos=s.rfind('\\\\n}')\ns=s[:pos]+'''\n test(name+': review replay with mismatched proposal identity is rejected',()=>{\n const s=ready();C.review(s);s.review.proposalId='OTHER-PROPOSAL';\n assert.equal(C.reviewed(s),false);\n assert.throws(()=>C.exportHandoff(s),/Save and review/);\n const restored=C.restore
+verify error bash failed
+"✔ CommonJS: seeded finding, benign control and exact citations (2.31975ms)\n✔ CommonJS: unknown, unsupported and temporal boundaries never imply compliance (0.429625ms)\n✔ CommonJS: invalid imports rejected atomically and raw draft retained (1.455666ms)\n✔ CommonJS: byte and asset limits include exact boundaries (0.374167ms)\n✔ CommonJS: SHA-256, canonical order and all proposal field
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfor p in ['core.cjs','index.html']:\n s=open(p).read().replace(\\\"s.review?.decision==='reviewed'&&s.review.digest\\\", \\\"s.review?.decision==='reviewed'&&s.review.proposalId===s.committed.proposalId&&s.review.digest\\\").replace(\\\"\"'!s.committed||s.review.digest!==digest(s.committed)\",\"!s.committed||s.review.proposalId!==s.committed.pr
+verify tool bash completed
+"✔ CommonJS: seeded finding, benign control and exact citations (2.202417ms)\n✔ CommonJS: unknown, unsupported and temporal boundaries never imply compliance (0.443167ms)\n✔ CommonJS: invalid imports rejected atomically and raw draft retained (1.540125ms)\n✔ CommonJS: byte and asset limits include exact boundaries (0.374042ms)\n✔ CommonJS: SHA-256, canonical order and all proposal f
+verify text The new test reproduced the proposal-ID mismatch in both implementations. The repair now rejects export and invalidates a restored review when its proposal ID differs. All 22 tests pass with no skips. I’m recording the failure, repair, criterion coverage, and pending browser checks in the verification notes.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nplan=json.load(open('acceptance-plan.json'))\nintro='''# Verification record\n\nVerification phase, 2026-11-04. **requirementsMet: false.** Node application checks pass; the full prototype completion gate remains unverified until the host runs browser journeys on desktop and narrow viewports. No browser runtime/tool or host report 
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "workbench",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Analyst workbench: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "corpus",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic evidence and baseline: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "analysis",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Evidence validation and explanation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Revision-bound proposal review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "journal",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local session and event journal: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "handoff",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification ran 22 application tests with zero failures/skips; single repair binds reviews to proposal identity in both cores. Browser checks and operational validation remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Portable analyst handoff: generated. The live diagram has been updated."}]
+verify text Fixed a review-binding defect: mismatched proposal IDs now block export and invalidate restored reviews.
+
+- All 22 application tests pass; no skips.
+- Updated verification.md, test-matrix.md, and README.md.
+- Preserved frozen contracts and host-owned evidence.
+- Browser journeys, screenshots, and traces remain pending with the host.
+
+`requirementsMet` remains false; 17 criteria are deferred.
+verify info TAP version 13
+# Subtest: CommonJS: seeded finding, benign control and exact citations
+ok 1 - CommonJS: seeded finding, benign control and exact citations
+  ---
+  duration_ms: 2.180958
+  type: 'test'
+  ...
+# Subtest: CommonJS: unknown, unsupported and temporal boundaries never imply compliance
+ok 2 - CommonJS: unknown, unsupported and temporal boundaries never imply compliance
+  ---
+  duration_ms:
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

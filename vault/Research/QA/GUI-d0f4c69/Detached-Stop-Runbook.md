@@ -1,12 +1,24 @@
 ---
 type: test-plan
-status: ready
+status: complete
 owner: mukul
 updated: 2026-11-04
-summary: "Detached Pi Stop fixture at d0f4c69; source, syntax and pure checks pass, runtime execution remains pending."
+summary: "The detached Pi child survives Stop at d0f4c69; measured failure precedes separate successful fixture cleanup."
 ---
 
 # Stop with a detached background worker
+
+[E, independently reviewed runtime receipt] **STOP-DETACHED-01 fails at d0f4c69.** [Receipt 5903f0de](stop-detached-5903f0de-d2df-43a9-953f-11dd99176176/result.json), 16:08:28 to 16:08:42 EST, proves that an owned detached child kept running after the actual Stop button while the app remained stopped. Separate cleanup passed. This measured outcome supersedes preparation-only status below; it does not establish other engines or shutdown paths.
+
+| Observation before separate cleanup | Result |
+| --- | --- |
+| Detachment | Shell 32168 and child 32171 are distinct observed session leaders and process-group leaders; parent 32169 shares the shell group. macOS sess fields are zero, so leader flags provide the session proof. |
+| Shell and ordinary parent | Both absent at observation start and end; parent heartbeat count remains 9. |
+| Detached child | Same PID, start time, command digest and group remain present; PPID becomes 1. Heartbeats advance from 28 to 106 over approximately eight seconds. This is active work, not a zombie-only observation. |
+| App and provider | App reports stopped at both endpoints. Provider requests remain one. |
+| Watchdog and cleanup order | Observation ends about 49 seconds before the worker deadline. FAIL is recorded before the cleanup marker; subsequent cleanup confirms all three PIDs absent. |
+
+[E] Executed script SHA-256 `d517a44dcb0c4dbb4696bdb2eebc83d3a7b65ac8b3eb285f2fad218722f125d5` matches the reviewed script. The 24 ms click duration and 11 ms post-click status observation are not descendant termination latency. [R] Keep this failure open until the same owned detached-worker case passes after a runtime fix. A stopped badge and the earlier ordinary-child pass do not establish complete shutdown.
 
 [E, preparation] [qa-stop-detached.mjs](qa-stop-detached.mjs) extends [[Research/QA/GUI-631849f/Stop-Child-Runbook]]. Only source review, syntax and pure validation ran here. No app, fixture provider, Pi command or worker was executed. Main owns review and any execution in its independently authorized GUI environment.
 

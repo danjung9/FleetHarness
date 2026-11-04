@@ -140,6 +140,8 @@ summary: "Pinned static findings with independently reported runtime confirmatio
 
 ## Unified-interface findings at 631849f
 
+[E, later measured shutdown finding at d0f4c69] An actual Pi shell call's detached child survives the real Stop button while status says stopped. The same owned process advances heartbeats from 28 to 106 during observation, after its ordinary parent and shell end. Cleanup is separate and succeeds. This is a high-priority shutdown defect with bounded runtime evidence, distinct from Home discoverability. See [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]]. Codex, Quit and other descendant patterns remain unmeasured here.
+
 [E, later pinned source at d0f4c69] These three entries retain their original reproduction scope. U1's Home catalog-search surface has been removed by redesign. U2 still has no direct Stop on Home, but recent builds now display Building and provide a shortcut. U3's accessible name now includes its visible title in source. The new Home smoke fails before targeted closure checks. See [[Research/QA/Auto/Review-d0f4c69]]; none is silently promoted to a fresh runtime pass.
 
 ### U1. Medium: a visible card title is not searchable

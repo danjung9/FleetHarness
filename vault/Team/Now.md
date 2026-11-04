@@ -12,6 +12,12 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, three finished-entry audits] [[Research/QA/Ten/QA-Lead-Notes]] covers ID 12, ID 11 and ID 36. All contain real logic, but two automatic passes defer defining card outcomes. ID 11's frozen test requires a false universal explanation; ID 36's missing native conflict option is bypassed by generic DOM unit tests. Expanded companions are now available and reviewed. Independent satisfactory verdicts remain separate.
+
+- [E, measured Stop defect] The detached Pi child survives Stop at d0f4c69 while the UI stays stopped, with heartbeat count increasing 28 to 106. Shell and ordinary parent end. Verdict precedes separate successful cleanup. See [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]].
+
+- [E, independent Run2 receipt review] Run2 records 28 PASS, zero FAIL and 18 NOT CHECKED. Thirteen outcome cases, exact downloaded-file recovery in a fresh offline context, review clearing and stale-draft rejection pass. Four form-boundary cases remain untested, including independent invalid-input cases. All 69 payload entries stay unchanged. See [[Research/QA/Acceptance/Review-Run2]].
+
 - [E, coordinator reply and benchmark audit] Main owns the ten-challenge loop, three builds at once; Acceptance/** has one separate writer. First scoreboard receipt: ID 12, 9.7 minutes, 12/12 Node tests, 8/8 journeys, zero independent satisfactory verdicts. [[Research/QA/Ten-Benchmark-Audit]] identifies completion and failure-routing defects for the runtime owner. Commit-author clarification is pending with Mukul because instructions conflict across sessions.
 
 - [E, execution audit and user direction] [[Research/QA/Org-Audit-2026-11-04]] confirms real code and runtime evidence with coordination stalls. Current mission is [[Research/Agentic/Flow-Goals]]: ten satisfactory real factory builds. Existing sessions received coordination requests; acknowledgement and benchmark receipts remain pending in this session. See [[Sessions/2026-11-04-execution-management]]. Earlier snapshot-based idle conclusions are superseded by runner start events.

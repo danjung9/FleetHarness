@@ -1,0 +1,116 @@
+{
+  "title": "Synthetic Cyber Evidence and Proposal Workbench",
+  "description": "Offline, synthetic-only investigation and reviewed handoff. No execution adapter, scanner, identity provider or network connection. Controls and answers are planning-defined examples, not approved STIG content.",
+  "components": [
+    {
+      "id": "workbench",
+      "label": "Analyst workbench",
+      "description": "Responsive evidence, findings, proposal review and export panels with accessible native controls.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "corpus",
+      "label": "Synthetic evidence and baseline",
+      "description": "Inline versioned baseline and seeded/benign/unknown examples, with timestamps and exact excerpts. No official control content.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "analysis",
+      "label": "Evidence validation and explanation",
+      "description": "Shared dependency-free deterministic validation, applicability and citation-backed findings. No model inference or severity invention.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Revision-bound proposal review",
+      "description": "Draft/committed distinction, canonical proposal digest, explicit synthetic reviewer decision, invalidation on edit; no execution permission.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "journal",
+      "label": "Local session and event journal",
+      "description": "Versioned local storage with drafts, committed proposals and ordered synthetic audit events; memory fallback and honest integrity limits.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "handoff",
+      "label": "Portable analyst handoff",
+      "description": "Human-readable summary and documented JSON download containing findings, citations, reviewed proposal, gaps, audit and unexecuted verification/rollback instructions.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "corpus",
+      "to": "analysis",
+      "label": "Versioned synthetic evidence and control excerpts"
+    },
+    {
+      "from": "workbench",
+      "to": "analysis",
+      "label": "Validate and analyze pasted bundle"
+    },
+    {
+      "from": "analysis",
+      "to": "workbench",
+      "label": "Seeded, benign and insufficient-evidence explanations"
+    },
+    {
+      "from": "analysis",
+      "to": "review",
+      "label": "Asset-specific proposed before/after change"
+    },
+    {
+      "from": "workbench",
+      "to": "review",
+      "label": "Save draft and explicitly review committed revision"
+    },
+    {
+      "from": "review",
+      "to": "journal",
+      "label": "Digest-bound decisions and invalidations"
+    },
+    {
+      "from": "analysis",
+      "to": "journal",
+      "label": "Import and analysis events with citations"
+    },
+    {
+      "from": "journal",
+      "to": "workbench",
+      "label": "Restore local draft and saved status"
+    },
+    {
+      "from": "journal",
+      "to": "handoff",
+      "label": "Evidence, proposal and full local event history"
+    },
+    {
+      "from": "review",
+      "to": "handoff",
+      "label": "Current review state; not execution authority"
+    }
+  ]
+}
