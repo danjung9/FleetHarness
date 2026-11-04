@@ -18,7 +18,7 @@ Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challe
 
 Use `npm run build:hosted` for the hosted MVP: individual logins, private projects, account-level OpenAI API keys, background builds, checkpoint recovery, app previews, review, source ZIP downloads and share links. It requires Supabase authentication/storage and Vercel Workflow/Sandbox configuration; see [hosted setup and release checks](docs/hosted.md). Builds continue after signing out or closing the browser.
 
-Test changes from `deployment-infra` on staging before merging to `main`. Pushes to `main` trigger the production GitHub Actions deployment at [fleetharness-studio.vercel.app](https://fleetharness-studio.vercel.app/).
+Test changes from `deployment-infra` on staging before merging to `main`. Pushes to `main` trigger the production GitHub Actions workflow for [fleetharness-studio.vercel.app](https://fleetharness-studio.vercel.app/). The current private-repository Hobby setup accepts deployments authored by the Vercel project owner; other contributors' commits are blocked. See the [hosting requirements](docs/hosted.md) before relying on team-wide automatic deployments.
 
 For a static interface snapshot, `npm run build:web` writes `dist-web`. That build supports browsing challenges and saving briefs in the current browser; it does not include accounts or agent execution. The hosted build produces Vercel build output with backend functions, rather than a static `dist-web` deployment.
 

@@ -8,6 +8,8 @@ Each account owns its projects and encrypted OpenAI connection. Signing out or c
 
 Work on `deployment-infra` and test staging before merging to `main`. The existing production GitHub Actions workflow deploys pushes to `main` to `fleetharness-studio`. The hosted branch changes `vercel.json` to run `npm run build:hosted`; Nitro produces the Vercel Build Output API directory automatically.
 
+The current Vercel Hobby project belongs to George. For this private repository, commits authored by other teammates are blocked even when GitHub Actions uses `vercel deploy --prebuilt`. A successful build or a triggered workflow does not confirm deployment. Team-wide automatic deployment requires an appropriate Vercel team plan and contributor access; see [Vercel's project collaboration rules](https://vercel.com/docs/deployments/troubleshoot-project-collaboration). The verified George-authored staging deployment remains usable for the demo.
+
 Staging is a separate Vercel project, `fleetharness-staging`, at `https://fleetharness-staging.vercel.app`. Its public address is needed so sandbox workers can reach the authenticated model proxy. Do not use a Vercel-authentication-protected deployment URL as `APP_ORIGIN`.
 
 ```sh
