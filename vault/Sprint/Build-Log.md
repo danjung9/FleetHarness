@@ -63,3 +63,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:39 Astra agents started: one fixer and three auditors (run lifecycle, engines and safety, pipeline verdicts).
 - 17:41 `f5fec32` landed on `mvp`: real builds on a Mac no longer end as failed from a rejected `ps` flag. Unit tests 141 of 142; the one failure also fails on `0da7ce9` and is with the fixer.
 - 17:41 Team branch: mvp now f5fec32
+- 17:46 Astra audit-engines finished, exit 0. Report: `Research/Backend-Audit/audit-engines.md`
