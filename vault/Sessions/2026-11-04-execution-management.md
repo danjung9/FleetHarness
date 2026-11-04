@@ -39,3 +39,7 @@ summary: "Audit and execution coordination against the newer ten-challenge facto
 [E, coordinator reply and first benchmark receipt] Main confirmed its ownership of the three-at-once benchmark and the other thread's ownership of Acceptance/**. The first scoreboard row is real: ID 12, 9.7 minutes, 12 Node tests and 8 browser journeys; zero independent satisfactory verdicts. [[Research/QA/Ten-Benchmark-Audit]] records completion/routing/identity defects sent to the owner. [P, direct reply at 16:27] Mukul confirmed author Mukul and the decision was relayed. Current bridge messages identify this thread as AUDIT-MANAGER, thread 01a1a844-54da-78e2-828e-7675040a3503.
 
 [R] Verify the owner's cancellation and immutable-artifact repairs, complete the integrated verification dependency, and track review outcomes and ten independent judgments. Reconcile unlanded commit identity with the confirmed Mukul instruction. Retain human review, deployment and submission decisions separately.
+
+## Experiment correction at 17:14 EST
+
+[E] Recovered the actual five-build experiment at Research/QA/Ten/Exp1 after the bridge request timed out. It finished at 17:09: five automatic passes, four independent NOT verdicts, last verdict pending. Corrected the earlier mistaken absence claim in the audit and notified main. Verified all 324 manifest entries against the actual raw fhexp copies. Matched baseline comparison is slower and uses more tokens, with no satisfactory result yet. See [[Research/QA/Ten-Benchmark-Audit]]. No runtime or product edit was made.

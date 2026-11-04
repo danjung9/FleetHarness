@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, experiment receipt at 17:14] [[Research/QA/Ten/Exp1/Scoreboard]] records five finished automatic passes and five independent NOT verdicts. It ran 16:39 to 17:09 on 1d9eeee plus scratch changes. The earlier absence claim was a wrong-path error. All 324 raw manifest entries match. Matched time and token cost increased; no satisfactory improvement yet. [[Research/QA/Ten-Benchmark-Audit]] distinguishes this run from the newer-head verifier patch blocker.
+
 - [E, coordinator scope clarification] Round-one manifest differences are retained as the stated limit. Main reports exact frozen output outside the vault for first-open and driver STOP/3.5-hour cancellation from round two. QA now prioritizes findings that alter build outcomes; dev-3 owns the sandbox verifier's injectable launcher first and smoke task next. The separate measured Pi detached-child defect remains open.
 
 - [E, detached Stop receipt confirmed] Receipt 5903f0de proves continuing detached Pi work after Stop at d0f4c69. Identity, heartbeat, observation/final consistency and eight control-file hashes recheck successfully. Cleanup succeeds only after the failure verdict. The defect remains open; see [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]].
@@ -75,7 +77,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 ## Blocking
 
 - [E, execution review about 16:09] Ten independently satisfactory builds are not yet established. [[Research/QA/Ten/Scoreboard]] is the current measured record; passing development tests alone does not satisfy the mission.
-- [E, exact source and pushed record at 16:56] Process-cleanup change `c6ce52d` landed. Native Stop proof remains pending. Its environment wrapper invalidates the benchmark's temporary verifier patch, which is silently skipped; prepared-source containment is a blocker before any new-head experiment. The separated verifier `c3057e9` awaits review, recovery `e93a877` passes 49 independent checks but needs prerequisite integration, and preflight still needs wiring. Round 1 used `d0f4c69` plus disclosed scratch changes.
+- [E, exact source and pushed record at 16:56] Process-cleanup change `c6ce52d` landed. Native Stop proof remains pending. The original environment-wrapper patch mismatch is corrected in the current helper against fc97f36, with process markers retained; native prepared-source containment still needs confirmation before a new-head experiment. The separated verifier `c3057e9` awaits review, recovery `e93a877` passes 49 independent checks but needs prerequisite integration, and preflight still needs wiring. Round 1 used `d0f4c69` plus disclosed scratch changes.
 - [E, source and reviewer evidence] Generated-test containment and registered-test counting require one integrated implementation. The extra unsandboxed test execution in the returned hardening change remains a real blocker. See [[Research/QA/Org-Audit-2026-11-04]].
 - [E, historical access checks] Portal team membership was absent at 10:38 AM and has not been rechecked here. Earlier hook approval notes predate successful live builds and are not a current instruction to suspend already-authorized execution. Portal/team confirmation remains a person-owned submission item.
 
