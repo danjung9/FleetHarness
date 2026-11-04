@@ -13,6 +13,19 @@ const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 export class SmokeFailure extends Error {}
 
+/** Match the requested demo scope while retaining honestly deferred recipe criteria. */
+export function verifyDemoReport(verification, brief) {
+  const quality = verification?.quality;
+  if (!verification || verification.exitCode !== 0 || verification.passed <= 0 || verification.total !== verification.passed || verification.failed || verification.skipped || quality?.schemaVersion !== 1 || quality.status !== 'passed' || !Array.isArray(quality.errors) || quality.errors.length || !quality.journeys?.length || quality.journeys.some(item => item.status !== 'passed') || !quality.criteria?.length || quality.criteria.some(item => !['passed', 'unverified'].includes(item.status))) throw new SmokeFailure('Independent prototype verification did not pass.');
+  const requested = brief?.criteria;
+  if (!Array.isArray(requested) || !requested.length || requested.some(requirement => typeof requirement !== 'string' || !requirement.trim() || !quality.criteria.some(item => item.requirement.trim() === requirement.trim() && item.status === 'passed'))) throw new SmokeFailure('Independent verification did not establish every requested demo criterion.');
+  return {
+    sourceHash: verification.sourceHash, nodeTests: verification.passed, browserJourneys: quality.journeys.length,
+    criteria: quality.criteria.length, requestedCriteria: requested.length, requirementsMet: quality.requirementsMet,
+    deferredCriteria: quality.criteria.filter(item => item.status === 'unverified').map(({ criterionId, requirement, detail }) => ({ criterionId, requirement, detail })),
+  };
+}
+
 /** Inspect the bounded ZIP in memory. Never extract or execute generated files. */
 export function inspectZip(bytes) {
   if (bytes.length > 40 * 1024 * 1024) throw new SmokeFailure('The export exceeds the smoke limit.');
@@ -170,10 +183,9 @@ export async function runLiveSmoke(options, environment = process.env) {
     }, 'independent verification and review');
     if (hash(await request(`${base}/artifact?path=${encodeURIComponent('.fleet/packet.json')}`)) !== packetHash) throw new SmokeFailure('The protected checkpoint packet changed after resume.');
     report.checks.resumedWithCompletedStages = true;
-    const verification = review.report, quality = verification?.quality;
-    if (!verification || verification.exitCode !== 0 || verification.passed <= 0 || verification.total !== verification.passed || verification.failed || verification.skipped || quality?.status !== 'passed' || quality.errors?.length || !quality.journeys?.length || quality.journeys.some(item => item.status !== 'passed') || !quality.criteria?.length || quality.criteria.some(item => item.status !== 'passed')) throw new SmokeFailure('Independent verification did not establish every demo criterion.');
-    report.checks.verified = true; report.verification = { sourceHash: verification.sourceHash, nodeTests: verification.passed, browserJourneys: quality.journeys.length, criteria: quality.criteria.length }; await save();
-    await request(`${base}/approve`, { method: 'POST', body: { feedback: 'Staging API smoke: accepted after independent Node and browser evidence passed all demo criteria.' } });
+    const verification = review.report;
+    report.verification = verifyDemoReport(verification, brief); report.checks.verified = true; await save();
+    await request(`${base}/approve`, { method: 'POST', body: { feedback: 'Staging API smoke: independent Node and browser evidence passed every requested demo criterion. Any supplemental deferred recipe criteria remain explicitly unverified in the evidence.' } });
     report.checks.approved = true;
     const zip = await request(`${base}/export`, { format: 'bytes' }), inspected = inspectZip(zip);
     if (inspected.sourceHash !== verification.sourceHash) throw new SmokeFailure('Exported source differs from the approved verified version.');
