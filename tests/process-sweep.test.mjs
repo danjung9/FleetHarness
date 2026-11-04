@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promises as fs } from 'node:fs';
@@ -45,6 +45,40 @@ test('a fake run sweeps its detached job after cwd changes and leaves an unrelat
   assert.equal(unrelated.exited, false, 'sweep ended a process outside the run');
   assert.ok(unrelated.ticks > before, 'unrelated process heartbeat must keep advancing');
   assert.throws(() => scope.run(() => runProcessEnvironment()), /closed/);
+});
+
+// The fixtures above inject discovery. This one uses the real ps or /proc path, which every
+// actual run depends on, and only stands aside where the host forbids running ps at all.
+test('native discovery sweeps a marked job and leaves an unmarked job alive', { timeout: 20000 }, async t => {
+  if (!['darwin', 'linux'].includes(process.platform)) return t.skip('Native discovery covers macOS and Linux.');
+  if (process.platform === 'darwin') {
+    const allowed = await new Promise(resolve => execFile('/bin/ps', ['-p', String(process.pid)], error => resolve(!error)));
+    if (!allowed) return t.skip('This host forbids running ps.');
+  }
+  const scope = new RunProcessSweep();
+  const owned = await worker(t, scope.run(() => runProcessEnvironment({ ...process.env }))),
+    unrelated = await worker(t, { ...process.env });
+  const before = unrelated.ticks;
+  await scope.stop();
+  await delay(80);
+  assert.equal(owned.exited, true, 'native discovery missed the marked job');
+  assert.equal(unrelated.exited, false, 'native discovery ended an unmarked job');
+  assert.ok(unrelated.ticks > before, 'unrelated process heartbeat must keep advancing');
+});
+
+test('a clean sweep is not refused when slow inspection uses the whole deadline', async () => {
+  const slow = () => delay(60).then(() => []);
+  const scope = new RunProcessSweep({ graceMs: 1, killMs: 10, scan: slow });
+  scope.run(() => runProcessEnvironment());
+  await scope.stop();
+});
+
+test('a single empty snapshot at the deadline is still refused', async () => {
+  let scans = 0;
+  const scope = new RunProcessSweep({ graceMs: 1, killMs: 10, signal: () => {},
+    scan: async () => { await delay(30); return ++scans < 3 ? [{ pid: 987654, started: 'fixture' }] : []; } });
+  scope.run(() => runProcessEnvironment());
+  await assert.rejects(scope.stop(), /did not settle/);
 });
 
 test('a detached job that ignores TERM is killed and repeated Stop shares cleanup', { timeout: 10000 }, async t => {
