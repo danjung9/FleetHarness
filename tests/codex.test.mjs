@@ -128,6 +128,21 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
   const project = store.state.projects[0], phases = [];
   const codex = { home: path.join(root, 'codex'), models: [{ id: 'fixture-codex', configured: true }], async refresh() {} };
+  // The judge has its own read-only RPC session, separate from the builder adapter below.
+  t.mock.method(CodexRpc, 'launch', () => {
+    const rpc = new FakeRpc();
+    rpc.handler = async (method, params) => {
+      if (method === 'thread/start') {
+        assert.equal(params.sandbox, 'read-only');
+        assert.deepEqual(params.dynamicTools.map(tool => tool.name), ['judge_read']);
+      }
+      if (method === 'turn/start') setImmediate(() => {
+        rpc.emit('item/agentMessage/delta', { threadId: 'thread-1', delta: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) });
+        rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } });
+      });
+    };
+    return rpc;
+  });
   const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { codex,
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
@@ -161,5 +176,6 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, 4);
   assert.deepEqual(phases, ['intake', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.equal(project.report.independentJudge.verdict, 'SATISFACTORY');
   assert.match(await fs.readFile(path.join(project.workspace, 'README.md'), 'utf8'), /Fixture guide/);
 });

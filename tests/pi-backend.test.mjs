@@ -35,11 +35,24 @@ async function harness(t, options = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-flow-'));
   const store = new Store(root); await store.init();
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
-  const project = store.state.projects[0], sessions = [], snapshots = [];
+  const project = store.state.projects[0], sessions = [], judgeSessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
+      if (tools.includes('judge_read')) {
+        assert.deepEqual(tools, ['judge_read']);
+        assert.deepEqual(customTools.map(tool => tool.name), ['judge_read']);
+        const listeners = new Set();
+        const judge = { disposed: false, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+          async prompt() {
+            for (const name of ['requirements.md', 'index.html', 'test-report.json']) await customTools[0].execute('judge', { path: name });
+            for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
+              content: [{ type: 'text', text: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) }] } });
+          }, abort() {}, dispose() { this.disposed = true; }
+        };
+        judgeSessions.push(judge); return { session: judge };
+      }
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
       const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false,
@@ -76,7 +89,7 @@ async function harness(t, options = {}) {
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
     assert.equal(saved.status, status); assert.equal(saved.error, project.error);
   };
-  return { root, store, project, backend, sessions, snapshots, run, settle, assertSettled };
+  return { root, store, project, backend, sessions, judgeSessions, snapshots, run, settle, assertSettled };
 }
 
 test('builds accept optional criteria and hand resources and links to agents', { timeout: 10000 }, async t => {
@@ -114,6 +127,8 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.equal(h.project.stages.find(s => s.id === 'review').status, 'review');
   assert.equal(h.project.stages.find(s => s.id === 'deliver').status, 'queued');
   assert.equal(h.project.approvedAt, undefined); assert.ok(h.sessions.every(s => s.disposed));
+  assert.equal(h.judgeSessions.length, 1); assert.ok(h.judgeSessions[0].disposed);
+  assert.equal(h.project.report.independentJudge.verdict, 'SATISFACTORY');
   assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2);
   assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /No installation is required/);
   assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
@@ -125,7 +140,7 @@ test('the complete workflow advances in order and persists real test evidence be
     const phase = packet.stages.find(phase => phase.id === session.stage);
     assert.deepEqual(session.tools, [...packet.globalTools, ...phase.tools]);
     assert.deepEqual(session.skills.sort(), [...phase.skills].sort());
-    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools].sort());
+    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools, ...(packet.globalTools.includes('bash') ? ['bash'] : [])].sort());
     assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
   }
 });

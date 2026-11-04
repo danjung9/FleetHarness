@@ -17,6 +17,7 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
+import { runIndependentJudge } from './independent-judge.js';
 
 type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
 interface BackendOptions {
@@ -269,6 +270,16 @@ export class FleetBackend {
       this.check(run);
       await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
+      p.report = await runIndependentJudge({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, report: p.report,
+        signal: run.controller.signal, limits: this.options.agentLimits,
+        engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
+          codexHome: this.options.codex?.home, createSession: this.options.createSession },
+        checkInputs: () => this.checkInputs(p, run), log: text => this.log(p, 'verify', 'info', text),
+        recordReport: async report => { p.report = report; await this.changed(p); },
+        repair: instruction => this.agent(p, run, 'verify', provider, model, instruction,
+          ['index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true),
+        verify: () => verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits)
+      });
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');
       this.check(run);
       run.outcome = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
