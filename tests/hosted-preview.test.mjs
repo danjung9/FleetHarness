@@ -97,3 +97,20 @@ test('failed readiness cannot produce a broken preview URL', async () => {
   assert.equal(gotDomain, false);
   await assert.rejects(previewUrl({ ...run, userId: randomUUID() }, manifest, { database: { readManifestFiles: async () => { assert.fail(); } }, sandboxes: {} }));
 });
+
+test('expired and production previews restore immutable files without reusing a staging URL', async () => {
+  const { run, manifest, files } = fixture();
+  const stale = { ...run, metadata: { previewUrl: 'https://expired-stage.vercel.run', sandboxId: 'old-stage-sandbox' } };
+  let restores = 0;
+  const database = { readManifestFiles: async (saved, version) => { assert.equal(saved.id, run.id); assert.equal(version.version, manifest.version); restores++; return files; } };
+  function scope(domain) {
+    let ready = false;
+    const sandbox = { writeFiles: async saved => { assert.ok(saved.some(file => file.path.endsWith('/index.html'))); },
+      runCommand: async command => { if (command.cmd === 'flock') ready = true; return { exitCode: ready ? 0 : 1 }; }, domain: () => domain };
+    return { database, sandboxes: { getOrCreate: async options => { assert.equal(options.name, `preview-${manifest.version}`); await options.onCreate(sandbox); return sandbox; }, get: async () => sandbox } };
+  }
+  assert.equal(await previewUrl(stale, manifest, scope('https://recreated-stage.vercel.run')), 'https://recreated-stage.vercel.run');
+  assert.equal(await previewUrl(stale, manifest, scope('https://production.vercel.run')), 'https://production.vercel.run');
+  assert.equal(restores, 2);
+  assert.equal(stale.metadata.previewUrl, 'https://expired-stage.vercel.run');
+});
