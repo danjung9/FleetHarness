@@ -111,15 +111,29 @@ const boot = () => page.evaluate(() => window.fleetHarness.bootstrap());
 const persistedState = state => JSON.parse(JSON.stringify(state));
 const project = id => page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id), id);
 async function completed(id) {
-  await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id)?.status), id, { timeout: 180_000 });
-  const current = await project(id);
+  // Poll the resolved IPC response in Node. Browser polling must not mistake
+  // the async bridge's Promise for a completed run.
+  const deadline = Date.now() + 180_000;
+  let current;
+  do {
+    current = await project(id);
+    if (['review', 'failed', 'stopped'].includes(current?.status)) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  } while (Date.now() < deadline);
   await fs.writeFile(path.join(output, 'last-fixture-run.json'), JSON.stringify(current, null, 2));
   assert.equal(current.status, 'review', current.error);
   assert.equal(current.report.passed, 1, current.report.output);
   assert.equal(current.report.failed, 0);
   assert.ok(current.report.quality.journeys.length >= 4, 'Run both primary/recovery journeys at desktop/narrow sizes.');
   assert.ok(current.report.quality.journeys.every(journey => journey.status === 'passed'));
-  assert.equal(current.report.quality.requirementsMet, true);
+  assert.equal(current.report.quality.status, 'passed');
+  // The fixture implements the custom parser criterion and honestly defers the
+  // recipe's broader workflow requirements. It must not claim full coverage.
+  const [requested, ...deferred] = current.report.quality.criteria;
+  assert.equal(requested.criterionId, 'UCcustom-1');
+  assert.equal(requested.status, 'passed');
+  assert.ok(deferred.length > 0 && deferred.every(criterion => criterion.status === 'unverified'));
+  assert.equal(current.report.quality.requirementsMet, false);
   assert.ok(current.logs.some(log => log.text.includes('Starting one Pi repair attempt')));
   return current;
 }
