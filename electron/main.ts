@@ -193,6 +193,14 @@ function registerIPC() {
   handle('fleet:chatgpt:cancel', async () => { requireNoRuns(); await codex.cancel(); return bootstrap(); });
   handle('fleet:chatgpt:disconnect', async () => { requireNoRuns(); await codex.logout(); return bootstrap(); });
   handle('fleet:chatgpt:refresh', async () => { await codex.refresh(); return bootstrap(); });
+  handle('fleet:developer-mode', async (enabled: boolean) => {
+    if (typeof enabled !== 'boolean') throw new Error('Choose whether developer mode is enabled.');
+    const previous = store.state.settings.developerMode;
+    store.state.settings.developerMode = enabled;
+    try { await store.save(); }
+    catch (error) { store.state.settings.developerMode = previous; throw error; }
+    notify(); return bootstrap();
+  });
   handle('fleet:settings', async (settings: Settings, key?: string) => {
     if (backend.active.size) throw new Error('Stop active runs before changing providers.');
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
@@ -201,7 +209,7 @@ function registerIPC() {
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
       if (codex.account.status !== 'connected' || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT and select a Codex model first.');
-      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false };
+      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
       await store.save(); notify(); return bootstrap();
     }
     if (!backend.runtime.getModel(settings.provider, settings.model)) throw new Error('Select a valid Pi model.');
@@ -212,7 +220,7 @@ function registerIPC() {
       if (settings.rememberKey) await fs.writeFile(keyFile, safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })), { mode: 0o600 });
     }
     if (!settings.rememberKey) await fs.rm(keyFile, { force: true });
-    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey };
+    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
     await store.save(); notify(); return bootstrap();
   });
 }

@@ -1,7 +1,7 @@
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
 export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
 export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
 export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string; tool?: ToolEvent }
@@ -26,7 +26,7 @@ export interface Project extends BriefContext {
 }
 export type AgentBackend = 'pi' | 'codex';
 export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;
@@ -50,6 +50,7 @@ export interface FleetAPI {
   readArtifact(id: string, file: string): Promise<string>;
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
+  setDeveloperMode(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
   connectChatGPT(): Promise<Bootstrap>;
   cancelChatGPTLogin(): Promise<Bootstrap>;

@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   readArtifact: (id: string, file: string) => ipcRenderer.invoke('fleet:read', id, file),
   preview: (id: string) => ipcRenderer.invoke('fleet:preview', id),
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
+  setDeveloperMode: (enabled: boolean) => ipcRenderer.invoke('fleet:developer-mode', enabled),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),
   connectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:connect'),
   cancelChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:cancel'),

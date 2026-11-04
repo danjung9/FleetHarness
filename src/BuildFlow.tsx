@@ -34,8 +34,9 @@ function PhaseMarker({ state, number }: { state: PhaseState; number: number }) {
   return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : state === 'stopped' ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
 }
 
-export function BuildFlow({ project, onPreview, onArtifact, onReview, onEditBrief }: {
+export function BuildFlow({ project, developerMode = false, onPreview, onArtifact, onReview, onEditBrief }: {
   project: Project;
+  developerMode?: boolean;
   onPreview: () => void;
   onArtifact: (path: string) => void;
   onReview: () => void;
@@ -87,6 +88,7 @@ export function BuildFlow({ project, onPreview, onArtifact, onReview, onEditBrie
   const canPreview = selectedId === 'build' && files.some(file => file.path === 'index.html');
 
   return <div className="build-flow">
+    {developerMode && <div className="build-system-design"><SystemDesign project={project}/></div>}
     <section className="build-sequence" aria-labelledby={detailId + '-sequence'}>
       <div className="build-sequence-heading"><h2 id={detailId + '-sequence'}>Build phases</h2><span>{completed} of 5 complete</span></div>
       <ol className="build-phase-list">
@@ -122,7 +124,6 @@ export function BuildFlow({ project, onPreview, onArtifact, onReview, onEditBrie
         {selectedId === 'intake' && project.status === 'draft' && <button className="text-button build-edit-brief" type="button" onClick={onEditBrief}>Edit brief <ArrowRight size={14}/></button>}
       </section>
 
-      {selectedId === 'plan' && project.systemDesign && <details className="build-disclosure" key={runKey + '-design'}><summary>System design<ChevronRight size={15} aria-hidden="true"/></summary><SystemDesign project={project}/></details>}
       <details className="build-disclosure" key={runKey + selectedId + '-activity'}><summary><span>{previousBuild ? 'Previous build activity' : 'Activity'}{activity.length > 0 && <span className="build-disclosure-count">{activity.length}</span>}</span><ChevronRight size={15} aria-hidden="true"/></summary><div className="build-activity"><ActivityFeed items={activity} live={project.status === 'running' && selectedState === 'active'} emptyDescription="Updates appear here when this phase begins."/></div></details>
       {contract && <details className="build-disclosure" key={runKey + selectedId + '-configuration'}><summary>Phase details<ChevronRight size={15} aria-hidden="true"/></summary><div className="build-configuration"><p className="build-phase-role">{contract.role}</p><PhaseDetails phase={contract} globalTools={project.globalTools} legacy={!!project.runId && !project.phasePlan}/></div></details>}
     </section>

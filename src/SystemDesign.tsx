@@ -17,10 +17,11 @@ function StatusIcon({ status }: { status: DisplayStatus }) {
 
 export function SystemDesign({ project }: { project: Project }) {
   const design = project.systemDesign;
-  const planning = project.status === 'running' && !design;
+  const running = project.status === 'running' && !design;
+  const planning = running && project.stages.some(stage => stage.id === 'plan' && stage.status === 'active');
   if (!design || !design.definition.components.length) return <section className="system-design sd-empty-surface" aria-label="System design">
     <div className="sd-empty"><div className="sd-empty-symbol"><GitBranch size={30} aria-hidden="true"/></div><h2>{planning ? 'Designing your system' : 'Your system design will appear here'}</h2>
-      <p>{planning ? 'The planning agent is mapping the application’s components and how they connect. The diagram will appear as soon as it publishes the design.' : project.status === 'stopped' || project.status === 'failed' ? 'The run ended before a system design was published. Start a new run to generate the architecture.' : project.runId && project.status !== 'draft' ? 'This earlier run has no system design. New runs publish a live architecture diagram during planning.' : 'Start a build to see the planned components, their connections, and progress as the agents implement them.'}</p>
+      <p>{planning ? 'The planning agent is mapping the application’s components and how they connect. The diagram will appear as soon as it publishes the design.' : running ? 'The diagram will appear automatically when the planning agent publishes the architecture, after the brief and research phases.' : project.status === 'stopped' || project.status === 'failed' ? 'The run ended before a system design was published. Start a new run to generate the architecture.' : project.runId && project.status !== 'draft' ? 'This earlier run has no system design. New runs publish a live architecture diagram during planning.' : 'Start a build to see the planned components, their connections, and progress as the agents implement them.'}</p>
       {planning && <span className="sd-status building" role="status"><Activity size={14} aria-hidden="true"/>Planning in progress</span>}
     </div>
   </section>;
