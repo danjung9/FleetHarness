@@ -15,12 +15,66 @@ export interface VerificationCommand { runner: string; args: string[]; ready: st
 // Trusted host/test dependency only. Production callers omit this and always use the sandbox.
 export type VerificationLauncher = (root: string, executable: string, testArgs: string[]) => VerificationCommand | Promise<VerificationCommand>;
 export interface VerificationOptions extends Partial<VerificationLimits> { launcher?: VerificationLauncher }
-export async function applicationTestFiles(root: string) {
-  return (await listArtifacts(root)).filter(f => f.size > 0 && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+export class VerificationShutdownError extends Error {
+  constructor(cause: unknown) {
+    super('Verification shutdown was not confirmed. Recovery in this workspace is blocked. An operator must stop remaining workers before starting a new run in a fresh workspace.', { cause });
+    this.name = 'VerificationShutdownError';
+  }
+}
+export async function applicationTestFiles(root: string, includeEmpty = false) {
+  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
   return { total: count('tests'), passed: count('pass'), failed: count('fail'), skipped: count('skipped') + count('todo') };
+}
+// The host-owned reporter runs in Node's coordinator, outside generated test
+// workers. Encode TAP as data, so worker stdout can never forge a summary record.
+// Both the TAP and per-file registered-case evidence come from this ONE run.
+const registeredReporter = 'data:text/javascript;base64,' + Buffer.from(`
+import { tap } from 'node:test/reporters';
+export default async function* (events) {
+  const summaries = [];
+  async function* observe() {
+    for await (const event of events) {
+      if (event.type === 'test:summary' && event.data.file) summaries.push(event.data);
+      yield event;
+    }
+  }
+  for await (const text of tap(observe())) yield JSON.stringify({ type: 'output', text }) + '\\n';
+  yield JSON.stringify({ type: 'registered', summaries }) + '\\n';
+}
+`).toString('base64');
+
+async function registeredEvidence(root: string, files: string[], wire: string) {
+  type Summary = { file: string; counts: { tests: number; passed: number; failed: number; skipped: number; todo: number; cancelled: number } };
+  let summaries: Summary[] | undefined, output = '', invalid = false;
+  for (const line of wire.split('\n').filter(Boolean)) {
+    try {
+      const record = JSON.parse(line);
+      if (record.type === 'output' && typeof record.text === 'string') output += record.text;
+      else if (record.type === 'registered' && Array.isArray(record.summaries) && !summaries) summaries = record.summaries;
+      else invalid = true;
+    } catch { output += line + '\n'; invalid = true; }
+  }
+  const registeredTests: NonNullable<TestReport['registeredTests']> = [];
+  const counts = { total: 0, passed: 0, failed: 0, skipped: 0 };
+  const missing: string[] = [];
+  for (const file of files) {
+    const resolved = await fs.realpath(path.join(root, file));
+    const matches = summaries?.filter(summary => typeof summary.file === 'string' && path.resolve(summary.file) === resolved) ?? [];
+    const c = matches.length === 1 ? matches[0].counts : undefined;
+    if (!c || !['tests', 'passed', 'failed', 'skipped', 'todo', 'cancelled'].every(key => Number.isSafeInteger(c[key as keyof typeof c]) && c[key as keyof typeof c] >= 0) || c.tests <= 0) {
+      missing.push(file); continue;
+    }
+    registeredTests.push({ file, tests: c.tests });
+    counts.total += c.tests; counts.passed += c.passed;
+    counts.failed += c.failed + c.cancelled; counts.skipped += c.skipped + c.todo;
+  }
+  const problem = invalid || !summaries ? 'Registered-test evidence did not complete successfully.'
+    : missing.length ? 'No registered application tests in: ' + missing.join(', ') : '';
+  if (problem) { counts.total = 0; counts.passed = 0; counts.failed = 0; counts.skipped = 0; output += '\n' + problem; }
+  return { ...counts, output, registeredTests, problem };
 }
 const sandboxFailure = 'Could not start verification sandbox. Reinstall AppYard or ask your administrator to enable its bundled sandbox. Tests will never run unsandboxed.';
 function sandboxStartupFailure(output: string) {
@@ -58,44 +112,25 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid verification limit: ${key}`);
   }
-  const files = await applicationTestFiles(root);
-  if (!files.length) throw new Error('Pi did not produce any .test.js, .test.cjs, or .test.mjs files. No verification claim was made.');
+  const files = await applicationTestFiles(root, true);
+  if (!files.length || !(await applicationTestFiles(root)).length) throw new Error('Pi did not produce any .test.js, .test.cjs, or .test.mjs files. No verification claim was made.');
   if (signal?.aborted) throw new Error('Run stopped.');
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = ['--test', '--test-reporter=tap', ...files.map(file => './' + file)];
-  const child = spawn(executable, args, {
-    cwd: root, env: runProcessEnvironment({ PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' }),
-    stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
-  });
-  const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };
-  let output = '', outputBytes = 0, timedOut = false, overflow = false;
-  let interrupt!: () => void;
-  const interrupted = new Promise<null>(resolve => { interrupt = () => { stop(); resolve(null); }; });
-  // Register completion and cancellation before exposing the child to a caller.
-  const completed = new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
-  const collect = (chunk: Buffer) => {
-    const remaining = Math.max(0, limits.maxOutputBytes - outputBytes);
-    output += chunk.subarray(0, remaining).toString(); outputBytes += chunk.length;
-    if (outputBytes > limits.maxOutputBytes) { overflow = true; interrupt(); }
-  };
-  child.stdout?.on('data', collect); child.stderr?.on('data', collect);
-  const timer = setTimeout(() => { timedOut = true; interrupt(); }, limits.timeoutMs);
-  signal?.addEventListener('abort', interrupt, { once: true });
-  if (signal?.aborted) interrupt();
-  let exitCode: number | null;
-  try { onProcess(child); exitCode = await Promise.race([completed, interrupted]); }
-  finally {
-    clearTimeout(timer); signal?.removeEventListener('abort', interrupt);
-    stop(); child.stdout?.destroy(); child.stderr?.destroy();
+  const args = ['--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
+  let command: VerificationCommand, home: string;
+  try {
+    command = await launcher(root, executable, args);
+    // Never load a user's credentials/config or let workspace .codex settings replace this profile.
+    home = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-verification-'));
   }
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
     const child = spawn(command.runner, command.args, {
-      cwd: root, env: { PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
-        CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot },
+      cwd: root, env: runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+        CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot }),
       stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
     });
     let closed = false;
@@ -150,6 +185,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     finally {
       clearTimeout(timer); signal?.removeEventListener('abort', interrupt);
       try { await stop(); }
+      catch (error) { throw new VerificationShutdownError(error); }
       finally { child.stdout?.destroy(); child.stderr?.destroy(); }
     }
     if (signal?.aborted) throw new Error('Run stopped.');
@@ -159,10 +195,14 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     // Keep their bounded diagnostics and never attempt another, unsandboxed launch.
     if (!output.includes(command.ready)) throw new Error(sandboxStartupFailure(output));
     output = output.replace(command.ready, '');
+    const evidence = await registeredEvidence(root, files, output);
+    output = evidence.output;
     const hash = await sourceHash(root);
     if (signal?.aborted) throw new Error('Run stopped.');
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
-      exitCode: timedOut || overflow ? null : exitCode, ...summarizeTap(output), output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
+      exitCode: timedOut || overflow ? null : evidence.problem ? 1 : exitCode,
+      total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
+      registeredTests: evidence.registeredTests, output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
   } finally { await fs.rm(home, { recursive: true, force: true }); }
 }

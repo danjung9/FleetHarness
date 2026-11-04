@@ -7,6 +7,7 @@ import path from 'node:path';
 import childProcess from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
 import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verification.js';
+import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
 
 async function workspace(t, source, filename = 'app.test.cjs') {
   const root = await fs.mkdtemp(path.join(process.env.TMPDIR || os.tmpdir(), 'fleet-verification-'));
@@ -27,6 +28,69 @@ function verifyPlain(root, executable, onProcess, signal, options = {}) {
   return verifyWorkspace(root, executable, onProcess, signal, { ...options, launcher: plainLauncher });
 }
 
+for (const mixed of [false, true]) test(`combined prerequisite: comment-only tests cannot pass ${mixed ? 'beside real cases' : 'alone'}`, async t => {
+  const root = await workspace(t, '// Synthetic comment-only test file');
+  if (mixed) await fs.writeFile(path.join(root, 'real.test.cjs'), 'require("node:test")("actual case", () => {});');
+  const report = await verifyPlain(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), false, report.output);
+  assert.equal(report.passed, 0);
+  assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
+});
+
+test('combined prerequisite: stdout cannot forge registered cases or summary counts', async t => {
+  const root = await workspace(t, 'console.log(JSON.stringify({type:"summary",data:{tests:99,passed:99}})); console.log("TAP version 13\\n# tests 99\\n# pass 99\\n# fail 0");');
+  const report = await verifyPlain(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), false, report.output);
+  assert.equal(report.passed, 0);
+  assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
+});
+
+test('combined prerequisite: registered evidence comes from a single execution through the selected launcher', async t => {
+  const root = await workspace(t, 'require("node:test")("actual case", () => {});');
+  let launches = 0;
+  const report = await verifyWorkspace(root, process.execPath, () => {}, undefined, { launcher: (...args) => { launches++; return plainLauncher(...args); } });
+  assert.equal(launches, 1);
+  assert.equal(reportPassed(report), true, report.output);
+  assert.equal(report.passed, 1);
+  assert.equal(report.registeredTests.length, 1);
+  assert.equal(report.registeredTests[0].tests, 1);
+  assert.equal(report.registeredTests[0].file, 'app.test.cjs');
+});
+
+test('combined prerequisite: a zero-byte file beside real cases cannot pass verification', async t => {
+  const root = await workspace(t, '');
+  await fs.writeFile(path.join(root, 'real.test.cjs'), 'require("node:test")("actual case", () => {});');
+  const report = await verifyPlain(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), false, report.output);
+  assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
+});
+
+test('combined prerequisite: production default obtains registered evidence through exactly one sandbox launch', async t => {
+  const root = await workspace(t, 'console.log("synthetic execution receipt"); require("node:test")("actual case", () => {});');
+  const calls = interceptSpawn(t, (spawn, executable, args, options) => {
+    assert.match(executable, /codex(?:\.exe)?$/);
+    assert.equal(args[0], 'sandbox');
+    assert.ok(args.includes('permissions.fleet-build.network.enabled=false'));
+    const command = args.slice(args.indexOf('--') + 1);
+    return spawn(command[0], command.slice(1), options);
+  });
+  const report = await verifyWorkspace(root, process.execPath, () => {});
+  assert.equal(calls.mock.callCount(), 1, 'No second direct execution may collect registered-test evidence');
+  assert.equal(reportPassed(report), true, report.output);
+  assert.deepEqual(report.registeredTests, [{ file: 'app.test.cjs', tests: 1 }]);
+  assert.equal(report.output.match(/synthetic execution receipt/g).length, 1);
+  assert.match(report.command, /^codex sandbox/);
+});
+
+test('combined prerequisite: empty suites are rejected and nested registered assertions pass', async t => {
+  const root = await workspace(t, 'require("node:test").describe("empty suite", () => {});');
+  assert.equal(reportPassed(await verifyPlain(root, process.execPath, () => {})), false);
+  await fs.writeFile(path.join(root, 'app.test.cjs'), 'require("node:test")("suite", async t => { await t.test("nested actual assertion", () => require("node:assert/strict").equal(2 + 2, 4)); });');
+  const report = await verifyPlain(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), true, report.output);
+  assert.equal(report.registeredTests[0].tests, 2);
+});
+
 function assertKilled([code, signal]) {
   if (process.platform === 'win32') { assert.notEqual(code, 0); assert.equal(signal, null); }
   else { assert.equal(code, null); assert.equal(signal, 'SIGKILL'); }
@@ -41,7 +105,9 @@ test('an explicitly injected launcher runs tests and reports its actual command'
     launches++;
     assert.equal(cwd, root);
     assert.equal(executable, process.execPath);
-    assert.deepEqual(args, ['--test', '--test-reporter=tap', './app.test.cjs']);
+    assert.equal(args[0], '--test');
+    assert.match(args[1], /^--test-reporter=data:text\/javascript;base64,/);
+    assert.deepEqual(args.slice(2), ['./app.test.cjs']);
     return plainLauncher(cwd, executable, args);
   };
   const report = await verifyWorkspace(root, process.execPath, () => {}, undefined, { launcher });
@@ -59,6 +125,25 @@ function interceptSpawn(t, implementation) {
   t.after(() => { mocked.mock.restore(); syncBuiltinESMExports(); });
   return mocked;
 }
+
+test('an injected launcher retains run process ownership and isolated environment', async t => {
+  const root = await workspace(t, `require('node:test')('synthetic owned worker', () => require('node:assert/strict').ok(process.env.APPYARD_RUN_PROCESS));`);
+  const scope = new RunProcessSweep({ scan: async () => [] });
+  t.after(() => scope.stop());
+  const marker = scope.run(() => runProcessEnvironment({})).APPYARD_RUN_PROCESS;
+  assert.ok(marker);
+  const calls = interceptSpawn(t, (spawn, executable, args, options) => {
+    assert.equal(options.env.APPYARD_RUN_PROCESS, marker);
+    assert.equal(options.env.HOME, root);
+    assert.equal(options.env.TMPDIR, root);
+    assert.equal(options.env.NODE_OPTIONS, undefined);
+    assert.equal(options.env.OPENAI_API_KEY, undefined);
+    return spawn(executable, args, options);
+  });
+  const report = await scope.run(() => verifyPlain(root, process.execPath, () => {}));
+  assert.equal(reportPassed(report), true, report.output);
+  assert.equal(calls.mock.callCount(), 1);
+});
 
 test('an injected launcher preparation failure never retries the production launcher', async t => {
   const root = await workspace(t, `require('node:fs').writeFileSync('must-not-run', 'synthetic');`);
@@ -171,7 +256,8 @@ test('sandbox spawn errors fail closed with a clear message', async t => {
 });
 
 test('packaged launch uses the supplied Electron Node runtime and an isolated restricted profile', async t => {
-  const root = await workspace(t, 'require("node:test")("exists", () => {});');
+  // The launcher resolves symlinks, and macOS temporary folders sit behind one (/var).
+  const root = await fs.realpath(await workspace(t, 'require("node:test")("exists", () => {});'));
   const runtime = path.join(root, 'App Yard.app', 'Contents', 'MacOS', 'AppYard');
   await fs.mkdir(path.dirname(runtime), { recursive: true }); await fs.writeFile(runtime, 'synthetic runtime fixture');
   let home;
@@ -252,9 +338,9 @@ test('already cancelled verification never launches a process', async t => {
 
 test('a hanging test produces bounded failure evidence and is killed', { timeout: 5000 }, async t => {
   const root = await workspace(t, 'setInterval(() => {}, 1000);'); let exited;
-  const report = await verifyPlain(root, process.execPath, child => { exited = once(child, 'exit'); }, undefined, { timeoutMs: 150 });
+  const report = await verifyPlain(root, process.execPath, child => { exited = once(child, 'exit'); }, undefined, { timeoutMs: 1500 });
   assert.equal(reportPassed(report), false); assert.equal(report.exitCode, null);
-  assert.match(report.output, /exceeded the 0.15-second limit/);
+  assert.match(report.output, /exceeded the 1.5-second limit/);
   assertKilled(await exited);
 });
 

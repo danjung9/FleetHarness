@@ -6,11 +6,11 @@ import type { AcceptanceCriterion } from '../harness/types.js';
 import type { QualityPlan, UxSpec, QualityReport } from '../shared/quality.js';
 import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
 import { safeFile, sourceHash } from './storage.js';
-import { verifyWorkspace, type VerificationLimits } from './verification.js';
+import { verifyWorkspace, type VerificationOptions } from './verification.js';
 import { verifyBrowserJourneys } from './browser-verification.js';
 
 export interface QualityContract { plan: QualityPlan; ux: UxSpec; hash: string; acceptance: AcceptanceCriterion[] }
-export interface ApplicationVerificationLimits extends VerificationLimits { browserTimeoutMs: number; browserStepTimeoutMs: number }
+export interface ApplicationVerificationLimits extends VerificationOptions { browserTimeoutMs: number; browserStepTimeoutMs: number }
 const contractFiles = ['acceptance-plan.json', 'ux-spec.json'] as const;
 async function readContract(root: string) {
   const bodies: string[] = [];

@@ -27,7 +27,7 @@ async function backend(t, baseUrl, limits = { idleMs: 10000, timeoutMs: 20000 })
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-sdk-'));
   const store = new Store(root); await store.init();
   store.state.projects[0] = newProject(qualityFixtureProject);
-  const runtime = await ModelRuntime.create({ authPath: path.join(root, 'auth.json'), modelsPath: null, modelsStorePath: path.join(root, 'models'), refreshOnCreate: false, allowModelNetwork: false });
+  const runtime = await ModelRuntime.create({ authPath: path.join(root, 'fixture-credentials.json'), modelsPath: null, modelsStorePath: path.join(root, 'models'), refreshOnCreate: false, allowModelNetwork: false });
   runtime.registerProvider('fleet-fixture', { baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
     models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] });
   store.state.settings = { provider: 'fleet-fixture', model: 'fixture-model', rememberKey: false };
@@ -59,7 +59,8 @@ test('real Pi provider that never responds is bounded by the inactivity watchdog
   const stalled = await provider(t, () => {});
   const h = await backend(t, stalled.baseUrl, { idleMs: 500, timeoutMs: 3000 });
   await h.pi.start(h.project.id); await h.settle();
-  assert.equal(stalled.requests.length, 1); assert.equal(h.project.status, 'failed');
+  assert.equal(stalled.requests.length, 2); assert.equal(h.project.status, 'failed');
+  assert.equal(h.project.logs.filter(log => log.text.includes('Retrying this stage once')).length, 1);
   assert.match(h.project.error, /no progress/); assert.equal(h.pi.active.size, 0);
   assert.equal(h.project.stages.some(s => s.status === 'active'), false);
 });

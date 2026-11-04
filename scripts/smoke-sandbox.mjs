@@ -73,4 +73,3 @@ test('workspace-only reads and writes pass inside the sandbox', { timeout: 20000
   assert.equal(report.passed, 1);
   assert.match(report.command, /sandbox/);
 });
-

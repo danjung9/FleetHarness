@@ -1,6 +1,31 @@
 import type { AgentSession, AgentSessionEvent } from '@earendil-works/pi-coding-agent';
+import type { StageTokenUsage } from '../shared/types.js';
 
-export type StageSession = Pick<AgentSession, 'prompt' | 'subscribe' | 'abort' | 'dispose'>;
+export type StageEvent = AgentSessionEvent | { type: 'usage_update'; usage: StageTokenUsage | null };
+export type StageSession = Pick<AgentSession, 'prompt' | 'abort' | 'dispose'> & {
+  subscribe: (listener: (event: StageEvent) => void) => () => void;
+};
+const count = (n: unknown): number | null => Number.isSafeInteger(n) && (n as number) >= 0 ? n as number : null;
+const add = (...values: (number | null)[]) => values.every(v => v !== null) ? count(values.reduce<number>((sum, n) => sum + n!, 0)) : null;
+
+export function sumTokenUsage(a: StageTokenUsage | null, b: StageTokenUsage | null): StageTokenUsage | null {
+  if (!a && !b) return null;
+  return Object.fromEntries(Object.keys(a ?? b!).map(key => [key, add(a?.[key as keyof StageTokenUsage] ?? null, b?.[key as keyof StageTokenUsage] ?? null)])) as unknown as StageTokenUsage;
+}
+
+/** Pi input excludes both cache reads and cache writes; Codex input includes cache reads. */
+export function tokenUsage(raw: unknown, engine: 'pi' | 'codex'): StageTokenUsage | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const u = raw as Record<string, unknown>;
+  const cachedInputTokens = count(engine === 'pi' ? u.cacheRead : u.cachedInputTokens);
+  const inputTokens = engine === 'pi' ? add(count(u.input), cachedInputTokens, count(u.cacheWrite)) : count(u.inputTokens);
+  const uncachedInputTokens = engine === 'pi' ? add(count(u.input), count(u.cacheWrite))
+    : inputTokens !== null && cachedInputTokens !== null ? count(inputTokens - cachedInputTokens) : null;
+  const outputTokens = count(engine === 'pi' ? u.output : u.outputTokens);
+  return { inputTokens, cachedInputTokens, uncachedInputTokens, outputTokens,
+    reasoningOutputTokens: count(engine === 'pi' ? u.reasoning : u.reasoningOutputTokens), totalTokens: count(u.totalTokens),
+    uncachedPlusOutputTokens: add(uncachedInputTokens, outputTokens) };
+}
 export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns: number }
 export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000, maxTurns: 40 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
@@ -12,8 +37,15 @@ export async function runAgentStage(options: {
   limits?: Partial<AgentLimits>;
   create: (signal: AbortSignal) => Promise<StageSession>;
   work: (prompt: (text: string) => Promise<void>, signal: AbortSignal) => Promise<void>;
-  onEvent: (event: AgentSessionEvent) => void;
+  onEvent: (event: StageEvent) => void;
+  onMetrics?: (metrics: { durationMs: number; usage: StageTokenUsage | null }) => void;
 }) {
+  const started = performance.now();
+  let usage: StageTokenUsage | null = null, sawUsage = false, receipts = 0;
+  let pendingPromptReceipts: number | undefined;
+  const accumulate = (next: StageTokenUsage | null) => {
+    usage = sawUsage ? sumTokenUsage(usage, next) : next; sawUsage = true;
+  };
   const limits = { ...defaultAgentLimits, ...options.limits };
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
@@ -52,6 +84,10 @@ export async function runAgentStage(options: {
     session = created;
     unsubscribe = created.subscribe(event => {
       if (closed || failure) return;
+      if (event.type === 'usage_update' || event.type === 'compaction_end' || (event.type === 'message_end' && event.message.role === 'assistant')) receipts++;
+      if (event.type === 'usage_update') { usage = event.usage; sawUsage = true; }
+      // Pi compaction uses a separate model call, outside assistant messages.
+      if (event.type === 'compaction_end') accumulate(tokenUsage(event.result?.usage, 'pi'));
       switch (event.type) {
         case 'message_update':
           lastActivity = 'receiving the model response'; heartbeat(); break;
@@ -80,6 +116,7 @@ export async function runAgentStage(options: {
       // A transient provider error can be followed by a successful SDK retry or compaction.
       // Only the final assistant outcome of this prompt determines its result.
       if (event.type === 'message_end' && event.message.role === 'assistant') {
+        accumulate(tokenUsage(event.message.usage, 'pi'));
         const reason = event.message.stopReason;
         assistantError = reason === 'error' ? event.message.errorMessage || 'The model provider returned an error.'
           : reason === 'aborted' ? 'The model stopped before completing this stage.'
@@ -89,7 +126,13 @@ export async function runAgentStage(options: {
     });
     await options.work(async text => {
       check(); assistantError = ''; lastActivity = 'waiting for the model'; heartbeat();
-      await created.prompt(text);
+      const before = receipts;
+      pendingPromptReceipts = before;
+      try { await created.prompt(text); }
+      finally {
+        if (!closed && receipts === before) accumulate(null);
+        pendingPromptReceipts = undefined;
+      }
       check();
       if (assistantError) throw new Error(assistantError);
       lastActivity = 'checking stage artifacts'; heartbeat();
@@ -98,11 +141,17 @@ export async function runAgentStage(options: {
   })();
   try { await Promise.race([work, interrupted]); succeeded = true; }
   finally {
+    // Cancellation can win the race before prompt() settles. Invalidate a missing
+    // current receipt now, before publishing metrics from earlier completed turns.
+    if (pendingPromptReceipts !== undefined && pendingPromptReceipts === receipts) accumulate(null);
     closed = true;
     controller.abort(failure ?? new Error('Agent stage closed.'));
     clearTimeout(deadline); clearTimeout(idleTimer!);
     options.signal.removeEventListener('abort', abort);
     // A session that finishes initialization after cancellation is released above.
-    try { unsubscribe?.(); } finally { if (session) release(session, !succeeded); }
+    try { unsubscribe?.(); } finally {
+      if (session) release(session, !succeeded);
+      options.onMetrics?.({ durationMs: Math.round(performance.now() - started), usage });
+    }
   }
 }

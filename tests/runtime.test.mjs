@@ -8,6 +8,33 @@ import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verific
 import { PreviewServers } from '../dist-electron/electron/preview.js';
 
 const temp = () => fs.mkdtemp(path.join(os.tmpdir(), 'fleet-test-'));
+// Checked-in synthetic fixtures explicitly select their host launcher. This is
+// test wiring only; generated application tests retain the production sandbox.
+function fixtureLauncher(_root, executable, args) {
+  const ready = 'synthetic-runtime-verification-ready\n';
+  const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(args)},{stdio:'inherit'});child.once('error',e=>{console.error(e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
+  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: 'synthetic runtime fixture launcher' };
+}
+function verifyFixture(root, launcher = fixtureLauncher) {
+  return verifyWorkspace(root, process.execPath, () => {}, undefined, { launcher });
+}
+test('runtime evidence fixtures explicitly launch each source revision exactly once', async () => {
+  const dir = await temp(); let launches = 0;
+  const launcher = (...args) => { launches++; return fixtureLauncher(...args); };
+  try {
+    const file = path.join(dir, 'synthetic.test.cjs');
+    for (const value of [1, 2]) {
+      await fs.writeFile(file, `require('node:test')('synthetic revision ${value}', () => require('node:assert/strict').equal(${value}, 2));`);
+      const report = await verifyFixture(dir, launcher);
+      assert.equal(launches, value);
+      assert.equal(report.command, 'synthetic runtime fixture launcher');
+      assert.deepEqual(report.registeredTests, [{ file: 'synthetic.test.cjs', tests: 1 }]);
+      assert.equal(report.failed, value === 1 ? 1 : 0);
+      assert.equal(reportPassed(report), value === 2);
+      assert.equal(report.sourceHash, await sourceHash(dir));
+    }
+  } finally { await fs.rm(dir, { recursive: true, force: true }); }
+});
 test('saved challenges survive reload and interrupted runs become stopped', async () => {
   const dir=await temp(); try {
     const store=new Store(dir);await store.init();
@@ -53,15 +80,15 @@ test('test evidence records actual failures, success, skipped cases and source c
   const dir=await temp();try {
     const file=path.join(dir,'behavior.test.cjs');
     await fs.writeFile(file,'require("node:test")("fails",()=>require("node:assert/strict").equal(1,2));');
-    let report=await verifyWorkspace(dir,process.execPath,()=>{});
+    let report=await verifyFixture(dir);
     assert.equal(report.failed,1);assert.equal(reportPassed(report),false);
     await fs.writeFile(file,'require("node:test")("passes",()=>require("node:assert/strict").equal(2,2));');
-    report=await verifyWorkspace(dir,process.execPath,()=>{});
+    report=await verifyFixture(dir);
     assert.equal(reportPassed(report),true);
     assert.equal(report.sourceHash,await sourceHash(dir));
     await fs.writeFile(file,'require("node:test")("skipped",{skip:true},()=>{});');
     assert.notEqual(report.sourceHash,await sourceHash(dir));
-    report=await verifyWorkspace(dir,process.execPath,()=>{});
+    report=await verifyFixture(dir);
     assert.equal(report.skipped,1);assert.equal(reportPassed(report),false);
   } finally {await fs.rm(dir,{recursive:true,force:true});}
 });

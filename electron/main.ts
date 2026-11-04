@@ -82,12 +82,17 @@ function registerIPC() {
     Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
     p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
     p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+    p.runCheckpoint = undefined;
     p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
     p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
   });
   handle('fleet:start', async (id: string) => {
     requireIdle(id); startingRuns.add(id);
     try { await backend.start(id); } finally { startingRuns.delete(id); }
+  });
+  handle('fleet:resume', async (id: string) => {
+    requireIdle(id); startingRuns.add(id);
+    try { await backend.resume(id); } finally { startingRuns.delete(id); }
   });
   handle('fleet:stop', (id: string) => backend.stop(id));
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });

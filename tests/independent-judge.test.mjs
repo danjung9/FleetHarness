@@ -27,7 +27,7 @@ async function fixture(t, answers = [not, satisfactory], options = {}) {
     'builder-context.md': 'PRIVATE BUILDER CONVERSATION MUST NOT REACH JUDGE',
   };
   for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(workspace, name), content);
-  const sessions = [], repairs = [], events = [], reports = [], controller = new AbortController();
+  const sessions = [], repairs = [], events = [], reports = [], measurements = [], controller = new AbortController();
   let verifications = 0;
   const frozen = () => Promise.all(['requirements.md', 'acceptance-plan.json', 'ux-spec.json'].map(name => fs.readFile(path.join(workspace, name), 'utf8')));
   const originals = await frozen();
@@ -52,7 +52,7 @@ async function fixture(t, answers = [not, satisfactory], options = {}) {
           const answer = answers[Math.min(sessions.indexOf(this), answers.length - 1)];
           const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
           const message = { role: 'assistant', stopReason: 'stop', content: [{ type: 'text', text }],
-            ...(options.noUsage ? {} : { usage: { input: 100, output: 20, totalTokens: 120 } }) };
+            ...(options.noUsage ? {} : { usage: { input: 100, output: 20, cacheRead: 0, cacheWrite: 0, totalTokens: 120 } }) };
           for (const fn of listeners) fn({ type: 'message_end', message });
         },
         abort() {}, dispose() { this.disposed = true; }
@@ -62,12 +62,13 @@ async function fixture(t, answers = [not, satisfactory], options = {}) {
   };
   const run = async () => runIndependentJudge({ workspace, report: await verify(), engine, resourcesRoot: path.resolve('.'), signal: controller.signal,
     limits: options.limits ?? { timeoutMs: 5000, idleMs: 2000 }, checkInputs,
+    repairLimit: options.repairLimit, onMetrics: measured => measurements.push(measured),
     repair: async instruction => {
       repairs.push(instruction);
       await options.onRepair?.(workspace);
       await fs.writeFile(path.join(workspace, 'index.html'), files['index.html'] + '<p>Repaired ' + repairs.length + '</p>');
     }, verify, log: text => events.push(text), recordReport: async report => { reports.push(report); } });
-  return { workspace, run, sessions, repairs, events, reports, controller, get verifications() { return verifications; } };
+  return { workspace, run, sessions, repairs, events, reports, measurements, controller, get verifications() { return verifications; } };
 }
 
 test('NOT sends every gap and fix to the builder, reverifies and judges a fresh session before review', async t => {
@@ -93,6 +94,9 @@ test('SATISFACTORY performs no repair and records verify time and actual tokens'
   assert.equal(report.independentJudge.stage, 'verify');
   assert.equal(report.independentJudge.attempts[0].tokens.totalTokens, 120);
   assert.ok(report.independentJudge.durationMs >= 0);
+  assert.equal(h.measurements.length, 1);
+  assert.deepEqual(h.measurements[0].usage, report.independentJudge.attempts[0].tokens);
+  assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 120);
 });
 
 test('missing usage on any judge response leaves the token total unknown', async t => {
@@ -102,6 +106,51 @@ test('missing usage on any judge response leaves the token total unknown', async
   const report = await h.run();
   assert.equal(report.independentJudge.attempts[0].tokens, null);
 });
+
+test('Pi commentary before the final answer does not invalidate JSON or disappear from usage', async t => {
+  const h = await fixture(t, [satisfactory], { onPrompt: ({ session }) => {
+    session.emit({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: 'I will inspect the evidence.' } });
+    session.emit({ type: 'message_end', message: { role: 'assistant', stopReason: 'toolUse',
+      content: [{ type: 'text', text: 'I will inspect the evidence.' }],
+      usage: { input: 10, output: 5, cacheRead: 0, cacheWrite: 0, totalTokens: 15 } } });
+  } });
+  const report = await h.run();
+  assert.equal(report.independentJudge.verdict, 'SATISFACTORY');
+  assert.equal(h.repairs.length, 0);
+  assert.equal(h.measurements[0].usage.totalTokens, 135);
+  assert.equal(report.independentJudge.attempts[0].tokens.totalTokens, 135);
+});
+
+for (const mode of ['delta-only', 'commentary-only', 'malformed-final', 'completed-turn-items']) {
+  test(`Codex judge requires strict JSON from a completed final message: ${mode}`, async t => {
+    let listener;
+    const emit = (method, params) => listener({ method, params: { threadId: 'judge-thread', turnId: 'judge-turn', ...params } });
+    const rpc = { async initialize() {}, onClose() {}, dispose() {}, send() {}, subscribe(fn) { listener = fn; },
+      async request(method) {
+        if (method === 'thread/start') return { thread: { id: 'judge-thread' } };
+        if (method === 'turn/start') {
+          emit('turn/started', { turn: { id: 'judge-turn' } });
+          emit('item/agentMessage/delta', { itemId: 'partial', delta: JSON.stringify(satisfactory) });
+          const item = { id: 'final', type: 'agentMessage', phase: mode === 'commentary-only' ? 'commentary' : 'final_answer',
+            text: mode === 'malformed-final' ? 'Here is JSON: ' + JSON.stringify(satisfactory) : JSON.stringify(satisfactory) };
+          if (['commentary-only', 'malformed-final'].includes(mode)) emit('item/completed', { item });
+          emit('turn/completed', { turn: { id: 'judge-turn', status: 'completed', items: mode === 'completed-turn-items' ? [item] : [] } });
+          // A final receipt may arrive immediately after turn/completed. Unrelated turns must not count.
+          emit('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 10, outputTokens: 5, cachedInputTokens: 0, totalTokens: 15 } } });
+          emit('thread/tokenUsage/updated', { turnId: 'unrelated', tokenUsage: { total: { inputTokens: 100, outputTokens: 50, totalTokens: 150 } } });
+          return { turn: { id: 'judge-turn' } };
+        }
+        return {};
+      } };
+    const h = await fixture(t, [satisfactory], { repairLimit: 0,
+      engine: { backend: 'codex', codexHome: path.resolve('.tmp'), launchCodex: () => rpc } });
+    const report = await h.run();
+    assert.equal(report.independentJudge.verdict, mode === 'completed-turn-items' ? 'SATISFACTORY' : 'NOT');
+    if (mode !== 'completed-turn-items') assert.match(report.output, /Invalid judge response/);
+    assert.equal(h.repairs.length, 0);
+    assert.equal(h.measurements[0].usage.totalTokens, 15);
+  });
+}
 
 test('two repair loops are the limit and review retains a final NOT plus all historical gaps', async t => {
   const second = { verdict: 'NOT', gaps: [{ ...gap, requirement: 'Schedule export', evidence: 'Export omits assignments.' }] };
@@ -132,7 +181,8 @@ test('judge has only snapshot reads, no builder context, inherited skills, shell
 });
 
 test('malformed output and contradictory satisfactory verdicts become honest NOT gaps, never approval', async t => {
-  for (const answer of ['not json', { verdict: 'SATISFACTORY', gaps: [gap] }, { verdict: 'NOT', gaps: [] }, { verdict: 'MAYBE', gaps: [] }]) {
+  for (const answer of ['not json', 'I inspected it. ' + JSON.stringify(satisfactory), '```json\n' + JSON.stringify(satisfactory) + '\n```',
+    { verdict: 'SATISFACTORY', gaps: [gap] }, { verdict: 'NOT', gaps: [] }, { verdict: 'MAYBE', gaps: [] }]) {
     const h = await fixture(t, [answer], { noUsage: true }); const report = await h.run();
     assert.equal(report.independentJudge.verdict, 'NOT');
     assert.match(report.output, /Invalid judge response/);
@@ -188,8 +238,11 @@ test('Codex judge starts a fresh read-only thread with only the snapshot tool an
       sent.push(message);
       if (message.id === 'read') {
         assert.match(JSON.stringify(message.result), /editable weekly schedule/);
-        emit('item/agentMessage/delta', { threadId: 'judge-thread', delta: JSON.stringify(satisfactory) });
-        emit('thread/tokenUsage/updated', { threadId: 'judge-thread', turnId: 'judge-turn', tokenUsage: { total: { inputTokens: 30, outputTokens: 10, totalTokens: 40 } } });
+        emit('item/agentMessage/delta', { threadId: 'judge-thread', itemId: 'commentary', delta: 'I will inspect the evidence.' });
+        emit('item/completed', { threadId: 'judge-thread', item: { id: 'commentary', type: 'agentMessage', phase: 'commentary', text: 'I will inspect the evidence.' } });
+        emit('item/agentMessage/delta', { threadId: 'judge-thread', itemId: 'final', delta: JSON.stringify(satisfactory) });
+        emit('item/completed', { threadId: 'judge-thread', item: { id: 'final', type: 'agentMessage', phase: 'final_answer', text: JSON.stringify(satisfactory) } });
+        emit('thread/tokenUsage/updated', { threadId: 'judge-thread', turnId: 'judge-turn', tokenUsage: { total: { inputTokens: 30, cachedInputTokens: 5, outputTokens: 10, totalTokens: 40 } } });
         emit('turn/completed', { threadId: 'judge-thread', turn: { id: 'judge-turn', status: 'completed' } });
       }
     },
@@ -198,6 +251,7 @@ test('Codex judge starts a fresh read-only thread with only the snapshot tool an
       calls.push({ method, params });
       if (method === 'thread/start') return { thread: { id: 'judge-thread' } };
       if (method === 'turn/start') {
+        emit('turn/started', { threadId: 'judge-thread', turn: { id: 'judge-turn' } });
         emit('item/tool/call', { threadId: 'judge-thread', tool: 'write', arguments: { path: 'index.html', content: 'FAKE' } }, 'write');
         emit('item/tool/call', { threadId: 'judge-thread', callId: 'read', tool: 'judge_read', arguments: { path: 'requirements.md' } }, 'read');
         return { turn: { id: 'judge-turn' } };
@@ -209,6 +263,9 @@ test('Codex judge starts a fresh read-only thread with only the snapshot tool an
   const report = await h.run();
   assert.equal(report.independentJudge.verdict, 'SATISFACTORY');
   assert.equal(report.independentJudge.attempts[0].tokens.totalTokens, 40);
+  assert.equal(h.measurements.length, 1);
+  assert.equal(h.measurements[0].usage.totalTokens, 40);
+  assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 35);
   const start = calls.find(c => c.method === 'thread/start').params;
   assert.equal(start.sandbox, 'read-only'); assert.equal(start.approvalPolicy, 'never');
   assert.equal(start.ephemeral, true);
@@ -248,11 +305,9 @@ test('fake-engine production workflow reaches review after two repairs with the 
           journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] }, verificationNumber: ++verifications })
     } });
     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
-    const { qualityFixture } = await import('./scripts/quality-fixture.mjs');
+    const { qualityFixture, qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
     const store = new Store(process.env.JUDGE_TEST_ROOT); await store.init();
-    store.state.projects[0] = newProject({ title: 'Synthetic judge lifecycle fixture',
-      description: 'Parse an invented TASK prefix and prepare a synthetic review draft. No publication is performed.',
-      criteria: ['Parse a synthetic task and recover from empty input.', 'Publication requires owner approval.'] });
+    store.state.projects[0] = newProject(qualityFixtureProject);
     store.state.settings = { backend: 'pi', provider: 'fixture', model: 'fixture' };
     const project = store.state.projects[0]; let judgments = 0, repairs = 0;
     const backend = new FleetBackend(store, process.execPath, () => {}, process.cwd(), {
@@ -269,8 +324,13 @@ test('fake-engine production workflow reaches review after two repairs with the 
     backend.agent = async (p, run, stage, provider, model, instruction) => {
       if (stage === 'plan') {
         for (const [name, body] of Object.entries(qualityFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
+        await fs.writeFile(path.join(p.workspace, 'plan.md'), 'Synthetic implementation plan');
+        await fs.writeFile(path.join(p.workspace, 'test-matrix.md'), 'Synthetic acceptance mapping');
       }
-      if (stage === 'build') await fs.writeFile(path.join(p.workspace, 'index.html'), '<!doctype html><title>Synthetic</title>');
+      if (stage === 'build') {
+        await fs.writeFile(path.join(p.workspace, 'index.html'), '<!doctype html><title>Synthetic</title>');
+        await fs.writeFile(path.join(p.workspace, 'app.test.cjs'), 'require("node:test")("synthetic registered case", () => {});');
+      }
       if (instruction.includes('repairing gaps from an independent')) {
         repairs++; assert.match(instruction, /Missing output/); assert.match(instruction, /Implement output/);
         await fs.writeFile(path.join(p.workspace, 'index.html'), '<!doctype html><title>Synthetic repair ' + repairs + '</title>');

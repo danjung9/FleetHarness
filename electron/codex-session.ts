@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { AgentSessionEvent, ToolDefinition } from '@earendil-works/pi-coding-agent';
-import type { StageSession } from './agent-runner.js';
+import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { tokenUsage, type StageEvent, type StageSession } from './agent-runner.js';
 import { CodexRpc, type RpcMessage } from './codex-rpc.js';
 import { runProcessEnvironment } from './process-sweep.js';
 
@@ -14,10 +14,23 @@ export async function createCodexSession(options: {
   await prepareCodexHome(options.home);
   options.signal.throwIfAborted();
   const rpc = (options.launch ?? CodexRpc.launch)(options.home);
-  const listeners = new Set<(event: AgentSessionEvent) => void>();
+  const listeners = new Set<(event: StageEvent) => void>();
   // Reuse the factory's existing activity contract; Codex never starts a Pi session.
-  const emit = (event: object) => { for (const listener of listeners) listener(event as AgentSessionEvent); };
+  const emit = (event: object) => { for (const listener of listeners) listener(event as StageEvent); };
   let threadId = '', turnId = '', disposed = false;
+  let currentTurn: { id: string; hasUsage: boolean } | undefined;
+  const previousTurns = new Set<string>();
+  const earlyUsage = new Map<string, unknown>();
+  const reportUsage = (total: unknown) => {
+    currentTurn!.hasUsage = true;
+    emit({ type: 'usage_update', usage: tokenUsage(total, 'codex') });
+  };
+  const identifyTurn = (id: string) => {
+    if (!currentTurn) return;
+    currentTurn.id = id; turnId = id;
+    if (earlyUsage.has(id)) reportUsage(earlyUsage.get(id));
+    earlyUsage.clear();
+  };
   let pending: { resolve: () => void; reject: (error: Error) => void } | undefined;
   const settle = (error?: Error) => { const current = pending; pending = undefined; turnId = ''; if (error) current?.reject(error); else current?.resolve(); };
   const tools = options.tools as unknown as Tool[];
@@ -41,9 +54,22 @@ export async function createCodexSession(options: {
   rpc.subscribe(message => {
     if (message.id !== undefined && message.method) { void serverRequest(message); return; }
     const p = message.params;
-    if (!pending || p?.threadId !== threadId) return;
+    if (disposed || controller.signal.aborted || p?.threadId !== threadId) return;
+    if (message.method === 'thread/tokenUsage/updated') {
+      // Each stage owns a fresh thread. Replace cumulative totals, never sum them.
+      // Accept a final receipt immediately following turn/completed as well.
+      if (!currentTurn || typeof p.turnId !== 'string') return;
+      if (!currentTurn.id && previousTurns.has(p.turnId)) return;
+      if (!currentTurn.id) earlyUsage.set(p.turnId, p.tokenUsage?.total);
+      else if (p.turnId === currentTurn.id) reportUsage(p.tokenUsage?.total);
+      return;
+    }
+    if (!pending) return;
+    if (!currentTurn?.id && p.turn?.id && previousTurns.has(p.turn.id)) return;
     switch (message.method) {
-      case 'turn/started': turnId = p.turn.id; emit({ type: 'turn_start' }); break;
+      case 'turn/started':
+        if (currentTurn?.id && p.turn.id !== currentTurn.id) return;
+        identifyTurn(p.turn.id); emit({ type: 'turn_start' }); break;
       case 'item/agentMessage/delta': emit({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: p.delta } }); break;
       case 'item/commandExecution/outputDelta':
       case 'item/reasoning/summaryTextDelta':
@@ -62,6 +88,7 @@ export async function createCodexSession(options: {
       case 'error': if (!p.willRetry) settle(new Error(p.error?.message || 'Codex could not complete the turn.')); break;
       case 'turn/completed':
         if (turnId && p.turn.id !== turnId) return;
+        identifyTurn(p.turn.id);
         emit({ type: 'turn_end' });
         settle(p.turn.status === 'completed' ? undefined : new Error(p.turn.error?.message || `Codex turn ${p.turn.status}. Check your ChatGPT connection and usage in Settings.`)); break;
     }
@@ -88,14 +115,21 @@ export async function createCodexSession(options: {
     async prompt(text: string) {
       if (disposed || controller.signal.aborted) throw new Error('Codex session is closed.');
       if (pending) throw new Error('Codex already has an active turn.');
+      if (currentTurn?.id) previousTurns.add(currentTurn.id);
+      const promptTurn = currentTurn = { id: '', hasUsage: false };
+      earlyUsage.clear();
       const completion = new Promise<void>((resolve, reject) => { pending = { resolve, reject }; });
       // Handle early connection failure while the turn/start request is still pending.
       void completion.catch(() => {});
       try {
         const result = await rpc.request('turn/start', { threadId, input: [{ type: 'text', text, text_elements: [] }] });
-        if (pending) turnId = result.turn.id;
+        if (pending) identifyTurn(result.turn.id);
         await completion;
       } catch (error) { settle(error instanceof Error ? error : new Error(String(error))); throw error; }
+      finally {
+        // A missing receipt for a follow-up must not reuse the prior turn's total.
+        if (!promptTurn.hasUsage) emit({ type: 'usage_update', usage: null });
+      }
     },
     async abort() {
       if (turnId) void rpc.request('turn/interrupt', { threadId, turnId }).catch(() => {});
