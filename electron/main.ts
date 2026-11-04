@@ -47,6 +47,7 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 }
 const bootstrap = () => ({
   state: store.state, models: backend.models(), storagePath: store.root,
+  capabilities: { projectConversation: true },
   chatgpt: codex.account,
   credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' && codex.account.planUsageEnabled ? 'Using ChatGPT plan' : 'Connect your ChatGPT plan to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron

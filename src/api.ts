@@ -2,6 +2,7 @@ import type { AppState, FleetAPI, NewProject, Project } from '../shared/types';
 import { stageDefinitions, starters } from '../shared/types';
 import { normalizeProjectInput } from '../shared/project-input';
 import { getChallenge } from '../harness/catalog';
+import { withDesktopCompatibility } from '../shared/desktop-api';
 export const isDesktop = !!window.fleetHarness;
 function makeProject(input: NewProject): Project {
   const normalized = normalizeProjectInput(input);
@@ -20,7 +21,7 @@ function save(nextState: AppState) {
   for (const fn of listeners) fn(structuredClone(browserState));
 }
 const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to run coding agents and access local artifacts.'); };
-export const api: FleetAPI = window.fleetHarness || {
+export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(window.fleetHarness) : {
   sendMessage: desktopOnly,
   cancelMessage: desktopOnly,
   answerClarification: desktopOnly,

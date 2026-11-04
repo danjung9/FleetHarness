@@ -6,7 +6,19 @@ The lead can explain the current brief, phase status, failures and relevant arti
 
 ## Research and planning questions
 
-Research and planning agents receive `fleet_request_clarification`. They use it only when a missing user decision materially affects the workflow, success criteria or a major tradeoff. Routine choices continue automatically. Each phase can ask at most two rounds of one to three questions, with optional choices and recommendations.
+Research and planning agents receive `fleet_request_clarification`. They use it only when a missing user decision materially affects the workflow, success criteria or a major tradeoff. Routine choices continue automatically. Each phase can ask at most two rounds of one to three questions, with optional recommendations.
+
+Each question declares an `answerType` that selects its answer controls:
+
+| Answer type | Tool input | Project lead controls |
+| --- | --- | --- |
+| `text` | Question and context; omit options | Open-ended text area |
+| `single_choice` | Question, context and 2–4 distinct options | Radio buttons for one choice |
+| `multiple_choice` | Question, context and 2–4 distinct options | Checkboxes for all applicable choices |
+
+Choice forms also accept written context or a custom answer without selecting an option. Choices start unselected, recommendations never submit an answer, and **Clear selection(s)** lets the user switch to a written answer. Draft text and selections survive renderer reloads. Earlier saved questions and legacy tool calls infer single choice when options are present, otherwise text.
+
+The answer API accepts `{ selectedOptions: string[], text: string }`. The host validates the selections against the question, limits single-choice answers to one selection, and saves both the structured response and readable answer text. Both reach the resumed agent. Legacy string answers remain supported.
 
 After requesting clarification, the agent ends its turn. The host closes the model session and waits outside the agent timeout. The project shows **Waiting for your answer**, and Project lead exposes explicit answer controls. Nothing is submitted automatically. An ordinary chat message does not answer the phase question; the lead can help explain it while the worker remains waiting.
 
@@ -23,7 +35,7 @@ Lead responses have a three-minute deadline, a one-minute inactivity limit and a
 ## Validation
 
 - `npm test` includes coordinator isolation, history, context bounds, artifact access, proposal validation, cancellation, interrupted-state recovery, broker persistence and pipeline integration tests.
-- `npm run test:conversation` builds and runs a real Electron/Pi SDK smoke using an explicit local streaming provider fixture. It checks action application, stale proposals, research and planning questions, idle waits, resumed answers, unchanged frozen contracts, reloads, fresh builds, stopped questions, keyboard focus and desktop overflow.
+- `npm run test:conversation` builds and runs a real Electron/Pi SDK smoke using an explicit local streaming provider fixture. It checks action application, stale proposals, all three clarification answer controls, draft restoration, partial-round waits, structured answers in resumed sessions, unchanged frozen contracts, reloads, fresh builds, stopped questions, keyboard focus and desktop overflow.
 - Captures and the smoke result are written to `output/playwright/conversation/` at 1512×982 and 1120×720.
 
 The fixture proves the application integration. It does not measure hosted-model latency, token cost, question quality or production account behavior. Voice input and live redirection of implementation agents are outside this version.
