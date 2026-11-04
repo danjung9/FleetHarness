@@ -1,47 +1,53 @@
 ---
 name: FleetHarness
-description: An inspectable desktop software factory with navy navigation and warm paper work surfaces.
+description: An inspectable desktop software factory with navy navigation and cool white work surfaces.
 colors:
-  ink: "#19283a"
-  muted: "#626c72"
-  paper: "#f7f5ef"
-  ground: "#ebe9e2"
-  line: "#d2d0c9"
-  orange: "#d94c26"
-  blue: "#315d8d"
+  ink: "#003b4f"
+  muted: "#526574"
+  paper: "#fff"
+  ground: "#e9eef2"
+  line: "#c9d3db"
+  gold: "#e8b00f"
+  gold-ink: "#705304"
+  gold-soft: "#fbefd0"
+  focus: "#94700b"
+  selected: "#e2ebf1"
+  field-border: "#7d919f"
+  nav-hover: "#164657"
+  blue: "#245d7a"
   green: "#32705a"
-  deep: "#102437"
+  deep: "#022a3a"
   white: "#fff"
-  panel: "#f3f1eb"
-  sheet: "#fbfaf6"
-  field: "#fcfbf7"
-  badge-neutral: "#e3e4df"
-  badge-neutral-ink: "#4b565d"
+  panel: "#f3f6f8"
+  sheet: "#fff"
+  field: "#fff"
+  badge-neutral: "#e3e9ed"
+  badge-neutral-ink: "#475e6c"
   complete: "#dceae3"
   complete-ink: "#286348"
-  active: "#f6d9ce"
-  active-ink: "#9e361a"
+  active: "#ddebf3"
+  active-ink: "#003b4f"
   failed: "#f3d8d3"
   failed-ink: "#9b3022"
-  review: "#f2e5b8"
-  review-ink: "#71550b"
+  review: "#fbefd0"
+  review-ink: "#705304"
 typography:
   display:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "DM Serif Display, Georgia, serif"
     fontSize: "28px"
-    fontWeight: 700
+    fontWeight: 400
     lineHeight: 1.25
     letterSpacing: "-0.03em"
   headline:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "DM Serif Display, Georgia, serif"
     fontSize: "23px"
-    fontWeight: 700
+    fontWeight: 400
     lineHeight: 1.25
     letterSpacing: "-0.03em"
   title:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "DM Serif Display, Georgia, serif"
     fontSize: "17px"
-    fontWeight: 700
+    fontWeight: 400
     letterSpacing: "-0.02em"
   body:
     fontFamily: "DM Sans, sans-serif"
@@ -133,14 +139,14 @@ components:
 
 **Creative North Star: "Inspectable software factory"**
 
-FleetHarness is a dense, practical desktop workspace. A deep navy navigation rail frames warm paper surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; orange marks attention and selection without replacing the navy action hierarchy.
+FleetHarness is a dense, practical desktop workspace. A deep navy navigation rail frames cool white surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; gold marks attention and selection without replacing the navy action hierarchy.
 
-The interface makes agent work inspectable. Manrope establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.
+The interface makes agent work inspectable. DM Serif Display establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.
 
 **Key Characteristics:**
-- Persistent navy navigation and warm paper work surfaces.
+- Persistent navy navigation and cool white work surfaces.
 - Compact controls, thin borders, and flat work areas.
-- Orange selection and focus, with explicit semantic status colors.
+- Gold selection and focus, with explicit semantic status colors.
 - Separate typography for headings, interface text, and execution records.
 - Desktop panels that resize and scroll within the application window.
 
@@ -148,11 +154,11 @@ This is a scan of the implemented system in `src/styles.css`, `src/App.tsx`, and
 
 ## Colors
 
-The palette pairs dark blue structure with warm off-white materials, a restrained orange attention color, and semantic state tints. Frontmatter values are normative; the sidecar's synthesized tonal ramps are swatch previews, not additional application tokens.
+The palette pairs dark blue structure with cool white materials, a restrained gold attention color, and semantic state tints. The original desktop palette draws on the [U.S. Navy design guide](https://usnavy.github.io/Navy-Design-Guide/brand-colors.html), with darker gold for accessible focus on light surfaces. Frontmatter values are normative; the sidecar's synthesized tonal ramps are swatch previews, not additional application tokens.
 
 ### Primary
 
-- **Orange:** Keyboard focus, selected graph stages, active graph connections, and active-stage cues.
+- **Gold:** Brand mark and active navigation. Dark gold (`focus`) provides accessible keyboard focus, selected graph outlines, and active graph connections on light surfaces; the navy rail uses bright gold focus. Running states use blue tints, while review uses pale gold with dark gold text.
 - **Ink:** Primary action fills, headings, and interface text. Primary buttons remain navy.
 
 ### Secondary
@@ -181,22 +187,22 @@ The palette pairs dark blue structure with warm off-white materials, a restraine
 
 ## Typography
 
-**Display Font:** Manrope, with a sans-serif fallback.
+**Display Font:** DM Serif Display, with Georgia and serif fallbacks.
 **Body Font:** DM Sans, with a sans-serif fallback.
 **Label/Mono Font:** IBM Plex Mono, with a monospace fallback, for execution data.
 
-The pairing gives compact operational screens a clear hierarchy without making ordinary instructions resemble a terminal. Fonts are bundled locally. Manrope weights 600 and 700, DM Sans weights 400–700, and IBM Plex Mono weights 400–600 are imported.
+The pairing gives compact operational screens a clear hierarchy without making ordinary instructions resemble a terminal. Fonts are bundled locally. DM Serif Display uses its native 400 weight from `src/fonts/dm-serif-display.ttf`; DM Sans weights 400–700 and IBM Plex Mono weights 400–600 are imported.
 
 ### Hierarchy
 
-- **Display:** Page titles use the display token.
+- **Display:** Page titles use the display token. The Home portfolio uses a 36–54px fluid serif title and 19px serif challenge names; operational panels retain their compact scale.
 - **Headline:** The persistent challenge title uses the headline token; it contracts to (21px) at the narrow desktop breakpoint. Dialog titles also use (23px), with their own slightly tighter tracking.
 - **Title:** Section headings use the title token, with contextual (14–16px) headings inside dense panels and sheets.
 - **Body:** Page descriptions use the body token; instructions and checklist text also use (12px). Page introductions are limited to (76ch), while empty-state text is limited to (52ch).
 - **Label:** Actions and field labels use the label token. Field text uses its own normal-weight token.
 - **Log:** Tool output, test output, paths, and source use the log family. Human-readable agent messages return to DM Sans.
 
-**The Three Voices Rule.** Use Manrope for hierarchy, DM Sans for interaction and explanation, and IBM Plex Mono for execution records and identifiers.
+**The Three Voices Rule.** Use DM Serif Display at weight 400 for hierarchy, DM Sans for interaction and explanation, and IBM Plex Mono for execution records and identifiers.
 
 ## Layout
 
@@ -210,7 +216,7 @@ At viewport widths of (1280px) or less, the rail becomes (210px), the factory in
 
 ## Elevation & Depth
 
-Work surfaces are flat and separated by warm tonal changes and thin borders. Shadows identify transient layers: the modal floats above a dark backdrop and the toast floats above the workspace. Graph texture is a faint square grid, not a raised-card effect.
+Work surfaces are flat and separated by cool tonal changes and thin borders. Shadows identify transient layers: the modal floats above a dark backdrop and the toast floats above the workspace. Graph texture is a faint square grid, not a raised-card effect.
 
 ### Shadow Vocabulary
 
@@ -229,9 +235,9 @@ Borders are generally (1px). SVG icons provide consistent line-based symbols; th
 
 ### Buttons
 
-Compact, explicit actions use an inline icon and text with an (8px) gap. Primary and secondary variants share the action radius, (36px) height, and label typography. Primary hover changes to `#2c4357`; secondary hover becomes white. Icon buttons are (32×32px), while text actions are blue with no surface fill. Disabled buttons use opacity (.48) and a blocked cursor.
+Compact, explicit actions use an inline icon and text with an (8px) gap. Primary and secondary variants share the action radius, (36px) height, and label typography. Primary hover changes to `#164f66`; secondary hover becomes white. Icon buttons are (32×32px), while text actions are blue with no surface fill. Disabled buttons use opacity (.48) and a blocked cursor.
 
-Keyboard focus uses an orange (2px) outline with a (3px) offset across buttons, inputs, textareas, selects, and disclosures. The implementation does not add animated button transitions.
+Keyboard focus uses an dark gold (2px) outline with a (3px) offset across buttons, inputs, textareas, selects, and disclosures. The implementation does not add animated button transitions.
 
 ### Chips
 
@@ -243,15 +249,15 @@ Paper sheets and bordered output areas supply the main surface structure. Lists 
 
 ### Inputs / Fields
 
-Fields use the field background, control radius, a `#b9bdb8` border, and the field typography token. Labels sit above the control, with supporting hints in muted DM Sans. The orange caret and shared focus outline connect forms to the rest of the interface. Textareas resize vertically within the implemented (80–340px) bounds; checkbox accent uses ink. Validation messages sit beside the affected form rather than introducing a separate visual language.
+Fields use the field background, control radius, a `#7d919f` border, and the field typography token. Labels sit above the control, with supporting hints in muted DM Sans. The dark gold caret and shared focus outline connect forms to the rest of the interface. Textareas resize vertically within the implemented (80–340px) bounds; checkbox accent uses ink. Validation messages sit beside the affected form rather than introducing a separate visual language.
 
 ### Navigation
 
-The rail uses a deep background, muted blue-gray inactive text, and line icons. Rows are (39px) tall by default. Hover adds a slightly lighter navy surface and white text; active navigation uses warm paper with dark text. The rail remains present at the minimum desktop width. The project picker and backend connection status remain distinct from navigation rows.
+The rail uses a deep background, muted blue-gray inactive text, and line icons. Rows are (39px) tall by default. Hover adds a slightly lighter navy surface and white text; active navigation uses gold with dark navy text. The rail remains present at the minimum desktop width. The project picker and backend connection status remain distinct from navigation rows.
 
 ### Factory Stages
 
-Each selectable stage is a compact rectangular button with a number, circular SVG status icon, Manrope title, supporting detail, and written status. Selection adds the shared orange outline independently of execution state. Complete, active, review, and failed states alter borders and icon treatments; active and review also tint the surface. Connectors are thin gray paths, with a dashed repair route. The active repair route uses an (8s linear infinite) dash animation. Reduced-motion preference disables animation and transitions.
+Each selectable stage is a compact rectangular button with a number, circular SVG status icon, DM Serif Display title, supporting detail, and written status. Selection adds the shared dark gold outline independently of execution state. Complete, active, review, and failed states alter borders and icon treatments; active and review also tint the surface. Connectors are thin gray paths, with a dashed repair route. The active repair route uses an (8s linear infinite) dash animation. Reduced-motion preference disables animation and transitions.
 
 ### Execution Records and Feedback
 
@@ -261,15 +267,15 @@ Logs use divided rows, monospaced metadata, wrapping output, and red error text.
 
 ### Do:
 
-- **Do** keep the navy rail and warm paper surfaces when extending this desktop workspace.
+- **Do** keep the navy rail and cool white surfaces when extending this desktop workspace.
 - **Do** pair status color with a written state and the established SVG icon treatment.
-- **Do** use the three font roles consistently and preserve visible orange keyboard focus.
+- **Do** use the three font roles consistently and preserve visible gold keyboard focus.
 - **Do** keep long source, logs, and file paths readable through panel scrolling and text wrapping.
 - **Do** preserve reduced-motion support for the animated graph connection.
 
 ### Don't:
 
-- **Don't** replace the navy primary-action treatment with orange merely because orange is the attention color.
+- **Don't** replace the navy primary-action treatment with gold merely because gold is the attention color.
 - **Don't** apply dialog or toast shadows to ordinary work sheets and list rows.
 - **Don't** turn one screen's graph or column arrangement into a mandatory layout for every surface.
 - **Don't** use a successful test tint to imply human approval or operational readiness.

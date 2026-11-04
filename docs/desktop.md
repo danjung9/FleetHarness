@@ -13,13 +13,27 @@ The local build is ad-hoc signed. It is not Apple Developer ID signed or notariz
 3. Choose **New challenge** to import one of the 34 Norfolk catalog entries, use a sample brief, or write a custom problem. Review the acceptance criteria.
 4. Choose **Start build**. Intake, research, planning, implementation and verification roles execute sequentially in a dedicated folder. Up to three challenges can run concurrently.
 5. Inspect **Development**, **Agents**, and **Artifacts**. Reload the preview after the agent has written index.html.
-6. Review **Evidence & delivery**, enter review notes, and approve the prototype. Export copies source, requirements, test output, and your review into a new destination folder.
+6. Review **Evidence & delivery**, enter review notes, and approve the prototype. Choose **Download executable** for a standalone app, or **Export app & evidence** to copy source, requirements, test output, and your review into a new destination folder.
 
 Pi agents have local read, write, edit, and shell tools. A separate project folder is **not an operating-system sandbox**. Only start runs you trust. The selected provider receives requirements and model/tool context and may charge for usage. There is no deployment or publishing integration.
 
 ## Current delivery contract
 
 The first release targets a dependency-free, self-contained index.html application, testable source, Node test files, and documentation. The preview uses a separate loopback origin for each run, supports its own browser storage, and blocks network requests through a content policy. It has no desktop IPC bridge or Node integration.
+
+### Standalone app downloads
+
+After a build passes verification and you approve it, **Download executable** opens a save dialog and packages the verified application for the build machine's OS and processor. The ZIP contains a macOS `.app`, a Windows `.exe` with its supporting files, or a Linux executable with its supporting files, plus `START-HERE.txt`. Extract the whole ZIP before opening the app. The end user needs neither FleetHarness nor Node.js nor an AI account.
+
+FleetHarness uses [Electron Packager](https://electron.github.io/packager/main/) with the same Electron version as its host. The first download may need network access to obtain the runtime; subsequent downloads reuse Electron's cache. Packaging runs separately with a ten-minute limit. Closing FleetHarness interrupts packaging; reopening shows a retry action. Editing requirements or starting another run clears the previous download state. Source fingerprints are checked before packaging and again before saving; source changes require a new verified build.
+
+Only the self-contained `index.html` and a host-controlled desktop wrapper enter the application. Agent scripts, dependencies, test files, sessions, and FleetHarness credentials are excluded. The wrapper preserves offline browser storage under a stable, project-specific application-data directory and disables Node integration, external requests, navigation, popups, and permissions. Preview data is separate from the standalone app's data.
+
+macOS packages are ad-hoc signed, not Developer ID signed or notarized. Windows packages have no publisher signature. OS approval may therefore be required; this is a prototype distribution path. Cross-compilation, installers, automatic updates, and public-release signing are not provided. The executable smoke test has been run on macOS Apple Silicon; Windows and Linux need validation on their own build machines.
+
+Run `npm run test:executable` to verify approval, save cancellation, packaging, ZIP extraction, standalone launch, local persistence, renderer isolation, concurrent-change protection, and stale-source rejection. To test the packaged FleetHarness host, run `FLEET_EXECUTABLE=/absolute/path/to/FleetHarness.app/Contents/MacOS/FleetHarness node scripts/smoke-executable.mjs` after `npm run pack`. The fixture is independently tested and requires no model credentials.
+
+After implementing the app, the build agent writes `README.md` in a dedicated follow-up step within the same session and time/turn budget. This user guide explains quick start, the main workflows, a synthetic example with expected results, input formats, data persistence, troubleshooting, limitations, and developer test commands. Open `README.md` in **Artifacts / Files** or in the exported source folder. Verification and repair keep the guide aligned with the final application before the host records its source fingerprint. A missing or empty guide blocks completion.
 
 Native backends, arbitrary framework dev servers, production data connectors, distributed/offline transport, and operational readiness are outside this release's verified scope. Domain toolkit calculations and synthetic fixtures are separate from generated-application tests.
 
@@ -30,7 +44,7 @@ The 34-entry catalog, recipe preparation, reusable skills, and seven domain tool
 - All logs and badges reflect actual agent events and saved state.
 - Each agent phase inherits global `read`, `write`, `edit` and `bash` tools, then adds only its assigned phase tools. The `.fleet` packet records both levels and the skills allotted to each phase. Select a phase in **Build flow** to inspect the assignment, outputs and completion gate.
 - Each role has a 30-minute ceiling, including session setup and artifact completion. Pi also has a 40-model-turn ceiling; Codex reports user turns rather than its internal model iterations. Five minutes without model, tool, retry, or compaction activity fails the stage with its last activity recorded. These limits settle the host run even if Pi's prompt or abort promise never returns.
-- Missing or empty stage outputs get one targeted completion prompt within the same budget. Requirements and packet integrity are checked after every agent handoff. A recovered provider retry can continue normally.
+- Missing or empty outputs get one targeted completion prompt per step within the same stage budget, including the post-implementation user guide. Requirements and packet integrity are checked after every agent handoff. A recovered provider retry can continue normally.
 - FleetHarness executes generated tests independently using the Node runtime bundled with Electron.
 - A failed test run gets one repair attempt and one repeat execution.
 - Test runs have a 120-second and 2 MB output limit.
@@ -57,7 +71,7 @@ The original dashboard uses an 84px icon rail with short labels: Home, Flow, Pre
 
 Challenge descriptions expand under **Challenge brief**. Select a flow stage, or use the panel icon, to inspect its owner, output, criteria, and activity. The Preview toolbar toggles activity and the review checklist independently. Test output expands on demand and opens automatically when verification fails. Approval, export, execution permissions, and readiness limitations remain explicit.
 
-This refinement applies only to the original dashboard. FleetHarness Studio keeps its separate renderer and design.
+The original dashboard is the sole FleetHarness interface.
 
 Use Node.js 22.19 or newer for Pi SDK compatibility; the packaged app has its own Node 24 runtime.
 

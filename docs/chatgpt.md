@@ -1,6 +1,6 @@
 # ChatGPT subscription builds
 
-FleetHarness includes Codex 0.166.0 as a second build engine alongside Pi. Both the desktop dashboard and Studio expose the same account controls.
+FleetHarness includes Codex 0.166.0 as a second build engine alongside Pi. The desktop dashboard exposes the account controls.
 
 1. Open **Settings**, then select **Codex · ChatGPT subscription** under **Build engine**.
 2. Choose **Continue with ChatGPT** and complete sign-in in the browser. Settings updates when OpenAI confirms the login. Use **Cancel sign-in** to stop a pending attempt.
@@ -25,7 +25,7 @@ Choose **Pi · model providers** to continue using existing Pi credentials and A
 
 `npm test` includes account-state, URL validation, login cancellation, logout, protocol timeout/process-loss, tool-dispatch, failed/interrupted turn, cancellation, and full Codex factory routing tests. The full workflow uses a deterministic protocol fixture and real files plus independent Node tests; it does not consume a ChatGPT subscription.
 
-`node scripts/smoke-chatgpt.mjs` exercises the actual bundled login-start/cancel RPC through Electron while intercepting external browser opening. It checks connected UI states with an explicitly synthetic account fixture in both interfaces. The existing Electron and Studio smoke suites still exercise Pi generation, repair, review, and export.
+`node scripts/smoke-chatgpt.mjs` exercises the actual bundled login-start/cancel RPC through Electron while intercepting external browser opening. It checks connected UI states with an explicitly synthetic account fixture in the desktop interface. The Electron smoke suite also exercises Pi generation, repair, review, and export.
 
 Live sign-in completion and hosted-model generation require the user's account and have not been validated by the automated suite.
 

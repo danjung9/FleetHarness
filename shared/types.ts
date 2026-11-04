@@ -10,6 +10,7 @@ export interface TestReport {
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
 }
 export interface Project {
+  executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
   backend?: AgentBackend;
@@ -39,6 +40,7 @@ export interface FleetAPI {
   stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
+  downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;
   readArtifact(id: string, file: string): Promise<string>;
   preview(id: string): Promise<string | null>;

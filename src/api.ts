@@ -18,7 +18,7 @@ export const api: FleetAPI = window.fleetHarness || {
   bootstrap: async () => ({ state: structuredClone(browserState), models: [], storagePath: 'Browser preview — local to this browser', credentialStatus: 'Desktop app required', runtime: 'Browser preview' }),
   createProject: async input => { const p = makeProject(input); browserState.projects.unshift(p); save(); return p; },
   updateProject: async (id, input) => { const p = browserState.projects.find(p => p.id === id)!; Object.assign(p, input); p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined; save(); return p; },
-  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, openWorkspace: desktopOnly,
+  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
   connectChatGPT: desktopOnly, cancelChatGPTLogin: desktopOnly, disconnectChatGPT: desktopOnly, refreshChatGPT: desktopOnly,
   onState: fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }

@@ -20,16 +20,14 @@
     "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
     "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
     "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
-    "test:system-design": "npm run build && npm run build:studio && node scripts/smoke-system-design.mjs",
+    "test:system-design": "npm run build && node scripts/smoke-system-design.mjs",
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
-    "studio": "npm run build:electron && node scripts/studio.mjs",
-    "studio:web": "vite --config vite.studio.config.ts --host 127.0.0.1",
-    "build:studio": "tsc && vite build --config vite.studio.config.ts",
-    "test:studio": "npm run build:studio && npm run build:electron && node scripts/smoke-studio.mjs",
-    "test:chatgpt": "npm run build && npm run build:studio && node scripts/smoke-chatgpt.mjs"
+    "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
+    "test:executable": "npm run build && node scripts/smoke-executable.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.5.0",
+    "@electron/packager": "20.3.0",
     "@fontsource/dm-sans": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/manrope": "5.3.0",
@@ -37,12 +35,14 @@
     "lucide-react": "1.68.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "typebox": "1.3.27"
+    "typebox": "1.3.27",
+    "yazl": "3.3.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/yazl": "3.3.1",
     "@vitejs/plugin-react": "6.2.1",
     "concurrently": "10.0.6",
     "cross-env": "10.1.0",
@@ -79,7 +79,9 @@
     "artifactName": "FleetHarness-${version}-${arch}.${ext}",
     "npmRebuild": false,
     "asarUnpack": [
-      "node_modules/@openai/codex-*/**/*"
+      "node_modules/**/*",
+      "dist-electron/electron/package-worker.js",
+      "package.json"
     ]
   },
   "author": "FleetHarness"

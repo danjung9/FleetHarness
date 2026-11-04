@@ -1,3 +1,5 @@
+import { Home } from './Home';
+import { ExecutableDownload } from './ExecutableDownload';
 import { ModelSettings } from './ModelSettings';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
@@ -18,7 +20,6 @@ import { challenges, toProjectInput } from '../harness/catalog';
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
 const labels: Record<string, string> = { draft: 'Ready', running: 'Building', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered', queued: 'Queued', complete: 'Complete', active: 'In progress' };
 const date = (value: string) => new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-const short = (title: string) => title.split(/[\s-]+/).map(w => w[0]).join('').slice(0, 3).toUpperCase();
 function Mark() { return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M5 7h26M5 18h18M5 29h26M12 7v22M24 7v22"/><circle cx="24" cy="18" r="4"/></svg>; }
 function Glyph({ status }: { status: string }) {
   return status === 'complete' || status === 'approved' || status === 'delivered' ? <Check size={15}/> : status === 'active' || status === 'running' ? <Activity size={15}/> : status === 'failed' ? <XCircle size={15}/> : status === 'review' ? <ShieldCheck size={15}/> : <CircleDot size={15}/>;
@@ -82,15 +83,6 @@ function Factory({ project, selected, select, navigate }: { project: Project; se
     <button className="secondary full-width" onClick={() => navigate('workspace')}><Code2 size={16}/> Open preview</button>
   </aside>}</div>;
 }
-function Portfolio({ projects, open, create, query, setQuery }: { projects: Project[]; open: (id: string) => void; create: () => void; query: string; setQuery: (q: string) => void }) {
-  const filtered = projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase()));
-  return <div className="page"><div className="page-heading"><div><h1>Challenges</h1></div><button className="primary" onClick={create}><Plus size={16}/> New challenge</button></div>
-    <div className="portfolio-summary"><span><strong>{projects.length}</strong> saved challenges</span><span><strong>{projects.filter(p => p.status === 'running').length}</strong> active runs</span><span><strong>{projects.filter(p => p.report && p.report.exitCode === 0).length}</strong> tested prototypes</span><span><strong>{projects.filter(p => p.status === 'delivered').length}</strong> deliveries</span></div>
-    <div className="list-heading"><h2>Your workspace</h2><label className="filter-input"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter challenges" aria-label="Filter challenges"/></label></div>
-    <div className="project-list">{filtered.map((p, i) => <button key={p.id} onClick={() => open(p.id)}><span className={'monogram tone-' + i % 3}>{short(p.title)}</span><span className="project-copy"><strong>{p.title}</strong><small>{p.criteria.length} criteria · {p.runId ? date(p.updatedAt) : 'Not started'}</small></span><Badge status={p.status}/><ArrowRight size={18}/></button>)}</div>
-    {!filtered.length && <Empty icon={<Search size={28}/>} title="No matching challenges">Try a different title or create a new challenge.</Empty>}
-  </div>;
-}
 function RequirementsForm({ initial, submit, busy, submitLabel }: { initial: NewProject; submit: (p: NewProject) => Promise<void>; busy: boolean; submitLabel: string }) {
   const [title, setTitle] = useState(initial.title), [description, setDescription] = useState(initial.description), [criteria, setCriteria] = useState(initial.criteria.join('\n'));
   const [error, setError] = useState('');
@@ -107,13 +99,14 @@ function RequirementsForm({ initial, submit, busy, submitLabel }: { initial: New
     <div className="form-actions"><span className="small-note">Saved locally. Build when ready.</span><button className="primary" disabled={busy} type="submit"><Check size={16}/>{submitLabel}</button></div>
   </form>;
 }
-function Intake({ close, action, created, busy }: { close: () => void; action: Action; created: (project: Project) => void; busy: boolean }) {
-  const [template, setTemplate] = useState(-1);
-  const [catalogId, setCatalogId] = useState('');
+function Intake({ close, action, created, busy, initialCatalogId }: { initialCatalogId: string; close: () => void; action: Action; created: (project: Project) => void; busy: boolean }) {
+  const [template, setTemplate] = useState(initialCatalogId ? -2 : -1);
+  const [catalogId, setCatalogId] = useState(initialCatalogId);
+  const [catalogExpanded, setCatalogExpanded] = useState(!initialCatalogId);
   const [catalogQuery, setCatalogQuery] = useState('');
   return <Modal title="New challenge" close={close} wide>
-    <div className="template-picker"><button className={template === -2 ? 'selected' : ''} onClick={() => setTemplate(-2)}>Norfolk catalog · {challenges.length}</button><button className={template === -1 ? 'selected' : ''} onClick={() => setTemplate(-1)}>Custom problem</button>{starters.map((p, i) => <button key={p.title} className={template === i ? 'selected' : ''} onClick={() => setTemplate(i)}>{['Message parsing', 'Scheduling', 'Offline workflow'][i]}</button>)}</div>
-    {template === -2 && <div className="catalog-picker"><label>Find a published challenge<input value={catalogQuery} onChange={e => setCatalogQuery(e.target.value)} placeholder="Search title, category, or challenge ID"/></label><div className="catalog-results">{challenges.filter(c => (c.id + ' ' + c.title + ' ' + c.category).toLowerCase().includes(catalogQuery.toLowerCase())).map(c => <button className={catalogId === c.id ? 'selected' : ''} key={c.id} onClick={() => setCatalogId(c.id)}><span className="catalog-id">#{c.id}</span><span>{c.title}<small>{c.category || 'Uncategorized'} · {c.recipe}</small></span>{catalogId === c.id && <Check size={16}/>}</button>)}</div></div>}
+    <div className="template-picker"><button className={template === -2 ? 'selected' : ''} onClick={() => { setTemplate(-2); setCatalogExpanded(true); }}>Norfolk catalog · {challenges.length}</button><button className={template === -1 ? 'selected' : ''} onClick={() => setTemplate(-1)}>Custom problem</button>{starters.map((p, i) => <button key={p.title} className={template === i ? 'selected' : ''} onClick={() => setTemplate(i)}>{['Message parsing', 'Scheduling', 'Offline workflow'][i]}</button>)}</div>
+    {template === -2 && (catalogExpanded ? <div className="catalog-picker"><label>Find a published challenge<input value={catalogQuery} onChange={e => setCatalogQuery(e.target.value)} placeholder="Search title, category, or challenge ID"/></label><div className="catalog-results">{challenges.filter(c => (c.id + ' ' + c.title + ' ' + c.category).toLowerCase().includes(catalogQuery.toLowerCase())).map(c => <button className={catalogId === c.id ? 'selected' : ''} key={c.id} onClick={() => { setCatalogId(c.id); setCatalogExpanded(false); }}><span className="catalog-id">#{c.id}</span><span>{c.title}<small>{c.category || 'Uncategorized'} · {c.recipe}</small></span>{catalogId === c.id && <Check size={16}/>}</button>)}</div></div> : <div className="intake-source"><span>Starting from Norfolk challenge #{catalogId}</span><button className="text-button" onClick={() => setCatalogExpanded(true)}>Change challenge</button></div>)}
     {(template !== -2 || catalogId) && <RequirementsForm key={template + catalogId} initial={template === -2 ? toProjectInput(catalogId) : template < 0 ? { title: '', description: '', criteria: [] } : starters[template]} busy={busy} submitLabel="Save challenge" submit={async input => {
       await action(async () => { const p = await api.createProject(input); close(); created(p); }, 'Challenge saved.');
     }}/>}
@@ -153,7 +146,8 @@ function Evidence({ project, action, busy }: { project: Project; action: Action;
         <label>Review notes<textarea rows={5} maxLength={10000} value={feedback} disabled={!!project.approvedAt} onChange={e => setFeedback(e.target.value)} placeholder="What did you try? What worked, and what still needs domain validation?"/></label>
         {!project.approvedAt && <label className="checkbox"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/>I inspected the application, test evidence, and limitations.</label>}
         {project.approvedAt ? <p className="approval-note"><ShieldCheck size={17}/>Approved for prototype delivery · {date(project.approvedAt)}</p> : <button className="primary full-width" disabled={!passed || !reviewed || feedback.trim().length < 10 || busy || project.status === 'running'} onClick={() => void action(() => api.approve(project.id, feedback), 'Prototype approved for delivery.')}><ShieldCheck size={16}/> Approve prototype</button>}
-        <button className="secondary full-width" disabled={!project.approvedAt || busy} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/> Export app & evidence</button>
+        <ExecutableDownload project={project} api={api} busy={busy} action={action} buttonClassName="primary full-width"/>
+        <button className="secondary full-width" disabled={!project.approvedAt || busy || project.executable?.status === 'packaging'} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/> Export app & evidence</button>
         {project.exportedTo && <p className="path-note">{project.exportedTo}</p>}
       </div></div>
       <div className="readiness-note"><ShieldCheck size={19}/><p><strong>Operational readiness: unverified.</strong> Synthetic fixtures and prototype review do not validate production integrations, security accreditation, or field performance.</p></div>
@@ -197,7 +191,8 @@ function Settings({ data, action, updated, busy }: { data: Bootstrap; action: Ac
 }
 export default function App() {
   const [data, setData] = useState<Bootstrap | null>(null), [state, setState] = useState<AppState | null>(null);
-  const [active, setActive] = useState<View>('factory'), [current, setCurrent] = useState(''), [selected, setSelected] = useState<StageId>('intake');
+  const [active, setActive] = useState<View>('portfolio'), [current, setCurrent] = useState(''), [selected, setSelected] = useState<StageId>('intake');
+  const [intakeCatalogId, setIntakeCatalogId] = useState('');
   const [intake, setIntake] = useState(false), [search, setSearch] = useState(false), [start, setStart] = useState(false);
   const [query, setQuery] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
   useEffect(() => { api.bootstrap().then(b => { setData(b); setState(b.state); setCurrent(b.state.projects[0]?.id || ''); }).catch(e => setError(String(e))); return api.onState(setState); }, []);
@@ -211,6 +206,7 @@ export default function App() {
   };
   const p = state?.projects.find(p => p.id === current) || state?.projects[0];
   const configured = data?.models.some(m => m.id === state?.settings.model && m.provider === state?.settings.provider && m.configured && (m.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
+  function createChallenge(challengeId = '') { setIntakeCatalogId(challengeId); setIntake(true); }
   function openProject(id: string) { setCurrent(id); setSelected('intake'); setActive('factory'); setSearch(false); }
   const nav: { id: View; label: string; shortLabel: string; icon: typeof Bot }[] = [
     { id: 'portfolio', label: 'Home — challenge portfolio', shortLabel: 'Home', icon: LayoutDashboard }, { id: 'factory', label: 'Flow — build pipeline', shortLabel: 'Flow', icon: GitBranch },
@@ -218,38 +214,44 @@ export default function App() {
     { id: 'evidence', label: 'Review — evidence & delivery', shortLabel: 'Review', icon: ClipboardCheck }
   ];
   const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
-  if (!state || !data || !p) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>FleetHarness</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
+  if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>FleetHarness</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
+  const showHome = active === 'portfolio' || (!p && active !== 'settings');
   return <div className="app-shell">
+    {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="FleetHarness" title="FleetHarness"><div className="mark"><Mark/></div></div>
-      <nav aria-label="Primary">{nav.map(item => <IconButton key={item.id} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => setActive(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(p => p.status === 'running') && <i className="live-dot"/>}</IconButton>)}
+      <nav aria-label="Primary">{nav.map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => setActive(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(p => p.status === 'running') && <i className="live-dot"/>}</IconButton>)}
         <div className="nav-divider"/>
-        <IconButton label="Brief — requirements" placement="right" className={active === 'requirements' ? 'active' : ''} aria-current={active === 'requirements' ? 'page' : undefined} onClick={() => setActive('requirements')}><Inbox size={21}/><span>Brief</span></IconButton>
-        <IconButton label="Files — artifacts" placement="right" className={active === 'artifacts' ? 'active' : ''} aria-current={active === 'artifacts' ? 'page' : undefined} onClick={() => setActive('artifacts')}><Archive size={21}/><span>Files</span></IconButton>
+        <IconButton disabled={!p} label="Brief — requirements" placement="right" className={active === 'requirements' ? 'active' : ''} aria-current={active === 'requirements' ? 'page' : undefined} onClick={() => setActive('requirements')}><Inbox size={21}/><span>Brief</span></IconButton>
+        <IconButton disabled={!p} label="Files — artifacts" placement="right" className={active === 'artifacts' ? 'active' : ''} aria-current={active === 'artifacts' ? 'page' : undefined} onClick={() => setActive('artifacts')}><Archive size={21}/><span>Files</span></IconButton>
       </nav>
       <div className="rail-bottom"><IconButton label="Model settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => setActive('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
-      <header className="topbar"><div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div><div className="top-actions">
-        {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
-        <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
-        <IconButton label="New challenge" onClick={() => setIntake(true)}><Plus size={20}/></IconButton>
-        {p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop run</button> : <button className="primary" disabled={busy} onClick={() => configured ? setStart(true) : setActive('settings')}><Play size={15}/>{configured ? 'Start build' : 'Connect model'}</button>}
-      </div></header>
-      {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
-      {active !== 'portfolio' && active !== 'settings' && <section className="run-header"><div><div className="run-title"><h1>{p.title}</h1><Badge status={p.status}/></div><details className="brief-disclosure"><summary><Info size={13}/> Challenge brief</summary><p>{p.description}</p><button className="text-button" onClick={() => setActive('requirements')}>Edit brief <ArrowRight size={13}/></button></details></div></section>}
-      {p.error && active === 'factory' && <div className="run-error"><XCircle size={16}/><span>{p.error}</span></div>}
-      {active === 'factory' && <Factory key={p.id} project={p} selected={selected} select={setSelected} navigate={setActive}/>}
-      {active === 'portfolio' && <Portfolio projects={state.projects} open={openProject} create={() => setIntake(true)} query={query} setQuery={setQuery}/>}
-      {active === 'workspace' && <Development key={p.id} project={p} action={action} navigate={setActive}/>}
-      {active === 'agents' && <AgentSessions key={p.id} project={p} selectStage={setSelected}/>}
-      {active === 'evidence' && <Evidence key={p.id + (p.approvedAt || '')} project={p} action={action} busy={busy}/>}
-      {active === 'artifacts' && <Artifacts key={p.id} project={p} action={action}/>}
-      {active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>Saving changes resets tests and approval.</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running'} submitLabel="Save requirements" submit={async input => { await action(() => api.updateProject(p.id, input), 'Requirements saved.'); }}/></div>}
+      <header className="topbar">
+        {showHome || !p ? <div className="workspace-title">FleetHarness <span>/ {showHome ? 'Home' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div>}
+        <div className="top-actions">
+          {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
+          <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
+          {showHome ? <button className="primary" onClick={() => createChallenge()}><Plus size={16}/>New challenge</button> : <>
+            <IconButton label="New challenge" onClick={() => createChallenge()}><Plus size={20}/></IconButton>
+            {p && (p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop run</button> : <button className="primary" disabled={busy} onClick={() => configured ? setStart(true) : setActive('settings')}><Play size={15}/>{configured ? 'Start build' : 'Connect model'}</button>)}
+          </>}
+        </div>
+      </header>
+      {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
+      {p && !showHome && active !== 'settings' && <section className="run-header"><div><div className="run-title"><h1>{p.title}</h1><Badge status={p.status}/></div><details className="brief-disclosure"><summary><Info size={13}/> Challenge brief</summary><p>{p.description}</p><button className="text-button" onClick={() => setActive('requirements')}>Edit brief <ArrowRight size={13}/></button></details></div></section>}
+      {p?.error && active === 'factory' && <div className="run-error"><XCircle size={16}/><span>{p.error}</span></div>}
+      {p && active === 'factory' && <Factory key={p.id} project={p} selected={selected} select={setSelected} navigate={setActive}/>}
+      {p && active === 'workspace' && <Development key={p.id} project={p} action={action} navigate={setActive}/>}
+      {p && active === 'agents' && <AgentSessions key={p.id} project={p} selectStage={setSelected}/>}
+      {p && active === 'evidence' && <Evidence key={p.id + (p.approvedAt || '')} project={p} action={action} busy={busy}/>}
+      {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action}/>}
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>Saving changes resets tests and approval.</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running'} submitLabel="Save requirements" submit={async input => { await action(() => api.updateProject(p.id, input), 'Requirements saved.'); }}/></div>}
       {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={b => { setData(b); setState(b.state); }} busy={busy}/>}
     </main>
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}
-    {intake && <Intake close={() => setIntake(false)} action={action} created={project => { setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); openProject(project.id); }} busy={busy}/>}
+    {intake && <Intake initialCatalogId={intakeCatalogId} close={() => setIntake(false)} action={action} created={project => { setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); openProject(project.id); }} busy={busy}/>}
     {search && <Modal title="Find a challenge" close={() => setSearch(false)}><label className="search-field"><Search size={18}/><input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="Search saved challenges"/></label><div className="search-results">{results.map(p => <button key={p.id} onClick={() => openProject(p.id)}><span>{p.title}<small>{labels[p.status]}</small></span><ArrowRight size={16}/></button>)}{!results.length && <p className="muted">No matching challenges.</p>}</div></Modal>}
-    {start && <Modal title={state.settings.backend === 'codex' ? 'Start Codex build' : 'Start Pi build'} close={() => setStart(false)}><p className="muted">{state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this Mac. {state.settings.backend === 'codex' ? 'Codex runs with workspace write access and external command network access disabled. FleetHarness independently executes generated tests locally.' : 'They work in a new project folder, which is not an OS sandbox.'} {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your ChatGPT plan’s Codex allowance and is subject to its limits.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current requirements.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Build started.')}><Play size={16}/>Run {state.settings.backend === 'codex' ? 'Codex' : 'Pi'} agents</button></div></Modal>}
+    {start && p && <Modal title={state.settings.backend === 'codex' ? 'Start Codex build' : 'Start Pi build'} close={() => setStart(false)}><p className="muted">{state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this Mac. {state.settings.backend === 'codex' ? 'Codex runs with workspace write access and external command network access disabled. FleetHarness independently executes generated tests locally.' : 'They work in a new project folder, which is not an OS sandbox.'} {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your ChatGPT plan’s Codex allowance and is subject to its limits.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current requirements.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Build started.')}><Play size={16}/>Run {state.settings.backend === 'codex' ? 'Codex' : 'Pi'} agents</button></div></Modal>}
   </div>;
 }

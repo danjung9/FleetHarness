@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   stopRun: (id: string) => ipcRenderer.invoke('fleet:stop', id),
   approve: (id: string, feedback: string) => ipcRenderer.invoke('fleet:approve', id, feedback),
   exportProject: (id: string) => ipcRenderer.invoke('fleet:export', id),
+  downloadExecutable: (id: string) => ipcRenderer.invoke('fleet:download-executable', id),
   artifacts: (id: string) => ipcRenderer.invoke('fleet:artifacts', id),
   readArtifact: (id: string, file: string) => ipcRenderer.invoke('fleet:read', id, file),
   preview: (id: string) => ipcRenderer.invoke('fleet:preview', id),

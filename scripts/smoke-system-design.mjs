@@ -11,7 +11,7 @@ const output = path.resolve('output/playwright'); await fs.mkdir(output, { recur
 const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
 const fixture = await startFixtureProvider(); fixture.setDelay(500);
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': { baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] } } }));
-let app, browser, studioServer;
+let app, browser, server;
 try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDir }, timeout: 45000 });
   const page = await app.firstWindow(); await page.locator('.app-shell').waitFor();
@@ -24,6 +24,7 @@ try {
     api.onState(state => { const p = state.projects[0]; window.designSnapshots.push({ status: p.status, progress: p.systemDesign?.progress, report: p.report }); });
     return p.id;
   });
+  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('button', { name: 'Run Pi agents', exact: true }).click();
   await page.getByRole('heading', { name: 'Designing your system' }).waitFor();
@@ -51,40 +52,45 @@ try {
   await page.getByRole('button', { name: 'App preview', exact: true }).click();
   await page.frameLocator('iframe').getByRole('button', { name: 'Parse message' }).click();
   await page.reload(); await page.locator('.app-shell').waitFor();
+  await page.getByRole('button', { name: 'Preview — development workspace', exact: true }).click();
   await page.getByRole('button', { name: 'System design', exact: true }).click();
   assert.equal(await page.locator('.sd-node.generated').count(), 3, 'Saved design survives reload');
   await page.evaluate(id => window.fleetHarness.updateProject(id, { title: 'Revised parser', description: 'A revised application brief should clear the previous system architecture.', criteria: ['Publish a new design.'] }), id);
   await page.getByRole('heading', { name: 'Your system design will appear here' }).waitFor();
   assert.deepEqual(errors, []);
-  // Seed the same real fixture result into Studio's browser preview to inspect small screens.
-  studioServer = await preview({ configFile: 'vite.studio.config.ts', preview: { host: '127.0.0.1', port: 0, strictPort: false } });
-  const studioUrl = `http://127.0.0.1:${studioServer.httpServer.address().port}/studio/index.html#build/${id}`;
+  // Check interrupted states in the retained browser renderer using the real fixture result.
+  server = await preview({ preview: { host: '127.0.0.1', port: 0, strictPort: false } });
   browser = await chromium.launch({ headless: true, channel: process.env.FLEET_BROWSER_CHANNEL || 'chrome' });
-  const mobile = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
-  mobile.on('pageerror', e => errors.push(e.message));
-  await mobile.goto(studioUrl);
-  const seed = async p => {
-    await mobile.evaluate(project => localStorage.setItem('fleetharness-studio-preview-v1', JSON.stringify({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: [project] })), p);
-    await mobile.reload();
-    await mobile.getByRole('tab', { name: 'System design', exact: true }).click();
-    await mobile.locator('.sd-node').first().waitFor();
+  const renderer = await browser.newPage({ viewport: { width: 1120, height: 720 }, reducedMotion: 'reduce' });
+  renderer.on('pageerror', e => errors.push(e.message));
+  await renderer.goto(`http://127.0.0.1:${server.httpServer.address().port}/`);
+  const seed = async project => {
+    await renderer.evaluate(project => localStorage.setItem('fleet-browser-preview', JSON.stringify({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: [project] })), project);
+    await renderer.reload();
+    await renderer.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+    await renderer.getByRole('button', { name: 'System design', exact: true }).click();
+    await renderer.locator('.sd-node').first().waitFor();
   };
-  await seed(final);
-  await mobile.screenshot({ path: path.join(output, 'system-design-studio-desktop.png'), fullPage: true, scale: 'css' });
-  await mobile.setViewportSize({ width: 390, height: 844 });
-  await mobile.screenshot({ path: path.join(output, 'system-design-studio-mobile.png'), fullPage: true, scale: 'css' });
-  assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   const interrupted = structuredClone(final);
   interrupted.status = 'stopped'; interrupted.systemDesign.progress.parser.status = 'building';
   await seed(interrupted);
-  assert.equal(await mobile.locator('.sd-node.building').count(), 0);
-  assert.equal(await mobile.getByRole('button', { name: 'Task extraction: Stopped' }).count(), 1);
+  assert.equal(await renderer.locator('.sd-node.building').count(), 0);
+  assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Stopped' }).count(), 1);
   interrupted.status = 'failed'; await seed(interrupted);
-  assert.equal(await mobile.getByRole('button', { name: 'Task extraction: Blocked' }).count(), 1);
+  assert.equal(await renderer.getByRole('button', { name: 'Task extraction: Blocked' }).count(), 1);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, planning: true, liveProgress: true, repair: true, sourceReferences: true, persistence: true, staleDesignCleared: true, studioResponsive: true, interruptedStates: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, planning: true, liveProgress: true, repair: true, sourceReferences: true, persistence: true, staleDesignCleared: true, interruptedStates: true, rendererErrors: 0, screenshots: output }, null, 2));
+} catch (error) {
+  if (app) {
+    const page = await app.firstWindow();
+    console.error(await page.evaluate(async () => ({
+      projects: (await window.fleetHarness.bootstrap()).state.projects.map(p => ({ status: p.status, error: p.error, progress: p.systemDesign?.progress })),
+      snapshots: window.designSnapshots
+    })));
+  }
+  throw error;
 } finally {
   await browser?.close(); await app?.close(); await fixture.close();
-  if (studioServer) await new Promise(resolve => studioServer.httpServer.close(resolve));
+  await server?.close();
   await fs.rm(root, { recursive: true, force: true });
 }

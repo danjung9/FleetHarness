@@ -24,16 +24,18 @@ export async function startFixtureProvider() {
     const last = body.messages.at(-1);
     const prompt = body.messages.filter(m => m.role === 'user').map(m => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('\n');
     let files = [], extraCalls = [];
-    const implementation = prompt.includes('You are the implementation agent');
+    const guide = prompt.includes('Implementation is complete.');
+    const implementation = prompt.includes('You are the implementation agent') && !guide;
     const verification = prompt.includes('You are the verification agent') || prompt.includes('The independent test run failed');
     if (last?.role === 'user') {
-      if (prompt.includes('The independent test run failed')) files = [
+      if (guide) files = [['README.md', '# Fixture parser user guide\n\nOpen index.html in a browser; no install or server is required.\n\n## Walkthrough\n1. Enter the synthetic input `TASK: inspect pump` in Message.\n2. Select Parse message.\n3. The result is `{"task":"inspect pump"}`.\n\n## Data and limitations\nThe fixture only strips the TASK prefix; other input is returned unchanged. It saves a lastParse marker in browser storage, but does not retain messages or results after a reload. No export or reset control is provided.\n\n## Troubleshooting\nIf no result appears, select Parse message and check that browser scripts are enabled.\n\n## Developer tests\nWith Node installed, run `node --test parser.test.cjs`. See [verification notes](verification.md) and [field validation](path-to-fleet.md). This is a synthetic integration-test fixture.\n']];
+      else if (prompt.includes('The independent test run failed')) files = [
         ['core.cjs', 'exports.parse = text => ({task:text.replace(/^TASK: /,"")});\n'],
         ['verification.md', '# Verification\nThe initial fixture failure was repaired. Domain performance is unverified.\n']
       ];
       else if (prompt.includes('You are the verification agent')) files = [['verification.md', '# Verification\nOne source behavior is covered. Operational readiness is unverified.\n']];
       else if (prompt.includes('You are the implementation agent')) files = [
-        ['index.html', html], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'], ['README.md', '# Fixture app\nOpen index.html. Run node --test.\n'],
+        ['index.html', html], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
         ['core.cjs', 'exports.parse = text => ({task:"intentional defect"});\n'],
         ['parser.test.cjs', 'const {test}=require("node:test");const assert=require("node:assert/strict");const {parse}=require("./core.cjs");test("extracts a task",()=>assert.deepEqual(parse("TASK: inspect pump"),{task:"inspect pump"}));\n']
       ];

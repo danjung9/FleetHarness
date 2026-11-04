@@ -131,12 +131,19 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
       const rpc = new FakeRpc(); rpc.signedIn = true;
+      let phase;
       rpc.handler = async (method, params) => {
         if (method !== 'turn/start') return;
         const text = params.input[0].text;
-        const phase = /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
-        const files = phase === 'intake' ? { 'scope.md': 'Scope' } : phase === 'research' ? { 'research.md': 'Research' } : phase === 'plan' ? { 'scope.md': 'Scope', 'research.md': 'Research', 'plan.md': 'Plan', 'test-matrix.md': 'Test mapping' }
-          : phase === 'build' ? { 'index.html': '<!doctype html><title>Fixture</title><main>Works</main>', 'README.md': 'Readme', 'path-to-fleet.md': 'Domain review required', 'app.test.cjs': 'require("node:test")("sum",()=>require("node:assert/strict").equal(2+2,4));' }
+        phase ??= /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
+        const guide = text.startsWith('Implementation is complete.');
+        if (guide) {
+          await fs.access(path.join(options.cwd, 'index.html'));
+          await assert.rejects(fs.access(path.join(options.cwd, 'README.md')), /ENOENT/);
+        }
+        const files = guide ? { 'README.md': '# Fixture guide\nOpen index.html in a browser. The page displays Works. It has no input controls or persistence. Run `node --test app.test.cjs` with Node for developer tests.' }
+          : phase === 'intake' ? { 'scope.md': 'Scope' } : phase === 'research' ? { 'research.md': 'Research' } : phase === 'plan' ? { 'scope.md': 'Scope', 'research.md': 'Research', 'plan.md': 'Plan', 'test-matrix.md': 'Test mapping' }
+          : phase === 'build' ? { 'index.html': '<!doctype html><title>Fixture</title><main>Works</main>', 'path-to-fleet.md': 'Domain review required', 'app.test.cjs': 'require("node:test")("sum",()=>require("node:assert/strict").equal(2+2,4));' }
           : { 'verification.md': 'Verified by the independent runner' };
         for (const [file, content] of Object.entries(files)) await fs.writeFile(path.join(options.cwd, file), content);
         const tool = options.tools.find(t => t.name === (phase === 'plan' ? 'fleet_system_design' : 'fleet_component_progress'));
@@ -151,5 +158,6 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
   backend.runtime = { getModel() { throw new Error('Pi model lookup must not run'); } };
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1);
-  assert.deepEqual(phases, ['intake', 'research', 'plan', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.deepEqual(phases, ['intake', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.match(await fs.readFile(path.join(project.workspace, 'README.md'), 'utf8'), /Fixture guide/);
 });

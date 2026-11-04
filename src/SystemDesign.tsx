@@ -14,13 +14,12 @@ function StatusIcon({ status }: { status: DisplayStatus }) {
   return <Icon size={14} aria-hidden="true"/>;
 }
 
-export function SystemDesign({ project, studio = false }: { project: Project; studio?: boolean }) {
+export function SystemDesign({ project }: { project: Project }) {
   const [selected, setSelected] = useState('');
   const uid = useId().replaceAll(':', '');
   const design = project.systemDesign;
   const planning = project.status === 'running' && !design;
-  const className = 'system-design' + (studio ? ' system-design-studio' : '');
-  if (!design) return <section className={className} aria-label="System design">
+  if (!design) return <section className="system-design" aria-label="System design">
     <div className="sd-empty"><GitBranch size={28} aria-hidden="true"/><h2>{planning ? 'Designing your system' : 'Your system design will appear here'}</h2>
       <p>{planning ? 'The planning agent is mapping the application’s components and how they connect. The diagram will appear as soon as it publishes the design.' : project.status === 'stopped' || project.status === 'failed' ? 'The run ended before a system design was published. Start a new run to generate the architecture.' : project.runId && project.status !== 'draft' ? 'This earlier run has no system design. New runs publish a live architecture diagram during planning.' : 'Start a build to see the planned components, their connections, and progress as the agents implement them.'}</p>
       {planning && <span className="sd-status building" role="status"><Activity size={14}/>Planning in progress</span>}
@@ -48,7 +47,7 @@ export function SystemDesign({ project, studio = false }: { project: Project; st
   const verifying = project.status === 'running' && project.stages.some(s => s.id === 'verify' && s.status === 'active');
   const related = connections.filter(c => c.from === active.id || c.to === active.id);
   const progress = design.progress[active.id];
-  return <section className={className} aria-label="System design">
+  return <section className="system-design" aria-label="System design">
     <header className="sd-heading"><div><h2>System design</h2><p>{title}</p></div><span className="sd-live"><Layers size={15}/>{project.status === 'running' ? 'Live build' : 'Saved design'}</span></header>
     <div className="sd-summary"><span role="status" aria-live="polite">{generated} of {components.length} components generated{building > 0 ? ` · ${building} building` : ''}</span><span>{project.status === 'stopped' ? 'Run stopped' : project.status === 'failed' ? 'Run needs attention' : verifying ? 'Verification in progress' : passed ? 'Application tests passed' : 'Tests not yet passed'}</span></div>
     <p className="sd-description">{description}</p>
