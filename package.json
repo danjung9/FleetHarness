@@ -13,7 +13,7 @@
     "build:web": "tsc && vite build --outDir dist-web --base /",
     "start": "electron .",
     "preview": "vite preview",
-    "test": "npm run build:electron && node --test tests/*.test.mjs",
+    "test": "npm run build:electron && node --test --test-concurrency=2 tests/*.test.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
     "pack": "npm run build && electron-builder --dir",
