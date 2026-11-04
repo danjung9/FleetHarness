@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
@@ -77,6 +78,11 @@ function validateAssignments(input, assignments) {
         !Array.isArray(r.starts) || r.starts.some(s => !Number.isSafeInteger(s))) errors.push('Invalid numeric input for ' + r.id);
   }
   if (!Array.isArray(assignments)) return { valid: false, errors: ['Assignments are not an array'], totals: {}, rest: {} };
+  if (assignments.some(a => !a || typeof a !== 'object' || Array.isArray(a) || typeof a.id !== 'string' ||
+      !Array.isArray(a.people) || a.people.some(p => typeof p !== 'string') ||
+      !Array.isArray(a.resources) || a.resources.some(r => typeof r !== 'string'))) {
+    return { valid: false, errors: ['Malformed assignment identity or membership fields'], totals: {}, rest: {} };
+  }
   const returned = assignments.map(a => a?.id);
   if (!equal([...ids].sort(), [...returned].sort())) errors.push('Required and returned ID multisets differ');
   const totals = Object.fromEntries(input.people.map(p => [p.id, 0]));
@@ -128,8 +134,21 @@ function selfCheck() {
   assert.equal(validateAssignments(base, strings).valid, false, 'Numeric strings must not pass');
   const duplicate = clone(valid); duplicate[3] = clone(duplicate[2]);
   assert.equal(validateAssignments(base, duplicate).valid, false, 'Duplicate returned IDs');
+  for (const field of ['people', 'resources']) for (const value of ['P01', null, {}, [17]]) {
+    const malformed = clone(valid); malformed[0][field] = value;
+    assert.equal(validateAssignments(base, malformed).valid, false, 'Malformed ' + field);
+  }
+  const extra = clone(valid); extra[0].diagnostic = 'Harmless additional observation';
+  assert.equal(judge(cases[0], { status: 'feasible', assignments: extra }).status, 'PASS', 'Harmless extra assignment fields');
+  const roomCase = cases.find(c => c.id === 'V14'), roomBad = clone(roomCase.expected.assignments);
+  Object.assign(roomBad.find(a => a.id === 'C'), { start: 0, end: 60 });
+  assert.equal(validateAssignments(roomCase.input, roomBad).valid, false, 'Room conflict across different people');
+  assert.equal(validateAssignments(cases.find(c => c.id === 'V15').input, valid).valid, false, 'Cross-day total limit');
+  const reversed = cases.find(c => c.id === 'V16'), reverseBad = clone(reversed.expected.assignments);
+  Object.assign(reverseBad.find(a => a.id === 'B'), { start: 60, end: 120 });
+  assert.equal(validateAssignments(reversed.input, reverseBad).valid, false, 'Chronological rather than input-order rest');
   assert.deepEqual(validateAssignments(cases.find(c => c.id === 'V13').input, cases.find(c => c.id === 'V13').expected.assignments).totals, { P01: 105, P02: 120 });
-  return { status: 'PASS', validCases: cases.filter(c => c.expected.status === 'feasible').length, rejected: ['N1', 'N2', 'N3', 'numeric strings', 'duplicate returned IDs'], scope: 'Pure evaluator controls only, no candidate acceptance' };
+  return { status: 'PASS', validCases: cases.filter(c => c.expected.status === 'feasible').length, rejected: ['N1', 'N2', 'N3', 'numeric strings', 'duplicate returned IDs', 'malformed people/resources'], acceptedExtraDiagnostics: true, scope: 'Pure evaluator controls only, no candidate acceptance' };
 }
 
 function inputShape(v) {
@@ -157,7 +176,11 @@ function normalizedStatus(value) {
   const s = value.trim().toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
   return ['feasible', 'infeasible', 'invalid_input', 'budget_exhausted'].includes(s) ? s : s === 'invalid' ? 'invalid_input' : null;
 }
-const sortedAnswer = rows => [...rows].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+const sortedAnswer = rows => rows.map(a => a && typeof a === 'object' ? {
+  id: a.id, start: a.start, end: a.end,
+  people: Array.isArray(a.people) ? [...a.people].sort() : a.people,
+  resources: Array.isArray(a.resources) ? [...a.resources].sort() : a.resources
+} : a).sort((a, b) => String(a?.id).localeCompare(String(b?.id)));
 function judge(c, observed) {
   if (!observed) return { status: 'NOT CHECKED', detail: 'No unambiguous current rendered result schema' };
   if (c.id === 'G10' && observed.status !== 'budget_exhausted' && observed.status !== 'infeasible') {
@@ -178,7 +201,8 @@ function judge(c, observed) {
 // Payload staging excludes hidden paths, credential-like names, and symlinks before reading bytes.
 function excluded(name) {
   return name.startsWith('.') || ['node_modules', 'credentials', 'secrets', 'auth'].includes(name.toLowerCase()) ||
-    /(?:^|[._-])(?:credentials?|secrets?|passwords?|tokens?|auth|private[-_]?key)(?:[._-]|$)/i.test(name) ||
+    /(?:^|[._-])(?:credentials?|secrets?|passwords?|tokens?|auth|private[-_]?key|api[-_]?keys?|access[-_]?tokens?|client[-_]?secret)(?:[._-]|$)/i.test(name) ||
+    /^id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?$/i.test(name) ||
     /\.(?:pem|key|p12|pfx|keystore|jks)$/i.test(name);
 }
 async function payload(root, copyTo) {
@@ -216,8 +240,14 @@ async function resolvedFuture(target) {
 
 async function observe(page) {
   return page.evaluate(() => {
-    const visible = el => !!el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' &&
-      getComputedStyle(el).display !== 'none' && !el.closest('[aria-hidden="true"]');
+    const visible = el => {
+      if (!el.getClientRects().length || el.closest('[aria-hidden="true"]')) return false;
+      for (let node = el; node; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+      }
+      return true;
+    };
     const label = el => el.getAttribute('aria-label') || (el.labels ? [...el.labels].map(l => l.innerText).join(' ') : '') || el.innerText || el.value || '';
     const capped = s => String(s || '').slice(0, 30000);
     const editors = [...document.querySelectorAll('textarea')].map((el, index) => ({
@@ -238,16 +268,15 @@ async function observe(page) {
     const imports = [...document.querySelectorAll('input[type=file]')].map((el, index) => ({
       index, label: capped(label(el)), accept: el.accept, multiple: el.multiple, disabled: el.disabled
     }));
-    return { url: location.href, body: capped(document.body.innerText), editors, buttons, outputs, tables, review, statusTexts, imports };
+    const busy = [...document.querySelectorAll('[aria-busy="true"]')].some(visible);
+    return { url: location.href, body: capped(document.body.innerText), editors, buttons, outputs, tables, review, statusTexts, imports, busy };
   });
 }
-function tableResult(observation) {
-  const statuses = [...new Set(observation.statusTexts.map(normalizedStatus).filter(Boolean))];
-  if (statuses.length !== 1) return null;
+function tableAssignments(tables) {
   const candidates = [];
   const header = s => s.toLowerCase().replace(/[^a-z]/g, '');
   const integer = s => /^-?\d+$/.test(s) && Number.isSafeInteger(Number(s)) ? Number(s) : null;
-  for (const table of observation.tables) {
+  for (const table of tables) {
     if (!table.length) continue;
     const h = table[0].map(header);
     const col = names => { const matches = h.map((x, n) => names.includes(x) ? n : -1).filter(n => n >= 0); return matches.length === 1 ? matches[0] : -1; };
@@ -260,9 +289,15 @@ function tableResult(observation) {
       resources: (r[indexes[4]] || '').split(/[,;]/).map(s => s.trim()).filter(Boolean)
     }));
     if (assignments.some(a => a.start === null || a.end === null)) continue;
-    candidates.push({ status: statuses[0], assignments, source: 'visible table with explicit numeric-minute headers' });
+    candidates.push(assignments);
   }
   return candidates.length === 1 ? candidates[0] : null;
+}
+function tableResult(observation) {
+  const statuses = [...new Set(observation.statusTexts.map(normalizedStatus).filter(Boolean))];
+  if (statuses.length !== 1) return null;
+  const assignments = tableAssignments(observation.tables);
+  return assignments ? { status: statuses[0], assignments, source: 'visible table with numeric-minute columns' } : null;
 }
 function renderedResult(observation) {
   const found = [];
@@ -277,6 +312,8 @@ function renderedResult(observation) {
   // Nested code/pre elements may repeat the same JSON; differing results are ambiguous.
   const unique = [...new Map(found.map(r => [canonical({ status: r.status, assignments: r.assignments }), r])).values()];
   if (unique.length > 1) return null;
+  const statuses = [...new Set(observation.statusTexts.map(normalizedStatus).filter(Boolean))];
+  if (unique.length && statuses.some(s => s !== unique[0].status)) return null;
   const fromTable = tableResult(observation);
   if (unique.length && fromTable && !equal({ status: unique[0].status, assignments: sortedAnswer(unique[0].assignments) }, { status: fromTable.status, assignments: sortedAnswer(fromTable.assignments) })) return null;
   return unique[0] || fromTable;
@@ -317,7 +354,7 @@ function displayedTotals(observation) {
     const t = h.findIndex(s => ['totalminutes', 'trainingminutes', 'totaltrainingminutes', 'minutes'].includes(s));
     if (p < 0 || t < 0) continue;
     const values = {};
-    for (const row of table.slice(1)) if (/^-?\d+$/.test(row[t] || '')) {
+    for (const row of table.slice(1)) if (['P01', 'P02'].includes(row[p]) && /^-?\d+$/.test(row[t] || '')) {
       if (Object.hasOwn(values, row[p])) { values.duplicate = true; break; }
       values[row[p]] = Number(row[t]);
     }
@@ -332,11 +369,11 @@ async function main() {
   const positional = [], flags = {};
   for (let n = 0; n < argv.length; n++) {
     if (argv[n].startsWith('--')) {
-      if (!['--deps', '--chrome'].includes(argv[n]) || !argv[n + 1] || argv[n + 1].startsWith('--')) throw new Error('Unknown or missing option');
+      if (!['--deps', '--chrome', '--writers-stopped-evidence'].includes(argv[n]) || !argv[n + 1] || argv[n + 1].startsWith('--')) throw new Error('Unknown or missing option');
       flags[argv[n++]] = argv[n];
     } else positional.push(argv[n]);
   }
-  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE]');
+  if (positional.length !== 2 || !flags['--deps']) throw new Error('Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE]');
   const candidateArgument = path.resolve(positional[0]);
   if ((await fs.lstat(candidateArgument)).isSymbolicLink()) throw new Error('Candidate root must not be a symlink');
   const candidate = await fs.realpath(candidateArgument);
@@ -400,34 +437,44 @@ async function main() {
       await locator.fill(JSON.stringify(input, null, 2)); await locator.blur();
       let echoed;
       try { echoed = JSON.parse(await locator.inputValue()); } catch {}
-      return { ok: equal(echoed, input), kind: 'Editor value roundtrip only', reason: 'Editor readback does not by itself establish full semantic ingestion' };
+      return { ok: equal(echoed, input), mismatch: inputShape(echoed) && !equal(echoed, input), kind: 'Editor value roundtrip only', reason: 'Editor readback does not by itself establish full semantic ingestion' };
     }
     const document = replaceInput(adapter.template, adapter.inputPath, input);
     await page.locator('input[type=file]').nth(adapter.importIndex).setInputFiles({ name: label + '.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(document)) });
     await sleep(250);
+    const immediate = await capture(label + '-immediate-import');
     const saved = await download(SAVE, label + '-roundtrip');
     const inputs = saved?.json ? findInputs(saved.json) : [];
-    return { ok: inputs.length === 1 && equal(inputFields(inputs[0].value), input), kind: 'Actual import then export roundtrip', evidence: saved?.filename };
+    const ok = inputs.length === 1 && equal(inputFields(inputs[0].value), input);
+    return { ok, mismatch: inputs.length === 1 && !ok, immediate, kind: 'Actual import then export roundtrip', evidence: saved?.filename };
   }
-  async function compute(c, label) {
-    const entered = await applyInput(c.input, label);
+  async function compute(c, label, alreadyEntered) {
+    const entered = alreadyEntered || await applyInput(c.input, label);
     const before = await capture(label + '-entered');
-    if (!entered.ok) return { entered, ...before, judged: { status: 'NOT CHECKED', detail: 'Input roundtrip could not be established' } };
+    if (!entered.ok) return { entered, ...before, judged: { status: entered.mismatch ? 'FAIL' : 'NOT CHECKED', detail: entered.mismatch ? 'Known canonical input roundtrip differs from submitted values' : 'Input roundtrip could not be established' } };
     const button = chooseButton(before.observation, CHECK);
     if (!button) return { entered, ...before, judged: { status: 'NOT CHECKED', detail: 'No unique actual check/solve control' } };
     await click(button);
-    // Wait for two equal observable result snapshots; no app-private state is read.
+    // Stable stale output is not completion. Wait for the expected result or the full bound.
     let observation, previous = '', stable = 0;
+    const beforeSignature = canonical(renderedResult(before.observation));
     const deadline = Date.now() + 4000;
     do {
       await sleep(150); observation = await observe(page);
-      const value = canonical(renderedResult(observation));
+      const current = renderedResult(observation), value = canonical(current);
       stable = value === previous ? stable + 1 : 0; previous = value;
-      if (value !== 'null' && stable >= 2) break;
+      const busy = observation.busy || observation.buttons.some(b => b.visible && b.disabled && CHECK.test(b.name)) ||
+        observation.statusTexts.some(s => /^(checking|solving|working|running|calculating)(?:\.{0,3}|…)?$/i.test(s));
+      if (!busy && stable >= 2 && judge(c, current).status === 'PASS') break;
     } while (Date.now() < deadline);
     const after = await capture(label + '-result');
     const observed = renderedResult(after.observation);
-    return { entered, ...after, judged: judge(c, observed) };
+    const busy = after.observation.busy || after.observation.buttons.some(b => b.visible && b.disabled && CHECK.test(b.name)) ||
+      after.observation.statusTexts.some(s => /^(checking|solving|working|running|calculating)(?:\.{0,3}|…)?$/i.test(s));
+    let judged = judge(c, observed);
+    if (busy) judged = { status: 'NOT CHECKED', detail: 'Check remains visibly busy at the observation deadline', observed };
+    else if (judged.status !== 'PASS' && canonical(observed) === beforeSignature) judged = { status: 'NOT CHECKED', detail: 'Output remained unchanged; current computation could not be established', observed };
+    return { entered, ...after, judged };
   }
   async function markReviewed() {
     const observation = await observe(page), button = chooseButton(observation, REVIEW);
@@ -442,14 +489,22 @@ async function main() {
   async function newContext(entry) {
     const next = await browser.newContext({ acceptDownloads: true, serviceWorkers: 'block', viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
     await next.setOffline(true);
+    const allowedFiles = new Set(receipt.payloadBefore.files.map(f => path.resolve(path.dirname(entry), f.path)));
     await next.route('**/*', route => {
-      const protocol = new URL(route.request().url()).protocol;
+      const requested = new URL(route.request().url()), protocol = requested.protocol;
       if (['http:', 'https:', 'ws:', 'wss:'].includes(protocol)) return route.abort('blockedbyclient');
+      if (protocol === 'file:') {
+        try { if (!allowedFiles.has(path.resolve(fileURLToPath(requested)))) return route.abort('blockedbyclient'); }
+        catch { return route.abort('blockedbyclient'); }
+      }
       return route.continue();
     });
     if (typeof next.routeWebSocket === 'function') await next.routeWebSocket(/.*/, socket => socket.close());
     const opened = await next.newPage(); opened.setDefaultTimeout(5000); opened.setDefaultNavigationTimeout(10000);
-    opened.on('dialog', dialog => { void dialog.dismiss(); });
+    opened.on('dialog', dialog => {
+      receipt.dialogs ||= []; receipt.dialogs.push({ type: dialog.type(), message: dialog.message().slice(0, 1000), sequence });
+      void dialog.dismiss();
+    });
     opened.on('pageerror', error => { receipt.rendererErrors ||= []; receipt.rendererErrors.push(String(error.message).slice(0, 1000)); });
     await opened.goto(pathToFileURL(entry).href, { waitUntil: 'load', timeout: 10000 });
     return { next, opened };
@@ -457,17 +512,20 @@ async function main() {
   try {
     timer = setTimeout(() => {
       receipt.status = 'ERROR'; receipt.error = 'Harness watchdog expired'; receipt.finishedAt = new Date().toISOString();
-      void persist().finally(async () => {
-        const stop = setTimeout(() => process.exit(2), 5000);
-        try { await browser?.close(); } catch {}
-        clearTimeout(stop); process.exit(2);
-      });
+      const stop = setTimeout(() => process.exit(2), 5000);
+      void Promise.allSettled([persist(), browser?.close()]).then(() => { clearTimeout(stop); process.exit(2); });
     }, receipt.limits.harnessWatchdogMs);
     const keyBytes = await fs.readFile(KEY), contractBytes = await fs.readFile(CONTRACT);
-    const keyBlock = /~~~json\s*([\s\S]*?)~~~/g; // Markdown may use either fence style.
     const fenced = keyBytes.toString('utf8').match(/(?:\x60{3}|~{3})json\s*([\s\S]*?)(?:\x60{3}|~{3})/);
     if (!fenced || !equal(JSON.parse(fenced[1]), base)) throw new Error('Frozen golden input differs from evaluator base; review contract revision');
     receipt.contracts = { acceptanceSha256: sha(contractBytes), goldenSha256: sha(keyBytes), scriptSha256: sha(await fs.readFile(SCRIPT)) };
+    if (flags['--writers-stopped-evidence']) {
+      const evidence = path.resolve(flags['--writers-stopped-evidence']);
+      const stat = await fs.lstat(evidence);
+      if (!stat.isFile() || stat.isSymbolicLink() || excluded(path.basename(evidence)) || stat.size > 1_000_000) throw new Error('Stopped-writer attestation must be a bounded regular noncredential file');
+      const bytes = await fs.readFile(evidence);
+      record('STOPPED-WRITERS-ATTESTATION', 'PASS', 'Operator supplied this evidence reference; shutdown was not independently observed by this browser script', { path: evidence, sha256: sha(bytes), size: bytes.length });
+    } else record('STOPPED-WRITERS-ATTESTATION', 'NOT CHECKED', 'No stopped-writer evidence supplied; matching file hashes alone do not prove writers were stopped');
     receipt.cases = cases;
     const staged = path.join(output, 'payload');
     receipt.payloadBefore = await payload(candidate, staged);
@@ -483,7 +541,9 @@ async function main() {
     for (const option of options) { try { await fs.access(option); executablePath = option; break; } catch {} }
     if (!executablePath) throw new Error('Existing Chrome not found; provide --chrome. No browser will be installed');
     receipt.runtime = { node: process.version, platform: process.platform, chromePath: executablePath, playwrightVersion: require('playwright/package.json').version };
-    browser = await chromium.launch({ executablePath, headless: true, timeout: 20000, args: ['--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-first-run'] });
+    browser = await chromium.launch({ executablePath, headless: true, timeout: 20000,
+      env: { PATH: process.env.PATH || '/usr/bin:/bin', LANG: 'en_US.UTF-8', TMPDIR: os.tmpdir() },
+      args: ['--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-first-run'] });
     receipt.runtime.chromeVersion = browser.version();
     const launched = await newContext(path.join(staged, 'index.html')); context = launched.next; page = launched.opened;
     await capture('cold-offline-launch');
@@ -495,7 +555,8 @@ async function main() {
       const one = await compute(fresh, 'calibration-fresh'), two = await compute(original, 'calibration-base');
       calibration = one.entered.ok && two.entered.ok && one.judged.status === 'PASS' && two.judged.status === 'PASS' &&
         !equal(one.judged.observed.assignments, two.judged.observed.assignments);
-      record('CAUSAL-INPUT-OUTPUT', calibration ? 'PASS' : 'NOT CHECKED', calibration ? 'Two distinct entered inputs produced their distinct independently expected outputs' : 'Cannot establish current output responsiveness; default/example content is insufficient', { first: one, second: two });
+      const failedCalibration = [one, two].some(r => r.judged.status === 'FAIL');
+      record('CAUSAL-INPUT-OUTPUT', calibration ? 'PASS' : failedCalibration ? 'FAIL' : 'NOT CHECKED', calibration ? 'Two distinct entered inputs produced their distinct independently expected outputs' : 'Cannot establish correct current output responsiveness; default/example content is insufficient', { first: one, second: two });
     } else record('CAUSAL-INPUT-OUTPUT', 'NOT CHECKED', 'No unique canonical JSON editor or actual export/import schema discovered');
     for (const c of cases) {
       if (!adapter || !calibration) { record(c.id, 'NOT CHECKED', 'Input/output boundary not established'); continue; }
@@ -516,19 +577,22 @@ async function main() {
       if (reviewedBase === true) {
         savedBase = await download(SAVE, 'reviewed-base-draft');
         const entered = await applyInput(fresh.input, 'review-edit');
-        const immediate = await capture('review-immediately-after-edit');
+        const immediate = entered.immediate || await capture('review-immediately-after-edit');
         const immediateState = reviewState(immediate.observation);
         record('REVIEW-EDIT', entered.ok && immediateState !== null ? (immediateState ? 'FAIL' : 'PASS') : 'NOT CHECKED', 'Review state checked after edit and before recheck', { state: immediateState, entered, evidence: immediate.evidence });
-        const recalculated = await compute(fresh, 'review-recheck');
+        const recalculated = await compute(fresh, 'review-recheck', entered);
         const afterCheck = reviewState(recalculated.observation);
         record('REVIEW-RECHECK', recalculated.judged.status === 'PASS' && afterCheck !== null ? (afterCheck ? 'FAIL' : 'PASS') : 'NOT CHECKED', 'Recheck alone must not approve edited draft', { state: afterCheck, evidence: recalculated.evidence });
-        const explicitlyReviewed = await markReviewed();
+        const explicitlyReviewed = recalculated.judged.status === 'PASS' && afterCheck === false ? await markReviewed() : null;
         record('REVIEW-FRESH', explicitlyReviewed === true ? 'PASS' : 'NOT CHECKED', 'Explicit review of changed, recalculated G02', { state: explicitlyReviewed });
         if (explicitlyReviewed === true) savedFresh = await download(SAVE, 'reviewed-fresh-draft');
       } else {
         for (const id of ['REVIEW-EDIT', 'REVIEW-RECHECK', 'REVIEW-FRESH']) record(id, 'NOT CHECKED', 'No unambiguous established reviewed state/action');
       }
-      if (!savedFresh) savedFresh = await download(SAVE, 'fresh-draft-unreviewed');
+      if (!savedFresh) {
+        const savePreparation = await compute(fresh, 'save-fresh-preparation');
+        if (savePreparation.judged.status === 'PASS') savedFresh = await download(SAVE, 'fresh-draft-unreviewed');
+      }
     } else {
       for (const id of ['REVIEW-EDIT', 'REVIEW-RECHECK', 'REVIEW-FRESH']) record(id, 'NOT CHECKED', 'Input/output boundary not established');
     }
@@ -536,13 +600,18 @@ async function main() {
     record('READABLE-SUMMARY', 'NOT CHECKED', summary ? 'Actual summary downloaded; independent officer readability and value comparison required' : 'No unambiguous readable-summary download discovered', { file: summary?.filename, sha256: summary?.sha256 });
     const savedInputs = savedFresh?.json ? findInputs(savedFresh.json) : [];
     const exactSaved = savedInputs.length === 1 && equal(inputFields(savedInputs[0].value), fresh.input);
-    record('SAVE-INPUT-ROUNDTRIP', savedFresh ? (exactSaved ? 'PASS' : 'NOT CHECKED') : 'NOT CHECKED', exactSaved ? 'Actual downloaded draft preserves all canonical G02 input fields' : 'Complete input acceptance is unestablished; editor echo alone is insufficient', { file: savedFresh?.filename, sha256: savedFresh?.sha256 });
+    record('SAVE-INPUT-ROUNDTRIP', exactSaved ? 'PASS' : savedInputs.length === 1 ? 'FAIL' : 'NOT CHECKED', exactSaved ? 'Actual downloaded draft preserves all canonical G02 input fields' : savedInputs.length === 1 ? 'Saved canonical input differs from G02' : 'Complete input acceptance is unestablished; editor echo alone is insufficient', { file: savedFresh?.filename, sha256: savedFresh?.sha256 });
     if (savedFresh && exactSaved) {
       await context.close();
       const reopened = await newContext(path.join(staged, 'index.html')); context = reopened.next; page = reopened.opened;
       const empty = await capture('fresh-context-before-import');
-      const upload = importControl(empty.observation);
-      if (upload) {
+      adapter = await discoverAdapter();
+      // Establish a different, observed input first. An ignored import must not pass
+      // merely because the reopened app's default example happens to equal G02.
+      const importBaseline = adapter ? await compute(original, 'fresh-context-import-baseline') : null;
+      const importView = await observe(page);
+      const upload = importControl(importView);
+      if (upload && importBaseline?.judged.status === 'PASS' && importBaseline.entered.ok) {
         await page.locator('input[type=file]').nth(upload.index).setInputFiles(savedFresh.target);
         await sleep(300);
         const restored = await capture('fresh-context-after-import');
@@ -550,22 +619,29 @@ async function main() {
         const values = exported?.json ? findInputs(exported.json) : [];
         const inputsMatch = values.length === 1 && equal(inputFields(values[0].value), fresh.input);
         const judged = judge(fresh, renderedResult(restored.observation));
-        record('OFFLINE-FRESH-IMPORT', inputsMatch ? judged.status : 'NOT CHECKED', inputsMatch ? 'Fresh offline context imported exact downloaded draft; rendered values checked before any recompute' : 'Could not establish complete input roundtrip after fresh-context import', { observed: judged.observed, file: savedFresh.filename, roundtrip: exported?.filename, evidence: restored.evidence });
+        record('OFFLINE-FRESH-IMPORT', inputsMatch ? judged.status : values.length === 1 ? 'FAIL' : 'NOT CHECKED', inputsMatch ? 'Fresh offline context imported exact downloaded draft; rendered values checked before any recompute' : values.length === 1 ? 'Reimported canonical input differs from saved G02' : 'Could not establish complete input roundtrip after fresh-context import', { observed: judged.observed, file: savedFresh.filename, roundtrip: exported?.filename, evidence: restored.evidence });
         record('IMPORTED-REVIEW-BINDING', 'NOT CHECKED', 'Visible reviewed state alone cannot prove version binding; inspect record identity and edited-import check', { observedReviewState: reviewState(restored.observation) });
         const oldInputs = savedBase?.json ? findInputs(savedBase.json) : [];
         if (oldInputs.length === 1) {
-          const changed = replaceInput(savedBase.json, oldInputs[0].path, fresh.input);
-          await page.locator('input[type=file]').nth(upload.index).setInputFiles({ name: 'edited-previously-reviewed.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(changed)) });
-          await sleep(300);
-          const edited = await capture('edited-reviewed-metadata-import');
-          const echo = await download(SAVE, 'edited-import-roundtrip');
-          const v = echo?.json ? findInputs(echo.json) : [];
-          const accepted = v.length === 1 && equal(inputFields(v[0].value), fresh.input);
-          const state = reviewState(edited.observation);
-          record('EDITED-IMPORT-REVIEW', accepted && state !== null ? (state ? 'FAIL' : 'PASS') : 'NOT CHECKED', 'Changed input imported in original reviewed draft envelope without changing its other metadata', { acceptedInputRoundtrip: accepted, reviewState: state, evidence: edited.evidence, roundtrip: echo?.filename });
+          const baseline = await compute(original, 'edited-import-base');
+          const baselineReview = baseline.judged.status === 'PASS' ? await markReviewed() : null;
+          if (baseline.judged.status === 'PASS' && baseline.entered.ok && baselineReview === true) {
+            const changed = replaceInput(savedBase.json, oldInputs[0].path, fresh.input);
+            const editedImportControl = importControl(await observe(page));
+            if (editedImportControl) {
+              await page.locator('input[type=file]').nth(editedImportControl.index).setInputFiles({ name: 'edited-previously-reviewed.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(changed)) });
+              await sleep(300);
+              const edited = await capture('edited-reviewed-metadata-import');
+              const echo = await download(SAVE, 'edited-import-roundtrip');
+              const v = echo?.json ? findInputs(echo.json) : [];
+              const accepted = v.length === 1 && equal(inputFields(v[0].value), fresh.input);
+              const state = reviewState(edited.observation);
+              record('EDITED-IMPORT-REVIEW', accepted && state !== null ? (state ? 'FAIL' : 'PASS') : 'NOT CHECKED', 'Changed input imported in original reviewed draft envelope without changing its other metadata; rejection/ambiguous import requires manual assessment', { acceptedInputRoundtrip: accepted, reviewState: state, evidence: edited.evidence, roundtrip: echo?.filename });
+            } else record('EDITED-IMPORT-REVIEW', 'NOT CHECKED', 'Import control is no longer unambiguous');
+          } else record('EDITED-IMPORT-REVIEW', 'NOT CHECKED', 'Could not establish a different reviewed baseline before edited import');
         } else record('EDITED-IMPORT-REVIEW', 'NOT CHECKED', 'Reviewed-base download has no unique full input schema');
       } else {
-        for (const id of ['OFFLINE-FRESH-IMPORT', 'IMPORTED-REVIEW-BINDING', 'EDITED-IMPORT-REVIEW']) record(id, 'NOT CHECKED', 'No unique ordinary file-import control in fresh context');
+        for (const id of ['OFFLINE-FRESH-IMPORT', 'IMPORTED-REVIEW-BINDING', 'EDITED-IMPORT-REVIEW']) record(id, 'NOT CHECKED', 'No unique ordinary import control and distinct observed baseline in fresh context', { evidence: empty.evidence });
       }
     } else {
       for (const id of ['OFFLINE-FRESH-IMPORT', 'IMPORTED-REVIEW-BINDING', 'EDITED-IMPORT-REVIEW']) record(id, 'NOT CHECKED', 'No exact saved G02 draft available');
