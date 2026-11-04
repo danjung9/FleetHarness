@@ -2,6 +2,16 @@
 
 **An AI-powered software factory for turning operational challenges into working, testable software.**
 
+## Desktop application
+
+The Electron app now runs **Pi coding agents** for planning, implementation, verification, and one repair attempt. It includes saved challenges, the 34-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
+
+**Apple Silicon build:** open release/mac-arm64/FleetHarness.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
+
+For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
+
+Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
+
 ## Overview
 
 FleetHarness is a project for the **Norfolk FleetHacker hackathon**. Its goal is to systematically build solutions for the **34 published use cases**, spanning naval operations, readiness, maintenance, cybersecurity, document processing, scheduling, and decision support.

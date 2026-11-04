@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-electron/
+dist-harness/
+release/
+output/
+.playwright-cli/
+.DS_Store
+.impeccable/review/
+.impeccable/cache/
+.fleet-runs/
+build/icon.iconset/
+dist-studio/

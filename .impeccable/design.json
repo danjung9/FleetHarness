@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T16:43:53.659757+00:00",
+  "title": "Design System: FleetHarness",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Navy Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.03941 253.60)",
+          "oklch(26.43% 0.03941 253.60)",
+          "oklch(37.86% 0.03941 253.60)",
+          "oklch(49.29% 0.03941 253.60)",
+          "oklch(60.71% 0.03941 253.60)",
+          "oklch(72.14% 0.03941 253.60)",
+          "oklch(83.57% 0.03941 253.60)",
+          "oklch(95.00% 0.03941 253.60)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.01545 233.98)",
+          "oklch(26.43% 0.01545 233.98)",
+          "oklch(37.86% 0.01545 233.98)",
+          "oklch(49.29% 0.01545 233.98)",
+          "oklch(60.71% 0.01545 233.98)",
+          "oklch(72.14% 0.01545 233.98)",
+          "oklch(83.57% 0.01545 233.98)",
+          "oklch(95.00% 0.01545 233.98)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00823 91.48)",
+          "oklch(26.43% 0.00823 91.48)",
+          "oklch(37.86% 0.00823 91.48)",
+          "oklch(49.29% 0.00823 91.48)",
+          "oklch(60.71% 0.00823 91.48)",
+          "oklch(72.14% 0.00823 91.48)",
+          "oklch(83.57% 0.00823 91.48)",
+          "oklch(95.00% 0.00823 91.48)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Warm Ground",
+        "tonalRamp": [
+          "oklch(15.00% 0.00960 93.57)",
+          "oklch(26.43% 0.00960 93.57)",
+          "oklch(37.86% 0.00960 93.57)",
+          "oklch(49.29% 0.00960 93.57)",
+          "oklch(60.71% 0.00960 93.57)",
+          "oklch(72.14% 0.00960 93.57)",
+          "oklch(83.57% 0.00960 93.57)",
+          "oklch(95.00% 0.00960 93.57)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Warm Divider",
+        "tonalRamp": [
+          "oklch(15.00% 0.00980 93.58)",
+          "oklch(26.43% 0.00980 93.58)",
+          "oklch(37.86% 0.00980 93.58)",
+          "oklch(49.29% 0.00980 93.58)",
+          "oklch(60.71% 0.00980 93.58)",
+          "oklch(72.14% 0.00980 93.58)",
+          "oklch(83.57% 0.00980 93.58)",
+          "oklch(95.00% 0.00980 93.58)"
+        ]
+      },
+      "orange": {
+        "role": "primary",
+        "displayName": "Attention Orange",
+        "tonalRamp": [
+          "oklch(15.00% 0.18379 35.53)",
+          "oklch(26.43% 0.18379 35.53)",
+          "oklch(37.86% 0.18379 35.53)",
+          "oklch(49.29% 0.18379 35.53)",
+          "oklch(60.71% 0.18379 35.53)",
+          "oklch(72.14% 0.18379 35.53)",
+          "oklch(83.57% 0.18379 35.53)",
+          "oklch(95.00% 0.18379 35.53)"
+        ]
+      },
+      "blue": {
+        "role": "secondary",
+        "displayName": "Operational Blue",
+        "tonalRamp": [
+          "oklch(15.00% 0.09239 252.18)",
+          "oklch(26.43% 0.09239 252.18)",
+          "oklch(37.86% 0.09239 252.18)",
+          "oklch(49.29% 0.09239 252.18)",
+          "oklch(60.71% 0.09239 252.18)",
+          "oklch(72.14% 0.09239 252.18)",
+          "oklch(83.57% 0.09239 252.18)",
+          "oklch(95.00% 0.09239 252.18)"
+        ]
+      },
+      "green": {
+        "role": "secondary",
+        "displayName": "Evidence Green",
+        "tonalRamp": [
+          "oklch(15.00% 0.07394 167.55)",
+          "oklch(26.43% 0.07394 167.55)",
+          "oklch(37.86% 0.07394 167.55)",
+          "oklch(49.29% 0.07394 167.55)",
+          "oklch(60.71% 0.07394 167.55)",
+          "oklch(72.14% 0.07394 167.55)",
+          "oklch(83.57% 0.07394 167.55)",
+          "oklch(95.00% 0.07394 167.55)"
+        ]
+      },
+      "deep": {
+        "role": "neutral",
+        "displayName": "Deep Navy",
+        "tonalRamp": [
+          "oklch(15.00% 0.04458 248.86)",
+          "oklch(26.43% 0.04458 248.86)",
+          "oklch(37.86% 0.04458 248.86)",
+          "oklch(49.29% 0.04458 248.86)",
+          "oklch(60.71% 0.04458 248.86)",
+          "oklch(72.14% 0.04458 248.86)",
+          "oklch(83.57% 0.04458 248.86)",
+          "oklch(95.00% 0.04458 248.86)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00826 91.48)",
+          "oklch(26.43% 0.00826 91.48)",
+          "oklch(37.86% 0.00826 91.48)",
+          "oklch(49.29% 0.00826 91.48)",
+          "oklch(60.71% 0.00826 91.48)",
+          "oklch(72.14% 0.00826 91.48)",
+          "oklch(83.57% 0.00826 91.48)",
+          "oklch(95.00% 0.00826 91.48)"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Stage Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00539 95.10)",
+          "oklch(26.43% 0.00539 95.10)",
+          "oklch(37.86% 0.00539 95.10)",
+          "oklch(49.29% 0.00539 95.10)",
+          "oklch(60.71% 0.00539 95.10)",
+          "oklch(72.14% 0.00539 95.10)",
+          "oklch(83.57% 0.00539 95.10)",
+          "oklch(95.00% 0.00539 95.10)"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00538 95.10)",
+          "oklch(26.43% 0.00538 95.10)",
+          "oklch(37.86% 0.00538 95.10)",
+          "oklch(49.29% 0.00538 95.10)",
+          "oklch(60.71% 0.00538 95.10)",
+          "oklch(72.14% 0.00538 95.10)",
+          "oklch(83.57% 0.00538 95.10)",
+          "oklch(95.00% 0.00538 95.10)"
+        ]
+      },
+      "badge-neutral": {
+        "role": "neutral",
+        "displayName": "Neutral Status",
+        "tonalRamp": [
+          "oklch(15.00% 0.00678 115.71)",
+          "oklch(26.43% 0.00678 115.71)",
+          "oklch(37.86% 0.00678 115.71)",
+          "oklch(49.29% 0.00678 115.71)",
+          "oklch(60.71% 0.00678 115.71)",
+          "oklch(72.14% 0.00678 115.71)",
+          "oklch(83.57% 0.00678 115.71)",
+          "oklch(95.00% 0.00678 115.71)"
+        ]
+      },
+      "badge-neutral-ink": {
+        "role": "neutral",
+        "displayName": "Neutral Status Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.01803 235.77)",
+          "oklch(26.43% 0.01803 235.77)",
+          "oklch(37.86% 0.01803 235.77)",
+          "oklch(49.29% 0.01803 235.77)",
+          "oklch(60.71% 0.01803 235.77)",
+          "oklch(72.14% 0.01803 235.77)",
+          "oklch(83.57% 0.01803 235.77)",
+          "oklch(95.00% 0.01803 235.77)"
+        ]
+      },
+      "complete": {
+        "role": "secondary",
+        "displayName": "Complete Tint",
+        "tonalRamp": [
+          "oklch(15.00% 0.01758 164.64)",
+          "oklch(26.43% 0.01758 164.64)",
+          "oklch(37.86% 0.01758 164.64)",
+          "oklch(49.29% 0.01758 164.64)",
+          "oklch(60.71% 0.01758 164.64)",
+          "oklch(72.14% 0.01758 164.64)",
+          "oklch(83.57% 0.01758 164.64)",
+          "oklch(95.00% 0.01758 164.64)"
+        ]
+      },
+      "complete-ink": {
+        "role": "secondary",
+        "displayName": "Complete Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.07649 161.14)",
+          "oklch(26.43% 0.07649 161.14)",
+          "oklch(37.86% 0.07649 161.14)",
+          "oklch(49.29% 0.07649 161.14)",
+          "oklch(60.71% 0.07649 161.14)",
+          "oklch(72.14% 0.07649 161.14)",
+          "oklch(83.57% 0.07649 161.14)",
+          "oklch(95.00% 0.07649 161.14)"
+        ]
+      },
+      "active": {
+        "role": "secondary",
+        "displayName": "Active Tint",
+        "tonalRamp": [
+          "oklch(15.00% 0.03570 41.94)",
+          "oklch(26.43% 0.03570 41.94)",
+          "oklch(37.86% 0.03570 41.94)",
+          "oklch(49.29% 0.03570 41.94)",
+          "oklch(60.71% 0.03570 41.94)",
+          "oklch(72.14% 0.03570 41.94)",
+          "oklch(83.57% 0.03570 41.94)",
+          "oklch(95.00% 0.03570 41.94)"
+        ]
+      },
+      "active-ink": {
+        "role": "secondary",
+        "displayName": "Active Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.14400 35.58)",
+          "oklch(26.43% 0.14400 35.58)",
+          "oklch(37.86% 0.14400 35.58)",
+          "oklch(49.29% 0.14400 35.58)",
+          "oklch(60.71% 0.14400 35.58)",
+          "oklch(72.14% 0.14400 35.58)",
+          "oklch(83.57% 0.14400 35.58)",
+          "oklch(95.00% 0.14400 35.58)"
+        ]
+      },
+      "failed": {
+        "role": "secondary",
+        "displayName": "Failed Tint",
+        "tonalRamp": [
+          "oklch(15.00% 0.03092 30.19)",
+          "oklch(26.43% 0.03092 30.19)",
+          "oklch(37.86% 0.03092 30.19)",
+          "oklch(49.29% 0.03092 30.19)",
+          "oklch(60.71% 0.03092 30.19)",
+          "oklch(72.14% 0.03092 30.19)",
+          "oklch(83.57% 0.03092 30.19)",
+          "oklch(95.00% 0.03092 30.19)"
+        ]
+      },
+      "failed-ink": {
+        "role": "secondary",
+        "displayName": "Failed Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.14478 30.61)",
+          "oklch(26.43% 0.14478 30.61)",
+          "oklch(37.86% 0.14478 30.61)",
+          "oklch(49.29% 0.14478 30.61)",
+          "oklch(60.71% 0.14478 30.61)",
+          "oklch(72.14% 0.14478 30.61)",
+          "oklch(83.57% 0.14478 30.61)",
+          "oklch(95.00% 0.14478 30.61)"
+        ]
+      },
+      "review": {
+        "role": "secondary",
+        "displayName": "Review Tint",
+        "tonalRamp": [
+          "oklch(15.00% 0.06020 93.84)",
+          "oklch(26.43% 0.06020 93.84)",
+          "oklch(37.86% 0.06020 93.84)",
+          "oklch(49.29% 0.06020 93.84)",
+          "oklch(60.71% 0.06020 93.84)",
+          "oklch(72.14% 0.06020 93.84)",
+          "oklch(83.57% 0.06020 93.84)",
+          "oklch(95.00% 0.06020 93.84)"
+        ]
+      },
+      "review-ink": {
+        "role": "secondary",
+        "displayName": "Review Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.09116 85.14)",
+          "oklch(26.43% 0.09116 85.14)",
+          "oklch(37.86% 0.09116 85.14)",
+          "oklch(49.29% 0.09116 85.14)",
+          "oklch(60.71% 0.09116 85.14)",
+          "oklch(72.14% 0.09116 85.14)",
+          "oklch(83.57% 0.09116 85.14)",
+          "oklch(95.00% 0.09116 85.14)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Page Title",
+        "purpose": "Top-level page hierarchy."
+      },
+      "headline": {
+        "displayName": "Challenge Title",
+        "purpose": "Persistent challenge heading."
+      },
+      "title": {
+        "displayName": "Section Title",
+        "purpose": "Section hierarchy."
+      },
+      "body": {
+        "displayName": "Interface Body",
+        "purpose": "Page descriptions and instructions."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Buttons and field labels."
+      },
+      "field": {
+        "displayName": "Field Text",
+        "purpose": "Editable form content."
+      },
+      "log": {
+        "displayName": "Execution Record",
+        "purpose": "Tool output, tests, source, and paths."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog",
+        "value": "0 24px 70px rgba(10,24,36,.26)",
+        "purpose": "Modal separation above the workspace."
+      },
+      {
+        "name": "toast",
+        "value": "0 8px 24px rgba(10,24,36,.18)",
+        "purpose": "Transient feedback above the workspace."
+      }
+    ],
+    "motion": [
+      {
+        "name": "repair-connection",
+        "value": "dash 8s linear infinite",
+        "purpose": "Active repair connection; keyframes end at stroke-dashoffset: -90. Disabled by prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop-max-width",
+        "value": "1280px"
+      },
+      {
+        "name": "compact-desktop-max-height",
+        "value": "800px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Navy action for creating, saving, or approving work.",
+      "html": "<button class=\"ds-primary\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>New challenge</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;border:1px solid #bdbbb5;border-radius:6px;padding:0 13px;font-size:12px;font-weight:600;white-space:nowrap;font-family:\"DM Sans\",sans-serif;cursor:pointer;background:var(--ink,#19283a);border-color:var(--ink,#19283a);color:#fff}.ds-primary:hover:not(:disabled){background:#2c4357}.ds-primary:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}.ds-primary:disabled{opacity:.48;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bordered paper action used beside primary actions.",
+      "html": "<button class=\"ds-secondary\">Review evidence<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;border:1px solid #bdbbb5;border-radius:6px;padding:0 13px;font-size:12px;font-weight:600;white-space:nowrap;font-family:\"DM Sans\",sans-serif;cursor:pointer;background:var(--paper,#f7f5ef);color:var(--ink,#19283a)}.ds-secondary:hover:not(:disabled){background:#fff}.ds-secondary:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}.ds-secondary:disabled{opacity:.48;cursor:not-allowed}"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Compact labeled toolbar control.",
+      "html": "<button class=\"ds-icon-button\" aria-label=\"Reload preview\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 11a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 7M21 2v5h-5M21 13a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 17m5 0H3v5\"/></svg></button>",
+      "css": ".ds-icon-button{display:grid;place-items:center;flex:0 0 auto;width:32px;height:32px;border:1px solid var(--line,#d2d0c9);border-radius:5px;background:transparent;color:var(--ink,#19283a);font-family:\"DM Sans\",sans-serif;cursor:pointer;}.ds-icon-button:hover{background:#fff}.ds-icon-button:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}.ds-icon-button:disabled{opacity:.48;cursor:not-allowed}"
+    },
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Blue low-emphasis action without a filled surface.",
+      "html": "<button class=\"ds-text-button\">View the factory<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-text-button{display:inline-flex;align-items:center;gap:7px;border:0;background:none;color:var(--blue,#315d8d);padding:10px 0;font-size:12px;font-weight:600;font-family:\"DM Sans\",sans-serif;cursor:pointer;}.ds-text-button:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}.ds-text-button:disabled{opacity:.48;cursor:not-allowed}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Warm field with an explicit label and orange keyboard focus.",
+      "html": "<label class=\"ds-field-label\">Challenge title<input class=\"ds-field\" placeholder=\"e.g. Maintenance record reconciliation\"/></label>",
+      "css": ".ds-field-label{font:600 12px \"DM Sans\",sans-serif;color:var(--ink,#19283a);display:block;margin-bottom:20px}.ds-field{display:block;width:100%;border:1px solid #b9bdb8;border-radius:5px;background:#fcfbf7;color:var(--ink,#19283a);padding:11px 12px;margin-top:8px;font:400 13px/1.5 \"DM Sans\",sans-serif;caret-color:var(--orange,#d94c26)}.ds-field::placeholder{color:#6e777b}.ds-field:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}"
+    },
+    {
+      "name": "Desktop Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Persistent dark rail with warm-paper selection.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button class=\"ds-nav-item ds-selected\" aria-current=\"page\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 18 6-6-6-6M8 6l-6 6 6 6\"/></svg><span>Development</span></button><button class=\"ds-nav-item\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg><span>Pi sessions</span></button></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:4px;background:var(--deep,#102437);padding:12px;width:204px}.ds-nav-item{border:0;background:transparent;color:#afc0cc;height:39px;border-radius:6px;display:flex;align-items:center;gap:10px;padding:0 10px;text-align:left;font-size:12px;font-family:\"DM Sans\",sans-serif;cursor:pointer;}.ds-nav-item span{flex:1}.ds-nav-item:hover{background:#1b3449;color:#fff}.ds-nav-item.ds-selected{background:#f4f1e9;color:#172a3d;font-weight:600}.ds-nav-item:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "State is represented by label, SVG, and color together.",
+      "html": "<span class=\"ds-badge ds-complete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 12 2 2 4-4\"/><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>Complete</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;border-radius:20px;background:#e3e4df;color:#4b565d;font:600 10px \"DM Sans\",sans-serif;padding:5px 8px}.ds-badge svg{width:12px;height:12px}.ds-badge.ds-complete{background:#dceae3;color:#286348}.ds-badge.ds-active{background:#f6d9ce;color:#9e361a}.ds-badge.ds-failed{background:#f3d8d3;color:#9b3022}.ds-badge.ds-review{background:#f2e5b8;color:#71550b}"
+    },
+    {
+      "name": "Factory Sheet",
+      "kind": "card",
+      "refersTo": "factory-sheet",
+      "description": "Flat paper sheet divided into a heading and a gridded work area.",
+      "html": "<section class=\"ds-sheet\"><div class=\"ds-sheet-head\"><div><h2>Implementation flow</h2><p>Pi agents \u00b7 actual execution state</p></div></div><div class=\"ds-grid\"></div></section>",
+      "css": ".ds-sheet{position:relative;background:var(--paper,#f7f5ef);border:1px solid #c9c7c0;min-height:355px;overflow:hidden;color:var(--ink,#19283a)}.ds-sheet-head{height:76px;border-bottom:1px solid var(--line,#d2d0c9);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px}.ds-sheet-head h2{margin:0;font:700 16px var(--display,\"Manrope\",sans-serif);letter-spacing:-.02em}.ds-sheet-head p{margin:5px 0 0;font:11px/1.6 \"DM Sans\",sans-serif;color:var(--muted,#626c72)}.ds-grid{position:absolute;inset:76px 0 34px;min-height:245px;background:linear-gradient(rgba(42,55,64,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(42,55,64,.045) 1px,transparent 1px);background-size:24px 24px}"
+    },
+    {
+      "name": "Factory Stage",
+      "kind": "custom",
+      "refersTo": "stage",
+      "description": "Selectable execution node; selection is independent of status.",
+      "html": "<div class=\"ds-stage-host\"><button class=\"ds-stage ds-stage-active\" aria-pressed=\"false\"><span class=\"ds-stage-index\">04</span><span class=\"ds-stage-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg></span><strong>Build</strong><small>Implementation agent</small><em>In progress</em></button></div>",
+      "css": ".ds-stage-host{position:relative;min-height:112px}.ds-stage{position:relative;height:104px;border:1px solid #b6bebd;background:#fbfaf6;color:var(--ink,#19283a);text-align:left;padding:11px 10px 9px;border-radius:3px;font-family:\"DM Sans\",sans-serif;cursor:pointer;}.ds-stage:hover{background:#fff;border-color:#6c7d87}.ds-stage[aria-pressed=\"true\"]{outline:2px solid var(--orange,#d94c26);outline-offset:3px}.ds-stage-index{position:absolute;right:8px;top:7px;color:#646e74;font:9px var(--mono,\"IBM Plex Mono\",monospace)}.ds-stage-icon{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:#e0e6e2;color:#496359;margin-bottom:6px}.ds-stage strong,.ds-stage small,.ds-stage em{display:block}.ds-stage strong{font:700 12px var(--display,\"Manrope\",sans-serif)}.ds-stage small{font-size:10px;color:#626c72;margin-top:3px}.ds-stage em{font-style:normal;font-size:9px;color:#626c72;margin-top:5px}.ds-stage.ds-stage-active{border-color:#d87756;background:#fff6f0}.ds-stage.ds-stage-active .ds-stage-icon{background:#f7d7cc;color:#a53b1b}.ds-stage:focus-visible{outline:2px solid var(--orange,#d94c26);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Inspectable software factory",
+    "overview": "FleetHarness is a dense, practical desktop workspace. A deep navy navigation rail frames warm paper surfaces for plans, requirements, logs, source, and evidence. Thin boundaries and compact controls organize the work; orange marks attention and selection without replacing the navy action hierarchy.\n\nThe interface makes agent work inspectable. Manrope establishes hierarchy, DM Sans carries instructions and interaction, and IBM Plex Mono distinguishes recorded execution data. The visual language supports the direct, credible voice in PRODUCT.md and keeps generated, tested, reviewed, and delivered states visibly distinct.",
+    "keyCharacteristics": [
+      "Persistent navy navigation and warm paper work surfaces.",
+      "Compact controls, thin borders, and flat work areas.",
+      "Orange selection and focus, with explicit semantic status colors.",
+      "Separate typography for headings, interface text, and execution records.",
+      "Desktop panels that resize and scroll within the application window."
+    ],
+    "rules": [],
+    "dos": [
+      "**Do** keep the navy rail and warm paper surfaces when extending this desktop workspace.",
+      "**Do** pair status color with a written state and the established SVG icon treatment.",
+      "**Do** use the three font roles consistently and preserve visible orange keyboard focus.",
+      "**Do** keep long source, logs, and file paths readable through panel scrolling and text wrapping.",
+      "**Do** preserve reduced-motion support for the animated graph connection."
+    ],
+    "donts": [
+      "**Don't** replace the navy primary-action treatment with orange merely because orange is the attention color.",
+      "**Don't** apply dialog or toast shadows to ordinary work sheets and list rows.",
+      "**Don't** turn one screen's graph or column arrangement into a mandatory layout for every surface.",
+      "**Don't** use a successful test tint to imply human approval or operational readiness."
+    ]
+  }
+}
