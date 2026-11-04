@@ -22,6 +22,37 @@ const canonical = value => JSON.stringify(value, function (_key, v) {
 });
 const equal = (a, b) => canonical(a) === canonical(b);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const REPORT_STATUSES = ['PASS', 'FAIL', 'UI LIMITATION', 'OUT OF BRIEF', 'NOT CHECKED', 'ERROR'];
+function summarizeChecks(checks, setupError = false) {
+  const counts = Object.fromEntries(REPORT_STATUSES.map(s => [s, checks.filter(c => c.status === s).length]));
+  const error = setupError || counts.ERROR > 0;
+  const incomplete = counts['NOT CHECKED'] > 0 || counts['UI LIMITATION'] > 0;
+  return {
+    status: error ? 'ERROR' : counts.FAIL ? 'FAIL' : incomplete ? 'INCOMPLETE' : 'PASS',
+    exit: error ? 2 : counts.FAIL ? 1 : incomplete ? 3 : 0, counts
+  };
+}
+function summaryAssessment(scope, files, downloaded) {
+  if (scope) {
+    const source = files.find(f => f.path === scope.file && f.sha256 === scope.sha256);
+    if (source) return { status: 'OUT OF BRIEF', detail: scope.detail, briefEvidence: source };
+    return { status: 'NOT CHECKED', detail: 'The reviewed brief digest is absent or changed; separate-summary scope must be reviewed again', expectedBrief: scope };
+  }
+  return { status: 'NOT CHECKED', detail: downloaded ? 'Actual summary downloaded; independent officer readability and value comparison required' : 'No unambiguous readable-summary download discovered' };
+}
+function reportingSelfCheck() {
+  const rows = (...statuses) => statuses.map(status => ({ status }));
+  assert.equal(summarizeChecks(rows('PASS', 'UI LIMITATION')).exit, 3, 'A known UI limitation cannot become a pass');
+  assert.equal(summarizeChecks(rows('PASS', 'OUT OF BRIEF')).status, 'PASS', 'An out-of-brief item is not a product failure');
+  assert.equal(summarizeChecks(rows('FAIL', 'UI LIMITATION', 'OUT OF BRIEF')).exit, 1, 'Observed failure remains visible');
+  assert.equal(summarizeChecks(rows('FAIL'), true).exit, 2, 'Harness errors retain precedence');
+  const scope = { file: 'synthetic-brief.md', sha256: 'fixture-digest', detail: 'Synthetic scope check' };
+  assert.equal(summaryAssessment(scope, [{ path: scope.file, sha256: scope.sha256 }], false).status, 'OUT OF BRIEF');
+  assert.equal(summaryAssessment(scope, [{ path: scope.file, sha256: 'changed-digest' }], false).status, 'NOT CHECKED', 'Changed brief cannot inherit a scope exemption');
+  assert.equal(summaryAssessment(scope, [], false).status, 'NOT CHECKED', 'Missing or changed brief cannot inherit a scope exemption');
+  assert.equal(summaryAssessment(null, [], false).status, 'NOT CHECKED', 'Generic discovery cannot infer brief scope');
+  return { status: 'PASS', scope: 'Receipt classification only; frozen oracle and evaluator unchanged' };
+}
 const base = {
   windows: [{ start: 0, end: 240 }, { start: 1440, end: 1680 }],
   people: [
@@ -380,7 +411,7 @@ function displayedTotals(observation) {
 
 async function main() {
   const argv = process.argv.slice(2);
-  if (argv.length === 1 && argv[0] === '--self-check') { console.log(JSON.stringify(selfCheck(), null, 2)); return; }
+  if (argv.length === 1 && argv[0] === '--self-check') { console.log(JSON.stringify({ ...selfCheck(), reporting: reportingSelfCheck() }, null, 2)); return; }
   const positional = [], flags = {};
   for (let n = 0; n < argv.length; n++) {
     if (argv[n].startsWith('--')) {
@@ -401,12 +432,12 @@ async function main() {
   const output = path.join(outputBase, 'training-acceptance-' + randomUUID());
   await fs.mkdir(output, { recursive: true });
   const receipt = {
-    version: 2, startedAt: new Date().toISOString(), candidate, output, checks: [],
+    version: 3, startedAt: new Date().toISOString(), candidate, output, checks: [],
     provenance: 'Independent browser observations of a staged synthetic candidate; no live generation claim',
     variants: 'Fixed before candidate inspection and not supplied by this QA assignment in the public build brief; no protected holdout claim',
     limits: { harnessWatchdogMs: 300000, browserActionMs: 5000, maxPayloadBytes: 50000000 },
     scopeExclusions: ['Factory consent and Stop', 'Executable packaging', 'Operational policy', 'Human approval decision', 'Complete security isolation'],
-    selfCheck: selfCheck(), status: 'ERROR'
+    selfCheck: selfCheck(), reportingSelfCheck: reportingSelfCheck(), status: 'ERROR'
   };
   let browser, context, page, timer, sequence = 0, setupError = false;
   const record = (id, status, detail, extra = {}) => {
@@ -473,6 +504,9 @@ async function main() {
   async function compute(c, label, alreadyEntered) {
     const entered = alreadyEntered || await applyInput(c.input, label);
     const before = await capture(label + '-entered');
+    if (!entered.ok && entered.limitation?.boundary === 'editable-form' && entered.unsupported?.length) {
+      return { entered, ...before, judged: { status: 'UI LIMITATION', detail: entered.reason + '. ' + entered.limitation.alternativeBoundary } };
+    }
     if (!entered.ok && ['G08', 'G09'].includes(c.id)) {
       const rejectionEvidence = entered.immediate || before;
       const rejection = renderedResult(rejectionEvidence.observation);
@@ -638,7 +672,8 @@ async function main() {
       for (const id of ['REVIEW-EDIT', 'REVIEW-RECHECK', 'REVIEW-FRESH']) record(id, 'NOT CHECKED', 'Input/output boundary not established');
     }
     const summary = adapter ? await download(SUMMARY, 'readable-summary') : null;
-    record('READABLE-SUMMARY', 'NOT CHECKED', summary ? 'Actual summary downloaded; independent officer readability and value comparison required' : 'No unambiguous readable-summary download discovered', { file: summary?.filename, sha256: summary?.sha256 });
+    const summaryScope = summaryAssessment(explicitAdapter?.readableSummaryScope, receipt.payloadBefore.files, !!summary);
+    record('READABLE-SUMMARY', summaryScope.status, summaryScope.detail, { file: summary?.filename, sha256: summary?.sha256, briefEvidence: summaryScope.briefEvidence, expectedBrief: summaryScope.expectedBrief });
     const savedInputs = savedFresh?.json ? findInputs(savedFresh.json) : [];
     const exactSaved = savedInputs.length === 1 && equal(inputFields(savedInputs[0].value), fresh.input);
     record('SAVE-INPUT-ROUNDTRIP', exactSaved ? 'PASS' : savedInputs.length === 1 ? 'FAIL' : 'NOT CHECKED', exactSaved ? 'Actual downloaded draft preserves all canonical G02 input fields' : savedInputs.length === 1 ? 'Saved canonical input differs from G02' : 'Complete input acceptance is unestablished; editor echo alone is insufficient', { file: savedFresh?.filename, sha256: savedFresh?.sha256 });
@@ -705,13 +740,13 @@ async function main() {
         receipt.browserCleanup = 'PASS';
       } catch (error) { receipt.browserCleanup = 'UNCONFIRMED'; setupError = true; receipt.cleanupError = String(error.message); }
     }
-    const failed = receipt.checks.some(c => c.status === 'FAIL');
-    const incomplete = receipt.checks.some(c => c.status === 'NOT CHECKED');
-    receipt.status = setupError ? 'ERROR' : failed ? 'FAIL' : incomplete ? 'INCOMPLETE' : 'PASS';
+    const assessment = summarizeChecks(receipt.checks, setupError);
+    receipt.status = assessment.status;
+    receipt.counts = assessment.counts;
     receipt.finishedAt = new Date().toISOString();
     await persist();
-    const exit = setupError ? 2 : failed ? 1 : incomplete ? 3 : 0;
-    console.log(JSON.stringify({ status: receipt.status, exit, output, counts: Object.fromEntries(['PASS', 'FAIL', 'NOT CHECKED', 'ERROR'].map(s => [s, receipt.checks.filter(c => c.status === s).length])) }));
+    const exit = assessment.exit;
+    console.log(JSON.stringify({ status: receipt.status, exit, output, counts: assessment.counts }));
     process.exitCode = exit;
     if (receipt.browserCleanup === 'UNCONFIRMED') process.exit(exit);
   }

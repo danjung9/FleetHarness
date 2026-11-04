@@ -52,4 +52,4 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 
 [E, main bridge] Main owns the live runtime and benchmark repairs. The dated restart and source findings above supersede the earlier draining status. [[Research/QA/Ten/Scoreboard]] remains the changing result record.
 
-[E] Commit-author instructions conflict across sessions. The user-provided instructions in this chat require Mukul; main reports a later divinedev111 instruction in its session. A single clarification is pending with Mukul. No author change is performed by this audit and no answer is assumed.
+[P, direct user reply at 16:27] Mukul explicitly selected Mukul as commit author. Main received the answer through the existing bridge. This resolves the conflicting divinedev111 report; existing unlanded commit identities and review SHAs must be reconciled without changing reviewed code.

@@ -10,6 +10,8 @@ summary: "Completed modified build, failing shipped gate, factory acceptance fai
 
 ## Latest benchmark diagnosis
 
+[E, November 4, 2026, round 1 challenge 12] [[Research/Agentic/09-Primary-Task-Deferral]] groups IDs 12 and 11 under primary-task deferral: source outcomes were deferred while recipe tests passed. [R] Agentic-builder should add source-task coverage instructions and a host gate before plan freeze and final verification. The note names exact files, independent mock-message acceptance cases and related coverage signals. Implementation and a new satisfactory verdict remain unverified.
+
 [E, November 4, 2026, round 1 challenge 36] [[Research/Agentic/08-Native-Select-Repair]] traces the failed conflict journeys to a malformed option closing tag that survived a label-only repair. The final host rerun passed 22/22 Node tests and 8/12 browser cases. [R] Agentic-builder should strengthen native-control diagnosis in `skills/fleet-ux/SKILL.md` and preserve the failure with a browser regression; fresh factory and independent acceptance evidence remain required. This diagnosis follows the current directive and supersedes no historical receipt below.
 
 ## Bottom line

@@ -3,12 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 12 round 1 judged NOT; earlier training-draft evidence and frozen keys retained."
+summary: "Challenge 12 round 1 remains unsatisfactory; one coalesced judgment retains artifact identity and evidence limits."
 ---
 
 # Synthetic pilot answer keys
 
-[E, current benchmark review] [[Research/QA/Officer/JUDGE-R1-id12-optask]] records NOT: the generic sample and manual category choices leave the original mock-USMTF task unmet. Twelve passing tests and eight reported passing browser journeys cover the reduced workflow. Evidence limits and disclosure are in [[Research/QA/Officer/Sprint/Judge-R1-id12-optask]]. This current assignment supersedes the older ID 12 backlog status below; earlier training-draft findings remain historical.
+[E, current benchmark review] [[Research/QA/Officer/JUDGE-R1-id12-optask]] records unsatisfactory, the same outcome already recorded as NOT in the scoreboard. The exact round/challenge assignment was coalesced into that existing file. Twelve passing tests and eight journeys cover the reduced synthetic workflow; requirementsMet is false and four criteria, including both defining card outcomes, remain unverified. One repair, 9.7 minutes, 232070 tokens and patched-d0f4c69 provenance are retained. The judgment identifies copied bytes and separates offline first-open from complete disconnected use. Evidence limits and disclosure are in [[Research/QA/Officer/Sprint/Judge-R1-id12-optask]]. This assignment supersedes the older ID 12 backlog status below; earlier training-draft findings remain historical.
 
 ## Bottom line
 

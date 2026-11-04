@@ -1,6 +1,10 @@
 // Public DOM and portable-file adapter for the inspected CLI-route interface.
 // This module does not import, call, or reproduce the candidate's scheduling code.
 export const id = 'cli-route';
+export const readableSummaryScope = {
+  file: 'BRIEF.md', sha256: '791f97b934a853cc7b65c0b9214b1d36757539f28bcf2294cb09e735d4ccc5a6',
+  detail: 'The reviewed public brief requires portable save/import of exact inputs and draft, but no separate readable-summary export. Its absence is out of brief, not a product failure.'
+};
 export const names = {
   check: /^Find draft again$/,
   save: /^Save draft file$/,
@@ -228,6 +232,7 @@ export async function applyInput(page, input) {
   if (!nonnegative(input.maxNodes) || [...input.windows, ...input.people.flatMap(p => p.windows || [])].some(w => !w || !nonnegative(w.start) || !nonnegative(w.end))) unsupported.push('Exact nonnumeric or negative window/search values cannot roundtrip');
   if (unsupported.length) return {
     ok: false, kind: 'Unsupported exact CLI form variant; no coercion or candidate-private state change attempted',
+    limitation: { boundary: 'editable-form', alternativeBoundary: 'Portable file import exists; these exact variants were not exercised through it, so this finding does not establish app-wide inability.' },
     reason: unsupported.join('; '), unsupported, priorObservation
   };
   await openDetails(page, '#constraints');

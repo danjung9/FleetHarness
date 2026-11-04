@@ -1,6 +1,10 @@
 // UI adapter discovered from Pipeline-run1 index.html and its retained browser DOM.
 // Transforms representation only. No candidate functions or storage are accessed.
 export const id = 'pipeline-run1';
+export const readableSummaryScope = {
+  file: 'requirements.md', sha256: '513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb',
+  detail: 'The reviewed public brief requires portable save/import of exact inputs and draft, but no separate readable-summary export. Its absence is out of brief, not a product failure.'
+};
 export const names = {
   check: /^Generate draft$/, save: /^Save JSON$/, summary: null, review: /^Mark draft reviewed$/
 };

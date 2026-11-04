@@ -22,7 +22,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 - [E, independent Run2 receipt review] Run2 records 28 PASS, zero FAIL and 18 NOT CHECKED. Thirteen outcome cases, exact downloaded-file recovery in a fresh offline context, review clearing and stale-draft rejection pass. Four form-boundary cases remain untested, including independent invalid-input cases. All 69 payload entries stay unchanged. See [[Research/QA/Acceptance/Review-Run2]].
 
-- [E, execution audit at 16:23] Repaired runner restarted at 16:19:21. ID 12 independently judges NOT despite its automatic pass. Full-manifest checks reproduce copied-document mutation, and benchmark STOP still lacks driver cancellation. Main owns runtime repairs; Acceptance/** has one separate writer. See [[Research/QA/Ten-Benchmark-Audit]]. Commit-author clarification remains pending.
+- [E, execution audit at 16:23] Repaired runner restarted at 16:19:21. ID 12 independently judges NOT despite its automatic pass. Full-manifest checks reproduce copied-document mutation, and benchmark STOP still lacks driver cancellation. Main owns runtime repairs; Acceptance/** has one separate writer. See [[Research/QA/Ten-Benchmark-Audit]]. [P, direct reply at 16:27] Mukul confirmed commit author Mukul; main received the decision.
 
 - [E, execution audit and user direction] [[Research/QA/Org-Audit-2026-11-04]] confirms real code and runtime evidence with coordination stalls. Current mission is [[Research/Agentic/Flow-Goals]]: ten satisfactory real factory builds. Main acknowledged ownership and benchmark receipts are now available; independent completion remains unestablished. See [[Sessions/2026-11-04-execution-management]]. Earlier snapshot-based idle conclusions are superseded by runner start events.
 
@@ -67,7 +67,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Needs a decision
 
-[P] Mukul directed full coordination and completion. [E] Main owns real generation, benchmark and browser execution; the other QA thread owns Acceptance/**; AUDIT-MANAGER independently audits results and does not edit those shared files. Real event-key builds have receipts, while standalone packaging and full challenge acceptance require their own evidence. A single clarification is pending with Mukul because this chat requires commit author Mukul and the coordinator reports a later divinedev111 instruction. Human artifact acceptance, portal eligibility and submission approval remain separate decisions. The Google sheet question remains set aside as previously directed.
+[P] Mukul directed full coordination and completion. [E] Main owns real generation, benchmark and browser execution; the other QA thread owns Acceptance/**; AUDIT-MANAGER independently audits results and does not edit those shared files. Real event-key builds have receipts, while standalone packaging and full challenge acceptance require their own evidence. Mukul directly resolved the cross-session author conflict at 16:27: use Mukul, with no attribution trailers. Main received the decision; unlanded commit identities and review SHAs need reconciliation. Human artifact acceptance, portal eligibility and submission approval remain separate decisions. The Google sheet question remains set aside as previously directed.
 
 ## Not captured yet
 
