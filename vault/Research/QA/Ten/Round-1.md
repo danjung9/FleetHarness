@@ -16,7 +16,7 @@ summary: "Ten-challenge benchmark, round 1 at d0f4c69: 6 of 10 finished, 5 passe
 
 | Challenge | Status | Min | Tests | Journeys | Criteria met / deferred / failed | Repair | Open errors | Tokens, uncached plus output | Bar | Judge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [[Research/QA/Ten/R1/id12-optask/final\|id12-optask]] | review | 9.7 | 12/12 | 8/8 | 3 / 4 / 0 | yes | 0 | 232070 | pass | NOT |
+| [[Research/QA/Ten/R1/id12-optask/final\|id12-optask]] | review | 9.7 | 12/12 | 8/8 | 3 / 4 / 0 | yes | 0 | 232070 | pass | unsatisfactory |
 | [[Research/QA/Ten/R1/id36-paperless/final\|id36-paperless]] | failed at verify | 13.2 | 22/22 | 8/12 | 3 / 15 / 2 | yes | 0 | 311374 | FAIL | pending |
 | [[Research/QA/Ten/R1/id11-training/final\|id11-training]] | review | 14.1 | 15/15 | 16/16 | 3 / 4 / 0 | no | 0 | 285944 | pass | pending |
 | [[Research/QA/Ten/R1/id08-casrep/final\|id08-casrep]] | review | 11.3 | 15/15 | 8/8 | 3 / 2 / 0 | yes | 0 | 252079 | pass | pending |

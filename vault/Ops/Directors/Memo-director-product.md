@@ -3,17 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep the factory candidate primary, reconcile scope conflicts and finish two research handoffs."
+summary: "Prioritize benchmark failures, preserve Dan's new journey and allocate one bounded UX handoff."
 ---
 
 # Product decisions
 
-[E, Real-Build-Run1] Modified 631849f completed five phases with 22 generated-test passes. [R] Credit the 4 PM gate. Show its task first, then factory evidence; retain CLI as backup. Neither candidate is accepted.
+[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, Scoreboard at 16:23 EST] Six finished, five automatic passes, zero satisfactory; ID 12 judged NOT. Engineering's absent-scoreboard statement and Quality's one-result snapshot are stale.
 
-[E, retained receipts] Factory: 33 PASS/1 FAIL/14 NOT CHECKED. Latest CLI: 28 PASS/18 NOT CHECKED, with successful offline import. [R] Withdraw Engineering's stale recovery-defect claim. Clock and readable-summary expectations exceed the delivered brief. Preserve the key and raw failure; reconcile scope before human acceptance. Contradictory factory exhaustion wording is a concrete defect for instruction repair, without hand-editing output.
+[R] Existing architect owns ID 36's missing native option, ID 11's false frozen explanation and defining requirements deferred by ID 11/12. Quality judges exact artifacts. Preserve failures; repair the factory, never hand-edit outputs or lower acceptance to manufacture success. Coalesce automatic assignments.
 
-[E, latest gate] d0f4c69 reports 147 pass/20 fail inside the sandbox, superseding the earlier 96/20 headline. [R] QA reconciles counts and substantiates causes. E1/E2/E4 have source guards, not matched runtime closure. Preserve Dan's changes.
+[R] Uphold Engineering's return of the extra unsandboxed test execution. Preserve existing code owners and review gates; administrative returns belong to the runner. Remove stale duplicate tasks without restarting completed work.
 
-[R] Retain existing code/QA owners; remove duplicate dev-1 work. The 15:45 enablement notice supersedes the disabled snapshot; file ownership still governs. Assign only an AppYard walkthrough update and evidence-card refresh. Connectors and second builds remain unallocated.
+[E, relay and pinned source] Dan pushed 1d9eeee with Brief/Build/Review/Deliver and revised all five failing smoke scripts. Windows e68e90e overlaps pipeline tests. [R] Dev-3 compares Dan's changes before further smoke edits. Require matching runtime receipts. Protect frontend files and shared-file ownership.
 
-[R] Keep 6 PM task and 7 PM evidence targets, Thursday noon code freeze and 1:15 PM submission target. Pending human review stays pending overnight. Status holds one morning decision list. No new run or publication is authorized.
+[R] Allocate only one bounded re-ux handoff for the new review journey and benchmark completion limits. Accept completed scout work; keep scout/connectors idle. No new scan, connector, trial protocol or separate build.
+
+[R] Keep task-first presentation, explicit partial scope and pending human acceptance. Preserve 6 PM/7 PM evidence checkpoints, Thursday noon freeze and 1:15 PM submission target. Status holds person-only decisions and dated token accounting.

@@ -34,8 +34,22 @@ summary: "Independent checks of the ten-challenge benchmark's completion, failur
 
 [R] An independent judge must assess whether the actual primary task is satisfied; a working generic parser cannot earn full challenge completion merely by documenting the missing requirement. No operational data or policy is needed for this judgment. Keep the scope synthetic and the incomplete requirements visible.
 
+## Follow-up at 16:23 EST
+
+[E, runner.log and isolated strict-verdict probes] The organization runner restarted at 16:19:21. Five probes confirm only an exact, unambiguous APPROVE verdict is accepted; mixed, suffixed, embedded and absent verdicts reject. Work is running, based on dated start/completion events, not a process census. Three factory commits remain under review. The current dev/reviewed reference moved to 1d9eeee through frontend relay; that does not establish landing of those factory fixes.
+
+[E, ten.py source] The completion check now writes GOAL and pauses further generation. New results copy the full eligible payload and run first-open checks on that copy. STOP and the four-hour deadline still end only the watcher; the source explicitly warns that the driver may remain running. Bounded cancellation of the actual driver and owned model work remains requested.
+
+[E, SHA-256 comparisons] Saved manifests do not remain valid: ID 08 has five mismatched Markdown files, ID 20 has five, and ID 35 changed from zero mismatches to six during inspection. Original workspace bytes still match the manifests. A direct README diff shows vault normalization changing literal UI strings from em-dash separators to commas. This is not evidence of changed application logic, but it invalidates the claim that the copied payload is unchanged. ID 11, ID 12 and ID 36 predate full manifests and have none.
+
+[R, sent to runtime owner] Preserve immutable raw generated artifacts separately from prose-normalized vault notes, or perform any required transformation before final hashing and acceptance. Bind judgments to the final artifact manifest. Do not retroactively credit original-workspace tests as tests of a subsequently changed copy.
+
+[E, independent judgment] [[Research/QA/Officer/JUDGE-R1-id12-optask]] returns NOT. It confirms real supporting mechanics but no extraction of the requested mock-USMTF event types. The first independent verdict therefore rejects the automatic pass, as intended. No satisfactory result is claimed.
+
+[E, queue and dev-3 working source] The current dev-3 task is smoke-script maintenance while its sandbox verifier changes remain uncommitted. The returned registration-check implementation still depends on integration with that verifier. Requested explicit ownership and completion of that dependency before treating smoke work as the only remaining task.
+
 ## Ownership and open decisions
 
-[E, main bridge] Main reports that the organization runner is draining for fixes, native verification was redirected and the next benchmark results will appear in [[Research/QA/Ten/Scoreboard]]. These reported remediation actions require fresh source/receipt verification.
+[E, main bridge] Main owns the live runtime and benchmark repairs. The dated restart and source findings above supersede the earlier draining status. [[Research/QA/Ten/Scoreboard]] remains the changing result record.
 
 [E] Commit-author instructions conflict across sessions. The user-provided instructions in this chat require Mukul; main reports a later divinedev111 instruction in its session. A single clarification is pending with Mukul. No author change is performed by this audit and no answer is assumed.

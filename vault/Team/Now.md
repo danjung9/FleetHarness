@@ -12,15 +12,19 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, Run1 handoff reconciliation] The script at `Research/QA/Acceptance/accept-training.mjs` is ready and already has independently reviewed Pipeline-run1 and CLI-route receipts. [[Research/QA/Acceptance/Review-Candidates]] preserves unsupported cases, the corrected checker error and the Pipeline wording defect. Neither artifact is human accepted.
+
+- [E, plan reconciliation] [[Research/Plan/Review]] has been read against later receipts. The ordinary-child Stop pass remains scoped to 631849f; detached Pi shutdown now has a measured failure at d0f4c69, while Codex shutdown remains unmeasured. The later ten-challenge direction continues to govern QA.
+
 - [E, three finished-entry audits] [[Research/QA/Ten/QA-Lead-Notes]] covers ID 12, ID 11 and ID 36. All contain real logic, but two automatic passes defer defining card outcomes. ID 11's frozen test requires a false universal explanation; ID 36's missing native conflict option is bypassed by generic DOM unit tests. Expanded companions are now available and reviewed. Independent satisfactory verdicts remain separate.
 
 - [E, measured Stop defect] The detached Pi child survives Stop at d0f4c69 while the UI stays stopped, with heartbeat count increasing 28 to 106. Shell and ordinary parent end. Verdict precedes separate successful cleanup. See [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]].
 
 - [E, independent Run2 receipt review] Run2 records 28 PASS, zero FAIL and 18 NOT CHECKED. Thirteen outcome cases, exact downloaded-file recovery in a fresh offline context, review clearing and stale-draft rejection pass. Four form-boundary cases remain untested, including independent invalid-input cases. All 69 payload entries stay unchanged. See [[Research/QA/Acceptance/Review-Run2]].
 
-- [E, coordinator reply and benchmark audit] Main owns the ten-challenge loop, three builds at once; Acceptance/** has one separate writer. First scoreboard receipt: ID 12, 9.7 minutes, 12/12 Node tests, 8/8 journeys, zero independent satisfactory verdicts. [[Research/QA/Ten-Benchmark-Audit]] identifies completion and failure-routing defects for the runtime owner. Commit-author clarification is pending with Mukul because instructions conflict across sessions.
+- [E, execution audit at 16:23] Repaired runner restarted at 16:19:21. ID 12 independently judges NOT despite its automatic pass. Full-manifest checks reproduce copied-document mutation, and benchmark STOP still lacks driver cancellation. Main owns runtime repairs; Acceptance/** has one separate writer. See [[Research/QA/Ten-Benchmark-Audit]]. Commit-author clarification remains pending.
 
-- [E, execution audit and user direction] [[Research/QA/Org-Audit-2026-11-04]] confirms real code and runtime evidence with coordination stalls. Current mission is [[Research/Agentic/Flow-Goals]]: ten satisfactory real factory builds. Existing sessions received coordination requests; acknowledgement and benchmark receipts remain pending in this session. See [[Sessions/2026-11-04-execution-management]]. Earlier snapshot-based idle conclusions are superseded by runner start events.
+- [E, execution audit and user direction] [[Research/QA/Org-Audit-2026-11-04]] confirms real code and runtime evidence with coordination stalls. Current mission is [[Research/Agentic/Flow-Goals]]: ten satisfactory real factory builds. Main acknowledged ownership and benchmark receipts are now available; independent completion remains unestablished. See [[Sessions/2026-11-04-execution-management]]. Earlier snapshot-based idle conclusions are superseded by runner start events.
 
 - [E, preparation complete] [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]] and its script are ready for main's fixture execution. Source, generated-worker syntax and pure identity/verdict checks pass. The test proves distinct process group/session and advancing heartbeats before Stop, then records observations before separate cleanup. No detached-job runtime result is claimed yet.
 
@@ -57,7 +61,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 ## Blocking
 
 - [E, execution review about 16:09] Ten independently satisfactory builds are not yet established. [[Research/QA/Ten/Scoreboard]] is the current measured record; passing development tests alone does not satisfy the mission.
-- [E, main-session confirmation and local Git] Reviewed integration remains at `d0f4c69` pending worker reviews and coordinator repairs. Main is draining the organization runner for a repaired restart. The benchmark runs separately on a disclosed scratch patch; do not describe that patch as shipped behavior.
+- [E, local Git and runner state at 16:23] The runner restarted and dev/reviewed moved to `1d9eeee` through frontend relay. Factory commits `b8cb505`, `4af1bd9` and `1cd427d` remain under review. Round 1 runs on `d0f4c69` plus a disclosed scratch patch; do not describe that patch as shipped behavior.
 - [E, source and reviewer evidence] Generated-test containment and registered-test counting require one integrated implementation. The extra unsandboxed test execution in the returned hardening change remains a real blocker. See [[Research/QA/Org-Audit-2026-11-04]].
 - [E, historical access checks] Portal team membership was absent at 10:38 AM and has not been rechecked here. Earlier hook approval notes predate successful live builds and are not a current instruction to suspend already-authorized execution. Portal/team confirmation remains a person-owned submission item.
 
@@ -78,7 +82,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Next
 
-1. Main completes the repaired runner restart and exact-commit review/integration of existing fixes. Do not duplicate their implementation or revive superseded holds.
+1. Main completes exact-commit review/integration of existing fixes and closes the benchmark driver-cancellation and artifact-identity findings. Do not duplicate implementation or revive superseded holds.
 2. Run the existing ten-challenge benchmark and route each failed primary task or verification outcome to one factory repair owner. Preserve failures and compare the next tested revision.
 3. Independent QA judges exact saved artifacts and retains untested steps; no generated-app hand edits or relaxed acceptance to manufacture success.
 4. Prepare the human acceptance and submission decisions with concrete evidence, including portal/team confirmation, category and disclosed omissions. No new outward-facing action is inferred from the coordination instruction.

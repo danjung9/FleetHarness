@@ -8,6 +8,10 @@ summary: "Completed modified build, failing shipped gate, factory acceptance fai
 
 # Agent workflow evidence and designs
 
+## Latest benchmark diagnosis
+
+[E, November 4, 2026, round 1 challenge 36] [[Research/Agentic/08-Native-Select-Repair]] traces the failed conflict journeys to a malformed option closing tag that survived a label-only repair. The final host rerun passed 22/22 Node tests and 8/12 browser cases. [R] Agentic-builder should strengthen native-control diagnosis in `skills/fleet-ux/SKILL.md` and preserve the failure with a browser regression; fresh factory and independent acceptance evidence remain required. This diagnosis follows the current directive and supersedes no historical receipt below.
+
 ## Bottom line
 
 [E, November 4, 2026] The modified `631849f` experiment completed five phases at 15:24:21 EST and reported 22 generated-test passes, meeting the 4 PM build gate. [E] AppYard `d0f4c69` has a failing 96-pass / 20-fail product gate; hosted-main source is `8db53c3`, with hosted runtime unverified. [E] The factory adapter run is FAIL; a newer CLI run is INCOMPLETE, with numeric-case passes and remaining NOT CHECKED coverage. [R] The approved route and candidates resolve the feed-31 request for another checker authorization; Quality/main now owns failure confirmation and final-copy acceptance.

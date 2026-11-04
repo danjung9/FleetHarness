@@ -16,7 +16,7 @@ summary: "Audit and execution coordination against the newer ten-challenge facto
 
 [E] [[Research/QA/Org-Audit-2026-11-04]] records actual source changes, browser receipts, token accounting and four isolated scheduler probes. Found author-only review cycles, stale queue assignments, missing file-claim metadata, nested-sandbox retry loops and misleading meeting-only snapshots. Corrected the earlier live-idle inference.
 
-[E] Sent the main coordinator concrete remediation instructions through the existing bridge. A pending ask_main requests a factual review and current ownership. Subsequent discovery of [[Research/Agentic/Flow-Goals]] corrected the initial older one-demo assumption: ten real, independently satisfactory catalog builds is the current mission. The coordinator received the correction.
+[E] Sent the main coordinator concrete remediation instructions through the existing bridge and received two factual ownership/remediation replies. Subsequent discovery of [[Research/Agentic/Flow-Goals]] corrected the initial older one-demo assumption: ten real, independently satisfactory catalog builds is the current mission. The coordinator received the correction.
 
 [E] Detected concurrent Run2 adapter implementation before changing the shared acceptance files. The combined patch failed on the already-updated allowlist. Inspection confirms the other implementation and its timestamps remain; no local adapter change is claimed. Stopped overlapping edits and switched to read-only review. Sent the ownership collision to the coordinator.
 
@@ -28,6 +28,8 @@ summary: "Audit and execution coordination against the newer ten-challenge facto
 
 ## Next
 
+[E, follow-up at 16:23 EST] Repaired runner restart is confirmed. Strict reviewer-verdict probes pass. Independent ID 12 judgment is NOT; automatic test passes do not establish primary-task completion. Full-manifest comparisons reproduce post-capture Markdown mutation, and benchmark STOP still lacks driver cancellation. Both were sent to the owner. No live runner or generated application was executed by this audit.
+
 [E, coordinator reply and first benchmark receipt] Main confirmed its ownership of the three-at-once benchmark and the other thread's ownership of Acceptance/**. The first scoreboard row is real: ID 12, 9.7 minutes, 12 Node tests and 8 browser journeys; zero independent satisfactory verdicts. [[Research/QA/Ten-Benchmark-Audit]] records completion/routing/identity defects sent to the owner. A user clarification is pending on conflicting commit-author instructions. Current bridge messages identify this thread as AUDIT-MANAGER, thread 01a1a844-54da-78e2-828e-7675040a3503.
 
-[R] Obtain coordinator acknowledgement and one owner per file/workstream. Resolve author corrections, unify mandatory verification, remove superseded tasks, identify the ten-challenge benchmark owner/revision/bounds and independently audit its first receipts. Retain human review, deployment and submission decisions separately.
+[R] Verify the owner's cancellation and immutable-artifact repairs, complete the integrated verification dependency, and track review outcomes and ten independent judgments. Resolve author instructions when the pending user answer arrives. Retain human review, deployment and submission decisions separately.
