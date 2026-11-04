@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { AgentModel, Bootstrap, FleetAPI } from '../shared/types';
 import './model-selector.css';
+import { isHosted } from './hosted-config';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
 const modelValue = (model: { provider: string; id: string }) => JSON.stringify([model.provider, model.id]);
@@ -12,14 +13,14 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
   const id = useId();
   const settings = data.state.settings;
   const backend = settings.backend ?? (settings.provider ? 'pi' : 'codex');
-  const engine = backend === 'pi' ? 'Pi' : 'Codex';
+  const engine = isHosted ? 'Build' : backend === 'pi' ? 'Pi' : 'Codex';
   const models = data.models.filter(model => (model.backend ?? 'pi') === backend);
   const selected = models.find(model => model.provider === settings.provider && model.id === settings.model);
   const connected = models.filter(model => model.configured);
   const providers = [...new Set(connected.map(model => model.provider))];
   const value = settings.model ? modelValue({ provider: settings.provider, id: settings.model }) : '';
-  const running = data.state.projects.some(project => project.status === 'running');
-  const description = running ? 'Stop active builds to change models.'
+  const running = data.state.projects.some(project => project.status === 'running' || project.status === 'pausing');
+  const description = running ? isHosted ? 'Pause active builds to change models.' : 'Stop active builds to change models.'
     : !desktop ? 'Open the desktop app to connect a model.'
     : selected?.configured ? 'Used for new builds. Completed builds keep their recorded model.'
     : 'Connect a provider in model settings to run builds.';
@@ -47,7 +48,7 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
       {providers.map(provider => <optgroup key={provider} label={provider}>
         {connected.filter(model => model.provider === provider).map(model => <option key={model.id} value={modelValue(model)}>{model.name}</option>)}
       </optgroup>)}
-      <option value="settings">{backend === 'pi' ? 'Connect a provider…' : 'Model settings…'}</option>
+      <option value="settings">{isHosted ? 'OpenAI settings…' : backend === 'pi' ? 'Connect a provider…' : 'Model settings…'}</option>
     </select>
     <span id={`${id}-hint`} className="model-selector-hint">{description}</span>
   </div>;

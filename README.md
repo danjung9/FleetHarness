@@ -4,7 +4,7 @@
 
 ## Desktop application
 
-AppYard has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
+AppYard shares its interface across the Electron desktop app, hosted application and static browser preview.
 
 The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
@@ -12,9 +12,17 @@ The Electron app now runs **Pi coding agents** for intake, research, planning, i
 
 **Apple Silicon:** open `release/mac-arm64/AppYard.app` or install the DMG in `release/`. The existing `npm run dist` command still builds macOS ARM64 packages. In either app, connect an engine in **Model settings**, choose a challenge, and start a build.
 
-For development: `npm ci`, `npm run setup:browser`, then `npm run dev` (Node 22.19+; CI uses Node 24). Every team change must reach `main` to enter the shared Windows installer. Each successful Windows release includes all changes in its source commit. Installed copies are upgraded by running a newer installer; there is no background updater.
+For development: `npm ci`, `npm run setup:browser`, then `npm run dev` (Node 24.x). Every team change must reach `main` to enter the shared Windows installer. Each successful Windows release includes all changes in its source commit. Installed copies are upgraded by running a newer installer; there is no background updater.
 
 Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
+
+## Hosted web application
+
+Use `npm run build:hosted` for the hosted MVP: individual logins, private projects, account-level OpenAI API keys, background builds, checkpoint recovery, app previews, review, source ZIP downloads and share links. It requires Supabase authentication/storage and Vercel Workflow/Sandbox configuration; see [hosted setup and release checks](docs/hosted.md). Builds continue after signing out or closing the browser.
+
+Test changes from `deployment-infra` on staging before merging to `main`. Pushes to `main` trigger the production GitHub Actions workflow for [fleetharness-studio.vercel.app](https://fleetharness-studio.vercel.app/). The current private-repository Hobby setup accepts deployments authored by the Vercel project owner; other contributors' commits are blocked. See the [hosting requirements](docs/hosted.md) before relying on team-wide automatic deployments.
+
+For a static interface snapshot, `npm run build:web` writes `dist-web`. That build supports browsing challenges and saving briefs in the current browser; it does not include accounts or agent execution. The hosted build produces Vercel build output with backend functions, rather than a static `dist-web` deployment.
 
 ## Overview
 

@@ -2,6 +2,7 @@ import { Home } from './Home';
 import { Mark } from './Mark';
 import { ExecutableDownload } from './ExecutableDownload';
 import { ModelSettings } from './ModelSettings';
+import { HostedModelSettings } from './HostedModelSettings';
 import { ModelSelector } from './ModelSelector';
 import { QualityEvidence } from './QualityEvidence';
 import { reportPassed } from '../shared/verification';
@@ -9,12 +10,13 @@ import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type React
 import {
   Activity, Archive, ArrowRight, Bot, Check, CheckCircle2, CircleDot,
   ClipboardCheck, Code2, FileCode2, FolderOpen, GitBranch, Inbox, LayoutDashboard,
-  Play, Plus, RefreshCw, Search, Settings2, ShieldCheck, Square, TerminalSquare, X, XCircle, Download, PanelRight, ListChecks, Info, UserRound, FlaskConical
+  Play, Pause, LogOut, Share2, Copy, Plus, RefreshCw, Search, Settings2, ShieldCheck, Square, TerminalSquare, X, XCircle, Download, PanelRight, ListChecks, Info, UserRound, FlaskConical
 } from 'lucide-react';
 import type { AppState, Artifact, Bootstrap, NewProject, Project, StageId, View } from '../shared/types';
 import { starters } from '../shared/types';
 import { normalizeProjectInput } from '../shared/project-input';
-import { api, isDesktop } from './api';
+import { api, isDesktop, isHosted } from './api';
+import { hostedClient } from './hosted-api';
 import { IconButton } from './IconButton';
 import { PhaseDetails, projectPhases } from './PhaseDetails';
 import { SystemDesign } from './SystemDesign';
@@ -24,10 +26,10 @@ import { bundledNorfolkCatalog, toProjectInput } from '../harness/catalog';
 import type { NorfolkCatalog } from '../harness/norfolk';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
-const labels: Record<string, string> = { draft: 'Brief saved', running: 'Building', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered', queued: 'Queued', complete: 'Complete', active: 'In progress' };
+const labels: Record<string, string> = { draft: 'Brief saved', running: 'Building', pausing: 'Saving checkpoint', paused: 'Paused', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered', queued: 'Queued', complete: 'Complete', active: 'In progress' };
 const date = (value: string) => new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 function Glyph({ status }: { status: string }) {
-  return status === 'complete' || status === 'approved' || status === 'delivered' ? <Check size={15}/> : status === 'active' || status === 'running' ? <Activity size={15}/> : status === 'failed' ? <XCircle size={15}/> : status === 'review' ? <ShieldCheck size={15}/> : <CircleDot size={15}/>;
+  return status === 'paused' || status === 'pausing' ? <Pause size={15}/> : status === 'complete' || status === 'approved' || status === 'delivered' ? <Check size={15}/> : status === 'active' || status === 'running' ? <Activity size={15}/> : status === 'failed' ? <XCircle size={15}/> : status === 'review' ? <ShieldCheck size={15}/> : <CircleDot size={15}/>;
 }
 function Badge({ status, label }: { status: string; label?: string }) { return <span className={'badge ' + status}><Glyph status={status}/>{label || labels[status] || status}</span>; }
 function stageStatus(project: Project, status: string) { return status === 'queued' && !project.runId ? 'Not started' : labels[status] || status; }
@@ -46,14 +48,16 @@ function Modal({ title, close, children, wide = false, className = '' }: { title
     <div className="dialog-inner"><div className="dialog-heading"><h2 id={headingId}>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={close}><X size={18}/></button></div>{children}</div>
   </dialog>;
 }
-type BuildGuidance = { configured: boolean; busy: boolean; startBuild: () => void; navigate: (view: View) => void };
-function BuildNextStep({ project, configured, busy, startBuild, navigate }: BuildGuidance & { project: Project }) {
+type BuildGuidance = { configured: boolean; busy: boolean; startBuild: () => void; resumeBuild?: () => void; navigate: (view: View) => void };
+function BuildNextStep({ project, configured, busy, startBuild, resumeBuild, navigate }: BuildGuidance & { project: Project }) {
   if (project.status === 'running') return <div className="build-next-step"><p>Your agents are working. Follow their progress as results arrive.</p><button className="secondary" onClick={() => navigate('agents')}><Activity size={16}/>View activity</button></div>;
-  if (!isDesktop) return <div className="build-next-step"><p>Builds run in the AppYard desktop app. This brief is saved only in this browser.</p><button className="secondary" onClick={() => navigate('settings')}><Info size={16}/>Desktop setup</button></div>;
+  if (project.status === 'pausing') return <div className="build-next-step"><p>Stopping the active phase and saving progress at the latest checkpoint. You can leave this page.</p></div>;
+  if (isHosted && project.canResume && resumeBuild) return <div className="build-next-step"><p>Your saved checkpoint is ready. Resume continues the build; an interrupted phase may restart.</p><button className="primary" disabled={busy} onClick={() => configured ? resumeBuild() : navigate('settings')}><Play size={15}/>{configured ? 'Resume build' : 'Connect model'}</button></div>;
+  if (!isDesktop && !isHosted) return <div className="build-next-step"><p>Builds run in the AppYard desktop app. This brief is saved only in this browser.</p><button className="secondary" onClick={() => navigate('settings')}><Info size={16}/>Desktop setup</button></div>;
   return <div className="build-next-step"><p>{configured ? 'Build from your saved brief, then inspect the app and its test results.' : 'Connect a model to build from this brief. You can review the plan and results as they arrive.'}</p><button className="primary" disabled={busy} onClick={() => configured ? startBuild() : navigate('settings')}>{configured ? <Play size={15}/> : <Settings2 size={16}/>} {configured ? project.runId ? 'Start new build' : 'Start build' : 'Connect model'}</button></div>;
 }
 function Logs({ project, stage, compact = false }: { project: Project; stage?: StageId; compact?: boolean }) {
-  const items = buildActivity(project.logs, project.status, project.stages.find(s => s.status === 'active')?.id);
+  const items = buildActivity(project.logs, project.status === 'paused' ? 'stopped' : project.status === 'pausing' ? 'running' : project.status, project.stages.find(s => s.status === 'active')?.id);
   return <ActivityFeed items={stage ? items.filter(item => item.stage === stage) : items} compact={compact} live={project.status === 'running'} emptyDescription={stage ? 'Updates will appear here when this stage begins.' : undefined}/>;
 }
 function Factory({ project, selected, select, navigate, ...guidance }: BuildGuidance & { project: Project; selected: StageId; select: (id: StageId) => void }) {
@@ -129,7 +133,7 @@ function RequirementsForm({ initial, submit, busy, submitLabel }: { initial: New
     </div>
     <div className="requirements-footer">
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><span className="small-note">Saved locally. Build when ready.</span><button className="primary" disabled={busy} type="submit"><Check size={16}/>{submitLabel}</button></div>
+    <div className="form-actions"><span className="small-note">{isHosted ? 'Saved to your account.' : 'Saved locally.'} Build when ready.</span><button className="primary" disabled={busy} type="submit"><Check size={16}/>{submitLabel}</button></div>
     </div>
   </form>;
 }
@@ -153,7 +157,7 @@ function Intake({ close, action, created, busy, initialCatalogId, catalog }: { c
   return <Modal title="New challenge" close={close} wide className="intake-dialog">
     <div className="template-picker" role="group" aria-label="Challenge source"><button aria-pressed={template === -2} className={template === -2 ? 'selected' : ''} onClick={() => { setTemplate(-2); setCatalogExpanded(true); }}>Norfolk catalog · {challenges.length}</button><button aria-pressed={template !== -2} className={template !== -2 ? 'selected' : ''} onClick={() => setTemplate(-1)}>Custom problem</button></div>
     {template !== -2 && <details className="starter-choices"><summary>Use a starter brief</summary><div className="template-picker" role="group" aria-label="Starter brief">{starters.map((p, i) => <button key={p.title} aria-pressed={template === i} className={template === i ? 'selected' : ''} onClick={() => setTemplate(i)}>{['Message parsing', 'Scheduling', 'Offline workflow'][i]}</button>)}</div></details>}
-    {template === -2 && catalogExpanded && <><div className="intake-source"><span role="status">{refreshing ? 'Refreshing Norfolk challenges…' : `Norfolk source saved ${date(catalog.fetchedAt)}`}</span><button className="text-button" disabled={refreshing || !isDesktop} title={isDesktop ? undefined : 'Refresh is available in the desktop app.'} onClick={() => void refresh()}><RefreshCw size={14}/>Refresh from Norfolk</button></div>{refreshError && <p className="form-error" role="alert">{refreshError}</p>}</>}
+    {template === -2 && catalogExpanded && <><div className="intake-source"><span role="status">{refreshing ? 'Refreshing Norfolk challenges…' : `Norfolk source saved ${date(catalog.fetchedAt)}`}</span><button className="text-button" disabled={refreshing || (!isDesktop && !isHosted)} title={isDesktop || isHosted ? undefined : 'Refresh is available in the desktop app.'} onClick={() => void refresh()}><RefreshCw size={14}/>Refresh from Norfolk</button></div>{refreshError && <p className="form-error" role="alert">{refreshError}</p>}</>}
     {template === -2 && (catalogExpanded ? <div className="catalog-picker"><label>Find a published challenge<input value={catalogQuery} onChange={e => setCatalogQuery(e.target.value)} placeholder="Search title, category, or challenge ID"/></label><p className="catalog-count" role="status">{matches.length} of {challenges.length} challenges</p><div className="catalog-results">{matches.map(c => <button aria-pressed={catalogId === c.id} className={catalogId === c.id ? 'selected' : ''} key={c.id} disabled={refreshing} onClick={() => { setCatalogId(c.id); setCatalogRevision(revision => revision + 1); setCatalogInput(toProjectInput(c.id, challenges)); setCatalogExpanded(false); }}><span className="catalog-id">#{c.id}</span><span>{c.title}<small>{c.category || 'Uncategorized'} · {c.recipe}</small></span>{catalogId === c.id && <Check size={16}/>}</button>)}{!matches.length && <div className="catalog-empty"><p>No challenges match “{catalogQuery}”.</p><button className="text-button" onClick={() => setCatalogQuery('')}>Clear search</button></div>}</div></div> : <div className="intake-source"><span>Starting from Norfolk challenge #{catalogId}</span><button className="text-button" onClick={() => setCatalogExpanded(true)}>Change challenge</button></div>)}
     {(template !== -2 || catalogInput) && <div className="intake-form" hidden={template === -2 && catalogExpanded}><RequirementsForm key={`${template}:${catalogId}:${catalogRevision}`} initial={template === -2 ? catalogInput! : template < 0 ? { title: '', description: '', criteria: [] } : starters[template]} busy={busy} submitLabel="Save challenge" submit={async input => {
       await action(async () => { const p = await api.createProject(input); close(); created(p); }, 'Challenge saved.');
@@ -164,17 +168,28 @@ function Development({ project, action, navigate, ...guidance }: BuildGuidance &
   const [surface, setSurface] = useState<'preview' | 'design'>(project.status === 'running' ? 'design' : 'preview');
   useEffect(() => { if (project.status === 'running') setSurface('design'); }, [project.runId]);
   const [preview, setPreview] = useState<string | null>(null), [revision, setRevision] = useState(0), [loading, setLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
   const [activity, setActivity] = useState(project.status === 'running'), [review, setReview] = useState(false);
-  useEffect(() => { let current = true; setLoading(true); api.preview(project.id).then(value => { if (current) setPreview(value); }).catch(() => { if (current) setPreview(null); }).finally(() => { if (current) setLoading(false); }); return () => { current = false; }; }, [project.id, project.status, revision]);
+  useEffect(() => {
+    let current = true; setLoading(true); setPreviewError('');
+    api.preview(project.id).then(value => {
+      if (value && isHosted) {
+        const url = new URL(value);
+        if (url.protocol !== 'https:' || url.origin === location.origin) throw new Error('The preview must use an isolated HTTPS address.');
+      }
+      if (current) setPreview(value);
+    }).catch(error => { if (current) { setPreview(null); setPreviewError(error instanceof Error ? error.message : 'Preview could not be loaded.'); } }).finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [project.id, project.status, revision]);
   return <div className="development">
     {activity && <aside className="session-panel" id="preview-activity"><div className="panel-heading"><h2>Activity</h2><Badge status={project.status}/></div><Logs project={project}/><button className="text-button" onClick={() => navigate('agents')}>View all agent activity <ArrowRight size={13}/></button></aside>}
     <section className="preview-panel"><div className="preview-toolbar"><div className="sd-view-switch" aria-label="Development views"><button aria-pressed={surface === 'design'} onClick={() => setSurface('design')}>System design</button><button aria-pressed={surface === 'preview'} onClick={() => setSurface('preview')}>App preview</button></div><div className="preview-actions">
       <IconButton label="Toggle activity" aria-expanded={activity} aria-controls="preview-activity" onClick={() => setActivity(v => !v)}><TerminalSquare size={18}/></IconButton>
       <IconButton label="Toggle review checklist" aria-expanded={review} aria-controls="preview-review" onClick={() => setReview(v => !v)}><ListChecks size={18}/></IconButton>
-      <IconButton label="Open source folder" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
+      <IconButton label={isHosted ? 'Browse source files' : 'Open source folder'} disabled={isHosted ? !project.runId : !project.workspace} onClick={() => isHosted ? navigate('artifacts') : void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
       <IconButton label="Reload preview" onClick={() => { setSurface('preview'); setRevision(r => r + 1); }}><RefreshCw size={17}/></IconButton>
     </div></div>
-      {surface === 'design' ? <div className="preview-system-design"><SystemDesign project={project}/></div> : loading ? <Empty icon={<RefreshCw size={26}/>} title="Loading preview">Opening the latest build.</Empty> : preview ? <iframe key={revision} title="Generated application preview" sandbox="allow-scripts allow-same-origin allow-downloads allow-forms" src={preview}/> : <Empty icon={<Code2 size={36}/>} title={project.runId ? 'No preview available yet' : 'Your brief is ready to build'} action={<BuildNextStep project={project} navigate={navigate} {...guidance}/>}>{project.status === 'running' ? 'Your app will appear here when the build produces a preview.' : 'Build an app from this brief to try it here.'}</Empty>}
+      {surface === 'design' ? <div className="preview-system-design"><SystemDesign project={project}/></div> : loading ? <Empty icon={<RefreshCw size={26}/>} title="Loading preview">Opening the latest build.</Empty> : preview ? <iframe key={revision} title="Generated application preview" sandbox="allow-scripts allow-same-origin allow-downloads allow-forms" referrerPolicy="no-referrer" src={preview}/> : previewError ? <Empty icon={<XCircle size={30}/>} title="Preview unavailable" action={<button className="secondary" onClick={() => setRevision(value => value + 1)}><RefreshCw size={15}/>Retry preview</button>}>{previewError}</Empty> : <Empty icon={<Code2 size={36}/>} title={project.runId ? 'No preview available yet' : 'Your brief is ready to build'} action={<BuildNextStep project={project} navigate={navigate} {...guidance}/>}>{project.status === 'running' ? 'Your app will appear here when the build produces a preview.' : 'Build an app from this brief to try it here.'}</Empty>}
       <div className="preview-footer"><ShieldCheck size={13}/> Isolated preview · synthetic data</div>
     </section>
     {review && <aside className="review-panel" id="preview-review"><h2>Review checklist</h2><EvaluationCriteria criteria={project.criteria}/>
@@ -185,6 +200,7 @@ function Development({ project, action, navigate, ...guidance }: BuildGuidance &
 }
 function Evidence({ project, action, busy, ...guidance }: BuildGuidance & { project: Project; action: Action }) {
   const [feedback, setFeedback] = useState(project.feedback), [reviewed, setReviewed] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
   const passed = reportPassed(project.report, project.qualityVersion === 1);
   return <div className="page evidence-page"><div className="page-heading"><div><h1>Review & delivery</h1></div></div>
     {!project.report ? <Empty icon={<ClipboardCheck size={32}/>} title="No test evidence yet" action={<BuildNextStep project={project} busy={busy} {...guidance}/>}>Test results appear after the build reaches verification.</Empty> : <>
@@ -192,11 +208,18 @@ function Evidence({ project, action, busy, ...guidance }: BuildGuidance & { proj
       <details className="output-details" open={!passed}><summary>Test runner output <span>Exit {project.report.exitCode ?? 'terminated'}</span></summary><code>{project.report.command}</code><pre>{project.report.output}</pre></details>
       <QualityEvidence report={project.report.quality}/>
       <div className="review-form"><div><h2>Human review</h2><p className="muted">Try the app, check the agent-written tests, and note limitations before approving this prototype.</p><EvaluationCriteria criteria={project.criteria}/></div><div>
-        <label>Review notes<span className="field-hint">Add at least 10 characters describing what you checked and any limitations.</span><textarea rows={5} maxLength={10000} value={feedback} disabled={!!project.approvedAt} onChange={e => setFeedback(e.target.value)} placeholder="What did you try? What worked, and what still needs domain validation?"/></label>
+        <label>Review notes<span className="field-hint">Add at least 10 characters describing what you checked and any limitations.</span><textarea rows={5} maxLength={isHosted ? 8000 : 10000} value={feedback} disabled={!!project.approvedAt} onChange={e => setFeedback(e.target.value)} placeholder="What did you try? What worked, and what still needs domain validation?"/></label>
         {!project.approvedAt && <label className="checkbox"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/>I inspected the application, test evidence, and limitations.</label>}
         {project.approvedAt ? <p className="approval-note"><ShieldCheck size={17}/>Approved for prototype delivery · {date(project.approvedAt)}</p> : <button className="primary full-width" disabled={!passed || !reviewed || feedback.trim().length < 10 || busy || project.status === 'running'} onClick={() => void action(() => api.approve(project.id, feedback), 'Prototype approved for delivery.')}><ShieldCheck size={16}/> Approve prototype</button>}
-        <ExecutableDownload project={project} api={api} busy={busy} action={action} buttonClassName="primary full-width"/>
-        <button className="secondary full-width" disabled={!project.approvedAt || busy || project.executable?.status === 'packaging'} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/> Export app & evidence</button>
+        {!isHosted && <ExecutableDownload project={project} api={api} busy={busy} action={action} buttonClassName="primary full-width"/>}
+        <button className="secondary full-width" disabled={!project.approvedAt || busy || project.executable?.status === 'packaging'} onClick={() => void action(() => api.exportProject(project.id), isHosted ? 'Source and evidence ZIP downloaded.' : undefined)}><Download size={16}/> {isHosted ? 'Download source & evidence ZIP' : 'Export app & evidence'}</button>
+        {isHosted && api.shareProject && <button className="secondary full-width" disabled={!project.approvedAt || busy} onClick={() => void action(async () => {
+          const value = await api.shareProject!(project.id);
+          const url = new URL(value);
+          if (url.protocol !== 'https:') throw new Error('The shared result must use an HTTPS address.');
+          setShareUrl(url.href);
+        })}><Share2 size={16}/>{shareUrl ? 'Refresh result link' : 'Create result link'}</button>}
+        {shareUrl && <div className="shared-result"><p>Anyone with this link can view the approved app without access to your workspace or account.</p><a href={shareUrl} target="_blank" rel="noopener noreferrer">Open shared app <ArrowRight size={12}/></a><br/><button className="text-button" onClick={() => void action(() => navigator.clipboard.writeText(shareUrl), 'Result link copied.')}><Copy size={14}/>Copy link</button></div>}
         {project.exportedTo && <p className="path-note">{project.exportedTo}</p>}
       </div></div>
       <div className="readiness-note"><ShieldCheck size={19}/><p><strong>Operational readiness: unverified.</strong> Synthetic fixtures and prototype review do not validate production integrations, security accreditation, or field performance.</p></div>
@@ -205,16 +228,21 @@ function Evidence({ project, action, busy, ...guidance }: BuildGuidance & { proj
 }
 function Artifacts({ project, action }: { project: Project; action: Action }) {
   const [files, setFiles] = useState<Artifact[]>([]), [selected, setSelected] = useState(''), [content, setContent] = useState('');
+  const readRevision = useRef(0);
   useEffect(() => { let current = true; void action(async () => { const f = await api.artifacts(project.id); if (current) setFiles(f); }); return () => { current = false; }; }, [project.id, project.status]);
-  async function open(file: string) { setSelected(file); setContent('Loading…'); await action(async () => { setContent(await api.readArtifact(project.id, file)); }); }
-  return <div className="page artifact-page"><div className="page-heading"><div><h1>Files</h1></div><button className="secondary" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={16}/> Open folder</button></div>
+  async function open(file: string) {
+    const revision = ++readRevision.current; setSelected(file); setContent('Loading…');
+    const loaded = await action(async () => { const value = await api.readArtifact(project.id, file); if (revision === readRevision.current) setContent(value); });
+    if (!loaded && revision === readRevision.current) setContent('This file could not be loaded. Select it again to retry.');
+  }
+  return <div className="page artifact-page"><div className="page-heading"><div><h1>Files</h1></div>{!isHosted && <button className="secondary" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={16}/> Open folder</button>}</div>
     {!files.length ? <Empty icon={<Archive size={30}/>} title="No generated artifacts">Files appear after the first build.</Empty> : <div className="artifact-browser"><div className="file-list">{files.map(f => <button key={f.path} className={selected === f.path ? 'selected' : ''} onClick={() => void open(f.path)}><FileCode2 size={15}/><span>{f.path}</span><small>{Math.ceil(f.size / 1024)} KB</small></button>)}</div><div className="file-content"><h3>{selected || 'Select a file'}</h3><pre>{content || 'Choose an artifact to inspect its saved contents.'}</pre></div></div>}
   </div>;
 }
 function AgentSessions({ project, selectStage }: { project: Project; selectStage: (id: StageId) => void }) {
   const [filter, setFilter] = useState<StageId | 'all'>('all');
   const [kind, setKind] = useState<'all' | 'message' | 'tool' | 'error'>('all');
-  const all = buildActivity(project.logs, project.status, project.stages.find(s => s.status === 'active')?.id);
+  const all = buildActivity(project.logs, project.status === 'paused' ? 'stopped' : project.status === 'pausing' ? 'running' : project.status, project.stages.find(s => s.status === 'active')?.id);
   const staged = all.filter(item => filter === 'all' || item.stage === filter);
   const isIssue = (item: typeof all[number]) => item.kind === 'error' || item.status === 'failed' || item.status === 'interrupted';
   const items = staged.filter(item => kind === 'all' || (kind === 'error' ? isIssue(item) : item.kind === kind));
@@ -230,11 +258,11 @@ function AgentSessions({ project, selectStage }: { project: Project; selectStage
 }
 function Settings({ data, action, updated, busy }: { data: Bootstrap; action: Action; updated: (b: Bootstrap) => void; busy: boolean }) {
   return <div className="page settings-page"><div className="page-heading"><div><h1>Model settings</h1></div><span className="runtime-label">{data.runtime}</span></div>
-    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">Connect ChatGPT or choose a Pi provider.</p>
-      <ModelSettings key={JSON.stringify(data.state.settings)} data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop}/>
+    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">{isHosted ? 'Connect your OpenAI project to build apps in the cloud.' : 'Connect ChatGPT or choose a Pi provider.'}</p>
+      {isHosted ? <HostedModelSettings key={JSON.stringify(data.state.settings)} data={data} api={api} busy={busy} action={action} updated={updated}/> : <ModelSettings key={JSON.stringify(data.state.settings)} data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop}/>}
     </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Your selected engine reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>The agent writes the app and tests. AppYard executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
-      <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this computer. AppYard independently runs the generated tests locally. Codex uses your ChatGPT allowance; Pi uses your configured provider account.</p></div>
-      <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Credentials stay in the desktop backend. The interface shows your account, models, and usage status.</p>
+      <div className="readiness-note"><TerminalSquare size={20}/><p>{isHosted ? 'Agents work in isolated cloud sandboxes. AppYard independently runs the generated tests. Builds continue when you close the browser or sign out; Pause saves a checkpoint so you can resume later.' : 'Agents can read and write files and execute shell commands on this computer. AppYard independently runs the generated tests locally. Codex uses your ChatGPT allowance; Pi uses your configured provider account.'}</p></div>
+      <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">{isHosted ? 'Projects, progress, and artifacts are saved to your private account. Your API key stays encrypted in backend storage.' : 'Credentials stay in the desktop backend. The interface shows your account, models, and usage status.'}</p>
       {data.buildInfo && <section className="app-build-info" data-testid="app-build-info" aria-label="Installed build">
         <h3 className="section-label">Installed build</h3>
         <dl><dt>Version</dt><dd>{data.buildInfo.version}</dd><dt>Revision</dt><dd>{data.buildInfo.revision}</dd><dt>Build</dt><dd>{data.buildInfo.buildId}</dd></dl>
@@ -243,13 +271,20 @@ function Settings({ data, action, updated, busy }: { data: Bootstrap; action: Ac
     </aside></div>
   </div>;
 }
-export default function App() {
+export default function App({ accountEmail, signOut }: { accountEmail?: string; signOut?: () => Promise<void> } = {}) {
   const [data, setData] = useState<Bootstrap | null>(null), [state, setState] = useState<AppState | null>(null);
   const [active, setActive] = useState<View>('portfolio'), [current, setCurrent] = useState(''), [selected, setSelected] = useState<StageId>('intake');
   const [intakeCatalogId, setIntakeCatalogId] = useState('');
   const [intake, setIntake] = useState(false), [search, setSearch] = useState(false), [start, setStart] = useState(false);
   const [query, setQuery] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
-  useEffect(() => { api.bootstrap().then(b => { setData(b); setState(b.state); setCurrent(b.state.projects[0]?.id || ''); }).catch(e => setError(String(e))); return api.onState(setState); }, []);
+  const [connectionMessage, setConnectionMessage] = useState('');
+  useEffect(() => {
+    let current = true;
+    api.bootstrap().then(b => { if (current) { setData(b); setState(b.state); setCurrent(b.state.projects[0]?.id || ''); } }).catch(e => { if (current && e?.name !== 'AbortError') setError(e instanceof Error ? e.message : String(e)); });
+    const unsubscribe = api.onState(next => { if (current) setState(next); });
+    return () => { current = false; unsubscribe(); };
+  }, []);
+  useEffect(() => { if (isHosted) return hostedClient.subscribeConnection(setConnectionMessage); }, []);
   useEffect(() => { const handler = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearch(v => !v); } }; window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler); }, []);
   useEffect(() => { if (!message) return; const timer = setTimeout(() => setMessage(''), 5000); return () => clearTimeout(timer); }, [message]);
   const action: Action = async (work, success) => {
@@ -273,9 +308,17 @@ export default function App() {
     { id: 'evidence', label: 'Review — evidence & delivery', shortLabel: 'Review', icon: ClipboardCheck }
   ];
   const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
-  if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
+  if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || (isHosted ? 'Opening your private workspace…' : 'Opening your local workspace…')}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}{signOut && <button className="text-button" onClick={() => void signOut()}>Sign out</button>}</div>;
   const showHome = active === 'portfolio' || (!p && active !== 'settings');
-  const guidance: BuildGuidance = { configured: !!configured, busy, startBuild: () => setStart(true), navigate: setActive };
+  const resumeBuild = () => {
+    if (!p || !api.resumeRun) return;
+    if (isHosted && p.model && p.model !== state.settings.model) {
+      setActive('settings'); setMessage(`Select ${p.model} to resume this build with its original model.`); return;
+    }
+    void action(() => api.resumeRun!(p.id), 'Build resumed from its saved checkpoint.');
+  };
+  const resumable = isHosted && p?.canResume && ['paused', 'failed', 'stopped'].includes(p.status);
+  const guidance: BuildGuidance = { configured: !!configured, busy, startBuild: () => setStart(true), resumeBuild, navigate: setActive };
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
@@ -290,29 +333,36 @@ export default function App() {
       <header className="topbar">
         {showHome || !p ? <div className="workspace-title">AppYard <span>/ {showHome ? 'Home' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div>}
         <div className="top-actions">
-          {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
-          <ModelSelector data={{ ...data, state }} api={api} busy={busy} action={action} updated={b => { setData(b); setState(b.state); }} desktop={isDesktop} openSettings={() => setActive('settings')}/>
+          {!isDesktop && !isHosted && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
+          <ModelSelector data={{ ...data, state }} api={api} busy={busy} action={action} updated={b => { setData(b); setState(b.state); }} desktop={isDesktop || isHosted} openSettings={() => setActive('settings')}/>
           <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
           {showHome ? <button className="primary" onClick={() => createChallenge()}><Plus size={16}/>New challenge</button> : <>
             <IconButton label="New challenge" onClick={() => createChallenge()}><Plus size={20}/></IconButton>
-            {p && active !== 'settings' && (p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop run</button> : ['review', 'approved', 'delivered'].includes(p.status) ? <button className="primary" onClick={() => setActive(active === 'evidence' ? 'workspace' : 'evidence')}>{active === 'evidence' ? <Code2 size={16}/> : <ClipboardCheck size={16}/>} {active === 'evidence' ? 'Open preview' : p.status === 'review' ? 'Review build' : 'Delivery'}</button> : <button className="primary" disabled={busy} onClick={() => isDesktop && configured ? setStart(true) : setActive('settings')}>{!isDesktop ? <Info size={16}/> : <Play size={15}/>} {!isDesktop ? 'Desktop setup' : configured ? p.runId ? 'Start new build' : 'Start build' : 'Connect model'}</button>)}
+            {p && active !== 'settings' && (p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), isHosted ? 'Pause requested. Stopping the active phase and keeping the latest checkpoint.' : 'Stop requested. Current artifacts will be kept.')}>{isHosted ? <Pause size={14}/> : <Square size={14}/>} {isHosted ? 'Pause build' : 'Stop run'}</button> : p.status === 'pausing' ? <button className="secondary" disabled><Pause size={14}/>Saving checkpoint…</button> : resumable ? <button className="primary" disabled={busy} onClick={() => configured ? resumeBuild() : setActive('settings')}><Play size={15}/>{configured ? 'Resume build' : 'Connect model'}</button> : ['review', 'approved', 'delivered'].includes(p.status) ? <button className="primary" onClick={() => setActive(active === 'evidence' ? 'workspace' : 'evidence')}>{active === 'evidence' ? <Code2 size={16}/> : <ClipboardCheck size={16}/>} {active === 'evidence' ? 'Open preview' : p.status === 'review' ? 'Review build' : 'Delivery'}</button> : <button className="primary" disabled={busy} onClick={() => (isDesktop || isHosted) && configured ? setStart(true) : setActive('settings')}>{!isDesktop && !isHosted ? <Info size={16}/> : <Play size={15}/>} {!isDesktop && !isHosted ? 'Desktop setup' : configured ? p.runId ? 'Start new build' : 'Start build' : 'Connect model'}</button>)}
           </>}
+          {signOut && <div className="account-control"><span className="account-email" title={accountEmail}>{accountEmail}</span><IconButton label="Sign out" title="Sign out — builds continue in the cloud" onClick={() => void signOut()}><LogOut size={17}/></IconButton></div>}
         </div>
       </header>
+      {connectionMessage && <div className="connection-banner" role="status"><RefreshCw size={15}/>{connectionMessage}</div>}
       {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
-      {p && !showHome && active !== 'settings' && <section className="run-header"><div><div className="run-title"><h1>{p.title}</h1><Badge status={p.status}/></div><details className="brief-disclosure"><summary><Info size={13}/> Challenge brief</summary><p>{p.description}</p><button className="text-button" onClick={() => setActive('requirements')}>Edit brief <ArrowRight size={13}/></button></details></div></section>}
+      {p && !showHome && active !== 'settings' && <section className="run-header"><div><div className="run-title"><h1>{p.title}</h1><Badge status={p.status}/></div><details className="brief-disclosure"><summary><Info size={13}/> Challenge brief</summary><p>{p.description}</p><button className="text-button" onClick={() => setActive('requirements')}>Edit brief <ArrowRight size={13}/></button></details>{isHosted && (p.status === 'running' || p.status === 'pausing' || p.status === 'paused' || p.canResume) && <p className="cloud-run-note"><ShieldCheck size={13}/>{p.status === 'running' ? 'Running in the cloud. Closing this page or signing out won’t interrupt the build.' : p.status === 'pausing' ? 'Stopping the active phase and keeping the latest checkpoint. You can leave this page.' : p.canResume ? 'Checkpoint saved. Resume when you’re ready; an interrupted phase may restart.' : 'No checkpoint is available. Start a new build to continue.'}</p>}</div></section>}
       {p?.error && active === 'factory' && <div className="run-error"><XCircle size={16}/><span>{p.error}</span></div>}
       {p && active === 'factory' && <Factory key={p.id} project={p} selected={selected} select={setSelected} {...guidance}/>}
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} {...guidance}/>}
       {p && active === 'agents' && <AgentSessions key={p.id} project={p} selectStage={setSelected}/>}
       {p && active === 'evidence' && <Evidence key={p.id + (p.approvedAt || '')} project={p} action={action} {...guidance}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action}/>}
-      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>Saving changes resets tests and approval.</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running'} submitLabel="Save requirements" submit={async input => { await action(() => api.updateProject(p.id, input), 'Requirements saved.'); }}/></div>}
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{isHosted && p.canResume ? 'Saving changes starts a fresh brief and clears the saved checkpoint, tests, and approval.' : 'Saving changes resets tests and approval.'}</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running' || p.status === 'pausing'} submitLabel="Save requirements" submit={async input => { await action(() => api.updateProject(p.id, input), 'Requirements saved.'); }}/></div>}
       {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={b => { setData(b); setState(b.state); }} busy={busy}/>}
     </main>
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}
     {intake && <Intake catalog={state.norfolkCatalog ?? bundledNorfolkCatalog} initialCatalogId={intakeCatalogId} close={() => setIntake(false)} action={action} created={project => { setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); openProject(project.id); }} busy={busy}/>}
     {search && <Modal title="Find a challenge" close={() => setSearch(false)}><label className="search-field"><Search size={18}/><input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="Search saved challenges"/></label><div className="search-results">{results.map(p => <button key={p.id} onClick={() => openProject(p.id)}><span>{p.title}<small>{labels[p.status]}</small></span><ArrowRight size={16}/></button>)}{!results.length && <p className="muted">No matching challenges.</p>}</div></Modal>}
-    {start && p && <Modal title={state.settings.backend === 'codex' ? 'Start Codex build' : 'Start Pi build'} close={() => setStart(false)}><p className="muted">{state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this computer. {state.settings.backend === 'codex' ? 'Codex runs with workspace write access and external command network access disabled. AppYard independently executes generated tests locally.' : 'They work in a new project folder, which is not an OS sandbox.'} {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your ChatGPT plan’s Codex allowance and is subject to its limits.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current requirements.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Build started.')}><Play size={16}/>Run {state.settings.backend === 'codex' ? 'Codex' : 'Pi'} agents</button></div></Modal>}
+    {start && p && <Modal title={isHosted ? 'Start cloud build' : state.settings.backend === 'codex' ? 'Start Codex build' : 'Start Pi build'} close={() => setStart(false)}>
+      <p className="muted">{isHosted ? 'Your agents' : state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p>
+      <div className="run-disclosure"><TerminalSquare size={20}/>{isHosted ? <p>Agents work in an isolated cloud workspace and use your account’s OpenAI key. OpenAI receives the brief and tool context; API usage charges may apply. Closing this page or signing out won’t interrupt the build.</p> : <p>The agents can edit files and execute shell commands on this computer. {state.settings.backend === 'codex' ? 'Codex runs with workspace write access and external command network access disabled. AppYard independently executes generated tests locally.' : 'They work in a new project folder, which is not an OS sandbox.'} {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your ChatGPT plan’s Codex allowance and is subject to its limits.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p>}</div>
+      <p className="small-note">{isHosted ? 'This starts a new build from your current brief. Use Pause during a build to save a checkpoint for later.' : 'Prior run folders are preserved. This starts fresh from the current requirements.'}</p>
+      <div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Build started.')}><Play size={16}/>{isHosted ? 'Start build' : `Run ${state.settings.backend === 'codex' ? 'Codex' : 'Pi'} agents`}</button></div>
+    </Modal>}
   </div>;
 }

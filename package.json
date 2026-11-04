@@ -13,7 +13,7 @@
     "build:web": "tsc && vite build --outDir dist-web --base /",
     "start": "electron .",
     "preview": "vite preview",
-    "test": "npm run build:electron && node --test --test-concurrency=2 tests/*.test.mjs",
+    "test": "npm run build:electron && npm run build:worker && node --test --test-concurrency=2 tests/*.test.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
     "pack": "npm run build && electron-builder --dir",
@@ -31,20 +31,33 @@
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
     "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
     "test:models": "npm run build && node scripts/smoke-model-selector.mjs",
-    "test:executable": "npm run build && node scripts/smoke-executable.mjs"
+    "test:executable": "npm run build && node scripts/smoke-executable.mjs",
+    "build:worker": "node scripts/build-worker.mjs",
+    "build:hosted": "npm run build:worker && node scripts/stage-worker.mjs && tsc && tsc -p tsconfig.hosted.json && vite build --config vite.hosted.config.ts && npm run test:hosted-build",
+    "dev:hosted": "vite --config vite.hosted.config.ts --host 127.0.0.1",
+    "test:hosted": "npm run build:worker && node --test tests/hosted-*.test.mjs src/hosted-client.test.mjs",
+    "test:hosted-build": "node scripts/check-hosted-workflow.mjs"
   },
   "dependencies": {
+    "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-coding-agent": "1.5.0",
     "@electron/packager": "20.3.0",
     "@fontsource/dm-sans": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/manrope": "5.3.0",
     "@openai/codex": "0.166.0",
+    "@supabase/supabase-js": "2.119.0",
+    "@vercel/sandbox": "3.9.1",
+    "lru-cache": "10.4.3",
     "lucide-react": "1.68.0",
+    "nitro": "3.0.261103-rc",
     "playwright": "1.64.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "typebox": "1.3.27",
+    "undici": "7.30.1",
+    "unstorage": "2.0.0-alpha.10",
+    "workflow": "5.3.0",
     "yazl": "3.3.1"
   },
   "devDependencies": {
@@ -53,10 +66,12 @@
     "@types/react-dom": "19.3.0",
     "@types/yazl": "3.3.1",
     "@vitejs/plugin-react": "6.2.1",
+    "acorn": "8.16.0",
     "concurrently": "10.0.6",
     "cross-env": "10.1.0",
     "electron": "45.2.2",
     "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "wait-on": "9.5.1"
@@ -106,5 +121,12 @@
       "package.json"
     ]
   },
-  "author": "AppYard"
+  "author": "AppYard",
+  "engines": {
+    "node": "24.x"
+  },
+  "overrides": {
+    "undici@^7.0.0": "7.30.1",
+    "zod@^4.0.0": "4.6.7"
+  }
 }
