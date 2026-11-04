@@ -138,7 +138,7 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
         assert.deepEqual(params.dynamicTools.map(tool => tool.name), ['judge_read']);
       }
       if (method === 'turn/start') setImmediate(() => {
-        rpc.emit('item/agentMessage/delta', { threadId: 'thread-1', delta: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) });
+        rpc.emit('item/completed', { threadId: 'thread-1', item: { id: 'judge-final', type: 'agentMessage', phase: 'final_answer', text: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) } });
         rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } });
       });
     };
