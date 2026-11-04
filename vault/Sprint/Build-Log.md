@@ -46,3 +46,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:19 dev-5: Migrated five smoke callers to explicit synthetic parser inputs. Preserved production validation, existing assertions and the teammate’s catalog-count fix.
 - 17:21 dev-3: Reapplied the three-file verifier patch on `0da7ce9`, preserving the teammate’s process ownership hook. GUI smoke changes remain intact.
 - 17:24 Real build, round 3, id12-optask: failed in 12.7 minutes, tests 27/27, journeys 14/14. Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before st
+- 17:26 Real build, round 3, id36-paperless: failed in 14.2 minutes, tests 24/24, journeys 14/14. Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before st
+- 17:26 Real build, round 3, id11-training: failed in 14.7 minutes, tests 15/15, journeys 16/16. Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before st
+- 17:27 dev-4: Added the independent judge inside verify, with fresh read-only sessions, at most two repairs, reverification, verdict/gap history, timing and tokens. Human review remains required.
+- 17:27 dev-2: Fixed the three review gaps and prepared tested teammate integration patches.

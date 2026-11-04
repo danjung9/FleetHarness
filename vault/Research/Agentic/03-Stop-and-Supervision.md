@@ -1,14 +1,58 @@
 ---
 type: research
-status: draft
+status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Revoke authority first, await local work termination, and keep restart or delivery blocked when shutdown is incomplete."
+summary: "Round 3 challenge 12 fails during final process cleanup; the flow discards the diagnostic reason. Dev-4 owns the bounded correction."
 ---
 
 # Stop that ends local work
 
 ## Bottom line
+
+[E, R3 ID 12 receipt and pinned source] Generation and automatic verification finished successfully, but the final process sweep rejected before the run could settle at human review. The cleanup catch changes review to failed and discards the underlying reason. [R] Return this to **dev-4**, the existing cleanup owner, with the three-file correction below. [E] The retained evidence proves the failure boundary, but cannot establish whether processes survived, inspection failed or cleanup ran out of time. A specific native scanner repair is not yet supported by the evidence.
+
+## Round 3 challenge 12: exact failure path
+
+[E] `Research/QA/Ten/R3/id12-optask/final.json` and `test-report.json` contain identical reports at `2026-11-04T22:24:16.638Z`: exit 0, 27/27 Node tests, no skipped tests, 14/14 browser executions, seven criteria passed and requirementsMet true. Intake through verify are complete; review is failed and delivery queued. `log-tail.txt:89` records the successful-check handoff, followed at line 90 by the generic cleanup failure. `first-open.json` separately records no page/console errors, no external requests and a nonblank page. These are retained results, not new runtime tests or independent task acceptance.
+
+[E, `electron/pi-backend.ts` at f662d81] The causal chain is:
+
+1. Lines 271 to 274 accept the verification report, complete verify, mark the review stage pending human review and set `run.outcome = 'review'`.
+2. The `execute()` finally block at line 279 always calls `finish()`. At line 53, `finish()` awaits `run.processes.stop()` before assigning the final project status.
+3. The catch at lines 59 to 63 sets the project to failed, changes the review stage to failed and logs the generic warning. It does not retain the caught exception. This matches both the recorded event order and final stage states. The report remains passed because this failure occurs after application verification.
+
+[E, `electron/process-sweep.ts:111`] Cleanup requires two empty process scans. It can reject for failed inspection, an invalid target identity, surviving run processes or failure to settle within its deadline. Its own inspection catch at line 115 also collapses discovery exceptions. On macOS, discovery uses three sequential process snapshots, with retries for changed identity; each process-list call has a 1,500 ms timeout, while the sweep uses a nominal 400 ms grace plus 1,600 ms kill window. Those are source facts, not proof that a timeout caused this run's failure. The receipt retains no reason category, elapsed cleanup time, scan count or surviving process identities.
+
+[E] The exact supported agent-flow cause is **post-verification cleanup rejection preventing the review outcome**, compounded by loss of the diagnostic cause in the host. A live descendant, denied inspection, unstable snapshot or insufficient deadline cannot be selected as the exact operating-system cause from these files. No parser repair, extra model turn or relaxation of acceptance follows from this receipt. Keep the cleanup gate: an unconfirmed shutdown must not become a successful review outcome.
+
+## Smallest correction and code seat
+
+[R] **Owner: dev-4**, as specified for new cleanup failures in [[Ops/Directors/Directive-development]]. This is a handoff recommendation, not a new dispatch. Coordinate `electron/pi-backend.ts` with the current integration/judge work before editing. No frontend or generated-app change is needed.
+
+| File | Smallest justified change [R] |
+| --- | --- |
+| `electron/process-sweep.ts` | Return or throw a bounded cleanup diagnostic with an allowlisted reason, elapsed time, scan count and confirmed remaining PID/start identities where available. Preserve distinctions between inspection failure, unstable snapshots, invalid identity, survivors and insufficient settling. Keep raw process command lines, environments, stdout/stderr and arbitrary exception text out of the receipt. Preserve ownership rechecks and termination safeguards. |
+| `electron/pi-backend.ts::finish` | Catch the typed diagnostic and append only its safe fields to the existing persisted log/error. Preserve the passing application report and failed cleanup outcome. Keep review/delivery blocked on cleanup failure. Unknown errors retain a generic fallback. This fixes the demonstrated information loss; it does not by itself repair native cleanup. |
+| `tests/process-sweep.test.mjs` | Add a normal-success-to-review case alongside the current stop/failure cases. Prove success waits for cleanup, and that distinct injected inspection, survivor and settling failures remain distinguishable in persisted evidence while still failing the run. Include a raw-error sentinel that must never enter saved logs. Preserve PID-reuse and lost-ownership negative controls. |
+
+[R] Dev-4 first retains a failing-before/passing-after diagnostic regression. Main/QA then captures one native successful-run cleanup and the existing detached-worker fixture on the exact prepared revision, with no raw process-environment logging. That receipt determines the smallest functional scanner change in the same owner/files. Require confirmed absence of owned work, stable heartbeats and unrelated-process survival before accepting it. Do not bypass cleanup, blindly increase timeouts, target all processes belonging to a user or send host cleanup failures back to the application repair agent. Failed shutdown remains an operator escalation with separate cleanup evidence and human approval of the final artifact.
+
+[E, `tests/process-sweep.test.mjs` and `org/reports/feed-118.md`] The landed tests exercise real detached workers using injected discovery. Their backend outcome loop covers stop, failure and cleanup-failure, but not normal success reaching review. The implementation/review reports explicitly leave native discovery to main. Those test results do not prove this normal-completion path works on the benchmark machine.
+
+## Identity, grouping and limits
+
+[E] [[Research/QA/Ten/Round-3]] identifies f662d81 plus disclosed scratch changes to the engine/account/verification route. Local Git inspection found no committed changes to `process-sweep.ts`, `pi-backend.ts` or their focused tests between f662d81 and supplied mvp 0da7ce9. The exact prepared scratch tree was not present in the supplied evidence packet; no claim of byte-identical runtime source is made.
+
+[E] Forty of 45 retained manifest entries match SHA-256, with none missing. The five differences are `README.md`, `plan.md`, `test-matrix.md`, `user-guide.md` and `verification.md`. The app, test source, frozen acceptance plan and test report match. Final-report equality and the log order establish this diagnosis without relying on those differing Markdown copies. Final JSON SHA-256: `b7c973841ffa5126c3d8085f60653db50bd9fdced9b6b09d816e404e07b374d2`; log-tail SHA-256: `3088baf3361bf3ea704a587deb2bca8103de87591d403dddcdc3de887269d84f`.
+
+[E] Searches found no existing per-challenge note for this cleanup rejection. It is recorded here with the existing shutdown design, separately from [[Research/Agentic/09-Primary-Task-Deferral]] and [[Research/Agentic/08-Native-Select-Repair]]. The earlier measured detached Pi survivor is a separate receipt, not proof of the cause in R3 ID 12. No repository program, browser, process scanner or model build was executed for this review. Native failure reason, a functional repair and independent satisfactory judgment remain unverified.
+
+[E] Current sources: `Research/QA/Ten/R3/id12-optask/{final.json,log-tail.txt,test-report.json,first-open.json,MANIFEST.json}`; [[Research/QA/Ten/Round-3]]; local pinned source at https://github.com/danjung9/FleetHarness/tree/f662d81; `org/reports/feed-118.md`, `snapshot-158.md`; [[Ops/Directors/Directive-development]] and [[Ops/Directors/Directive-agentic]]. Repository URL is a revision reference, not a remote retrieval.
+
+## Historical design at 50fcaea, retained as background
+
+[E] The sections below preserve the earlier design and its then-current evidence. Their broad supervisor proposal, estimates and historical holds are not the R3 allocation. Use the bounded dev-4 handoff above and current directives for this failure.
 
 [R] Must before any new live generation: prove that Stop prevents more tool dispatch and leaves no candidate work running. Do not equate a settled promise or saved stopped status with process termination. [R] The smallest immediate patch joins agent and packaging cancellation under the existing Stop IPC. A killable restricted Pi worker and proved test boundary are the complete design; cut the general cross-platform sandbox rewrite for Thursday and use an already proved preparation environment or an accepted saved artifact.
 

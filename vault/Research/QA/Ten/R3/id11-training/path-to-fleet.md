@@ -1,0 +1,11 @@
+# Owner handoff
+
+Operational sponsor and sustainment owner: unresolved; designate an authorized PB4T sponsor and application/security maintenance team before any field activity. Intended users are PB4T coordinators and departmental representatives. This package is a synthetic offline browser demonstration only.
+
+The current route is opening index.html on a test workstation. Fleet device, approved browser and hosting/install route remain undecided. No government-device install or authority to operate is established. For an approved offline pilot, owner distributes a reviewed source-bound package; retain the previous package and exported synthetic snapshots for rollback. Local storage is browser-specific; exports cannot currently be imported. An update/rollback migration procedure must be tested before field use.
+
+Use synthetic data only. Classification, retention, approved storage, device encryption, qualification/roster feeds, operational calendars, training history, SFTRM revision, identity and approval integrations need security and owner decisions. No credentials, endpoints or real data were accessed. No operational publication or release is implemented.
+
+Existing evidence: application Node tests (9 pass), dependency-free self-contained source, independent pair and duty checks. Host browser tests and human prototype review remain pending. No penetration, accessibility conformance, operational safety, solver-scale, authorization or real-format validation is established. No third-party package is bundled. Evaluate any future OR-Tools version, license, platform and benchmarks independently.
+
+Next validation: prototype reviewer runs the frozen weekly, edit, review and recovery journeys on desktop and narrow screens; success means every literal expected outcome passes with useful board and heatmap review. PB4T policy owner then supplies approved recurrence, fatigue semantics, full duty history and qualified roster; success means independent domain audits reproduce every required obligation and hard constraint without relaxation. Security/IT owner defines approved data and deployment boundaries and tests install/update/rollback and persistence failure recovery. Only the authorized PB4T operator can accept a specific operational schedule. All three owners remain to be named.

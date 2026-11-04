@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "PB4T coordinators and departmental representatives evaluating an offline synthetic weekly planning demonstration; all people, rules and agent behavior are invented. Actual operator authority is outside this prototype.",
+  "primaryTask": "Load synthetic departmental proposals, inspect collisions, click Optimize schedule, review the negotiated weekly calendar and personnel loading, edit and validate allocations, then record a demonstration-only review.",
+  "successOutcome": "A six-occurrence seven-day board accounts for every synthetic due obligation, shows no hard-constraint violations, explains named agents\u2019 alternate allocations, reconciles personnel heatmaps and exposes the exact saved revision eligible for demonstration acceptance. Real SFTRM compliance and operator approval remain unverified.",
+  "screens": [
+    {
+      "name": "Weekly training board",
+      "purpose": "Primary task workspace: seven labeled day columns, drill cards, visible synthetic disclosure, initial conflict count and named negotiation results. Each card exposes details and a labeled edit action. Desktop uses columns; narrow widths use stacked day sections.",
+      "primaryAction": "Optimize schedule \u2014 one click on saved inputs; clearly disclose bounded first-feasible search."
+    },
+    {
+      "name": "Inputs and alternatives",
+      "purpose": "Readable roster, qualifications, operational windows, explicit synthetic policy and history; editable Engineering duration and search budget; selected drill allocation shows current and selected people, time and resource side by side. Diagnostic fixture selector is in secondary Sample scenarios section.",
+      "primaryAction": "Save inputs or Save allocation; Discard input changes restores the committed revision."
+    },
+    {
+      "name": "Load and review",
+      "purpose": "Personnel loading heatmap with numeric totals and legend, occurrence/deadline table, original-versus-proposed changes, policy requests, review checkbox and saved/unsaved/accepted status.",
+      "primaryAction": "Accept demonstration after reviewing the current valid saved schedule; export a labeled local JSON draft."
+    }
+  ],
+  "states": {
+    "empty": "First open has no accepted schedule. Explain local-only synthetic data and offer Load scenario with weekly sample selected. Show no accepted or feasible status for empty required inputs. Seven day headings remain visible.",
+    "loading": "During immediate local loading, validation, optimization, save and export show Working locally and suppress duplicate actions; announce final result in a polite live region. There is no network wait.",
+    "error": "Preserve entered values and last saved board. Inline duration error names the invalid field. Invalid input, infeasible, search exhausted and invalid edited board are distinct. Show blocked occurrence and competing person/resource/time with a next action. Do not silently relax hard policies or call exhaustion infeasible.",
+    "success": "Show exact feasible count, named negotiation and validated board, recurrence coverage and numeric heatmap. Enable review only for a saved, current, valid complete proposal with no pending policy requests. Record Accepted for demonstration only without implying actual PB4T approval."
+  },
+  "persistence": "Use versioned localStorage for saved synthetic inputs, pending requests, board and its revision, accepted review and separate dirty draft. Reload restores each with clear status; revalidate restored results. No server, identity or production durability. Export synthetic-pb4t-week.json includes disclosure, revision, policies/history, proposals, negotiations, occurrence coverage, assignments, loads and demo review. Storage failures remain visible, keep working memory and allow export. Loading a sample with dirty work requires an explicit Save current draft or Discard and load choice; acceptance and export never silently commit edits.",
+  "recovery": "Errors retain drafts. Save or discard before reviewing changed committed content. Saved changes revoke review and invalidate old feasibility until optimize or validate. Preferred-versus-alternate board edit shows both allocations before save. Block pending policy requests until explicitly withdrawn; requests never change active rules. Load scenario supplies known synthetic recovery fixtures; diagnostics are secondary. No destructive reset without an explicit discard choice.",
+  "keyboard": "Use labeled native inputs/selects/buttons/checkboxes, logical Tab order, visible focus and Enter/Space native activation. Focus first invalid field after a save error and announce status changes. Day headings, conflict descriptions, numeric heatmap values and load legend provide meaning without color. On narrow screens controls wrap and days stack; avoid page-wide horizontal scrolling."
+}

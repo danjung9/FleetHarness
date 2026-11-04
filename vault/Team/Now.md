@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, detached Stop regression prepared] [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]] pins the integrated process sweep and maps the current UI. Only pin/path and five selectors changed; all shutdown assertions remain unchanged. Syntax and pure controls pass. Main owns a matching rebuild and native rerun; the measured defect remains open.
+
 - [E, coordination at 17:21] Existing QA task was idle and received a bounded assignment to close the detached Pi Stop defect against the landed process-sweep revision. Main retains native execution; QA prepares the exact rerun and judges its receipt. No new agents or competing GUI.
 
 - [E, experiment receipt at 17:14] [[Research/QA/Ten/Exp1/Scoreboard]] records five finished automatic passes and five independent NOT verdicts. It ran 16:39 to 17:09 on 1d9eeee plus scratch changes. The earlier absence claim was a wrong-path error. All 324 raw manifest entries match. Matched time and token cost increased; no satisfactory improvement yet. [[Research/QA/Ten-Benchmark-Audit]] distinguishes this run from the newer-head verifier patch blocker.

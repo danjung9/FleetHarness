@@ -39,6 +39,8 @@ summary: "QA coordination, pinned source review, independent GUI receipt assessm
 
 ## Verification
 
+- [E, integrated Stop follow-up] Inspected c4f6ac9 implementation, c6ce52d corrected negative tests and pinned 0da7ce9 integration. Prepared GUI-0da7ce9 fixture and review, changing only revision/path and five source-checked UI selectors. Reverse transformation exactly restores the original failing fixture. Main/generated-worker syntax and pure controls pass; no runtime, repository edits, installs or new agents. Exact build/rerun instructions and closure requirements are ready for the existing runtime owner.
+
 - [E, coordinator priority clarification] Recorded the stated round-one manifest limit and the separate frozen-output path used by first-open. Removed provenance cleanup from active factory recommendations. Main reports driver STOP/3.5-hour cancellation from round two, not the older round-one driver; this does not close the measured Pi detached-child Stop defect. dev-3 owns the injectable sandbox-verifier launcher first and its smoke task next. QA keeps acceptance/adapters ownership and focuses on changes to actual build outcomes. No additional provenance inspection or execution occurred.
 
 - [E, detached rerun receipt recheck] Revalidated receipt 5903f0de, all shared observation/final fields, continuing process identity, eight control-file hashes and the exact executed script. The detached child remains active, heartbeat 28 to 106, while parent/shell are absent and UI reports stopped. FAIL precedes cleanup by 46 ms; separate cleanup passes, and the worker deadline had not been reached. [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]] records the cross-check. No runtime was repeated and no shutdown fix is claimed.

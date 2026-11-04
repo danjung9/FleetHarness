@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Engineering, Weapons, Combat Systems, Damage Control and Air agents negotiate six synthetic occurrences, move Weapons to Blair at Mon 10:00 and Combat Systems to Casey at Mon 10:00, enforce common hard constraints and show all synthetic deadlines. Actual SFTRM compliance remains unverified.",
+      "journeyIds": [],
+      "reason": "real-data: Applicable SFTRM rules, approved fatigue policy, actual training history and qualified roster are outside the synthetic-only boundary. Withhold assurance of actual SFTRM compliance; demonstrate all named departmental negotiation, collision, alternate-allocation, window, qualification, fatigue and recurrence behaviors synthetically."
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "The six-occurrence weekly answer key has zero personnel and resource overlaps, including concurrent Mon 10:00 Weapons and Combat Systems using different people and resources. A board edit to the competing preferred Weapons allocation is rejected; selecting its alternate restores validity.",
+      "journeyIds": [
+        "weekly-board",
+        "board-edit-recovery"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "The application rejects missing Fire Party Leader qualification, unavailable personnel, 59-minute rest and 181-minute duty with distinct reasons; accepts exactly 60 minutes rest and 180 minutes duty including prior work. The weekly fixture respects all qualifications, availability and declared fatigue constraints; invalid duration is recoverable.",
+      "journeyIds": [
+        "weekly-board",
+        "constraint-recovery",
+        "duration-recovery"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "A fully explored two-request shared-person/shared-resource conflict yields Infeasible; a one-node weekly search yields Search budget exhausted \u2014 feasibility unknown; 5000 nodes yields six scheduled occurrences with unchanged hard constraints.",
+      "journeyIds": [
+        "search-recovery"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Six explicit synthetic obligations are expanded and scheduled before their deadlines; missing policy or ENG-2 is invalid input. Prior Engineering completion is Sun 1 Nov 09:00 with next external due Tue 10 Nov 09:00. Actual owner-approved mandatory periodicities remain unverified.",
+      "journeyIds": [],
+      "reason": "real-data: Applicable owner-supplied recurrence rules and completion history are unavailable within the synthetic-only boundary. Withhold actual mandatory-periodicity validation; demonstrate explicit synthetic recurrence expansion, carry-in history, due dates and complete occurrence coverage."
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "deferred",
+      "expectedOutcome": "A locally accepted synthetic revision survives reload; dirty edits require save or discard, saved changes invalidate acceptance, and pending policy changes block acceptance. Actual PB4T operator approval remains unverified.",
+      "journeyIds": [],
+      "reason": "human-authority: An authorized PB4T operator must actually review and accept a specific calendar. Withhold actual operator approval and release; demonstrate editable review, load inspection, pending policy requests and a local synthetic acceptance record."
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One Optimize schedule action automatically resolves three cross-department proposal conflict pairs into the literal six-event seven-day board, with original versus alternate allocations and named agent negotiation. Personnel heatmaps show Alex 180/180 including prior duty, Blair 120/120 and Casey 120/120. Editable review, labeled export, recurrence and failure recovery are usable; bounded feasibility is disclosed rather than global optimality.",
+      "journeyIds": [
+        "weekly-board",
+        "duration-recovery",
+        "search-recovery",
+        "constraint-recovery",
+        "recurrence-recovery",
+        "review-revision",
+        "board-edit-recovery",
+        "policy-change-recovery"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "weekly-board",
+      "title": "Negotiate the complete synthetic PB4T week",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "expectText",
+          "selector": "#disclosure",
+          "text": "Synthetic demonstration; synthetic, not validated against the real format. Not validated against real SFTRM rules or operational data."
+        },
+        {
+          "action": "expectText",
+          "selector": "#initial-conflicts",
+          "text": "3 conflicting proposal pairs: ENG-1 / WPN-1; ENG-1 / CS-1; WPN-1 / CS-1."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible \u2014 6 of 6 required occurrences scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#optimization-note",
+          "text": "Optimization uses bounded first-feasible search; global optimality is not established."
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-ENG-1",
+          "text": "Engineering casualty control | Mon 08:00\u201309:00 | Alex | Trainer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-WPN-1",
+          "text": "Weapons exercise | Mon 10:00\u201311:00 | Blair | Range"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-CS-1",
+          "text": "Combat Systems exercise | Mon 10:00\u201311:00 | Casey | Trainer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-DC-1",
+          "text": "Damage Control drill | Wed 08:00\u201309:00 | Blair | Trainer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-ENG-2",
+          "text": "Engineering casualty control | Thu 08:00\u201309:00 | Alex | Trainer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-AIR-1",
+          "text": "Flight quarters | Fri 08:00\u201309:00 | Casey | Flight deck"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-summary",
+          "text": "Engineering Agent retained ENG-1 and ENG-2. Weapons Agent moved WPN-1 from Alex / Mon 08:00 / Trainer to Blair / Mon 10:00 / Range. Combat Systems Agent moved CS-1 from Alex / Mon 08:00 / Trainer to Casey / Mon 10:00 / Trainer. Damage Control Agent retained DC-1. Air Agent retained AIR-1."
+        },
+        {
+          "action": "expectText",
+          "selector": "#audit-summary",
+          "text": "0 personnel overlaps; 0 resource overlaps; 0 hard-constraint violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#recurrence-summary",
+          "text": "6 of 6 synthetic obligations covered; 0 missed deadlines; next Engineering due Tue 10 Nov 09:00."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-alex",
+          "text": "Alex: 120 planned + 60 prior = 180 / 180 min"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-blair",
+          "text": "Blair: 120 planned + 0 prior = 120 / 120 min"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-casey",
+          "text": "Casey: 120 planned + 0 prior = 120 / 120 min"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-pb4t-week.json",
+          "text": "synthetic, not validated against the real format"
+        }
+      ]
+    },
+    {
+      "id": "duration-recovery",
+      "title": "Correct an invalid drill duration without losing the draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#input-error",
+          "text": "Engineering duration must be a positive whole number of minutes."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#eng-duration",
+          "value": "0"
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Saved inputs; schedule requires optimization."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible \u2014 6 of 6 required occurrences scheduled."
+        }
+      ]
+    },
+    {
+      "id": "search-recovery",
+      "title": "Distinguish impossible allocations from exhausted search",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "impossible"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible \u2014 no allocation satisfies the supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#blocking-reason",
+          "text": "ENG-1 and WPN-1 require Alex and Trainer at Mon 08:00; no alternative is supplied."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "fill",
+          "selector": "#max-nodes",
+          "value": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Search budget exhausted \u2014 feasibility unknown."
+        },
+        {
+          "action": "fill",
+          "selector": "#max-nodes",
+          "value": "5000"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible \u2014 6 of 6 required occurrences scheduled."
+        }
+      ]
+    },
+    {
+      "id": "constraint-recovery",
+      "title": "Reject qualification, availability, rest and duty violations then honor exact boundaries",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "missing-qualification"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible \u2014 no allocation satisfies the supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#blocking-reason",
+          "text": "WPN-1: no candidate holds Fire Party Leader."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible \u2014 no allocation satisfies the supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#blocking-reason",
+          "text": "WPN-1: no candidate fits personnel availability."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "rest-short"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible \u2014 no allocation satisfies the supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#blocking-reason",
+          "text": "Boundary drill: 59 minutes rest is below the synthetic 60-minute minimum."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "duty-over"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible \u2014 no allocation satisfies the supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#blocking-reason",
+          "text": "Boundary drill: 181 minutes exceeds the synthetic 180-minute horizon budget."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "exact-boundary"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible \u2014 2 of 2 required occurrences scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary-summary",
+          "text": "Alex: 60 minutes rest; 180 / 180 minutes including prior duty; qualifications and availability satisfied."
+        }
+      ]
+    },
+    {
+      "id": "recurrence-recovery",
+      "title": "Expose missing policy and missing mandatory work then recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "missing-policy"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Invalid input \u2014 synthetic recurrence policy is missing."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "missing-occurrence"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Invalid input \u2014 mandatory occurrence ENG-2 is missing."
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#recurrence-ENG",
+          "text": "Engineering: prior completion Sun 1 Nov 09:00; ENG-1 due Wed 4 Nov 09:00; ENG-2 due Sat 7 Nov 09:00; next due Tue 10 Nov 09:00."
+        },
+        {
+          "action": "expectText",
+          "selector": "#recurrence-summary",
+          "text": "6 of 6 synthetic obligations covered; 0 missed deadlines; next Engineering due Tue 10 Nov 09:00."
+        }
+      ]
+    },
+    {
+      "id": "review-revision",
+      "title": "Save, inspect and record a synthetic review; edits invalidate acceptance",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted for demonstration only; no actual PB4T operator approval."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted for demonstration only; no actual PB4T operator approval."
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "45"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved changes; save or discard before review."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Save or discard draft changes, then optimize and review the current schedule."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-inputs"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#eng-duration",
+          "value": "60"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted for demonstration only; no actual PB4T operator approval."
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "45"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Not accepted; saved inputs changed."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-alex",
+          "text": "Alex: 90 planned + 60 prior = 150 / 180 min"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted for demonstration only; no actual PB4T operator approval."
+        }
+      ]
+    },
+    {
+      "id": "board-edit-recovery",
+      "title": "Resolve a competing board allocation through explicit save and revalidation",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "select",
+          "selector": "#edit-occurrence",
+          "value": "WPN-1"
+        },
+        {
+          "action": "select",
+          "selector": "#edit-allocation",
+          "value": "preferred"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-comparison",
+          "text": "Current: Blair / Mon 10:00 / Range. Selected: Alex / Mon 08:00 / Trainer."
+        },
+        {
+          "action": "click",
+          "selector": "#save-allocation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Not accepted; saved inputs changed."
+        },
+        {
+          "action": "click",
+          "selector": "#validate-board"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-validation",
+          "text": "Invalid board: ENG-1 and WPN-1 overlap on Alex and Trainer."
+        },
+        {
+          "action": "select",
+          "selector": "#edit-allocation",
+          "value": "alternate"
+        },
+        {
+          "action": "click",
+          "selector": "#save-allocation"
+        },
+        {
+          "action": "click",
+          "selector": "#validate-board"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-validation",
+          "text": "Valid board: 6 of 6 occurrences; 0 hard-constraint violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-WPN-1",
+          "text": "Weapons exercise | Mon 10:00\u201311:00 | Blair | Range"
+        }
+      ]
+    },
+    {
+      "id": "policy-change-recovery",
+      "title": "Keep a requested hard-policy relaxation explicit and unapproved",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "weekly"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#change-request",
+          "value": "Reduce rest to 0 minutes"
+        },
+        {
+          "action": "click",
+          "selector": "#record-change-request"
+        },
+        {
+          "action": "expectText",
+          "selector": "#change-status",
+          "text": "Pending synthetic policy request: Reduce rest to 0 minutes. Active minimum rest remains 60 minutes."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Resolve the pending policy request before demonstration acceptance."
+        },
+        {
+          "action": "click",
+          "selector": "#withdraw-change-request"
+        },
+        {
+          "action": "expectText",
+          "selector": "#change-status",
+          "text": "No pending policy requests; no hard constraints relaxed."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted for demonstration only; no actual PB4T operator approval."
+        }
+      ]
+    }
+  ]
+}

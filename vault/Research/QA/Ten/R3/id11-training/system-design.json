@@ -1,0 +1,107 @@
+{
+  "title": "Synthetic PB4T weekly deconfliction",
+  "description": "Offline synthetic departmental negotiation, bounded feasibility and operator demonstration review; no operational integrations.",
+  "components": [
+    {
+      "id": "board",
+      "label": "Weekly PB4T board and personnel heatmap",
+      "description": "Seven-day board, proposals, original/alternate assignments, editable drafts and load review.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Simulated departmental agents",
+      "description": "Engineering, Weapons, Combat Systems, Damage Control and Air propose ranked alternatives and exchange deterministic rejection/counterproposal messages.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "constraints",
+      "label": "Constraint and recurrence engine",
+      "description": "Expand synthetic due occurrences; validate availability, qualifications, windows, rest, duty, resource and history constraints.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "solver",
+      "label": "Bounded allocation search",
+      "description": "Deterministic first-feasible search over exact personnel/slot alternatives, distinct infeasible and exhausted states; independent result audit.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "fixtures",
+      "label": "Synthetic policies, roster and drill proposals",
+      "description": "Inline invented seven-day fixtures with explicit history, recurrence and answer key; no real SFTRM data.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Local draft, review and export",
+      "description": "Local storage revisions, save/discard gates, synthetic acceptance and labeled JSON export; no actual operator authority or system connection.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "fixtures",
+      "to": "agents",
+      "label": "Ranked departmental preferences and qualified alternatives"
+    },
+    {
+      "from": "fixtures",
+      "to": "constraints",
+      "label": "Synthetic rules, history and required occurrences"
+    },
+    {
+      "from": "board",
+      "to": "agents",
+      "label": "Saved proposals and one-click Optimize schedule"
+    },
+    {
+      "from": "agents",
+      "to": "solver",
+      "label": "Proposals and counterproposals"
+    },
+    {
+      "from": "constraints",
+      "to": "solver",
+      "label": "Hard feasibility predicates and completeness audit"
+    },
+    {
+      "from": "solver",
+      "to": "board",
+      "label": "Assignments, negotiation log, conflicts and loads"
+    },
+    {
+      "from": "board",
+      "to": "review",
+      "label": "Save/discard edits and demonstration review"
+    },
+    {
+      "from": "review",
+      "to": "board",
+      "label": "Persisted revision, acceptance status and export"
+    }
+  ]
+}
