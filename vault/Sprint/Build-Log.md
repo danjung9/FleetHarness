@@ -67,3 +67,10 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 17:47 Automatic QA at f5fec32 on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only. `Research/QA/Auto/f5fec32.md`
 - 17:48 Astra audit-lifecycle finished, exit 0. Report: `Research/Backend-Audit/audit-lifecycle.md`
 - 17:48 Astra fixer finished, exit 0. Report: `Research/Backend-Audit/fixer.md`
+- 17:50 Astra audit-pipeline finished, exit 0. Report: `Research/Backend-Audit/audit-pipeline.md`
+- 17:51 `acee4fa` pushed: stage retry, guarded resume and bounded repair, mandatory verification sandbox, independent judge, deferral rules and judge accounting. Unit tests 278 of 278, harness 77 of 77, outside the sandbox.
+- 17:51 Team branch: mvp now acee4fa
+- 17:52 Astra fixer started: Backend fixer: API-key sign-in for Codex and the API-key route merge.
+- 17:52 Astra fix-approval started: Backend fixer: approval, export and evidence.
+- 17:52 Astra fix-pi started: Backend fixer: Pi tool containment and secrets.
+- 17:52 Astra fix-truth started: Backend fixer: coverage and repair truth.
