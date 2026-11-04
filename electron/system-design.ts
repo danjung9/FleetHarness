@@ -19,12 +19,14 @@ const designSchema = Type.Object({
 });
 
 export function systemDesignPrompt(stage: StageId) {
+  if (!['plan', 'build', 'verify'].includes(stage)) return '';
   return stage === 'plan'
     ? 'Publish the architecture of the APPLICATION being built using fleet_system_design early in planning, before writing the remaining planning documents. Describe roughly 3–8 major components and their labeled data-flow connections, tailored to this challenge. These are application components, not factory stages or implementation tasks. Map components to the exact source filenames the builder should produce; multiple components may share index.html. Label simulated integrations explicitly. The tool saves system-design.json and immediately displays the diagram to the user. You must call this tool before completing planning.'
     : 'Read system-design.json. Keep its architecture and filenames consistent with the application. Use fleet_component_progress for each component: building before working on it, generated only once its implementation and mapped files exist, or blocked with a concrete reason. Report incremental progress as you work, not just at the end. Generated means agent-reported implementation, not verified correctness. Before finishing, report every implemented component as generated. Preserve system-design.json. During verification or repair, move affected components back to building and then generated when fixed.';
 }
 
 export function createSystemDesignTools(project: Project, stage: StageId, signal: AbortSignal, changed: () => Promise<void>): ToolDefinition[] {
+  if (!['plan', 'build', 'verify'].includes(stage)) return [];
   const response = (text: string) => ({ content: [{ type: 'text' as const, text }], details: {} });
   const check = () => signal.throwIfAborted();
   if (stage === 'plan') return [{

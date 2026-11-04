@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   preview: (id: string) => ipcRenderer.invoke('fleet:preview', id),
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),
+  connectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:connect'),
+  cancelChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:cancel'),
+  disconnectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:disconnect'),
+  refreshChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:refresh'),
   onState: (callback: (state: AppState) => void) => {
     const listener = (_event: unknown, state: AppState) => callback(state);
     ipcRenderer.on('fleet:state', listener); return () => ipcRenderer.removeListener('fleet:state', listener);

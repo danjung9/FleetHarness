@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
-import { createPacket, customPacket, fleetStagePrompt } from './planner.js';
+import { createPacket, customPacket } from './planner.js';
 import { fixtures } from './fixtures.js';
 import { toolRegistry } from './tool-registry.js';
 import { compareText } from './tools/validation.js';
@@ -26,7 +26,8 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
     const source = fileURLToPath(new URL(`./tools/${name}.js`,import.meta.url));
     files.set(`toolkit/${name}.js`,await fs.readFile(source,'utf8'));
   }
-  for (const skill of packet.recipe.skills) {
+  const skills = [...new Set(packet.stages.flatMap(phase => phase.skills))];
+  for (const skill of skills) {
     const content = await fs.readFile(path.join(input.resourcesRoot,'skills',skill,'SKILL.md'),'utf8');
     files.set(`skills/${skill}/SKILL.md`,content);
   }
@@ -58,8 +59,8 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
       await fs.rename(temporary,target);
     } finally { await fs.rm(temporary,{recursive:true,force:true}); }
   }
-  return {challengeId:input.challengeId,packetHash:hash,skillPaths:packet.recipe.skills.map(skill => path.join(target,'skills',skill)),
-    context:`FleetHarness packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md and the selected skills: ${packet.recipe.skills.join(', ')}.\nAvailable domain tools: ${packet.recipe.tools.join(', ') || 'Planning only; domain implementation required'}.\nData boundary: synthetic-only. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}\n${fleetStagePrompt('intake')}`};
+  return {challengeId:input.challengeId,packetHash:hash,phases:packet.stages,globalTools:packet.globalTools,skillPaths:skills.map(skill => path.join(target,'skills',skill)),
+    context:`FleetHarness packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md. Use only the skills and tools assigned to the current phase.\nData boundary: synthetic-only. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}`};
 }
 
 /** Compare against a hash retained by the host, not a hash chosen by generated code. */

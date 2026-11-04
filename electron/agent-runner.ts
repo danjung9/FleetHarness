@@ -22,7 +22,7 @@ export async function runAgentStage(options: {
   const controller = new AbortController();
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
   let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
-  let lastActivity = 'initializing the Pi session';
+  let lastActivity = 'initializing the agent session';
   let idleTimer: ReturnType<typeof setTimeout>;
   let rejectInterrupted!: (error: Error) => void;
   const interrupted = new Promise<never>((_resolve, reject) => { rejectInterrupted = reject; });
@@ -54,17 +54,23 @@ export async function runAgentStage(options: {
       if (closed || failure) return;
       switch (event.type) {
         case 'message_update':
+          lastActivity = 'receiving the model response'; heartbeat(); break;
         case 'tool_execution_update':
+          heartbeat(); break;
         case 'tool_execution_end':
         case 'turn_end':
+        case 'message_end':
+          lastActivity = 'waiting for the model'; heartbeat(); break;
         case 'auto_retry_start':
+          lastActivity = 'waiting for a provider retry'; heartbeat(); break;
         case 'auto_retry_end':
-        case 'compaction_start':
         case 'compaction_end':
+          lastActivity = 'waiting for the model'; heartbeat(); break;
+        case 'compaction_start':
         case 'summarization_retry_scheduled':
         case 'summarization_retry_attempt_start':
         case 'summarization_retry_finished':
-          heartbeat(); break;
+          lastActivity = 'compacting the agent context'; heartbeat(); break;
         case 'tool_execution_start':
           lastActivity = `running ${event.toolName}`; heartbeat(); break;
         case 'turn_start':
@@ -93,6 +99,7 @@ export async function runAgentStage(options: {
   try { await Promise.race([work, interrupted]); succeeded = true; }
   finally {
     closed = true;
+    controller.abort(failure ?? new Error('Agent stage closed.'));
     clearTimeout(deadline); clearTimeout(idleTimer!);
     options.signal.removeEventListener('abort', abort);
     // A session that finishes initialization after cancellation is released above.

@@ -11,10 +11,14 @@ const resourcesRoot = path.resolve('.');
 const never = () => new Promise(() => {});
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const stageOf = prompt => prompt.includes('The independent test run failed') ? 'repair'
+  : prompt.includes('You are the intake agent') ? 'intake'
+  : prompt.includes('You are the research agent') ? 'research'
   : prompt.includes('You are the implementation agent') ? 'build'
   : prompt.includes('You are the verification agent') ? 'verify' : 'plan';
 async function artifacts(cwd, stage, broken = false) {
-  const files = stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
+  const files = stage === 'intake' ? { 'scope.md': 'Synthetic scope' }
+    : stage === 'research' ? { 'research.md': 'Local fixture research' }
+    : stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
     : stage === 'build' ? { 'index.html': '<!doctype html><title>Task parser</title><main>Local workflow fixture</main>',
       'README.md': 'Run node --test', 'path-to-fleet.md': 'Domain review required',
       'core.cjs': broken ? 'exports.parse = () => "defect";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;',
@@ -32,10 +36,10 @@ async function harness(t, options = {}) {
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     verificationLimits: options.verificationLimits,
-    createSession: async ({ cwd, customTools }) => {
+    createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
-      const s = { stage: undefined, prompts: [], aborts: 0, disposed: false,
+      const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false,
         subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
         emit(event) { for (const listener of listeners) listener(event); },
         async prompt(text) {
@@ -46,7 +50,7 @@ async function harness(t, options = {}) {
           });
           const handled = await options.scenario?.({ cwd, stage: this.stage, session: this, sessions, project, store });
           if (!handled) await artifacts(cwd, this.stage, options.brokenBuild && (this.stage === 'build' || options.brokenRepair));
-          if (this.stage !== 'plan') await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
+          if (['build', 'verify', 'repair'].includes(this.stage)) await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
           this.emit({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop' } });
           this.emit({ type: 'turn_end' });
         },
@@ -72,8 +76,8 @@ async function harness(t, options = {}) {
 
 test('the complete workflow advances in order and persists real test evidence before human review', { timeout: 10000 }, async t => {
   const h = await harness(t); await h.run(); await h.assertSettled('review');
-  assert.deepEqual(h.sessions.map(s => s.stage), ['plan', 'build', 'verify']);
-  for (const id of ['research', 'plan', 'build', 'verify']) {
+  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  for (const id of ['intake', 'research', 'plan', 'build', 'verify']) {
     const changes = h.snapshots.map(p => p.stages.find(s => s.id === id).status).filter((s, i, all) => !i || s !== all[i - 1]);
     assert.deepEqual(changes, ['queued', 'active', 'complete'], id);
   }
@@ -83,20 +87,32 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.equal(h.project.stages.find(s => s.id === 'review').status, 'review');
   assert.equal(h.project.stages.find(s => s.id === 'deliver').status, 'queued');
   assert.equal(h.project.approvedAt, undefined); assert.ok(h.sessions.every(s => s.disposed));
+  assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
+  assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash']);
+  const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
+  assert.deepEqual(h.project.phasePlan, packet.stages);
+  assert.deepEqual(h.project.globalTools, packet.globalTools);
+  for (const session of h.sessions) {
+    const phase = packet.stages.find(phase => phase.id === session.stage);
+    assert.deepEqual(session.tools, [...packet.globalTools, ...phase.tools]);
+    assert.deepEqual(session.skills.sort(), [...phase.skills].sort());
+    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools].sort());
+    assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
+  }
 });
 
 for (const brokenRepair of [false, true]) {
   test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: 10000 }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
-    assert.deepEqual(h.sessions.map(s => s.stage), ['plan', 'build', 'verify', 'repair']);
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair']);
     assert.equal(reportPassed(h.project.report), !brokenRepair);
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
     if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
-for (const blockedStage of ['plan', 'build', 'verify']) {
+for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
   test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: 10000 }, async t => {
     const h = await harness(t, { agentLimits: { idleMs: 200, timeoutMs: 3000 }, scenario: ({ stage }) => stage === blockedStage ? never() : false });
     await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /no progress/);
@@ -120,22 +136,22 @@ test('missing artifacts get one targeted completion prompt within the same stage
     return true;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.sessions[0].prompts.length, 2); assert.match(h.sessions[0].prompts[1], /plan\.md/);
+  assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2); assert.match(h.sessions.find(s => s.stage === 'plan').prompts[1], /plan\.md/);
 });
 
 test('an agent that keeps omitting artifacts cannot advance or loop forever', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.length, 1); assert.equal(h.sessions[0].prompts.length, 2);
-  assert.match(h.project.error, /after one completion attempt.*scope\.md/);
+  assert.equal(h.sessions.length, 3); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
+  assert.match(h.project.error, /after one completion attempt.*plan\.md/);
 });
 
 test('empty files and directories cannot satisfy stage outputs', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage !== 'plan') return false;
-    await fs.writeFile(path.join(cwd, 'plan.md'), ''); await fs.mkdir(path.join(cwd, 'scope.md'), { recursive: true }); return true;
+    await fs.writeFile(path.join(cwd, 'plan.md'), ''); await fs.mkdir(path.join(cwd, 'test-matrix.md'), { recursive: true }); return true;
   } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /scope\.md.*plan\.md/);
+  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /plan\.md.*test-matrix\.md/);
 });
 
 test('missing application tests are recovered before verification starts', { timeout: 10000 }, async t => {
@@ -144,7 +160,7 @@ test('missing application tests are recovered before verification starts', { tim
     await artifacts(cwd, stage); if (session.prompts.length === 1) await fs.rm(path.join(cwd, 'app.test.cjs')); return true;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.sessions[1].prompts.length, 2); assert.match(h.sessions[1].prompts[1], /application.*test/);
+  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
 });
 
 for (const target of ['requirements.md', '.fleet/README.md']) {
@@ -152,7 +168,7 @@ for (const target of ['requirements.md', '.fleet/README.md']) {
     const h = await harness(t, { scenario: async ({ cwd, stage }) => {
       if (stage === 'plan') await fs.appendFile(path.join(cwd, target), '\nChanged by agent'); return false;
     } });
-    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 1);
+    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 3);
     assert.match(h.project.error, /requirements changed|integrity failed/);
   });
 }
@@ -175,6 +191,16 @@ test('stopped runs can restart in fresh workspaces and late old events cannot co
   oldSession.emit({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: 'stale activity' } });
   assert.deepEqual(h.project, snapshot);
   assert.ok((await fs.readFile(path.join(oldWorkspace, 'requirements.md'), 'utf8')).includes(h.project.title));
+});
+
+test('Stop during workspace preparation clears prior approval and test evidence', { timeout: 10000 }, async t => {
+  const h = await harness(t);
+  h.project.status = 'approved'; h.project.approvedAt = 'previous approval';
+  h.project.report = { passed: 5 }; h.project.exportedTo = 'previous export';
+  const rejected = assert.rejects(h.backend.start(h.project.id), /stopped by you/);
+  await h.backend.stop(h.project.id); await rejected; await h.assertSettled('stopped');
+  assert.equal(h.project.report, undefined); assert.equal(h.project.approvedAt, undefined);
+  assert.equal(h.project.exportedTo, undefined); assert.equal(h.sessions.length, 0);
 });
 
 test('duplicate starts and the concurrency limit are enforced; stopAll drains and persists every run', { timeout: 10000 }, async t => {

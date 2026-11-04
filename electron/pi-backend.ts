@@ -2,29 +2,35 @@ import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
+import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { Store, safeFile } from './storage.js';
 import { applicationTestFiles, reportPassed, verifyWorkspace, type VerificationLimits } from './verification.js';
 import { runAgentStage, stoppedMessage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
+import { phasePrompt, toolsForPhase, type PhaseContract } from '../harness/phases.js';
 import { createFleetTools } from '../harness/pi-tools.js';
 import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompleteComponents } from './system-design.js';
 
-type ActiveRun = { controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; skillPaths?: string[]; packetHash?: string; requirements?: string };
+import { createCodexSession } from './codex-session.js';
+import type { CodexAccount } from './codex-account.js';
+
+type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string };
 interface BackendOptions {
+  codex?: CodexAccount;
+  createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
   verificationLimits?: Partial<VerificationLimits>;
 }
-export class PiBackend {
+export class FleetBackend {
   runtime!: ModelRuntime;
   active = new Map<string, ActiveRun>();
   constructor(private store: Store, private executable: string, private notify: () => void, private resourcesRoot: string, private options: BackendOptions = {}) {}
   async init() { this.runtime = await ModelRuntime.create({ allowModelNetwork: false }); }
   models(): AgentModel[] {
-    return this.runtime.getModels().map(m => ({ id: m.id, provider: m.provider, name: m.name,
-      configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name));
+    return [...(this.options.codex?.models ?? []), ...this.runtime.getModels().map(m => ({ backend: 'pi' as const, id: m.id, provider: m.provider, name: m.name,
+      configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
   }
   private async changed(p: Project) { p.updatedAt = new Date().toISOString(); this.notify(); await this.store.save(); }
   private log(p: Project, stage: StageId, kind: 'info' | 'text' | 'tool' | 'error', text: string, tool?: ToolEvent) {
@@ -54,22 +60,28 @@ export class PiBackend {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
-    const { provider, model: modelId } = this.store.state.settings;
-    const model = this.runtime.getModel(provider, modelId);
-    if (!model || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Pi settings first.');
+    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
+    if (backend === 'codex') {
+      await this.options.codex?.refresh();
+      if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
+    } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
+    // Authentication can await network I/O; recheck capacity before reserving the run.
+    if (this.active.has(id)) throw new Error('This challenge already has an active run.');
+    if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { controller: new AbortController(), done, resolve };
+    const run: ActiveRun = { backend, controller: new AbortController(), done, resolve };
     this.active.set(id, run);
     try {
       p.runId = randomUUID();
       p.workspace = path.join(this.store.root, 'workspaces', p.id, p.runId);
+      p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
+      p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+      p.report = undefined; p.error = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.feedback = '';
+      p.backend = backend;
+      p.model = provider + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
-      p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
-      p.systemDesign = undefined;
-      p.report = undefined; p.error = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.feedback = '';
-      p.model = provider + '/' + modelId;
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
         '# ' + p.title, '', p.description, '', '## Acceptance criteria',
         ...p.criteria.map((c, i) => (i + 1) + '. ' + c), '',
@@ -77,10 +89,10 @@ export class PiBackend {
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
         criteria: p.criteria, challengeId: p.challengeId, resourcesRoot: this.resourcesRoot });
-      run.context = packet.context; run.skillPaths = packet.skillPaths; run.packetHash = packet.packetHash;
+      run.context = packet.context; run.phases = packet.phases; run.globalTools = packet.globalTools; p.globalTools = [...packet.globalTools]; p.phasePlan = structuredClone(packet.phases); run.packetHash = packet.packetHash;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       this.check(run);
-      this.log(p, 'intake', 'info', 'Requirements saved. Backend: Pi SDK · ' + p.model);
+      this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
       await this.changed(p);
       this.check(run);
       void this.execute(p, run, provider, modelId);
@@ -93,23 +105,31 @@ export class PiBackend {
   }
   private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false) {
     this.check(run);
-    this.log(p, stage, 'info', 'Starting Pi ' + stage + ' agent.');
+    const phase = run.phases!.find(phase => phase.id === stage)!;
+    if (phase.owner !== 'agent') throw new Error('This phase is controlled by the human or host.');
+    const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
+    const allowedTools = toolsForPhase(phase, run.globalTools);
+    this.log(p, stage, 'info', 'Starting ' + engine + ' ' + stage + ' agent. Skills: ' + phase.skills.join(', ') + '. Global tools: ' + run.globalTools!.join(', ') + '. Phase tools: ' + phase.tools.join(', ') + '.');
     await runAgentStage({
-      label: 'Pi ' + stage + ' agent', signal: run.controller.signal, limits: this.options.agentLimits,
+      label: engine + ' ' + stage + ' agent', signal: run.controller.signal, limits: this.options.agentLimits,
       create: async signal => {
-          const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 2 } });
-          const loader = new DefaultResourceLoader({
+        const customTools = [...createFleetTools(allowedTools), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))];
+        if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
+          home: this.options.codex!.home, cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
+        });
+        const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 2 } });
+        const loader = new DefaultResourceLoader({
           cwd: p.workspace!, agentDir: path.join(this.store.root, 'pi'), settingsManager,
-          noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, additionalSkillPaths: run.skillPaths,
+          noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, additionalSkillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill)),
           agentsFilesOverride: () => ({ agentsFiles: [] }),
-          systemPromptOverride: base => (base || '') + '\n\nYou are a FleetHarness software-factory agent. Work only inside the current working directory. Never access credentials or unrelated files, publish, deploy, or contact external operational systems. Use synthetic examples. Write actual working artifacts and report limitations honestly. You may use local read, write, edit, and bash tools. This is a dedicated working directory, not an OS sandbox.'
+          systemPromptOverride: base => (base || '') + '\n\nYou are a FleetHarness software-factory agent. Work only inside the current working directory. Never access credentials or unrelated files, publish, deploy, or contact external operational systems. Use synthetic examples. Write actual working artifacts and report limitations honestly. Use only the tools assigned to the current phase. This is a dedicated working directory, not an OS sandbox.'
         });
         await loader.reload();
         signal.throwIfAborted();
         const { session } = await (this.options.createSession ?? createAgentSession)({
           cwd: p.workspace!, agentDir: path.join(this.store.root, 'pi'), modelRuntime: this.runtime,
           model: this.runtime.getModel(provider, modelId), thinkingLevel: 'medium',
-      tools: ['read', 'write', 'edit', 'bash', 'fleet_*'], customTools: [...createFleetTools(), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))], resourceLoader: loader, settingsManager,
+          tools: allowedTools, excludeTools: ['mcp__*'], customTools, resourceLoader: loader, settingsManager,
           sessionManager: SessionManager.create(p.workspace!, path.join(this.store.root, 'sessions', p.id))
         });
         return session;
@@ -134,27 +154,27 @@ export class PiBackend {
       },
       work: async (prompt, signal) => {
         const check = () => { this.check(run); signal.throwIfAborted(); };
-        await prompt([run.context, stage === 'plan' ? fleetStagePrompt('research') : '', fleetStagePrompt(stage), instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'));
+        await prompt([run.context, phasePrompt(phase, run.globalTools), fleetStagePrompt(stage), instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'));
         check(); await this.checkInputs(p, run); check();
-        let missing = await this.missingFiles(p, files, tests); check();
+        let missing = await this.missingFiles(p, stage, files, tests); check();
         if (missing.length) {
           this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
           await prompt('The stage is incomplete. Produce these missing or empty artifacts before finishing: ' + missing.join(', ') + '. Follow the original stage instructions; preserve requirements.md and .fleet. This is the only artifact completion attempt.');
           check(); await this.checkInputs(p, run); check();
-          missing = await this.missingFiles(p, files, tests); check();
+          missing = await this.missingFiles(p, stage, files, tests); check();
         }
-        if (missing.length) throw new Error('Pi did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
+        if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
       }
     });
   }
-  private async missingFiles(p: Project, files: string[], tests = false) {
+  private async missingFiles(p: Project, stage: StageId, files: string[], tests = false) {
     const missing: string[] = [];
     for (const file of files) {
       try { const stat = await fs.stat(await safeFile(p.workspace!, file)); if (!stat.isFile() || !stat.size) missing.push(file); }
       catch { missing.push(file); }
     }
     if (tests && !(await applicationTestFiles(p.workspace!)).length) missing.push('application *.test.cjs or *.test.mjs files');
-    if (!p.systemDesign) missing.push('system-design.json (publish the application architecture with fleet_system_design)');
+    if (['plan', 'build', 'verify'].includes(stage) && !p.systemDesign) missing.push('system-design.json (publish the application architecture with fleet_system_design)');
     if (tests && incompleteComponents(p).length) missing.push('component progress: call fleet_component_progress for ' + incompleteComponents(p).join(', '));
     return missing;
   }
@@ -167,10 +187,19 @@ export class PiBackend {
   }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
     try {
-      await this.stage(p, 'research', 'active'); await this.stage(p, 'plan', 'active');
+      await this.stage(p, 'intake', 'active');
+      await this.agent(p, run, 'intake', provider, model,
+        'You are the intake agent. Read requirements.md and the challenge packet. Write scope.md with the requested user workflow, inputs, outputs, exclusions, unknowns and synthetic data boundary. Preserve requirements.md. Do not research, plan or implement yet.', ['scope.md']);
+      await this.stage(p, 'intake', 'complete');
+      await this.stage(p, 'research', 'active');
+      await this.agent(p, run, 'research', provider, model,
+        'You are the research agent. Read requirements.md and scope.md. Write research.md with reuse candidates, adopt/adapt/reject decisions, supplied source evidence and integration risks. Use the global workspace tools for local inspection and fleet_search_evidence for supplied documents. No web browser is provided. Mark unchecked source links, versions and licenses as unverified; do not invent web research. Do not plan or implement yet.', ['scope.md', 'research.md']);
+      await this.stage(p, 'research', 'complete');
+      await this.stage(p, 'plan', 'active');
       await this.agent(p, run, 'plan', provider, model,
-        'Read requirements.md. You are the planning agent. Produce scope.md as a derived scope assessment without changing requirements.md, research.md with architecture, reuse options and honest sources (do not invent web research), plan.md with implementation tasks, and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md']);
-      await this.stage(p, 'research', 'complete'); await this.stage(p, 'plan', 'complete'); await this.stage(p, 'build', 'active');
+        'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json']);
+      await this.stage(p, 'plan', 'complete');
+      await this.stage(p, 'build', 'active');
       await this.agent(p, run, 'build', provider, model,
         'You are the implementation agent. Read requirements.md, research.md, and plan.md, then implement the complete usable application. Deliver a self-contained index.html with inline CSS and classic JS (no imports, CDNs, or network dependencies), a README.md, path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. Keep the tested core and inline app logic consistent. No placeholder controls or fake test results. Include synthetic sample data, empty states, validation, and accessible controls. Document limitations. Use no package dependencies. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md'], true); await this.stage(p, 'build', 'complete'); await this.stage(p, 'verify', 'active');
       await this.agent(p, run, 'verify', provider, model,
@@ -181,7 +210,7 @@ export class PiBackend {
       this.log(p, 'verify', 'info', p.report.output);
       if (!reportPassed(p.report)) {
         await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
-        this.log(p, 'verify', 'info', 'Verification failed. Starting one Pi repair attempt.');
+        this.log(p, 'verify', 'info', 'Verification failed. Starting one ' + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt.');
         await this.agent(p, run, 'verify', provider, model,
           'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Keep index.html consistent with core source. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
         await this.checkInputs(p, run);
@@ -206,3 +235,6 @@ export class PiBackend {
   }
   async stopAll() { await Promise.all([...this.active.keys()].map(id => this.stop(id))); }
 }
+
+// Compatibility for existing integrations. Both engines share this factory workflow.
+export { FleetBackend as PiBackend };

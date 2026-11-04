@@ -2,8 +2,8 @@ import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { invokeFleetTool, toolRegistry } from './tool-registry.js';
 
 /** Runtime adapter; no SDK initialization, credentials or model request occurs here. */
-export function createFleetTools(): ToolDefinition[] {
-  return toolRegistry.map(tool => ({
+export function createFleetTools(names: readonly string[] = toolRegistry.map(tool => tool.name)): ToolDefinition[] {
+  return toolRegistry.filter(tool => names.includes(tool.name)).map(tool => ({
     name:tool.name, label:tool.name.replace(/^fleet_/,'').replaceAll('_',' '), description:tool.description,
     promptSnippet:tool.description, parameters:tool.parameters,
     async execute(_id, parameters, signal) {

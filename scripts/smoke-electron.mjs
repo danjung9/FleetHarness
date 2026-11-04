@@ -25,10 +25,12 @@ try {
   await page.screenshot({path:path.join(output,'factory-minimum.png'),scale:'css'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1512,982));
-  await page.getByRole('button',{name:'Pi settings',exact:true}).click();
+  await page.getByRole('button',{name:'Model settings',exact:true}).click();
+  await page.getByLabel('Build engine',{exact:true}).selectOption('pi');
+  await page.getByLabel('Build engine').selectOption('pi');
   await page.getByLabel('Provider',{exact:true}).selectOption('fleet-fixture');
-  await page.getByRole('button',{name:'Save Pi settings'}).click();
-  await page.getByText('Pi settings saved.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save model settings'}).click();
+  await page.getByText('Model settings saved.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'New challenge',exact:true}).click();
   await page.getByRole('button',{name:'Norfolk catalog · 34'}).click();
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');

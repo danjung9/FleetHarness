@@ -13,23 +13,27 @@
     "start": "electron .",
     "preview": "vite preview",
     "test": "npm run build:electron && node --test tests/*.test.mjs",
+    "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
     "harness:build": "tsc -p harness/tsconfig.json",
     "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
     "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
     "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
+    "test:system-design": "npm run build && npm run build:studio && node scripts/smoke-system-design.mjs",
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
     "studio": "npm run build:electron && node scripts/studio.mjs",
     "studio:web": "vite --config vite.studio.config.ts --host 127.0.0.1",
     "build:studio": "tsc && vite build --config vite.studio.config.ts",
-    "test:studio": "npm run build:studio && npm run build:electron && node scripts/smoke-studio.mjs"
+    "test:studio": "npm run build:studio && npm run build:electron && node scripts/smoke-studio.mjs",
+    "test:chatgpt": "npm run build && npm run build:studio && node scripts/smoke-chatgpt.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.5.0",
     "@fontsource/dm-sans": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/manrope": "5.3.0",
+    "@openai/codex": "0.166.0",
     "lucide-react": "1.68.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -73,7 +77,10 @@
       "buildResources": "build"
     },
     "artifactName": "FleetHarness-${version}-${arch}.${ext}",
-    "npmRebuild": false
+    "npmRebuild": false,
+    "asarUnpack": [
+      "node_modules/@openai/codex-*/**/*"
+    ]
   },
   "author": "FleetHarness"
 }

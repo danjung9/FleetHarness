@@ -8,6 +8,12 @@ import { createSystemDesignTools, checkSystemDesign, incompleteComponents } from
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { fixtureSystemDesign } from '../scripts/mock-provider.mjs';
 
+test('architecture and component tools are unavailable outside their assigned phases', () => {
+  for (const stage of ['intake', 'research', 'review', 'deliver']) {
+    assert.deepEqual(createSystemDesignTools({}, stage, new AbortController().signal, async () => {}), []);
+  }
+});
+
 test('architecture rejects duplicate IDs, missing connection endpoints, unsafe files and excessive diagrams', () => {
   for (const edit of [
     d => { d.components[1].id = d.components[0].id; },

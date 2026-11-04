@@ -53,7 +53,7 @@ try {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(url);
-  await page.getByRole('button', { name: 'Agents — Pi sessions', exact: true }).click();
+  await page.getByRole('button', { name: 'Agents — coding sessions', exact: true }).click();
   await page.locator('.activity-timeline').waitFor();
   await page.evaluate(() => document.fonts.ready);
   assert.equal(await page.locator('.activity-row.tool').count(), 6, 'Start/result pairs must render once');
@@ -99,7 +99,7 @@ try {
   await page.locator('.inspector .activity-feed').waitFor();
   assert.equal(await page.locator('.inspector .activity-row').count(), 4);
   await page.screenshot({ path: path.join(output, 'inspector.png'), fullPage: true, animations: 'disabled' });
-  await page.getByRole('button', { name: 'Agents — Pi sessions', exact: true }).click();
+  await page.getByRole('button', { name: 'Agents — coding sessions', exact: true }).click();
   await page.setViewportSize({ width: 1512, height: 982 });
   await page.getByRole('button', { name: 'Jump to latest' }).click().catch(() => {});
   await scroll.evaluate(el => { el.scrollTop = 0; });
@@ -124,6 +124,7 @@ try {
   assert.equal(await scroll.evaluate(el => el.scrollWidth > el.clientWidth), false);
   assert.equal(await page.evaluate(() => window.untrusted), undefined);
   project.logs = []; project.status = 'draft';
+  project.stages = structuredClone(stageDefinitions);
   await page.evaluate(state => window.updateActivityFixture(state), state);
   await page.getByText('No activity yet', { exact: true }).waitFor();
   await page.screenshot({ path: path.join(output, 'empty.png'), fullPage: true, animations: 'disabled' });

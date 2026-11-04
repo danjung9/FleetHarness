@@ -36,7 +36,7 @@ Users begin from one of 34 published challenge descriptions or a newly entered o
 - Surface tasks, agent activity, build logs, artifacts, tests, and human feedback.
 - Clearly distinguish planned, generated, runnable, tested, and operationally validated states.
 - Keep humans in control of requirements, security-sensitive actions, and readiness claims.
-- Real Pi planning, implementation, and verification sessions run sequentially per challenge, using selected model-provider credentials and local coding tools; up to three challenge runs may execute concurrently.
+- Separate intake, research, planning, implementation and verification sessions run sequentially per challenge, using selected model-provider credentials, global workspace tools and phase-specific tools and skills; up to three challenge runs may execute concurrently.
 - Challenges, execution state, logs, generated files, test reports, and review decisions persist locally. Each run has a dedicated working directory, not an operating-system sandbox.
 - The first delivery contract is a self-contained browser prototype with source, executable Node tests, and review documentation. An independent local runner executes tests, with one Pi repair attempt after failure.
 - The 34-entry Norfolk catalog connects to challenge-specific recipes, selected skills, and seven synthetic-data domain tools. Toolkit checks are distinct from generated-application verification.

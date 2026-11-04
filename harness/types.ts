@@ -35,7 +35,8 @@ export interface PipelinePacket {
   challenge: Challenge;
   recipe: Recipe;
   dataPolicy: 'synthetic-only';
+  globalTools: string[];
   acceptance: AcceptanceCriterion[];
-  stages: { id: string; role: string; inputs: string[]; outputs: string[]; exit: string }[];
+  stages: import('./phases.js').PhaseContract[];
   unknowns: string[];
 }

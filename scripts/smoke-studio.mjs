@@ -101,11 +101,12 @@ try {
   const app = await desktop.firstWindow();
   app.on('pageerror', e => errors.push(e.message));
   await app.getByRole('heading', { name: 'Hard problems. Working software.' }).waitFor({ timeout: 45000 });
-  await app.getByRole('button', { name: 'Connect Pi', exact: true }).click();
-
+  await app.getByRole('button', { name: 'Connect model', exact: true }).click();
+  await app.getByLabel('Build engine', { exact: true }).selectOption('pi');
+  await app.getByLabel('Build engine').selectOption('pi');
   await app.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
-  await app.getByRole('button', { name: 'Save Pi settings' }).click();
-  await app.getByText('Pi settings saved.', { exact: true }).waitFor();
+  await app.getByRole('button', { name: 'Save model settings' }).click();
+  await app.getByText('Model settings saved.', { exact: true }).waitFor();
   await app.getByLabel('Choose brief JSON').setInputFiles(path.join(root, 'brief.json'));
   await app.getByText('Brief imported. Open My builds to edit or generate it.').waitFor();
   await app.getByRole('button', { name: /My builds/ }).click();
@@ -130,9 +131,10 @@ try {
   await app.keyboard.press('End');
   assert.equal(await app.getByRole('tab', { name: 'Review & delivery' }).getAttribute('aria-selected'), 'true');
   await app.keyboard.press('Home');
-  assert.equal(await app.getByRole('tab', { name: 'System design' }).getAttribute('aria-selected'), 'true');
+  assert.equal(await app.getByRole('tab', { name: 'Build flow' }).getAttribute('aria-selected'), 'true');
   await app.keyboard.press('ArrowLeft');
   assert.equal(await app.getByRole('tab', { name: 'Review & delivery' }).getAttribute('aria-selected'), 'true');
+  await app.keyboard.press('ArrowRight');
   await app.keyboard.press('ArrowRight');
   await app.keyboard.press('ArrowRight');
   await app.keyboard.press('ArrowRight');

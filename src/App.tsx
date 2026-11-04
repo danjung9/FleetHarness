@@ -1,3 +1,4 @@
+import { ModelSettings } from './ModelSettings';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Activity, Archive, ArrowRight, Bot, Check, CheckCircle2, CircleDot,
@@ -8,6 +9,7 @@ import type { AppState, Artifact, Bootstrap, NewProject, Project, StageId, View 
 import { starters } from '../shared/types';
 import { api, isDesktop } from './api';
 import { IconButton } from './IconButton';
+import { PhaseDetails, projectPhases } from './PhaseDetails';
 import { SystemDesign } from './SystemDesign';
 import { ActivityFeed } from './ActivityFeed';
 import { buildActivity, stageNames } from '../shared/activity';
@@ -37,9 +39,11 @@ function Logs({ project, stage, compact = false }: { project: Project; stage?: S
   return <ActivityFeed items={stage ? items.filter(item => item.stage === stage) : items} compact={compact} live={project.status === 'running'} emptyDescription={stage ? 'Updates will appear here when this stage begins.' : undefined}/>;
 }
 function Factory({ project, selected, select, navigate }: { project: Project; selected: StageId; select: (id: StageId) => void; navigate: (view: View) => void }) {
-  const [inspecting, setInspecting] = useState(false);
+  const [inspecting, setInspecting] = useState(true);
   const [surface, setSurface] = useState<'flow' | 'design'>('flow');
   const stage = project.stages.find(s => s.id === selected)!;
+  const phases = useMemo(() => projectPhases(project), [project.phasePlan, project.challengeId]);
+  const phase = phases.find(phase => phase.id === selected)!;
   function closeInspector() { setInspecting(false); document.getElementById('stage-details-toggle')?.focus(); }
   const output: Record<StageId, string> = { intake: 'requirements.md', research: 'research.md', plan: 'plan.md', build: 'index.html', verify: 'test-report.json', review: 'review.json', deliver: 'Delivery bundle' };
   const icons: Record<StageId, typeof Bot> = { intake: Inbox, research: Search, plan: GitBranch, build: Code2, verify: FlaskConical, review: ShieldCheck, deliver: Download };
@@ -69,7 +73,9 @@ function Factory({ project, selected, select, navigate }: { project: Project; se
     </section>
   </div>{inspecting && <aside className="inspector" id="stage-inspector" aria-label="Stage details" onKeyDown={event => { if (event.key === 'Escape') closeInspector(); }}>
     <div className="inspector-heading"><Badge status={stage.status}/><IconButton label="Close stage details" onClick={closeInspector}><X size={17}/></IconButton></div><h2>{stage.label}</h2><p className="muted">{stage.detail}</p>
-    <div className="owner-row">{stage.id === 'intake' || stage.id === 'review' ? <UserRound size={19}/> : <Bot size={19}/>}<strong>{stage.id === 'intake' || stage.id === 'review' ? 'You' : stage.id === 'deliver' ? 'Exporter' : 'Pi · ' + (stage.id === 'research' ? 'planning' : stage.id) + ' agent'}</strong></div>
+    <div className="owner-row">{phase.owner === 'human' ? <UserRound size={19}/> : <Bot size={19}/>}<strong>{phase.role}</strong></div>
+    <PhaseDetails phase={phase} globalTools={project.globalTools} legacy={!!project.runId && !project.phasePlan}/>
+
     <button className="artifact-link" onClick={() => navigate(stage.id === 'verify' || stage.id === 'review' ? 'evidence' : 'artifacts')}><FileCode2 size={18}/><span>{output[stage.id]}</span><ArrowRight size={15}/></button>
     <details className="inline-details"><summary>Acceptance criteria <span>{project.criteria.length}</span></summary><ul className="criteria">{project.criteria.map(c => <li key={c}><CircleDot size={13}/><span>{c}</span></li>)}</ul></details>
     <details className="inline-details" open={stage.status === 'active' || stage.status === 'failed'}><summary>Activity</summary><Logs project={project} stage={stage.id} compact/><button className="text-button" onClick={() => navigate('agents')}>View all agent activity <ArrowRight size={13}/></button></details>
@@ -172,7 +178,7 @@ function AgentSessions({ project, selectStage }: { project: Project; selectStage
   const completed = staged.filter(item => item.kind === 'tool' && item.status === 'complete').length;
   const filters = [{ id: 'all', label: 'All activity', count: staged.length }, { id: 'message', label: 'Messages', count: staged.filter(item => item.kind === 'message').length }, { id: 'tool', label: 'Tools', count: staged.filter(item => item.kind === 'tool').length }, { id: 'error', label: 'Issues', count: staged.filter(isIssue).length }] as const;
   return <div className="page agents-page"><div className="page-heading"><div><h1>Agents</h1><p>Follow the work, inspect results, and see what needs attention.</p></div></div>
-    <div className="agent-roles" aria-label="Filter by agent">{(['plan', 'build', 'verify'] as StageId[]).map(id => { const stage = project.stages.find(s => s.id === id)!; const Icon = id === 'plan' ? GitBranch : id === 'build' ? Code2 : FlaskConical; return <button key={id} onClick={() => { setFilter(filter === id ? 'all' : id); selectStage(id); }} aria-pressed={filter === id} className={filter === id ? 'selected' : ''}><Icon size={21}/><div><h2>{id === 'plan' ? 'Planning agent' : id === 'build' ? 'Build agent' : 'Verification agent'}</h2><p>{id === 'plan' ? 'Research & implementation plan' : id === 'build' ? 'Source & application' : 'Tests & repair'}</p></div><Badge status={stage.status}/></button>; })}</div>
+    <div className="agent-roles" aria-label="Filter by agent">{(['intake', 'research', 'plan', 'build', 'verify'] as StageId[]).map(id => { const stage = project.stages.find(s => s.id === id)!; const Icon = id === 'intake' ? Inbox : id === 'research' ? Search : id === 'plan' ? GitBranch : id === 'build' ? Code2 : FlaskConical; return <button key={id} onClick={() => { setFilter(filter === id ? 'all' : id); selectStage(id); }} aria-pressed={filter === id} className={filter === id ? 'selected' : ''}><Icon size={21}/><div><h2>{stageNames[id]} agent</h2><p>{stage.detail}</p></div><Badge status={stage.status}/></button>; })}</div>
     <div className="activity-toolbar"><div className="activity-toolbar-heading"><h2>{filter === 'all' ? 'Run activity' : stageNames[filter] + ' activity'}</h2><span className="activity-count">{completed} tool{completed === 1 ? '' : 's'} completed</span></div><label className="activity-stage-filter">Stage<select aria-label="Filter activity by stage" value={filter} onChange={e => setFilter(e.target.value as StageId | 'all')}><option value="all">All stages</option>{project.stages.map(stage => <option key={stage.id} value={stage.id}>{stageNames[stage.id]}</option>)}</select></label>
       <div className="activity-filters" aria-label="Filter activity type">{filters.map(option => <button key={option.id} type="button" aria-label={`${option.label} ${option.count}`} aria-pressed={kind === option.id} onClick={() => setKind(option.id)}>{option.label}<span>{option.count}</span></button>)}</div>
     </div>
@@ -180,23 +186,12 @@ function AgentSessions({ project, selectStage }: { project: Project; selectStage
   </div>;
 }
 function Settings({ data, action, updated, busy }: { data: Bootstrap; action: Action; updated: (b: Bootstrap) => void; busy: boolean }) {
-  const [provider, setProvider] = useState(data.state.settings.provider || data.models[0]?.provider || '');
-  const models = data.models.filter(m => m.provider === provider);
-  const [model, setModel] = useState(data.state.settings.model || models[0]?.id || '');
-  const [key, setKey] = useState(''), [remember, setRemember] = useState(data.state.settings.rememberKey);
-  const providers = [...new Set(data.models.map(m => m.provider))];
   return <div className="page settings-page"><div className="page-heading"><div><h1>Model settings</h1></div><span className="runtime-label">{data.runtime}</span></div>
-    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">{data.credentialStatus}.</p>
-      <form onSubmit={e => { e.preventDefault(); void action(async () => { const result = await api.saveSettings({ provider, model, rememberKey: remember }, key || undefined); updated(result); setKey(''); }, 'Pi settings saved.'); }}>
-        <label>Provider<select aria-label="Provider" value={provider} onChange={e => { const value = e.target.value; setProvider(value); setModel(data.models.find(m => m.provider === value)?.id || ''); }}><option value="" disabled>Select a provider</option>{providers.map(p => <option key={p} value={p}>{p}{data.models.find(m => m.provider === p)?.configured ? ' · connected' : ''}</option>)}</select></label>
-        <label>Model<select aria-label="Model" value={model} onChange={e => setModel(e.target.value)}><option value="" disabled>Select a model</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
-        <label>API key <span className="field-hint">Leave blank to use existing Pi credentials.</span><input type="password" value={key} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>
-        <label className="checkbox"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/>Remember this key using operating-system encryption</label>
-        <button className="primary" disabled={busy || !provider || !model || !isDesktop} type="submit"><Check size={16}/>Save Pi settings</button>
-      </form>
-    </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Pi reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>Pi writes the app and tests. FleetHarness executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
-      <div className="readiness-note"><TerminalSquare size={20}/><p>Pi can read and write files and execute shell commands on this Mac. Project folders are separate, but they are not OS sandboxes. Runs use your provider account and may incur charges.</p></div>
-      <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Only model identifiers are sent to the interface. Keys remain in the desktop backend.</p>
+    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">Connect ChatGPT or choose a Pi provider.</p>
+      <ModelSettings data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop}/>
+    </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Your selected engine reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>The agent writes the app and tests. FleetHarness executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
+      <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this Mac. FleetHarness independently runs the generated tests locally. Codex uses your ChatGPT allowance; Pi uses your configured provider account.</p></div>
+      <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Credentials stay in the desktop backend. The interface shows your account, models, and usage status.</p>
     </aside></div>
   </div>;
 }
@@ -215,11 +210,11 @@ export default function App() {
     finally { setBusy(false); }
   };
   const p = state?.projects.find(p => p.id === current) || state?.projects[0];
-  const configured = data?.models.some(m => m.id === state?.settings.model && m.provider === state?.settings.provider && m.configured);
+  const configured = data?.models.some(m => m.id === state?.settings.model && m.provider === state?.settings.provider && m.configured && (m.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
   function openProject(id: string) { setCurrent(id); setSelected('intake'); setActive('factory'); setSearch(false); }
   const nav: { id: View; label: string; shortLabel: string; icon: typeof Bot }[] = [
     { id: 'portfolio', label: 'Home — challenge portfolio', shortLabel: 'Home', icon: LayoutDashboard }, { id: 'factory', label: 'Flow — build pipeline', shortLabel: 'Flow', icon: GitBranch },
-    { id: 'workspace', label: 'Preview — development workspace', shortLabel: 'Preview', icon: Code2 }, { id: 'agents', label: 'Agents — Pi sessions', shortLabel: 'Agents', icon: Bot },
+    { id: 'workspace', label: 'Preview — development workspace', shortLabel: 'Preview', icon: Code2 }, { id: 'agents', label: 'Agents — coding sessions', shortLabel: 'Agents', icon: Bot },
     { id: 'evidence', label: 'Review — evidence & delivery', shortLabel: 'Review', icon: ClipboardCheck }
   ];
   const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
@@ -231,14 +226,14 @@ export default function App() {
         <IconButton label="Brief — requirements" placement="right" className={active === 'requirements' ? 'active' : ''} aria-current={active === 'requirements' ? 'page' : undefined} onClick={() => setActive('requirements')}><Inbox size={21}/><span>Brief</span></IconButton>
         <IconButton label="Files — artifacts" placement="right" className={active === 'artifacts' ? 'active' : ''} aria-current={active === 'artifacts' ? 'page' : undefined} onClick={() => setActive('artifacts')}><Archive size={21}/><span>Files</span></IconButton>
       </nav>
-      <div className="rail-bottom"><IconButton label="Pi settings" title={configured ? 'Pi connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => setActive('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
+      <div className="rail-bottom"><IconButton label="Model settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => setActive('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar"><div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div><div className="top-actions">
         {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
         <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
         <IconButton label="New challenge" onClick={() => setIntake(true)}><Plus size={20}/></IconButton>
-        {p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop run</button> : <button className="primary" disabled={busy} onClick={() => configured ? setStart(true) : setActive('settings')}><Play size={15}/>{configured ? 'Start build' : 'Connect Pi'}</button>}
+        {p.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop run</button> : <button className="primary" disabled={busy} onClick={() => configured ? setStart(true) : setActive('settings')}><Play size={15}/>{configured ? 'Start build' : 'Connect model'}</button>}
       </div></header>
       {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
       {active !== 'portfolio' && active !== 'settings' && <section className="run-header"><div><div className="run-title"><h1>{p.title}</h1><Badge status={p.status}/></div><details className="brief-disclosure"><summary><Info size={13}/> Challenge brief</summary><p>{p.description}</p><button className="text-button" onClick={() => setActive('requirements')}>Edit brief <ArrowRight size={13}/></button></details></div></section>}
@@ -255,6 +250,6 @@ export default function App() {
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}
     {intake && <Intake close={() => setIntake(false)} action={action} created={project => { setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); openProject(project.id); }} busy={busy}/>}
     {search && <Modal title="Find a challenge" close={() => setSearch(false)}><label className="search-field"><Search size={18}/><input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="Search saved challenges"/></label><div className="search-results">{results.map(p => <button key={p.id} onClick={() => openProject(p.id)}><span>{p.title}<small>{labels[p.status]}</small></span><ArrowRight size={16}/></button>)}{!results.length && <p className="muted">No matching challenges.</p>}</div></Modal>}
-    {start && <Modal title="Start Pi build" close={() => setStart(false)}><p className="muted">Pi will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this Mac. They work in a new project folder, which is not an OS sandbox. Your configured model provider receives the brief and tool context; provider usage charges may apply.</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current requirements.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Pi build started.')}><Play size={16}/>Run Pi agents</button></div></Modal>}
+    {start && <Modal title={state.settings.backend === 'codex' ? 'Start Codex build' : 'Start Pi build'} close={() => setStart(false)}><p className="muted">{state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will plan, implement, and verify <strong>{p.title}</strong> using <strong>{state.settings.provider}/{state.settings.model}</strong>.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this Mac. {state.settings.backend === 'codex' ? 'Codex runs with workspace write access and external command network access disabled. FleetHarness independently executes generated tests locally.' : 'They work in a new project folder, which is not an OS sandbox.'} {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your ChatGPT plan’s Codex allowance and is subject to its limits.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current requirements.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('workspace'); }, 'Build started.')}><Play size={16}/>Run {state.settings.backend === 'codex' ? 'Codex' : 'Pi'} agents</button></div></Modal>}
   </div>;
 }

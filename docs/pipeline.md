@@ -25,7 +25,7 @@ npm run --silent harness -- fixture fleet_extract_messages > /tmp/fleet-message.
 npm run --silent harness -- tool fleet_extract_messages --input /tmp/fleet-message.json
 ```
 
-In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Planning writes research, implementation and test-matrix documents; implementation produces a standalone browser application and testable core; verification inspects and tests it. The host independently runs Node tests and allows one repair attempt. The operator reviews the result before exporting a package.
+In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Separate intake, research and planning sessions write the scope, reuse decisions, implementation plan and test matrix; implementation produces a standalone browser application and testable core; verification inspects and tests it. The host independently runs Node tests and allows one repair attempt. The operator reviews the result before exporting a package.
 
 ## Pipeline contracts
 
@@ -35,7 +35,11 @@ flowchart LR
   I --> R[Reuse research]
   R --> P[Plan and acceptance matrix]
   P --> B[Pi implementation]
-  S[Selected skills and tools] --> B
+  G[Global workspace tools] --> I
+  G --> R
+  G --> P
+  G --> B
+  G --> V
   B --> V[Independent test runner]
   V -->|failure, one repair| B
   V -->|passing evidence| H[Human review]
@@ -52,7 +56,7 @@ flowchart LR
 | Review | Host-recorded decision | Human inspects the exact verified revision and limitations |
 | Deliver | Source/evidence bundle, `path-to-fleet.md` | Source still matches verification and approval; setup and remaining dependencies documented |
 
-The runtime currently combines research and planning in one Pi session and uses separate implementation and verification sessions. These are sequential per run. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has a process timeout; failed verification remains visible.
+The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the application architecture before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has a process timeout; failed verification remains visible.
 
 ## Challenge families
 
@@ -73,7 +77,27 @@ Related IDs are retained rather than collapsed: an umbrella challenge and a narr
 
 ## Included skills and tools
 
-Twelve skills live under `skills/`: intake, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The recipe loads only relevant skills into each Pi workspace. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+Fourteen skills live under `skills/`: intake, research, planning, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills; each agent session loads only the skills allotted to its phase. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+
+### Tool hierarchy
+
+`harness/phases.ts` defines two levels of tool access. The packet saves `globalTools` once, while each phase's `tools` contains only its additional tools. Effective access is the deduplicated union of both lists. A fresh Pi session receives exact tool names, never the `fleet_*` wildcard; the Codex adapter receives only the selected custom tools alongside its native workspace tools.
+
+**Global tools:** `read`, `write`, `edit`, `bash`. These workspace capabilities are inherited by every agent phase. They do not imply permission to deploy, change requirements or access operational systems, and phase allocation is not an OS sandbox.
+
+| Phase | Assigned skills | Additional phase tools |
+|---|---|---|
+| Intake | Intake | `fleet_get_challenge` |
+| Research | Research, evidence, recipe domain skills | `fleet_search_evidence` |
+| Plan | Planning, evidence, recipe domain skills | `fleet_system_design` |
+| Build | Recipe domain skills, evidence, delivery | Recipe domain tools, `fleet_component_progress` |
+| Verify / repair | Evidence, recipe domain skills | Recipe domain tools, `fleet_component_progress` |
+| Human review | Evidence guidance | No agent tools; preview, evidence and approval controls |
+| Deliver | Delivery guidance | No agent tools; host integrity check and export |
+
+For example, a scheduling build adds `fleet_solve_schedule`; a message build adds `fleet_extract_messages` and `fleet_search_evidence`. The host independently runs tests during verification. A repair stays within verification's allocation and is limited to one attempt.
+
+The build flow in both interfaces exposes global tools, phase-specific tools, skills, inputs, outputs and the completion gate. Each run persists its assignments with the source packet. Older runs without saved assignments show the proposed assignments for the next run explicitly.
 
 | Pi tool | Actual behavior | Boundary |
 |---|---|---|
@@ -91,6 +115,7 @@ All tools are local, deterministic transformations of supplied data. Input schem
 
 - `harness/catalog.ts`: typed catalog, `getChallenge`, and `toProjectInput` for the desktop picker.
 - `harness/recipes.ts`: approaches, selected skills/tools, component candidates, acceptance criteria and limitations.
+- `harness/phases.ts`: global tools, phase-specific tools, skills, owners and completion gates.
 - `harness/planner.ts`: packet composition and stage-specific instructions.
 - `harness/integration.ts`: `prepareFleetWorkspace`, `fleetStagePrompt`, `assertFleetPacketIntegrity`.
 - `harness/pi-tools.ts`: `createFleetTools()` for Pi `customTools`.

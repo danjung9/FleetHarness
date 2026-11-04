@@ -11,6 +11,7 @@ import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/in
 import { createFleetTools } from '../harness/pi-tools.js';
 import { toolRegistry } from '../harness/tool-registry.js';
 import { fixtures } from '../harness/fixtures.js';
+import { globalAgentTools, toolsForPhase } from '../harness/phases.js';
 
 const resourcesRoot=process.cwd();
 async function temporary(t: any) {const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-pipeline-'));t.after(() => fs.rm(root,{recursive:true,force:true}));return root;}
@@ -55,6 +56,33 @@ test('custom packets explicitly preserve user origin instead of claiming an offi
   const packet=customPacket({title:'My workflow',description:'A local custom workflow',criteria:['Keep revisions']});
   assert.equal(packet.challenge.sourceScope,'user');assert.equal(packet.challenge.sourceUrl,'');
   assert.ok(packet.unknowns.some(s => s.includes('provisional')));
+});
+test('global workspace tools are inherited while phase tools remain scoped to the task and recipe', async () => {
+  for (const challenge of challenges) {
+    const packet = createPacket(challenge.id);
+    assert.deepEqual(packet.globalTools, ['read', 'write', 'edit', 'bash']);
+    assert.deepEqual(packet.stages.map(s => s.id), ['intake', 'research', 'plan', 'build', 'verify', 'review', 'deliver']);
+    for (const phase of packet.stages) {
+      const effective = toolsForPhase(phase, packet.globalTools);
+      assert.equal(new Set(effective).size, effective.length);
+      assert.ok(phase.tools.every(name => !globalAgentTools.includes(name)), 'Inherited tools belong at the global level');
+      if (phase.owner === 'agent') assert.ok(globalAgentTools.every(name => effective.includes(name)));
+      else assert.deepEqual(effective, [], 'Human and host phases must not launch agents');
+      for (const skill of phase.skills) await fs.access(path.join(resourcesRoot, 'skills', skill, 'SKILL.md'));
+    }
+    const byId = (id: string) => packet.stages.find(s => s.id === id)!;
+    assert.deepEqual(byId('intake').tools, ['fleet_get_challenge']);
+    assert.deepEqual(byId('research').tools, ['fleet_search_evidence']);
+    assert.deepEqual(byId('plan').tools, ['fleet_system_design']);
+    assert.deepEqual(byId('build').tools, [...packet.recipe.tools, 'fleet_component_progress']);
+    assert.deepEqual(byId('verify').tools, [...packet.recipe.tools, 'fleet_component_progress']);
+    assert.ok(!byId('plan').skills.includes('fleet-delivery'));
+  }
+  const packet = createPacket('11'), build = packet.stages.find(s => s.id === 'build')!;
+  assert.deepEqual(createFleetTools(toolsForPhase(build)).map(t => t.name), ['fleet_solve_schedule']);
+  assert.deepEqual(createFleetTools([]), []);
+  // Adding a tool at the global level is inherited; overlapping assignments are deduplicated.
+  assert.deepEqual(toolsForPhase(build, ['read', 'fleet_solve_schedule']), ['read', 'fleet_solve_schedule', 'fleet_component_progress']);
 });
 test('workspace handoff materializes executable primitives, selected skills and immutable source context', async t => {
   const workspace=await temporary(t);

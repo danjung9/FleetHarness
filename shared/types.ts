@@ -10,6 +10,8 @@ export interface TestReport {
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
 }
 export interface Project {
+  phasePlan?: import('../harness/phases.js').PhaseContract[];
+  globalTools?: string[];
   backend?: AgentBackend;
   systemDesign?: import('./system-design.js').SystemDesign;
   challengeId?: string;
@@ -49,7 +51,7 @@ export interface FleetAPI {
   onState(callback: (state: AppState) => void): () => void;
 }
 export const stageDefinitions: Stage[] = [
-  { id: 'intake', label: 'Challenge intake', detail: 'Problem & constraints', status: 'complete' },
+  { id: 'intake', label: 'Challenge intake', detail: 'Problem & constraints', status: 'queued' },
   { id: 'research', label: 'Research', detail: 'Reuse & architecture', status: 'queued' },
   { id: 'plan', label: 'Plan', detail: 'Tasks & acceptance tests', status: 'queued' },
   { id: 'build', label: 'Build', detail: 'Implementation agent', status: 'queued' },
