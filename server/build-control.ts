@@ -10,6 +10,7 @@ import type { WorkerInput, WorkerProgress, CheckpointPointer } from '../worker/t
 import { validateBundle, type ArtifactBundle } from '../worker/files.js';
 import type { PipelineCheckpoint } from '../electron/pi-backend.js';
 import { reportPassed } from '../shared/verification.js';
+import { completedCommand } from './command-status.js';
 
 type BuildMetadata = Record<string, unknown> & {
   mode?: 'start' | 'resume'; startedAt?: number; retryVerification?: boolean;
@@ -141,8 +142,14 @@ export async function pollBuild(runId: string, epoch: number): Promise<'continue
     }
   }
   if (elapsed > 38 * 60_000) { await finishPaused(run); return 'done'; }
-  const command = await sandbox.getCommand(run.commandId!);
-  if (command.exitCode !== null) { await failBuild(runId, epoch, 'The sandbox stopped before finishing. Resume the last saved checkpoint or start again.'); return 'done'; }
+  const command = await completedCommand(await sandbox.getCommand(run.commandId!));
+  if (command) {
+    // The final progress write may have raced the earlier read while wait observed exit.
+    const final = await readControl<WorkerProgress>(sandbox, 'progress.json', 16 * 1024 * 1024);
+    if (final && ['review', 'paused', 'failed'].includes(final.value.status)) return 'continue';
+    await failBuild(runId, epoch, 'The sandbox stopped before finishing. Resume the last saved checkpoint or start again.');
+    return 'done';
+  }
   return 'continue';
 }
 
@@ -172,8 +179,8 @@ export async function pollVerification(runId: string, epoch: number): Promise<bo
   const sandbox = await Sandbox.get({ name: verifier.sandboxName });
   if (run.status === 'pausing') { await sandbox.stop(); await finishPaused(run); return true; }
   if (Date.now() - verifier.startedAt > 11 * 60_000) throw new Error('Verification timed out.');
-  const command = await sandbox.getCommand(verifier.commandId);
-  if (command.exitCode === null) return false;
+  const command = await completedCommand(await sandbox.getCommand(verifier.commandId));
+  if (!command) return false;
   if (command.exitCode !== 0) { await sandbox.stop(); throw new Error('Independent verification did not pass. Resume the build to repair it.'); }
   const output = JSON.parse((await command.stdout()).trim()) as { version: number; status: string; runId: string; epoch: number; sourceHash: string; reportSha256: string; artifactsSha256: string; checkpointSha256: string };
   const report = await readControl<TestReport>(sandbox, 'verified-report.json', 8 * 1024 * 1024);
