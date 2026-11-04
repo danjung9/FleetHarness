@@ -10,3 +10,6 @@ output/
 .impeccable/cache/
 .fleet-runs/
 build/icon.iconset/
+.vercel
+.env*
+dist-web/

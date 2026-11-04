@@ -10,6 +10,7 @@
     "dev:web": "vite --host 127.0.0.1",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "tsc && vite build && npm run build:electron",
+    "build:web": "tsc && vite build --outDir dist-web --base /",
     "start": "electron .",
     "preview": "vite preview",
     "test": "npm run build:electron && node --test tests/*.test.mjs",
