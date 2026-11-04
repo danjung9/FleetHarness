@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Narrow QA, correct false findings and require artifact evidence."
+summary: "Credit new GUI evidence precisely, close preparation and prioritize final artifact acceptance."
 ---
 
 # Quality decisions
 
-[R] Keep four-request partial ID 11 and the 3 PM access, 4 PM real-build and 6 PM accepted-artifact gates. Defer the 36-role-pass matrix, other pilots and connectors. Protect Dan's frontend.
+[R] Keep four-request partial ID 11 and manual final-copy acceptance. After the unclosed 3 PM access gate, recommend the checker through an overseer-confirmed route. Keep the 4 PM factory and 6 PM accepted-artifact cutoffs.
 
-[E, final relay and gate] At 631849f, Dan consolidated one Home-to-Flow interface; 128 tests reportedly pass. Retire Studio/Workbench checks. Test-Plan's earlier fixture smoke lacks revision/log provenance. Live generation, shutdown and delivered-app acceptance remain unverified here.
+[E, GUI receipt and Receipt-Review] Six scripts report success at 631849f, with no live inference or completed sign-in. One initiated/cancelled real login. U1 search, U2 hidden Stop and U3 label mismatch reproduce. The 3 ms observation is after click completion, not Stop latency.
 
-[R] Give qa-runner one evidence reconciliation and runtime handoff; qa-officer one independent ID 11 contract check. The main QA lead owns runtime acceptance; the organization runner supplies launches outside restricted seats. No duplicate runners or live builds.
+[E, STOP-CHILD-01 receipt] Ordinary Pi parent/child shutdown and separate cleanup now report PASS. [R] Do not rerun it. Broader shutdown/containment stay open. Protect Dan's frontend; engineering must use the corrected receipt limits.
 
-[E, pinned source character inspection] Static-Findings 1 and 11 misread normal newline escapes at both revisions. Return those findings for correction. Engineering should remove its newline repair unless reproduction establishes another defect. The source-export race remains separate; executable packaging has additional checks. Evidence: [[Ops/Directors/Sprint/Quality-Meeting-7]].
+[R] Accept qa-officer's arithmetic and fallback preparation as complete; leave that seat idle until an artifact arrives. Return qa-runner's stale gate for one ten-minute evidence update, then stop.
 
-[R] Require the new Home smoke, consent, Stop, fresh review, guide accuracy and final-copy recovery evidence. Packaging alone proves neither offline use nor saved-data recovery. Stop the builder before independent acceptance and record final digests.
+[E, Acceptance-Reconcile-631849f] Seven verification/export failures remain open despite 128 baseline passes. [R] Accept the actual final copy against Acceptance-11, with stopped writers, independent per-file digests, recovery and human decision. No artifact acceptance is supplied.
 
-[E, feed-7] No QA QUESTIONS were supplied. Execution approval remains with the overseer; manual final-copy acceptance is allowed and must be labeled manual.
+[E, relay] Main d322b39 adds browser deployment; desktop remains 631849f. [R] Hosted preview gets separate provenance if claimed. It cannot clear desktop or delivered-task gates. Answers and ownership: [[Ops/Directors/Directive-qa]].
