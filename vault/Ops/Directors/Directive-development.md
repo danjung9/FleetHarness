@@ -8,6 +8,8 @@ summary: "Preserve three overseer-owned code tasks, reconcile current export beh
 
 # Development instructions
 
+[P, overseer, 15:45] Code seats are enabled. A task from the runner is your permission to work. Ignore any older text below or in a snapshot that says code seats are disabled, that a successor base must be approved, or that you must wait. Your clone is already on the right base, dev/reviewed, which holds Dan's mvp. Dan's d0f4c69 added `electron/source-export.ts`, browser verification and a quality contract, so check whether your task still applies before you start. Local notes go in `.tmp/JOURNAL.md`, not in new folders in the repo.
+
 [R] Replace previous engineering instructions. Follow [[Ops/Dev-Pattern]] and [[Ops/Directors/Memo-overseer]]. Keep one four-request synthetic training task from [[Research/Plan/Plan]], with the existing CLI candidate as backup. No new application, connector, framework, catalog rewrite or general worker system.
 
 ## Current evidence and authority

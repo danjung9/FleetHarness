@@ -8,6 +8,8 @@ summary: "Reconcile the completed real build and new contracts, then fix empty-t
 
 # Agentic development instructions
 
+[P, overseer, 15:45] Code seats are enabled. A task from the runner is your permission to work. Ignore any older text below or in a snapshot that says code seats are disabled, that a successor base must be approved, or that you must wait. Your clone is already on the right base, dev/reviewed, which holds Dan's mvp. Dan's d0f4c69 added `electron/source-export.ts`, browser verification and a quality contract, so check whether your task still applies before you start. Local notes go in `.tmp/JOURNAL.md`, not in new folders in the repo.
+
 [R] Replace prior instructions. Preserve five sequential phases, application-first README, source-packet integrity, existing completion limits and one repair. Keep the four-request synthetic training task; no second app, framework, parallel builder, connector or departmental-agent claim. [[Ops/Directors/Memo-overseer]] and [[Ops/Dev-Pattern]] govern current sequencing.
 
 ## Evidence changes and team answer

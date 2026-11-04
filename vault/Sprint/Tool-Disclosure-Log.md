@@ -51,6 +51,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Independent ID 11 browser checker revision 2 | QA tool | Added explicit adapters discovered from both candidate interfaces, retaining the frozen independent oracle and reporting unrepresentable cases | Created for this sprint | 2026-11-04 |
 | zsh 5.9 and standard readers | shell | context reads | system distribution. | 2026-11-04 |
 | Session execution/patch tools, versions unexposed | local operations | reads and notes | session environment. | 2026-11-04 |
+| Node.js 26.0.0 | runtime | log comparison/tests | Node.js contributors. | 2026-11-04 |
+| TypeScript 7.0.2 | compiler | Electron compilation | Microsoft. | 2026-11-04 |
 
 ## Data and sources
 

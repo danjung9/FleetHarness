@@ -1,85 +1,72 @@
 ---
 type: research
-status: draft
+status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Ranked design-only improvements for protected acceptance, independent checking, shutdown, delivery and bounded event-key generation."
+summary: "Completed modified build, failing shipped gate, factory acceptance failure and newer incomplete CLI acceptance remain separate."
 ---
 
-# Agent workflow designs for Thursday
+# Agent workflow evidence and designs
 
 ## Bottom line
 
-[R] Prioritize one independently accepted synthetic app and verifiable final delivery before expanding the factory. Keep Dan's five phases, README follow-up and executable packaging. [R] Must outcomes may be met by an explicitly recorded manual procedure for Thursday, but live generation requires proved access and shutdown controls. Cut a general sandbox/backend rewrite and frontend changes. [E] These are designs against `50fcaea`, not implemented fixes or passing runtime results.
+[E, November 4, 2026] The modified `631849f` experiment completed five phases at 15:24:21 EST and reported 22 generated-test passes, meeting the 4 PM build gate. [E] AppYard `d0f4c69` has a failing 96-pass / 20-fail product gate; hosted-main source is `8db53c3`, with hosted runtime unverified. [E] The factory adapter run is FAIL; a newer CLI run is INCOMPLETE, with numeric-case passes and remaining NOT CHECKED coverage. [R] The approved route and candidates resolve the feed-31 request for another checker authorization; Quality/main now owns failure confirmation and final-copy acceptance.
 
-[E, directive read] Code seats remain gated. [[Ops/Directors/Directive-agentic]] selects manual final-copy acceptance and defers implementation of the acceptance store, checker, supervisor and snapshot systems. [R] The should rows below rank design value only; they are not current assignments. Read [[Research/Agentic/Run-Readiness-50fcaea]] for the successor route/evidence table under [[Ops/Directors/Directive-rande]], including reported active attempts and the remaining acceptance hold. Pending-start and packaging Stop observations remain with Quality; queued source-export work belongs to development.
+## Current evidence, November 4, 2026
 
-## Evidence and teammate alignment
+| Evidence | Recorded outcome [E] | Boundary [R] |
+| --- | --- | --- |
+| [Modified factory run](../Plan/Real-Build-Run1.md), 15:10:59 to 15:24:21 | `631849f` plus the [four-file experiment patch](../Plan/Real-Build-Run1.patch), event-key Codex engine, `gpt-6.1-sol`, five phases, Needs review, 22 generated tests passed. | Credit the completed build and selected permission-profile observations. It is not a shipped patch, independent app acceptance or general containment proof. Usage/cost remain unknown. |
+| [Current gate log](~/.local/share/fleethacker-context/org/logs/mvp-d0f4c69.gate.log), 15:29:35 | AppYard `d0f4c69`: **FAIL, 96 passed / 20 failed**. | Browser-launch errors are observed. A common cause for every downstream failure is not established. |
+| [Current relay](~/.local/share/fleethacker-context/org/relay/LATEST-analysis.md), source pulled 15:33:03 | `main 8db53c3` merges `mvp d0f4c69`; backend, harness, skills and delivery changed with the frontend. | Hosted deployment/runtime unverified. The old unchanged-backend claim applied only through `631849f`. |
+| [Pipeline-run1 adapter receipt](../QA/Acceptance/Results/training-acceptance-edf3150f-4563-4059-b9c0-6ecca70e64ac/result.json), 15:37:54 | **FAIL**, 33 PASS / 1 FAIL / 14 NOT CHECKED. Clock displays midnight instead of the officer key's 0800 origin. | Numeric cases, review invalidation and fresh offline import pass independently of the clock failure. |
+| [Historical CLI receipt](../QA/Acceptance/Results/training-acceptance-aaa1585f-8701-485b-861e-d2cc2ff42f8a/result.json), 15:38:20 | **FAIL**, 27 PASS / 1 FAIL / 18 NOT CHECKED; offline import mismatch reported. | Retain this failed receipt as history; do not carry its app-defect claim past the newer result. |
+| [Current CLI receipt af6357a9](../QA/Acceptance/Results/training-acceptance-af6357a9-6421-4d12-ba9b-21b462cd2b3c/result.json), 15:42:49 | **INCOMPLETE**, 28 PASS / 0 FAIL / 18 NOT CHECKED; offline import now PASS. | Same payload manifest and frozen acceptance/golden hashes; changed checker and adapter. Credit recovery without calling it an app repair or final acceptance. |
 
-[E, prior pinned diff and November 4 QA receipts] `631849f` retains Home/Flow and removes Studio/Workbench; backend/harness/skills/shared/dependency-lock contents are unchanged from `50fcaea`. The 14:42:27 gate reports 128 passes, zero failures. [Results-631849f-GUI](../QA/Results-631849f-GUI.md) adds six successful smoke scripts, consent on one Pi fixture path, reproduced U1/U2/U3 and one Stop observation: stopped at the first query 3 ms after click completion, with no later request over eight seconds. [Receipt-Review](../QA/GUI-631849f/Receipt-Review.md) limits this to observed plumbing, not child termination or live generation. [E, relay] `main` at `d322b39` adds hosted-preview deployment configuration; deployment success remains NOT VERIFIED and is separate from Electron and delivered ID 11 acceptance.
+[E] [Run readiness](Run-Readiness-50fcaea.md) lists every current NOT CHECKED row, candidate manifest identity, the earlier 3-pass / 27-NOT-CHECKED discovery receipts, historical defects and scoped Stop evidence. Both current receipts pass copied-byte comparisons and record writer shutdown as operator attestations, not independent process observations. Neither candidate has final human acceptance. The receipt counts are separate and must not be added into one score.
 
-[E, new receipt completed November 4 at 15:12:06 EST] [STOP-CHILD-01](../QA/GUI-631849f/stop-child-16bd720f-1ef9-408f-aac2-df194cc67e21/result.json) separately reports PASS at `631849f` for one ordinary Pi shell parent and non-detached child: both PIDs absent, stable heartbeats and no further requests over eight seconds after settling, before cleanup. This supersedes missing evidence for that case only. It does not clear pending-start, packaging, quit, detached/resistant descendants, containment or the environment shutdown fallback.
+[R] Preserve Dan's frozen `acceptance-plan.json` and `ux-spec.json`, browser journeys and evidence hashes, richer source snapshots and revised source exporter. Keep deferred requirements unverified and independent domain cases outside builder edit authority. Model-authored contracts and generated tests are not the independent oracle. Existing public golden examples remain development inputs; no evaluator variants belong in future prompts. Keep Home/Flow and Dan's ownership of `src/`, `studio/`, `index.html` and CSS; do not restore removed interfaces.
 
-[E, successor read of Plan/Review and Team/Now] Checker work is reported started at 15:07 EST, modified-copy event-key/profile probes at 15:08/15:09, and a real build at 15:11. Team/Now separately reports patched-factory and locked-CLI candidates at 15:11 with prior owner approval relayed by main. These reports establish attributed progress; exact patch/run/environment/control receipts and the relationship between checker starts remain missing here. They do not change shipped `631849f` capabilities. [R] Preserve the existing overseer-owned efforts without approving another run. Keep the 4 PM useful-factory-candidate cutoff, 6 PM accepted-task target and 7 PM final-copy evidence packaging. [E] Acceptance-11 application outcomes remain NOT RUN and H1, V1, E1 through E5 remain OPEN. The readiness table gives one concrete operator evidence request per route/stage.
+## Small corrections and current sequence
 
-[E] Reviewed local Git object `50fcaea1e86028503ae66bd2f17287093ad30cbe` and its changes from `0f175a8`. The checkout's local `mvp` reference began at the older commit and advanced to `50fcaea` during review; all code claims use pinned object reads. The latest commit adds executable packaging/worker, delivery locking and interruption recovery, README follow-up and tests, and Workbench/frontend changes. No frontend implementation was opened for redesign or changed.
+[R] Propose the smallest clock instruction correction after Quality/main confirmation: make the day-one 0800 display origin explicit while preserving integer-minute solver semantics. The earlier conditional lossless-import correction is superseded by the same-payload CLI recovery pass; Quality's memo says to withdraw the current generated-app defect claim. Return that existing proof, with no CLI instruction edit or rerun requested here. No generated output, frozen oracle or skill source changed. Any future regeneration needs separate allocation and independent acceptance of its new bytes.
 
-[E, historical review] Plan/Findings and older Test-Results apply to `0f175a8`. The earlier gate reported 128 passes at `50fcaea`, 14:34:58; the current gate and subsequent GUI evidence are identified above. No tests were rerun for this document update. The initial design review is recorded in [[Research/Agentic/Session-2026-11-04]]; the current evidence correction and shared-log handoff are in [[Research/Agentic/Run-Readiness-50fcaea]].
+[R] Existing owners remain dev-2 for the event-key route/profile/true-route record, dev-3 for sandboxed generated tests and dev-1 for source-export reconciliation. Agentic-builder's sequence is **BUG-V1 first, then separately allocated test-change evidence and foreground-only instructions, then confirmed candidate defects**. V1 starts only after overseer enablement, dev-3's reviewed change lands and the runner releases `electron/verification.ts` plus affected tests. Limit it to that verifier, `tests/verification.test.mjs` and `tests/runtime.test.mjs`, preserving profile execution and Dan's gate. Prove a failing zero-registered-test regression first; use host-controlled test events rather than a text search or spoofable stdout pattern. Review binds to the exact landed commit.
 
-## Ranked work before Thursday, November 5, 2:00 PM EST
+[R] Preserve five sequential phases, application-first README, source-packet integrity, existing completion limits and one repair. A later prompt ban on background jobs is not process containment. No framework, second app, connector, parallel builder, acceptance-store implementation or frontend task is allocated here.
 
-[R] Must means required evidence or operating condition for the claim being made. Should means a bounded implementation improvement after one accepted app exists. Cut means no deadline allocation. Estimates in individual notes are assumptions for a contributor familiar with the code, include focused proof and exclude integration surprises; they are not staffing commitments or additive across shared modules.
+## Historical proof remains bounded
 
-| Order | Rank | Deliverable | Thursday acceptance and design |
-| --- | --- | --- | --- |
-| 1 | Must | Frozen acceptance contract outside agent authority | Human checks the partial ID 11 expected outcomes; builder cannot edit canonical cases or reports. Manual evaluator boundary is allowed and labeled. [[Research/Agentic/01-Protected-Acceptance]] |
-| 2 | Must | Independent check of actual final app | Bad inline app rejected despite passing generated core tests; fresh edit, failure cases and save/reopen pass on final bytes. [[Research/Agentic/02-Independent-Checker]] |
-| 3 | Must | Final-byte delivery record | Build stopped, final copy tested, manifest/digest and human approval recorded. Executable delivery requires extracted-package checks. [[Research/Agentic/04-Tested-Delivery]] |
-| 4 | Must for a factory-generation claim | Working event-key route tied to the actual implementation | Stock Pi evidence and reported modified-copy app-server evidence remain separate. Record the actual provider/model, patch, profile and run result; this row approves no new attempt. [[Research/Agentic/Run-Readiness-50fcaea]]; [[Research/Agentic/07-Pi-Event-Key]] remains the earlier Pi design. |
-| 5 | Must, conditional on live generation | Proved tool authority and shutdown | Outside canaries denied, Stop prevents new work and ends owned activity; incomplete shutdown blocks restart and delivery. Use an already proved preparation environment if the product implementation is not ready. [[Research/Agentic/03-Stop-and-Supervision]], [[Research/Agentic/05-Phase-Tool-Policy]] |
-| 6 | Must, conditional on live generation | One whole-run deadline and declared usage policy | One run, at most one repair, guide/retries share limits; usage/cost unknown stays explicit. [[Research/Agentic/06-Run-Budgets]] |
-| 7 | Should, first small host patch | Pi preflight, whole-run timer and unified Stop | Small separately reviewed changes; Stop includes pending starts and Dan's package job. This patch alone does not prove process containment. Notes 03, 06, 07. |
-| 8 | Should, highest evidence automation value | Snapshot-bound approval and both exports | Dialog/copy races cannot substitute untested bytes; retain new executable safeguards. Note 04. |
-| 9 | Should | Host-owned acceptance gate and one browser driver | Fixed case IDs, independent oracle, mutation failure proof; manual evidence remains required until this passes. Notes 01, 02. |
-| 10 | Should only if proved within a separate timebox | Restricted Pi worker, phase file tools and full token gate | Guide-only write policy; real SDK exposes no extra tool; all inference attempts accounted. Notes 03, 05, 06. |
-| 11 | Cut | General shell sandbox, cross-platform descendant guarantee, new orchestration framework, more agents, automatic provider migration, catalog-wide acceptance | Too much integration and proof for this deadline. No current safety/acceptance claim depends on pretending these exist. |
-| 12 | Cut | Frontend redesign, new dashboards, restoring alternate interfaces, signing/sync expansion | Preserve Dan's unified interface and ownership; consume existing IPC, logs and error/status fields. |
+[E] The older 128-pass gates and six successful `631849f` GUI smoke scripts remain historical results. U1/U2/U3 reproduced at that revision. [STOP-CHILD-01](../QA/GUI-631849f/stop-child-16bd720f-1ef9-408f-aac2-df194cc67e21/result.json) separately passed for one ordinary Pi shell parent and non-detached child, with absent PIDs, stable heartbeats and no later requests before cleanup. It does not prove Codex, detached descendants, pending-start, packaging, quit or enclosing-environment shutdown.
 
-## Small implementation sequence for later authorization
+[E] BUG-H1, BUG-V1 and BUG-E1 through BUG-E5 remain historical OPEN regressions from the [403/410 runner record](../QA/Runner/Harness-Coverage.md) and [reconciliation](../QA/Acceptance-Reconcile-631849f.md). Credit the current gate's passing frozen-contract and source-export checks without treating them as matching closure of every old scenario. The seven historical defects are distinct from the current gate's 20 failures and the separate candidate receipt histories.
 
-[R] No build is authorized by this design task. If the team later selects implementation, coordinate one editor per shared host file and use this sequence:
+## Design index, background only
 
-1. Freeze the one task contract and choose the actual delivery format. Assign an independent evaluator role without inventing a named approver. This is required before generation or claiming acceptance.
-2. If no new generation is needed, skip provider/worker work and spend time on independent final-copy checks and the delivery record. If a new run is needed, prove the existing preparation boundary and event-key preflight first; do not use the pitch as the experiment.
-3. Timebox the small host improvements as separate patches: preflight, global deadline/one-run policy, unified cancellation. Stop or scope down if the live capability proof fails.
-4. After the app works, choose snapshot enforcement before broad browser automation. Bind the same host gate to source export and executable download. Inspect Dan's current branch again before editing `main.ts`, `pi-backend.ts`, `storage.ts`, `phases.ts` or `fleet-delivery`.
-5. Do not start the restricted worker/tool redesign alongside submission packaging unless an owner has a credible separate proof window. It is a coherent follow-on design, not a hidden requirement to finish all code before Thursday.
+[R] These notes retain the original `50fcaea` designs. Current allocation is controlled by the directive and sequence above, not their older rankings.
 
-[R] This reconciles the earlier architecture's larger restricted-worker target with the plan's smaller manual acceptance default. It preserves the plan's one-repair limit rather than adopting an older build-pattern suggestion of two repairs. The hard artifact/evidence goals remain; their automatic enforcement can follow after the deadline.
+| Note | Retained purpose |
+| --- | --- |
+| [Run readiness](Run-Readiness-50fcaea.md) | Current evidence, public brief, all open acceptance rows and exact handoff |
+| [01 Protected acceptance](01-Protected-Acceptance.md) | Human contract and evaluator authority |
+| [02 Independent checker](02-Independent-Checker.md) | Actual-app behavior checked against fixed expectations |
+| [03 Stop and supervision](03-Stop-and-Supervision.md) | Shutdown design and limits of process observations |
+| [04 Tested delivery](04-Tested-Delivery.md) | Exact final bytes and review/delivery binding |
+| [05 Phase tool policy](05-Phase-Tool-Policy.md) | Phase authority and deferred enforcement |
+| [06 Run budgets](06-Run-Budgets.md) | Whole-run limits and honest unknown usage |
+| [07 Pi event key](07-Pi-Event-Key.md) | Earlier Pi design, separate from the completed patched Codex route |
+| [Review log](Review-Log.md), [initial session](Session-2026-11-04.md), [current journal](.tmp/JOURNAL.md) | Prior work, local disclosure and verification history |
 
-## Trust and handoff model
+## Exact remaining dependency
 
-```text
-Human reviews task contract and execution limits
-  -> bounded builder with phase-scoped tools
-  -> revoke writer authority and confirm shutdown
-  -> freeze candidate snapshot
-  -> independent checker against fixed expectations
-       failure -> one bounded repair -> new snapshot and recheck
-       pass -> human review bound to acceptance and payload hashes
-  -> locked source export OR trusted executable packaging
-  -> final destination/archive identity check and delivery receipt
-```
+[R] **Quality/main confirms the factory clock-origin finding, preserves the newer CLI recovery pass, completes or explicitly retains the factory's 14 and CLI's 18 NOT CHECKED rows, and records a human decision on the identified final bytes.** No fresh checker authorization is needed. Stop writers, retain independent per-file digests, and assess fresh input, failure states, review invalidation, guide and save/import recovery. Source-copy checks do not establish executable-package acceptance.
 
-[R] The controller owns policy, epochs, budgets, reports, approval and delivery. The builder owns candidate edits only. The checker never grants operational authority. Prohibited actions include deployment, publication, operational-system writes, credential discovery and canonical-test changes. Existing logs carry current phase, deadline, denial, last action and stop result. Escalation blocks promotion for changed contract, tampering, missing checker, failed entitlement, budget exhaustion or incomplete shutdown. A person decides whether to revise scope or restart; no automatic authority expansion.
+[R] The 4 PM build gate is met; retain 6 PM useful-task acceptance, 7 PM final-copy evidence, Thursday noon code freeze and November 5, 2 PM EST submission. Product retains one morning list of person-only review, user trial, category and submission decisions. Keep broader offline readiness, executable packaging, recurrence, departmental negotiation and reconnect-sync gaps explicit. No measured benefit without a trial.
 
-## What these designs do not establish
-
-[E] This document review performed no runtime checks. It credits QA's `631849f` fixtures and narrow Stop result, plus attributed modified-copy probes and checker/build starts. Direct proof of stock event-key inference, general containment, complete shutdown, completed task generation, final-copy acceptance/recovery and executable cold start remains NOT VERIFIED or NOT RUN. Only local research documents changed. [R] Reported starts and probe successes do not establish accepted delivered behavior or transfer patched capabilities to stock `mvp`. The local successor disclosure/session handoff is in [[Research/Agentic/Run-Readiness-50fcaea]].
+[R] Humans approve execution limits, accepted artifact and submission. Monitor time, tools, changes, available usage and failures. Stop and escalate prohibited data, uncontrolled work, changed accepted bytes or failed shutdown. Use synthetic/public inputs only; no official writes, real-person assignment, messages, credentials or publication. No repository execution or model calls occurred in this document reconciliation. Shared Sprint, Sessions and Team/Now handoffs remain staged in the local journal because this assignment permits writes only here.
 
 ## Sources
 
-- [E] Local pinned source: https://github.com/danjung9/FleetHarness/tree/50fcaea1e86028503ae66bd2f17287093ad30cbe.
-- [E] [[Research/Plan/Plan]], [[Research/Plan/Findings]], [[Research/Plan/Test-Results]], [[Research/Architecture/Target-Architecture]], [[Research/Architecture/Optimizations]].
-- [E] [[Research/Build-Patterns/Specs-and-Acceptance-Tests]], [[Research/Build-Patterns/Test-and-Repair-Loops]], [[Research/Build-Patterns/Isolated-Execution]].
-- [E] [[Research/Agentic/Review-Log]], [[Research/Agentic/Session-2026-11-04]].
+- [E] Final check at 15:46 EST reread both relays and inventoried newer receipts once. It found CLI af6357a9; [[Ops/Directors/Memo-director-quality]] confirms that its passing recovery result supersedes the earlier defect claim. No polling or runtime rerun.
+- [E] [[Research/Plan/Real-Build-Run1]], [[Research/Plan/Review]], [[Research/Plan/Plan]], [[Research/Plan/Findings]], [[Research/Plan/Test-Results]], both relays and exact gate/acceptance receipts linked above.
+- [R] [[Ops/Directors/Directive-agentic]], [[Ops/Directors/Memo-overseer]], [[Ops/Dev-Pattern]].
