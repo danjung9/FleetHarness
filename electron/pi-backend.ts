@@ -8,7 +8,7 @@ import { Store, safeFile } from './storage.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
 import { loadQualityContract, assertQualityContract, verifyApplication, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
 import type { AcceptanceCriterion } from '../harness/types.js';
-import { runAgentStage, stoppedMessage, type AgentLimits, type StageSession } from './agent-runner.js';
+import { runAgentStage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
 import { phasePrompt, toolsForPhase, type PhaseContract } from '../harness/phases.js';
 import { createFleetTools } from '../harness/pi-tools.js';
@@ -16,14 +16,20 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
+import { RunBudget, runAbortError, type BudgetClock } from './run-budget.js';
+import { normalizeBuildTimeLimitMinutes } from '../shared/run-budget.js';
+import { RunUsageLedger } from './run-usage.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
+type ActiveRun = { backend: AgentBackend; controller: AbortController; budget: RunBudget; usage: RunUsageLedger; heartbeat?: ReturnType<typeof setInterval>; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract };
 interface BackendOptions {
   codex?: CodexAccount;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
   verificationLimits?: Partial<ApplicationVerificationLimits>;
+  budgetClock?: BudgetClock;
+  verifyApplication?: typeof verifyApplication;
+  cancellationGraceMs?: number;
 }
 export class FleetBackend {
   runtime!: ModelRuntime;
@@ -34,7 +40,11 @@ export class FleetBackend {
     return [...(this.options.codex?.models ?? []), ...this.runtime.getModels().map(m => ({ backend: 'pi' as const, id: m.id, provider: m.provider, name: m.name,
       configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
   }
-  private async changed(p: Project) { p.updatedAt = new Date().toISOString(); this.notify(); await this.store.save(); }
+  private async changed(p: Project) {
+    const run = this.active.get(p.id);
+    if (run && p.runSummary) { run.budget.snapshot(); p.runSummary.usage = run.usage.snapshot(); }
+    p.updatedAt = new Date().toISOString(); this.notify(); await this.store.save();
+  }
   private log(p: Project, stage: StageId, kind: 'info' | 'text' | 'tool' | 'error', text: string, tool?: ToolEvent) {
     const last = p.logs.at(-1);
     if (kind === 'text' && last?.kind === 'text' && last.stage === stage && last.text.length < 16000) last.text += text;
@@ -43,16 +53,29 @@ export class FleetBackend {
     this.notify();
   }
   private async stage(p: Project, id: StageId, status: 'active' | 'complete' | 'failed' | 'review') {
-    p.stages.find(s => s.id === id)!.status = status; await this.changed(p);
+    const run = this.active.get(p.id);
+    if (run) { this.check(run); if (status === 'active') run.budget.phase(id, stageDefinitions.find(s => s.id === id)!.label); }
+    p.stages.find(s => s.id === id)!.status = status;
+    if (run) await run.budget.wait(() => this.changed(p)); else await this.changed(p);
+    if (run) this.check(run);
   }
-  private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
+  private check(run: ActiveRun) { run.budget.check(); }
   private async finish(p: Project, run: ActiveRun) {
-    try { await this.changed(p); }
+    clearInterval(run.heartbeat);
+    run.budget.finish(p.status === 'review' ? 'completed' : p.status === 'stopped' ? 'stopped' : 'failed');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try { await Promise.race([this.changed(p), new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Saving run state did not finish within 5 seconds.')), 5000);
+    })]); }
     catch (error) {
       p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
-      if (p.status !== 'stopped') p.status = 'failed';
+      if (p.status !== 'stopped') {
+        p.status = 'failed';
+        if (p.runSummary) p.runSummary.terminalReason = 'failed';
+      }
       this.log(p, 'intake', 'error', p.error);
     } finally {
+      clearTimeout(timer);
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
       this.notify();
@@ -62,20 +85,21 @@ export class FleetBackend {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
-    if (backend === 'codex') {
-      await this.options.codex?.refresh();
-      if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
-    } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
-    // Authentication can await network I/O; recheck capacity before reserving the run.
-    if (this.active.has(id)) throw new Error('This challenge already has an active run.');
-    if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
+    const { provider, model: modelId, backend = 'pi', buildTimeLimitMinutes } = this.store.state.settings;
+    const timeLimitMs = normalizeBuildTimeLimitMinutes(buildTimeLimitMinutes) * 60_000;
+    if (backend !== 'codex' && (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider))) throw new Error('Choose a model and connect its provider in Model settings first.');
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, controller: new AbortController(), done, resolve };
+    const controller = new AbortController(), usage = new RunUsageLedger(backend);
+    const now = this.options.budgetClock?.wallNow() ?? Date.now();
+    const runId = randomUUID();
+    p.runSummary = { runId, backend, model: provider + '/' + modelId, startedAt: new Date(now).toISOString(),
+      deadlineAt: new Date(now + timeLimitMs).toISOString(), timeLimitMs, elapsedMs: 0, phases: [], usage: usage.snapshot() };
+    const run: ActiveRun = { backend, controller, usage, budget: new RunBudget(p.runSummary, controller, this.options.budgetClock), done, resolve };
     this.active.set(id, run);
     try {
-      p.runId = randomUUID();
+      run.budget.phase('setup', 'Session setup');
+      p.runId = runId;
       p.workspace = path.join(this.store.root, 'workspaces', p.id, p.runId);
       p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = [];
       p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
@@ -83,28 +107,40 @@ export class FleetBackend {
       p.qualityVersion = 1;
       p.backend = backend;
       p.model = provider + '/' + modelId;
-      await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
+      await run.budget.wait(() => fs.mkdir(p.workspace!, { recursive: true, mode: 0o700 }));
+      await run.budget.wait(() => this.changed(p));
+      let saving = false;
+      run.heartbeat = setInterval(() => {
+        if (saving) return;
+        saving = true;
+        void this.changed(p).catch(() => {}).finally(() => { saving = false; });
+      }, 5000);
+      if (backend === 'codex') {
+        await run.budget.wait(async () => { await this.options.codex?.refresh(); });
+        if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
+      }
       this.check(run);
-      await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
+      await run.budget.wait(() => fs.writeFile(path.join(p.workspace!, 'requirements.md'), [
         '# ' + p.title, '', p.description, '', '## Evaluation criteria',
         ...(p.criteria.length ? p.criteria.map((c, i) => (i + 1) + '. ' + c)
           : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
         ...(p.resources ? ['## Resources', '', p.resources, ''] : []),
         ...(p.links?.length ? ['## Reference links', '', ...p.links.map(link => '- ' + link), ''] : []),
         'Use synthetic data only. Operational readiness requires independent domain review.'
-      ].join('\n'));
-      const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
-        criteria: p.criteria, resources: p.resources, links: p.links, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
+      ].join('\n')));
+      const packet = await run.budget.wait(() => prepareFleetWorkspace({ workspace: p.workspace!, title: p.title, description: p.description,
+        criteria: p.criteria, resources: p.resources, links: p.links, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot }));
       run.context = packet.context; run.phases = packet.phases; run.globalTools = packet.globalTools; p.globalTools = [...packet.globalTools]; p.phasePlan = structuredClone(packet.phases); run.packetHash = packet.packetHash;
       run.acceptance = packet.acceptance;
-      run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
+      run.requirements = await run.budget.wait(() => fs.readFile(path.join(p.workspace!, 'requirements.md'), 'utf8'));
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
-      await this.changed(p);
+      this.log(p, 'intake', 'info', `Whole-build time budget: ${timeLimitMs / 60_000} minutes, including setup, retries, verification and repair. Human review and later export/packaging are separate. Tokens and cost are telemetry, not enforced limits.`);
+      await run.budget.wait(() => this.changed(p));
       this.check(run);
       void this.execute(p, run, provider, modelId);
     } catch (error) {
-      p.status = run.controller.signal.aborted ? 'stopped' : 'failed'; p.error = error instanceof Error ? error.message : String(error);
+      p.status = run.controller.signal.aborted ? 'stopped' : 'failed'; p.error = run.controller.signal.aborted ? runAbortError(run.controller.signal).message : error instanceof Error ? error.message : String(error);
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       this.log(p, 'intake', 'error', p.error);
       await this.finish(p, run); throw error;
@@ -117,7 +153,10 @@ export class FleetBackend {
     const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
     const allowedTools = toolsForPhase(phase, run.globalTools);
     this.log(p, stage, 'info', 'Starting ' + engine + ' ' + stage + ' agent. Skills: ' + phase.skills.join(', ') + '. Global tools: ' + run.globalTools!.join(', ') + '. Phase tools: ' + phase.tools.join(', ') + '.');
-    await runAgentStage({
+    const sessionKey = randomUUID();
+    const usagePhase = p.runSummary?.phases.at(-1)?.id ?? stage;
+    let succeeded = false;
+    try { await runAgentStage({
       label: engine + ' ' + stage + ' agent', signal: run.controller.signal, limits: this.options.agentLimits,
       create: async signal => {
         const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined), ...createSystemDesignTools(p, stage, signal, () => this.changed(p))];
@@ -142,6 +181,8 @@ export class FleetBackend {
         return session;
       },
       onEvent: event => {
+        run.usage.event(usagePhase, event, sessionKey);
+        if (p.runSummary) p.runSummary.usage = run.usage.snapshot();
         if (event.type === 'message_update' && event.assistantMessageEvent.type === 'text_delta') this.log(p, stage, 'text', event.assistantMessageEvent.delta);
         if (event.type === 'tool_execution_start') {
           const args = event.args as Record<string, unknown> | null;
@@ -162,11 +203,13 @@ export class FleetBackend {
       work: async (prompt, signal) => {
         const check = () => { this.check(run); signal.throwIfAborted(); };
         const complete = async (text: string, required: string[]) => {
+          check(); run.usage.beginPrompt(usagePhase);
           await prompt(text);
           check(); await this.checkInputs(p, run); check();
           let missing = await this.missingFiles(p, run, stage, required, tests); check();
           if (missing.length) {
             this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
+            check(); run.usage.beginPrompt(usagePhase);
             await prompt('The stage is incomplete. Produce these missing or empty artifacts before finishing: ' + missing.join(', ') + '. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
             check(); await this.checkInputs(p, run); check();
             missing = await this.missingFiles(p, run, stage, required, tests); check();
@@ -179,7 +222,8 @@ export class FleetBackend {
           await complete(followUp.instruction, [...files, ...followUp.files]);
         }
       }
-    });
+    }); succeeded = true; }
+    finally { run.usage.endSession(usagePhase, sessionKey, !succeeded); }
   }
   private async missingFiles(p: Project, run: ActiveRun, stage: StageId, files: string[], tests = false) {
     const missing: string[] = [];
@@ -207,6 +251,24 @@ export class FleetBackend {
       throw new Error('The original requirements changed during the run. Review the artifacts and start a new run.');
     }
   }
+  private async verify(p: Project, run: ActiveRun) {
+    this.check(run);
+    const operation = (this.options.verifyApplication ?? verifyApplication)(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+    try { return await run.budget.wait(() => operation); }
+    catch (error) {
+      if (run.controller.signal.aborted) {
+        // Revoke model work immediately, then let the existing bounded process/browser teardown finish.
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const settled = await Promise.race([operation.then(() => true, () => true), new Promise<false>(resolve => {
+            timer = setTimeout(() => resolve(false), this.options.cancellationGraceMs ?? 11_000);
+          })]);
+          if (!settled) this.log(p, 'verify', 'error', 'Verification did not acknowledge cancellation within the cleanup grace period. No further model work will start.');
+        } finally { clearTimeout(timer); }
+      }
+      throw error;
+    }
+  }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
     try {
       await this.stage(p, 'intake', 'active');
@@ -220,7 +282,7 @@ export class FleetBackend {
       await this.stage(p, 'plan', 'active');
       await this.agent(p, run, 'plan', provider, model,
         'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Target a dependency-free browser application delivered as a self-contained index.html (inline CSS and classic JS, no external files or CDNs), plus testable core logic and Node built-in test runner files named *.test.cjs or *.test.mjs. The complete application must run by opening index.html. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'acceptance-plan.json', 'ux-spec.json']);
-      run.quality = await loadQualityContract(p.workspace!, run.acceptance!);
+      run.quality = await run.budget.wait(() => loadQualityContract(p.workspace!, run.acceptance!));
       this.log(p, 'plan', 'info', 'Acceptance plan and UX specification validated and frozen. Browser journeys will verify the delivered application at desktop and narrow sizes.');
       await this.stage(p, 'plan', 'complete');
       await this.stage(p, 'build', 'active');
@@ -233,26 +295,29 @@ export class FleetBackend {
       await this.agent(p, run, 'verify', provider, model,
         'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested logic and index.html. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Keep index.html self-contained and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
       this.check(run);
-      await this.checkInputs(p, run);
-      p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+      await run.budget.wait(() => this.checkInputs(p, run));
+      run.budget.phase('verify-host', 'Host verification');
+      p.report = await this.verify(p, run);
       this.log(p, 'verify', 'info', p.report.output);
       if (!reportPassed(p.report, true)) {
-        await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
+        await run.budget.wait(() => fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2)));
         this.log(p, 'verify', 'info', 'Verification failed. Starting one ' + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt.');
+        run.budget.phase('repair', 'Repair');
         await this.agent(p, run, 'verify', provider, model,
           'The independent test run failed. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. Never edit acceptance-plan.json or ux-spec.json; the host checks their original hash. Keep index.html consistent with core source. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'index.html', 'README.md', 'path-to-fleet.md', 'verification.md'], true);
-        await this.checkInputs(p, run);
-        p.report = await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits);
+        await run.budget.wait(() => this.checkInputs(p, run));
+        run.budget.phase('verify-host-retry', 'Host verification after repair');
+        p.report = await this.verify(p, run);
         this.log(p, 'verify', 'info', p.report.output);
       }
       this.check(run);
-      await fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2));
+      await run.budget.wait(() => fs.writeFile(path.join(p.workspace!, 'test-report.json'), JSON.stringify(p.report, null, 2)));
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');
       this.check(run);
       p.status = 'review'; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
-      p.error = error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
+      p.error = run.controller.signal.aborted ? runAbortError(run.controller.signal).message : error instanceof Error ? error.message : String(error); p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; }); this.log(p, stage, 'error', p.error);
     } finally { await this.finish(p, run); }

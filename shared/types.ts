@@ -12,6 +12,7 @@ export interface TestReport {
 }
 export interface BriefContext { resources?: string; links?: string[] }
 export interface Project extends BriefContext {
+  runSummary?: import('./run-budget.js').RunSummary;
   qualityVersion?: 1;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
@@ -26,7 +27,7 @@ export interface Project extends BriefContext {
 }
 export type AgentBackend = 'pi' | 'codex';
 export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; buildTimeLimitMinutes?: number }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;

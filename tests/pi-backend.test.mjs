@@ -6,6 +6,7 @@ import path from 'node:path';
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed } from '../dist-electron/electron/verification.js';
+import { verifyApplication } from '../dist-electron/electron/quality.js';
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 const resourcesRoot = path.resolve('.');
@@ -34,9 +35,14 @@ async function artifacts(cwd, stage, broken = false) {
 async function harness(t, options = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-flow-'));
   const store = new Store(root); await store.init();
-  store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
+  store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false, ...options.settings };
   const project = store.state.projects[0], sessions = [], snapshots = [];
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
+    budgetClock: options.budgetClock,
+    verifyApplication: options.verifyApplication,
+    codex: options.codex,
+    createCodexSession: options.createCodexSession,
+    cancellationGraceMs: options.cancellationGraceMs ?? 20,
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     verificationLimits: { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2000, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
@@ -367,4 +373,239 @@ test('a hung generated test is bounded, repaired once, then reaches review on ac
   } });
   await h.run(); await h.assertSettled('review');
   assert.ok(h.project.logs.some(l => l.text.includes('Verification exceeded'))); assert.equal(h.sessions.at(-1).stage, 'repair');
+});
+
+function budgetClock() {
+  let elapsed = 0, sequence = 0;
+  const origin = Date.parse('2026-11-04T15:00:00.000Z'), timers = new Map();
+  return {
+    now: () => elapsed, wallNow: () => origin + elapsed,
+    setTimeout(callback, milliseconds) { const id = ++sequence; timers.set(id, { at: elapsed + milliseconds, callback }); return id; },
+    clearTimeout(id) { timers.delete(id); },
+    advance(milliseconds) {
+      const target = elapsed + milliseconds;
+      for (;;) {
+        const next = [...timers].filter(([, timer]) => timer.at <= target).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!next) break;
+        elapsed = next[1].at; timers.delete(next[0]); next[1].callback();
+      }
+      elapsed = target;
+    }
+  };
+}
+
+async function assertBudgetExhausted(h) {
+  await h.assertSettled('stopped');
+  assert.match(h.project.error, /time.*budget|budget.*exhaust|whole.build/i);
+  assert.equal(h.project.runSummary.terminalReason, 'time_budget_exhausted');
+  assert.equal(h.project.runSummary.timeLimitMs, 60_000);
+  assert.equal(h.project.runSummary.elapsedMs, 60_000);
+  assert.ok(h.project.runSummary.finishedAt);
+  const state = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8'));
+  assert.deepEqual(state.projects.find(p => p.id === h.project.id).runSummary, h.project.runSummary);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'run-summary.json'), 'utf8')), h.project.runSummary);
+}
+
+test('the whole-build deadline survives a phase boundary and persists artifacts and elapsed usage', { timeout: 10000 }, async t => {
+  const clock = budgetClock();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, scenario: async ({ cwd, stage }) => {
+    if (stage === 'intake') { clock.advance(45_000); return false; }
+    if (stage === 'research') { await artifacts(cwd, stage); clock.advance(15_000); return never(); }
+    return false;
+  } });
+  await h.run(); await assertBudgetExhausted(h);
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research']);
+  assert.equal(h.sessions[1].aborts, 1); assert.equal(h.sessions[1].disposed, true);
+  assert.equal(await fs.readFile(path.join(h.project.workspace, 'scope.md'), 'utf8'), 'Synthetic scope');
+  assert.equal(await fs.readFile(path.join(h.project.workspace, 'research.md'), 'utf8'), 'Local fixture research');
+  assert.equal(h.project.runSummary.phases.reduce((sum, phase) => sum + phase.durationMs, 0), 60_000);
+  assert.equal(h.project.runSummary.usage.prompts, 2);
+});
+
+test('a hung session setup exhausts the whole-build deadline and releases the run slot', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), entered = deferred();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, createSession: () => { entered.resolve(); return never(); } });
+  await h.backend.start(h.project.id); await entered.promise;
+  clock.advance(60_000); await h.settle(); await assertBudgetExhausted(h);
+  assert.equal(h.sessions.length, 0);
+  assert.equal(h.project.runSummary.usage.prompts, 0);
+});
+
+test('Codex account setup is inside the build deadline before any session can start', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), entered = deferred(); let sessionCalls = 0;
+  const h = await harness(t, { budgetClock: clock,
+    settings: { backend: 'codex', provider: 'chatgpt', buildTimeLimitMinutes: 1 },
+    codex: { models: [{ id: 'fixture', configured: true }], refresh: () => { entered.resolve(); return never(); } },
+    createCodexSession: () => { sessionCalls++; return never(); }
+  });
+  const rejected = assert.rejects(h.backend.start(h.project.id), /time.*budget|budget.*exhaust|whole.build/i);
+  await entered.promise; clock.advance(60_000); await rejected; await assertBudgetExhausted(h);
+  assert.equal(sessionCalls, 0);
+  assert.equal(h.project.runSummary.usage.prompts, 0);
+});
+
+test('a stalled state save cannot retain capacity forever after the build budget expires', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), saving = deferred();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 } });
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  h.store.save = () => { saving.resolve(); return never(); };
+  const rejected = assert.rejects(h.backend.start(h.project.id), /time.*budget|budget.*exhaust|whole.build/i);
+  await saving.promise; clock.advance(60_000);
+  await new Promise(resolve => setImmediate(resolve));
+  t.mock.timers.tick(5000); await rejected;
+  assert.equal(h.backend.active.has(h.project.id), false);
+  assert.equal(h.project.status, 'stopped');
+  assert.equal(h.project.runSummary.terminalReason, 'time_budget_exhausted');
+  assert.match(h.project.error, /Could not save run state.*5 seconds/);
+  assert.equal(h.sessions.length, 0);
+});
+
+test('late session initialization after budget expiry is disposed without model dispatch', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), entered = deferred(), sessionReady = deferred();
+  const lateSession = { prompts: 0, aborts: 0, disposed: 0,
+    subscribe() { return () => {}; }, prompt() { this.prompts++; return never(); },
+    abort() { this.aborts++; return never(); }, dispose() { this.disposed++; }
+  };
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, createSession: () => { entered.resolve(); return sessionReady.promise; } });
+  await h.backend.start(h.project.id); await entered.promise;
+  clock.advance(60_000); await h.settle(); await assertBudgetExhausted(h);
+  const saved = structuredClone(h.project);
+  sessionReady.resolve({ session: lateSession });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(lateSession.prompts, 0); assert.equal(lateSession.aborts, 1); assert.equal(lateSession.disposed, 1);
+  assert.deepEqual(h.project, saved);
+});
+
+test('retry and compaction activity cannot postpone the build deadline', { timeout: 10000 }, async t => {
+  const clock = budgetClock();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, scenario: ({ stage, session }) => {
+    if (stage !== 'intake') return false;
+    clock.advance(20_000); session.emit({ type: 'auto_retry_start', attempt: 1, maxAttempts: 2, delayMs: 1000, errorMessage: 'fixture transient failure' });
+    clock.advance(20_000); session.emit({ type: 'compaction_start', reason: 'threshold' });
+    session.emit({ type: 'compaction_end', reason: 'threshold' });
+    clock.advance(20_000); return never();
+  } });
+  await h.run(); await assertBudgetExhausted(h);
+  assert.equal(h.sessions.length, 1); assert.equal(h.sessions[0].aborts, 1);
+  assert.ok(h.project.logs.some(log => log.text.includes('Provider retry')));
+  assert.ok(h.project.logs.some(log => log.text.includes('compaction completed')));
+});
+
+for (const recovery of ['artifact', 'guide']) test(`${recovery} recovery shares the existing build allowance`, { timeout: 10000 }, async t => {
+  const clock = budgetClock();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, scenario: async ({ cwd, stage, session }) => {
+    if (recovery === 'artifact' && stage === 'intake') {
+      clock.advance(session.prompts.length === 1 ? 50_000 : 10_000);
+      return session.prompts.length === 1 ? true : never();
+    }
+    if (recovery === 'guide' && stage === 'build') clock.advance(50_000);
+    if (recovery === 'guide' && stage === 'guide') {
+      await fs.writeFile(path.join(cwd, 'README.md'), '');
+      if (session.prompts.length === 2) { clock.advance(9000); return true; }
+      clock.advance(1000); return never();
+    }
+    return false;
+  } });
+  await h.run(); await assertBudgetExhausted(h);
+  const active = h.sessions.at(-1);
+  assert.equal(active.stage, recovery === 'artifact' ? 'intake' : 'build');
+  assert.equal(active.prompts.length, recovery === 'artifact' ? 2 : 3);
+  assert.equal(active.aborts, 1);
+  assert.ok(!h.sessions.some(session => session.stage === 'verify'));
+});
+
+test('host verification shares the build deadline and cancellation signal', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), entered = deferred(); let verificationSignal;
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 },
+    scenario: ({ stage }) => { if (stage === 'build') clock.advance(55_000); return false; },
+    verifyApplication: async (_root, _executable, _quality, signal) => { verificationSignal = signal; entered.resolve(); return never(); }
+  });
+  await h.backend.start(h.project.id); await entered.promise;
+  clock.advance(5000); await h.settle(); await assertBudgetExhausted(h);
+  assert.equal(verificationSignal.aborted, true);
+  assert.equal(h.sessions.at(-1).stage, 'verify');
+  assert.equal(h.project.report, undefined);
+});
+
+test('verification teardown completes before a budget-exhausted run releases capacity', { timeout: 10000 }, async t => {
+  const clock = budgetClock(), entered = deferred(), cleaning = deferred(), release = deferred();
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, cancellationGraceMs: 1000,
+    verifyApplication: (_root, _executable, _quality, signal) => new Promise((_resolve, reject) => {
+      entered.resolve();
+      signal.addEventListener('abort', () => { cleaning.resolve(); void release.promise.then(() => reject(signal.reason)); }, { once: true });
+    })
+  });
+  await h.backend.start(h.project.id); await entered.promise; clock.advance(60_000); await cleaning.promise;
+  assert.equal(h.backend.active.has(h.project.id), true, 'capacity must remain reserved during verification cleanup');
+  release.resolve(); await h.settle(); await assertBudgetExhausted(h);
+});
+
+test('budget expiry terminates the verification worker and descendants before releasing capacity', { timeout: 15000 }, async t => {
+  const clock = budgetClock(), pids = []; let observed = '', closed = false;
+  const alive = pid => { try { process.kill(pid, 0); return true; } catch (error) { if (error.code === 'ESRCH') return false; throw error; } };
+  t.after(() => { for (const pid of pids) { try { process.kill(pid, 'SIGKILL'); } catch {} } });
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, cancellationGraceMs: 11_000,
+    scenario: async ({ cwd, stage }) => {
+      if (stage !== 'build') return false;
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, 'app.test.cjs'), `
+        const descendant = require('node:child_process').spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });
+        console.log('TREE_PIDS=' + process.pid + ',' + descendant.pid);
+        setInterval(() => {}, 1000);
+      `);
+      return true;
+    },
+    verifyApplication: (root, executable, contract, signal, limits) => verifyApplication(root, executable, contract, signal, limits, child => {
+      pids.push(child.pid); child.once('close', () => { closed = true; });
+      child.stdout.on('data', chunk => {
+        observed += chunk.toString();
+        const match = observed.match(/TREE_PIDS=(\d+),(\d+)/);
+        if (match && pids.length === 1) { pids.push(Number(match[1]), Number(match[2])); clock.advance(60_000); }
+      });
+    })
+  });
+  await h.run(); await assertBudgetExhausted(h);
+  assert.equal(pids.length, 3, 'fixture must start the coordinator, worker and descendant');
+  assert.equal(closed, true, 'the run slot was freed before verification teardown completed');
+  const reapDeadline = Date.now() + 2000;
+  while (pids.some(alive) && Date.now() < reapDeadline) await new Promise(resolve => setTimeout(resolve, 20));
+  assert.deepEqual(pids.filter(alive), [], 'a verification worker outlived budget cancellation');
+});
+
+test('repair consumes the remaining allowance and cannot begin another verification after expiry', { timeout: 10000 }, async t => {
+  const clock = budgetClock(); let verifications = 0;
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 },
+    scenario: ({ stage }) => {
+      if (stage === 'build') clock.advance(30_000);
+      if (stage === 'repair') { clock.advance(10_000); return never(); }
+      return false;
+    },
+    verifyApplication: async () => {
+      verifications++; clock.advance(20_000);
+      return { time: new Date().toISOString(), command: 'fixture', exitCode: 1, passed: 0, failed: 1, skipped: 0, total: 1,
+        output: 'Fixture verification failed.', durationMs: 20_000, sourceHash: 'fixture' };
+    }
+  });
+  await h.run(); await assertBudgetExhausted(h);
+  assert.equal(h.sessions.at(-1).stage, 'repair');
+  assert.equal(h.sessions.at(-1).aborts, 1); assert.equal(verifications, 1);
+  assert.equal(h.project.runSummary.usage.phases.find(phase => phase.phase === 'repair').prompts, 1);
+  assert.equal(h.project.report.failed, 1);
+  assert.equal(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')).failed, 1);
+});
+
+test('human review freezes the build summary and a fresh run preserves the prior run summary', { timeout: 15000 }, async t => {
+  const clock = budgetClock(); let exhaustNext = false;
+  const h = await harness(t, { budgetClock: clock, settings: { buildTimeLimitMinutes: 1 }, scenario: ({ stage }) => {
+    if (stage === 'intake') { clock.advance(exhaustNext ? 60_000 : 1000); if (exhaustNext) return never(); }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  const oldWorkspace = h.project.workspace, oldSummary = structuredClone(h.project.runSummary);
+  assert.equal(oldSummary.terminalReason, 'completed'); assert.equal(oldSummary.elapsedMs, 1000);
+  clock.advance(3_600_000);
+  assert.deepEqual(h.project.runSummary, oldSummary);
+  exhaustNext = true; await h.run(); await assertBudgetExhausted(h);
+  assert.notEqual(h.project.workspace, oldWorkspace);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(oldWorkspace, 'run-summary.json'), 'utf8')), oldSummary);
 });

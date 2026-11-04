@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
+import { DEFAULT_BUILD_TIME_LIMIT_MINUTES } from '../shared/run-budget';
 import './model-settings.css';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
@@ -9,6 +10,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
   const [provider, setProvider] = useState(data.state.settings.provider);
   const [model, setModel] = useState(data.state.settings.model);
   const [key, setKey] = useState(''), [remember, setRemember] = useState(data.state.settings.rememberKey);
+  const [buildTimeLimit, setBuildTimeLimit] = useState(String(data.state.settings.buildTimeLimitMinutes ?? DEFAULT_BUILD_TIME_LIMIT_MINUTES));
   const allModels = data.models.filter(m => (m.backend ?? 'pi') === backend);
   const selectedProvider = backend === 'codex' ? 'chatgpt' : provider;
   const models = allModels.filter(m => m.provider === selectedProvider);
@@ -32,7 +34,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
   }, [api, connecting]);
   return <form className="model-settings-form" onSubmit={e => {
     e.preventDefault(); void action(async () => {
-      updated(await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined)); setKey('');
+      updated(await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember, buildTimeLimitMinutes: Number(buildTimeLimit) }, backend === 'pi' ? key || undefined : undefined)); setKey('');
     }, 'Model settings saved.');
   }}>
     {!desktop && <div className="desktop-setup-notice"><h3>Builds run in the desktop app</h3><p>This browser preview lets you explore AppYard and save briefs. To run a build, open the AppYard desktop app, add your brief, then connect a model in Settings.</p><p>Briefs saved here stay in this browser; they do not sync to the desktop app.</p></div>}
@@ -68,6 +70,13 @@ export function ModelSettings({ data, api, busy, action, updated, desktop }: { d
     </>}
     <label>Model<select aria-label="Model" value={backend === 'codex' && !connected ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !connected)} onChange={e => setModel(e.target.value)}><option value="" disabled>{backend === 'codex' && !connected ? 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
     {backend === 'codex' && connected && <p className="connection-note">Model access depends on your plan and workspace.</p>}
+    <div className="build-budget-settings">
+      <label htmlFor="build-time-limit">Whole-build time limit (minutes)
+        <input id="build-time-limit" type="number" min="1" max="180" step="1" required value={buildTimeLimit} disabled={disabled} onChange={e => setBuildTimeLimit(e.target.value)} aria-describedby="build-time-help"/>
+      </label>
+      <p id="build-time-help" className="connection-note">1–180 minutes for setup, all generation stages, retries, verification and repair. Each new build gets this limit. Human review, export and app packaging are separate.</p>
+      <p className="connection-note">Time is enforced. Token usage is observational and may be incomplete; token and spend caps are unavailable for these engines.</p>
+    </div>
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
     <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !connected)} type="submit">Save model settings <ArrowRight size={16}/></button>
   </form>;

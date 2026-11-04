@@ -1,4 +1,5 @@
 import type { AgentSession, AgentSessionEvent } from '@earendil-works/pi-coding-agent';
+import { runAbortError } from './run-budget.js';
 
 export type StageSession = Pick<AgentSession, 'prompt' | 'subscribe' | 'abort' | 'dispose'>;
 export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns: number }
@@ -18,7 +19,7 @@ export async function runAgentStage(options: {
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
   }
-  if (options.signal.aborted) throw new Error(stoppedMessage);
+  if (options.signal.aborted) throw runAbortError(options.signal);
   const controller = new AbortController();
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
   let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
@@ -36,7 +37,7 @@ export async function runAgentStage(options: {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. Inspect the saved activity and start a new run.`), limits.idleMs);
   };
-  const abort = () => fail(stoppedMessage);
+  const abort = () => fail(runAbortError(options.signal).message);
   const check = () => { if (failure) throw failure; controller.signal.throwIfAborted(); };
   const release = (target: StageSession, cancel: boolean) => {
     // abort() waits for idle in Pi. Cleanup must not depend on that promise settling.
