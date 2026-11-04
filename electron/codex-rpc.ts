@@ -1,6 +1,8 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { createRequire } from 'node:module';
+import { promises as fs } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
 export interface RpcMessage { id?: number | string; method?: string; params?: any; result?: any; error?: { code: number; message: string } }
@@ -11,6 +13,32 @@ export function codexExecutable() {
   const require = createRequire(import.meta.url);
   const root = path.dirname(require.resolve(`@openai/codex-${platform}-${arch}/package.json`)).replace(/app\.asar([/\\])/, 'app.asar.unpacked$1');
   return path.join(root, 'vendor', triple, 'bin', platform === 'win32' ? 'codex.exe' : 'codex');
+}
+
+/** App-owned policy. Workspace roots resolve per thread, so concurrent builds stay separate. */
+export async function prepareCodexHome(home: string) {
+  home = path.resolve(home);
+  const temporary = path.join(home, 'tmp');
+  await fs.mkdir(temporary, { recursive: true, mode: 0o700 });
+  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(codexExecutable())])];
+  const config = [
+    'default_permissions = "fleet-build"',
+    'web_search = "disabled"', '',
+    '[permissions.fleet-build.filesystem]',
+    '":root" = "deny"',
+    '":minimal" = "read"',
+    ...toolchains.map(folder => `${JSON.stringify(folder)} = "read"`),
+    '":workspace_roots" = "write"',
+    `${JSON.stringify(temporary)} = "write"`, '',
+    '[permissions.fleet-build.network]',
+    'enabled = false', ''
+  ].join('\n');
+  // Atomic replacement prevents another phase from loading a partially written policy.
+  const staging = path.join(home, `config-${randomUUID()}.toml`);
+  try {
+    await fs.writeFile(staging, config, { mode: 0o600, flag: 'wx' });
+    await fs.rename(staging, path.join(home, 'config.toml'));
+  } finally { await fs.rm(staging, { force: true }); }
 }
 export class CodexRpc {
   private nextId = 0;
@@ -36,9 +64,9 @@ export class CodexRpc {
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
   static launch(home: string) {
-    const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home };
+    const env: NodeJS.ProcessEnv = { ...process.env, CODEX_HOME: home, TMPDIR: path.join(home, 'tmp') };
     delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
-    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'forced_login_method="chatgpt"', '-c', 'cli_auth_credentials_store="file"'], {
+    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'cli_auth_credentials_store="file"'], {
       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
     }));
   }

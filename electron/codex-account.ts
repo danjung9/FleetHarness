@@ -1,12 +1,16 @@
-import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { AgentModel, ChatGPTAccount } from '../shared/types.js';
-import { CodexRpc } from './codex-rpc.js';
+import { CodexRpc, prepareCodexHome } from './codex-rpc.js';
 
 /** Owns an isolated Codex login; OAuth credentials never cross renderer IPC. */
 export class CodexAccount {
   account: ChatGPTAccount = { status: 'disconnected' };
   models: AgentModel[] = [];
+  private accountType?: string;
+  get route() {
+    return this.accountType === 'apiKey' ? { provider: 'openai', label: 'Event API key' }
+      : { provider: 'chatgpt', label: 'ChatGPT subscription' };
+  }
   private rpc?: CodexRpc;
   private opening?: Promise<CodexRpc>;
   private loginId?: string;
@@ -19,7 +23,7 @@ export class CodexAccount {
     if (this.rpc) return this.rpc;
     if (this.opening) return this.opening;
     this.opening = (async () => {
-      await fs.mkdir(this.home, { recursive: true, mode: 0o700 });
+      await prepareCodexHome(this.home);
       const rpc = this.launch(this.home);
       rpc.subscribe(message => {
         if (message.method === 'account/login/completed' && message.params?.loginId === this.loginId) {
@@ -39,7 +43,7 @@ export class CodexAccount {
   }
   private clearLogin() { this.loginId = undefined; this.connecting = false; clearTimeout(this.loginTimer); }
   private setLimits(limits: any) {
-    if (this.account.status !== 'connected') return;
+    if (this.account.status !== 'connected' || this.accountType !== 'chatgpt') return;
     this.account.limits = ['primary', 'secondary'].flatMap((key, i) => {
       const value = limits?.[key];
       if (!value || typeof value.usedPercent !== 'number') return [];
@@ -52,15 +56,18 @@ export class CodexAccount {
       const rpc = await this.connection();
       if (this.connecting) return;
       const { account } = await rpc.request('account/read', { refreshToken: false });
-      this.account = account?.type === 'chatgpt' ? { status: 'connected', email: account.email, plan: account.planType } : { status: 'disconnected' };
+      this.accountType = account?.type;
+      this.account = account?.type === 'chatgpt' ? { status: 'connected', email: account.email, plan: account.planType }
+        : account?.type === 'apiKey' ? { status: 'connected', email: 'Event API key' } : { status: 'disconnected' };
       this.models = [];
       let cursor: string | null = null;
       do {
         const page = await rpc.request('model/list', { limit: 100, ...(cursor ? { cursor } : {}) });
+        // Keep the existing settings selector compatible; run provenance uses the observed route.
         this.models.push(...page.data.filter((m: any) => !m.hidden).map((m: any) => ({ id: m.model, name: m.displayName, provider: 'chatgpt', backend: 'codex' as const, configured: this.account.status === 'connected' })));
         cursor = page.nextCursor;
       } while (cursor);
-      if (this.account.status === 'connected') {
+      if (this.account.status === 'connected' && this.accountType === 'chatgpt') {
         try { const result = await rpc.request('account/rateLimits/read'); this.setLimits(result.rateLimits); }
         catch { /* Usage availability does not determine whether the account is signed in. */ }
       }

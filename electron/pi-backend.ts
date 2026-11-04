@@ -67,6 +67,7 @@ export class FleetBackend {
       await this.options.codex?.refresh();
       if (!this.options.codex?.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
     } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
+    const route = backend === 'codex' ? this.options.codex?.route : undefined;
     // Authentication can await network I/O; recheck capacity before reserving the run.
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
@@ -82,7 +83,7 @@ export class FleetBackend {
       p.report = undefined; p.error = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.feedback = '';
       p.qualityVersion = 1;
       p.backend = backend;
-      p.model = provider + '/' + modelId;
+      p.model = (route?.provider ?? provider) + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
       await fs.writeFile(path.join(p.workspace, 'requirements.md'), [
@@ -99,7 +100,7 @@ export class FleetBackend {
       run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       this.check(run);
-      this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
+      this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ' + (route?.label ?? 'ChatGPT subscription') : 'Pi SDK') + ' · ' + p.model);
       await this.changed(p);
       this.check(run);
       void this.execute(p, run, provider, modelId);
