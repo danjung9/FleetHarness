@@ -56,7 +56,7 @@ async function ps(environment: boolean) {
     // A BSD-style first word (ww, eww) puts macOS ps in its legacy parser, where -u is a
     // bare flag and everything after it is refused. -U selects by user in both parsers.
     execFile('/bin/ps', [...(environment ? ['eww'] : ['ww']), '-U', String(process.getuid!()), '-o', 'pid=,lstart=,stat=,command='],
-      { env: { ...process.env, LC_ALL: 'C' }, encoding: 'utf8', timeout: 1500, maxBuffer: 16 * 1024 * 1024 }, (error, stdout) => {
+      { env: { ...process.env, LC_ALL: 'C' }, encoding: 'utf8', timeout: 5000, maxBuffer: 16 * 1024 * 1024 }, (error, stdout) => {
         // execFile errors can contain process environments. Do not forward them.
         if (error) reject(new Error('Cannot inspect the current user\'s processes.'));
         else resolve(stdout);
@@ -66,11 +66,7 @@ async function ps(environment: boolean) {
 
 async function scan(marker: string): Promise<Identity[]> {
   if (process.platform === 'darwin') {
-    for (let attempt = 0; ; attempt++) {
-      try { return markedPsProcesses(await ps(false), await ps(true), marker, await ps(false)); }
-      catch (error) { if (!(error instanceof SnapshotChanged) || attempt === 2) throw error; }
-      await delay(20);
-    }
+    return markedPsProcesses(await ps(false), await ps(true), marker, await ps(false));
   }
   if (process.platform !== 'linux') throw new Error('Run process inspection is unavailable on this platform.');
   const result: Identity[] = [];
@@ -117,23 +113,26 @@ export class RunProcessSweep {
   }
   private async sweep() {
     if (!this.used) return;
+    let empty = 0;
     const inspect = async () => {
       try { return await (this.options.scan ?? scan)(this.marker); }
-      catch { throw new Error('Process cleanup could not be confirmed: cannot inspect this run\'s processes. Check the run and use the operator shutdown procedure.'); }
+      // A timeout or changing snapshot is inconclusive. Retry within the same
+      // deadline, and never count snapshots across an inspection failure.
+      catch { empty = 0; return undefined; }
     };
     const signal = this.options.signal ?? ((pid, signal) => { process.kill(pid, signal); });
-    let empty = 0;
-    const started = performance.now(), grace = this.options.graceMs ?? 400, deadline = grace + (this.options.killMs ?? 1600);
+    const started = performance.now(), grace = this.options.graceMs ?? 400, deadline = grace + (this.options.killMs ?? 5000);
     do {
       const remaining = await inspect();
-      if (!remaining.length) { if (++empty === 2) return; }
-      else {
+      if (remaining && !remaining.length) { if (++empty === 2) return; }
+      else if (remaining) {
         empty = 0;
         for (const target of remaining) {
           if (target.pid <= 1 || target.pid === process.pid) throw new Error('Process cleanup refused an invalid run process identity.');
           // Recheck both ownership and start identity immediately before each
           // signal. Never signal a process group or a saved, unverified PID.
           const fresh = await inspect();
+          if (!fresh) break;
           if (!fresh.some(p => p.pid === target.pid && p.started === target.started)) continue;
           try { signal(target.pid, performance.now() - started < grace ? 'SIGTERM' : 'SIGKILL'); }
           catch (error) { if (!vanished(error)) { /* Verify again and report survivors below. */ } }
@@ -142,6 +141,7 @@ export class RunProcessSweep {
       await delay(50);
     } while (performance.now() - started <= deadline);
     const remaining = await inspect();
+    if (!remaining) throw new Error('Process cleanup could not be confirmed: cannot inspect this run\'s processes. Check the run and use the operator shutdown procedure.');
     // Two consecutive empty snapshots are verified quiescence, even when slow inspection used
     // the whole deadline. A single empty snapshot at the deadline is not.
     if (!remaining.length && empty) return;

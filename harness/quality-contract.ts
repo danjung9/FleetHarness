@@ -36,7 +36,7 @@ function version(value: unknown, name: string) {
 }
 
 function step(value: unknown, name: string): BrowserStep {
-  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName']);
+  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName', 'fresh']);
   const action = text(entry.action, `${name}.action`, 32);
   const selector = () => text(entry.selector, `${name}.selector`, limits.selector).trim();
   const fields = (...keys: string[]) => object(value, name, ['action', ...keys]);
@@ -60,10 +60,14 @@ function step(value: unknown, name: string): BrowserStep {
       fields('selector', 'text');
       return { action, selector: selector(), text: text(entry.text, `${name}.text`, limits.value) };
     case 'expectDownload': {
-      fields('selector', 'fileName', 'text');
+      fields('selector', 'fileName', 'text', 'fresh');
       const result: Extract<BrowserStep, { action: 'expectDownload' }> = { action, selector: selector() };
       if (Object.hasOwn(entry, 'fileName')) result.fileName = text(entry.fileName, `${name}.fileName`, 255);
       if (Object.hasOwn(entry, 'text')) result.text = text(entry.text, `${name}.text`, limits.value);
+      if (Object.hasOwn(entry, 'fresh')) {
+        if (typeof entry.fresh !== 'boolean') throw new Error(`${name}.fresh must be a boolean.`);
+        result.fresh = entry.fresh;
+      }
       return result;
     }
     default: throw new Error(`${name}.action is unsupported: ${action}. Use only the documented browser actions; JavaScript and navigation are not allowed.`);
@@ -246,7 +250,7 @@ Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"expectVisible","selector":"#validation-error"}
 - {"action":"expectDownload","selector":"#export","fileName":"records.csv","text":"Inspect pump"}
 
-expectText compares the exact visible innerText after whitespace normalization. expectValue compares the exact value. expectDownload clicks the selected control and checks the download; optional fileName must match the suggested filename exactly, and optional text is a literal substring of the UTF-8 file contents. No evaluate, JavaScript, navigation, URLs, arbitrary commands, timeouts or custom step fields are supported. Use local synthetic inputs. Values for fill and expectValue may be empty for validation/reset checks; all other strings must be nonempty. IDs start with a letter and contain letters, digits, underscores or hyphens (maximum 80 characters). Descriptions and expectedOutcome are at most 4,000 characters, titles 200, selectors 512, values/expected text 10,000, keys 80, filenames 255. At most 512 criteria are supported.
+expectText compares the exact visible innerText after whitespace normalization. expectValue compares the exact value. expectDownload captures the selected control once and reuses its file for further assertions on that selector until fill, click, select, press, check or reload. Set fresh: true to require another capture without an edit. Every assertion checks the captured bytes; optional fileName must match the suggested filename exactly, and optional text is a literal substring of the UTF-8 file contents. No evaluate, JavaScript, navigation, URLs, arbitrary commands, timeouts or custom step fields are supported. Use local synthetic inputs. Values for fill and expectValue may be empty for validation/reset checks; all other strings must be nonempty. IDs start with a letter and contain letters, digits, underscores or hyphens (maximum 80 characters). Descriptions and expectedOutcome are at most 4,000 characters, titles 200, selectors 512, values/expected text 10,000, keys 80, filenames 255. At most 512 criteria are supported.
 
 Example shape (replace UCcustom-1 and add every remaining packet criterion; do not copy sample outcomes unless they describe the actual requested workflow):
 {

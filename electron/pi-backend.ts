@@ -20,6 +20,7 @@ import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
+import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
 type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId> };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
@@ -234,6 +235,7 @@ export class FleetBackend {
     run.context = checkpoint.context; run.phases = packet.stages; run.globalTools = packet.globalTools; run.acceptance = packet.acceptance;
     const planned = p.stages.find(s => s.id === 'plan')?.status === 'complete';
     if (p.stages.find(s => s.id === 'build')?.status === 'complete') {
+      assertTestBaseline(checkpoint.buildTests, checkpoint.buildTestContents);
       if (!checkpoint.buildTests || !checkpoint.lastTests || !Array.isArray(checkpoint.testChanges)) throw new Error('The build-test baseline is missing. Start a new run; resume cannot replace the original evidence.');
       if (!Object.keys(checkpoint.buildTests).length) throw new Error('The build-test baseline is invalid. Start a new run.');
       for (const snapshot of [checkpoint.buildTests, checkpoint.lastTests]) {
@@ -397,7 +399,7 @@ export class FleetBackend {
           }
           if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
         };
-        await complete([run.context, 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), foregroundPolicy, fleetStagePrompt(stage), instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files);
+        await complete([run.context, 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), foregroundPolicy, fleetStagePrompt(stage), stage === 'verify' ? testBaselinePolicy : '', instruction, systemDesignPrompt(stage)].filter(Boolean).join('\n\n'), files);
         if (followUp) {
           this.log(p, stage, 'info', 'Application implementation is ready. Writing README.md with a user guide before verification.');
           await complete(followUp.instruction, [...files, ...followUp.files]);
@@ -456,12 +458,15 @@ export class FleetBackend {
       checkpoint.testChanges!.push(message);
       this.log(p, 'verify', 'info', message);
     }
-    checkpoint.lastTests = current;
+    const restored = await restoreTestBaseline(p.workspace!, checkpoint.buildTests, checkpoint.buildTestContents);
+    checkpoint.lastTests = { ...current, ...checkpoint.buildTests };
+    if (restored.length) this.log(p, 'verify', 'info', 'Restored original build tests: ' + restored.join(', ') + '. ' + testBaselinePolicy);
     await this.changed(p);
   }
   private async verify(p: Project, run: ActiveRun) {
     return this.retryStage(p, run, 'verify', async () => {
       const checkpoint = p.runCheckpoint!;
+      await this.recordTestChanges(p, 'host verification');
       checkpoint.writerState = 'active'; await this.changed(p);
       let confirmed = true;
       try { return await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, this.options.verificationLimits); }
@@ -470,6 +475,7 @@ export class FleetBackend {
     });
   }
   private appendTestChanges(p: Project) {
+    p.report!.testBaseline = { hashes: { ...p.runCheckpoint!.buildTests! }, changes: [...p.runCheckpoint!.testChanges ?? []], policy: testBaselinePolicy };
     if (p.runCheckpoint!.testChanges?.length) p.report!.output += '\n' + p.runCheckpoint!.testChanges.join('\n');
   }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
@@ -503,8 +509,9 @@ export class FleetBackend {
             instruction: 'Implementation is complete. Now write README.md as a practical user guide for the software you just built. Inspect the actual index.html, application source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and quick start (open index.html in a browser, with no install or server required); numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using synthetic sample input and the expected output; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Write or update README.md only in this step. Preserve requirements.md, .fleet, application source and tests.',
             files: ['README.md']
           });
-        const baseline = await this.testSnapshot(p);
-        p.runCheckpoint!.buildTests = baseline; p.runCheckpoint!.lastTests = { ...baseline }; p.runCheckpoint!.testChanges = [];
+        const baseline = await captureTestBaseline(p.workspace!);
+        p.runCheckpoint!.buildTests = baseline.hashes; p.runCheckpoint!.buildTestContents = baseline.contents;
+        p.runCheckpoint!.lastTests = { ...baseline.hashes }; p.runCheckpoint!.testChanges = [];
         await this.stage(p, 'build', 'complete');
       }
       const verificationCompleted = p.runCheckpoint!.verificationAgent === 'complete' || p.stages.find(s => s.id === 'verify')!.status === 'complete';

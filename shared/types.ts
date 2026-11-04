@@ -23,6 +23,7 @@ export interface TestReport {
   registeredTests?: { file: string; tests: number }[];
   portableCommand?: string;
   provenance?: { runner: string; args: string[]; cwd: string; environment: Record<string, string | undefined> };
+  testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
 export interface BriefContext { resources?: string; links?: string[] }
 export interface RunCheckpoint {
@@ -39,6 +40,7 @@ export interface RunCheckpoint {
   verificationAgent?: 'started' | 'complete';
   repairStopped?: boolean;
   buildTests?: Record<string, string>;
+  buildTestContents?: Record<string, string>;
   lastTests?: Record<string, string>;
   testChanges?: string[];
   backgroundJob?: boolean;

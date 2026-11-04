@@ -281,18 +281,41 @@ test('UX contracts require the complete task, screen, state and recovery specifi
   for (const spec of invalid) assert.throws(() => parseUxSpec(spec));
 });
 
+// Extend the archived fixture with explicit unverified narrative coverage. Original
+// expectations stay unchanged; these synthetic assertions do not claim real-format validation.
+function addId12Narrative(plan: QualityPlan, inventory: AcceptanceCriterion[]) {
+  const phrases: Record<string, string> = { 'DESC12-1': 'formatted telecommunication messages', 'DESC12-2': 'scheduled for events', 'SUMMARY12-1': 'consolidated daily timeline' };
+  const steps: QualityPlan['journeys'][number]['steps'] = [{ action: 'click', selector: '#synthetic-narrative' }];
+  const rows: QualityPlan['criteria'] = [];
+  for (const source of inventory.filter(item => !plan.criteria.some(row => row.criterionId === item.id))) {
+    const name = phrases[source.id];
+    assert.ok(name, 'Every added narrative span needs explicit fixture coverage: ' + source.id);
+    assert.ok(source.requirement.includes(name));
+    rows.push({ criterionId: source.id, disposition: 'deferred', expectedOutcome: source.requirement, journeyIds: [],
+      reason: 'real-data: Vetted reference records are unavailable; real-format validation remains unverified.',
+      syntheticCoverage: { assumptions: 'Fictional narrative schema fixture only, not real-format validation.', journeyIds: ['synthetic-narrative'], outputs: [{ sourceCriterionId: source.id, name }] } });
+    steps.push({ action: 'expectText', selector: '#' + source.id, text: 'Synthetic ' + name });
+  }
+  // Keep the archived first and last criterion positions used by the adversarial cases.
+  plan.criteria.splice(1, 0, ...rows);
+  plan.journeys.push({ id: 'synthetic-narrative', title: 'Synthetic narrative outputs', kind: 'primary', steps });
+}
+
 test('ID 12 generic-only baseline is rejected even with allowed real-data dependency reasons', async () => {
   // Archived rejected plan, with current allowed reason prefixes added only in this test.
   const plan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
   const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
   for (const criterion of plan.criteria) if (criterion.disposition === 'deferred') criterion.reason = 'real-data: Vetted reference records are unavailable; real-format validation is withheld.';
   assert.deepEqual(plan.criteria.filter((item: any) => item.disposition === 'implemented').map((item: any) => item.criterionId), ['MSG-01', 'MSG-02', 'MSG-03']);
+  assert.throws(() => parseQualityPlan(plan, inventory), /Missing acceptance criteria: DESC12-1, DESC12-2, SUMMARY12-1/);
+  addId12Narrative(plan, inventory);
   assert.throws(() => parseQualityPlan(plan, inventory), /UC12-1.*syntheticCoverage/);
 });
 
 async function syntheticId12Plan(): Promise<{ plan: QualityPlan; inventory: AcceptanceCriterion[] }> {
   const plan: QualityPlan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
   const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
+  addId12Narrative(plan, inventory);
   const outputs = [
     { sourceCriterionId: 'UC12-1', name: 'frequency plans' },
     { sourceCriterionId: 'UC12-1', name: 'crypto change-over windows' },
@@ -346,7 +369,7 @@ test('synthetic coverage cannot be replaced by generic journeys, labels, inputs 
     { change: plan => { plan.criteria[0].syntheticCoverage!.outputs = [plan.criteria[0].syntheticCoverage!.outputs.at(-1)!]; }, error: /own deferred source/ },
     { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds.push('synthetic-usmtf'); }, error: /duplicates/ },
     { change: plan => { plan.criteria[0].syntheticCoverage!.outputs.push(plan.criteria[0].syntheticCoverage!.outputs[0]); }, error: /duplicates/ },
-    { change: plan => { plan.criteria[1].syntheticCoverage = structuredClone(plan.criteria[0].syntheticCoverage); }, error: /allowed only for a deferred/ },
+    { change: plan => { plan.criteria.find(item => item.disposition === 'implemented')!.syntheticCoverage = structuredClone(plan.criteria[0].syntheticCoverage); }, error: /allowed only for a deferred/ },
     { change: plan => { plan.journeys.at(-1)!.steps = [
       { action: 'fill', selector: '#source-input', value: original.criteria[0].syntheticCoverage!.outputs.map(output => output.name).join(', ') },
       { action: 'click', selector: '#parse' }, { action: 'expectText', selector: '#result', text: 'Saved generic record' }

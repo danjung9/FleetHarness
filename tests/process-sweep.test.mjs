@@ -81,6 +81,76 @@ test('a single empty snapshot at the deadline is still refused', async () => {
   await assert.rejects(scope.stop(), /did not settle/);
 });
 
+for (const failure of ['ps timeout', 'changed snapshot']) test(`${failure} is retried before confirming two clean snapshots`, async () => {
+  let scans = 0;
+  const signals = [];
+  const scope = new RunProcessSweep({
+    scan: async marker => {
+      if (++scans === 1) {
+        if (failure === 'ps timeout') throw new Error('synthetic ps timeout');
+        const row = command => `987654 Wed Nov  4 16:08:30 2026 Ss ${command}\n`;
+        return markedPsProcesses(row('node worker'), row('node worker APPYARD_RUN_PROCESS=' + marker), marker, row('node changed'));
+      }
+      return [];
+    },
+    signal: (...args) => signals.push(args),
+  });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(scans, 3, 'Cleanup needs two clean snapshots after the failed inspection');
+  assert.deepEqual(signals, []);
+});
+
+test('an inspection failure resets the consecutive clean snapshot count', async () => {
+  let scans = 0;
+  const scope = new RunProcessSweep({ scan: async () => {
+    if (++scans === 2) throw new Error('synthetic inspection failure');
+    return [];
+  } });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(scans, 4, 'Clean snapshots separated by a failed inspection cannot confirm cleanup');
+});
+
+test('a transient identity recheck failure requires fresh ownership before any signal', async () => {
+  let scans = 0, alive = true;
+  const signals = [];
+  const scope = new RunProcessSweep({
+    scan: async () => {
+      if (++scans === 2) throw new Error('synthetic recheck timeout');
+      return alive ? [{ pid: 987654, started: 'fixture' }] : [];
+    },
+    signal: (pid, signal) => { signals.push({ pid, signal, scans }); alive = false; },
+  });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(signals.length, 1);
+  assert.equal(signals[0].pid, 987654);
+  assert.equal(signals[0].scans, 4, 'The failed ownership recheck must never authorize a signal');
+  assert.equal(scans, 6, 'Two clean snapshots are required after the signal');
+});
+
+test('inspection failure at the deadline fails closed even after an empty snapshot', async () => {
+  for (const firstEmpty of [false, true]) {
+    let scans = 0;
+    const scope = new RunProcessSweep({ graceMs: 1, killMs: 10, scan: async () => {
+      scans++;
+      if (scans === 1) {
+        await delay(30);
+        if (firstEmpty) return [];
+      }
+      throw new Error('synthetic private environment');
+    } });
+    scope.environment({});
+    await assert.rejects(scope.stop(), error => {
+      assert.match(error.message, /cleanup could not be confirmed: cannot inspect/);
+      assert.doesNotMatch(error.message, /synthetic private environment/);
+      return true;
+    });
+    assert.equal(scans, 2, 'The failed first inspection must be retried before giving up');
+  }
+});
+
 test('a detached job that ignores TERM is killed and repeated Stop shares cleanup', { timeout: 10000 }, async t => {
   let job;
   const signals = [];
@@ -165,7 +235,9 @@ test('macOS discovery matches only environment markers with the same start ident
 });
 
 for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 'cleanup-failure']) {
-  test(`${engine}: ${outcome} waits for cleanup and persists the truthful outcome`, { timeout: 10000 }, async t => {
+  // Failed cleanup also runs startup recovery, which can spend its full retry
+  // window after the session's five-second abort allowance.
+  test(`${engine}: ${outcome} waits for cleanup and persists the truthful outcome`, { timeout: outcome === 'cleanup-failure' ? 20000 : 10000 }, async t => {
     await fs.mkdir('.tmp', { recursive: true });
     const root = await fs.mkdtemp(path.resolve('.tmp/sweep-run-'));
     const store = new Store(root); await store.init();
