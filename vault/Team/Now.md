@@ -8,9 +8,11 @@ summary: "Current sprint status, blockers and next actions."
 
 # Now
 
-Last updated 2026-11-04, after independent GUI receipt review at 631849f.
+Last updated 2026-11-04, after Stop-child receipt review and ID 11 acceptance-checker handoff.
 
 ## Latest session
+
+- [E, preparation complete] [[Research/QA/Acceptance/README]] documents the independent browser checker and [[Research/QA/Acceptance/Officer-Walkthrough-11]] supplies the officer checklist. Syntax and pure evaluator checks pass. Main received both for execution against separately identified final copies; candidate outcomes remain unmeasured here.
 
 - [E, independent Stop receipt] Ordinary Pi shell parent/child shutdown passes at `631849f`: both PIDs absent, stable heartbeats and no further provider calls during observation before separate cleanup. See [[Research/QA/GUI-631849f/Stop-Child-Runbook]]. Other shutdown paths remain open.
 - [E, main-session report] Two real partial ID 11 candidates started at 15:11 EST: patched factory and locked CLI routes. Main relays prior owner approval and selected-canary containment results for its temporary profile. These changes are not yet shipped product behavior. Independent browser acceptance is being prepared; no candidate correctness or delivered-app acceptance is claimed.

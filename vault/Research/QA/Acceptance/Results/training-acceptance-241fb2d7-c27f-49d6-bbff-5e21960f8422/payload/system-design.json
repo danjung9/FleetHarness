@@ -1,0 +1,110 @@
+{
+  "title": "Synthetic two-day training draft",
+  "description": "Dependency-free offline demonstration for A–D with fixed assignments, bounded feasibility, current-input review, and portable JSON recovery. No operational integrations or model-driven constraint decisions.",
+  "components": [
+    {
+      "id": "editor",
+      "label": "Synthetic input editor",
+      "description": "Editable four requests, roster constraints, operating windows and fixed assignments; retains invalid values with field errors.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Validation and bounded feasibility core",
+      "description": "Pure functions validate input, search explicit starts, enforce constraints and compute whole-horizon loads; four distinct outcomes.",
+      "kind": "logic",
+      "files": [
+        "app-core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "board",
+      "label": "Two-day board and conflict explanations",
+      "description": "All requests remain visible; displays complete feasible draft or unresolved rows, personnel loads, diagnostic reasons and synthetic limitations.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Current-draft state and review",
+      "description": "Input/result revisions clear review; person-selected allowed-start edits are independently validated. Human review remains separate from source approval.",
+      "kind": "logic",
+      "files": [
+        "app-core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "portable",
+      "label": "Portable synthetic snapshot",
+      "description": "Versioned JSON preserves exact inputs and draft; validated import, explicit re-review after import, no reconnect synchronization.",
+      "kind": "data",
+      "files": [
+        "app-core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "fileio",
+      "label": "Local browser file transfer",
+      "description": "Browser download and file picker only; local JSON transfer, no backend, calendar connector, identity provider or simulated operational connection.",
+      "kind": "integration",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "editor",
+      "to": "review",
+      "label": "Every edit invalidates reviewed revision"
+    },
+    {
+      "from": "review",
+      "to": "core",
+      "label": "Current validated inputs / selected starts"
+    },
+    {
+      "from": "core",
+      "to": "board",
+      "label": "Status, complete draft, loads and diagnostics"
+    },
+    {
+      "from": "board",
+      "to": "review",
+      "label": "Allowed-start edits and human review action"
+    },
+    {
+      "from": "review",
+      "to": "portable",
+      "label": "Exact current inputs and result snapshot"
+    },
+    {
+      "from": "portable",
+      "to": "core",
+      "label": "Validate imported contract and recompute consistency"
+    },
+    {
+      "from": "portable",
+      "to": "fileio",
+      "label": "Download versioned JSON"
+    },
+    {
+      "from": "fileio",
+      "to": "portable",
+      "label": "Untrusted local JSON import"
+    },
+    {
+      "from": "portable",
+      "to": "review",
+      "label": "Atomic restore with review cleared"
+    }
+  ]
+}

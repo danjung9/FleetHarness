@@ -1,6 +1,6 @@
 ---
 type: test-plan
-status: reviewing
+status: ready
 owner: mukul
 updated: 2026-11-04
 summary: "Independent browser acceptance of the exact delivered synthetic ID 11 page, with incomplete discovery kept visible."
@@ -11,6 +11,22 @@ summary: "Independent browser acceptance of the exact delivered synthetic ID 11 
 [R] The acceptance contract is [[Research/QA/Officer/Acceptance-11]], using [[Research/QA/Officer/11-Training-Golden]]. The entry point is `accept-training.mjs`. Its target is a final folder containing `index.html` and local companion files. It must exercise the actual page in existing Chrome through Playwright. It may not import candidate functions, trust candidate tests, manufacture observed values from expected answers or use private application storage as an oracle.
 
 [R] Stop all candidate writers and identify each final copy before execution. Keep the factory-generated and direct-CLI candidates separate, with their actual build routes. Use a clean browser context with network disabled before opening the exact file URL. Existing Chrome and Playwright are required; no installer, live provider, login or credential is part of this checker. The main session owns execution in its independently permitted environment. This QA environment's existing browser/loopback restriction is not retried or bypassed.
+
+## Run and interpret
+
+[R] Replace the two placeholder paths with the actual final candidate folder and its existing stopped-writer receipt. Use the same frozen script on both candidates. The output folder receives a unique run directory. `--chrome` may name an existing Chrome binary if the default installed path differs.
+
+```sh
+node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.mjs \
+  /absolute/path/to/final-task-app \
+  ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results \
+  --deps ~/Documents/CDAO/fh-org/gui-631849f \
+  --writers-stopped-evidence /absolute/path/to/operator-receipt.md
+```
+
+[E, implementation] Exit codes are 0 for all checks passing, 1 for an observed failure, 2 for setup/harness/cleanup error and 3 for incomplete coverage. `result.json` retains every check, DOM observations, screenshots, downloaded files and manifests. Human guide/decision and unreadable or ambiguous summary/review-binding evidence deliberately remain NOT CHECKED, so a successful automated subset can still exit 3. Do not convert that result to overall acceptance. The optional stopped-writer file is recorded as an operator attestation and hash, not independently verified shutdown.
+
+[E, direct preparation verification] The final script passes Node syntax checking and its pure evaluator self-check. It validates seven feasible expected answers, rejects N1/N2/N3, numeric strings, duplicate IDs and malformed membership values, and accepts harmless extra diagnostics. Additional controls check room-only contention, cross-day minutes and chronological rest. No candidate was inspected or executed and no browser was launched during preparation.
 
 ## Required evidence
 

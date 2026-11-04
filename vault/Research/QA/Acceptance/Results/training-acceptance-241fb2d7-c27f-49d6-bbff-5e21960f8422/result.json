@@ -1,0 +1,3066 @@
+{
+  "version": 1,
+  "startedAt": "2026-11-04T20:29:19.279Z",
+  "candidate": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/TaskApp/Pipeline-run1",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results/training-acceptance-241fb2d7-c27f-49d6-bbff-5e21960f8422",
+  "checks": [
+    {
+      "id": "STOPPED-WRITERS-ATTESTATION",
+      "status": "PASS",
+      "detail": "Operator supplied this evidence reference; shutdown was not independently observed by this browser script",
+      "at": "2026-11-04T20:29:19.299Z",
+      "path": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Receipts/Pipeline-run1-writers-stopped.md",
+      "sha256": "62884199cb6da58cd75301b0c314acbded2af19b5cf8a1c78a04bb600d26e54b",
+      "size": 382
+    },
+    {
+      "id": "PAYLOAD-SCOPE",
+      "status": "PASS",
+      "detail": "All bounded regular candidate payload files copied",
+      "at": "2026-11-04T20:29:19.309Z",
+      "skipped": []
+    },
+    {
+      "id": "CAUSAL-INPUT-OUTPUT",
+      "status": "NOT CHECKED",
+      "detail": "No unique canonical JSON editor or actual export/import schema discovered",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G01",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G02",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G03",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G04",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G05",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G06",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G07",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G08",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G09",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G10",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G11",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G12a",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "G12b",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "V13",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "V14",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "V15",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "V16",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "REVIEW-EDIT",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "REVIEW-RECHECK",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "REVIEW-FRESH",
+      "status": "NOT CHECKED",
+      "detail": "Input/output boundary not established",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "READABLE-SUMMARY",
+      "status": "NOT CHECKED",
+      "detail": "No unambiguous readable-summary download discovered",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "SAVE-INPUT-ROUNDTRIP",
+      "status": "NOT CHECKED",
+      "detail": "Complete input acceptance is unestablished; editor echo alone is insufficient",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "OFFLINE-FRESH-IMPORT",
+      "status": "NOT CHECKED",
+      "detail": "No exact saved G02 draft available",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "IMPORTED-REVIEW-BINDING",
+      "status": "NOT CHECKED",
+      "detail": "No exact saved G02 draft available",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "EDITED-IMPORT-REVIEW",
+      "status": "NOT CHECKED",
+      "detail": "No exact saved G02 draft available",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "GUIDE-AND-HUMAN-DECISION",
+      "status": "NOT CHECKED",
+      "detail": "Officer must follow the delivered guide and decide on this exact artifact scope; automation does not grant approval",
+      "at": "2026-11-04T20:29:20.317Z"
+    },
+    {
+      "id": "PAYLOAD-BYTES",
+      "status": "PASS",
+      "detail": "Original before/after and staged payload byte manifests compared",
+      "at": "2026-11-04T20:29:20.323Z"
+    }
+  ],
+  "provenance": "Independent browser observations of a staged synthetic candidate; no live generation claim",
+  "variants": "Fixed before candidate inspection and not supplied by this QA assignment in the public build brief; no protected holdout claim",
+  "limits": {
+    "harnessWatchdogMs": 300000,
+    "browserActionMs": 5000,
+    "maxPayloadBytes": 50000000
+  },
+  "scopeExclusions": [
+    "Factory consent and Stop",
+    "Executable packaging",
+    "Operational policy",
+    "Human approval decision",
+    "Complete security isolation"
+  ],
+  "selfCheck": {
+    "status": "PASS",
+    "validCases": 7,
+    "rejected": [
+      "N1",
+      "N2",
+      "N3",
+      "numeric strings",
+      "duplicate returned IDs",
+      "malformed people/resources"
+    ],
+    "acceptedExtraDiagnostics": true,
+    "scope": "Pure evaluator controls only, no candidate acceptance"
+  },
+  "status": "INCOMPLETE",
+  "contracts": {
+    "acceptanceSha256": "679f2fe753496a2c21fd75dfe39d663285b93b4b3113b520744458ece1fa288d",
+    "goldenSha256": "6c0b515006eafbd93751f8e9e292f1668a757fccac3694e1e90e011a86f63c54",
+    "scriptSha256": "57207a0b7967c0f2c3c5ccaceab7d2d5343282340e2a9d2d9ca2465e223b42dd"
+  },
+  "cases": [
+    {
+      "id": "G01",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G02",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              30
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90,
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G03",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 and Room-1 overlap"
+    },
+    {
+      "id": "G04",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 has zero rest rather than 30"
+    },
+    {
+      "id": "G05",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "G06",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 requires 120 minutes, exceeding 119"
+    },
+    {
+      "id": "G07",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P01 lacks Q-A"
+    },
+    {
+      "id": "G08",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "reason": "Duplicate request ID C"
+    },
+    {
+      "id": "G09",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              "0900"
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "invalid_input",
+        "assignments": []
+      },
+      "reason": "A quoted start is not an integer minute"
+    },
+    {
+      "id": "G10",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 1
+      },
+      "expected": {
+        "status": "budget_exhausted",
+        "assignments": []
+      },
+      "reason": "Interrupted search is not proof of infeasibility"
+    },
+    {
+      "id": "G11",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "D lies outside P02 availability"
+    },
+    {
+      "id": "G12a",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1499
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "D ends at 1500 beyond operating end 1499"
+    },
+    {
+      "id": "G12b",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1500
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V13",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 45,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              60,
+              75
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 45,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 75,
+            "end": 135,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V14",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0,
+              60,
+              150
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 90,
+            "end": 150,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 150,
+            "end": 210,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    },
+    {
+      "id": "V15",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 119,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              0,
+              90
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "infeasible",
+        "assignments": []
+      },
+      "reason": "P02 requires 120 minutes across both days"
+    },
+    {
+      "id": "V16",
+      "input": {
+        "windows": [
+          {
+            "start": 0,
+            "end": 240
+          },
+          {
+            "start": 1440,
+            "end": 1680
+          }
+        ],
+        "people": [
+          {
+            "id": "P01",
+            "qualifications": [
+              "Q-A"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 30
+          },
+          {
+            "id": "P02",
+            "qualifications": [
+              "Q-B"
+            ],
+            "windows": [
+              {
+                "start": 0,
+                "end": 240
+              },
+              {
+                "start": 1440,
+                "end": 1680
+              }
+            ],
+            "maxMinutes": 120,
+            "restMinutes": 0
+          }
+        ],
+        "requests": [
+          {
+            "id": "A",
+            "duration": 60,
+            "starts": [
+              120
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "B",
+            "duration": 60,
+            "starts": [
+              30,
+              60
+            ],
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ],
+            "qualifications": [
+              "Q-A"
+            ]
+          },
+          {
+            "id": "C",
+            "duration": 60,
+            "starts": [
+              0
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          },
+          {
+            "id": "D",
+            "duration": 60,
+            "starts": [
+              1440
+            ],
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ],
+            "qualifications": [
+              "Q-B"
+            ]
+          }
+        ],
+        "maxNodes": 50000
+      },
+      "expected": {
+        "status": "feasible",
+        "assignments": [
+          {
+            "id": "A",
+            "start": 120,
+            "end": 180,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "B",
+            "start": 30,
+            "end": 90,
+            "people": [
+              "P01"
+            ],
+            "resources": [
+              "Room-1"
+            ]
+          },
+          {
+            "id": "C",
+            "start": 0,
+            "end": 60,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          },
+          {
+            "id": "D",
+            "start": 1440,
+            "end": 1500,
+            "people": [
+              "P02"
+            ],
+            "resources": [
+              "Room-2"
+            ]
+          }
+        ]
+      },
+      "reason": ""
+    }
+  ],
+  "payloadBefore": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "runtime": {
+    "node": "v26.0.0",
+    "platform": "darwin",
+    "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "playwrightVersion": "1.64.1",
+    "chromeVersion": "156.0.8078.80"
+  },
+  "adapter": null,
+  "payloadAfter": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "stagedAfter": {
+    "files": [
+      {
+        "path": "README.md",
+        "size": 15789,
+        "sha256": "3846c1ae0b686de27dd84bbcbbd7167cf459ae27936dd4e22a9af214043c72f7"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "size": 813,
+        "sha256": "82c41d40ad6a901b3ae5ffd02505c51d5480f4d0684736ab87ec09e36a2d7153"
+      },
+      {
+        "path": "app-core.js",
+        "size": 12514,
+        "sha256": "32cc81fd3922395b7d3eaa634ce7426fc9d77eae288728d6e7787467d1fc8707"
+      },
+      {
+        "path": "controller.test.cjs",
+        "size": 4734,
+        "sha256": "b11d9d0ddd8adcc115bba02cef2fab1177ab8525be6af084dbdb145193cca581"
+      },
+      {
+        "path": "core.test.cjs",
+        "size": 6095,
+        "sha256": "f067002f0e5f998ddbfd005487f7ea0e50e04ed60e693ce570c31ca37c4667d2"
+      },
+      {
+        "path": "evidence/verify-run1.tap",
+        "size": 3219,
+        "sha256": "143457c761fd05b194425afcb0778d148920e5db2f4fda4e5a4d771a27b66063"
+      },
+      {
+        "path": "evidence/verify-run2.tap",
+        "size": 2074,
+        "sha256": "7e5da42b29e2affff997b3401df8d2385da07b51ef65441e9a7e3ae891d87a89"
+      },
+      {
+        "path": "index.html",
+        "size": 29657,
+        "sha256": "776b4a72369b1d7d6978b1ca032fff32ce057e83c13874aedf2d00f621e70175"
+      },
+      {
+        "path": "packaging.test.cjs",
+        "size": 1882,
+        "sha256": "edbfe090e79223589aaed6d31375b4b30b46176d139ac8031728d3caee212071"
+      },
+      {
+        "path": "path-to-fleet.md",
+        "size": 4586,
+        "sha256": "2503820188245c783ece5f742c039cdc45ffff2d228b4b7df723fb4e81bc0c20"
+      },
+      {
+        "path": "plan.md",
+        "size": 13779,
+        "sha256": "f66e2c7a41df76a30cbaae75bffeb3a6118375f6c94fda387d4c2cb79ff8e9df"
+      },
+      {
+        "path": "requirements.md",
+        "size": 3773,
+        "sha256": "513f2b34bbee011a1d05c51ca4c934b543e394ca4a9d8c7ffb2afd376f2df8eb"
+      },
+      {
+        "path": "research.md",
+        "size": 14434,
+        "sha256": "d7db5894e594cf4a3141069b9f6bdea5c4a24cc6746366e886a617e550e83467"
+      },
+      {
+        "path": "scope.md",
+        "size": 12531,
+        "sha256": "fbbfcb27aea098748e6fc8ad5de9d7f6843500d4fc1672e5069ce46132e01394"
+      },
+      {
+        "path": "screens/01-settings.png",
+        "size": 110711,
+        "sha256": "ae199acd219e7736eda0c4a0a3c04aacb13736d6f31805e8791eb03e47529694"
+      },
+      {
+        "path": "screens/02-brief.png",
+        "size": 206236,
+        "sha256": "4265189c1eaa09c025552882e075d789452401bf190fef78a8ecc08499513e10"
+      },
+      {
+        "path": "screens/03-consent.png",
+        "size": 160903,
+        "sha256": "4125b25b41739be4516e7b0089fd311eafaab4292eee257c94e4880b834cc8a1"
+      },
+      {
+        "path": "screens/app.png",
+        "size": 319976,
+        "sha256": "04322b550412049fee3a74e270c51173f3776cbfd4f188f61935cb6fe459ac9f"
+      },
+      {
+        "path": "screens/final.png",
+        "size": 117799,
+        "sha256": "223e671ee3021d667dd60f9a27392949196d326dab5daaec0de5c9a0feed8be1"
+      },
+      {
+        "path": "state.test.cjs",
+        "size": 3871,
+        "sha256": "135f144b830648163298af52b7043dcedf0b303339c8b8f6e68dc18449687682"
+      },
+      {
+        "path": "system-design.json",
+        "size": 3347,
+        "sha256": "1dc858c4bfe72e6ae8988c83e2f3d0a33a11d012c63313dc4c32a381b1ec840d"
+      },
+      {
+        "path": "test-matrix.md",
+        "size": 21014,
+        "sha256": "427428f86001c5235a9a34e44678226f821a844ca6978cc54010e5a7a24bf73d"
+      },
+      {
+        "path": "test-report.json",
+        "size": 5361,
+        "sha256": "60d514d296f108e0fa59ddfb66086b7b268af6495c6f11517f98aac1d8db53bd"
+      },
+      {
+        "path": "verification.md",
+        "size": 12832,
+        "sha256": "23db901b287caeafbf8319a264110ddfcd72e7e30e0bec8c30f50403a0cf226c"
+      }
+    ],
+    "skipped": [],
+    "manifestSha256": "369e45eb12a4255f0eeec86c130990a38b73f0e271f474defba262c062007920"
+  },
+  "browserCleanup": "PASS",
+  "finishedAt": "2026-11-04T20:29:20.395Z"
+}

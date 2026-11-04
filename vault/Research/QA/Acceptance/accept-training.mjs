@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Independent synthetic training acceptance. No candidate module is imported into Node.
-// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE]
+// Usage: node accept-training.mjs CANDIDATE OUTPUT --deps EXISTING_PROJECT [--chrome EXECUTABLE] [--writers-stopped-evidence FILE]
 // Pure evaluator check: node accept-training.mjs --self-check
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -384,7 +384,7 @@ async function main() {
   const receipt = {
     version: 1, startedAt: new Date().toISOString(), candidate, output, checks: [],
     provenance: 'Independent browser observations of a staged synthetic candidate; no live generation claim',
-    variants: 'Independent undisclosed-before-build inputs, not security-isolated holdouts',
+    variants: 'Fixed before candidate inspection and not supplied by this QA assignment in the public build brief; no protected holdout claim',
     limits: { harnessWatchdogMs: 300000, browserActionMs: 5000, maxPayloadBytes: 50000000 },
     scopeExclusions: ['Factory consent and Stop', 'Executable packaging', 'Operational policy', 'Human approval decision', 'Complete security isolation'],
     selfCheck: selfCheck(), status: 'ERROR'
@@ -440,17 +440,27 @@ async function main() {
       return { ok: equal(echoed, input), mismatch: inputShape(echoed) && !equal(echoed, input), kind: 'Editor value roundtrip only', reason: 'Editor readback does not by itself establish full semantic ingestion' };
     }
     const document = replaceInput(adapter.template, adapter.inputPath, input);
+    const priorObservation = await observe(page);
     await page.locator('input[type=file]').nth(adapter.importIndex).setInputFiles({ name: label + '.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(document)) });
     await sleep(250);
     const immediate = await capture(label + '-immediate-import');
     const saved = await download(SAVE, label + '-roundtrip');
     const inputs = saved?.json ? findInputs(saved.json) : [];
     const ok = inputs.length === 1 && equal(inputFields(inputs[0].value), input);
-    return { ok, mismatch: inputs.length === 1 && !ok, immediate, kind: 'Actual import then export roundtrip', evidence: saved?.filename };
+    return { ok, mismatch: inputs.length === 1 && !ok, immediate, priorObservation, kind: 'Actual import then export roundtrip', evidence: saved?.filename };
   }
   async function compute(c, label, alreadyEntered) {
     const entered = alreadyEntered || await applyInput(c.input, label);
     const before = await capture(label + '-entered');
+    if (!entered.ok && ['G08', 'G09'].includes(c.id)) {
+      const rejectionEvidence = entered.immediate || before;
+      const rejection = renderedResult(rejectionEvidence.observation);
+      const changed = entered.priorObservation && !equal(renderedResult(entered.priorObservation), rejection);
+      if (changed && rejection?.status === 'invalid_input' && Array.isArray(rejection.assignments) && rejection.assignments.length === 0) {
+        return { entered, ...rejectionEvidence, judged: { ...judge(c, rejection), detail: 'Immediate explicit invalid-input rejection; prior valid input may legitimately remain' } };
+      }
+      return { entered, ...rejectionEvidence, judged: { status: 'NOT CHECKED', detail: 'Invalid import did not roundtrip; rejection versus coercion cannot be disambiguated', observed: rejection } };
+    }
     if (!entered.ok) return { entered, ...before, judged: { status: entered.mismatch ? 'FAIL' : 'NOT CHECKED', detail: entered.mismatch ? 'Known canonical input roundtrip differs from submitted values' : 'Input roundtrip could not be established' } };
     const button = chooseButton(before.observation, CHECK);
     if (!button) return { entered, ...before, judged: { status: 'NOT CHECKED', detail: 'No unique actual check/solve control' } };
