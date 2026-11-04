@@ -1,0 +1,104 @@
+{
+  "title": "CASREP Command — synthetic local review workflow",
+  "description": "Dependency-free local CASREP drafting, sequential simulated command review, conflict reconciliation and immutable simulated release. No official transmission or authenticated identities.",
+  "components": [
+    {
+      "id": "draft",
+      "label": "CASREP drafting and message preview",
+      "description": "Structured fictional report types, field validation, saved/unsaved state and synthetic-format preview.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "route",
+      "label": "Command review and authority guards",
+      "description": "Pure core shared with Node via extraction: six-role transitions, revision-bound approvals, return loop and explicit simulated CO release.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "lineage",
+      "label": "Revision and conflict review",
+      "description": "Immutable revisions, competing amendment simulator, visible competing content and explicit resolution; approval invalidation.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local record and audit repository",
+      "description": "Versioned localStorage envelope, persisted drafts and atomic state writes, immutable release snapshots and audit events. Local-only, unencrypted.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Routing board and history",
+      "description": "Current holder, simulated role selector, comments, decisions, recoverable branches and monitoring.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "outputs",
+      "label": "Synthetic release package and guidance",
+      "description": "Named message/history downloads, embedded walkthrough and printable brief; explicit external integration limitations.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "walkthrough.md",
+        "fielding-brief.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "draft",
+      "to": "route",
+      "label": "Validated committed revision"
+    },
+    {
+      "from": "route",
+      "to": "store",
+      "label": "Persist decision and current holder before success"
+    },
+    {
+      "from": "draft",
+      "to": "lineage",
+      "label": "New immutable content revision"
+    },
+    {
+      "from": "lineage",
+      "to": "route",
+      "label": "Conflict blocks release; resolution resets approvals"
+    },
+    {
+      "from": "lineage",
+      "to": "store",
+      "label": "Retain all parents and branches"
+    },
+    {
+      "from": "store",
+      "to": "review",
+      "label": "Reload saved state, history and audit"
+    },
+    {
+      "from": "review",
+      "to": "route",
+      "label": "Explicit simulated actor decision"
+    },
+    {
+      "from": "store",
+      "to": "outputs",
+      "label": "Same frozen released revision and audit package"
+    }
+  ]
+}

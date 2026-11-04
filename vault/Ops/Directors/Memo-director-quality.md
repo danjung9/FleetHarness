@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep existing judges, audit one new artifact and require revision-bound runtime proof."
+summary: "Retire duplicate audits, examine one recovered experiment and retain independent task judgment."
 ---
 
 # Quality decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern QA. [E, closing Scoreboard] Nine finished, eight automatic passes, zero satisfactory. IDs 12, 11, 8 and 20 have negative judgments. ID 8 is refreshed. [R] Route failures once; earlier counts are historical.
+[P, Flow-Goals] Ten satisfactory catalog builds govern QA. [E, scoreboards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 finished three of five, all automatic passes; IDs 12 and 11 are NOT. Input-format substitution and preset-only scheduling survive the structural deferral correction.
 
-[R] Accept qa-runner's completed d0f4c69 crosswalk and preserve missing receipts. Officer judgments are already running/queued; coalesce duplicates instead of adding work. Assign runner one bounded technical audit of ID 32's test meaning, repair history and artifact identity. This extends the main QA lead's three-artifact source audit without duplicating the officer verdict.
+[R] Return those failures through the existing primary-task owner, dev-5, and architect diagnosis. Require independently chosen primary-outcome cases, including narrative obligations. Do not add a competing builder assignment.
 
-[E, QA audit at 16:30] ID 10/32 raw captures have verified full manifests. [R] Earlier copies need their own binding; normalized prose cannot inherit raw-byte acceptance. Main retains benchmark cancellation, detached Stop, native containment and final-copy execution.
+[E, feed-118] The ID 32 runner audit was held by the queue. [E, QA-Lead-Notes] Main's audit now covers all ten baseline artifacts. [R] Retire that stale assignment. Give qa-runner one bounded R101 ID 36 recovery/export evidence audit; qa-officer keeps its existing judgment queue. No second verdict or benchmark.
 
-[R] Keep recovery changes returned for late writes and Resume budget bypass; preserve the return of unsandboxed test counting. Engineering owns serial integration. ID 36 repair and primary-task deferral already have owners.
+[E, reviews] Recovery's 49 checks pass; mandatory verifier integration remains pending. Cleanup landed at c6ce52d, without native detached-Stop proof. Its Auto receipt has 125 unit/51 harness passes and two smoke failures. [R] Main retains runtime proof; Engineering retains serial integration and smoke repairs. Preserve round-one identity limits without another historical cleanup campaign.
 
-[E, Auto/1d9eeee] 125 unit and 51 harness passes coexist with Electron/Norfolk smoke failures. [R] Require integrated reruns through main. Preserve Dan's Brief/Build/Review/Deliver frontend and Windows 4c49e85 assertions. Hosted smoke 5ea5ec6 remains unrun. No duplicate edits or release work. Human acceptance and Thursday noon freeze remain.
+[R] Protect Dan's 1d9eeee frontend and teammate Windows/hosted changes. Hosted requested-demo approval cannot establish catalog completion or human acceptance. Keep Thursday noon freeze, final-byte review and submission decisions with their existing owners.
