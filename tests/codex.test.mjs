@@ -1,4 +1,4 @@
-import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -9,7 +9,7 @@ import { CodexRpc } from '../dist-electron/electron/codex-rpc.js';
 import { CodexAccount } from '../dist-electron/electron/codex-account.js';
 import { createCodexSession } from '../dist-electron/electron/codex-session.js';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
-import { Store } from '../dist-electron/electron/storage.js';
+import { Store, newProject } from '../dist-electron/electron/storage.js';
 
 class FakeRpc {
   listeners = new Set(); closers = new Set(); calls = []; sent = []; disposed = false; signedIn = false;
@@ -125,6 +125,7 @@ test('RPC handles correlation, timeouts and process death without hanging', asyn
 
 test('the Codex engine runs every factory phase, domain tools and independent verification without a Pi session', { timeout: 15000 }, async t => {
   const root = await temp(t), store = new Store(root); await store.init();
+  store.state.projects[0] = newProject(qualityFixtureProject);
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
   const project = store.state.projects[0], phases = [];
   const codex = { home: path.join(root, 'codex'), models: [{ id: 'fixture-codex', configured: true }], async refresh() {} };

@@ -6,7 +6,8 @@ import path from 'node:path';
 import os from 'node:os';
 import { ModelRuntime } from '@earendil-works/pi-coding-agent';
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
-import { Store, sourceHash } from '../dist-electron/electron/storage.js';
+import { Store, sourceHash, newProject } from '../dist-electron/electron/storage.js';
+import { qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -25,6 +26,7 @@ async function provider(t, respond) {
 async function backend(t, baseUrl, limits = { idleMs: 10000, timeoutMs: 20000 }) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-sdk-'));
   const store = new Store(root); await store.init();
+  store.state.projects[0] = newProject(qualityFixtureProject);
   const runtime = await ModelRuntime.create({ authPath: path.join(root, 'auth.json'), modelsPath: null, modelsStorePath: path.join(root, 'models'), refreshOnCreate: false, allowModelNetwork: false });
   runtime.registerProvider('fleet-fixture', { baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
     models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] });
