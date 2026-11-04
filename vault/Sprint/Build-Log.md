@@ -87,3 +87,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:07 Astra fix-approval finished, exit 1. Report: `Research/Backend-Audit/fix-approval.md`
 - 18:07 Astra fix-pi finished, exit 1. Report: `Research/Backend-Audit/fix-pi.md`
 - 18:08 Astra fixer finished, exit 1. Report: `Research/Backend-Audit/fixer.md`
+- 18:11 Astra conn-api finished, exit 1. Report: `Research/Backend-Audit/conn-api.md`
