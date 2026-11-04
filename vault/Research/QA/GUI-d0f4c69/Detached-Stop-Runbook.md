@@ -20,6 +20,8 @@ summary: "The detached Pi child survives Stop at d0f4c69; measured failure prece
 
 [E] Executed script SHA-256 `d517a44dcb0c4dbb4696bdb2eebc83d3a7b65ac8b3eb285f2fad218722f125d5` matches the reviewed script. The 24 ms click duration and 11 ms post-click status observation are not descendant termination latency. [R] Keep this failure open until the same owned detached-worker case passes after a runtime fix. A stopped badge and the earlier ordinary-child pass do not establish complete shutdown.
 
+[E, receipt cross-check] Every shared field in observation.json matches result.json; all eight retained control-file hashes match. The child keeps its pre-Stop PID, start time, command digest and process group throughout observation. FAIL was recorded 46 ms before cleanup began, and the child's exit record says cleanup. Its watchdog still had 49.076 seconds remaining at observation end. This confirms the measured failure independently of later fixture removal.
+
 [E, preparation] [qa-stop-detached.mjs](qa-stop-detached.mjs) extends [[Research/QA/GUI-631849f/Stop-Child-Runbook]]. Only source review, syntax and pure validation ran here. No app, fixture provider, Pi command or worker was executed. Main owns review and any execution in its independently authorized GUI environment.
 
 [R] After review and a separate matching build receipt, main may use:

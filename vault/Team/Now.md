@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, detached Stop receipt confirmed] Receipt 5903f0de proves continuing detached Pi work after Stop at d0f4c69. Identity, heartbeat, observation/final consistency and eight control-file hashes recheck successfully. Cleanup succeeds only after the failure verdict. The defect remains open; see [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]].
+
 - [E, all ten round-one audits] [[Research/QA/Ten/QA-Lead-Notes]] covers every finished challenge with one concise finding and factory change. Nine pass the automatic bar; zero satisfactory verdicts are recorded. ID 16 omits narrative obligations from a true requirementsMet result; other gaps include first-finding-only proposals, unchecked stored fact/citation consistency and fragment-only exports. Detailed evidence and identities are retained separately. No new candidate runtime or edits occurred.
 
 - [E, three-candidate comparison] Run1 remains the provisional coverage leader with 17 independent outcome cases versus 13 each for CLI and Run2. Run2's observed G10 exhaustion wording is correct, and its adapter is ready with the same frozen oracle and clearer limitation/scope reporting. No human acceptance or new browser result is claimed. See [[Research/QA/Acceptance/Review-Candidates]] and [[Research/QA/Acceptance/Review-Run2]].

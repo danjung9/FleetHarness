@@ -84,6 +84,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Workspace execution and apply_patch, session versions | Development tools | Local reads, edits and checks | OpenAI | 2026-11-04 |
 | Round-1 synthetic artifacts | evidence dataset | QA coverage review | team benchmark. | 2026-11-04 |
 | Ten-challenge round-one evidence pack complete 2026-11-04 | Synthetic source and QA dataset | Read all ten final card builds, generated tests, contracts and host reports for semantic gaps beyond the automatic bar; no candidate execution | Team-generated synthetic apps and main-owned benchmark | 2026-11-04 |
+| Archived ID 12 R1 plan | Synthetic regression dataset | Reproduce generic-only bypass | Existing project QA evidence | 2026-11-04 |
+| bsdtar 3.5.3 | archive extraction | exact-commit review copy | libarchive/Apple. Other tool disclosures are recorded in the journal. | 2026-11-04 |
 
 ## Data and sources
 
