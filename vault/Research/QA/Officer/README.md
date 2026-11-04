@@ -3,7 +3,7 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Current four-request ID 11 acceptance at 631849f, with prior pilot keys preserved as backlog and a local QA handoff."
+summary: "Four-request acceptance keys, a ten-minute anonymous user trial and bounded burden claims."
 ---
 
 # Synthetic pilot answer keys
@@ -13,6 +13,8 @@ summary: "Current four-request ID 11 acceptance at 631849f, with prior pilot key
 [R] Use [[Research/QA/Officer/Acceptance-11]] with [[Research/QA/Officer/11-Training-Golden]] for the current four-request training draft. Every example value, person identifier, role, device, room, message and record is synthetic. [R] The main QA lead owns runtime execution and acceptance. [E] The paper arithmetic agrees with the plan; actual app outcomes remain NOT RUN.
 
 ## Current directive and acceptance
+
+[E, direct task, 2026-11-04] Added [[Research/QA/Officer/Trial-Protocol]] and [[Research/QA/Officer/Burden-Claim]] for Thursday morning. [R] Use the protocol with an accepted task artifact and one consenting participant; preserve an untimed baseline as ESTIMATE. The one-page landscape print companion is [Trial-Protocol.pdf](Trial-Protocol.pdf). [E] No trial or burden reduction was measured during preparation. Public Navy/GAO sources provide context only. Local disclosure and session handoffs: [[Research/QA/Officer/Sprint/Trial-Preparation]] and [[Research/QA/Officer/Sessions/2026-11-04-trial-preparation]].
 
 [E, current directive and relay reads, 2026-11-04] [[Ops/Directors/Directive-qa]] is now available and governs this work at `631849f638614735a89a555d487d6b3c777c52e3`. Both relay files now describe the retained single interface. [R] Use Home to Flow and the actual delivered task app. The historical three-interface mappings below do not authorize removed routes or additional pilot work. Preserve IDs 12 and 36 as backlog. The two-request S cases remain supplementary.
 

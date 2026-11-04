@@ -3,19 +3,21 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Meeting 7: one training draft, current evidence, two research handoffs and human decisions."
+summary: "Meeting 19: one artifact, reported active routes, scoped QA evidence and remaining human decisions."
 ---
 
 # Team status
 
-[E, relay] Dan pushed 631849f, consolidating Home-to-Flow and removing Studio/Workbench. No backend/harness change is reported in that delta. No saved-profile migration is established. [E, pinned Git] Main then merged mvp at 2e30b4a; its source tree exactly matches 631849f. Test results remain attributed to 631849f.
+[E, reports and QA] Done: 631849f baseline reports 128 passes; six GUI smoke scripts report success, without live inference or completed sign-in in that suite. U1 search, U2 hidden Home Stop and U3 label mismatch reproduce. STOP-CHILD-01 reports ordinary Pi parent/child termination before cleanup, with separate cleanup PASS. Broader shutdown remains unproved. Seven verification/export failures from the separate 403/410 suite remain OPEN. See [[Research/QA/GUI-631849f/Receipt-Review]] and [[Research/QA/Acceptance-Reconcile-631849f]].
 
-[E, mvp-gate.md and referenced log] Done: the current baseline reports 89 main plus 39 harness tests passing. [E, [[Research/QA/Runner/Harness-Coverage]]] A separate 50fcaea run reports 403/410 additional checks passing, seven failing verification/export expectations. These are different suites; there is no all-clear. [[Research/QA/Officer/Acceptance-11]] independently checks the four-request arithmetic; actual app outcomes remain NOT RUN. [[Research/Agentic/Run-Readiness-50fcaea]] is complete as a document; readiness remains HOLD. A real build, accepted app, shutdown, delivered recovery and user benefit are not established.
+[E, completed files] UX adaptation, the ID 11 evidence card, independent arithmetic and readiness correction are delivered. Actual Acceptance-11 outcomes remain NOT RUN. No accepted task app or final artifact digest is supplied.
 
-[R] In progress/queued: Quality's current-revision handoff and subsequent runtime acceptance; product's two bounded tasks, UX adaptation and one submission evidence card. The architect and qa-officer documents close their follow-ups; do not repeat them. Dev-1's source-export correction waits for overseer enablement. Other code seats and connector research have no new allocation. Snapshot-7 is an earlier activity report, not current completion proof.
+[E, newer [[Research/Plan/Review]]] In progress: checker work reportedly started 15:07 and a real build 15:11. Event-key and permission-profile probes succeeded in a modified copy, according to that review. Exact attempt identities, resulting files, completion and acceptance still need receipts. These reports supersede the earlier no-route-started assumption, without clearing stock 631849f readiness. Quality's existing gate update and two narrow evidence follow-ups remain allocated. Dev-1 export work stays conditional; code seats were disabled in snapshot-19.
 
-[R] Decided: retain partial ID 11, four synthetic requests and the checker fallback. Preserve 3 PM access, 4 PM build and 6 PM useful-artifact gates today. Show the accepted task before factory evidence. Defer new CSV/online connectors, additional pilots and feature research. Update engineering instructions to use Dan's unified interface and cancel the disproved newline repair. Keep manual final-copy acceptance, independent per-file digests and guide/recovery checks. See [[Ops/Directors/Directive-rande]].
+[E, relay] Dan's 631849f retains Home/Flow and removes Studio/Workbench. Main merged the same tree at 2e30b4a; d322b39 adds separate browser deployment. Hosted success is unverified. Preserve Dan's frontend and web-build separation.
 
-[R] Person-only decisions: Mukul/overseer clears execution prerequisites and code enablement; an authorized representative confirms current team/form access and partial-entry/category eligibility, especially missing recurrence, departmental negotiation and reconnect sync. No waiver or submission approval is recorded. No outward action occurred.
+[R] Decided: finish one four-request training artifact/checker; preserve ongoing owned routes, add none. Keep 4 PM factory cutoff, 6 PM accepted-task target and 7 PM final evidence packaging. Use manual final-copy acceptance. No new importer or redesign. Conditional ID 36 research is retained, with no second build assigned. Source labels, audit evidence and the one-page transition plan remain submission gaps.
 
-[E, snapshot-7, 14:34:39] Token counter reports 0 of 1,000,000,000 while seats were running. Actual token spend and cost, including this meeting, are unavailable; zero is not a measured spend. No new workers launched. Central logging/status transfer remains pending because writes are restricted here: [[Ops/Directors/Sprint/Product-Meeting-7]].
+[R] Person-only: overseer confirms route/operator/bounds and code enablement; reviewer accepts final bytes; authorized representative confirms team/form access, category, partial eligibility, missing sync and submission. Proposed Naval Agentic AI/BYOI labels are not approvals. Main publication also needs approval and monitoring/rollback ownership.
+
+[E, snapshot-19 at 15:04:42] Reported cumulative tokens: 2,172,431 of 1,000,000,000. Later usage, this meeting's spend and dollar cost are unknown. Central logging/status transfer remains pending: [[Ops/Directors/Sprint/Product-Meeting-19]].

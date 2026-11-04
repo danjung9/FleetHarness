@@ -46,6 +46,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | FleetHarness Stop-child fixture revision 1 | Synthetic test fixture | Prepared a bounded ordinary Pi shell and child shutdown check; syntax checked only in this QA assignment | Team-authored synthetic material | 2026-11-04 |
 | macOS ps, installed system version | System diagnostic | Included in the prepared Stop fixture to inspect only recorded synthetic worker PIDs; not executed during preparation | Apple macOS | 2026-11-04 |
 | Session clock, version unexposed | time service | dated review | session runtime. Shared-log handoff staged locally. | 2026-11-04 |
+| Independent ID 11 browser acceptance variants revision 1 | Synthetic evaluation data | Prepared fixed extra scheduling cases before candidate inspection; browser execution belongs to main session | Created for this sprint | 2026-11-04 |
 
 ## Data and sources
 

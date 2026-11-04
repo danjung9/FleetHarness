@@ -3,19 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-04
-summary: "Keep one accepted training draft, reconcile the interface change and close broad research."
+summary: "Finish one accepted task, credit newer route evidence and stop repeat preparation."
 ---
 
 # Product decisions
 
-[R] Retain four-request partial ID 11 and the 3 PM access, 4 PM real-build and 6 PM useful-artifact gates. The officer sees the accepted task first. No second pilot or live-generation pitch.
+[R] Retain one four-request synthetic training artifact. Keep the 4 PM factory cutoff and 6 PM accepted-task target; Review's 7 PM milestone is final-copy evidence packaging, not extra factory time. The officer opens the accepted task first.
 
-[E, relay/Git] Dan's 631849f replaces Studio/Workbench with Home-to-Flow. Main's 2e30b4a merge has the identical tree. [R] This supersedes engineering's Workbench preservation instruction. Development and Agentic directives now reflect the change. Protect Dan's frontend; do not restore deleted paths or assume profile migration.
+[E, Plan/Review] Checker work and a real build reportedly started at 15:07 and 15:11. Modified-copy event-key and permission-profile probes are also reported. [R] This supersedes the earlier no-route-started assumption. Preserve those owned efforts; start no duplicate lane. Request exact provenance and completion evidence, without treating modified-copy behavior as shipped 631849f behavior.
 
-[E, QA reports] The current 128-pass baseline coexists with seven additional verification/export failures at 50fcaea. [R] Reuse those reproducers. Cancel the disproved newline repair. Keep dev-1's export slice gated; independently accept final copied bytes with a separate per-file manifest. Packaging and green tests do not prove task correctness or recovery.
+[E, QA receipts] Six smoke scripts report success; ordinary Pi parent/child Stop and separate cleanup report PASS. No completed sign-in or general shutdown proof follows. Seven verification/export failures remain open. [R] Keep manual acceptance of final copied bytes with independent digests and human review.
 
-[R] Reject the connector proposal for a new CSV/file importer this sprint. Keep the delivered task's own saved-draft recovery. Defer timelines, settled-event preservation, branching and more novelty research. Equivalent-input and reviewer-understanding checks are optional after required acceptance.
+[R] Accept completed UX, arithmetic and research preparation. Leave re-ux and re-connectors idle. Assign only a short route-evidence correction and evidence-card refresh. Conditional ID 36 research remains available after an accepted first artifact and successful factory route, with no second build assigned.
 
-[E, readiness note] Architecture has finished its HOLD decision. [R] Close that follow-up. Product queues only UX adaptation and one submission evidence card. Quality retains its existing assignments and runtime ownership.
-
-[R] Mukul/overseer owns execution decisions; a person must settle team/form access and partial-entry eligibility, including missing sync. Usage remains unverified. See [[Ops/Directors/Status]] and [[Ops/Directors/Directive-rande]].
+[R] Protect Dan's Home/Flow. Main d322b39 adds browser deployment, not desktop execution proof. Defer importers and redesign. Proposed submission categories require a person's ruling; retain partial-scope omissions. Shared instructions and answers are in [[Ops/Directors/Directive-rande]].
