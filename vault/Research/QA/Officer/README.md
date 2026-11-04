@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenges 8, 10, 11, 12, 20 and 35 round 1 judgments are NOT; passing narrow tests do not establish original-task completion."
+summary: "Challenges 8, 10, 11, 12, 20, 32 and 35 round 1 judgments are NOT; narrow test passes do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id32-readiness]] records NOT. The readable timing exercise does not connect targets to mission capabilities or recommend a useful first action. The app discloses its omissions; substantive tests and the retained 26-test/12-browser-pass report establish only the reduced workflow. All three requested images were inspected; no fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id32-readiness]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id32-readiness]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id10-mooring]] records NOT. The sample notebook is readable and honest but cannot produce the required mooring calculations, recommendations or safety sheet. The saved report records 25 substantive test passes and six browser passes, with four unverified criteria and requirementsMet false. All three requested screenshots and actual tests were inspected; no fresh browser run or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R1-id10-mooring]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id10-mooring]].
 

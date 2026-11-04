@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, coordinator scope clarification] Round-one manifest differences are retained as the stated limit. Main reports exact frozen output outside the vault for first-open and driver STOP/3.5-hour cancellation from round two. QA now prioritizes findings that alter build outcomes; dev-3 owns the sandbox verifier's injectable launcher first and smoke task next. The separate measured Pi detached-child defect remains open.
+
 - [E, detached Stop receipt confirmed] Receipt 5903f0de proves continuing detached Pi work after Stop at d0f4c69. Identity, heartbeat, observation/final consistency and eight control-file hashes recheck successfully. Cleanup succeeds only after the failure verdict. The defect remains open; see [[Research/QA/GUI-d0f4c69/Detached-Stop-Runbook]].
 
 - [E, all ten round-one audits] [[Research/QA/Ten/QA-Lead-Notes]] covers every finished challenge with one concise finding and factory change. Nine pass the automatic bar; zero satisfactory verdicts are recorded. ID 16 omits narrative obligations from a true requirementsMet result; other gaps include first-finding-only proposals, unchecked stored fact/citation consistency and fragment-only exports. Detailed evidence and identities are retained separately. No new candidate runtime or edits occurred.
