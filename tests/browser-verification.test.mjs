@@ -70,6 +70,31 @@ test('actual browser journeys cover keyboard, selection, validation, reload pers
   }
 });
 
+test('native download assertions reuse each file until an edit requires a fresh export', { timeout: 30_000 }, async t => {
+  const html = application.replace('</main>', '<button id="second-export">Export second file</button><p id="captures">0</p></main>')
+    .replace('</script>', `let captures=0;
+      for(const id of ['export','second-export']) document.getElementById(id).onclick=()=>{
+        document.getElementById('captures').textContent=String(++captures);
+        const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([Array.from({length:9},(_,i)=>'part-'+i+': '+task.value).join('\\n')]));
+        a.download=id+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      };</script>`);
+  const root = await workspace(t, html);
+  const steps = [{ action: 'fill', selector: '#task', value: 'Inspect pump' }];
+  for (let i = 0; i < 9; i++) for (const selector of ['#export', '#second-export']) {
+    steps.push({ action: 'expectDownload', selector, fileName: selector.slice(1) + '.txt', text: 'part-' + i + ': Inspect pump' });
+  }
+  steps.push({ action: 'expectText', selector: '#captures', text: '2' },
+    { action: 'fill', selector: '#task', value: 'Inspect valve' },
+    { action: 'expectDownload', selector: '#export', fileName: 'export.txt', text: 'part-8: Inspect valve' },
+    { action: 'expectText', selector: '#captures', text: '3' },
+    { action: 'expectDownload', selector: '#export', fresh: true, text: 'part-0: Inspect valve' },
+    { action: 'expectText', selector: '#captures', text: '4' });
+  const result = await verify(root, { plan: plan(steps), stepTimeoutMs: 2500 });
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.journeys.length, 4);
+  assert.ok(result.journeys.every(journey => journey.status === 'passed'), JSON.stringify(result));
+});
+
 test('passing core tests cannot hide a wrong rendered result', { timeout: 20_000 }, async t => {
   const root = await workspace(t, application.replace("result.textContent='Saved: '+task.value+' ('+document.querySelector('#priority').value+')'", "result.textContent='Wrong result'"));
   await fs.writeFile(path.join(root, 'app.test.cjs'), 'require("node:test")("core passes",()=>require("node:assert/strict").equal(2+2,4));');

@@ -19,11 +19,11 @@ export function qualityFixture(criterionIds) {
   };
   // A parser lifecycle run cannot establish unrelated starter or catalog outcomes.
   if (!criterionIds.length || new Set(criterionIds).size !== criterionIds.length ||
-    criterionIds.some(id => !['R1', 'UCcustom-1', 'UCcustom-2', ...Object.keys(recipeOutcomes)].includes(id))) {
+    criterionIds.some(id => !['R1', 'UCcustom-1', 'UCcustom-2', 'SUMMARYcustom-1', 'SUMMARYcustom-2', ...Object.keys(recipeOutcomes)].includes(id))) {
     throw new Error('qualityFixture only supports the synthetic task parser inventory; use a separate fixture for catalog outcomes.');
   }
   const plan = { schemaVersion: 1,
-    criteria: criterionIds.map(criterionId => ['R1', 'UCcustom-1'].includes(criterionId)
+    criteria: criterionIds.map(criterionId => ['R1', 'UCcustom-1', 'SUMMARYcustom-1', 'SUMMARYcustom-2'].includes(criterionId)
       ? { criterionId, disposition: 'implemented', expectedOutcome: 'Parse a synthetic task and recover from empty input.', journeyIds: ['parse-task', 'recover-empty'] }
       : criterionId === 'UCcustom-2'
         ? { criterionId, disposition: 'deferred', expectedOutcome: 'Owner approval is required before publication; the synthetic review draft does not grant it.', journeyIds: [], reason: 'human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated.',

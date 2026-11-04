@@ -21,6 +21,7 @@ export interface TestReport {
   stageMetrics?: (StageMetrics & { stage: StageId })[];
   quality?: import('./quality.js').QualityReport;
   registeredTests?: { file: string; tests: number }[];
+  testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
 export interface BriefContext { resources?: string; links?: string[] }
 export interface RunCheckpoint {
@@ -37,6 +38,7 @@ export interface RunCheckpoint {
   verificationAgent?: 'started' | 'complete';
   repairStopped?: boolean;
   buildTests?: Record<string, string>;
+  buildTestContents?: Record<string, string>;
   lastTests?: Record<string, string>;
   testChanges?: string[];
   backgroundJob?: boolean;

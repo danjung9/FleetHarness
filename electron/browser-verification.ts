@@ -76,7 +76,9 @@ async function keepArtifact(file: string) {
   }
 }
 
-async function perform(page: Page, step: BrowserStep, timeout: number) {
+export type DownloadCaptures = Map<string, { fileName: string; text: string }>;
+export async function performBrowserStep(page: Page, step: BrowserStep, timeout: number, downloads: DownloadCaptures) {
+  if (['fill', 'click', 'select', 'press', 'check', 'reload'].includes(step.action)) downloads.clear();
   if (step.action === 'reload') { await page.reload({ waitUntil: 'domcontentloaded', timeout }); return; }
   // Prefixing with css prevents selectors from being treated as executable browser code.
   const target = page.locator('css=' + step.selector);
@@ -102,6 +104,8 @@ async function perform(page: Page, step: BrowserStep, timeout: number) {
       throw new Error(`${step.action} ${step.selector}: expected ${JSON.stringify(expected.slice(0, 500))}, received ${JSON.stringify(actual.slice(0, 500))}.`);
     }
     case 'expectDownload': {
+      let captured = step.fresh ? undefined : downloads.get(step.selector);
+      if (!captured) {
       const [download] = await Promise.all([page.waitForEvent('download', { timeout }), target.click({ timeout })]);
       if (step.fileName !== undefined && download.suggestedFilename() !== step.fileName) {
         await download.cancel();
@@ -119,7 +123,11 @@ async function perform(page: Page, step: BrowserStep, timeout: number) {
       }
       const failure = await download.failure();
       if (failure) throw new Error('Download failed: ' + failure);
-      if (step.text !== undefined && !Buffer.concat(chunks).toString('utf8').includes(step.text)) throw new Error('Downloaded content does not contain the expected literal text.');
+      captured = { fileName: download.suggestedFilename(), text: Buffer.concat(chunks).toString('utf8') };
+      downloads.set(step.selector, captured);
+      }
+      if (step.fileName !== undefined && captured.fileName !== step.fileName) throw new Error(`Expected download ${JSON.stringify(step.fileName)}, received ${JSON.stringify(captured.fileName)}.`);
+      if (step.text !== undefined && !captured.text.includes(step.text)) throw new Error('Downloaded content does not contain the expected literal text.');
       break;
     }
     default: throw new Error('Unsupported browser action.');
@@ -182,10 +190,11 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
         page.on('dialog', dialog => { record('Unexpected ' + dialog.type() + ' dialog: ' + dialog.message()); void dialog.dismiss().catch(() => {}); });
         context.on('page', opened => { if (opened !== page) { record('Application opened an unexpected new window.'); void opened.close().catch(() => {}); } });
         await deadline.run(page.goto(url, { waitUntil: 'load', timeout: Math.min(stepTimeoutMs, deadline.remaining()) }));
+        const downloads: DownloadCaptures = new Map();
         for (const step of journey.steps) {
           stepIndex++;
           const stepLimit = Math.min(stepTimeoutMs, deadline.remaining());
-          await deadline.run(stepWithin(perform(page, step, stepLimit), stepLimit));
+          await deadline.run(stepWithin(performBrowserStep(page, step, stepLimit, downloads), stepLimit));
           const overflow = await deadline.run(page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0) > innerWidth + 1));
           if (overflow) record('Horizontal overflow prevents the application fitting the ' + viewport + ' viewport.');
         }
