@@ -80,11 +80,17 @@ export async function safeFile(root: string, relative: string) {
 }
 export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
   const hash = createHash('sha256');
+  // Versioned, length-prefixed records invalidate ambiguous legacy approvals.
+  hash.update('AppYard source hash v2\0');
   for (const file of await listArtifacts(root)) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-    hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));
+    const name = Buffer.from(file.path, 'utf8'), contents = await fs.readFile(await safeFile(root, file.path));
+    if (contents.length > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
+    const lengths = Buffer.alloc(8);
+    lengths.writeUInt32BE(name.length, 0); lengths.writeUInt32BE(contents.length, 4);
+    hash.update(lengths); hash.update(name); hash.update(contents);
   }
   return hash.digest('hex');
 }

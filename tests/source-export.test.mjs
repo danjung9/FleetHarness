@@ -41,6 +41,50 @@ test('an edit made while choosing an export folder is rejected before creating a
   await onlyExisting(input.parent);
 });
 
+test('BUG-E2 editing index.html after the first copy rejects a mixed revision', async t => {
+  const input = await fixture(t);
+  let changed = false;
+  await assert.rejects(exportVerifiedBundle(input, undefined, async (source, destination) => {
+    await fs.copyFile(source, destination);
+    if (!changed) {
+      changed = true;
+      assert.notEqual(path.basename(source), 'index.html');
+      await fs.appendFile(path.join(input.workspace, 'index.html'), '<p>Unreviewed copy change</p>');
+    }
+  }), /during export/);
+  assert.equal(changed, true);
+  await onlyExisting(input.parent);
+});
+
+test('BUG-H1 different file path and content boundaries produce different source hashes', async t => {
+  const left = await fixture(t), right = await fixture(t);
+  await fs.writeFile(path.join(left.workspace, 'a'), 'bc');
+  await fs.writeFile(path.join(right.workspace, 'ab'), 'c');
+  assert.notEqual(await sourceHash(left.workspace), await sourceHash(right.workspace));
+});
+
+test('BUG-H1 different boundaries between file contents produce different source hashes', async t => {
+  const { root } = await fixture(t);
+  const left = path.join(root, 'left'), right = path.join(root, 'right');
+  await fs.mkdir(left); await fs.mkdir(right);
+  // Both legacy encodings are "aXbYbZ", with identical file names and total byte counts.
+  await fs.writeFile(path.join(left, 'a'), 'XbY');
+  await fs.writeFile(path.join(left, 'b'), 'Z');
+  await fs.writeFile(path.join(right, 'a'), 'X');
+  await fs.writeFile(path.join(right, 'b'), 'YbZ');
+  assert.notEqual(await sourceHash(left), await sourceHash(right));
+});
+
+test('BUG-H1 an ambiguously renamed artifact cannot reuse the approved export hash', async t => {
+  const input = await fixture(t);
+  await fs.writeFile(path.join(input.workspace, 'a'), 'bc');
+  input.verifiedHash = await sourceHash(input.workspace);
+  await fs.rm(path.join(input.workspace, 'a'));
+  await fs.writeFile(path.join(input.workspace, 'ab'), 'c');
+  await assert.rejects(exportVerifiedBundle(input), /changed after verification/);
+  await onlyExisting(input.parent);
+});
+
 test('editing browser evidence during copying rejects export and removes only the new bundle', async t => {
   const input = await fixture(t);
   await assert.rejects(exportVerifiedBundle(input, undefined, async (source, destination) => {
