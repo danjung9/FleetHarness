@@ -69,11 +69,11 @@ Delivered apps: [R] real account data is left out of the delivered bundle unless
 
 ## GenAI.mil
 
-- [V] A DefenseScoop column of 2026-04-30 reports a recent release of a GenAI.mil API and frequent connection failures with developer applications, with no endpoint, key or format details. Source: https://defensescoop.com/2026/04/30/improved-but-incomplete-genai-mil-and-the-last-mile-problem/ (may have changed).
-- [V] A Marine Corps page lists API access as a planned future enhancement, cites MARADMIN 018/26 signed 2026-01-21, and says the platform is approved for CUI and not for PII, PHI or classified information. Source: https://semper-admin-portal.app.cloud.gov/marines/genai-mil-enterprise-platform/ (may have changed). A search summary of Marine Corps guidance also says personal devices are not authorized. Not verified directly.
-- [E] No public endpoint, key process or request format was found, so none may be invented or hard-coded. That message lists a help desk.
-- [P] Mukul, 2026-11-04: do not test the GenAI.mil API for now, that comes later. Set up the UI and the integration framework only. Fully test everything else.
-- [R] Model settings gets tabs: ChatGPT, API key, GenAI.mil, Other providers. The GenAI.mil tab takes the service address and the key from their administrator, stores them safely and hands them to a small provider module with a clear place to plug in the real format later, on the Pi engine. It says plainly that the connection has not been tested yet and never shows Connected. Unit tests cover saving, encrypted key storage and that the key stays out of logs and saved state. Nothing is tested against a GenAI.mil service or a stand-in for one.
+- [P] Mukul, 2026-11-04: set up the UI and framework now, no testing against the service yet. Fully test everything else. He supplied the API documentation. It comes from an account-holder's signed-in page, so it is not stored in this vault or the repo, and it is not given to agents on the event key. Only the API shape below is used.
+- [P] API shape from that documentation: base address `https://api.genai.mil/v1`, OpenAI-compatible chat completions and model listing, bearer key, no Responses API yet, browser calls blocked, and only model IDs ending in `-withtools` support system messages and tools. Keys lock every 14 days.
+- [R] So it runs on the Pi engine as a custom provider, and the model picker offers only `-withtools` models.
+- [E] Not proven against the live service. It needs a person with a key on an approved device.
+- [V] Public reporting and a Marine Corps page disagree on API status: https://defensescoop.com/2026/04/30/improved-but-incomplete-genai-mil-and-the-last-mile-problem/ and https://semper-admin-portal.app.cloud.gov/marines/genai-mil-enterprise-platform/ (may have changed). The supplied documentation describes an open beta.
 
 ## Tests
 
