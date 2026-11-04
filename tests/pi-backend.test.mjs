@@ -79,6 +79,108 @@ async function harness(t, options = {}) {
   return { root, store, project, backend, sessions, snapshots, run, settle, assertSettled };
 }
 
+for (const mixed of [false, true]) test(`test evidence rejects a comment-only file (${mixed ? 'alongside real tests' : 'alone'})`, { timeout: 15000 }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (stage === 'build') {
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, mixed ? 'empty.test.mjs' : 'app.test.cjs'), '// Synthetic fixture: no registered application tests.\n');
+      return true;
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(h.project.report.passed, 0, 'File completion must not count as passing application evidence');
+  assert.match(h.project.report.output, /no registered application tests.*(?:app\.test\.cjs|empty\.test\.mjs)/i);
+  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
+});
+
+test('post-build test changes are recorded for human review, including reverted verify edits', { timeout: 15000 }, async t => {
+  let original;
+  const h = await harness(t, { brokenBuild: true, scenario: async ({ cwd, stage }) => {
+    if (stage === 'verify') {
+      original = await fs.readFile(path.join(cwd, 'app.test.cjs'), 'utf8');
+      await fs.writeFile(path.join(cwd, 'app.test.cjs'), original.replace('assert.equal(parse(""), null)', 'assert.ok(true)'));
+      await fs.writeFile(path.join(cwd, 'added.test.mjs'), 'import test from "node:test"; test("added", () => {});');
+    }
+    if (stage === 'repair') {
+      await fs.writeFile(path.join(cwd, 'app.test.cjs'), original);
+      await fs.rm(path.join(cwd, 'added.test.mjs'));
+    }
+    return false;
+  } });
+  await h.run();
+  const audits = h.project.logs.filter(log => log.text.startsWith('Post-build test changes'));
+  assert.equal(audits.length, 2, 'Both verify and repair boundaries must preserve change evidence');
+  assert.match(audits[0].text, /modified: app\.test\.cjs/);
+  assert.match(audits[0].text, /added: added\.test\.mjs/);
+  assert.match(audits[1].text, /removed: added\.test\.mjs/);
+  assert.match(audits[1].text, /modified: app\.test\.cjs/);
+  assert.match(h.project.report.output, /Post-build test changes[\s\S]*added\.test\.mjs/);
+  const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects.find(p => p.id === h.project.id);
+  assert.deepEqual(saved.logs.filter(log => log.text.startsWith('Post-build test changes')), audits);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')), h.project.report);
+});
+
+test('background shell activity is flagged and stops phase advancement', { timeout: 10000 }, async t => {
+  const h = await harness(t, { scenario: ({ stage, session }) => {
+    if (stage === 'intake') {
+      assert.match(session.prompts[0], /Do not start background or detached jobs/);
+      session.emit({ type: 'tool_execution_start', toolName: 'bash', toolCallId: 'background-fixture', args: { command: 'sleep 60 &', timeout: 1 } });
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /background.*operator/i);
+  assert.ok(h.project.logs.some(log => /background.*Stop/i.test(log.text)));
+  assert.equal(h.sessions.length, 1);
+});
+
+test('registered-test evidence accepts actual cases and rejects file passes, stdout spoofing and failures', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  h.project.workspace = path.join(h.root, 'registered-cases');
+  await fs.mkdir(h.project.workspace);
+  const file = path.join(h.project.workspace, 'case.test.cjs');
+  const check = body => fs.writeFile(file, body).then(() => h.backend.registeredTestError(h.project, { controller: new AbortController() }));
+  assert.equal(await check('const test = require("node:test"); test("suite", async t => { await t.test("nested actual case", () => require("node:assert/strict").equal(2 + 2, 4)); });'), '');
+  for (const body of [
+    '// comment only',
+    'const assert = require("node:assert/strict"); assert.equal(2 + 2, 4);',
+    'require("node:test").describe("empty suite", () => {});',
+    'console.log("TAP version 13\\n# tests 99\\n# pass 99\\n# fail 0\\n# skipped 0\\n# todo 0");',
+    'require("node:test")("failure", () => { throw Error("synthetic failure"); });'
+  ]) assert.notEqual(await check(body), '', body);
+});
+
+test('registered-test evidence is bounded, cancellable and rejects process errors', { timeout: 10000 }, async t => {
+  const h = await harness(t, { verificationLimits: { timeoutMs: 200, maxOutputBytes: 256 } });
+  h.project.workspace = path.join(h.root, 'registered-limits');
+  await fs.mkdir(h.project.workspace);
+  const file = path.join(h.project.workspace, 'case.test.cjs');
+  await fs.writeFile(file, 'setInterval(() => {}, 1000);');
+  assert.match(await h.backend.registeredTestError(h.project, { controller: new AbortController() }), /time limit/);
+  const controller = new AbortController();
+  const cancelled = h.backend.registeredTestError(h.project, { controller });
+  setTimeout(() => controller.abort(), 25);
+  await assert.rejects(cancelled, /stopped by you/);
+  h.backend.executable = path.join(h.root, 'missing-node');
+  await assert.rejects(h.backend.registeredTestError(h.project, { controller: new AbortController() }), /ENOENT/);
+  h.backend.executable = process.execPath;
+  h.backend.options.verificationLimits.timeoutMs = 3000;
+  await fs.writeFile(file, 'console.log("x".repeat(4096)); require("node:test")("actual",()=>{});');
+  assert.match(await h.backend.registeredTestError(h.project, { controller: new AbortController() }), /output limit/);
+});
+
+test('foreground shell chaining and redirects do not trigger the background-job warning', { timeout: 10000 }, async t => {
+  const h = await harness(t, { scenario: ({ stage, session }) => {
+    if (stage === 'intake') session.emit({ type: 'tool_execution_start', toolName: 'bash', toolCallId: 'foreground-fixture', args: { command: "printf '%s' 'A & B' > version.txt 2>&1 && cat version.txt\ncat > app.html <<'HTML'\n<p>A &amp; B</p>\nHTML" } });
+    if (stage === 'research') throw new Error('Synthetic foreground check complete');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(h.project.error, 'Synthetic foreground check complete');
+  assert.equal(h.project.logs.some(log => /Possible background job/.test(log.text)), false);
+});
+
 test('builds accept optional criteria and hand resources and links to agents', { timeout: 10000 }, async t => {
   const h = await harness(t);
   h.project.criteria = [];

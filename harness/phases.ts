@@ -64,6 +64,7 @@ export function phasePrompt(phase: PhaseContract, globalTools: readonly string[]
     `Global workspace tools inherited by every agent phase: ${phase.owner === 'agent' ? globalTools.join(', ') : 'none'}.`,
     `Additional tools specific to this phase: ${phase.tools.join(', ') || 'none'}.`,
     `Effective tool access: ${toolsForPhase(phase, globalTools).join(', ') || 'none'}.`,
+    'Do not start background or detached jobs. Run shell commands in the foreground and wait for completion. Do not use &, nohup, disown, setsid, detached subprocesses, or persistent servers/watchers. Before finishing, check that every process you started has exited. If cleanup fails, report it and stop for the operator. Stop tracks foreground shell calls only; it cannot guarantee cleanup of detached jobs.',
     `Inputs: ${phase.inputs.join(', ')}. Required outputs: ${phase.outputs.join(', ')}.`,
     `Completion gate: ${phase.exit}`
   ].join('\n');
