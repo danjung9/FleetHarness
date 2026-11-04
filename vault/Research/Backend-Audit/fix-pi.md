@@ -48,3 +48,18 @@ Both TypeScript checks passed. All 47 focused tests passed. The full backend sui
 I could not validate the four revised pipeline cases with a working native sandbox, `ps`, or Chrome here. They need the overseer’s native rerun.
 
 COMMIT: Make Pi recovery timeout fixtures deterministic and verify writer shutdown gates
+
+## 18:34 report
+
+Resolved every working-tree conflict marker. Git index remains untouched.
+
+- Kept atomic writes, process scopes, validated manifests and authoritative evidence, with containment, redaction and delivery credential checks integrated.
+- Made evidence hashes consistent with redacted saved receipts.
+- Persisted run markers before sandbox preflight.
+- Confirmed existing export and lifecycle tests cover the deleted audit proofs. No assertions weakened.
+
+Both TypeScript checks and harness compilation passed. All 80 harness tests and 15 focused tests passed. Full unit run: 241 passed, 112 failed in sandbox/process/browser-dependent checks, 3 skipped.
+
+Successful native sandbox, `ps`, Chrome and containment-smoke execution remain unverified here.
+
+COMMIT: Merge Pi containment and secret checks with atomic delivery evidence
