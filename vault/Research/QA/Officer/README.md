@@ -3,10 +3,12 @@ type: research
 status: draft
 owner: mukul
 updated: 2026-11-04
-summary: "Challenge 12 round 1 remains unsatisfactory; one coalesced judgment retains artifact identity and evidence limits."
+summary: "Challenge 11 and challenge 12 round 1 judgments are NOT; their passing narrow tests do not establish original-task completion."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R1-id11-training]] records NOT. The sample resolves two Monday drills but omits departmental negotiation, mandatory training recurrence and optimization. Fifteen tests and sixteen journey/viewport runs pass for the limited workflow, while requirementsMet is false. The tests are substantive, but one requires an incorrect availability explanation. Source, receipts and three screenshots were reviewed; no fresh browser run or Sailor trial occurred. Local disclosure and session records are [[Research/QA/Officer/Sprint/Judge-R1-id11-training]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r1-id11-training]].
 
 [E, current benchmark review] [[Research/QA/Officer/JUDGE-R1-id12-optask]] records unsatisfactory, the same outcome already recorded as NOT in the scoreboard. The exact round/challenge assignment was coalesced into that existing file. Twelve passing tests and eight journeys cover the reduced synthetic workflow; requirementsMet is false and four criteria, including both defining card outcomes, remain unverified. One repair, 9.7 minutes, 232070 tokens and patched-d0f4c69 provenance are retained. The judgment identifies copied bytes and separates offline first-open from complete disconnected use. Evidence limits and disclosure are in [[Research/QA/Officer/Sprint/Judge-R1-id12-optask]]. This assignment supersedes the older ID 12 backlog status below; earlier training-draft findings remain historical.
 
