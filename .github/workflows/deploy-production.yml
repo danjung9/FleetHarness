@@ -39,7 +39,7 @@ jobs:
         run: npm install --global vercel@65.11.0
       - name: Pull production settings
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-      - name: Build browser application
+      - name: Build application
         run: vercel build --prod --token="$VERCEL_TOKEN"
       - name: Deploy production
         run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
