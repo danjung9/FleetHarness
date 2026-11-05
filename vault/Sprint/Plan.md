@@ -57,3 +57,16 @@ Organizers say teams may extend existing tools and do not have to start from scr
 
 - [P] Mukul approved: prove delivered apps work with wifi off, add a Compose file to delivered apps so Ark's packaging can take them into UDS, add change requests after a build, and test building with a local model on one challenge.
 - [R] For the team, not agents: one Sailor trial with a stopwatch, and run two of the ten challenges through Ark for a real comparison.
+
+## Overnight run, 2026-11-05 00:55 EST
+
+[P] Mukul: rip everything with all the Codex agents and the council until done by morning. Pull everything Dan has made. Test it all in the real app. Then benchmark.
+
+1. [R] Merge Dan's latest (`34f82b3`), finish the combined test, land on `mvp`.
+2. [R] Merge connectors (unified with Dan's brief data), the GenAI.mil framework and the tabs. Land.
+3. [R] Restart the org runner from the landed code, with tasks below.
+4. [R] Real app end to end with screenshots: every screen, sign-in, connectors with sample data, build, Stop, resume, review, approve, deliver, downloaded app.
+5. [R] One real build, then Stop test, then the ten-challenge benchmark. Tune from judge verdicts. Repeat rounds until morning.
+6. [R] Ark follow-ups: wifi-off proof of a delivered app, Compose file in delivered service apps, change requests after a build, one-challenge local model test.
+7. [R] Submission text corrected: no closed sandbox claim, real numbers only.
+8. [R] Morning report in `Sprint/Morning-Report.md`.
