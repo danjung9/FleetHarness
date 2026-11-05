@@ -39,3 +39,13 @@ Passed: 102 focused tests, 84 harness tests and all three TypeScript checks.
 Could not run the complete native ps/Chrome suite or clean-runtime integration here. Those eight original cases still need the overseer’s rerun. [Detailed findings and test changes](~/Documents/CDAO/fh-org/astra-merge/docs/native-failure-followup.md).
 
 COMMIT: Fix judge delivery snapshots, verification cleanup and redaction performance
+
+## 01:11 report
+
+Resolved all six conflicts, keeping both sides. Helpers have full access, inherit the run marker, and retain cleanup gates. Added browser/server cleanup tests and preserved sign-in, preflight, review evidence and Resume protections.
+
+Passed all three type checks, 182 selected unit checks and 84 harness tests.
+
+Could not validate native `ps`, Chrome, GUI smoke tests or complete clean-runtime workflows here. No additional frontend edits. Intentional assertion changes and exact limitations are listed in the [handoff](docs/browser-merge-handoff.md).
+
+COMMIT: Merge browser helpers with run cleanup and review protections

@@ -103,6 +103,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Detached Pi Stop fixture, pinned 16a6940 revision | QA tool | Prepared unchanged independent Stop regression at the corrected integrated source; syntax and pure validation only here | Team-created fixture | 2026-11-05 |
 | Automatic QA reports and runner source, rechecked 2026-11-05 | Evidence dataset | Compared reported revision, retained checkout, reflog, smoke stack and ignored preparation return codes | Team runtime owner | 2026-11-05 |
 | STOP-DETACHED-01 native receipt 6b784ff0 at 16a6940 | Evidence dataset | Independently verified bounded native shutdown, control and artifact hashes, identity, timing and cleanup separation | Existing runtime owner | 2026-11-05 |
+| Overnight detached Pi Stop fixture revision 1 | QA tool | Removed the fixed commit and checkout pin, records actual clean revision/build identity, retains all measured Stop assertions | Team-created acceptance fixture | 2026-11-05 |
+| Existing parallel QA reviewers, overnight source mapping | Review workflow | Read-only UI inventory and test evidence mapping for combined merge-dan; two existing event-key reviewers, no runtime or repository edits | Existing event-key review agents | 2026-11-05 |
 
 ## Data and sources
 
