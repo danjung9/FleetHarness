@@ -90,6 +90,18 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-resume.m
 
 [E] No newly measured defect in the combined runtime has arrived during preparation. Merge conflicts, missing receipts and deliberate full agent access are not product defects.
 
+### Shared integration findings to close before acceptance
+
+[E, shared audit reports] [[Research/Backend-Audit/Merge-Parent-Review]] and [[Research/Backend-Audit/Merge-Evidence-Review]] cover committed 8053707, separate from the unfinished incoming merge. They add the following targeted closure requirements. Their implementation and regression work remains with the integration owner; no duplicate audit or repository execution was started here.
+
+| Finding | Evidence strength and scope | Required closure evidence |
+| --- | --- | --- |
+| Passing evidence can acquire a later, untested application hash. | The evidence review includes an injected probe of the actual pinned judge function. A synthetic mutation during evidence writing retains SATISFACTORY and adopts the changed hash without reverification. This is a controlled function reproduction, not a native background writer or approved delivery receipt. | Reject or reverify an application mutation after the verified manifest is established; leave authoritative verification unset and refuse approval until current source is verified. Preserve a regression across finalization and cleanup. Existing GUI approval success alone does not close this. |
+| Stop can miss service-preview startup before its controller is registered. | Parent review establishes the pending-save/Stop/late-start interleaving from source, without executing it. This is distinct from the bounded detached Pi Stop case. | Hold preview startup at the first awaited save, request Stop, release it and prove no generated service starts afterward. Repeated Stop must not skip a still-pending preview. |
+| Filename-based redaction can corrupt persisted test baselines. | Parent review traces harmless names such as `token.test.cjs` into hash/content fields replaced during save, then rejected by Resume after restart. Source path only, not an executed restart reproduction. | Save, reload and Resume with those synthetic test names while preserving baseline hashes and original test identity. Continue redacting actual credentials. The new native Resume fixture uses ordinary parser filenames and does not close this special case. |
+
+[R] Recheck these against the final landed revision and its targeted receipts. Intentional full agent access does not remove evidence identity, restart integrity or Stop requirements.
+
 ## Complete journeys still required
 
 [R] Pair named checks with these real synthetic-data journeys on the same landed build. Main retains native execution ownership and existing authorization. The account owner handles real sign-in; no credentials or authorization URLs belong in evidence.
@@ -109,3 +121,5 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-resume.m
 [E, runtime coordination November 5] The bridge delivered the ready handoff and module-loading correction. A subsequent request for the clean landed target and native receipts timed out after ten minutes. Latest source recheck still shows HEAD 8053707 with 13 unmerged index paths. No test was run against that unfinished integration and no combined runtime PASS is inferred. Native restart/resume fixture preparation continues independently.
 
 [E, subsequent preparation] Native restart/resume preparation is now complete. Its script passed independent source review, syntax and pure controls. Four scripts are ready; actual native execution and combined acceptance remain pending.
+
+[P, subsequent overseer clarification] MVP remains 16a6940, including f5fec32 and transient cleanup retry. The combined merge-dan branch in fh-org/astra-merge is not landed; main will run the current-UI unpinned Stop fixture after landing. AUDIT-MANAGER has its own queued job and needs no relay. [E] Confirmed the ready fixture path and unchanged hash through the bridge. The earlier unanswered-target entry is historical; execution now explicitly awaits landing, not another target decision.

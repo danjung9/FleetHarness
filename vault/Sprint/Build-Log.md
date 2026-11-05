@@ -141,3 +141,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 01:12 Astra merge-dan started: The overseer committed your merge (8053707). The teammate pushed again at 01:09: 29ac921 "gave more skills", about 145 f
 - 01:19 Noted: branch `shourtestmerge` (Codex commits) merges `mvp`, `main`, `prod`, the Windows work and `mukul-dev`, but not Dan's latest. Not ours, left alone. It may be someone else's integration, so ask Mukul in the morning.
 - 01:36 Astra merge-dan finished, exit 0. Report: `Research/Backend-Audit/merge-dan.md`
+- 01:44 All of Dan's work through 29ac921 merged with ours as `26f8fae`: unit 756 of 768, harness 94 of 94, outside the sandbox. His new skills add about 11,600 tokens to the first prompts, plus about 13,600 optional. Fixing the rest before landing.
