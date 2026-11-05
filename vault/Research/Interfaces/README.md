@@ -38,6 +38,6 @@ summary: "Choose desktop Studio for the officer-facing demo, retain the original
 
 ## Sources
 
-- [E] Source root: `~/Documents/CDAO/FleetHarness`; pinned provenance link, not fetched: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323
-- [E] Screenshots: `~/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`.
+- [E] Source root: `/Users/mukul/Documents/CDAO/FleetHarness`; pinned provenance link, not fetched: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323
+- [E] Screenshots: `/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`.
 - [P] [[Research/00-Brief]], [[Event/Judging]].

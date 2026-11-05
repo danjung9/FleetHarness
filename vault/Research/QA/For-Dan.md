@@ -2,11 +2,31 @@
 type: research
 status: active
 owner: mukul
-updated: 2026-11-04
+updated: 2026-11-05
 summary: "Frontend defects seen in the running app at 631849f, for Dan to decide. Nothing here has been changed in his files."
 ---
 
 # Frontend reports for Dan
+
+## Pull `mvp` now, 2026-11-05 02:43 EST
+
+[E] `mvp` is `f2e5422` and contains everything on `dan/backend-improvements` through `29ac921`, merged with our backend, connectors, the GenAI.mil framework, the Model settings tabs and API-key sign-in. Please pull `mvp` and continue from there, so the merge is not repeated. Keep pushing to your branch as you like. It gets merged and tested, then lands on `mvp`.
+
+[E] Tested at or just before that commit, outside the agent sandbox: 934 of 934 unit tests, 94 of 94 harness tests, all 16 real-screen scripts, and native checks for inputs, browser recovery, detached Stop and resume. Fixtures only. No real build yet at this commit; the benchmark round is running now.
+
+[E] Frontend lines changed in your code, so you can check them:
+
+- `src/App.tsx`: Connectors rail item and route, change-request hook on the delivery page.
+- `src/ModelSettings.tsx`, `src/model-settings.css`: the four tabs (ChatGPT, API key, Other providers, GenAI.mil).
+- `src/BriefDataInputs.tsx`: a Use connected data section in the brief.
+- `src/api.ts`: browser preview now rejects unusable saved state instead of showing a blank screen.
+- New files: `src/Connectors.tsx`, `src/connectors.css`, `src/GenAiMilTab.tsx`.
+- Exact lines: `docs/backend-integration-frontend.patch`, `docs/connectors-frontend-lines.md` and `docs/connectors-integration.md` in the repo.
+- Coming next: `src/ReviewFlow.tsx` and `src/ProjectConversation.tsx` get a Request a change control after approval. These are being tested now.
+
+[R] Decision for you: `skills/impeccable` and `skills/ponytail` are third-party. They must be disclosed in the submission and they add about 11.6k tokens to initial prompts, plus about 13.6k optional. `skills/THIRD_PARTY.md` lists them. Say if you want them handled differently.
+
+## Earlier reports
 
 [P] Dan owns the frontend. These are reports, not changes. [E] Each one was reproduced in the running app at `631849f` on the local fixture. Evidence: [[Research/QA/Results-631849f-GUI]].
 

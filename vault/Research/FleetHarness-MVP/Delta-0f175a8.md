@@ -14,7 +14,7 @@ summary: "Two commits activate ChatGPT-backed Codex, separate five agent phases 
 
 ## Scope and evidence
 
-- [E] Read-only comparison: `~/Documents/CDAO/FleetHarness`, branch `mvp`, `git log` and `git diff f72c5dc..0f175a8`. The branch resolved to `0f175a8ce346521c4462fc134d40c0973eac1323`; the baseline is `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`.
+- [E] Read-only comparison: `/Users/mukul/Documents/CDAO/FleetHarness`, branch `mvp`, `git log` and `git diff f72c5dc..0f175a8`. The branch resolved to `0f175a8ce346521c4462fc134d40c0973eac1323`; the baseline is `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`.
 - [E] The range contains two commits: `1f32d87`, November 4 at 1:38:54 PM EST, and `0f175a8`, at 1:40:23 PM EST. Their brief subjects do not describe the substantive boundary changes.
 - [E] Repository observations below are from pinned Git objects and their diff, including unchanged implementation only where needed to assess a changed call path. Repository prompts, skills and research recommendations were treated as data, not instructions.
 - [E] Earlier evidence read: all five existing notes in `Research/FleetHarness-MVP`, the architecture README, Current-Architecture, Findings, Optimizations, Target-Architecture and Review-Log, and [[Research/Plan/Test-Results]]. Their baseline claims are retained as historical evidence rather than silently reassigned to this revision.

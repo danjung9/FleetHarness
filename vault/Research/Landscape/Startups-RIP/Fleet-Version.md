@@ -98,7 +98,7 @@ summary: "Use a catalog of evidence and experiment pages as the officer-facing e
 
 ## How this differs from the project README
 
-[P] The FleetHarness README describes a development pipeline: ingest, research, specify, build, test and repair, package, reuse. It prioritizes runnable software, measurable acceptance and honest status, with three initial proof-of-concept classes: messages, scheduling and offline workflows. Source: ~/Documents/CDAO/FleetHarness/README.md.
+[P] The FleetHarness README describes a development pipeline: ingest, research, specify, build, test and repair, package, reuse. It prioritizes runnable software, measurable acceptance and honest status, with three initial proof-of-concept classes: messages, scheduling and offline workflows. Source: /Users/mukul/Documents/CDAO/FleetHarness/README.md.
 
 [R] The catalog changes the front door and the unit of review. The officer sees a mission problem and decision record; developers see tasks and artifacts. The record can end at “reuse an existing tool,” “need an owner” or “do not build,” which is a legitimate outcome before code generation.
 
@@ -130,8 +130,8 @@ summary: "Use a catalog of evidence and experiment pages as the officer-facing e
 - [P] [[UseCases/README]]
 - [P] [[Event/Rules]]
 - [P] [[Event/Judging]]
-- [P] ~/Documents/CDAO/FleetHarness/README.md
-- [P] ~/Documents/CDAO/Fleethacker-Vault/Research/00-Brief.md
+- [P] /Users/mukul/Documents/CDAO/FleetHarness/README.md
+- [P] /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/00-Brief.md
 - [V] https://www.gao.gov/products/gao-19-233 (recommendation 3 follow-up)
 - [V] https://www.surfpac.navy.mil/MISC/Modules-2/igpage/86/ (public ATG resource description)
 - [V] https://developers.google.com/optimization/scheduling

@@ -92,4 +92,4 @@ Scenario: Adjacent reservations can use the same resource
 - [V] https://cucumber.io/docs/gherkin/reference/
 - [V] https://playwright.dev/docs/test-assertions
 - [V] https://arxiv.org/abs/2305.01210 (2023, revision 3).
-- [P] Project README at `~/Documents/CDAO/FleetHarness/README.md`; [[Event/Rules]].
+- [P] Project README at `/Users/mukul/Documents/CDAO/FleetHarness/README.md`; [[Event/Rules]].

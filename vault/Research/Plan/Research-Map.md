@@ -205,7 +205,7 @@ summary: "A complete directory of the research notes, their questions, code base
 
 ## Sources
 
-- [E] Local inventory root: `~/Documents/CDAO/Fleethacker-Vault/Research`.
+- [E] Local inventory root: `/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research`.
 - [E] https://github.com/danjung9/FleetHarness/tree/f72c5dc15aa6c34d2b9080c1c0b87742230cc16e
 - [E] https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323
 - [V] https://github.com/Agent-Field/SWE-AF/tree/ef26ffbf61496387d7ba554e83799cb5385804d0

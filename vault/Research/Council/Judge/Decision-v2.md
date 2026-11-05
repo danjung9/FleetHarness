@@ -14,7 +14,7 @@ summary: "Keep the working factory, lead with one independently checked training
 
 ## 2. What changed from round 1
 
-[E] This review read the assigned research and inspected Git objects at `0f175a8ce346521c4462fc134d40c0973eac1323` in `~/Documents/CDAO/FleetHarness`. The local `mvp` reference resolved to that commit. Source findings below concern that revision, not danjung9's possible later or uncommitted work. No repository program, installation, test or model request was run here.
+[E] This review read the assigned research and inspected Git objects at `0f175a8ce346521c4462fc134d40c0973eac1323` in `/Users/mukul/Documents/CDAO/FleetHarness`. The local `mvp` reference resolved to that commit. Source findings below concern that revision, not danjung9's possible later or uncommitted work. No repository program, installation, test or model request was run here.
 
 | Earlier position | Correction and consequence |
 | --- | --- |

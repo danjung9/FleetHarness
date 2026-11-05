@@ -10,7 +10,7 @@ summary: "Combined-app function inventory, executable acceptance checks, evidenc
 
 [E, current receipt review] All four new receipts hold on clean `3da8ad8` in `fh-org/astra-test`: desktop inputs 15/15, browser recovery 5/5, detached Pi Stop seven checks and native restart/Resume 5/5. [[Research/QA/Acceptance/Review-3da8ad8]] records independent raw-evidence checks and remaining gaps for every area. The bounded browser saved-state defect closes after `212d1b1`. Full verification, live sign-in, useful output and delivery remain unproven by this batch. Earlier d6f8750 errors and preparation snapshots below are historical. The inventory includes 23 original areas plus Connectors and GenAI.mil.
 
-[E] Complete acceptance remains pending. The current measured checkout is `~/Documents/CDAO/fh-org/astra-test`, clean `3da8ad831b7794bd65232ab074e986e8adbb8272`; main identifies this revision or a descendant as the land target. Initial inventory work used moving `merge-dan` source in astra-merge. Its earlier unresolved integration state is not the current test target. This note maps source and test assertions; a test's existence is not a passing result. Each later receipt must identify its actual revision and corresponding compiled files.
+[E] Complete acceptance remains pending. The current measured checkout is `/Users/mukul/Documents/CDAO/fh-org/astra-test`, clean `3da8ad831b7794bd65232ab074e986e8adbb8272`; main identifies this revision or a descendant as the land target. Initial inventory work used moving `merge-dan` source in astra-merge. Its earlier unresolved integration state is not the current test target. This note maps source and test assertions; a test's existence is not a passing result. Each later receipt must identify its actual revision and corresponding compiled files.
 
 [P, Mukul's direction relayed November 5 at 00:58] Build agents receive full host and network access. Product sandboxing and containment are deliberately removed. Their absence is not an acceptance defect. Stop, accurate state, preservation of saved work, usable output and truthful verification remain functional requirements. Main owns native execution and integration; this thread owns acceptance scripts. No product repository was modified or executed during preparation.
 
@@ -64,10 +64,10 @@ summary: "Combined-app function inventory, executable acceptance checks, evidenc
 [R] For any rerun, use main's clean compiled test target or its selected landed descendant. The output directory must exist. Substitute that runtime checkout for the placeholder; do not use changing integration files. Browser recovery uses named options; native scripts use positional arguments.
 
 ```sh
-node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-desktop-inputs.mjs /absolute/path/to/landed-checkout ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
-node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-browser-recovery.mjs --repo /absolute/path/to/landed-checkout --output ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
-node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-stop-detached.mjs /absolute/path/to/landed-checkout ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
-node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-resume.mjs /absolute/path/to/landed-checkout ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+node /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-desktop-inputs.mjs /absolute/path/to/landed-checkout /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+node /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-browser-recovery.mjs --repo /absolute/path/to/landed-checkout --output /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+node /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-stop-detached.mjs /absolute/path/to/landed-checkout /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+node /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-resume.mjs /absolute/path/to/landed-checkout /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
 ```
 
 [E] Native scripts write `result.json`, browser recovery writes `receipt.json`, each under a unique output directory. Failed behavioral assertions are FAIL pending receipt review; setup, identity drift, timeout and unconfirmed cleanup are ERROR. Native input locator/API exceptions are ERROR. A selector mismatch is not automatically a product defect. Stop records its measured verdict separately from cleanup/evidence errors. No receipt yet accepts the combined app.

@@ -139,21 +139,23 @@ async function project() {
 }
 async function snapshot(label, target = page) {
   const name = String(result.snapshots.length + 1).padStart(3, '0') + '-' + label;
-  const record = { label, at: stamp(), dom: name + '.dom.json', screenshot: name + '.png' }; result.snapshots.push(record);
+  const record = { label, at: stamp(), dom: name + '.dom.json', screenshot: name + '.png' }; result.snapshots.push(record); let captureError;
   if (target) {
     const dom = await target.evaluate(() => ({ url: location.href, title: document.title, text: document.body.innerText,
       controls: [...document.querySelectorAll('button,input,textarea,select')].map(e => ({ tag: e.tagName, text: e.textContent, type: e.getAttribute('type'), ariaLabel: e.getAttribute('aria-label'), disabled: e.disabled, checked: e.type === 'checkbox' ? e.checked : undefined, value: e.type === 'password' ? '[not recorded]' : 'value' in e ? e.value : undefined })), frames: [...document.querySelectorAll('iframe')].map(e => ({ title: e.title, src: e.src })) }));
     await fs.writeFile(path.join(output, record.dom), JSON.stringify(dom, null, 2) + '\n');
-    try { await target.screenshot({ path: path.join(output, record.screenshot), timeout: 6000, animations: 'disabled' }); } catch (error) { record.screenshotUnavailable = String(error.message).slice(0, 300); delete record.screenshot; }
+    try { await target.screenshot({ path: path.join(output, record.screenshot), timeout: 6000, animations: 'disabled' }); } catch (error) { record.screenshotUnavailable = String(error.message).slice(0, 300); delete record.screenshot; captureError = error; }
   }
   if (page && projectId) { record.project = name + '.project.json'; await fs.writeFile(path.join(output, record.project), JSON.stringify(await project(), null, 2) + '\n'); }
-  result.providerRequests = fixture?.requests.map(summarizeRequest) ?? []; await save(); return record;
+  result.providerRequests = fixture?.requests.map(summarizeRequest) ?? []; await save();
+  if (captureError) throw new Error('Required screenshot failed for ' + label + ': ' + captureError.message);
+  return record;
 }
 async function row(id, fn) {
   need(!interrupted, 'Harness shutdown requested.');
   const item = result.rows.find(r => r.id === id); item.startedAt = stamp(); item.evidence = {}; let failure;
   try { await fn(item.evidence); item.result = 'PASS'; } catch (error) { item.result = error.code === 'ERR_ASSERTION' ? 'FAIL' : 'ERROR'; item.error = String(error.message).slice(0, 1800); failure = error; }
-  item.finishedAt = stamp(); try { item.observation = await snapshot(id); } catch (error) { item.captureError = String(error.message).slice(0, 500); if (!failure) { item.result = 'ERROR'; failure = error; } }
+  item.finishedAt = stamp(); try { item.observation = await snapshot(id); } catch (error) { item.captureError = String(error.message).slice(0, 500); result.errors.push('Receipt capture failed for ' + id + ': ' + item.captureError); if (!failure) { item.result = 'ERROR'; failure = error; } }
   await save(); if (failure) { failure.recorded = true; throw failure; }
 }
 function registerChild(child, kind) { childHandles.push(child); const r = { kind, pid: child.pid, launchedAt: stamp() }; result.ownedProcesses.push(r); child.once('exit', (code, signal) => Object.assign(r, { exitedAt: stamp(), code, signal })); }

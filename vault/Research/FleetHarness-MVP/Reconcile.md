@@ -77,7 +77,7 @@ summary: "Keep the existing factory, lead with one accepted generated app, and s
 
 ## Sources
 
-- [E] `~/Documents/CDAO/FleetHarness`, branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`, source/docs/tests traced in [[Research/FleetHarness-MVP/What-Exists]].
+- [E] `/Users/mukul/Documents/CDAO/FleetHarness`, branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`, source/docs/tests traced in [[Research/FleetHarness-MVP/What-Exists]].
 - [E] [[Research/Council/Officer/Decision]], [[Research/Council/Builder/Decision]], [[Research/Council/Judge/Decision]], [[Research/FleetHarness-MVP/Officer-Test]] and [[Research/FleetHarness-MVP/Rules-Fit]].
 - [P] [[Research/00-Brief]], [[Event/Rules]], [[Event/Judging]], [[Sprint/Submission-Checklist]] and [[Reference/Open-Questions]].
 - [P] Event source referenced by the catalog: https://cdao.hackathon.maximus.com/event/norfolk/use-cases, not freshly authenticated in this review.

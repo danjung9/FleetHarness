@@ -17,7 +17,7 @@ summary: "Ark's stated development-and-delivery scope overlaps FleetHarness clos
 
 [V, provider engineering description, accessed November 4, 2026] The role description connects Ark with UDS packaging, agent orchestration, isolated development environments, automated validation and human oversight. It also describes persistent application state and asynchronous work. Some text describes work engineers will build, so it cannot establish that every capability has shipped. https://job-boards.greenhouse.io/defenseunicorns/jobs/5277744007
 
-[P] FleetHarness's README proposes a pipeline spanning requirements, research, implementation, testing, repair and packaging, with human review. Local source: `~/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
+[P] FleetHarness's README proposes a pipeline spanning requirements, research, implementation, testing, repair and packaging, with human review. Local source: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
 
 [A] Ark may cover much of that pipeline already. A distinction based only on generating apps with coding agents would be weak; task quality, reproducibility and actual user burden need comparison.
 
@@ -63,4 +63,4 @@ summary: "Ark's stated development-and-delivery scope overlaps FleetHarness clos
 - [V, provider-authored engineering role, limited evidence of product direction] https://job-boards.greenhouse.io/defenseunicorns/jobs/5277744007
 - [E, attempted public product retrieval, inaccessible through web tool] https://ark.defenseunicorns.com
 - [P] [[Research/00-Brief]]
-- [P, project scope] `~/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026
+- [P, project scope] `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026

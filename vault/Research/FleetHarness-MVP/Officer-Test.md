@@ -14,7 +14,7 @@ summary: "A source-based ten-minute walkthrough exposes the technical work still
 
 ## Conditions of this walkthrough
 
-[E] This is a cognitive walkthrough from source at `~/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`. No screen was launched, timed or tested with a person. [A] Times below allocate a hypothetical ten-minute visit; they are not measured durations or a promise that a build finishes. [A] The persona is an officer who knows the work problem and does not code; an actual billet, command process and training need have not been validated in this seat.
+[E] This is a cognitive walkthrough from source at `/Users/mukul/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`. No screen was launched, timed or tested with a person. [A] Times below allocate a hypothetical ten-minute visit; they are not measured durations or a promise that a build finishes. [A] The persona is an officer who knows the work problem and does not code; an actual billet, command process and training need have not been validated in this seat.
 
 [E] The clone advanced to `0f175a8` during review. This walkthrough remains pinned to `f72c5dc`; it does not evaluate the later interface/backend additions.
 
@@ -60,6 +60,6 @@ summary: "A source-based ten-minute walkthrough exposes the technical work still
 
 ## Sources
 
-- [E] `~/Documents/CDAO/FleetHarness` at `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`: `src/App.tsx`, `src/api.ts`, `src/SystemDesign.tsx`, `src/ActivityFeed.tsx`, `shared/activity.ts`, `src/studio/Studio.tsx`, `src/studio/brief.ts`, `src/studio/api.ts`, `scripts/studio.mjs`, `electron/main.ts`, `electron/pi-backend.ts`, `electron/system-design.ts`, `docs/desktop.md` and `docs/studio.md`.
+- [E] `/Users/mukul/Documents/CDAO/FleetHarness` at `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`: `src/App.tsx`, `src/api.ts`, `src/SystemDesign.tsx`, `src/ActivityFeed.tsx`, `shared/activity.ts`, `src/studio/Studio.tsx`, `src/studio/brief.ts`, `src/studio/api.ts`, `scripts/studio.mjs`, `electron/main.ts`, `electron/pi-backend.ts`, `electron/system-design.ts`, `docs/desktop.md` and `docs/studio.md`.
 - [E] [[Research/Council/Officer/Decision]], [[Research/00-Brief]] and [[Research/FleetHarness-MVP/What-Exists]].
 - [P] Published challenge source named by the app: https://cdao.hackathon.maximus.com/event/norfolk/use-cases. No fresh authenticated portal or user study was performed.

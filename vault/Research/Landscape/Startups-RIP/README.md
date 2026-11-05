@@ -76,8 +76,8 @@ summary: "The startup-report pattern complements FleetHarness as an officer-faci
 
 ## Sources
 
-- [P] ~/Documents/CDAO/Fleethacker-Vault/Research/00-Brief.md
-- [P] ~/Documents/CDAO/FleetHarness/README.md
+- [P] /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/00-Brief.md
+- [P] /Users/mukul/Documents/CDAO/FleetHarness/README.md
 - [P] [[UseCases/README]]
 - [P] [[Event/Rules]]
 - [P] [[Event/Judging]]

@@ -43,7 +43,7 @@ summary: "The factory exists; lead with one accepted generated app and use the f
 
 ## Sources
 
-- [E] `~/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`; exact paths and evidence in the linked notes.
+- [E] `/Users/mukul/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`; exact paths and evidence in the linked notes.
 - [E] [[Research/00-Brief]], [[Research/Council/Officer/Decision]], [[Research/Council/Builder/Decision]] and [[Research/Council/Judge/Decision]].
 - [V] https://pi.dev/docs/latest/sdk
 - [V] https://pi.dev/docs/latest/providers

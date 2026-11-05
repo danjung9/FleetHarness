@@ -14,7 +14,7 @@ summary: "Keep the factory, lead with one checked training-draft app, prepare th
 
 ## 1. What changed from round 1, and what was wrong
 
-[E, read-only Git] The inspected base is `~/Documents/CDAO/FleetHarness`, commit `0f175a8ce346521c4462fc134d40c0973eac1323`; `mvp` resolved to that commit during this review. Code findings below refer to its Git objects, not danjung9's changing working files. [E] The assigned reviews were read, including all three round 1 decisions and [[Research/Council/Verification/Verification]]. No repository program, installation, test or model build was run here.
+[E, read-only Git] The inspected base is `/Users/mukul/Documents/CDAO/FleetHarness`, commit `0f175a8ce346521c4462fc134d40c0973eac1323`; `mvp` resolved to that commit during this review. Code findings below refer to its Git objects, not danjung9's changing working files. [E] The assigned reviews were read, including all three round 1 decisions and [[Research/Council/Verification/Verification]]. No repository program, installation, test or model build was run here.
 
 | Earlier position | Correction and consequence |
 | --- | --- |

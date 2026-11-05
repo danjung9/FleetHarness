@@ -161,3 +161,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 02:36 Astra ark-package finished, exit 0. Report: `Research/Backend-Audit/ark-package.md`
 - 02:43 Team branch: mvp now f2e5422
 - 02:49 Teammate push: codex/fh-008-build-budgets now a5e0bcf; dan/backend-improvements now 29ac921; main now b590dae; mvp now f2e5422; prod now 95b7759; shourtestmerge now 
+- 02:53 dev-2: Renamed overstated labels, including `resumeBuild` to `reopensProject` and `cliExportsRunnablePackage` to `exportInvoked`. Narrowed restart, build and evaluation claims. All assertions and a
+- 02:54 dev-1: Confirmed and fixed. Failed reads now show a pane error with working Retry.

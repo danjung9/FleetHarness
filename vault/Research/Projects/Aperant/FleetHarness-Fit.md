@@ -14,7 +14,7 @@ summary: "Aperant provides useful middle-pipeline patterns but leaves mission ac
 
 ## Seven-step mapping
 
-[P] Step names and intended outcomes come from `~/Documents/CDAO/FleetHarness/README.md`. [E] Code evidence below is from direct inspection of `20250db`; `ai/` abbreviates `apps/desktop/src/main/ai/`.
+[P] Step names and intended outcomes come from `/Users/mukul/Documents/CDAO/FleetHarness/README.md`. [E] Code evidence below is from direct inspection of `20250db`; `ai/` abbreviates `apps/desktop/src/main/ai/`.
 
 | FleetHarness step | Aperant coverage | What FleetHarness still needs | Decision |
 | --- | --- | --- | --- |
@@ -77,7 +77,7 @@ summary: "Aperant provides useful middle-pipeline patterns but leaves mission ac
 
 ## Sources
 
-- [P] FleetHarness pipeline: `~/Documents/CDAO/FleetHarness/README.md`.
+- [P] FleetHarness pipeline: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`.
 - [P] Event requirements: [[Event/Rules]], [[Event/Terms]], [[Event/Judging]], and [[Research/00-Brief]].
 - [V] Source at inspected revision: https://github.com/AndyMik90/Aperant/tree/20250db069a849ab001ac6ab9e3e9779886ab9e2
 - [V] License file: https://github.com/AndyMik90/Aperant/blob/20250db069a849ab001ac6ab9e3e9779886ab9e2/LICENSE

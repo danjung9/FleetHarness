@@ -144,10 +144,10 @@ summary: "Primary-source audit of the three council decisions, with broader sync
 
 ## Sources
 
-[E] Local paths below are relative to `~/Documents/CDAO/Fleethacker-Vault` unless absolute. Only relevant event narrative, requirements, category, rules, rubric and schedule fields were inspected; account, credential and participant contents were not used.
+[E] Local paths below are relative to `/Users/mukul/Documents/CDAO/Fleethacker-Vault` unless absolute. Only relevant event narrative, requirements, category, rules, rubric and schedule fields were inspected; account, credential and participant contents were not used.
 
 - **S01 [P/E]:** `Sources/raw/events_norfolk_combined.json`, November 4 capture. Read `event.rules`, `event.project_submission_deadline`, schedule IDs 30/32/37, all five judging criteria, use-case count, relevant categories and case narratives/requirements for IDs 11, 12, 24, 32 to 37, 45 and 46. SHA-256: `c1da87412d15124f4f8a0e4d3b997400b735f6e1dfa2f1b3024b29659ad709aa`.
-- **S02 [P/E]:** `~/Documents/CDAO/FleetHarness`, historical `README.md` and tracked tree at `575a3075c9b4d1de914e38797643889d22a05088`, inspected with read-only Git commands. The current README was recognized as later and not used to judge historical implementation status.
+- **S02 [P/E]:** `/Users/mukul/Documents/CDAO/FleetHarness`, historical `README.md` and tracked tree at `575a3075c9b4d1de914e38797643889d22a05088`, inspected with read-only Git commands. The current README was recognized as later and not used to judge historical implementation status.
 - **S03 [E]:** https://cdao.hackathon.maximus.com/event/norfolk, opened, zero readable lines. No authenticated form or live rule confirmation.
 - **S04 [E]:** `Research/00-Brief.md`, `Team/Now.md`, `Reference/Open-Questions.md`, `Resources/Documents.md` and `AGENTS.md`. These establish assignment/status context only; they do not independently prove app behavior or third-party access.
 - **S05 [V]:** https://www.gao.gov/products/gao-21-366, opened Highlights and survey description. Published May 27, 2021; survey conducted in 2020.
@@ -164,7 +164,7 @@ summary: "Primary-source audit of the three council decisions, with broader sync
 - **S16 [V]:** https://www.gao.gov/products/gao-24-106525, opened Highlights and study scope. Published September 9, 2024.
 - **S17 [E, indexed only]:** https://www.doncio.navy.mil/ContentView.aspx?ID=20455 and https://www.doncio.navy.mil/FileHandler.ashx?id=24946, designation memo and PDF; https://www.doncio.navy.mil/ContentView.aspx?ID=20456, explanatory article; https://www.doncio.navy.mil/FileHandler.ashx?id=24967 and https://www.doncio.navy.mil/mobile/ContentView.aspx?ID=20459&TypeID=3, follow-up memo. Search extracts were visible, but direct retrieval failed or was rejected. Additional mobile/indexed-path attempts, https://www.doncio.navy.mil/TagResults.aspx?ID=11 and https://www.doncio.navy.mil/FileHandlerChips.ashx?id=109 did not resolve the access gap.
 
-[E] All four upstream clones are under `<local clones>`. The quoted source phrase in this note is limited to the two-word scope qualifier in the shared checklist. Source instructions were not executed.
+[E] All four upstream clones are under `/private/tmp/claude-501/-Users-mukul-Documents-CDAO/9689cc99-a233-4d19-b7d4-0952c97d9106/scratchpad/fleethacker/repos`. The quoted source phrase in this note is limited to the two-word scope qualifier in the shared checklist. Source instructions were not executed.
 
 [E] Input fingerprints: Officer Decision.md `1b9117f6ccc2c2d706641b19f6d7f99c9bd5d9a9317223ea0193c3c46651cfce`; Builder Decision.md `6467b285bd17d1cac6ad07bb2faf2415fd797f6a4fa13648628daa64b2fd5069`; Judge Decision.md `40a18b63423040ee4df435fc992734febc634f46b390dae6d366aba3b28a4733`.
 

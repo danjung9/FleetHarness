@@ -8,4 +8,4 @@ summary: "Stopped-writer receipt for CLI-route before acceptance."
 
 # Stopped writers: CLI-route
 
-[E, process list at 15:29:25] The final copy is ~/Documents/CDAO/Fleethacker-Vault/Research/TaskApp/CLI-route, a separate copy from the build folder. Build processes still running against it: 0.
+[E, process list at 15:29:25] The final copy is /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/TaskApp/CLI-route, a separate copy from the build folder. Build processes still running against it: 0.

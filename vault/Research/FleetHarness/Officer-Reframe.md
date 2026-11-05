@@ -93,7 +93,7 @@ summary: "A proposed officer-facing version of the pipeline, with plain decision
 
 ## Sources
 
-- [P] Project README: `~/Documents/CDAO/FleetHarness/README.md`, especially lines 23 to 41 and 71 to 87, read locally on 2026-11-04. No implementation, web URL or private page was verified.
+- [P] Project README: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, especially lines 23 to 41 and 71 to 87, read locally on 2026-11-04. No implementation, web URL or private page was verified.
 - [P] [[Research/00-Brief]], the direction to make the product more specific and simpler for a naval officer.
 - [P] [[Event/Rules]], especially rules 2, 4, 6 and 9; [[Event/Judging]], user burden and Fleet-condition criteria.
 - [E] The local event snapshots do not supply full portal URLs. Those URLs and all user-validation claims remain unverified. No public web source was used or full web URL invented.

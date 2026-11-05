@@ -14,7 +14,7 @@ summary: "Studio improves discovery and briefing while the original retains stro
 
 ## Scope and evidence
 
-[E] Read-only Git inspection identified branch `mvp`, commit `0f175a8ce346521c4462fc134d40c0973eac1323`, and a clean worktree during review. All repository paths below are relative to `~/Documents/CDAO/FleetHarness`. [E] Visual findings use the seven supplied screenshots under `~/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`; they are browser previews with no agents running. [E] Build and review behavior below is traced from source and test definitions, not exercised in this review. [A] Audience fit is a design hypothesis, not an officer interview result.
+[E] Read-only Git inspection identified branch `mvp`, commit `0f175a8ce346521c4462fc134d40c0973eac1323`, and a clean worktree during review. All repository paths below are relative to `/Users/mukul/Documents/CDAO/FleetHarness`. [E] Visual findings use the seven supplied screenshots under `/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`; they are browser previews with no agents running. [E] Build and review behavior below is traced from source and test definitions, not exercised in this review. [A] Audience fit is a design hypothesis, not an officer interview result.
 
 ## Comparison
 
@@ -67,8 +67,8 @@ summary: "Studio improves discovery and briefing while the original retains stro
 
 ## Sources
 
-- [E] Local source base: `~/Documents/CDAO/FleetHarness`; exact paths and anchors above.
+- [E] Local source base: `/Users/mukul/Documents/CDAO/FleetHarness`; exact paths and anchors above.
 - [E] Pinned repository reference, not fetched: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323
-- [E] Screenshot base: `~/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`, all seven supplied PNG files.
+- [E] Screenshot base: `/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens`, all seven supplied PNG files.
 - [E] [[Research/FleetHarness-MVP/README]], [[Research/Architecture/README]], [[Research/Naval-User/Simplicity-Requirements]], [[Research/Landscape/Startups-RIP/Fleet-Version]], [[Research/Landscape/App-Builders/Simplicity-Patterns]]. Earlier research is context, not a current test result.
 - [P] [[Event/Judging]] and [[Research/00-Brief]].

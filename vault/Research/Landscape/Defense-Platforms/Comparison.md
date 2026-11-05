@@ -35,7 +35,7 @@ summary: "Existing platforms cover much of the proposed scope; a defensible gap 
 
 [R] Let the officer describe the task and choose a prepared workflow. Produce a small application that accepts synthetic inputs, enforces constraints, explains impossible cases and exports a familiar result. The officer reviews requirements and results; a named technical owner handles builds, dependencies, hosting and maintenance.
 
-[P] The project README also calls for message parsing and offline-first workflow demonstrations. The software factory and its resulting applications are separate deliverables. A generated schedule app may work offline even if the development pipeline requires connectivity. Local source: `~/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
+[P] The project README also calls for message parsing and offline-first workflow demonstrations. The software factory and its resulting applications are separate deliverables. A generated schedule app may work offline even if the development pipeline requires connectivity. Local source: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
 
 [R] Make the proposed distinction measurable:
 

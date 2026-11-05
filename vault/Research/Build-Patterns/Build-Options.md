@@ -73,6 +73,6 @@ summary: "Recommend a small stateful controller with one worker and one fully ev
 ## Sources
 
 - [P] [[Research/00-Brief]], [[Event/Rules]] and [[Event/Judging]].
-- [P] `~/Documents/CDAO/FleetHarness/README.md`, read November 4.
+- [P] `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4.
 - [V] https://developers.openai.com/codex/noninteractive/
 - [V] https://arxiv.org/abs/2407.01489

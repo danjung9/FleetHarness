@@ -155,7 +155,7 @@ summary: "A complete proposed use-case page for synthetic training calendar deco
 - [P] [[UseCases/README]], ID 11, read 2026-11-04.
 - [P] [[Event/Rules]], especially rules 3, 4, 6, 9 and 11.
 - [P] [[Event/Judging]].
-- [P] ~/Documents/CDAO/FleetHarness/README.md, read 2026-11-04.
+- [P] /Users/mukul/Documents/CDAO/FleetHarness/README.md, read 2026-11-04.
 - [V] https://www.gao.gov/products/gao-19-233, recommendation 3 follow-up; accessed 2026-11-04. Adjacent history only.
 - [V] https://www.surfpac.navy.mil/MISC/Modules-2/igpage/86/, ATG resource description; accessed 2026-11-04. No authenticated portal accessed.
 - [V] https://developers.google.com/optimization/scheduling, scheduling overview; accessed 2026-11-04. Candidate technology only.
