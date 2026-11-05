@@ -58,6 +58,8 @@ summary: "Combined-app function inventory, executable acceptance checks, evidenc
 
 ## Prepared native checks
 
+[E, next real journey] `qa-real-delivered-app.mjs`, `morning-brief-oracle.mjs` and `morning-brief-adapter.mjs` follow main's actual Morning training brief download with independent source values, source-scoped review, two full delivered-app restarts and an offered changed-source import. [[Research/QA/Acceptance/Real-Journey-Checks]] has the command, exact scratch-profile precondition, eight rows, evidence binding and limits. Syntax/pure controls pass; native result pending. This browser candidate does not cover Node-service packaging or automatically establish judge-NOT acceptance.
+
 [E] Scripts are in `Research/QA/Overnight/`. They use synthetic data, require installed runtimes, perform no builds/installs, leave product source untouched and record actual source/build identity. Main supplies a clean freshly compiled checkout and retains build output linking compiled artifacts to the revision. Hashes establish identity/stability; they cannot prove an old compilation used the current source. Dependencies and untracked build inputs are not fully attested.
 
 | Script | Scope | Current verification |

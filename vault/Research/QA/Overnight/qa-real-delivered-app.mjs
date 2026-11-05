@@ -63,9 +63,14 @@ async function capture(name) {
   const records = await observe(page), value = { name, time: stamp(), url: page.url(), records }; result.observations.push(value);
   await fs.writeFile(path.join(root, name + '.json'), JSON.stringify(value, null, 2) + '\n'); await page.screenshot({ path: path.join(root, name + '.png'), fullPage: true, scale: 'css' }); return records;
 }
+async function failureView(name) {
+  if (!page || !root) return;
+  try { await bounded(Promise.all([page.screenshot({ path: path.join(root, name + '-failure.png'), fullPage: true, scale: 'css' }), page.locator('body').innerText().then(text => fs.writeFile(path.join(root, name + '-failure.txt'), text.slice(0, 30000)))]), 5000, 'Failure capture timed out.'); }
+  catch (error) { result.failureCaptureError = String(error).slice(0, 300); }
+}
 async function row(id, action) {
   need(!interrupted, 'Execution interrupted.'); const r = result.rows.find(item => item.id === id); r.startedAt = stamp();
-  try { r.observation = await bounded(action(), 120000, 'Checker row exceeded its deadline.'); r.result = 'PASS'; } catch (error) { r.result = error instanceof assert.AssertionError ? 'FAIL' : 'ERROR'; r.error = String(error).slice(0, 1200); if (r.result === 'ERROR') result.errors.push(r.error); throw error; }
+  try { r.observation = await bounded(action(), 120000, 'Checker row exceeded its deadline.'); r.result = 'PASS'; } catch (error) { r.result = error instanceof assert.AssertionError ? 'FAIL' : 'ERROR'; r.error = String(error).slice(0, 1200); if (r.result === 'ERROR') result.errors.push(r.error); await failureView(id); throw error; }
   finally { r.finishedAt = stamp(); await save(); }
 }
 async function launch() {
@@ -98,7 +103,7 @@ async function cleanup() {
     if (app) { try { await bounded(app.close(), 20000, 'Cleanup close timed out.'); } catch { clean = false; } app = undefined; }
     for (const child of children) if (child.exitCode === null && child.signalCode === null) { clean = false; try { child.kill('SIGKILL'); } catch { /* Unconfirmed cleanup is retained. */ } }
     if (proxy) { proxy.closeAllConnections(); await bounded(new Promise(resolve => proxy.close(resolve)), 3000, 'Proxy close timed out.').catch(() => { clean = false; }); }
-    if (clean && profileCreated) { try { await fs.rename(ownedProfile, path.join(root, 'profile-after')); profileCreated = false; result.profile.after = path.join(root, 'profile-after'); } catch (error) { clean = false; result.errors.push('Could not retain owned profile: ' + error.message); } }
+    if (clean && profileCreated) { try { const after = ownedProfile + '.qa-result-' + path.basename(root); await fs.rename(ownedProfile, after); profileCreated = false; result.profile.after = after; } catch (error) { clean = false; result.errors.push('Could not retain owned profile: ' + error.message); } }
     if (clean && originalProfileExisted) { try { await fs.rename(profileBackup, ownedProfile); originalProfileExisted = false; result.profile.restored = true; } catch (error) { clean = false; result.errors.push('Original scratch profile remains at ' + profileBackup + ': ' + error.message); } }
     result.cleanup = clean ? 'PASS' : 'UNCONFIRMED';
   })(); // Retain this test's profile and restore the preceding owner's scratch profile.
@@ -162,5 +167,5 @@ try {
     need(await sourceDigest(exportedRoot) === report.sourceHash, 'Source export changed during execution.');
     return { fullNativeExits: result.processes.length, noObservedNetworkAttempts: true, bundleUnchanged: true };
   });
-} catch (error) { if (!result.rows.some(r => ['FAIL', 'ERROR'].includes(r.result))) result.errors.push(String(error).slice(0, 1200)); }
+} catch (error) { if (!result.rows.some(r => ['FAIL', 'ERROR'].includes(r.result))) { result.errors.push(String(error).slice(0, 1200)); await failureView('setup'); } }
 finally { clearTimeout(watchdog); await cleanup().catch(error => result.errors.push(String(error))); result.result = verdict(result.rows, result.errors, result.cleanup); result.finishedAt = stamp(); await save(); console.log(JSON.stringify({ result: result.result, receipt: resultPath, rows: result.rows.map(({ id, result }) => ({ id, result })) })); if (result.result !== 'PASS') process.exitCode = 1; }

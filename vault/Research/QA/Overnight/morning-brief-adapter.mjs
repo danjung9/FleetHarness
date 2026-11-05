@@ -3,8 +3,8 @@ import { pathToFileURL } from 'node:url';
 
 // Visible UI only. The harness owns independent answers, lifecycle and network.
 export const adapterProvenance = Object.freeze({
-  inspectedIndexSHA256: '21bec78524290ae3c970b69c34b8ea88580e3edbd813f7dba0e675f1bae56a20',
-  sourceLines: 'index.html:7-29,161-197',
+  inspectedIndexSHA256: 'd61f3628cd2b7b7e6a8e9a422489fbbe50f09b8fd2c1ce0dcbd2f5072acdb571',
+  sourceLines: 'index.html:7-29,149-198',
   boundary: 'Rendered DOM and public controls only; no application globals or storage access',
 });
 const TIMEOUT = 7000;
