@@ -2,18 +2,18 @@
 type: memo
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Retire duplicate audits, finish existing judgments and adapt runtime proof to Dan's new frontend."
+updated: 2026-11-05
+summary: "Prioritize fresh benchmark failures and preserve bounded native passes."
 ---
 
 # Quality decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern QA. [E, scoreboards] Round one finished ten: nine automatic passes, nine negative judgments, zero satisfactory. Round 101 finished four of five; IDs 12, 11 and 36 are NOT despite automatic passes. Format substitution, preset-only scheduling and simulated delivery still miss primary outcomes.
+[E, current Scoreboard and R5 finals] Three of ten builds finished, zero passed automatically and zero are satisfactory. The run uses f2e5422 plus a disclosed scratch patch. IDs 12/36 log frozen-plan changes before final cleanup errors; ID 11 fails independent computation. These are fresh failures, not proof the old detached-Pi defect returned.
 
-[R] Return these through existing dev-5/architect work, requiring independent primary-outcome cases and narrative coverage. No competing builder assignment.
+[R] Assign two bounded reviews: runner reconciles IDs 12/36 failure chronology and missing native evidence; officer independently checks ID 11's claimed ordering contradiction. Preserve failed receipts and frozen expectations. Route demonstrated defects once through main/Engineering; do not tune fixtures or hand-edit generated apps.
 
-[E, feed-118/QA-Lead-Notes] ID 32's audit was held; main now covers all ten baseline artifacts. The officer also completed the proposed ID 36 audit's key gaps. [R] Retire both redundant allocations. Write an empty task list; keep unique queued judgments and main's existing runtime work.
+[E, Review-3da8ad8] Four native/browser passes hold within scope. Later 7c8b663 receipts report PASS. The charter reports f2e5422's 934 unit, 94 harness and 16 screen passes; the separate sandbox gate failed dependency installation. [R] Keep identities and environments distinct. Passing fixtures do not close R5 or establish delivered-app acceptance.
 
-[E, reviews] Recovery's 49 checks pass; mandatory verifier integration remains pending. Cleanup landed at c6ce52d without native detached-Stop proof. Its Auto receipt retains two smoke failures. [R] Main supplies exact-revision proof; Engineering finishes existing integration.
+[R] Main retains builds, native execution and shutdown recovery. Existing acceptance ownership retains delivery and persisted-baseline checkers. Architect's historical one-shot analysis remains separate. Retire old duplicate audits and containment requirements; full access is settled.
 
-[E, closing relay] Dan advanced mvp to 7a4c6cc, adding Settings and default-off Developer mode. [R] Preserve his changes and serialize dev-1/shared-type conflicts. Main reruns changed smokes, persistence, active-build locks and rollback on the integrated commit. Preserve Windows 98b8334's hosted merge and 0aa19c1 extraction. Scripted demo approval is not catalog or human acceptance. Keep Thursday noon freeze and final-byte approval.
+[R] Preserve Dan's merged UI, input/capability flow and sign-in. GenAI.mil remains framework only. Older relay analysis and director memos are historical. Keep noon freeze, exact-byte human approval and 2 PM submission. No new frontend work or duplicate packaging effort.
