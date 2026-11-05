@@ -187,9 +187,15 @@ export class ProjectLead {
       reply.text ||= proposed ? 'The proposed action is ready to review below.' : 'No reply was returned. Please try again.';
       reply.status = 'complete';
     } catch (error) {
-      const message = redactSecrets(controller.signal.aborted ? 'Reply stopped. Your build is unchanged.' : error instanceof Error ? error.message : String(error));
-      reply.status = 'error'; reply.text ||= message;
-      conversation.error = message;
+      if (controller.signal.aborted && proposed) {
+        // Applying the saved proposal stops the rest of the reply, and that is not a failure.
+        reply.text ||= 'The proposed action is ready to review below.';
+        reply.status = 'complete';
+      } else {
+        const message = redactSecrets(controller.signal.aborted ? 'Reply stopped. Your build is unchanged.' : error instanceof Error ? error.message : String(error));
+        reply.status = 'error'; reply.text ||= message;
+        conversation.error = message;
+      }
     } finally {
       textLog.flush();
       controller.abort();

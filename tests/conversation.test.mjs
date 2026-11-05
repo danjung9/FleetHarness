@@ -92,6 +92,21 @@ for (const status of ['review', 'failed']) test(`project lead proposes a change 
   assert.equal(h.project.conversation.actions[0].feedback, feedback);
 });
 
+test('applying a saved proposal while the reply finishes is not reported as a stopped reply', async t => {
+  const ready = deferred();
+  const h = await fixture(t, { scenario: async ({ config }) => {
+    await tool(config, 'fleet_propose_action').execute('change', { type: 'start', reason: 'Start again.' });
+    ready.resolve(); await never();
+  } });
+  h.project.status = 'review';
+  await h.lead.send(h.project.id, 'Start this again.'); await ready.promise;
+  await h.lead.cancel(h.project.id);
+  assert.equal(h.project.conversation.status, 'idle');
+  assert.equal(h.project.conversation.error, undefined);
+  assert.equal(h.project.conversation.messages.at(-1).status, 'complete');
+  assert.equal(h.project.conversation.actions[0].status, 'proposed');
+});
+
 test('project lead responds on demand beside an active build with only its own tools and session', async t => {
   const entered = deferred(), finish = deferred();
   const h = await fixture(t, { scenario: async ({ session }) => {
