@@ -389,13 +389,36 @@ try {
   await page.getByLabel('Filter files by type', { exact: true }).selectOption('all');
 
   await tab('Builds');
-  await row(old).getByRole('button', { name: `Delete ${old.name} from ${old.projectTitle}`, exact: true }).click();
+  const deleteBuild = row(old).getByRole('button', { name: `Delete ${old.name} from ${old.projectTitle}`, exact: true });
+  assert.equal(await deleteBuild.innerText(), 'Delete', 'Build deletion has a visible text label.');
+  await deleteBuild.click();
+  const buildDialog = page.getByRole('dialog', { name: 'Move to Trash?', exact: true });
+  await buildDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await buildDialog.waitFor({ state: 'hidden' });
+  await waitFocused(`Delete ${old.name} from ${old.projectTitle}`);
+  assert.equal(await fs.readFile(path.join(oldWorkspace, 'notes.txt'), 'utf8'), oldNote, 'Cancel keeps the whole build intact.');
+  await deleteBuild.click();
   await confirmTrash();
   await assert.rejects(fs.access(oldWorkspace), /ENOENT/);
   let trashed = (await overview()).trash.find(item => item.kind === 'build');
   assert.ok(trashed);
+  await tab('Trash');
+  assert.equal(await page.getByRole('button', { name: `Delete permanently: ${trashed.name} from ${trashed.projectTitle}`, exact: true }).innerText(), 'Delete permanently');
+  await capture('trash-desktop.png', 1512, 982);
+  await capture('trash-minimum.png', 1120, 720);
   await restore(trashed);
   assert.equal(await fs.readFile(path.join(oldWorkspace, 'notes.txt'), 'utf8'), oldNote);
+
+  await browse(old);
+  const deleteFromFiles = page.getByRole('button', { name: `Delete build: ${old.name} from ${old.projectTitle}`, exact: true });
+  assert.equal(await deleteFromFiles.innerText(), 'Delete build', 'The file workspace names the whole-build action.');
+  await deleteFromFiles.click();
+  await confirmTrash();
+  await page.getByRole('heading', { name: 'Data & storage', exact: true }).waitFor();
+  await assert.rejects(fs.access(oldWorkspace), /ENOENT/);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await row(old).waitFor();
+  assert.equal(await fs.readFile(path.join(oldWorkspace, 'notes.txt'), 'utf8'), oldNote, 'Undo restores a build deleted from its file workspace.');
 
   await browse(old);
   await page.getByRole('button', { name: 'Preview notes.txt', exact: true }).click();
@@ -521,7 +544,8 @@ try {
   const result = { passed: true, isolatedSyntheticProfile: true, realElectronIPC: true,
     inventoryAndFilters: true, paginatedFiles: true, keyboardFileNavigation: true, cancelRestoresFocus: true,
     distinctProjectAccessibleNames: true, normalProfileHasNoWarnings: true, textImageBinaryPreviews: true, dependenciesVisible: true,
-    buildAndFileTrashRestore: true, permanentDeletion: true, exportCopiesAndReveal: true,
+    buildAndFileTrashRestore: true, labeledBuildDeletion: true, buildDeleteCancel: true, detailBuildDeleteUndo: true,
+    permanentDeletion: true, exportCopiesAndReveal: true,
     approvalBlocksConcurrentStorage: true, storageDrainsPendingPreview: true,
     externalBuildsAndFilesRefresh: true, selectedPreviewUpdatesInPlace: true, sameSizePreservedTimePreviewRefresh: true,
     liveRefreshPreservesFiltersAndPage: true, returningToStorageRefreshes: true,

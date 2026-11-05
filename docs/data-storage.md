@@ -14,11 +14,13 @@ Builds appear before size calculations finish, and returning to Storage immediat
 
 ## Cleanup and recovery
 
-Moving a file or build to **Trash** is recoverable. Undo restores the most recently moved item; the Trash tab keeps all recoverable items across restarts. Trash continues to use disk space until **Delete permanently** is confirmed. Restoration refuses to overwrite anything already at the original location.
+Every build or folder row in **Builds** has a visible **Delete** button. Inside the file workspace, **Delete build** or **Delete folder** sits beside Export. To remove one file, select it and use **Move file to Trash** in its preview.
+
+**Delete** opens a confirmation to move the item to **Trash**, where it remains recoverable. **Undo** restores the most recently moved item; the Trash tab keeps all recoverable items across restarts. Use **Restore** to recover an item or **Delete permanently** to remove it from disk after a separate confirmation. Trash continues to use disk space until permanent deletion. Restoration refuses to overwrite anything already at the original location.
 
 If restoration fails, copied files may remain at the original location and the complete original stays in Trash. Move those copies aside before retrying. Failed exports can also leave an incomplete copy at the chosen destination; these files are preserved so cleanup cannot erase changes made in another editor.
 
-Current-build file changes clear verification, approval, packaging state, and resume eligibility. Restoring files does not reinstate an earlier approval. Start a new build to produce fresh evidence before approving and delivering. In-use projects cannot be changed during build, delivery, approval, conversation, or another storage operation.
+Current-build file changes clear verification, approval, packaging state, and resume eligibility. Deleting the entire current build returns its project to draft, including after restarting AppYard. Restoring that build recovers its files as historical data; it does not make it current again or reinstate an earlier approval. Start a new build to produce fresh evidence before approving and delivering. In-use projects cannot be changed during build, delivery, approval, conversation, or another storage operation.
 
 Saved experiment evidence is protected from file-level cleanup while learning history refers to it. **Manage learning** opens the existing comparison and learning settings, where the user can forget a project's learning separately. The selected candidate's delivery provenance may remain protected. Removing files does not silently erase learning history.
 
