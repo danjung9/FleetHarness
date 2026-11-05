@@ -107,7 +107,7 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
       <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
       {report && needsGapAcceptance && <section className="review-criteria">
         <h2>The independent check found {gaps.length} gaps</h2>
-        <ul>{gaps.map((gap, index) => <li key={index}><strong>{gap.requirement}</strong><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></li>)}</ul>
+        <ul>{gaps.map((gap, index) => <li key={index}>{gap.plain ? <><strong>{gap.plain}</strong><details><summary>Technical detail</summary><p>{gap.requirement}</p><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></details></> : <><strong>{gap.requirement}</strong><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></>}</li>)}</ul>
         {!approved && <><label className="checkbox"><input type="checkbox" checked={acceptedGaps} disabled={submitting} onChange={event => setAcceptedGapsFor(event.target.checked ? judgmentKey : undefined)}/>I read these gaps and accept them for this prototype</label>
           <button className="secondary" disabled={busy || submitting} onClick={() => setDraft(current => ({ ...current, feedback: gaps.map(gap => `${gap.requirement}\nEvidence: ${gap.evidence}\nFix: ${gap.fix}`).join('\n\n').slice(0, 10000) }))}>Use these gaps as my change request</button></>}
       </section>}

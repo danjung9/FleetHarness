@@ -109,6 +109,14 @@ async function harness(t, options = {}) {
         const listeners = new Set();
         const judge = { disposed: false, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
           async prompt(text) {
+            if (text.startsWith('Use answer check mode.')) {
+              judgeSessions.splice(judgeSessions.indexOf(this), 1);
+              const disputes = JSON.parse(JSON.parse((await customTools[0].execute('answers', { path: 'disputed-answers.json' })).content[0].text).text);
+              const answer = options.answerCheck ? await options.answerCheck(disputes) : { cases: [] };
+              for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
+                usage: options.usage, content: [{ type: 'text', text: JSON.stringify(answer) }] } });
+              return;
+            }
             if (text.startsWith('Use planning audit mode.')) {
               judgeSessions.splice(judgeSessions.indexOf(this), 1);
               auditSessions.push(this);
@@ -544,7 +552,7 @@ test('a judge repair that breaks verification is undone and the verified applica
   assert.ok(h.project.report.independentJudge.gaps.some(gap => /repair was undone/.test(gap.evidence)));
   assert.ok(h.project.logs.some(entry => /did not hold, so it was undone/.test(entry.text ?? entry.message ?? '')));
   assert.equal(reportPassed(h.project.report, true), true);
-  assert.deepEqual((await fs.readdir(os.tmpdir())).filter(name => name.startsWith('appyard-judge-repair-')), []);
+  await assert.rejects(fs.access(path.join(h.root, 'judge-repairs', h.project.runId)), /ENOENT/);
 });
 
 test('a judge repair agent that cannot finish is undone and the verified application reaches review', async t => {
@@ -564,20 +572,33 @@ test('a judge repair agent that cannot finish is undone and the verified applica
   assert.equal(reportPassed(h.project.report, true), true);
 });
 
-test('Stop during a judge repair still stops the run instead of undoing the repair', { timeout: 10000 }, async t => {
-  const entered = deferred();
-  const h = await harness(t, { judgeAnswers: [judgeNot], verify: syntheticReport, abort: () => Promise.resolve(),
-    scenario: async ({ stage, session }) => {
-      if (stage !== 'repair') return;
+test('Resume after Stop during a judge repair returns to the version that passed and judges again', { timeout: 15000 }, async t => {
+  const entered = deferred(), released = deferred();
+  let stopped = false;
+  const left = p => fs.access(path.join(p.workspace, 'repair-left.txt')).then(() => true, () => false);
+  const h = await harness(t, { judgeAnswers: [judgeNot], abort: () => { released.resolve(true); return Promise.resolve(); }, verify: async (p, run) => syntheticReport(p, run, await left(p)),
+    scenario: async ({ stage, cwd }) => {
+      if (stage !== 'repair' || stopped) return;
+      await fs.writeFile(path.join(cwd, 'repair-left.txt'), 'unfinished work');
       entered.resolve();
-      await new Promise(() => {});
+      await released.promise;
+      throw new Error('Stopped');
     } });
   const started = h.run();
   await entered.promise;
+  stopped = true;
   await h.backend.stop(h.project.id);
   await started;
   assert.notEqual(h.project.status, 'review');
   assert.equal(h.judgeSessions.length, 1);
+  // A crash during an earlier restore would leave files missing, and the saved copy must still bring them back.
+  await fs.rm(path.join(h.project.workspace, 'README.md'), { force: true });
+  await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('review');
+  assert.equal(await left(h.project), false);
+  await fs.access(path.join(h.project.workspace, 'README.md'));
+  assert.equal(h.judgeSessions.length, 2);
+  assert.equal(h.project.report.independentJudge.verdict, 'SATISFACTORY');
+  await assert.rejects(fs.access(path.join(h.root, 'judge-repairs', h.project.runId)), /ENOENT/);
 });
 
 test('resume keeps failed-attempt usage and timing and adds the resumed attempt', async t => {
@@ -2257,6 +2278,60 @@ for (const repair of [true, false]) test(`required core evaluation ${repair ? 'r
     await fs.access(path.join(h.project.workspace, 'evaluation-plan.json'));
     assert.equal(await sourceHash(h.project.workspace), h.project.report.sourceHash);
   } else assert.ok(!h.sessions.find(session => session.stage === 'build').writingGuide);
+});
+
+const constantAnswerApp = 'process.stdin.resume();process.stdin.on("end",()=>process.stdout.write(JSON.stringify("constant answer")));';
+
+test('a separate check corrects a frozen answer that contradicts the written rules, and the frozen key itself stays unchanged', { timeout: 30000 }, async t => {
+  let disputes;
+  const h = await harness(t, {
+    answerCheck: input => { disputes = input; return { cases: input.map(item => ({ id: item.id, answerWrong: true, rule: 'A result is the constant answer.', why: 'The frozen answer breaks that rule.' })) }; },
+    scenario: async ({ cwd, stage }) => {
+      if (stage !== 'build') return false;
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, 'evaluate.cjs'), constantAnswerApp);
+      return true;
+    } });
+  await h.run();
+  const frozen = await fs.readFile(path.join(h.root, 'evaluations', h.project.runId + '.json'), 'utf8');
+  assert.ok(disputes?.length, JSON.stringify(h.project.logs.slice(-6)));
+  assert.equal(disputes[0].appOutput, 'constant answer');
+  assert.notEqual(disputes[0].frozenAnswer, 'constant answer');
+  assert.equal(frozen.includes('constant answer'), false, 'The sealed key never changes');
+  const evidence = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'));
+  assert.equal(evidence.status, 'passed');
+  assert.ok(h.project.runCheckpoint.testChanges.some(change => /corrected a frozen test answer/.test(change)));
+  assert.equal(h.project.status, 'review', JSON.stringify([h.project.error, h.project.logs.slice(-8).map(item => String(item.message ?? item.text).slice(0, 300))]));
+  assert.ok(h.project.report.output.includes('corrected a frozen test answer'));
+  assert.ok(h.project.report.independentJudge.humanSteps.some(step => /corrected for case/.test(step)));
+  assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('the build still fails when the separate check keeps the frozen answers', { timeout: 30000 }, async t => {
+  let checks = 0;
+  const h = await harness(t, {
+    answerCheck: input => { checks++; return { cases: input.map(item => ({ id: item.id, answerWrong: false, rule: '', why: 'The application output is wrong.' })) }; },
+    scenario: async ({ cwd, stage }) => {
+      if (stage !== 'build') return false;
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, 'evaluate.cjs'), constantAnswerApp);
+      return true;
+    } });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(checks, 1);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+});
+
+test('an unreadable answer check keeps the frozen answers', { timeout: 30000 }, async t => {
+  const h = await harness(t, {
+    answerCheck: () => 'not json',
+    scenario: async ({ cwd, stage }) => {
+      if (stage !== 'build') return false;
+      await artifacts(cwd, stage);
+      await fs.writeFile(path.join(cwd, 'evaluate.cjs'), constantAnswerApp);
+      return true;
+    } });
+  await h.run(); await h.assertSettled('failed');
 });
 
 for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: functionalTimeout }, async t => {
