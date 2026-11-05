@@ -4,9 +4,11 @@ AppYard is an Electron application backed by **Codex 0.166.0 or Pi SDK 1.5.0**. 
 
 ## Run the packaged app
 
-On Apple Silicon, open release/mac-arm64/AppYard.app, or install from release/AppYard-0.1.0-arm64.dmg.
+On Windows x64, download an installer from the [latest successful Windows release](https://github.com/danjung9/FleetHarness/releases/latest), verify its SHA-256 checksum, and run it for your Windows account. The repository is private, so GitHub sign-in and repository access are required. The link becomes available after the first published release. See [Windows setup and team-release instructions](windows-releases.md), including publishing prerequisites and local packaging.
 
-The local build is ad-hoc signed. It is not Apple Developer ID signed or notarized for public distribution.
+On Apple Silicon, open `release/mac-arm64/AppYard.app`, or install a DMG from `release/`. The macOS local build is ad-hoc signed, not Apple Developer ID signed or notarized. Windows builds are unsigned until publisher signing is configured.
+
+Windows packages show their installed version, full source revision, and build identity in **Model settings → Installed build**. Existing macOS packaging shows the version with revision unavailable. Close AppYard and run a newer installer to upgrade. There is no in-app background updater.
 
 1. Open **Model settings** and select a build engine. For subscription builds, choose **Codex · ChatGPT subscription**, sign in, select a model, and save. See [ChatGPT setup](chatgpt.md).
 2. For Pi, supply an API key, or reuse existing Pi authentication in ~/.pi/agent/auth.json. Provider environment variables are supported when inherited by the app. Pi-compatible custom endpoints in ~/.pi/agent/models.json are also loaded.
@@ -29,7 +31,7 @@ AppYard uses [Electron Packager](https://electron.github.io/packager/main/) with
 
 Only the self-contained `index.html` and a host-controlled desktop wrapper enter the application. Agent scripts, dependencies, test files, sessions, and AppYard credentials are excluded. The wrapper preserves offline browser storage under a stable, project-specific application-data directory and disables Node integration, external requests, navigation, popups, and permissions. Preview data is separate from the standalone app's data.
 
-macOS packages are ad-hoc signed, not Developer ID signed or notarized. Windows packages have no publisher signature. OS approval may therefore be required; this is a prototype distribution path. Cross-compilation, installers, automatic updates, and public-release signing are not provided. The executable smoke test has been run on macOS Apple Silicon; Windows and Linux need validation on their own build machines.
+macOS generated packages are ad-hoc signed, not Developer ID signed or notarized. Windows generated packages have no publisher signature. OS approval may therefore be required; this is a prototype distribution path. Generated-app ZIPs do not include installers or automatic updates. The AppYard host has its own Windows installer, separate from these generated-app downloads. Windows release checks exercise generated executable export and launch; Linux still needs validation on its own build machine.
 
 Run `npm run test:executable` to verify approval, save cancellation, packaging, ZIP extraction, standalone launch, local persistence, renderer isolation, concurrent-change protection, and stale-source rejection. To test the packaged AppYard host, run `FLEET_EXECUTABLE="/absolute/path/to/AppYard.app/Contents/MacOS/AppYard" node scripts/smoke-executable.mjs` after `npm run pack`. The fixture is independently tested and requires no model credentials.
 
@@ -57,7 +59,9 @@ Tests are agent-authored and must be reviewed for meaningful coverage. Passing t
 
 ## Storage and credentials
 
-On macOS the default application state is under ~/Library/Application Support/fleetharness/ (the exact path appears in Model settings). State writes use a temporary file and rename. Previous run folders and Pi JSONL sessions remain on disk.
+On Windows, the default application state is under `%APPDATA%\fleetharness\`; on macOS it is under `~/Library/Application Support/fleetharness/`. The exact path appears in **Model settings → Workspace storage**. `FLEET_USER_DATA` can explicitly override it for isolated tests. State writes use a temporary file and rename. Previous run folders and Pi JSONL sessions remain on disk.
+
+The installer preserves the existing `dev.fleetharness.desktop` application identity and `fleetharness` storage root. Upgrades replace application files; they retain saved challenges, settings, workspaces, and encrypted credentials. Saved state remains schema version 1. Quit the app before backing up the entire storage folder or installing an upgrade. Rollback installers remain available in earlier GitHub releases; back up state first because future releases may introduce migrations.
 
 An entered key is held in memory unless **Remember this key** is selected. Remembered keys use Electron safeStorage encryption and a private file; API keys are never included in the bootstrap payload sent to the UI. Existing Pi credentials remain managed by Pi. Disabling remembered storage removes AppYard's encrypted key file but keeps the current in-memory key until the app exits.
 
@@ -85,13 +89,15 @@ Useful commands:
     npm run test:flow
     npm run test:harness
     npm run test:desktop
+    npm run dist:win
+    npm run test:windows
     npm run dist
 
 The desktop smoke test drives the actual Electron application with Playwright and a **local deterministic test provider**. It exercises the real Pi SDK, file tools, independent test failure/repair, preview isolation, review, export, and persistence. It does not validate the quality or authentication of a hosted model. A live provider smoke run requires your credentials.
 
 `npm run test:flow` runs the progress and failure regression suite without credentials. Virtual-clock tests prove inactivity, absolute-deadline, turn-budget, and cancellation behavior even when a session ignores abort. Pipeline tests exercise each agent handoff, artifact completion, bounded repair, immutable inputs, persistence, concurrency, and restart isolation. Real Pi SDK tests use a loopback provider to recover a 503, run actual file tools and Node tests, and handle stalled or rejected requests. Subprocess tests verify timeout, cancellation at process handoff, excessive output, and source mutation. These are orchestration guarantees for the tested failure modes; they do not measure hosted-model output quality.
 
-The dist command produces the Apple Silicon app, DMG, and ZIP in release/. The pack command makes an unpacked app. Apple signing/notarization credentials are required for a publicly trusted release.
+`npm run dist:win` produces the Windows x64 NSIS installer and provenance/checksum files in `release/`. `npm run dist` produces the Apple Silicon app, DMG, and ZIP in `release/`. `npm run pack` makes an unpacked app. See [Windows releases](windows-releases.md) for build identity, installer smoke and upgrade checks, and the main-branch publishing policy. Apple signing/notarization and Windows publisher signing need separate credentials.
 
 ## Integration references
 

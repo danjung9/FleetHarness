@@ -12,7 +12,11 @@ test('hosted migration enforces ownership, run fencing, budgets and immutable ap
   const directory = mkdtempSync(join(tmpdir(), 'fleet-db-test-'));
   const data = join(directory, 'data'); let started = false;
   const port = String(20000 + Math.floor(Math.random() * 20000));
-  const psqlArgs = ['-X', '-q', '-A', '-t', '-h', directory, '-p', port, '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'];
+  // Windows PostgreSQL does not expose Unix-domain sockets. Keep the existing
+  // isolated socket on Unix and use only loopback TCP on Windows.
+  const host = process.platform === 'win32' ? '127.0.0.1' : directory;
+  const serverOptions = process.platform === 'win32' ? `-F -p ${port} -h 127.0.0.1` : `-F -p ${port} -k ${directory} -h ''`;
+  const psqlArgs = ['-X', '-q', '-A', '-t', '-h', host, '-p', port, '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'];
   const sql = text => execFileSync('psql', psqlArgs, { input: text, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
   const fail = (text, code) => assert.throws(() => sql(text), error => error.stderr?.includes(code));
   const value = text => JSON.parse(sql(text));
@@ -20,7 +24,7 @@ test('hosted migration enforces ownership, run fencing, budgets and immutable ap
   const a = randomUUID(), b = randomUUID(), project = randomUUID(), otherProject = randomUUID();
   try {
     execFileSync('initdb', ['-D', data, '-A', 'trust', '-U', 'postgres', '--no-locale'], { stdio: 'ignore' });
-    execFileSync('pg_ctl', ['-D', data, '-l', join(directory, 'postgres.log'), '-o', `-F -p ${port} -k ${directory} -h ''`, '-w', 'start'], { stdio: 'ignore' }); started = true;
+    execFileSync('pg_ctl', ['-D', data, '-l', join(directory, 'postgres.log'), '-o', serverOptions, '-w', 'start'], { stdio: 'ignore' }); started = true;
     sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key);
       create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint);
       insert into auth.users values('${a}'),('${b}');`);

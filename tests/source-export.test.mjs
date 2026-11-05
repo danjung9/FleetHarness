@@ -71,7 +71,7 @@ test('cancellation during copying cleans the incomplete bundle and preserves ear
 
 test('export destinations inside the workspace are rejected through symlink aliases', async t => {
   const input = await fixture(t), alias = path.join(input.root, 'workspace-alias');
-  await fs.symlink(input.workspace, alias);
+  await fs.symlink(input.workspace, alias, process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(exportVerifiedBundle({ ...input, parent: alias }), /outside the agent workspace/);
   assert.equal(await sourceHash(input.workspace), input.verifiedHash);
   await onlyExisting(input.parent);

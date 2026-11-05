@@ -43,9 +43,9 @@ test('optional brief fields accept blanks, normalize supplied context and reject
 test('artifact access rejects traversal and symlink escapes', async () => {
   const dir=await temp();try {
     const inner=path.join(dir,'workspace');await fs.mkdir(inner);await fs.writeFile(path.join(dir,'secret'),'private');
-    await fs.symlink(path.join(dir,'secret'),path.join(inner,'escape'));
+    await fs.symlink(dir,path.join(inner,'escape'),process.platform === 'win32' ? 'junction' : 'dir');
     await assert.rejects(safeFile(inner,'../secret'));
-    await assert.rejects(safeFile(inner,'escape'));
+    await assert.rejects(safeFile(inner,'escape/secret'));
     assert.deepEqual(await listArtifacts(inner),[]);
   } finally {await fs.rm(dir,{recursive:true,force:true});}
 });

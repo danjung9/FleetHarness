@@ -36,9 +36,13 @@ test('static preview serves only allowed regular files with isolation headers', 
   await writeFile(join(root, 'assets/app.mjs'), 'export const value=1;');
   await writeFile(join(root, 'private.json'), '{"private":"brief"}');
   await writeFile(join(directory, 'outside.txt'), 'outside-file');
-  await symlink(join(directory, 'outside.txt'), join(root, 'linked.txt'));
+  const outside = join(directory, 'outside-files'); await mkdir(outside);
+  await writeFile(join(outside, 'secret.txt'), 'outside-file-through-directory-link');
+  const windows = process.platform === 'win32';
+  const linkedPath = windows ? 'linked/secret.txt' : 'linked.txt';
+  await symlink(windows ? outside : join(outside, 'secret.txt'), join(root, windows ? 'linked' : 'linked.txt'), windows ? 'junction' : 'file');
   const script = join(directory, 'serve.mjs');
-  await writeFile(script, staticPreviewServer(['index.html', 'assets/app.mjs', 'linked.txt', '../outside.txt'], 'fixture-ready', root, 0));
+  await writeFile(script, staticPreviewServer(['index.html', 'assets/app.mjs', linkedPath, '../outside.txt'], 'fixture-ready', root, 0));
   const child = spawn(process.execPath, [script], { stdio: ['ignore', 'pipe', 'pipe'] });
   t.after(async () => { if (child.exitCode === null) { child.kill(); await once(child, 'exit'); } });
   const [stdout] = await once(child.stdout, 'data');
@@ -49,7 +53,7 @@ test('static preview serves only allowed regular files with isolation headers', 
   assert.match(home.headers.get('Content-Security-Policy'), /worker-src 'none'/);
   assert.equal(home.headers.get('Referrer-Policy'), 'no-referrer'); assert.equal(home.headers.get('X-Content-Type-Options'), 'nosniff');
   const module = await fetch(base + '/assets/app.mjs'); assert.equal(module.status, 200); assert.match(module.headers.get('Content-Type'), /javascript/);
-  for (const path of ['/private.json', '/linked.txt', '/%2e%2e%2foutside.txt', '/assets/%2e%2e%2fprivate.json', '/%00']) assert.equal((await fetch(base + path)).status, 404, path);
+  for (const path of ['/private.json', '/' + linkedPath, '/%2e%2e%2foutside.txt', '/assets/%2e%2e%2fprivate.json', '/%00']) assert.equal((await fetch(base + path)).status, 404, path);
   assert.equal((await fetch(base, { method: 'POST' })).status, 405);
   assert.equal(await (await fetch(base, { method: 'HEAD' })).text(), '');
   assert.equal(await (await fetch(base + '/__fleet_health')).text(), 'fixture-ready');
