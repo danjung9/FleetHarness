@@ -8,6 +8,16 @@ summary: "Local tool disclosures, coordination gaps and prior-work references fo
 
 # Research log
 
+## Merged walkthrough, November 5
+
+[E] Assigned a report for Dan on the officer journey at f2e5422. Read the charter, brief, both relay files, current direction and prior UX work. The read-only agentic-builder clone resolves to f2e5422f900cfeb0fd73dae194923c5ea4c43f41 and has no reported working-tree changes. Git returned the requested results despite restricted temporary-cache warnings.
+
+[E] Reused the disclosed shell, Git, ripgrep, local image viewer and file patch interface. New evidence collection: Screens-f2e5422 | Synthetic screenshot dataset | Inspect the real application screens supplied for the merged-build walkthrough | Project QA. Screenshot fixtures are not officer testing or proof of live account access.
+
+[E] Central Sprint, Sessions and Team/Now.md remain outside this task's write boundary. The tools directory is explicitly denied, so the central ledger command cannot be used. Disclosures, friction and session handoff are staged here. No outward message, account action, application execution or frontend edit is part of this review.
+
+[E] Some batched read output was truncated. Relevant source sections are reread individually before findings are finalized. One patch failed because the journal heading differed from the expected heading; neither file was changed by that attempt. Prior-work inputs include Delta-d0f4c69, Plan/Findings/Review and the existing QA receipts; later direct task scope supersedes the older directive's idle status.
+
 ## Bottom line
 
 [E] Research stayed inside the assigned read and write boundaries. [E] Central logging could not be completed because those files are outside the writable folder. [R] Transfer the disclosures and session handoff through the authorized coordinating session.

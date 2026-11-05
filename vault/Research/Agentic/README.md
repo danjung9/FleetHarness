@@ -2,11 +2,13 @@
 type: research
 status: active
 owner: mukul
-updated: 2026-11-04
+updated: 2026-11-05
 summary: "Completed modified build, failing shipped gate, factory acceptance failure and newer incomplete CLI acceptance remain separate."
 ---
 
 # Agent workflow evidence and designs
+
+ [R, November 5] [[Research/Agentic/One-Shot-Gaps]] ranks three generic changes after reviewing all 14 historical negative officer verdicts and source at f2e5422: audit task coverage before freezing, require fresh-input counterexamples, and verify complete outputs at their destination. Existing core evaluation and final judging are retained. No measured verdict improvement is claimed.
 
 ## Latest benchmark diagnosis
 
