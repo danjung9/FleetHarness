@@ -75,7 +75,7 @@ try {
   await page.getByRole('button',{name:'Preview — generated app',exact:true}).click();
   await page.getByRole('button',{name:'Reload preview'}).click();
   const frame=page.frameLocator('iframe[title="Generated application preview"]');
-  await frame.getByRole('button',{name:'Parse message'}).click();
+  await frame.getByRole('button',{name:'Parse message'}).click().catch(async error=>{await page.screenshot({path:path.join(output,'electron-preview-failure.png'),scale:'css'}).catch(()=>{});throw error;});
   assert.match(await frame.locator('#result').textContent(),/inspect pump/);
   const child=page.frames().find(f=>f.url().startsWith('http://127.0.0.1:'));
   assert.equal(await child.evaluate(()=>typeof window.fleetHarness),'undefined');

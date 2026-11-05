@@ -38,6 +38,8 @@ try {
   await assert.rejects(page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), /approve/);
   await page.getByLabel('Review notes').fill('Verified the counter changes and persists locally. Tested for prototype use only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
+  // This fixture has no independent check on record, which a person must accept explicitly.
+  await page.getByLabel('I read these gaps and accept them for this prototype').check();
   await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
   await page.getByText('Prototype approved for delivery.', { exact: true }).waitFor();
   await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
