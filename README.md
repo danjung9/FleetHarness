@@ -18,7 +18,30 @@ Build and verification agents can [open and interact with their app](docs/agent-
 
 **Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
-For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
+### Quick start
+
+Requires Node.js 22.19 or later.
+
+From the repository directory, install dependencies and launch the app:
+
+```bash
+npm ci
+npm run dev
+```
+
+In the app:
+
+1. Connect a provider in **Pi settings**.
+2. Choose a challenge.
+3. Start a build.
+
+To create distributable packages:
+
+```bash
+npm run dist
+```
+
+### Features and documentation
 
 On the **`codex/one-shot-goal` experiment**, save the brief, then choose **Open new Codex goal** on Build to open a real Codex CLI goal with full access in macOS Terminal. Saving a brief or starting a pipeline build does not open Terminal. The complete brief and attached data go into a fresh folder; Codex owns implementation, testing and repair in one session. The existing pipeline remains available for comparison. See [the Codex goal experiment](docs/codex-goal-experiment.md) for usage, authentication and result boundaries.
 
