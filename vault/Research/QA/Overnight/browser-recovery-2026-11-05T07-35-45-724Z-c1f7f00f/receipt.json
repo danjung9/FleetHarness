@@ -1,0 +1,593 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-11-05T07:35:45.719Z",
+  "status": "PASS",
+  "storageKey": "fleet-browser-preview",
+  "cases": [
+    {
+      "id": "absent-storage",
+      "status": "PASS",
+      "seed": null,
+      "expected": "Interactive AppYard Home, directly or through an application recovery control.",
+      "pageerrors": [],
+      "blockedRequests": [],
+      "dialogs": [],
+      "path": "mounted-and-interactive",
+      "initialScreenshot": "absent-storage-initial.png"
+    },
+    {
+      "id": "malformed-json",
+      "status": "PASS",
+      "seed": "{",
+      "expected": "Interactive AppYard Home, directly or through an application recovery control.",
+      "pageerrors": [],
+      "blockedRequests": [],
+      "dialogs": [],
+      "path": "mounted-and-interactive",
+      "initialScreenshot": "malformed-json-initial.png",
+      "manualClearControl": {
+        "status": "PASS",
+        "mechanism": "QA removeItem then reload, without reseeding. Not application recovery.",
+        "screenshot": "malformed-json-manual-clear-control.png"
+      }
+    },
+    {
+      "id": "wrong-shape-object",
+      "status": "PASS",
+      "seed": "{}",
+      "expected": "Interactive AppYard Home, directly or through an application recovery control.",
+      "pageerrors": [],
+      "blockedRequests": [],
+      "dialogs": [],
+      "path": "mounted-and-interactive",
+      "initialScreenshot": "wrong-shape-object-initial.png",
+      "manualClearControl": {
+        "status": "PASS",
+        "mechanism": "QA removeItem then reload, without reseeding. Not application recovery.",
+        "screenshot": "wrong-shape-object-manual-clear-control.png"
+      }
+    },
+    {
+      "id": "missing-settings",
+      "status": "PASS",
+      "seed": "{\"version\":1,\"projects\":[]}",
+      "expected": "Interactive AppYard Home, directly or through an application recovery control.",
+      "pageerrors": [],
+      "blockedRequests": [],
+      "dialogs": [],
+      "path": "mounted-and-interactive",
+      "initialScreenshot": "missing-settings-initial.png",
+      "manualClearControl": {
+        "status": "PASS",
+        "mechanism": "QA removeItem then reload, without reseeding. Not application recovery.",
+        "screenshot": "missing-settings-manual-clear-control.png"
+      }
+    },
+    {
+      "id": "settings-wrong-type",
+      "status": "PASS",
+      "seed": "{\"version\":1,\"projects\":[],\"settings\":\"synthetic-invalid-settings\"}",
+      "expected": "Interactive AppYard Home, directly or through an application recovery control.",
+      "pageerrors": [],
+      "blockedRequests": [],
+      "dialogs": [],
+      "path": "mounted-and-interactive",
+      "initialScreenshot": "settings-wrong-type-initial.png",
+      "manualClearControl": {
+        "status": "PASS",
+        "mechanism": "QA removeItem then reload, without reseeding. Not application recovery.",
+        "screenshot": "settings-wrong-type-manual-clear-control.png"
+      }
+    }
+  ],
+  "errors": [],
+  "artifactDrift": false,
+  "execution": "Existing dist only; loopback Chrome with browser sandbox enabled; synthetic inputs; no model calls.",
+  "buildProvenance": "HEAD, source and served dist bytes are recorded independently. Main supplies the already built checkout; this fixture does not rebuild or establish source-to-dist equivalence.",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/browser-recovery-2026-11-05T07-35-45-724Z-c1f7f00f",
+  "app": {
+    "name": "fleetharness",
+    "version": "0.1.0",
+    "productName": "AppYard"
+  },
+  "scriptSHA256": "0230ed2faf8e3ab463d653bfc626a95a72b614f7387ffaa9fc95a9ad90295333",
+  "repo": "/Users/mukul/Documents/CDAO/fh-org/astra-test",
+  "before": {
+    "head": "3da8ad831b7794bd65232ab074e986e8adbb8272",
+    "tree": "d705c5cb4b6a57539ce0a91f4c0c9e407130f183",
+    "status": "",
+    "trackedStatus": "",
+    "sourceApiSHA256": "37af89e7fcfa97d5db8b09707eed97718b5d56c0064a680853535101a57dd025",
+    "dist": {
+      "app-icon-192.png": {
+        "bytes": 5014,
+        "sha256": "de396b3aae805d90cb7ab8c266de4c6d3d61fcf85953a23634571c22fe1722ea"
+      },
+      "app-icon-512.png": {
+        "bytes": 16889,
+        "sha256": "c33a8322eeea69e6188f3a473d065a2e39a600836f3777e5f9eb8975c06e7296"
+      },
+      "apple-touch-icon.png": {
+        "bytes": 3651,
+        "sha256": "0633a6c6039eb35bdf193c7c2c2a8285996d6c73f5db1a1a17b5bf211a781177"
+      },
+      "assets/dm-sans-latin-400-normal-BwCSEQnW.woff": {
+        "bytes": 18356,
+        "sha256": "38702875fe179437d200e7ba6f7fab4d497ffe48117ef332029b2081751186ad"
+      },
+      "assets/dm-sans-latin-400-normal-CW0RaeGs.woff2": {
+        "bytes": 14200,
+        "sha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006"
+      },
+      "assets/dm-sans-latin-500-normal-B9HHJjqV.woff2": {
+        "bytes": 14304,
+        "sha256": "19bf1984956517c35c2bd35b6cdedac12a21d6fcd3596c614ecdfb88b648909d"
+      },
+      "assets/dm-sans-latin-500-normal-Dr3UlScf.woff": {
+        "bytes": 18520,
+        "sha256": "7deb957e430b780ee3272d801af4f9f2211b1330ec40a312a8f25309eacb4034"
+      },
+      "assets/dm-sans-latin-600-normal-Aqo67rzb.woff2": {
+        "bytes": 14144,
+        "sha256": "6bb2b2645ba5eeaecf56322c543fa3a75b87b927977b9c03b1dabc4205089120"
+      },
+      "assets/dm-sans-latin-600-normal-BmdmIIQ2.woff": {
+        "bytes": 18320,
+        "sha256": "e7351257e49400eff05aca30a2007289194a900860d30c30770d8b8732897564"
+      },
+      "assets/dm-sans-latin-700-normal-CUSSCpQX.woff": {
+        "bytes": 18504,
+        "sha256": "af422a448ac00679a8dbb13532db3616829c5a35b58d3eeea5903ce17ad2e36a"
+      },
+      "assets/dm-sans-latin-700-normal-DvUfVpUG.woff2": {
+        "bytes": 14348,
+        "sha256": "35c5efa0e5daa52ee5c6500f5be354bf751fb65c4e49e1d6806c6eb5883e8fe9"
+      },
+      "assets/dm-sans-latin-ext-400-normal-BjWJ59Pq.woff": {
+        "bytes": 9976,
+        "sha256": "3d63423c3204f61bb196d1ae3729b7f2871d87abd4403d198f4810923888c016"
+      },
+      "assets/dm-sans-latin-ext-400-normal-BtiwyxMk.woff2": {
+        "bytes": 7364,
+        "sha256": "962730c6ff7595f9499b0d963a3bccb2139d793f0fb31fbd87aed1881c020e0a"
+      },
+      "assets/dm-sans-latin-ext-500-normal-BJfUCQsA.woff2": {
+        "bytes": 7432,
+        "sha256": "e0a1d21584ba00798a3dbe90ef5f8a162741d454f52ab66630f9dc41da372b3d"
+      },
+      "assets/dm-sans-latin-ext-500-normal-DR84L5F-.woff": {
+        "bytes": 10068,
+        "sha256": "e1f67472aa96c6f60969c696ba8a9d36ed8ea26c2ff5c3e27ee29c664911575d"
+      },
+      "assets/dm-sans-latin-ext-600-normal-4vooXBpG.woff2": {
+        "bytes": 7420,
+        "sha256": "6406eb05e2eb50779cb95ee8745c98ad23cce7e67d752822782453da7f6b4491"
+      },
+      "assets/dm-sans-latin-ext-600-normal-DRtaDpgU.woff": {
+        "bytes": 10024,
+        "sha256": "f70e6bb2170e2ab7bfc23a021af0663dce4df0b502173c9c5135015d7fed457a"
+      },
+      "assets/dm-sans-latin-ext-700-normal-BLI3TTWz.woff": {
+        "bytes": 10012,
+        "sha256": "56084e69490970432de58b4a2406ee4daa1f58d90f9600ae3fda0e895a6355e7"
+      },
+      "assets/dm-sans-latin-ext-700-normal-CJIcxD6K.woff2": {
+        "bytes": 7452,
+        "sha256": "f6640907b94df0d227f26e2fcb6db2497d6c44c4b68f731ea1e06f5b45e2e91b"
+      },
+      "assets/dm-serif-display-DEPTIRtf.ttf": {
+        "bytes": 70348,
+        "sha256": "c03775f8cc3db88cfea259b231abe13f94e6a3d3cb01c09477a2e42a1f5919e1"
+      },
+      "assets/ibm-plex-mono-cyrillic-400-normal-BSMlKf0J.woff2": {
+        "bytes": 8356,
+        "sha256": "7635422bd10ddbbcb0e0caa1154b928298f5c8319b8c00b30978d4395f4783ce"
+      },
+      "assets/ibm-plex-mono-cyrillic-400-normal-CEL4l2ZJ.woff": {
+        "bytes": 7204,
+        "sha256": "42da81a28bbcddda6768a25a4b3105ee291e69d5fa6c74747bc51bbc6718c538"
+      },
+      "assets/ibm-plex-mono-cyrillic-500-normal-Ael50iVv.woff": {
+        "bytes": 7208,
+        "sha256": "55a3af5e5ba0f565b4e66149cfe077ba88ac42cc3f68650a901d58eadbf9cd9b"
+      },
+      "assets/ibm-plex-mono-cyrillic-500-normal-Bq9vWWag.woff2": {
+        "bytes": 8460,
+        "sha256": "1d89462e86cb8e87e7e9d6f6635605bd7c3081baca6caaecee84916bf7b60edc"
+      },
+      "assets/ibm-plex-mono-cyrillic-600-normal-CTOM6hUh.woff2": {
+        "bytes": 9352,
+        "sha256": "2b05a8695c7f9f4abd7178b279646a3b005a8ce57546bef6fd145f25d131e0aa"
+      },
+      "assets/ibm-plex-mono-cyrillic-600-normal-fLZuRloM.woff": {
+        "bytes": 7268,
+        "sha256": "877b7b3177c22f6911f36888fb09f003d63c665e2185d3dbadea83130ecbb316"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-400-normal-DMdlQ8Kv.woff": {
+        "bytes": 5820,
+        "sha256": "0e4a2393e8ed3185ae300e4a202b6d9149d47d8a0e5bb8f1d1db33e76b86ecd1"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-400-normal-xuaO2J-f.woff2": {
+        "bytes": 6912,
+        "sha256": "f8c22ec1804bd6966b70f43ac7c327025645b4c09597117fca2a5a6c750106fe"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-500-normal-BIfNGwUT.woff": {
+        "bytes": 5772,
+        "sha256": "eadb2c427859b185761380143d1f42187fd7cbd94704b543e4c76c6368fbab52"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-500-normal-BqneJy0T.woff2": {
+        "bytes": 6972,
+        "sha256": "3febe5c7f22e4b07b4552738673c3dbe8bced2dc5f48b866edf7ccd9552d109a"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-600-normal-9HEixskS.woff": {
+        "bytes": 5792,
+        "sha256": "d17413b646f918a8b52316b1bc909068b90687a638fbf7fecc5653b870c7714a"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-600-normal-V-xxqcpd.woff2": {
+        "bytes": 7692,
+        "sha256": "83109cdd4f8665b475dfc11d61bd44da328bf7e6eab3d3953d39c49b1b9f6015"
+      },
+      "assets/ibm-plex-mono-latin-400-normal-CvHOgSBP.woff": {
+        "bytes": 13144,
+        "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381"
+      },
+      "assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2": {
+        "bytes": 14708,
+        "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+      },
+      "assets/ibm-plex-mono-latin-500-normal-CB9ihrfo.woff": {
+        "bytes": 13156,
+        "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d"
+      },
+      "assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2": {
+        "bytes": 14888,
+        "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+      },
+      "assets/ibm-plex-mono-latin-600-normal-BgSNZQsw.woff2": {
+        "bytes": 15620,
+        "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+      },
+      "assets/ibm-plex-mono-latin-600-normal-DWFSQ4vo.woff": {
+        "bytes": 13208,
+        "sha256": "cb96282f22c6f19112856fd6e0b34e2baefaf4ca6551e851d58c5ab0aabcd2be"
+      },
+      "assets/ibm-plex-mono-latin-ext-400-normal-BmRBH3aV.woff2": {
+        "bytes": 13348,
+        "sha256": "6bc0f226a5b7884a8170e3f62c63d7675609d4631bdc5931b5cdab81821f00eb"
+      },
+      "assets/ibm-plex-mono-latin-ext-400-normal-D3D2R8hC.woff": {
+        "bytes": 11768,
+        "sha256": "f8ddaa0ab9d3c052c9fe035751c8214b7e0d59e6e7b69b045f8659c2fe4dced2"
+      },
+      "assets/ibm-plex-mono-latin-ext-500-normal-CAhNIIs5.woff2": {
+        "bytes": 13432,
+        "sha256": "6bb06407c97584b0867a959e05e8874693bfeb8c317de190811c51598f2d99ea"
+      },
+      "assets/ibm-plex-mono-latin-ext-500-normal-CZ70TYgx.woff": {
+        "bytes": 11768,
+        "sha256": "ff5da89c3ee20d38359943b61a7aae9200d2a0f61cf95ca10a7cccef81da2ff5"
+      },
+      "assets/ibm-plex-mono-latin-ext-600-normal-D38SheWl.woff2": {
+        "bytes": 14328,
+        "sha256": "32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b"
+      },
+      "assets/ibm-plex-mono-latin-ext-600-normal-DmB0ttJJ.woff": {
+        "bytes": 11832,
+        "sha256": "46249f4bc59bb78b3893d3a4ad39226d2f3fb66dfa21ccc21bda044a4a3c78c9"
+      },
+      "assets/ibm-plex-mono-vietnamese-400-normal-BulugwFq.woff2": {
+        "bytes": 5868,
+        "sha256": "62632b6375305e70ddcafdd895218e6ae41a184fcd280a69c739460604ca00a9"
+      },
+      "assets/ibm-plex-mono-vietnamese-400-normal-DDuiU_S-.woff": {
+        "bytes": 5620,
+        "sha256": "bced561d991e3f81c150c08e71f7fa849fcbff523560f6059245f2edce19b600"
+      },
+      "assets/ibm-plex-mono-vietnamese-500-normal-C8zxqsMH.woff": {
+        "bytes": 5616,
+        "sha256": "755f62b418df17518aa0ea16b4232e546ce949a4ab7acc577071fa9be9e3dc88"
+      },
+      "assets/ibm-plex-mono-vietnamese-500-normal-DZ4AoWbu.woff2": {
+        "bytes": 6040,
+        "sha256": "781633d95de88040fb77141d1e65d928c87c0144691fbc74da5a64d137a7e910"
+      },
+      "assets/ibm-plex-mono-vietnamese-600-normal-D2EvbN8M.woff2": {
+        "bytes": 6932,
+        "sha256": "51b74d53e106ba8a26dd33464b231a562069be2a234b923c115beb622e6f6bc6"
+      },
+      "assets/ibm-plex-mono-vietnamese-600-normal-iLQfcSjf.woff": {
+        "bytes": 5712,
+        "sha256": "e4c71658a1eebc5d2b50d801aa4450c94956da1342c2df261442d674ecb96f0e"
+      },
+      "assets/index-BVOtQtCI.js": {
+        "bytes": 575759,
+        "sha256": "8bd0a616ca12948354cc3e5194c9e00f1dc86f75884b3c391475817851f129d0"
+      },
+      "assets/index-Dywp9hYY.css": {
+        "bytes": 115301,
+        "sha256": "012376a6bb0eab53128e661b8329c942aad28106dbf30118d79d846e46d975c0"
+      },
+      "favicon-16.png": {
+        "bytes": 454,
+        "sha256": "9f81f5d29c7f3f55bffe4268a0f9f290bbbf1fd6a0f81d47e6a0dbe9dab0affd"
+      },
+      "favicon-32.png": {
+        "bytes": 809,
+        "sha256": "c69dec9dbfa989542b94a24453c535750502de72a4b1c4e78215cc9e2875451c"
+      },
+      "favicon-48.png": {
+        "bytes": 1209,
+        "sha256": "a0a8bfebbf7b204d699fb1b57c76dccfdb4306de72a2cf7c25233e5335676645"
+      },
+      "favicon.ico": {
+        "bytes": 2526,
+        "sha256": "8cf4c5b9b68a780cb7fb7eccc26a88d953121956c2b8dbe0a8dd1bc213e2d29b"
+      },
+      "favicon.svg": {
+        "bytes": 536,
+        "sha256": "44626057b8b1d2796f3153add45102ae8dfb19ebfd585924f22cb43f0936f5ab"
+      },
+      "index.html": {
+        "bytes": 984,
+        "sha256": "3585418697c53b700cd90eedaf1d9ed56ef6406d07335672d56cf832f5730f6c"
+      },
+      "site.webmanifest": {
+        "bytes": 404,
+        "sha256": "f668365563c309ab24492f4b0c1f9ade9b0fcdf50a5333fd7820122e9bb8a829"
+      }
+    }
+  },
+  "playwright": "1.64.1",
+  "origin": "http://127.0.0.1:53399",
+  "browserPID": 25109,
+  "browserExit": {
+    "exitCode": 0,
+    "signalCode": null
+  },
+  "after": {
+    "head": "3da8ad831b7794bd65232ab074e986e8adbb8272",
+    "tree": "d705c5cb4b6a57539ce0a91f4c0c9e407130f183",
+    "status": "",
+    "trackedStatus": "",
+    "sourceApiSHA256": "37af89e7fcfa97d5db8b09707eed97718b5d56c0064a680853535101a57dd025",
+    "dist": {
+      "app-icon-192.png": {
+        "bytes": 5014,
+        "sha256": "de396b3aae805d90cb7ab8c266de4c6d3d61fcf85953a23634571c22fe1722ea"
+      },
+      "app-icon-512.png": {
+        "bytes": 16889,
+        "sha256": "c33a8322eeea69e6188f3a473d065a2e39a600836f3777e5f9eb8975c06e7296"
+      },
+      "apple-touch-icon.png": {
+        "bytes": 3651,
+        "sha256": "0633a6c6039eb35bdf193c7c2c2a8285996d6c73f5db1a1a17b5bf211a781177"
+      },
+      "assets/dm-sans-latin-400-normal-BwCSEQnW.woff": {
+        "bytes": 18356,
+        "sha256": "38702875fe179437d200e7ba6f7fab4d497ffe48117ef332029b2081751186ad"
+      },
+      "assets/dm-sans-latin-400-normal-CW0RaeGs.woff2": {
+        "bytes": 14200,
+        "sha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006"
+      },
+      "assets/dm-sans-latin-500-normal-B9HHJjqV.woff2": {
+        "bytes": 14304,
+        "sha256": "19bf1984956517c35c2bd35b6cdedac12a21d6fcd3596c614ecdfb88b648909d"
+      },
+      "assets/dm-sans-latin-500-normal-Dr3UlScf.woff": {
+        "bytes": 18520,
+        "sha256": "7deb957e430b780ee3272d801af4f9f2211b1330ec40a312a8f25309eacb4034"
+      },
+      "assets/dm-sans-latin-600-normal-Aqo67rzb.woff2": {
+        "bytes": 14144,
+        "sha256": "6bb2b2645ba5eeaecf56322c543fa3a75b87b927977b9c03b1dabc4205089120"
+      },
+      "assets/dm-sans-latin-600-normal-BmdmIIQ2.woff": {
+        "bytes": 18320,
+        "sha256": "e7351257e49400eff05aca30a2007289194a900860d30c30770d8b8732897564"
+      },
+      "assets/dm-sans-latin-700-normal-CUSSCpQX.woff": {
+        "bytes": 18504,
+        "sha256": "af422a448ac00679a8dbb13532db3616829c5a35b58d3eeea5903ce17ad2e36a"
+      },
+      "assets/dm-sans-latin-700-normal-DvUfVpUG.woff2": {
+        "bytes": 14348,
+        "sha256": "35c5efa0e5daa52ee5c6500f5be354bf751fb65c4e49e1d6806c6eb5883e8fe9"
+      },
+      "assets/dm-sans-latin-ext-400-normal-BjWJ59Pq.woff": {
+        "bytes": 9976,
+        "sha256": "3d63423c3204f61bb196d1ae3729b7f2871d87abd4403d198f4810923888c016"
+      },
+      "assets/dm-sans-latin-ext-400-normal-BtiwyxMk.woff2": {
+        "bytes": 7364,
+        "sha256": "962730c6ff7595f9499b0d963a3bccb2139d793f0fb31fbd87aed1881c020e0a"
+      },
+      "assets/dm-sans-latin-ext-500-normal-BJfUCQsA.woff2": {
+        "bytes": 7432,
+        "sha256": "e0a1d21584ba00798a3dbe90ef5f8a162741d454f52ab66630f9dc41da372b3d"
+      },
+      "assets/dm-sans-latin-ext-500-normal-DR84L5F-.woff": {
+        "bytes": 10068,
+        "sha256": "e1f67472aa96c6f60969c696ba8a9d36ed8ea26c2ff5c3e27ee29c664911575d"
+      },
+      "assets/dm-sans-latin-ext-600-normal-4vooXBpG.woff2": {
+        "bytes": 7420,
+        "sha256": "6406eb05e2eb50779cb95ee8745c98ad23cce7e67d752822782453da7f6b4491"
+      },
+      "assets/dm-sans-latin-ext-600-normal-DRtaDpgU.woff": {
+        "bytes": 10024,
+        "sha256": "f70e6bb2170e2ab7bfc23a021af0663dce4df0b502173c9c5135015d7fed457a"
+      },
+      "assets/dm-sans-latin-ext-700-normal-BLI3TTWz.woff": {
+        "bytes": 10012,
+        "sha256": "56084e69490970432de58b4a2406ee4daa1f58d90f9600ae3fda0e895a6355e7"
+      },
+      "assets/dm-sans-latin-ext-700-normal-CJIcxD6K.woff2": {
+        "bytes": 7452,
+        "sha256": "f6640907b94df0d227f26e2fcb6db2497d6c44c4b68f731ea1e06f5b45e2e91b"
+      },
+      "assets/dm-serif-display-DEPTIRtf.ttf": {
+        "bytes": 70348,
+        "sha256": "c03775f8cc3db88cfea259b231abe13f94e6a3d3cb01c09477a2e42a1f5919e1"
+      },
+      "assets/ibm-plex-mono-cyrillic-400-normal-BSMlKf0J.woff2": {
+        "bytes": 8356,
+        "sha256": "7635422bd10ddbbcb0e0caa1154b928298f5c8319b8c00b30978d4395f4783ce"
+      },
+      "assets/ibm-plex-mono-cyrillic-400-normal-CEL4l2ZJ.woff": {
+        "bytes": 7204,
+        "sha256": "42da81a28bbcddda6768a25a4b3105ee291e69d5fa6c74747bc51bbc6718c538"
+      },
+      "assets/ibm-plex-mono-cyrillic-500-normal-Ael50iVv.woff": {
+        "bytes": 7208,
+        "sha256": "55a3af5e5ba0f565b4e66149cfe077ba88ac42cc3f68650a901d58eadbf9cd9b"
+      },
+      "assets/ibm-plex-mono-cyrillic-500-normal-Bq9vWWag.woff2": {
+        "bytes": 8460,
+        "sha256": "1d89462e86cb8e87e7e9d6f6635605bd7c3081baca6caaecee84916bf7b60edc"
+      },
+      "assets/ibm-plex-mono-cyrillic-600-normal-CTOM6hUh.woff2": {
+        "bytes": 9352,
+        "sha256": "2b05a8695c7f9f4abd7178b279646a3b005a8ce57546bef6fd145f25d131e0aa"
+      },
+      "assets/ibm-plex-mono-cyrillic-600-normal-fLZuRloM.woff": {
+        "bytes": 7268,
+        "sha256": "877b7b3177c22f6911f36888fb09f003d63c665e2185d3dbadea83130ecbb316"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-400-normal-DMdlQ8Kv.woff": {
+        "bytes": 5820,
+        "sha256": "0e4a2393e8ed3185ae300e4a202b6d9149d47d8a0e5bb8f1d1db33e76b86ecd1"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-400-normal-xuaO2J-f.woff2": {
+        "bytes": 6912,
+        "sha256": "f8c22ec1804bd6966b70f43ac7c327025645b4c09597117fca2a5a6c750106fe"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-500-normal-BIfNGwUT.woff": {
+        "bytes": 5772,
+        "sha256": "eadb2c427859b185761380143d1f42187fd7cbd94704b543e4c76c6368fbab52"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-500-normal-BqneJy0T.woff2": {
+        "bytes": 6972,
+        "sha256": "3febe5c7f22e4b07b4552738673c3dbe8bced2dc5f48b866edf7ccd9552d109a"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-600-normal-9HEixskS.woff": {
+        "bytes": 5792,
+        "sha256": "d17413b646f918a8b52316b1bc909068b90687a638fbf7fecc5653b870c7714a"
+      },
+      "assets/ibm-plex-mono-cyrillic-ext-600-normal-V-xxqcpd.woff2": {
+        "bytes": 7692,
+        "sha256": "83109cdd4f8665b475dfc11d61bd44da328bf7e6eab3d3953d39c49b1b9f6015"
+      },
+      "assets/ibm-plex-mono-latin-400-normal-CvHOgSBP.woff": {
+        "bytes": 13144,
+        "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381"
+      },
+      "assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2": {
+        "bytes": 14708,
+        "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+      },
+      "assets/ibm-plex-mono-latin-500-normal-CB9ihrfo.woff": {
+        "bytes": 13156,
+        "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d"
+      },
+      "assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2": {
+        "bytes": 14888,
+        "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+      },
+      "assets/ibm-plex-mono-latin-600-normal-BgSNZQsw.woff2": {
+        "bytes": 15620,
+        "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+      },
+      "assets/ibm-plex-mono-latin-600-normal-DWFSQ4vo.woff": {
+        "bytes": 13208,
+        "sha256": "cb96282f22c6f19112856fd6e0b34e2baefaf4ca6551e851d58c5ab0aabcd2be"
+      },
+      "assets/ibm-plex-mono-latin-ext-400-normal-BmRBH3aV.woff2": {
+        "bytes": 13348,
+        "sha256": "6bc0f226a5b7884a8170e3f62c63d7675609d4631bdc5931b5cdab81821f00eb"
+      },
+      "assets/ibm-plex-mono-latin-ext-400-normal-D3D2R8hC.woff": {
+        "bytes": 11768,
+        "sha256": "f8ddaa0ab9d3c052c9fe035751c8214b7e0d59e6e7b69b045f8659c2fe4dced2"
+      },
+      "assets/ibm-plex-mono-latin-ext-500-normal-CAhNIIs5.woff2": {
+        "bytes": 13432,
+        "sha256": "6bb06407c97584b0867a959e05e8874693bfeb8c317de190811c51598f2d99ea"
+      },
+      "assets/ibm-plex-mono-latin-ext-500-normal-CZ70TYgx.woff": {
+        "bytes": 11768,
+        "sha256": "ff5da89c3ee20d38359943b61a7aae9200d2a0f61cf95ca10a7cccef81da2ff5"
+      },
+      "assets/ibm-plex-mono-latin-ext-600-normal-D38SheWl.woff2": {
+        "bytes": 14328,
+        "sha256": "32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b"
+      },
+      "assets/ibm-plex-mono-latin-ext-600-normal-DmB0ttJJ.woff": {
+        "bytes": 11832,
+        "sha256": "46249f4bc59bb78b3893d3a4ad39226d2f3fb66dfa21ccc21bda044a4a3c78c9"
+      },
+      "assets/ibm-plex-mono-vietnamese-400-normal-BulugwFq.woff2": {
+        "bytes": 5868,
+        "sha256": "62632b6375305e70ddcafdd895218e6ae41a184fcd280a69c739460604ca00a9"
+      },
+      "assets/ibm-plex-mono-vietnamese-400-normal-DDuiU_S-.woff": {
+        "bytes": 5620,
+        "sha256": "bced561d991e3f81c150c08e71f7fa849fcbff523560f6059245f2edce19b600"
+      },
+      "assets/ibm-plex-mono-vietnamese-500-normal-C8zxqsMH.woff": {
+        "bytes": 5616,
+        "sha256": "755f62b418df17518aa0ea16b4232e546ce949a4ab7acc577071fa9be9e3dc88"
+      },
+      "assets/ibm-plex-mono-vietnamese-500-normal-DZ4AoWbu.woff2": {
+        "bytes": 6040,
+        "sha256": "781633d95de88040fb77141d1e65d928c87c0144691fbc74da5a64d137a7e910"
+      },
+      "assets/ibm-plex-mono-vietnamese-600-normal-D2EvbN8M.woff2": {
+        "bytes": 6932,
+        "sha256": "51b74d53e106ba8a26dd33464b231a562069be2a234b923c115beb622e6f6bc6"
+      },
+      "assets/ibm-plex-mono-vietnamese-600-normal-iLQfcSjf.woff": {
+        "bytes": 5712,
+        "sha256": "e4c71658a1eebc5d2b50d801aa4450c94956da1342c2df261442d674ecb96f0e"
+      },
+      "assets/index-BVOtQtCI.js": {
+        "bytes": 575759,
+        "sha256": "8bd0a616ca12948354cc3e5194c9e00f1dc86f75884b3c391475817851f129d0"
+      },
+      "assets/index-Dywp9hYY.css": {
+        "bytes": 115301,
+        "sha256": "012376a6bb0eab53128e661b8329c942aad28106dbf30118d79d846e46d975c0"
+      },
+      "favicon-16.png": {
+        "bytes": 454,
+        "sha256": "9f81f5d29c7f3f55bffe4268a0f9f290bbbf1fd6a0f81d47e6a0dbe9dab0affd"
+      },
+      "favicon-32.png": {
+        "bytes": 809,
+        "sha256": "c69dec9dbfa989542b94a24453c535750502de72a4b1c4e78215cc9e2875451c"
+      },
+      "favicon-48.png": {
+        "bytes": 1209,
+        "sha256": "a0a8bfebbf7b204d699fb1b57c76dccfdb4306de72a2cf7c25233e5335676645"
+      },
+      "favicon.ico": {
+        "bytes": 2526,
+        "sha256": "8cf4c5b9b68a780cb7fb7eccc26a88d953121956c2b8dbe0a8dd1bc213e2d29b"
+      },
+      "favicon.svg": {
+        "bytes": 536,
+        "sha256": "44626057b8b1d2796f3153add45102ae8dfb19ebfd585924f22cb43f0936f5ab"
+      },
+      "index.html": {
+        "bytes": 984,
+        "sha256": "3585418697c53b700cd90eedaf1d9ed56ef6406d07335672d56cf832f5730f6c"
+      },
+      "site.webmanifest": {
+        "bytes": 404,
+        "sha256": "f668365563c309ab24492f4b0c1f9ade9b0fcdf50a5333fd7820122e9bb8a829"
+      }
+    }
+  },
+  "finishedAt": "2026-11-05T07:35:51.637Z"
+}
