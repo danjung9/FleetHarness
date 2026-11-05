@@ -142,3 +142,7 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 01:19 Noted: branch `shourtestmerge` (Codex commits) merges `mvp`, `main`, `prod`, the Windows work and `mukul-dev`, but not Dan's latest. Not ours, left alone. It may be someone else's integration, so ask Mukul in the morning.
 - 01:36 Astra merge-dan finished, exit 0. Report: `Research/Backend-Audit/merge-dan.md`
 - 01:44 All of Dan's work through 29ac921 merged with ours as `26f8fae`: unit 756 of 768, harness 94 of 94, outside the sandbox. His new skills add about 11,600 tokens to the first prompts, plus about 13,600 optional. Fixing the rest before landing.
+- 01:45 Astra merge-dan started: Your merge is committed as 26f8fae. Full run outside the sandbox, real ps, Chrome and Electron: unit 756 of 768, 9 faile
+- 01:45 Astra conn-core started: Connectors, final integration. The overseer started merging the combined branch, which now has the teammate's whole back
+- 01:45 Astra genai started: The overseer started merging the combined branch, which now has the teammate's whole backend plus API-key sign-in, with 
+- 01:48 Astra genai finished, exit 0. Report: `Research/Backend-Audit/genai.md`
