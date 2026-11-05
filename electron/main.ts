@@ -19,7 +19,7 @@ import { connectorConfiguration, connectorEncryption, fixtureSource } from './co
 import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
-import { ProjectLead, briefHash, projectBrief } from './conversation.js';
+import { ProjectLead, briefHash, projectBrief, canRequestChange } from './conversation.js';
 import { ClarificationBroker } from './clarifications.js';
 import { RunProcessSweep } from './process-sweep.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
@@ -175,7 +175,7 @@ function registerIPC() {
       if (action.type === 'stop') { await backend.stop(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
       else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
       else if (action.type === 'request_changes') {
-        if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this build before requesting a change from delivery.');
+        if (!canRequestChange(p)) throw new Error('Finish a build and open its review or approved delivery before requesting changes.');
         reviewFeedback(action.feedback!);
         await startRun(id, true, false, action.feedback); action.status = 'applied';
         record('Started a new iteration with your requested changes. Review and approve the new build before delivery.');
