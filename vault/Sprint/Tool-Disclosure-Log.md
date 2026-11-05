@@ -132,6 +132,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | @electron/asar 3.4.1 | Library | Inspect archive API and prepare read-only payload comparison in the native delivered-app checker; no packaged app executed here | Electron project | 2026-11-05 |
 | macOS ditto and PlistBuddy, bundled versions | System tools | Prepared owned-archive extraction and executable-name lookup for the native checker owner; not executed during preparation | Apple | 2026-11-05 |
 | R7 and latest QA records | project evidence | prioritization | project QA. | 2026-11-05 |
+| Meeting-198, R7 and paired gate records | project evidence | QA allocation | project runner/QA. | 2026-11-05 |
 
 ## Data and sources
 
