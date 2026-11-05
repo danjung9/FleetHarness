@@ -66,7 +66,7 @@ test('concurrent previews share initialization and return only after readiness',
   let exists = false;
   const dependencies = {
     database: { readManifestFiles: async (savedRun, savedManifest) => { reads++; assert.equal(savedRun.id, run.id); assert.equal(savedManifest.version, manifest.version); return files; } },
-    sandboxes: { getOrCreate: async options => { creates++; assert.equal(options.networkPolicy, 'deny-all'); assert.equal(options.persistent, false); assert.equal(options.name, `preview-${manifest.version}`); if (!exists) { exists = true; await options.onCreate(sandbox); } return sandbox; }, get: async () => sandbox },
+    sandboxes: { getOrCreate: async options => { creates++; assert.equal(options.networkPolicy, 'deny-all'); assert.equal(options.persistent, true); assert.deepEqual(options.keepLastSnapshots, { count: 1 }); assert.equal(options.snapshotExpiration, 86400000); assert.equal(options.name, `preview-${manifest.version}`); if (!exists) { exists = true; await options.onCreate(sandbox); } return sandbox; }, get: async () => sandbox },
   };
   const urls = await Promise.all([previewUrl(run, manifest, dependencies), previewUrl(run, manifest, dependencies)]);
   assert.deepEqual(urls, ['https://fixture.vercel.run', 'https://fixture.vercel.run']);
@@ -113,4 +113,52 @@ test('expired and production previews restore immutable files without reusing a 
   assert.equal(await previewUrl(stale, manifest, scope('https://production.vercel.run')), 'https://production.vercel.run');
   assert.equal(restores, 2);
   assert.equal(stale.metadata.previewUrl, 'https://expired-stage.vercel.run');
+});
+
+test('the production missing-snapshot error restores a legacy preview once and reuses it', async () => {
+  const { run, manifest, files } = fixture();
+  let restores = 0, installed = false, resumes = 0;
+  const names = [];
+  const sandbox = {
+    writeFiles: async saved => { restores++; assert.ok(saved.some(file => file.path.endsWith('/index.html'))); },
+    runCommand: async command => { if (command.cmd === 'flock') installed = true; return { exitCode: installed ? 0 : 1 }; },
+    domain: () => 'https://restored.vercel.run',
+  };
+  const dependencies = { database: { readManifestFiles: async () => files }, sandboxes: {
+    getOrCreate: async options => {
+      names.push(options.name);
+      if (options.name === `preview-${manifest.version}`) throw Object.assign(new Error('Status code 400 is not ok: Cannot resume sandbox: no snapshot available.'), { response: { status: 400 } });
+      assert.equal(options.name, `preview-restored-${manifest.version}`);
+      assert.equal(options.persistent, true);
+      if (!installed) await options.onCreate(sandbox);
+      return sandbox;
+    }, get: async () => { assert.fail('No resource should be deleted or replaced'); },
+  } };
+  assert.deepEqual(await Promise.all([previewUrl(run, manifest, dependencies), previewUrl(run, manifest, dependencies)]), ['https://restored.vercel.run', 'https://restored.vercel.run']);
+  assert.equal(restores, 1);
+  await previewUrl(run, manifest, dependencies);
+  assert.equal(restores, 1);
+  assert.equal(names.length, 4);
+  // Simulate the next stopped persistent session, including another instance's creation race.
+  dependencies.sandboxes.getOrCreate = async options => { if (options.name === `preview-${manifest.version}`) throw { response: { status: 400 }, message: 'Cannot resume sandbox: no snapshot available.' }; throw { response: { status: 409 } }; };
+  dependencies.sandboxes.get = async options => { assert.equal(options.name, `preview-restored-${manifest.version}`); assert.equal(options.resume, true); resumes++; await options.onResume(sandbox); return sandbox; };
+  assert.equal(await previewUrl(run, manifest, dependencies), 'https://restored.vercel.run');
+  assert.equal(resumes, 1);
+});
+
+test('unrelated upstream failures are sanitized for every concurrent caller without creating more sandboxes', async t => {
+  const { run, manifest } = fixture();
+  let calls = 0;
+  const logs = [];
+  t.mock.method(console, 'error', (...args) => logs.push(args));
+  const dependencies = { database: { readManifestFiles: async () => assert.fail() }, sandboxes: {
+    getOrCreate: async () => { calls++; throw Object.assign(new Error('Invalid request with private upstream credential'), { response: { status: 400 } }); },
+    get: async () => assert.fail(),
+  } };
+  const results = await Promise.allSettled([previewUrl(run, manifest, dependencies), previewUrl(run, manifest, dependencies)]);
+  for (const result of results) { assert.equal(result.status, 'rejected'); assert.equal(result.reason.status, 503); assert.equal(result.reason.code, 'preview_unavailable'); assert.doesNotMatch(result.reason.message, /credential/); }
+  assert.equal(calls, 1);
+  assert.doesNotMatch(JSON.stringify(logs), /credential/);
+  await assert.rejects(previewUrl(run, manifest, dependencies), error => error.status === 503);
+  assert.equal(calls, 2, 'A failed request must not poison the initialization cache');
 });

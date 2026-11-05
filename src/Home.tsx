@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2, CircleDot, FileCode2, Plus, Search } from 'lucide-react';
 import { challenges } from '../harness/catalog';
 import type { Project } from '../shared/types';
-import { getJourneyState } from '../shared/journey';
+import { getJourneyState } from './project-journey';
 import { Mark } from './Mark';
 import './home.css';
 

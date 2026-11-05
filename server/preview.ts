@@ -38,15 +38,29 @@ const healthCheck = `const expected=process.argv[1];for(let attempt=0;attempt<10
 interface PreviewDependencies { database: Pick<HostedDatabase, 'readManifestFiles'>; sandboxes: Pick<typeof Sandbox, 'getOrCreate' | 'get'> }
 const preparing = new Map<string, Promise<string>>();
 
+function upstreamStatus(error: unknown): number | undefined {
+  return (error as { response?: { status?: number } } | null)?.response?.status;
+}
+function missingSnapshot(error: unknown): boolean {
+  const value = error as { message?: string; json?: { error?: { code?: string } } } | null;
+  return upstreamStatus(error) === 400 && /cannot resume sandbox: no snapshot available/i.test(value?.message ?? '')
+    || upstreamStatus(error) === 410 && value?.json?.error?.code === 'snapshot_not_found';
+}
+
 export async function previewUrl(run: HostedRun, manifest: ArtifactManifest | undefined = run.manifest, dependencies?: PreviewDependencies): Promise<string> {
   if (!manifest || !manifest.files.some(file => file.path === 'index.html')) throw new HttpError(409, 'This build does not have an app preview yet.');
   assertManifest(run, manifest);
   const key = `${run.userId}/${run.id}/${manifest.version}/${manifest.sourceHash}`;
   const existing = preparing.get(key);
   if (existing) return existing;
-  const pending = prepare(run, manifest, dependencies ?? { database: db(), sandboxes: Sandbox });
+  const pending = prepare(run, manifest, dependencies ?? { database: db(), sandboxes: Sandbox }).catch(error => {
+    if (error instanceof HttpError) throw error;
+    // Upstream exceptions may include credentials. Log only safe diagnostic fields.
+    console.error('Preview preparation failed', { runId: run.id, artifactVersion: manifest.version, upstreamStatus: upstreamStatus(error) });
+    throw new HttpError(503, 'The preview could not be restored right now. Your saved app is safe. Please retry.', 'preview_unavailable');
+  }).finally(() => { preparing.delete(key); });
   preparing.set(key, pending);
-  try { return await pending; } finally { preparing.delete(key); }
+  return pending;
 }
 
 async function prepare(run: HostedRun, manifest: ArtifactManifest, { database, sandboxes }: PreviewDependencies): Promise<string> {
@@ -59,15 +73,25 @@ async function prepare(run: HostedRun, manifest: ArtifactManifest, { database, s
     // may own the process lock, including during a retried initialization.
     await sandbox.runCommand({ cmd: 'flock', args: ['-n', '/vercel/sandbox/preview.lock', 'node', '/vercel/sandbox/serve.mjs'], detached: true });
   };
-  const name = `preview-${manifest.version}`;
+  const open = async (name: string) => {
+    try {
+      return await sandboxes.getOrCreate({ name, ports: [3000], timeout: 30 * 60_000,
+        persistent: true, keepLastSnapshots: { count: 1 }, snapshotExpiration: 24 * 60 * 60_000,
+        networkPolicy: 'deny-all', resume: true, onCreate: install, onResume: install });
+    } catch (error) {
+      // Another server instance may have created the same immutable preview.
+      if (upstreamStatus(error) !== 409) throw error;
+      return sandboxes.get({ name, resume: true, onResume: install });
+    }
+  };
   let sandbox: Sandbox;
-  try {
-    sandbox = await sandboxes.getOrCreate({ name, ports: [3000], timeout: 30 * 60_000, persistent: false,
-      networkPolicy: 'deny-all', resume: true, onCreate: install, onResume: install });
-  } catch (error) {
-    // SDK getOrCreate is get-then-create: another request may win the creation.
-    if ((error as { response?: { status?: number } }).response?.status !== 409) throw error;
-    sandbox = await sandboxes.get({ name, resume: true, onResume: install });
+  try { sandbox = await open(`preview-${manifest.version}`); }
+  catch (error) {
+    if (!missingSnapshot(error)) throw error;
+    // Older previews were non-persistent and cannot resume. Restore into a
+    // separate, deterministic name: never delete a name another request may
+    // already have recreated. Future sessions keep a bounded recovery snapshot.
+    sandbox = await open(`preview-restored-${manifest.version}`);
   }
   const ready = () => sandbox.runCommand({ cmd: 'node', args: ['--input-type=module', '-e', healthCheck, identity], timeoutMs: 15_000 });
   if ((await ready()).exitCode !== 0) {

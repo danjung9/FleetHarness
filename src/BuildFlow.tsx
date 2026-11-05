@@ -3,6 +3,7 @@ import { Activity, ArrowRight, Check, ChevronRight, FileText, Pause, Play, Refre
 import type { Artifact, Project, StageId, StageStatus } from '../shared/types';
 import { buildActivity } from '../shared/activity';
 import { canContinuePlanning, getResumeStage, isPlanningReviewRejected, resumeLabel } from '../shared/journey';
+import { getHostedResumeStage, hostedPhaseState } from '../shared/hosted-journey';
 import { api, isDesktop, isHosted } from './api';
 import { ActivityFeed } from './ActivityFeed';
 import { PhaseDetails, projectPhases } from './PhaseDetails';
@@ -23,8 +24,7 @@ const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]
 
 function stateOf(project: Project, id: BuildPhaseId): PhaseState {
   if (project.status === 'draft') return 'queued';
-  if (isHosted && project.status === 'paused' && (project.checkpointStage ?? project.stages.find(stage => stage.status === 'active')?.id) === id) return 'paused';
-  if (isHosted && project.status === 'pausing' && project.stages.find(stage => stage.status === 'active')?.id === id) return 'pausing';
+  if (isHosted) return hostedPhaseState(project, id);
   // A checkpoint may be saved just before its stage status is updated.
   if (getResumeStage(project) === id) return project.status === 'stopped' ? 'stopped' : 'failed';
   if (project.status === 'running' && project.conversation?.questions.some(question => question.status === 'pending' && question.runId === project.runId && question.phase === id)) return 'waiting';
@@ -37,7 +37,7 @@ function stateLabel(state: PhaseState, started: boolean) {
 }
 
 function PhaseMarker({ state, number }: { state: PhaseState; number: number }) {
-  return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : state === 'stopped' || state === 'waiting' ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
+  return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : ['stopped', 'waiting', 'paused', 'pausing'].includes(state) ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
 }
 
 export function BuildFlow({ project, developerMode = false, busy, configured, resuming, onResume, onPreview, onArtifact, onReview, onEditBrief }: {
@@ -53,7 +53,7 @@ export function BuildFlow({ project, developerMode = false, busy, configured, re
   onEditBrief: () => void;
 }) {
   const detailId = useId();
-  const resumeStage = getResumeStage(project);
+  const resumeStage = isHosted ? getHostedResumeStage(project) : getResumeStage(project);
   const runKey = project.id + ':' + (project.runId ?? 'new') + (project.status === 'draft' ? ':draft' : '');
   const stageRevision = project.stages.map(stage => stage.id + ':' + stage.status).join('|');
   const currentId = (project.status === 'draft' ? 'intake' : resumeStage ??
@@ -63,7 +63,7 @@ export function BuildFlow({ project, developerMode = false, busy, configured, re
   const selectedId = inspection?.key === runKey ? inspection.id : currentId;
   const selected = phases.find(phase => phase.id === selectedId)!;
   const selectedState = stateOf(project, selectedId);
-  const continuingPlan = selectedId === 'plan' && canContinuePlanning(project);
+  const continuingPlan = !isHosted && selectedId === 'plan' && canContinuePlanning(project);
   const rejectedPlan = continuingPlan && isPlanningReviewRejected(project);
   const intakeStatus = selectedId === 'intake' && selectedState === 'active' ? project.stages.find(stage => stage.id === 'intake')?.detail : undefined;
   const activeId = project.stages.find(stage => stage.status === 'active')?.id;
@@ -127,8 +127,8 @@ export function BuildFlow({ project, developerMode = false, busy, configured, re
       <p className="build-purpose">{selected.purpose}</p>
       {blocked ? <div className="build-phase-problem" role="status"><strong>{rejectedPlan ? 'Independent review found changes the plan still needs.' : continuingPlan ? 'The updated brief is ready for planning.' : selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{!continuingPlan && project.error && <p>{project.error}</p>}
         <p className="build-recovery-note">{rejectedPlan ? 'Continue planning to revise the saved plan and run another independent review. Completed phases stay complete.' : continuingPlan ? 'Continue planning with the updated brief and saved files. Completed phases stay complete.' : resumeStage ? 'Resume this phase using the saved files. Completed phases stay complete.' : 'Saved outputs remain available. Start a new build when you’re ready to try again.'}</p>
-        {resumeStage === selectedId && <div className="build-phase-recovery"><button className="primary" disabled={busy || !configured || !isDesktop} onClick={onResume}><Play size={15}/>{resuming ? continuingPlan ? 'Continuing…' : 'Resuming…' : resumeLabel(resumeStage, project)}</button>
-          {!isDesktop ? <p>Open the desktop app to resume this phase.</p> : !configured && <p>Connect a model in Settings to resume this phase.</p>}
+        {resumeStage === selectedId && <div className="build-phase-recovery"><button className="primary" disabled={busy || resuming || !configured || (!isDesktop && !isHosted)} onClick={onResume}><Play size={15}/>{resuming ? continuingPlan ? 'Continuing…' : 'Resuming…' : resumeLabel(resumeStage, project)}</button>
+          {!isDesktop && !isHosted ? <p>Open the desktop app to resume this phase.</p> : !configured && <p>Connect a model in Settings to resume this phase.</p>}
         </div>}
       </div> :
         <p className="build-next-phase" role={intakeStatus || selectedState === 'waiting' ? 'status' : undefined}>{selectedState === 'paused' ? 'Your checkpoint is saved. Use Resume build above to continue.' : selectedState === 'pausing' ? 'Saving a durable checkpoint before pausing.' : selectedState === 'waiting' ? 'Open Project lead to answer the question. This phase continues after your answer.' : intakeStatus || (repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next)}</p>}

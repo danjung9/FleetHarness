@@ -4,7 +4,7 @@ import { DataStorage } from './DataStorage';
 import { Mark } from './Mark';
 import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
-import { canContinuePlanning, experimentRunning, getJourneyState, getResumeStage, pendingExperiment } from '../shared/journey';
+import { canContinuePlanning, experimentRunning, getResumeStage, pendingExperiment } from '../shared/journey';
 import { BuildFlow } from './BuildFlow';
 import { CodexGoalPanel } from './CodexGoalPanel';
 import { codexGoalActive } from '../shared/codex-goal';
@@ -25,6 +25,7 @@ import {
 import type { AppState, Artifact, Bootstrap, BriefDataInput, NewProject, Project, StageId, View } from '../shared/types';
 import { starters } from '../shared/types';
 import { normalizeProjectInput } from '../shared/project-input';
+import { getJourneyState } from './project-journey';
 import { api, isDesktop, isHosted } from './api';
 import { hostedClient } from './hosted-api';
 import { HostedModelSettings } from './HostedModelSettings';
@@ -154,7 +155,7 @@ function Development({ project, action, onBuild, onReview, onFiles }: { project:
       <IconButton label={isHosted ? "Browse source files" : "Open source folder"} disabled={isHosted ? !project.runId : !project.workspace} onClick={() => isHosted ? onFiles() : void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
       <IconButton label="Reload preview" onClick={() => setRevision(r => r + 1)}><RefreshCw size={17}/></IconButton>
     </div></div>
-    {loading ? <div className="preview-placeholder"><p className="muted" role="status">Opening the latest preview…</p></div> : preview ? <iframe key={revision} title="Generated application preview" src={preview}/> : project.runtimeProfile !== 'cli' && (previewFailed || completed) ? <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<><button className="secondary" onClick={() => setRevision(r => r + 1)}>Retry preview</button><button className="text-button" onClick={completed ? onReview : onBuild}>{completed ? 'Back to review' : 'Back to build'} <ArrowRight size={15}/></button></>}>{previewError || 'Could not open the preview. Your build and its evidence are kept.'}</Empty></div> : <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'} action={<button className="secondary" onClick={onBuild}>Back to build <ArrowRight size={15}/></button>}>{project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? 'AppYard is working automatically. Follow the build while your preview is prepared.' : 'Start a build from your brief to try the app here.'}</Empty></div>}
+    {loading ? <div className="preview-placeholder"><p className="muted" role="status">Opening the latest preview…</p></div> : preview ? <iframe key={revision} title="Generated application preview" src={preview}/> : project.runtimeProfile !== 'cli' && (previewFailed || completed) ? <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<><button className="secondary" onClick={() => setRevision(r => r + 1)}>Retry preview</button><button className="text-button" onClick={completed ? onReview : onBuild}>{completed ? 'Back to review' : 'Back to build'} <ArrowRight size={15}/></button></>}>{previewError || 'Could not open the preview. Your build and its evidence are kept.'}</Empty></div> : <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'} action={<button className="secondary" onClick={onBuild}>Back to build <ArrowRight size={15}/></button>}>{project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? 'AppYard is working automatically. Follow the build while your preview is prepared.' : isHosted && project.canResume ? 'Resume your saved build to finish preparing the app preview.' : 'Start a build from your brief to try the app here.'}</Empty></div>}
     <div className="preview-footer"><ShieldCheck size={13}/> App preview</div>
   </section></div>;
 }
@@ -278,7 +279,7 @@ export default function App({ accountEmail, signOut }: { accountEmail?: string; 
   const p = visibleProjects.find(project => project.id === current) || visibleProjects[0];
   const experiment = p ? pendingExperiment(p) : undefined;
   const goalActive = codexGoalActive(p?.codexGoal);
-  const editingPlan = !!p && getResumeStage(p) === 'plan';
+  const editingPlan = !isHosted && !!p && getResumeStage(p) === 'plan';
   const configured = data?.models.some(m => (!state?.settings.model || m.id === state.settings.model) && m.provider === state?.settings.provider && m.configured && (m.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
   function navigate(view: View) {
     if (view === 'settings') {

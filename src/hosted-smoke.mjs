@@ -54,8 +54,8 @@ try {
     const project = match && account.projects.find(project => project.id === match[1]);
     if (!project) return json(route, { error: 'Not found' }, 404);
     const action = match[2];
-    if (action === 'start' || action === 'resume') { project.status = 'running'; project.model = account.settings.model; project.runId = 'test-run'; project.canResume = false; project.stages[0].status = 'active'; return route.fulfill({ status: 204 }); }
-    if (action === 'pause') { project.status = 'paused'; project.canResume = true; project.checkpointStage = 'plan'; return route.fulfill({ status: 204 }); }
+    if (action === 'start' || action === 'resume') { project.status = 'running'; project.model = account.settings.model; project.runId = 'test-run'; project.canResume = false; project.stages.find(stage => stage.status !== 'complete').status = 'active'; return route.fulfill({ status: 204 }); }
+    if (action === 'pause') { project.status = 'paused'; project.canResume = true; project.checkpointStage = 'intake'; project.stages[0].status = 'complete'; project.stages[1].status = 'failed'; return route.fulfill({ status: 204 }); }
     if (action === 'artifacts') return json(route, [{ path: 'app/index.html', size: 100 }]);
     if (action === 'artifact') return json(route, '<h1>Saved private source</h1>');
     if (action === 'preview') return json(route, { url: ['review', 'approved'].includes(project.status) ? unsafePreview ? `${base}/generated` : 'https://preview-test.vercel.run/' : null });
@@ -89,7 +89,7 @@ try {
   await signIn('a'); assert.equal(await page.getByText('B private build', { exact: true }).count(), 0);
   await page.getByRole('button', { name: /A private build/ }).click();
   await page.getByRole('button', { name: 'Pause build', exact: true }).click();
-  await page.getByRole('button', { name: 'Resume build', exact: true }).first().waitFor(); await screenshot('paused');
+  await page.getByRole('button', { name: 'Resume build', exact: true }).first().waitFor(); await page.getByText('1 of 5 complete', { exact: true }).waitFor(); await page.getByRole('button', { name: 'Understand brief: Complete', exact: true }).waitFor(); await page.getByRole('button', { name: 'Research: Paused', exact: true }).waitFor(); assert.equal(await page.getByText('Saved outputs remain available. Start a new build when you’re ready to try again.', { exact: true }).count(), 0); await screenshot('paused');
   await page.getByRole('combobox', { name: 'Build model', exact: true }).selectOption(JSON.stringify(['openai', 'alternate-model']));
   await page.getByText('Model changed to Alternate model.', { exact: true }).waitFor();
   const resumeCount = calls.filter(call => call.path.endsWith('/resume')).length;
@@ -105,7 +105,7 @@ try {
   const project = accounts.a.projects[0];
   project.status = 'review'; project.stages = project.stages.map(stage => ({ ...stage, status: stage.id === 'review' ? 'review' : stage.id === 'deliver' ? 'queued' : 'complete' }));
   project.report = { time: new Date().toISOString(), command: 'node --test', exitCode: 0, passed: 1, failed: 0, skipped: 0, total: 1, output: 'All tests passed', durationMs: 200, sourceHash: 'fixture-source' };
-  await page.getByRole('button', { name: 'Review build', exact: true }).waitFor(); await page.getByRole('button', { name: 'Review build', exact: true }).click();
+  await page.getByRole('button', { name: 'Review build', exact: true }).waitFor(); await page.getByRole('button', { name: 'Home — challenge portfolio', exact: true }).click(); await page.getByRole('button', { name: /A private build/ }).click(); await page.getByRole('heading', { name: 'Review & delivery', exact: true }).waitFor();
   await page.getByLabel('Review notes').fill('I tested adding and completing a task. This is a demo prototype.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
   await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
