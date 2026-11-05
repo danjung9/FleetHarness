@@ -145,23 +145,35 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   if (manifest.requiredEnv.some(name => !/^[A-Z_][A-Z0-9_]*$/.test(name) || reservedEnv.test(name))) throw new Error('Runtime environment contains a reserved or invalid name.');
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-solution-'));
   const root = path.join(directory, 'package');
-  const children = new Set<ChildProcess>();
+  const children = new Map<ChildProcess, Promise<void>>();
   const controller = new AbortController();
   const previews = new PreviewServers();
   let failure: Error | undefined, closed = false;
-  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children) kill(child); previews.close(); };
+  let closing: Promise<void> | undefined;
+  const awaitClosure = async (completion: Promise<void>) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([completion, new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Solution runtime process shutdown was not confirmed within 5 seconds. Temporary files were retained for cleanup.')), 5000);
+      })]);
+    } finally { clearTimeout(timer); }
+  };
+  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children.keys()) kill(child); previews.close(); };
   const abort = () => stop(new Error('Solution execution stopped.'));
   signal?.addEventListener('abort', abort, { once: true });
   const deadline = setTimeout(() => stop(new Error('Solution runtime exceeded its total execution limit.')), limits.totalTimeoutMs);
   const check = () => { if (failure) throw failure; if (closed) throw new Error('Solution runtime is closed.'); signal?.throwIfAborted(); };
-  const close = async () => {
-    if (closed) return;
+  const close = () => closing ??= (async () => {
     closed = true; clearTimeout(deadline); signal?.removeEventListener('abort', abort);
+    // A rejected invocation is not proof that its OS process released the package.
+    // Capture every live process before aborting; concurrent close calls share this wait.
+    const completions = [...children.values()];
     controller.abort(new Error('Solution runtime closed.'));
-    for (const child of children) kill(child);
+    for (const child of children.keys()) kill(child);
     previews.close();
-    await fs.rm(directory, { recursive: true, force: true });
-  };
+    await awaitClosure(Promise.all(completions).then(() => {}));
+    await fs.rm(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  })();
   const env: NodeJS.ProcessEnv = { PATH: [path.dirname(nodeExecutable), '/usr/local/bin', '/usr/bin', '/bin'].join(path.delimiter),
     HOME: path.join(directory, 'home'), TMPDIR: path.join(directory, 'tmp'), TEMP: path.join(directory, 'tmp'), TMP: path.join(directory, 'tmp'),
     ELECTRON_RUN_AS_NODE: '1', PYTHONDONTWRITEBYTECODE: '1', LANG: 'C.UTF-8' };
@@ -177,7 +189,8 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   const launch = (command: string, args: string[], timeout: number, input?: string, extraEnv?: NodeJS.ProcessEnv) => {
     check();
     const child = spawn(command, args, { cwd: root, env: { ...env, ...extraEnv }, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
-    children.add(child);
+    const closure = new Promise<void>(resolve => child.once('close', () => { children.delete(child); resolve(); }));
+    children.set(child, closure);
     const stdout: Buffer[] = [], stderr: Buffer[] = []; let bytes = 0;
     let rejectExecution!: (error: Error) => void;
     let settled = false;
@@ -203,7 +216,10 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     child.stderr?.on('data', chunk => collect(chunk, 'stderr'));
     child.stdin?.on('error', () => { /* exit status reports broken input pipes */ });
     child.stdin?.end(input);
-    const result = finished.finally(() => { settled = true; clearTimeout(timer); controller.signal.removeEventListener('abort', aborted); children.delete(child); kill(child); });
+    const result = finished.finally(async () => {
+      settled = true; clearTimeout(timer); controller.signal.removeEventListener('abort', aborted);
+      kill(child); await awaitClosure(closure);
+    });
     void result.catch(() => {});
     return { child, result };
   };

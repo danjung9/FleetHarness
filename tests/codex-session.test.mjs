@@ -2,8 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCodexSession } from '../dist-electron/electron/codex-session.js';
 import { RunUsageLedger } from '../dist-electron/electron/run-usage.js';
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-test('Codex forwards only its cumulative usage, including a late completion update, and stops observing on disposal', async () => {
+test('Codex forwards only its cumulative usage, including a late completion update, and stops observing on disposal', async t => {
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-codex-usage-'));
+  t.after(() => fs.rm(home, { recursive: true, force: true }));
   const listeners = new Set(), closers = new Set();
   const rpc = {
     async initialize() {}, send() {},
@@ -17,7 +22,8 @@ test('Codex forwards only its cumulative usage, including a late completion upda
       return {};
     }
   };
-  const session = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
+  const session = await createCodexSession({ home, cwd: home, model: 'fixture', tools: [], signal: t.signal, launch: () => rpc });
+  t.after(() => session.dispose());
   const emit = (method, params) => { for (const listener of listeners) listener({ method, params }); };
   const usage = (inputTokens, outputTokens) => ({ inputTokens, outputTokens, totalTokens: inputTokens + outputTokens, cachedInputTokens: 4, reasoningOutputTokens: 2 });
   const ledger = new RunUsageLedger('codex'); session.subscribe(event => ledger.event('build', event, 'session'));

@@ -8,6 +8,24 @@ import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store } from '../dist-electron/electron/storage.js';
 import { createCodexSession } from '../dist-electron/electron/codex-session.js';
 import { runAgentStage } from '../dist-electron/electron/agent-runner.js';
+import { RunBudget } from '../dist-electron/electron/run-budget.js';
+import { RunUsageLedger } from '../dist-electron/electron/run-usage.js';
+
+async function codexHome(t) {
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-metrics-codex-'));
+  t.after(() => fs.rm(home, { recursive: true, force: true }));
+  return { home, cwd: home };
+}
+function activeFixture(t, project, controller, outcome, processes) {
+  const usage = new RunUsageLedger('codex'), now = Date.now();
+  project.runId = 'metrics-fixture';
+  project.runSummary = { runId: project.runId, backend: 'codex', model: 'fixture',
+    startedAt: new Date(now).toISOString(), deadlineAt: new Date(now + 60_000).toISOString(),
+    timeLimitMs: 60_000, elapsedMs: 0, phases: [], usage: usage.snapshot() };
+  const budget = new RunBudget(project.runSummary, controller);
+  t.after(() => budget.finish('failed'));
+  return { controller, outcome, processes, budget, usage, resolve() {} };
+}
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const never = () => new Promise(() => {});
@@ -207,9 +225,9 @@ function rpcFixture() {
   };
 }
 
-test('Codex stage measurements use cumulative thread totals once', async () => {
+test('Codex stage measurements use cumulative thread totals once', async t => {
   const rpc = rpcFixture(); let measured;
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal,
+  const s = await createCodexSession({ ...await codexHome(t), model: 'fixture', tools: [], signal: t.signal,
     launch: () => rpc });
   const total = { inputTokens: 180, cachedInputTokens: 100, outputTokens: 20, reasoningOutputTokens: 5, totalTokens: 200 };
   await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
@@ -223,10 +241,10 @@ test('Codex stage measurements use cumulative thread totals once', async () => {
   assert.deepEqual(measured.usage, expectedUsage);
 });
 
-test('Codex accepts a final usage receipt after turn completion and keeps a missing follow-up receipt unknown', async () => {
+test('Codex accepts a final usage receipt after turn completion and keeps a missing follow-up receipt unknown', async t => {
   for (const late of [true, false]) {
     const rpc = rpcFixture(); let measured;
-    const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
+    const s = await createCodexSession({ ...await codexHome(t), model: 'fixture', tools: [], signal: t.signal, launch: () => rpc });
     await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
       const first = prompt('Initial'); await setImmediate();
       rpc.emit('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, totalTokens: 15 } } });
@@ -241,15 +259,15 @@ test('Codex accepts a final usage receipt after turn completion and keeps a miss
 });
 
 
-test('review regression: a previous-turn receipt cannot make missing follow-up usage known', async () => {
+test('review regression: a previous-turn receipt cannot make missing follow-up usage known', async t => {
   const rpc = rpcFixture(); let measured, turn = 0;
   const request = rpc.request;
   rpc.request = async (method, params) => {
     const result = await request(method, params);
     return method === 'turn/start' ? { turn: { id: `turn-${++turn}` } } : result;
   };
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [],
-    signal: new AbortController().signal, launch: () => rpc });
+  const s = await createCodexSession({ ...await codexHome(t), model: 'fixture', tools: [],
+    signal: t.signal, launch: () => rpc });
   const total = { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, reasoningOutputTokens: 0, totalTokens: 15 };
   await run(s, { onMetrics: value => { measured = value; }, work: async prompt => {
     const first = prompt('Initial'); await setImmediate();
@@ -265,11 +283,11 @@ test('review regression: a previous-turn receipt cannot make missing follow-up u
     'A receipt for turn-1 must not satisfy the usage requirement for turn-2');
 });
 
-for (const late of [false, true]) test(`turn-correlated usage survives a delayed start response (${late ? 'after' : 'before'} completion)`, async () => {
+for (const late of [false, true]) test(`turn-correlated usage survives a delayed start response (${late ? 'after' : 'before'} completion)`, async t => {
   const rpc = rpcFixture(), reply = deferred();
   const request = rpc.request;
   rpc.request = (method, params) => method === 'turn/start' ? reply.promise : request(method, params);
-  const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: new AbortController().signal, launch: () => rpc });
+  const s = await createCodexSession({ ...await codexHome(t), model: 'fixture', tools: [], signal: t.signal, launch: () => rpc });
   const total = { inputTokens: 10, cachedInputTokens: 0, outputTokens: 5, totalTokens: 15 };
   let measured;
   await run(s, { onMetrics: m => { measured = m; }, work: async prompt => {
@@ -292,8 +310,8 @@ for (const reason of ['Stop', 'timeout']) for (const reported of [false, true]) 
     const project = store.state.projects[0]; project.workspace = root;
     const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'));
     const controller = new AbortController(), rpc = rpcFixture();
-    const s = await createCodexSession({ home: '.', cwd: '.', model: 'fixture', tools: [], signal: controller.signal, launch: () => rpc });
-    const active = { controller, outcome: 'failed', processes: { async stop() {} }, resolve() {} };
+    const s = await createCodexSession({ ...await codexHome(t), model: 'fixture', tools: [], signal: controller.signal, launch: () => rpc });
+    const active = activeFixture(t, project, controller, 'failed', { async stop() {} });
     backend.active.set(project.id, active); project.status = 'running';
     await backend.stage(project, 'build', 'active');
     let measured;
@@ -335,8 +353,7 @@ for (const status of ['failed', 'stopped']) test(`review regression: report-writ
   project.status = 'running';
   await backend.stage(project, 'verify', 'active');
   let cleaned = false;
-  const active = { controller: new AbortController(), outcome: status,
-    processes: { async stop() { cleaned = true; } }, resolve() {} };
+  const active = activeFixture(t, project, new AbortController(), status, { async stop() { cleaned = true; } });
   if (status === 'stopped') active.controller.abort();
   backend.active.set(project.id, active);
   project.report = { time: new Date().toISOString(), command: 'synthetic', exitCode: 1,

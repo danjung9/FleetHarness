@@ -90,7 +90,16 @@ test('synthetic files cannot use links or silently change the supplied-input man
   await fs.appendFile(path.join(root, 'inputs/manifest.json'), '\nchanged');
   await assert.rejects(freezeSyntheticData(root, prepared), /changed/);
   await fs.writeFile(path.join(root, 'inputs/manifest.json'), original);
-  await fs.rename(path.join(root, 'data/synthetic-data.json'), path.join(root, 'copied-data.json'));
-  await fs.symlink(path.join(root, 'copied-data.json'), path.join(root, 'data/synthetic-data.json'));
+  if (process.platform === 'win32') {
+    // A real outside file beneath a junction exercises the same ancestor guard
+    // without requiring Windows file-symlink privileges.
+    const outside = await temporary(t);
+    await fs.rename(path.join(root, 'data'), path.join(outside, 'data'));
+    await fs.symlink(path.join(outside, 'data'), path.join(root, 'data'), 'junction');
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(root, 'data/synthetic-data.json'), 'utf8')), syntheticDataFixture);
+  } else {
+    await fs.rename(path.join(root, 'data/synthetic-data.json'), path.join(root, 'copied-data.json'));
+    await fs.symlink(path.join(root, 'copied-data.json'), path.join(root, 'data/synthetic-data.json'));
+  }
   await assert.rejects(validateSyntheticData(root), /symbolic links/);
 });

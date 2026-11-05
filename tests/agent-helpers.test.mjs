@@ -175,22 +175,37 @@ test('symlinks are rejected at the catalog, package, directory and file levels',
   const root = await workspace(t);
   const targetRoot = await workspace(t);
   const directory = await helper(targetRoot, 'real');
-  await fs.symlink(path.join(targetRoot, '.agent-tools'), path.join(root, '.agent-tools'), 'dir');
+  const directoryLink = process.platform === 'win32' ? 'junction' : 'dir';
+  await fs.symlink(path.join(targetRoot, '.agent-tools'), path.join(root, '.agent-tools'), directoryLink);
   await assert.rejects(inspectAgentHelper(root, 'real'), /symlinks/);
   assert.match((await listAgentHelpers(root)).errors[0].error, /symlinks/);
   await fs.rm(path.join(root, '.agent-tools'));
   await fs.mkdir(path.join(root, '.agent-tools'));
-  await fs.symlink(directory, path.join(root, '.agent-tools', 'linked'), 'dir');
+  await fs.symlink(directory, path.join(root, '.agent-tools', 'linked'), directoryLink);
   await assert.rejects(inspectAgentHelper(root, 'linked'), /symlinks/);
   const local = await helper(root, 'local');
-  await fs.symlink(directory, path.join(local, 'nested'), 'dir');
+  await fs.symlink(directory, path.join(local, 'nested'), directoryLink);
   await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
   await fs.rm(path.join(local, 'nested'));
-  await fs.symlink(path.join(directory, 'run.mjs'), path.join(local, 'linked.mjs'));
-  await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
-  await fs.rm(path.join(local, 'linked.mjs'));
-  await fs.symlink(path.join(directory, 'missing.mjs'), path.join(local, 'dangling.mjs'));
-  await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
+  if (process.platform === 'win32') {
+    // File symlinks require a Windows privilege. Keep actual external source
+    // files behind a junction ancestor and point the entrypoint through it.
+    await fs.symlink(directory, path.join(local, 'linked'), 'junction');
+    await fs.writeFile(path.join(local, 'tool.json'), JSON.stringify(manifest('local', { entrypoint: 'linked/run.mjs' })));
+    assert.equal(await fs.readFile(path.join(local, 'linked/run.mjs'), 'utf8'), await fs.readFile(path.join(directory, 'run.mjs'), 'utf8'));
+    await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
+    await fs.rm(path.join(local, 'linked'));
+    await fs.symlink(directory, path.join(local, 'dangling'), 'junction');
+    await fs.writeFile(path.join(local, 'tool.json'), JSON.stringify(manifest('local', { entrypoint: 'dangling/missing.mjs' })));
+    await assert.rejects(fs.access(path.join(local, 'dangling/missing.mjs')), { code: 'ENOENT' });
+    await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
+  } else {
+    await fs.symlink(path.join(directory, 'run.mjs'), path.join(local, 'linked.mjs'));
+    await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
+    await fs.rm(path.join(local, 'linked.mjs'));
+    await fs.symlink(path.join(directory, 'missing.mjs'), path.join(local, 'dangling.mjs'));
+    await assert.rejects(inspectAgentHelper(root, 'local'), /symlinks/);
+  }
 });
 
 test('package file sizes, file counts, total bytes and nesting are bounded', async t => {

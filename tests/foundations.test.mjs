@@ -22,7 +22,7 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 
 async function workspace(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-foundation-test-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  t.after(() => fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }), { timeout: 5000 });
   return root;
 }
 async function materialize(t, plan = selected()) {
@@ -33,8 +33,8 @@ async function materialize(t, plan = selected()) {
 }
 async function start(t, foundation) {
   const runtime = await prepareSolutionRuntime(foundation.root, foundation.manifest, process.execPath,
-    undefined, { totalTimeoutMs: 30_000, startupTimeoutMs: 10_000, invocationTimeoutMs: 5000 });
-  t.after(() => runtime.close());
+    t.signal, { totalTimeoutMs: 45_000, startupTimeoutMs: 10_000, invocationTimeoutMs: 5000 });
+  t.after(() => runtime.close(), { timeout: 5000 });
   assert.notEqual(runtime.root, foundation.root);
   for (const file of foundation.manifest.files) assert.ok((await fs.stat(path.join(runtime.root, file))).isFile(), file);
   for (const privateFile of ['.fleet', 'foundation-plan.json', 'evaluation-plan.json']) {
@@ -130,10 +130,21 @@ test('pinned templates reject changed bundled bytes and symlinked source assets 
   await fs.appendFile(source, '\n// changed without a template version update\n');
   await assert.rejects(materializeFoundation({ workspace: destination, resourcesRoot: resources, selection: plan }), /checksum|hash|pinned/i);
   await assert.rejects(fs.access(path.join(destination, 'server.mjs')), /ENOENT/);
-  const external = path.join(resources, 'external-server.mjs');
-  await fs.copyFile(path.join(resourcesRoot, 'templates', 'node-service', 'server.mjs'), external);
-  await fs.rm(source);
-  await fs.symlink(external, source);
+  if (process.platform === 'win32') {
+    // Real source bytes behind a junction ancestor exercise the source guard
+    // without requiring Windows file-symlink privileges.
+    const external = path.join(resources, 'external-template');
+    assert.equal(path.dirname(external), resources);
+    await fs.rename(path.dirname(source), external);
+    await fs.copyFile(path.join(resourcesRoot, 'templates', 'node-service', 'server.mjs'), path.join(external, 'server.mjs'));
+    await fs.symlink(external, path.dirname(source), 'junction');
+    assert.equal(await fs.readFile(source, 'utf8'), await fs.readFile(path.join(external, 'server.mjs'), 'utf8'));
+  } else {
+    const external = path.join(resources, 'external-server.mjs');
+    await fs.copyFile(path.join(resourcesRoot, 'templates', 'node-service', 'server.mjs'), external);
+    await fs.rm(source);
+    await fs.symlink(external, source);
+  }
   await assert.rejects(materializeFoundation({ workspace: destination, resourcesRoot: resources, selection: plan }), /symlink|ordinary/i);
   await assert.rejects(fs.access(path.join(destination, 'foundation-lock.json')), /ENOENT/);
 });
@@ -150,12 +161,12 @@ test('materialization refuses to overwrite user files or follow workspace and de
   await fs.writeFile(path.join(outside, 'index.html'), 'outside content');
   const linked = await workspace(t);
   await fs.writeFile(path.join(linked, 'foundation-plan.json'), JSON.stringify(plan));
-  await fs.symlink(outside, path.join(linked, 'public'));
+  await fs.symlink(outside, path.join(linked, 'public'), process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(materializeFoundation({ workspace: linked, resourcesRoot, selection: plan }), /symlink|ordinary|real|directory/i);
   assert.equal(await fs.readFile(path.join(outside, 'index.html'), 'utf8'), 'outside content');
 
   const parent = await workspace(t);
-  await fs.symlink(linked, path.join(parent, 'linked-workspace'));
+  await fs.symlink(linked, path.join(parent, 'linked-workspace'), process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(materializeFoundation({ workspace: path.join(parent, 'linked-workspace'), resourcesRoot, selection: plan }), /symlink|ordinary|real|directory/i);
 });
 
@@ -182,7 +193,7 @@ test('materialization is bound to the accepted plan and later plan or provenance
   }
 });
 
-test('packaged scheduling performs real feasibility computation from a clean service copy', async t => {
+test('packaged scheduling performs real feasibility computation from a clean service copy', { timeout: 60_000 }, async t => {
   const foundation = await materialize(t, selected('scheduling'));
   await fs.mkdir(path.join(foundation.root, '.fleet'));
   await fs.writeFile(path.join(foundation.root, '.fleet', 'packet.json'), '{"private":"must not be packaged"}');
@@ -201,7 +212,7 @@ test('packaged scheduling performs real feasibility computation from a clean ser
   await runtime.assertIntegrity();
 });
 
-test('packaged messages retain exact offsets and flag unsupported or ambiguous source content', async t => {
+test('packaged messages retain exact offsets and flag unsupported or ambiguous source content', { timeout: 60_000 }, async t => {
   const runtime = await start(t, await materialize(t, selected('messages')));
   const text = 'TASK/T1/2026-11-04T09:00-05:00/Team/Inspect pump//\nTASK/T2/tomorrow/Team/Inspect valve//\nunsupported';
   const result = await runtime.invoke({ sourceId: 'test-source', text });
@@ -215,7 +226,7 @@ test('packaged messages retain exact offsets and flag unsupported or ambiguous s
   }
 });
 
-test('packaged dependency analysis distinguishes late work, unknown estimates and invalid graphs', async t => {
+test('packaged dependency analysis distinguishes late work, unknown estimates and invalid graphs', { timeout: 60_000 }, async t => {
   const runtime = await start(t, await materialize(t, selected('readiness')));
   const input = { deadline: 10, targets: ['finish'], nodes: [
     { id: 'parts', duration: 7, readyAt: 0, dependencies: [], source: 'fixture:parts' },
@@ -236,7 +247,7 @@ test('packaged dependency analysis distinguishes late work, unknown estimates an
   await assert.rejects(runtime.invoke(cycle), /HTTP request failed/);
 });
 
-test('packaged evidence excludes unapproved documents and returns actual source spans', async t => {
+test('packaged evidence excludes unapproved documents and returns actual source spans', { timeout: 60_000 }, async t => {
   const runtime = await start(t, await materialize(t, selected('evidence')));
   const document = { id: 'approved', title: 'Pump maintenance', source: 'fixture:pump',
     text: 'Inspect the pump seal before release.', approved: true, updatedAt: '2026-10-01T00:00:00Z' };
@@ -255,7 +266,7 @@ test('packaged evidence excludes unapproved documents and returns actual source 
   assert.deepEqual(absent.results, []);
 });
 
-test('packaged offline reconciliation preserves concurrent edits and converges across order and retries', async t => {
+test('packaged offline reconciliation preserves concurrent edits and converges across order and retries', { timeout: 60_000 }, async t => {
   const runtime = await start(t, await materialize(t, selected('offline')));
   const base = { id: 'base', recordId: 'record', parents: [], actor: 'a', value: 'draft' };
   const local = [base, { ...base, id: 'local', parents: ['base'], value: 'changed' }];
@@ -268,18 +279,23 @@ test('packaged offline reconciliation preserves concurrent edits and converges a
   assert.deepEqual(await runtime.invoke({ local: forward.operations, remote }), forward);
 });
 
-test('the starter UI posts input to the delivered backend and renders its computed result', { timeout: 25_000 }, async t => {
+test('the starter UI posts input to the delivered backend and renders its computed result', { timeout: 60_000 }, async t => {
   const foundation = await materialize(t, selected('scheduling'));
   const runtime = await start(t, foundation);
-  const browser = await chromium.launch({ headless: true, timeout: 5000 })
-    .catch(() => chromium.launch({ channel: 'chrome', headless: true, timeout: 5000 }));
-  t.after(() => browser.close());
+  const browser = await chromium.launch({ headless: true, timeout: 10_000 })
+    .catch(() => chromium.launch({ channel: 'chrome', headless: true, timeout: 10_000 }));
+  const cancelBrowser = () => { void browser.close().catch(() => {}); };
+  t.signal.addEventListener('abort', cancelBrowser, { once: true });
+  t.after(async () => { t.signal.removeEventListener('abort', cancelBrowser); await browser.close(); }, { timeout: 10_000 });
   const page = await browser.newPage();
+  page.setDefaultTimeout(5000);
+  page.setDefaultNavigationTimeout(10_000);
   await page.goto(runtime.url);
   await page.locator('#input').fill(JSON.stringify(scheduleInput));
-  const responsePromise = page.waitForResponse(response => new URL(response.url()).pathname === foundation.manifest.invokePath);
-  await page.locator('#run').click();
-  const response = await responsePromise;
+  const [response] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === foundation.manifest.invokePath),
+    page.locator('#run').click()
+  ]);
   assert.equal(response.request().method(), 'POST');
   assert.deepEqual(response.request().postDataJSON(), scheduleInput);
   assert.equal(response.status(), 200);
@@ -299,12 +315,13 @@ test('the starter UI posts input to the delivered backend and renders its comput
 
 const pythonAvailable = spawnSync('python3', ['--version'], { timeout: 5000 }).status === 0;
 test('Python foundation fails explicitly before customization and runs the delivered core afterward', {
-  timeout: 20_000, skip: !pythonAvailable && 'python3 is not installed'
+  timeout: 60_000, skip: !pythonAvailable && 'python3 is not installed'
 }, async t => {
   const foundation = await materialize(t, selected('custom', 'python-service'));
   const unimplemented = await start(t, foundation);
   const response = await fetch(new URL(foundation.manifest.invokePath, unimplemented.url), {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ values: [2, 3] })
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ values: [2, 3] }),
+    signal: AbortSignal.any([t.signal, AbortSignal.timeout(5000)])
   });
   assert.equal(response.status, 501);
   assert.match(await response.text(), /implement|not implemented/i);

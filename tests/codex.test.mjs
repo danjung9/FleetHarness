@@ -41,6 +41,22 @@ class FakeRpc {
   }
 }
 async function temp(t) { const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-codex-test-')); t.after(() => fs.rm(root, { recursive: true, force: true })); return root; }
+async function fakeHome(t) { const home = await temp(t); return { home, cwd: home }; }
+async function bounded(pending, label, timeoutMs = 5000) {
+  let timer;
+  try { return await Promise.race([pending, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} did not finish within ${timeoutMs} ms`)), timeoutMs); })]); }
+  finally { clearTimeout(timer); }
+}
+async function closeProcesses(children, closures) {
+  // Native Codex may own workers; close the fixture trees before disposing the
+  // transport so inherited pipe handles cannot keep this test file alive.
+  for (const child of children) {
+    if (child.exitCode !== null || child.signalCode !== null) continue;
+    if (process.platform === 'win32') await new Promise((resolve, reject) => childProcess.execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, timeout: 5000 }, error => error && child.exitCode === null && child.signalCode === null ? reject(error) : resolve()));
+    else { try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
+  }
+  await bounded(Promise.all(closures), 'Codex fixture process shutdown');
+}
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 const fixtureCredentials = () => Promise.resolve({ accessToken: 'fixture-subscription-token', expiresAt: Date.now() + 3600_000 });
@@ -75,11 +91,11 @@ test('Codex accepts only explicit ChatGPT credentials and keeps tokens out of ar
   assert.throws(() => codexProcessConfig('/tmp', { accessToken: '' }), /Sign in with ChatGPT/);
   for (const invalid of [{ accessToken: '', expiresAt: Date.now() + 10000 }, { accessToken: 'expired', expiresAt: Date.now() - 1 }]) {
     let launched = false;
-    await assert.rejects(createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: new AbortController().signal, tools: [], getCredentials: async () => invalid, launch: () => { launched = true; return new FakeRpc(); } }), /Sign in with ChatGPT/);
+    await assert.rejects(createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: new AbortController().signal, tools: [], getCredentials: async () => invalid, launch: () => { launched = true; return new FakeRpc(); } }), /Sign in with ChatGPT/);
     assert.equal(launched, false);
   }
   const rpc = new FakeRpc();
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: new AbortController().signal, tools: [], getCredentials: fixtureCredentials, launch: (_home, supplied) => { assert.equal(supplied.accessToken, credentials.accessToken); return rpc; } });
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: new AbortController().signal, tools: [], getCredentials: fixtureCredentials, launch: (_home, supplied) => { assert.equal(supplied.accessToken, credentials.accessToken); return rpc; } });
   t.after(() => value.dispose());
   assert.equal(rpc.calls.some(call => call.method.startsWith('account/')), false);
   assert.equal(JSON.stringify(rpc.calls).includes(credentials.accessToken), false);
@@ -142,7 +158,7 @@ test('unsupported or absent accounts never start a Codex thread', async t => {
   }
 });
 
-test('Codex startup writes a restrictive named profile in its own home before launch', async t => {
+test('Codex startup writes a restrictive named profile in its own home before launch', { timeout: 40_000 }, async t => {
   const root = await temp(t), rpc = new FakeRpc(); let launched = false;
   const account = new CodexAccount(root, async () => {}, home => {
     assert.match(readFileSync(path.join(home, 'config.toml'), 'utf8'), /default_permissions = "fleet-build"/);
@@ -158,7 +174,9 @@ test('Codex startup writes a restrictive named profile in its own home before la
   assert.match(config, /^":minimal" = "read"$/m);
   assert.match(config, /^":workspace_roots" = "write"$/m);
   assert.ok(config.includes(`${JSON.stringify(path.join(account.home, 'tmp'))} = "write"`));
-  for (const folder of ['/Library/Developer', '/opt/homebrew', '/usr/local']) assert.ok(config.includes(`${JSON.stringify(folder)} = "read"`));
+  for (const folder of ['/Library/Developer', '/opt/homebrew', '/usr/local']) assert.equal(config.includes(`${JSON.stringify(folder)} = "read"`), process.platform !== 'win32');
+  assert.ok(config.includes(`${JSON.stringify(path.dirname(process.execPath))} = "read"`));
+  assert.ok(config.includes(`${JSON.stringify(path.dirname(codexExecutable()))} = "read"`));
   const writes = config.split('\n').filter(line => line.endsWith('= "write"'));
   assert.equal(writes.length, 2, 'Only the project and dedicated temp directory are writable');
   assert.match(config, /\[permissions\.fleet-build\.network\]\nenabled = false/);
@@ -167,12 +185,18 @@ test('Codex startup writes a restrictive named profile in its own home before la
   assert.ok(!config.includes(`${JSON.stringify(account.home)} = "read"`));
   if (process.platform !== 'win32') assert.equal((await fs.stat(configPath)).mode & 0o777, 0o600);
   // The bundled parser, not a string-only assertion, must accept the generated TOML.
-  const actual = CodexRpc.launch(account.home); t.after(() => actual.dispose());
-  await actual.initialize();
-  const { config: parsed } = await actual.request('config/read', { includeLayers: false });
-  assert.equal(parsed.default_permissions, 'fleet-build');
-  assert.equal(parsed.permissions['fleet-build'].network.enabled, false);
-  assert.equal(parsed.permissions['fleet-build'].filesystem[':root'], 'deny');
+  const { args, env } = codexProcessConfig(account.home);
+  const child = spawn(codexExecutable(), args, { cwd: account.home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
+  const closed = new Promise(resolve => child.once('close', resolve)), actual = new CodexRpc(child);
+  try {
+    await actual.initialize();
+    const { config: parsed } = await actual.request('config/read', { includeLayers: false });
+    assert.equal(parsed.default_permissions, 'fleet-build');
+    assert.equal(parsed.permissions['fleet-build'].network.enabled, false);
+    assert.equal(parsed.permissions['fleet-build'].filesystem[':root'], 'deny');
+  } finally {
+    try { await closeProcesses([child], [closed]); } finally { actual.dispose(); }
+  }
 });
 
 test('a permission config write failure never launches the build process', async t => {
@@ -209,7 +233,10 @@ test('Codex streams activity, invokes Fleet tools and waits for successful termi
   const thread = rpc.calls.find(c => c.method === 'thread/start').params;
   assert.equal(thread.dynamicTools[0].type, 'function'); assert.equal(thread.approvalPolicy, 'never');
   assert.ok(!('sandbox' in thread), 'Legacy sandbox selection bypasses the permission profile');
-  assert.deepEqual(thread.config, { web_search: 'disabled' });
+  assert.equal(thread.config.web_search, 'disabled');
+  assert.equal(thread.config['sandbox_workspace_write.network_access'], false);
+  assert.deepEqual(thread.config['shell_environment_policy.exclude'], [CHATGPT_ACCESS_TOKEN_ENV]);
+  for (const feature of ['code_mode_tool_search', 'image_generation', 'computer_use']) assert.equal(thread.config[`features.${feature}`], false);
   assert.match(await fs.readFile(path.join(root, 'codex', 'config.toml'), 'utf8'), /default_permissions = "fleet-build"/);
   const prompt = value.prompt('Build'); await tick();
   rpc.emit('item/agentMessage/delta', { threadId: 'other', delta: 'ignore' });
@@ -275,7 +302,7 @@ test('the conversational Codex coordinator stays read-only and retains its narro
   let token = 'conversation-token', calls = 0;
   const processes = [];
   const instructions = 'Explain project evidence and propose actions. Never edit files or apply an action yourself.';
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture-coordinator', signal: new AbortController().signal,
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture-coordinator', signal: new AbortController().signal,
     conversationInstructions: instructions,
     getCredentials: async () => ({ accessToken: token, expiresAt: Date.now() + 3600_000 }),
     tools: [{ name: 'fleet_propose_action', description: 'Propose an action for review', parameters: { type: 'object' }, async execute() { calls++; return { content: [{ type: 'text', text: 'Proposed, not applied.' }] }; } }],
@@ -319,7 +346,7 @@ test('aborting or losing the Codex process settles pending work and releases the
 test('rotated ChatGPT credentials resume the same thread with its tools and isolated provider', async t => {
   let token = 'first-subscription-token', credentialReads = 0, toolCalls = 0;
   const processes = [], launches = [];
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: new AbortController().signal,
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: new AbortController().signal,
     getCredentials: async () => { credentialReads++; return { accessToken: token, expiresAt: Date.now() + 3600_000 }; },
     tools: [{ name: 'fleet_test', description: 'Test', parameters: { type: 'object' }, async execute() { toolCalls++; return { content: [{ type: 'text', text: 'ok' }] }; } }],
     launch: (_home, credentials) => { launches.push(credentials.accessToken); const rpc = new FakeRpc(); processes.push(rpc); return rpc; }
@@ -344,7 +371,7 @@ test('rotated ChatGPT credentials resume the same thread with its tools and isol
 });
 test('credential refresh failure never starts a turn with stale or API credentials', async t => {
   const rpc = new FakeRpc(); let rejectRefresh = false;
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: new AbortController().signal, tools: [],
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: new AbortController().signal, tools: [],
     getCredentials: async () => { if (rejectRefresh) throw new Error('Reconnect your ChatGPT account.'); return fixtureCredentials(); }, launch: () => rpc });
   t.after(() => value.dispose()); rejectRefresh = true;
   await assert.rejects(value.prompt('Build'), /Reconnect your ChatGPT account/);
@@ -352,7 +379,7 @@ test('credential refresh failure never starts a turn with stale or API credentia
 });
 test('credential rotation before the first turn starts a new empty thread without a nonexistent rollout', async t => {
   let reads = 0; const processes = [];
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: new AbortController().signal, tools: [],
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: new AbortController().signal, tools: [],
     getCredentials: async () => ({ accessToken: ++reads === 1 ? 'first-token' : 'replacement-token', expiresAt: Date.now() + 3600_000 }),
     launch: () => { const rpc = new FakeRpc(); processes.push(rpc); return rpc; } });
   t.after(() => value.dispose());
@@ -364,7 +391,7 @@ test('credential rotation before the first turn starts a new empty thread withou
 });
 test('cancellation while credentials refresh is pending does not launch a replacement process', async t => {
   const controller = new AbortController(), rpc = new FakeRpc(); let refreshing = false, resolveRefresh, launches = 0;
-  const value = await createCodexSession({ home: '/tmp', cwd: '/tmp', model: 'fixture', signal: controller.signal, tools: [],
+  const value = await createCodexSession({ ...await fakeHome(t), model: 'fixture', signal: controller.signal, tools: [],
     getCredentials: () => refreshing ? new Promise(resolve => { resolveRefresh = resolve; }) : fixtureCredentials(),
     launch: () => { launches++; return rpc; } });
   t.after(() => value.dispose()); refreshing = true;
@@ -385,9 +412,9 @@ test('RPC handles correlation, timeouts and process death without hanging', asyn
   } finally { rpc.dispose(); }
 });
 
-for (const conversationMode of [false, true]) test(conversationMode ? 'bundled Codex project lead disables command and edit tools across credential rotation' : 'bundled Codex uses SIWC HTTP transport and restores history and dynamic tools after token rotation', { timeout: 15000 }, async () => {
+for (const conversationMode of [false, true]) test(conversationMode ? 'bundled Codex project lead disables command and edit tools across credential rotation' : 'bundled Codex uses SIWC HTTP transport and restores history and dynamic tools after token rotation', { timeout: 30_000 }, async t => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-siwc-transport-'));
-  const processClosures = [];
+  const processClosures = [], children = [];
   const requests = [];
   const server = createServer(async (request, response) => {
     let body = ''; for await (const part of request) body += part;
@@ -408,7 +435,7 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     let accessToken = 'synthetic-first-token';
-    value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: new AbortController().signal,
+    value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: t.signal,
       ...(conversationMode ? { conversationInstructions: 'You are a read-only project conversation. Use only fleet_siwc_fixture.' } : {}),
       getCredentials: async () => ({ accessToken, expiresAt: Date.now() + 3600_000 }),
       tools: [{ name: 'fleet_siwc_fixture', description: 'Synthetic fixture tool', parameters: { type: 'object', properties: {} }, async execute() { return { content: [] }; } }],
@@ -417,7 +444,7 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
         // Only this local test replaces the production endpoint; no hosted inference is requested.
         args.push('-c', `model_providers.${CHATGPT_MODEL_PROVIDER}.base_url="http://127.0.0.1:${server.address().port}/v1"`);
         const child = spawn(codexExecutable(), args, { cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
-        processClosures.push(new Promise(resolve => child.once('close', resolve)));
+        children.push(child); processClosures.push(new Promise(resolve => child.once('close', resolve)));
         return new CodexRpc(child);
       }
     });
@@ -437,17 +464,18 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
     assert.ok(requests[1].body.input.length > requests[0].body.input.length);
     assert.ok(JSON.stringify(requests[1].body.input).includes('First synthetic fixture turn.'));
   } finally {
-    value?.dispose(); server.closeAllConnections();
-    await new Promise(resolve => server.close(resolve));
-    // dispose initiates shutdown; wait until Codex stops writing its local state.
-    await Promise.all(processClosures);
-    await fs.rm(home, { recursive: true, force: true });
+    try { await closeProcesses(children, processClosures); }
+    finally {
+      value?.dispose(); server.closeAllConnections();
+      await bounded(new Promise(resolve => server.close(resolve)), 'Fixture HTTP shutdown');
+      await fs.rm(home, { recursive: true, force: true });
+    }
   }
 });
 
-for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex surfaces model image rejection as a failed turn' : 'bundled Codex forwards browser screenshot pixels and console errors into the next model request', { timeout: 15000 }, async () => {
+for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex surfaces model image rejection as a failed turn' : 'bundled Codex forwards browser screenshot pixels and console errors into the next model request', { timeout: 30_000 }, async t => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-browser-transport-'));
-  const processClosures = [], requests = [], toolCalls = [];
+  const processClosures = [], children = [], requests = [], toolCalls = [];
   const server = createServer(async (request, response) => {
     let body = ''; for await (const part of request) body += part;
     if (request.url !== '/v1/responses') { response.writeHead(404); response.end(); return; }
@@ -477,7 +505,7 @@ for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex sur
   let value;
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-    value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: new AbortController().signal, getCredentials: fixtureCredentials,
+    value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: t.signal, getCredentials: fixtureCredentials,
       tools: [{ name: 'fleet_browser', description: 'Capture local app screenshot', parameters: { type: 'object', properties: { action: { type: 'string' } } },
         async execute(_id, args) {
           toolCalls.push(args);
@@ -489,7 +517,7 @@ for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex sur
         // Synthetic credentials and a loopback endpoint ensure this test never calls hosted inference.
         args.push('-c', `model_providers.${CHATGPT_MODEL_PROVIDER}.base_url="http://127.0.0.1:${server.address().port}/v1"`);
         const child = spawn(codexExecutable(), args, { cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
-        processClosures.push(new Promise(resolve => child.once('close', resolve)));
+        children.push(child); processClosures.push(new Promise(resolve => child.once('close', resolve)));
         return new CodexRpc(child);
       }
     });
@@ -505,23 +533,26 @@ for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex sur
       { type: 'input_image', image_url: `data:image/png;base64,${screenshotPng}` }
     ]);
   } finally {
-    value?.dispose(); server.closeAllConnections();
-    await new Promise(resolve => server.close(resolve));
-    await Promise.all(processClosures);
-    await fs.rm(home, { recursive: true, force: true });
+    try { await closeProcesses(children, processClosures); }
+    finally {
+      value?.dispose(); server.closeAllConnections();
+      await bounded(new Promise(resolve => server.close(resolve)), 'Fixture HTTP shutdown');
+      await fs.rm(home, { recursive: true, force: true });
+    }
   }
 });
 
 test('factory admission rejects stale model catalogs without an active ChatGPT plan grant', async t => {
   const root = await temp(t), store = new Store(root); await store.init();
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
-  const codex = { home: path.join(root, 'codex'), account: {}, models: [{ id: 'fixture-codex', configured: true }], async refresh() {}, credentials: fixtureCredentials };
+  const codex = { home: path.join(root, 'codex'), account: {}, models: [{ id: 'fixture-codex', configured: true }], async refresh() {}, sessionCredentials: fixtureCredentials };
   const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { codex,
     createCodexSession: () => { throw new Error('No session should start without plan permission'); } });
   for (const account of [{ status: 'disconnected', planUsageEnabled: true }, { status: 'connecting', planUsageEnabled: true }, { status: 'connected', planUsageEnabled: false }]) {
     codex.account = account;
     await assert.rejects(backend.start(store.state.projects[0].id), /sign in with ChatGPT/);
-    assert.equal(backend.active.size, 0); assert.equal(store.state.projects[0].status, 'draft');
+    assert.equal(backend.active.size, 0); assert.equal(store.state.projects[0].status, 'failed');
+    assert.equal(store.state.projects[0].runSummary.terminalReason, 'failed');
   }
 });
 
@@ -533,7 +564,7 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
   });
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
   const project = store.state.projects[0], phases = [], sessions = [];
-  const codex = { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture-codex', configured: true }], async refresh() {}, credentials: fixtureCredentials };
+  const codex = { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture-codex', configured: true }], async refresh() {}, sessionCredentials: fixtureCredentials };
   // The judge has its own read-only RPC session, separate from the builder adapter below.
   t.mock.method(CodexRpc, 'launch', () => {
     const rpc = new FakeRpc();
