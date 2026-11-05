@@ -359,11 +359,10 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       assert.doesNotMatch(project.error, /may still be active|could not confirm/);
     }
     if (engine === 'codex' && outcome !== 'cleanup-failure') {
-      // A clean process sweep is distinct from the adapter's conservative
-      // refusal to authorize Resume without writer-exit evidence.
-      assert.equal(project.runCheckpoint.writerState, 'unconfirmed');
-      assert.match(project.error, /could not confirm that all build work stopped/);
-      assert.match(project.error, /operator shutdown procedure/);
+      // Ending the app server and then finding no marked process is the writer-exit evidence.
+      assert.equal(project.runCheckpoint.writerState, 'idle');
+      assert.doesNotMatch(project.error, /could not confirm|operator shutdown procedure/);
+      if (outcome === 'stop') assert.match(project.error, /build was stopped/);
     }
     const restored = new Store(root); await restored.init();
     const recovered = restored.project(project.id);
@@ -379,3 +378,37 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
     }
   });
 }
+
+test('codex: a temporary stage failure retries once after the sweep proves the writer ended', { timeout: 15000 }, async t => {
+  await fs.mkdir('.tmp', { recursive: true });
+  const root = await fs.mkdtemp(path.resolve('.tmp/sweep-retry-'));
+  const store = new Store(root); await store.init();
+  store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture', rememberKey: false };
+  const project = store.state.projects[0];
+  let turns = 0, scans = 0;
+  const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), {
+    codex: { home: root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), models: [{ id: 'fixture', name: 'Fixture', backend: 'codex', provider: 'chatgpt', configured: true }], async refresh() {} },
+    preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
+    processSweep: () => new RunProcessSweep({ graceMs: 1, killMs: 500, scan: async () => { scans++; return []; } }),
+    createSession: async () => { throw new Error('Pi must not run'); },
+    createCodexSession: options => createCodexSession({ ...options, launch: () => ({
+      async initialize() {}, subscribe() {}, onClose() {}, dispose() {}, send() {},
+      async request(method) {
+        if (method === 'account/read') return { account: { type: 'chatgpt' } };
+        if (method === 'thread/start') return { thread: { id: 'fixture-thread' } };
+        if (method === 'turn/start') { turns++; throw new Error(turns === 1 ? '503 temporary interruption' : 'synthetic stage failure'); }
+        return {};
+      },
+    }) }),
+  });
+  backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
+  t.after(async () => { await backend.stopAll(); await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); });
+  await backend.start(project.id);
+  await backend.active.get(project.id)?.done;
+  assert.equal(turns, 2, 'The temporary failure gets exactly one retry');
+  assert.ok(scans >= 2, 'The retry waited for process evidence');
+  assert.ok(project.logs.some(log => log.text.includes('Retrying this stage once')));
+  assert.equal(project.status, 'failed');
+  assert.equal(project.runCheckpoint.writerState, 'idle');
+  assert.doesNotMatch(project.error, /could not confirm|operator shutdown procedure/);
+});

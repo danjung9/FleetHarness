@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "2f529b2032763280b4d39051b288c25feb5bd2a5faa5a970a447b757d20403ba",
+  "electron/pi-backend.ts": "4ef045fcfee1fd83f852f0528b77b00572267222b41de94d3e9535afe646929c",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -29,7 +29,7 @@ const errorInventory = {
   "electron/verification.ts": "178b4eb1e1eeb3668c257ea29961c43e195c29934985ebfa0c7e6a09ab34a132",
   "electron/quality.ts": "e100b5dd0c605254e394faf36c035d2737aa19de8994f37a04a1de0dde75a853",
   "harness/quality-contract.ts": "3c6bd49f01f12fff1f11ad61663abe4a3ba9b90ff5a3055ccaee1db847d18066",
-  "harness/solution-contract.ts": "c821253be013d2cd94d5e1da9be7a5d8cd1f7d1502d89022105661305a4f006a",
+  "harness/solution-contract.ts": "4b11e8c746d973b2073a4b90578ff429060ed1d1f0fe6cb8a7c7fe88aa1ec039",
   "electron/browser-verification.ts": "f4b4688364370ada03a7ba31fc23fb04c6acdee99896eb62b023c36ce998801d",
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
   "electron/solution-runtime.ts": "4f6657ffd75fb576423b1d48c0a7b28e6f401fa3bb535e058d033ebef4d6165b",

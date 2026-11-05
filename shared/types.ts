@@ -40,6 +40,7 @@ export interface RunCheckpoint {
   connectedContextHash?: string;
   qualityHash?: string;
   planHash?: string;
+  planBodies?: [string, string][];
   repairAttempts: number;
   // Missing or interrupted shutdown evidence cannot authorize workspace recovery.
   writerState?: 'active' | 'idle' | 'unconfirmed';

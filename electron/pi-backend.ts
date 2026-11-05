@@ -31,7 +31,7 @@ import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -192,8 +192,9 @@ export class FleetBackend {
   async requestChanges(id: string, feedback: string) {
     reviewFeedback(feedback);
     const p = this.store.project(id);
-    if (this.active.has(id) || !['review', 'failed'].includes(p.status) || !p.runId || !p.workspace || !p.report || p.approvedAt) {
-      throw new Error('Request changes from a completed, unapproved build with test evidence.');
+    const approved = !!p.approvedAt && ['approved', 'delivered'].includes(p.status);
+    if (this.active.has(id) || (!approved && (!['review', 'failed'].includes(p.status) || p.approvedAt)) || !p.runId || !p.workspace || !p.report) {
+      throw new Error('Finish a build and open its review or approved delivery before requesting changes.');
     }
     const review = await recordReview(this.store, p, 'changes_requested', feedback);
     this.notify();
@@ -217,7 +218,9 @@ export class FleetBackend {
   private async begin(id: string, resuming: boolean, revision?: { review: ReviewRecord; workspace: string }) {
     if (this.active.has(id)) throw new Error(resuming && this.active.get(id)?.preparingResume ? 'This challenge is already preparing to resume.' : 'This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
-    const p = this.store.project(id);
+    const currentProject = this.store.project(id);
+    // Prepare revisions privately so a failed start never publishes a revoked approval.
+    let p = revision ? structuredClone(currentProject) : currentProject;
     if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed; writer shutdown was not confirmed. Use Stop to reconcile the previous run before starting new work.');
     if (resuming && (p.approvedAt || !['failed', 'stopped'].includes(p.status))) throw new Error('Only a failed or stopped build can resume.');
     if (resuming && (!p.workspace || !p.runId || p.runCheckpoint?.version !== 1)) throw new Error('This build has no trusted recovery checkpoint. Its files are preserved; start a new build to continue.');
@@ -230,7 +233,8 @@ export class FleetBackend {
     }
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve, review: revision?.review, preparingResume: resuming };
+    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve,
+      review: revision ? p.reviewHistory?.find(item => item.id === revision.review.id) : undefined, preparingResume: resuming };
     let admitted = !resuming;
     this.active.set(id, run);
     try {
@@ -339,7 +343,14 @@ export class FleetBackend {
         this.log(p, 'review', 'info', 'Changes requested for run ' + run.review.runId + '. Starting another iteration with the saved reviewer comments and previous source.');
       }
       await this.checkpoint(p, run, 'intake');
-      await this.changed(p);
+      if (revision) {
+        this.check(run);
+        p.conversation = currentProject.conversation;
+        p.updatedAt = new Date().toISOString();
+        await this.store.saveProject(p);
+        p = currentProject;
+        this.notify();
+      } else await this.changed(p);
       this.check(run);
       void run.processes.run(() => this.execute(p, run, provider, modelId));
     } catch (error) {
@@ -355,12 +366,27 @@ export class FleetBackend {
       p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       recordProjectError(p, error, detail => this.log(p, 'intake', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      await this.finish(p, run, refusalSaveTimeoutMs); throw new Error(plainError(error).message, { cause: error });
+      await this.finish(p, run, refusalSaveTimeoutMs);
+      if (revision && p !== currentProject && p.processScope?.runId === p.runId && p.processScope?.cleanup !== 'confirmed' && p.runId !== currentProject.runId) {
+        // Retain an unresolved new process scope so Stop can reconcile it.
+        await this.store.saveProject(p);
+      }
+      throw new Error(plainError(error).message, { cause: error });
     }
   }
-  private async planningHash(p: Project) {
-    const bodies = await Promise.all(['plan.md', 'test-matrix.md'].map(async file => [file, await fs.readFile(await safeFile(p.workspace!, file), 'utf8')]));
-    return digest(JSON.stringify(bodies));
+  private async planningBodies(p: Project): Promise<[string, string][]> {
+    return Promise.all(['plan.md', 'test-matrix.md'].map(async (file): Promise<[string, string]> => [file, await fs.readFile(await safeFile(p.workspace!, file), 'utf8')]));
+  }
+  private async planningHash(p: Project) { return digest(JSON.stringify(await this.planningBodies(p))); }
+  /** Agents often note progress in the planning files. Put the frozen text back instead of discarding a finished build. */
+  private async restoreFrozenPlan(p: Project, run: ActiveRun) {
+    if (!run.planHash) return;
+    let unchanged = false;
+    try { unchanged = await this.planningHash(p) === run.planHash; } catch { /* A deleted or replaced file is a change. */ }
+    if (unchanged) return;
+    if (!run.planBodies || digest(JSON.stringify(run.planBodies)) !== run.planHash) throw new Error('The frozen plan changed after planning. Restore it or start a new run.');
+    for (const [file, body] of run.planBodies) await atomicHostWrite(p.workspace!, file, body);
+    this.log(p, p.stages.find(stage => stage.status === 'active')?.id ?? 'verify', 'info', 'An agent edited plan.md or test-matrix.md after planning. The frozen text was restored, so those edits are not part of the evidence.');
   }
   private async restore(p: Project, run: ActiveRun) {
     const checkpoint = p.runCheckpoint!;
@@ -406,6 +432,7 @@ export class FleetBackend {
     if (!run.data) throw new Error('The frozen brief data checkpoint is missing. Start a new run.');
     run.planHash = checkpoint.planHash;
     await this.checkRecoveryInputs(p, run);
+    run.planBodies = checkpoint.planBodies;
     run.phases = run.phases!.map(phase => resolvePhaseForRuntime(phase, run.quality?.solution?.runtime.profile));
   }
   private async retryStage<T>(p: Project, run: ActiveRun, stage: StageId, work: () => Promise<T>): Promise<T> {
@@ -497,16 +524,21 @@ export class FleetBackend {
       } });
     } catch (error) { failed = true; failure = error; }
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // Codex abort acknowledges a request, not worker exit. Disposal ends the app server, and the marked-process
+    // sweep then proves nothing it started still runs. That inspection needs longer than an in-process session.
+    const needsProcessEvidence = failed && run.backend === 'codex';
     const shutdown = (async () => {
       let creationFailed = false;
       await creation?.catch(() => { creationFailed = true; });
       if (!session) return !creationFailed;
       await Promise.all([...(failed ? [cancel()] : []), ...[...prompts].map(prompt => prompt.catch(() => {}))]);
       await session.dispose();
-      // Codex abort currently acknowledges a request, not worker process exit.
-      return !(failed && run.backend === 'codex');
+      if (!needsProcessEvidence) return true;
+      if (typeof run.processes.quiesce !== 'function') return false;
+      await run.processes.quiesce();
+      return true;
     })().catch(() => false);
-    let confirmed = await Promise.race([shutdown, new Promise<false>(resolve => { timer = setTimeout(() => resolve(false), timeoutMs); })]);
+    let confirmed = await Promise.race([shutdown, new Promise<false>(resolve => { timer = setTimeout(() => resolve(false), needsProcessEvidence ? timeoutMs * 6 : timeoutMs); })]);
     clearTimeout(timer); released = true;
     if (failure instanceof VerificationShutdownError) confirmed = false;
     try { session?.dispose(); } catch { confirmed = false; }
@@ -775,7 +807,7 @@ export class FleetBackend {
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);
     await assertBriefDataIntegrity(p.workspace!, run.data!);
     if (run.quality) await assertQualityContract(p.workspace!, run.quality);
-    if (run.planHash && await this.planningHash(p) !== run.planHash) throw new Error('The frozen plan changed after planning. Restore it or start a new run.');
+    await this.restoreFrozenPlan(p, run);
     if (run.foundation) await assertFoundationIntegrity(p.workspace!, run.foundation);
     if (run.foundationPlan !== undefined && await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8') !== run.foundationPlan) {
       throw new Error('The planned foundation changed after planning. Restore foundation-plan.json before resuming.');
@@ -889,15 +921,16 @@ export class FleetBackend {
       p.phasePlan = structuredClone(run.phases);
       await this.sealQuality(p, run);
       this.log(p, 'plan', 'info', 'Solution and acceptance contracts frozen. Evaluation answer keys are held outside the builder workspace. Required capabilities must pass host evaluation.');
-      run.planHash = await this.planningHash(p);
-      p.runCheckpoint!.qualityHash = run.quality.hash; p.runCheckpoint!.planHash = run.planHash;
+      run.planBodies = await this.planningBodies(p);
+      run.planHash = digest(JSON.stringify(run.planBodies));
+      p.runCheckpoint!.qualityHash = run.quality.hash; p.runCheckpoint!.planHash = run.planHash; p.runCheckpoint!.planBodies = run.planBodies;
       p.runCheckpoint!.foundation = run.foundation;
       await this.stage(p, 'plan', 'complete');
       }
       if (p.stages.find(s => s.id === 'build')!.status !== 'complete') {
       await this.stage(p, 'build', 'active');
       await this.agent(p, run, 'build', provider, model,
-        'You are the implementation agent. Read requirements.md, research.md, plan.md, solution-contract.json, acceptance-plan.json and ux-spec.json. Implement the computational core and the declared runtime first. Follow solution-contract.json invocation exactly, including response shapes, literal statuses/errors and array ordering. Test complete response objects against that public protocol and include novel boundary inputs; do not assert only selected fields or invent different response vocabulary. Create all declared runtime files and an initial interface where needed. The host will evaluate this core before the application completion step. Treat the validated browser steps, selectors and expected results as a frozen contract. Implement the specified first-run flow, feedback, recovery, keyboard operation and narrow layout. Do not edit acceptance-plan.json or ux-spec.json. Use one application implementation for browser and Node tests, for example by extracting the actual marked inline core in tests; avoid copied test-only logic. Deliver the declared runtime entrypoint, all manifest files, path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. The interface and host invocation must use the same core implementation. Browser profiles use local files; services serve their UI and JSON invocation on the host-assigned loopback port. No placeholder controls or fake test results. Use the prepared brief data in the application workflow and sample data, keeping supplied and synthetic provenance accurate. Include empty states, validation, and accessible controls. Document limitations. Use only the declared locked dependencies. Required model settings must be explicit; unavailable inference must fail visibly, never return sample answers. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'path-to-fleet.md', ...run.quality!.solution!.runtime.files], true, {
+        'You are the implementation agent. Read requirements.md, research.md, plan.md, solution-contract.json, acceptance-plan.json and ux-spec.json. Implement the computational core and the declared runtime first. Follow solution-contract.json invocation exactly, including response shapes, literal statuses/errors and array ordering. Test complete response objects against that public protocol and include novel boundary inputs; do not assert only selected fields or invent different response vocabulary. Create all declared runtime files and an initial interface where needed. The host will evaluate this core before the application completion step. Treat the validated browser steps, selectors and expected results as a frozen contract. Implement the specified first-run flow, feedback, recovery, keyboard operation and narrow layout. Do not edit plan.md, test-matrix.md, acceptance-plan.json or ux-spec.json: they are frozen, and notes about progress or results belong in verification.md. Use one application implementation for browser and Node tests, for example by extracting the actual marked inline core in tests; avoid copied test-only logic. Deliver the declared runtime entrypoint, all manifest files, path-to-fleet.md listing prerequisites for field validation and unresolved integrations, testable core source, and meaningful *.test.cjs or *.test.mjs tests using node:test and node:assert. The interface and host invocation must use the same core implementation. Browser profiles use local files; services serve their UI and JSON invocation on the host-assigned loopback port. No placeholder controls or fake test results. Use the prepared brief data in the application workflow and sample data, keeping supplied and synthetic provenance accurate. Include empty states, validation, and accessible controls. Document limitations. Use only the declared locked dependencies. Required model settings must be explicit; unavailable inference must fail visibly, never return sample answers. Do not modify requirements.md or .fleet. The harness will independently run tests with its bundled Node runtime. Tests must use OS temporary directories for mutable files. After implementation, a follow-up step will ask you to write README.md as the user guide for the finished application.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'path-to-fleet.md', ...run.quality!.solution!.runtime.files], true, {
           coreGate: true,
           instruction: 'Implementation is complete. The core passed host evaluation. Complete the planned application interactions using this exact core, then write README.md as a practical user guide for the software you just built. Inspect the declared runtime, applicable interface, source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and exact startup commands for the declared runtime, dependency installation and required model settings; numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using the prepared input or synthetic sample data and the expected output, with accurate provenance; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Preserve requirements.md, .fleet and frozen contracts. Keep the computational core and tests meaningful while finishing the UI and guide.',
           files: ['README.md']
@@ -911,7 +944,7 @@ export class FleetBackend {
       const verificationCompleted = p.runCheckpoint!.verificationAgent === 'complete' || p.stages.find(s => s.id === 'verify')!.status === 'complete';
       await this.stage(p, 'verify', 'active');
       if (!verificationCompleted) await this.agent(p, run, 'verify', provider, model,
-        'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen acceptance plan and UX specification. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested computational logic and the actual runtime entrypoint. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Preserve the declared runtime and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true);
+        'You are the verification agent. Inspect requirements.md, plan.md, acceptance-plan.json, ux-spec.json, application source, tests, and README.md. Preserve the frozen plan.md, test-matrix.md, acceptance plan and UX specification; record results in verification.md. The host will execute every planned browser journey at desktop and narrow sizes, checking actual rendered outcomes, console errors and layout overflow; Node-only success cannot pass verification. Improve coverage for edge cases and consistency between the tested computational logic and the actual runtime entrypoint. Fix defects you find. Check the README quick start and sample walkthrough against the actual application, and update README.md for any changed controls, inputs, outputs or limitations. Write verification.md mapping each requirement to tests and explicitly listing what remains unverified, including any guide steps you could not exercise. Do not claim test execution unless you execute it. Preserve the declared runtime and all test files named *.test.cjs or *.test.mjs using node:test. The harness independently runs the tests next.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true);
       this.check(run);
       await this.checkInputs(p, run);
       p.report = await this.verify(p, run);

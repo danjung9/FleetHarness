@@ -13,6 +13,7 @@ import { plainError } from '../dist-electron/electron/plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
 import { ConnectorStore } from '../dist-electron/electron/connectors/store.js';
 import { ConnectorService } from '../dist-electron/electron/connectors/index.js';
+import { mainHarness } from './helpers/main-harness.mjs';
 
 const resourcesRoot = path.resolve('.');
 // Full functional workflows launch real Node tests and Chromium. Keep their
@@ -952,6 +953,32 @@ test(recoveryLabel + 'resume republishes and reseals the exact answer key before
 }
 
 for (const verify of [undefined, syntheticReport]) {
+test((verify ? 'synthetic checks: ' : '') + 'delivered change request completes the existing pipeline and needs its own approval', { timeout: workflowTimeout * 2 }, async t => {
+  const h = await harness(t, { verify });
+  const main = await mainHarness(h.store, h.backend, 'electron/main.ts', { dialog: { async showOpenDialog() { return { filePaths: [h.root] }; } } });
+  await h.run(); await h.assertSettled('review');
+  await main.invoke('fleet:approve', h.project.id, 'Reviewed the original synthetic task parser.');
+  const delivered = await main.invoke('fleet:export', h.project.id);
+  const old = structuredClone(h.project);
+  const oldReceipt = await fs.readFile(path.join(delivered, 'review.json'), 'utf8');
+  const oldReport = await fs.readFile(path.join(delivered, 'test-report.json'), 'utf8');
+  await main.invoke('fleet:request-changes', h.project.id, 'Keep the entered message visible when validation fails.');
+  await h.settle(); await h.assertSettled('review');
+  assert.notEqual(h.project.runId, old.runId); assert.notEqual(h.project.workspace, old.workspace);
+  assert.equal(h.project.approvedAt, undefined); assert.equal(h.project.approval, undefined); assert.equal(h.project.exportedTo, undefined);
+  assert.equal(h.project.verification.runId, h.project.runId); assert.notEqual(h.project.report.sourceHash, old.report.sourceHash);
+  assert.equal(reportPassed(h.project.report), true);
+  await assert.rejects(main.invoke('fleet:export', h.project.id), /Review and approve/);
+  await main.invoke('fleet:approve', h.project.id, 'Reviewed the new iteration and its fresh verification.');
+  const nextDelivery = await main.invoke('fleet:export', h.project.id);
+  assert.notEqual(nextDelivery, delivered);
+  assert.equal(h.project.approval.runId, h.project.runId);
+  assert.deepEqual(h.project.reviewHistory.map(record => record.decision), ['approved', 'changes_requested', 'approved']);
+  assert.deepEqual(h.project.reviewHistory[0], old.reviewHistory[0]);
+  assert.equal(await fs.readFile(path.join(delivered, 'review.json'), 'utf8'), oldReceipt);
+  assert.equal(await fs.readFile(path.join(delivered, 'test-report.json'), 'utf8'), oldReport);
+});
+
 test((verify ? 'synthetic checks: ' : '') + 'review changes start another verified iteration with the comments and previous source', { timeout: workflowTimeout * 2 }, async t => {
   const h = await harness(t, { verify });
   h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
@@ -992,13 +1019,13 @@ test((verify ? 'synthetic checks: ' : '') + 'a review change request preserves t
   assert.equal(h.backend.active.has(h.project.id), false);
 });
 
-test((verify ? 'synthetic checks: ' : '') + 'failed verification can request changes, while incomplete or approved builds cannot', { timeout: workflowTimeout }, async t => {
+test((verify ? 'synthetic checks: ' : '') + 'failed verification can request changes, while incomplete builds or approval labels without approval cannot', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { verify });
-  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /Finish a build/);
   await h.run(); await h.assertSettled('review');
   for (const status of ['draft', 'running', 'approved', 'delivered']) {
     h.project.status = status;
-    await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+    await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /Finish a build/);
   }
   h.project.status = 'failed'; h.project.report.failed = 1;
   h.backend.runtime.hasConfiguredAuth = () => false;
@@ -1291,6 +1318,8 @@ test('a Codex abort acknowledgement cannot authorize recovery without worker exi
     return { subscribe: () => () => {}, prompt: async () => { throw new Error('Provider error: 503'); },
       abort: async () => {}, dispose: () => {} };
   };
+  // The process sweep is the evidence. When it cannot confirm, nothing may retry or resume.
+  h.backend.options.processSweep = () => ({ run: work => work(), stop: async () => {}, quiesce: async () => { throw new Error('Synthetic inspection failure'); } });
   await h.run(); await h.assertSettled('failed');
   assert.equal(creations, 1); assert.match(rawError(h.project), /shutdown.*not confirmed/i);
   await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
@@ -1367,6 +1396,23 @@ for (const field of ['title', 'description', 'criteria', 'resources', 'links', '
     await resumeRefused(h.backend, h.project, /brief.*changed|changed.*brief/i);
     assert.equal(h.sessions.length, count); assert.equal(h.backend.active.size, 0);
     assert.equal(h.project.status, 'failed');
+  });
+}
+
+for (const file of ['plan.md', 'test-matrix.md']) {
+  test(`an agent's note in frozen ${file} is undone and does not end the build`, { timeout: 10000 }, async t => {
+    let frozen;
+    const h = await harness(t, { verify: syntheticReport, scenario: async ({ cwd, stage }) => {
+      if (stage === 'build' && frozen === undefined) {
+        frozen = await fs.readFile(path.join(cwd, file), 'utf8');
+        await fs.appendFile(path.join(cwd, file), '\nResult: passed');
+      }
+      return false;
+    } });
+    await h.run(); await h.assertSettled('review');
+    assert.equal(await fs.readFile(path.join(h.project.workspace, file), 'utf8'), frozen);
+    assert.ok(h.project.logs.some(log => log.text.includes('The frozen text was restored')));
+    assert.equal(h.project.runCheckpoint.writerState, 'idle');
   });
 }
 

@@ -17,6 +17,8 @@ export interface RuntimeManifest {
   dependencies?: { manager: 'npm' | 'pip'; manifest: string; lockfile: string };
   healthPath?: string;
   invokePath?: string;
+  /** Delivery port; verification still assigns its own ephemeral port. */
+  port?: number;
 }
 
 export type CapabilityKind = 'algorithm' | 'optimization' | 'prediction' | 'retrieval' | 'generation' | 'workflow' | 'stateful';

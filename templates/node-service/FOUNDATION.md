@@ -10,7 +10,7 @@ Requires Node.js 22.19 or newer. No installation or third-party packages are nee
 HOST=127.0.0.1 PORT=3000 node server.mjs
 ```
 
-Open `http://127.0.0.1:3000/`. The host assigns `HOST` and `PORT` during clean evaluation. Bind only to that loopback host, respect the assigned port, and retain `package.json` for ES module imports from `.js` library files. `SIGINT` and `SIGTERM` close the HTTP server, allowing up to one second for requests to drain.
+Open `http://127.0.0.1:3000/`. The host assigns `HOST` and `PORT` during clean evaluation. Respect both values: verification uses loopback and container delivery uses `HOST=0.0.0.0` with a port published on host loopback. Retain `package.json` for ES module imports from `.js` library files. `SIGINT` and `SIGTERM` close the HTTP server, allowing up to one second for requests to drain.
 
 ## Extension contract
 
