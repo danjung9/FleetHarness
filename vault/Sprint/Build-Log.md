@@ -126,3 +126,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 19:51 Astra merge-dan started: Your last turn was cut off when the machine slept. The overseer committed your working tree as 62d26bf and merged the te
 - 19:51 Astra conn-core started: Small fix so the real connector screen test can run. The overseer changed scripts/smoke-connectors.mjs and added scripts
 - 19:55 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`
+- 20:15 Connectors through the real screen against fake servers: seven sample cards, custom API, Gmail and Outlook sign-in, restart and token refresh all pass. Unit 399 of 399 before the last test-only changes. The final step, a fixture build using connected data, is not yet passing and is rerun after the backend merge. Real keychain and real Google or Microsoft sign-in are not tested.
+- 20:15 Astra merge-dan finished, exit 0. Report: `Research/Backend-Audit/merge-dan.md`
