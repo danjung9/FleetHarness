@@ -113,12 +113,13 @@ test('phase smoke checks the synthetic specialist and judge separately without p
   const phaseRequest = phase => request(phasePrompt(phase, project.globalTools), toolsForPhase(phase, project.globalTools));
   const requests = packet.stages.filter(phase => phase.owner === 'agent').map(phaseRequest);
   requests.splice(1, 0, request(phasePrompt(syntheticDataPhase, project.globalTools) + '\nYou are the synthetic data agent.', toolsForPhase(syntheticDataPhase, project.globalTools)));
+  requests.splice(requests.findIndex(item => item.messages[0].content.includes('Current phase: plan.')) + 1, 0, request('Use planning audit mode. This is before implementation.', ['judge_read']));
   requests.push(request('You are a fresh independent judge.', ['judge_read']));
-  assert.equal(assertFixturePhaseRequests(project, requests).sessions.length, 7);
+  assert.equal(assertFixturePhaseRequests(project, requests).sessions.length, 8);
   for (const mutate of [
     rows => rows[1].tools.push({ function: { name: 'fleet_get_challenge' } }),
     rows => { rows[0].tools = rows[0].tools.filter(tool => tool.function.name !== 'fleet_get_challenge'); },
-    rows => { rows[4].tools = rows[4].tools.filter(tool => tool.function.name !== 'fleet_extract_messages'); },
+    rows => { rows[5].tools = rows[5].tools.filter(tool => tool.function.name !== 'fleet_extract_messages'); },
     rows => rows.at(-1).tools.push({ function: { name: 'write' } }),
     rows => rows.splice(1, 1),
     rows => rows.pop()

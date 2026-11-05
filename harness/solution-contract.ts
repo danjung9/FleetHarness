@@ -311,6 +311,8 @@ requiredEnv lists uppercase environment variable NAMES (maximum 32), never crede
 
 ## evaluation-plan.json
 
+For every mandatory capability, include a valid input outside bundled examples and preset choices, a changed constraint that changes the required result, and an invalid or impossible case. Derive complete expected results from the declared rules before implementation. Prove the user can supply the new input through the delivered interface. When optimization is required, compare objective value against an independently computed bounded reference, not feasibility alone. Never derive the reference from candidate code or helper self-tests.
+
 {
   "schemaVersion": 1,
   "evaluations": [{
@@ -326,7 +328,7 @@ Each evaluation requires id, capabilityId, description, dataset, evaluator, thre
 Each case has a unique id, input JSON and expected JSON. The candidate receives ONLY input; expected answers stay in host memory and outside the deployment. Required evaluations need at least two distinct inputs (object key order does not create a new input). Use boundary cases, invalid or missing data, counterexamples and appropriate failure/recovery cases. A plan may contain at most 100 cases per evaluation, 10 trials per case and 1,000 total invocations. JSON must be finite, at most 20 levels deep and 100,000 UTF-8 bytes per input/expected value; the complete plan is capped at 2,000,000 UTF-8 bytes. threshold is a score in (0,1]; optional baseline is a score in [0,1] and threshold must meet or exceed it. Choose a domain-appropriate meaningful threshold; deterministic correctness/constraint checks should require 1. Model-based behavior should use multiple trials and independent representative examples, including abstention and unsupported-claim cases. Do not lower thresholds to make broken output pass.
 
 Host-owned evaluators:
-- exact: exact structural JSON equality; object key order is ignored, array order matters.
+- exact: exact structural JSON equality; object key order is ignored, array order matters. State the ordering rule for each output array in invocation.rules, and check that every expected array follows that rule before freezing the plan: a contradiction between them cannot be repaired later.
 - numeric: exact JSON shape and exact nonnumeric values; numbers compare with absolute tolerance (optional, default 0). Expected JSON must contain a number. tolerance is valid only for numeric.
 - classification: expected/output are a scalar string/number/boolean label or a nonempty array of such labels. Array length must match; score is label accuracy.
 - schedule: input uses windows [{start,end}], people [{id,qualifications,windows,maxMinutes,restMinutes}], requests [{id,duration,starts,people,resources,qualifications}] in nonnegative integer minutes. expected is {"status":"feasible"} or {"status":"infeasible"}. Output contains status and assignments [{id,start,end,people,resources}]. Feasible results are independently checked for complete coverage, candidate starts, duration, qualifications, availability, shared-resource/person overlap, rest and duty budgets. Infeasible results are compared with the frozen answer key; this is not a general infeasibility proof. budget_exhausted cannot pass as infeasible.

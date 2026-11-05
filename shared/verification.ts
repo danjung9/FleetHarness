@@ -1,10 +1,20 @@
 import type { TestReport } from './types.js';
 import { visualReviewPassed } from './visual-review.js';
 
+export function judgeAccepted(report?: TestReport): boolean {
+  return report?.independentJudge?.verdict === 'SATISFACTORY';
+}
+
+/** Missing evaluation evidence also needs an explicit human decision. */
+export function judgeGaps(report?: TestReport) {
+  return report?.independentJudge?.gaps ?? [{ requirement: 'Independent check',
+    evidence: 'No independent judgment was recorded for this build.',
+    fix: 'Inspect the application and its evidence before accepting this prototype.' }];
+}
+
 /** A legacy Node-only report is never enough for a run using the quality contract. */
 export function reportPassed(report?: TestReport, requireQuality: boolean | 1 | 2 | 3 = false): boolean {
   if (!report || report.exitCode !== 0 || report.total <= 0 || report.passed <= 0 || report.failed !== 0 || report.skipped !== 0 || report.passed !== report.total) return false;
-  if (report.independentJudge && report.independentJudge.verdict !== 'SATISFACTORY') return false;
   if (!report.quality) return !requireQuality;
   const quality = report.quality;
   if (requireQuality === 3 && quality.schemaVersion !== 3) return false;

@@ -14,6 +14,7 @@ const project = { ...newProject({ title: 'Task review · evidence fixture', desc
       criteria: [{ criterionId: 'TASK-1', requirement: 'Parse a synthetic task.', status: 'failed', detail: 'Expected inspect pump, received placeholder.' }, { criterionId: 'INTEGRATION-1', requirement: 'Connect to an approved operational source.', status: 'unverified', detail: 'An authorized connector and domain validation are required.' }],
       journeys: [{ id: 'parse', title: 'Parse a synthetic task', viewport: 'desktop', status: 'failed', detail: 'Expected inspect pump, received placeholder.', screenshot: '.quality-evidence/fixture/parse-desktop.png' }, { id: 'parse', title: 'Parse a synthetic task', viewport: 'narrow', status: 'passed', detail: 'Task completed.' }] } } };
 const state = { version: 1, projects: [project], settings: { provider: '', model: '', rememberKey: false } };
+project.report.independentJudge = { verdict: 'SATISFACTORY', gaps: [] };
 
 function computationalQuality() {
   const runtime = { profile: 'browser', filesHash: 'computational-fixture-files', runtime: 'node-fixture', environmentNames: [] };
@@ -52,9 +53,11 @@ try {
     window.failNextQualityChangeRequest = !saved;
     window.fleetHarness = { bootstrap: async () => ({ state: current, models: [], storagePath: 'UI fixture', credentialStatus: '', runtime: 'UI fixture' }),
       onState: listener => { listeners.add(listener); return () => listeners.delete(listener); }, preview: async () => null, artifacts: async () => [],
-      approve: async (id, feedback) => {
+      approve: async (id, feedback, acceptJudgeGaps) => {
         window.qualityFixtureCalls.approvals.push(id);
         const project = current.projects.find(project => project.id === id);
+        if (project.report.independentJudge?.verdict !== 'SATISFACTORY' && acceptJudgeGaps !== true) throw new Error('Read and accept the independent check gaps before approving this prototype.');
+        window.lastQualityGapAcceptance = acceptJudgeGaps;
         project.status = 'approved'; project.approvedAt = new Date().toISOString(); project.feedback = feedback;
         current = structuredClone(current); for (const listener of listeners) listener(current);
       },
@@ -153,6 +156,31 @@ try {
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Automated checks passed', { exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  const gaps = [{ requirement: 'Task export', evidence: 'The exported file omits the entered task.', fix: 'Include the entered task in the export.' }];
+  project.report.independentJudge = { verdict: 'NOT', gaps, humanSteps: ['Have an operator review the prototype.'] };
+  await page.evaluate(value => window.setQualityFixture(value), state);
+  await page.getByRole('heading', { name: 'The independent check found 1 gaps', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Steps for a person', exact: true }).waitFor();
+  await page.getByText('Have an operator review the prototype.', { exact: true }).waitFor();
+  for (const gap of gaps) {
+    await page.getByText(gap.requirement, { exact: true }).waitFor();
+    await page.getByText('Evidence: ' + gap.evidence, { exact: true }).waitFor();
+    await page.getByText('Fix: ' + gap.fix, { exact: true }).waitFor();
+  }
+  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false);
+  await page.getByRole('button', { name: 'Use these gaps as my change request', exact: true }).click();
+  assert.equal(await page.getByLabel('Review notes').inputValue(), gaps.map(gap => `${gap.requirement}\nEvidence: ${gap.evidence}\nFix: ${gap.fix}`).join('\n\n'));
+  await page.getByLabel('I read these gaps and accept them for this prototype', { exact: true }).check();
+  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  await page.getByRole('button', { name: 'Home \u2014 challenge portfolio', exact: true }).click();
+  const homeBuild = page.locator('.home-build-list button').filter({ hasText: project.title });
+  await homeBuild.getByText('Needs review', { exact: true }).waitFor();
+  assert.match(await homeBuild.innerText(), /Review build/);
+  await homeBuild.click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
+  // Gap consent is deliberately not retained when leaving Review.
+  assert.equal(await page.getByLabel('I read these gaps and accept them for this prototype', { exact: true }).isChecked(), false);
+  await page.getByLabel('I read these gaps and accept them for this prototype', { exact: true }).check();
   const evidence = page.locator('.review-evidence');
   if (await evidence.getAttribute('open') === null) await evidence.locator(':scope > summary').click();
   assert.equal(await page.getByText('Unverified', { exact: true }).count(), 1);
@@ -169,6 +197,8 @@ try {
   project.report.quality = computationalQuality(); project.report.output = '2 Node tests and 4 browser journeys passed. Required scheduling constraint evaluation failed.';
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Verification needs attention', { exact: true }).waitFor();
+  assert.equal(await page.getByLabel('I read these gaps and accept them for this prototype', { exact: true }).isChecked(), false, 'Another iteration cannot inherit gap acceptance');
+  await page.getByLabel('I read these gaps and accept them for this prototype', { exact: true }).check();
   await page.getByLabel('Review notes').fill('Reviewed the constraint examples, failure details, baseline, and explicit integration limitation.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
   await page.getByRole('heading', { name: 'Computational capabilities', exact: true }).waitFor();
@@ -225,6 +255,7 @@ try {
   await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
   const exportButton = page.getByRole('button', { name: 'Export runnable package', exact: true });
   await exportButton.waitFor();
+  assert.equal(await page.evaluate(() => window.lastQualityGapAcceptance), true, 'Explicit acceptance reaches the approval bridge');
   assert.equal(await exportButton.isEnabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Download app', exact: true }).count(), 0);
   await page.getByText('Includes the command-line engine, dependency files, startup instructions, and verification evidence.', { exact: false }).waitFor();
@@ -243,9 +274,9 @@ try {
   assert.deepEqual((await page.evaluate(() => window.qualityFixtureCalls.changes)).at(-1), { id: project.id, feedback: approvedChange });
   assert.equal(await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Build', exact: true }).getAttribute('aria-pressed'), 'true');
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, browserFailureBlocksApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
-    failedChangeRequestPreservesDraft: true, savedChangeRequestSurvivesRestart: true, changeRequestsRetry: true, changeRequestsReturnToBuild: true,
-    explicitRequirementGaps: true, missingQualityBlocksApproval: true,
-    requiredCapabilityBlocksApproval: true, coreDeferralBlocksApproval: true, missingEvaluationBlocksApproval: true, cleanRuntimeRequired: true,
-    evaluationMetricsAndProvenance: true, cliApprovesWithoutBrowserJourneys: true, cliExportsRunnablePackage: true, approvedChangeRequestStartsIteration: true, screenshots: output }));
+  console.log(JSON.stringify({ passed: true, rendererFixtureOnly: true, failedBrowserReportDisablesApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
+    failedChangeRequestPreservesDraft: true, savedChangeRequestRestoredAfterReload: true, changeRequestRetryInvoked: true, changeRequestOpensBuildView: true,
+    unverifiedRequirementDisplayed: true, missingQualityReportDisablesApproval: true, judgeGapsRequireAcceptance: true, humanStepsDisplayed: true, gapAcceptanceDoesNotCarry: true,
+    failedCapabilityReportDisablesApproval: true, unverifiedCoreRequirementDisablesApproval: true, missingEvaluationReportDisablesApproval: true, uncleanPackageReportDisablesApproval: true,
+    evaluationMetricsAndProvenanceDisplayed: true, cliFixtureApprovalInvokedWithoutBrowserJourneys: true, exportInvoked: true, approvedChangeRequestStartsIteration: true, screenshots: output }));
 } finally { await browser?.close(); await new Promise(resolve => server.httpServer.close(resolve)); }

@@ -22,6 +22,7 @@ const messages = {
   changed: 'The build inputs or checked files changed; review the saved work and start a new build before approving it.',
   recovery: 'This saved build cannot continue safely; start a new build.',
   tests: 'The app did not pass its checks; review the failed checks in the activity log before trying again.',
+  'judge-acceptance': 'Read and accept the independent check gaps before approving this prototype.',
   output: 'The build did not produce all the required files; check the saved work and try again.',
   limits: 'The build exceeded a file or size limit; try a smaller problem and ask the app maintainer for help if this continues.',
   browser: 'The browser needed to check your app is unavailable; install Google Chrome and try again.',
@@ -40,6 +41,7 @@ const messages = {
 } as const;
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
+  ['judge-acceptance', /^Read and accept the independent check gaps before approving this prototype\.$/],
   ['provider-changing', /Wait for the GenAI\.mil connection change to finish/i],
   ['connection', /Connect GenAI\.mil|GenAI\.mil did not return a model list|Save your GenAI\.mil key before connecting|Unsupported GenAI\.mil request/i],
   ['provider-settings', /Enter (?:an HTTPS service address|a service address without a key|a (?:valid )?GenAI\.mil key|your key again when changing the service address)|Secure credential storage is unavailable|The GenAI\.mil connection could not be (?:saved|cleared)/i],
@@ -69,7 +71,7 @@ const rules: [PlainCode, RegExp][] = [
   ['shutdown', /Runtime workers did not close|Invalid saved run process marker/i],
   ['changed', /evaluation answer key changed|user clarification answers changed|sealed evaluation plan was recreated|acceptance plan, UX specification|Deployment files changed|Declared runtime files changed|Foundation provenance changed|prepared brief inputs.*changed|^Content changed\.|Approval does not match|Authoritative verification evidence|Artifacts changed after verification/i],
   ['recovery', /frozen brief data checkpoint is missing|Codex could not restore the build conversation/i],
-  ['tests', /shared repair budget is exhausted|required computational capabilities failed|Independent judgment did not pass|No application test files were verified|Passing automated tests.*required before delivery/i],
+  ['tests', /shared repair budget is exhausted|required computational capabilities failed|No application test files were verified|Passing automated tests.*required before delivery/i],
   ['files', /Artifact symlinks|Artifacts must be regular|Evidence directory must|Host write requires|Invalid host artifact path|Application tests must stay|Application test directories|Application tests cannot replace|Baseline test parent|Brief data must use ordinary|Foundation (?:root|paths) must|Invalid foundation file path|Clean runtime has an ambient node_modules ancestor/i],
   ['output', /regular, nonempty index.html|declared delivery runtime did not provide|Runtime file is absent|Runtime entrypoint or dependency is absent|Browser runtime requires index.html|no callable evaluation entrypoint/i],
   ['changed', /Delivery blocked:.*configured credential|Review and approve this prototype|successfully completed run in review is required/i],

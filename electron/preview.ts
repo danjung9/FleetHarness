@@ -8,6 +8,8 @@ import path from 'node:path';
 // file:// application origin, its preload bridge, or another run's localStorage.
 export class PreviewServers {
   private servers = new Map<string, { server: Server; url: string }>();
+  // A reload in the same run keeps its origin, so the app's browser storage survives. A new run has a new workspace, so a new origin.
+  private ports = new Map<string, number>();
   async url(workspace: string, files?: readonly string[]) {
     const key = workspace + '\0' + JSON.stringify(files ?? []);
     const cached = this.servers.get(key);
@@ -34,9 +36,13 @@ export class PreviewServers {
         }).end(content);
       } catch { response.writeHead(404).end('The preview file is no longer available.'); }
     });
-    await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+    const listen = (port: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.off('error', reject); resolve(); }); });
+    const earlier = this.ports.get(key);
+    if (earlier) await listen(earlier).catch(() => listen(0));
+    else await listen(0);
     const address = server.address();
     if (!address || typeof address === 'string') throw new Error('Preview server could not start.');
+    this.ports.set(key, address.port);
     const url = 'http://127.0.0.1:' + address.port + '/' + token + (files ? '/index.html' : '');
     this.servers.set(key, { server, url });
     return url;

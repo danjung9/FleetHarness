@@ -134,6 +134,16 @@ test('approval opens Deliver but does not claim a download or completed delivery
   }
 });
 
+test('negative or unavailable independent checks need review after automatic checks pass', () => {
+  for (const independentJudge of [undefined, { verdict: 'NOT', gaps: [] }, { verdict: 'NOT', evaluationError: 'Synthetic error', gaps: [] }]) {
+    const state = getJourneyState(project({ status: 'review', workspace: '/synthetic', qualityVersion: 1,
+      report: report({ quality: quality(), independentJudge }) }));
+    assert.equal(state.current, 'review'); assert.equal(state.activeStage, 'review');
+    assert.match(state.message, /review is needed.*independent check gaps/);
+    assert.doesNotMatch(state.message, /failed|Verification needs attention/);
+  }
+});
+
 test('source export and a saved app are distinct delivery outcomes', () => {
   const approved = project({ status: 'delivered', approvedAt: '2026-11-04T12:01:00Z' });
   const source = getJourneyState({ ...approved, exportedTo: '/delivery' });

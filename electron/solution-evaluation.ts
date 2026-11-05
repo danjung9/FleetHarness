@@ -40,6 +40,16 @@ function mismatchDetail(actual: JsonValue, expected: JsonValue, tolerance?: numb
     if (actual === expected) return;
     if (Array.isArray(actual) && Array.isArray(expected)) {
       if (actual.length !== expected.length) return describe(path, 'array length mismatch');
+      // Right values in another order is a different failure from wrong values, and it gives away no answer.
+      if (actual.length <= 500 && !equal(actual, expected, tolerance)) {
+        const rest = [...expected];
+        const sameValues = actual.every(item => {
+          const found = rest.findIndex(other => equal(item, other, tolerance));
+          if (found < 0) return false;
+          rest.splice(found, 1); return true;
+        });
+        if (sameValues) return describe(path, 'array order differs; the values are right, so reorder this output to satisfy the check');
+      }
       for (let i = 0; i < expected.length; i++) {
         if (equal(actual[i], expected[i], tolerance)) continue;
         const next = childPath(path, i);

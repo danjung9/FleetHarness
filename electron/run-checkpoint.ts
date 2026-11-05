@@ -25,6 +25,7 @@ export interface RunCheckpoint {
   acceptance: AcceptanceCriterion[];
   data: BriefDataSnapshot;
   quality?: QualityContract;
+  planningAudit?: import('./independent-judge.js').PlanningAuditRecord;
   foundation?: FoundationSnapshot;
   foundationPlan?: string;
   repairUsed?: boolean;

@@ -75,9 +75,11 @@ function json(text: string): JsonValue {
   }
   return parsed;
 }
-async function port() {
+async function port(preferred?: number) {
   const server = createServer();
-  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+  const listen = (requested: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(requested, '127.0.0.1', () => { server.off('error', reject); resolve(); }); });
+  if (preferred) await listen(preferred).catch(() => listen(0));
+  else await listen(0);
   const address = server.address();
   if (!address || typeof address === 'string') throw new Error('Could not allocate a local service port.');
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
@@ -138,8 +140,9 @@ function registryLock(packageJson: unknown, packageLock: unknown) {
 
 /** A clean package that runs generated commands directly with run process ownership. */
 export async function prepareSolutionRuntime(sourceRoot: string, manifest: RuntimeManifest, nodeExecutable: string,
-  signal?: AbortSignal, options: Partial<SolutionRuntimeLimits> = {}): Promise<SolutionRuntime> {
-  const limits = { ...defaults, ...options };
+  signal?: AbortSignal, options: Partial<SolutionRuntimeLimits> & { preferredPort?: number } = {}): Promise<SolutionRuntime> {
+  const { preferredPort, ...requestedLimits } = options;
+  const limits = { ...defaults, ...requestedLimits };
   for (const [key, value] of Object.entries(limits)) if (!Number.isSafeInteger(value) || value <= 0) throw new Error('Invalid solution runtime limit: ' + key);
   signal?.throwIfAborted();
   if (manifest.profile === 'browser' && (manifest.requiredEnv.length || manifest.evaluator?.runtime !== 'node')) {
@@ -304,7 +307,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     if (manifest.profile === 'service') {
       if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
       for (const value of [manifest.healthPath, manifest.invokePath]) if (!value.startsWith('/') || value.startsWith('//') || /[\\?#]/.test(value)) throw new Error('Service paths must be local absolute URL paths.');
-      const assignedPort = await port(); url = 'http://127.0.0.1:' + assignedPort + '/';
+      const assignedPort = await port(preferredPort); url = 'http://127.0.0.1:' + assignedPort + '/';
       env.HOST = '127.0.0.1'; env.PORT = String(assignedPort);
       const [program, args] = commandFor(selected);
       const running = await launch(program, args, limits.totalTimeoutMs, undefined, { HOST: '127.0.0.1', PORT: String(assignedPort) });

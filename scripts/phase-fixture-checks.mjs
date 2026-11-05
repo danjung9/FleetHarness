@@ -13,6 +13,11 @@ export function assertFixturePhaseRequests(project, requests) {
       sessions.add('judge');
       continue;
     }
+    if (prompt.includes('Use planning audit mode.')) {
+      assert.deepEqual(tools, ['judge_read'], 'The planning audit has only immutable evidence reading');
+      sessions.add('planning-audit');
+      continue;
+    }
     const stage = /Current phase: (\w+)\./.exec(prompt)?.[1];
     assert.ok(stage, 'Every builder request identifies its phase');
     observed.add(stage);
@@ -27,6 +32,6 @@ export function assertFixturePhaseRequests(project, requests) {
     assert.equal(tools.includes('fleet_solve_schedule'), false, 'Message builds must not expose scheduling tools');
   }
   assert.deepEqual([...observed], ['intake', 'research', 'plan', 'build', 'verify']);
-  assert.deepEqual([...sessions], ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', 'judge']);
+  assert.deepEqual([...sessions], ['intake', 'synthetic-data', 'research', 'plan', 'planning-audit', 'build', 'verify', 'judge']);
   return { phases: [...observed], sessions: [...sessions] };
 }

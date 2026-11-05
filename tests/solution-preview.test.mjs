@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
+import { createServer } from 'node:http';
 import path from 'node:path';
 import { ApplicationPreviews } from '../dist-electron/electron/solution-preview.js';
 
@@ -107,4 +108,36 @@ test('closing during service startup resolves to no preview and never reopens; C
   assert.equal(await cli.previews.url(cli.root), null);
   await cli.previews.close();
   assert.equal(await cli.previews.url(cli.root), null);
+});
+
+test('a preview reload keeps its origin so browser storage survives, and a new run gets a new one', async t => {
+  const { PreviewServers } = await import('../dist-electron/electron/preview.js');
+  const first = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-preview-origin-')), second = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-preview-origin-'));
+  t.after(async () => { await fs.rm(first, { recursive: true, force: true }); await fs.rm(second, { recursive: true, force: true }); });
+  for (const root of [first, second]) await fs.writeFile(path.join(root, 'index.html'), '<h1>Synthetic</h1>');
+  const servers = new PreviewServers();
+  t.after(() => servers.close());
+  const before = new URL(await servers.url(first));
+  servers.stop(first);
+  const after = new URL(await servers.url(first));
+  assert.equal(after.origin, before.origin);
+  assert.equal((await fetch(after)).status, 200);
+  assert.notEqual(new URL(await servers.url(second)).origin, before.origin);
+  // Someone else took the port: the preview still opens, on another origin.
+  servers.stop(first);
+  const other = createServer();
+  await new Promise(resolve => other.listen(Number(before.port), '127.0.0.1', resolve));
+  t.after(() => other.close());
+  const moved = new URL(await servers.url(first));
+  assert.notEqual(moved.origin, before.origin);
+  assert.equal((await fetch(moved)).status, 200);
+});
+
+test('a service preview reload keeps its origin', { timeout: 15_000 }, async t => {
+  const { root, previews } = await fixture(t);
+  const before = new URL(await previews.url(root));
+  await previews.stop(root);
+  const after = new URL(await previews.url(root));
+  assert.equal(after.origin, before.origin);
+  assert.equal((await fetch(new URL('/health', after))).status, 200);
 });

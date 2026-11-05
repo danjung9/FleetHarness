@@ -48,7 +48,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.locator('.app-shell').waitFor({ timeout: 45000 });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
+  await page.getByRole('tab', { name: 'Other model providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();
@@ -74,6 +74,15 @@ try {
   assert.equal(await dialog.getByLabel('Input name', { exact: true }).inputValue(), 'pending-notes.txt');
   assert.equal(await dialog.getByLabel('Input content', { exact: true }).inputValue(), 'TASK: check gauge\n');
   assert.equal(await dialog.getByRole('list', { name: 'Connected data inputs', exact: true }).getByRole('listitem').count(), 2);
+  await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await page.getByRole('button', { name: 'Connectors', exact: true }).click();
+  await page.getByRole('heading', { name: 'Connectors', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'New challenge', exact: true }).click();
+  assert.equal(await dialog.getByLabel('Challenge title', { exact: true }).inputValue(), briefDataFixtureProject.title);
+  assert.equal(await dialog.getByLabel('Input name', { exact: true }).inputValue(), 'pending-notes.txt');
+  assert.equal(await dialog.getByLabel('Input content', { exact: true }).inputValue(), 'TASK: check gauge\n');
+  assert.equal(await dialog.getByRole('list', { name: 'Connected data inputs', exact: true }).getByRole('listitem').count(), 2);
+  await dialog.getByText('Edits are unsaved until you save.', { exact: true }).waitFor();
   await dialog.getByRole('heading', { name: 'Data & inputs', exact: true }).scrollIntoViewIfNeeded();
   await screenshot(page, 'intake-connected-minimum.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
@@ -98,6 +107,15 @@ try {
   assert.equal(await inputs.getByRole('listitem').count(), 3);
   assert.deepEqual((await readProject(page, id)).dataInputs, expected);
   await page.getByRole('heading', { name: 'Data & inputs', exact: true }).scrollIntoViewIfNeeded();
+  await page.getByLabel('Challenge title', { exact: true }).fill('Synthetic unsaved brief edit');
+  await page.getByRole('button', { name: 'Connectors', exact: true }).click();
+  await page.getByRole('button', { name: 'Home \u2014 challenge portfolio', exact: true }).click();
+  await page.getByRole('button', { name: /^Connected inputs regression/ }).click();
+  await progress.getByRole('button', { name: 'Brief', exact: true }).click();
+  assert.equal(await page.getByLabel('Challenge title', { exact: true }).inputValue(), 'Synthetic unsaved brief edit');
+  assert.equal(await inputs.getByRole('listitem').count(), 3);
+  assert.equal((await readProject(page, id)).title, briefDataFixtureProject.title, 'Navigation must not silently save the draft');
+  await page.getByLabel('Challenge title', { exact: true }).fill(briefDataFixtureProject.title);
   await screenshot(page, 'brief-connected-minimum.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
   await screenshot(page, 'brief-connected-desktop.png');
@@ -132,7 +150,7 @@ try {
   await fs.rm(path.join(output, 'failure.png'), { force: true });
   await fs.rm(path.join(output, 'failure.json'), { force: true });
   console.log(JSON.stringify({ passed: true, uploadedAndPastedInputs: true, pendingPasteSaved: true,
-    pendingPasteSurvivesSourceSwitch: true, persistedAfterReload: true, suppliedDataSkipsSpecialist: true, removalTriggersSpecialist: true,
+    pendingPasteSurvivesSourceSwitch: true, draftsSurviveConnectors: true, persistedAfterReload: true, suppliedDataSkipsSpecialist: true, removalTriggersSpecialist: true,
     rendererErrors: 0, screenshots: output }, null, 2));
 } catch (error) {
   if (page && !page.isClosed()) {

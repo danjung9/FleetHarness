@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { CheckCircle2, ClipboardCheck, Code2, Download, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
 import type { Project } from '../shared/types';
-import { reportPassed } from '../shared/verification';
+import { judgeAccepted, judgeGaps, reportPassed } from '../shared/verification';
 import { api, isDesktop } from './api';
 import { ExecutableDownload } from './ExecutableDownload';
 import { QualityEvidence } from './QualityEvidence';
@@ -9,7 +9,7 @@ import { VisualReview } from './VisualReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
-type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onApproved: () => void; onChangesRequested: () => void };
+type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onGuide: () => void; onApproved: () => void; onChangesRequested: () => void };
 type DeliveryProps = { project: Project; busy: boolean; action: Action; onReview: () => void; onChangesRequested: () => void };
 type ReviewDraft = { feedback: string; reviewed: boolean };
 const reviewDrafts = new Map<string, ReviewDraft>();
@@ -34,18 +34,24 @@ export function ReviewWorkspace(props: ReviewProps) {
   return <ReviewContent key={draftKey(props.project)} {...props}/>;
 }
 
-function ReviewContent({ project, busy, action, onPreview, onApproved, onChangesRequested }: ReviewProps) {
+function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, onChangesRequested }: ReviewProps) {
   const key = draftKey(project);
   const [draft, setDraft] = useState(() => readDraft(key, project));
   const [approving, setApproving] = useState(false);
   const [requestingChanges, setRequestingChanges] = useState(false);
   const [approvalSubmitted, setApprovalSubmitted] = useState(false);
+  const [acceptedGapsFor, setAcceptedGapsFor] = useState<string>();
   const noteId = useId();
   const noteHintId = useId();
   const gateId = useId();
   const changesGateId = useId();
   const report = project.report;
   const passed = reportPassed(report, project.qualityVersion ?? false);
+  const needsGapAcceptance = !judgeAccepted(report);
+  const gaps = judgeGaps(report);
+  const humanSteps = report?.independentJudge?.humanSteps ?? [];
+  const judgmentKey = JSON.stringify([project.runId, report?.sourceHash, report?.independentJudge, project.approvedAt]);
+  const acceptedGaps = acceptedGapsFor === judgmentKey;
   const unverified = report?.quality?.criteria.filter(criterion => criterion.status === 'unverified').length || 0;
   const approved = !!project.approvedAt;
   const submitting = approving || requestingChanges;
@@ -70,7 +76,8 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to approve it.'
       : !passed || !project.workspace ? 'Resolve failed or missing checks with a new build before approval.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what you checked and any limitations.'
-          : !draft.reviewed ? 'Confirm that you inspected the app, test evidence, and limitations.' : '';
+          : !draft.reviewed ? 'Confirm that you inspected the app, test evidence, and limitations.'
+            : needsGapAcceptance && !acceptedGaps ? 'Read and accept the independent check gaps before approving this prototype.' : '';
   const changesUnmetCondition = project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to request changes.'
       : !project.workspace || !report || !['review', 'failed'].includes(project.status) ? 'Finish a build before requesting changes.'
@@ -79,7 +86,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
   async function approve() {
     if (busy || submitting || approved || unmetCondition) return;
     setApproving(true);
-    const success = await action(() => api.approve(project.id, draft.feedback), 'Prototype approved for delivery.');
+    const success = await action(() => api.approve(project.id, draft.feedback, needsGapAcceptance && acceptedGaps), 'Prototype approved for delivery.');
     if (success) setApprovalSubmitted(true);
     else setApproving(false);
   }
@@ -98,12 +105,19 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
   return <div className="page review-workspace">
     <div className="review-content">
       <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      {report && needsGapAcceptance && <section className="review-criteria">
+        <h2>The independent check found {gaps.length} gaps</h2>
+        <ul>{gaps.map((gap, index) => <li key={index}><strong>{gap.requirement}</strong><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></li>)}</ul>
+        {!approved && <><label className="checkbox"><input type="checkbox" checked={acceptedGaps} disabled={submitting} onChange={event => setAcceptedGapsFor(event.target.checked ? judgmentKey : undefined)}/>I read these gaps and accept them for this prototype</label>
+          <button className="secondary" disabled={busy || submitting} onClick={() => setDraft(current => ({ ...current, feedback: gaps.map(gap => `${gap.requirement}\nEvidence: ${gap.evidence}\nFix: ${gap.fix}`).join('\n\n').slice(0, 10000) }))}>Use these gaps as my change request</button></>}
+      </section>}
+      {humanSteps.length > 0 && <section className="review-criteria"><h2>Steps for a person</h2><ul>{humanSteps.map((step, index) => <li key={index}>{step}</li>)}</ul></section>}
       {pendingRequest && !submitting && <p className="review-pending" role="status">Your change request is saved. The next iteration has not started; you can retry below.</p>}
       {changeRequest && <details className="review-request"><summary>Changes requested for this iteration</summary><p className="review-recorded-notes">{changeRequest.feedback}</p><p className="review-report-time">Requested {date(changeRequest.createdAt)}</p></details>}
       <VisualReview projectId={project.id} report={project.visualReview ?? report?.quality?.visualReview} runtimeProfile={project.runtimeProfile} runStatus={project.status}/>
       {!report ? <div className="review-empty"><ClipboardCheck size={26}/><h2>No test evidence yet</h2><p>{project.status === 'running' ? 'The build is still running. Review will be ready after verification.' : 'Test results appear after a build reaches verification.'}</p></div> : <ol className="review-steps">
         <li>
-          <div className="review-step-heading"><div><h2>Try the app</h2><p>Use the main workflow and check the result against your brief.</p></div><button className="secondary" onClick={onPreview}><Code2 size={16}/>Open preview</button></div>
+          <div className="review-step-heading"><div><h2>Try the app</h2><p>{project.runtimeProfile === 'cli' ? 'Open the usage guide, then follow its commands in a terminal to run the app and check the result against your brief.' : 'Use the main workflow and check the result against your brief.'}</p></div><button className="secondary" onClick={project.runtimeProfile === 'cli' ? onGuide : onPreview}><Code2 size={16}/>{project.runtimeProfile === 'cli' ? 'Open usage guide' : 'Open preview'}</button></div>
         </li>
         <li>
           <h2>Check evidence and limitations</h2>
