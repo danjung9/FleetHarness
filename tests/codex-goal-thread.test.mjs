@@ -8,7 +8,7 @@ import path from 'node:path';
 import { CodexRpc, codexExecutable } from '../dist-electron/electron/codex-rpc.js';
 import { prepareCodexGoalThread } from '../dist-electron/electron/codex-goal-thread.js';
 
-test('native Codex persists an active goal without model calls, then pursues it on resume', { timeout: 20_000 }, async t => {
+for (const reasoningEffort of [undefined, 'high']) test(`native Codex preserves ${reasoningEffort ?? 'configured default'} reasoning when an idle goal resumes`, { timeout: 20_000 }, async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-goal-thread-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const home = path.join(root, 'codex-home');
@@ -28,7 +28,8 @@ test('native Codex persists an active goal without model calls, then pursues it 
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   await fs.writeFile(path.join(home, 'config.toml'), `
-model = "gpt-5.4"
+model = "gpt-5.5"
+model_reasoning_effort = "low"
 model_provider = "goal_test"
 check_for_update_on_startup = false
 web_search = "disabled"
@@ -56,7 +57,11 @@ trust_level = "trusted"
   // Explicitly avoid inheriting any real provider credentials or Codex home.
   const env = { PATH: process.env.PATH, HOME: os.homedir(), TMPDIR: process.env.TMPDIR, CODEX_HOME: home };
   const objective = "Build the requested dashboard. Keep the customer's 'quoted' text.\nVerify the result.";
-  const threadId = await prepareCodexGoalThread({ workspace, objective, home, env });
+  if (reasoningEffort) {
+    await assert.rejects(prepareCodexGoalThread({ workspace, objective, home, env, reasoningEffort: 'ultra' }), /does not support ultra reasoning/);
+    assert.equal(calls.length, 0, 'an unsupported selection must fail before model work');
+  }
+  const threadId = await prepareCodexGoalThread({ workspace, objective, home, env, reasoningEffort });
   assert.match(threadId, /^[a-f0-9-]{36}$/);
   assert.equal(calls.length, 0, 'preparing the handoff must not call a model');
 
@@ -74,13 +79,16 @@ trust_level = "trusted"
   assert.deepEqual(thread.turns, []);
   assert.equal(calls.length, 0, 'the persisted goal must remain idle until resume');
 
-  await rpc.request('thread/resume', { threadId });
+  const resumed = await rpc.request('thread/resume', { threadId });
+  assert.equal(resumed.approvalPolicy, 'never', 'the saved goal resumes without command approvals');
+  assert.equal(resumed.sandbox.type, 'dangerFullAccess', 'the saved goal resumes with full access');
   await Promise.race([
     firstCall,
     new Promise((_, reject) => { const timer = setTimeout(() => reject(new Error('Resuming did not pursue the goal.')), 8000); timer.unref(); })
   ]);
   assert.ok(calls[0].url.endsWith('/responses'));
   assert.ok(calls[0].body.includes('Build the requested dashboard.'));
+  assert.equal(JSON.parse(calls[0].body).reasoning.effort, reasoningEffort ?? 'low');
 });
 
 test('goal preparation rejects an empty objective before launching Codex', async () => {

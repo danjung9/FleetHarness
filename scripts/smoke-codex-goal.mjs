@@ -66,9 +66,13 @@ try {
   await intake.getByRole('button', { name: 'Paste data', exact: true }).click();
   await intake.getByLabel('Input name', { exact: true }).fill('schedule.csv');
   await intake.getByLabel('Input content', { exact: true }).fill('task,time\nInspect pump,09:00\n');
-  await intake.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.locator('.codex-goal-error').filter({ hasText: 'Fixture Terminal unavailable.' }).waitFor();
-  assert.equal(await intake.count(), 0, 'Failed launch closes intake after saving the draft');
+  await intake.getByRole('button', { name: 'Save challenge', exact: true }).click();
+  await page.getByText('Challenge saved.', { exact: true }).waitFor();
+  assert.equal(await intake.count(), 0, 'Saving closes intake and opens the saved challenge');
+  assert.equal(await app.evaluate(() => globalThis.__fleetCodexGoalSmoke.launches.length), 0, 'Saving a new challenge never launches Codex');
+  await page.getByRole('button', { name: 'Open new Codex goal', exact: true }).waitFor();
+  assert.match(await page.locator('.codex-goal-copy').innerText(), /full access to files, commands, and the network/);
+  assert.equal(await page.locator('.codex-goal-status').count(), 0, 'Saving does not claim a CLI session was opened');
   const saved = (await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0];
   assert.equal(saved.title, 'Codex goal handoff fixture');
   assert.equal(saved.status, 'draft');
@@ -76,7 +80,13 @@ try {
   assert.equal(saved.report, undefined);
   assert.equal(saved.dataInputs[0].content, 'task,time\nInspect pump,09:00\n');
   const persisted = JSON.parse(await fs.readFile(path.join(stateRoot, 'state.json'), 'utf8')).projects.find(project => project.id === saved.id);
-  assert.equal(persisted.title, saved.title, 'Launch failure preserves the actual saved brief');
+  assert.equal(persisted.title, saved.title, 'The draft is persisted before any CLI launch');
+  await capture('saved-minimum', 1120, 720);
+
+  await page.getByRole('button', { name: 'Open new Codex goal', exact: true }).click();
+  await page.locator('.codex-goal-error').filter({ hasText: 'Fixture Terminal unavailable.' }).waitFor();
+  assert.equal(await app.evaluate(() => globalThis.__fleetCodexGoalSmoke.launches.length), 1, 'Only the explicit goal action launches Codex');
+  assert.equal((await project(saved.id)).description, saved.description, 'Failed launch preserves the saved brief');
   await capture('failed-minimum', 1120, 720);
 
   await page.getByRole('button', { name: 'Try again in Terminal', exact: true }).click();
@@ -94,17 +104,22 @@ try {
   await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Brief', exact: true }).click();
   const updatedDescription = saved.description + ' Include search by task name.';
   await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?', { exact: true }).fill(updatedDescription);
-  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Save brief', exact: true }).click();
+  await page.getByText('Brief saved.', { exact: true }).waitFor();
   assert.equal((await project(saved.id)).description, updatedDescription);
+  assert.equal(await app.evaluate(() => globalThis.__fleetCodexGoalSmoke.launches.length), 2, 'Saving an edited brief never launches another CLI session');
+  await page.getByRole('button', { name: 'Open new Codex goal', exact: true }).click();
+  await page.getByText('Codex opened in Terminal. Follow the goal there.', { exact: true }).waitFor();
   const finalCalls = await app.evaluate(() => globalThis.__fleetCodexGoalSmoke.launches);
   assert.equal(finalCalls.length, 3);
   assert.equal(finalCalls.at(-1).description, updatedDescription, 'Edited brief reaches the handoff only after it is saved');
   await page.reload(); await page.locator('.app-shell').waitFor();
+  assert.equal(await app.evaluate(() => globalThis.__fleetCodexGoalSmoke.launches.length), 3, 'Reloading a saved project never launches Codex');
   assert.equal((await project(saved.id)).description, updatedDescription);
   assert.equal((await project(saved.id)).runId, undefined);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, mockedHandoffOnly: true, noModelConfiguration: true, saveBeforeLaunch: true,
+  console.log(JSON.stringify({ passed: true, mockedHandoffOnly: true, noModelConfiguration: true, explicitLaunchOnly: true,
+    saveDoesNotLaunch: true, editDoesNotLaunch: true, reloadDoesNotLaunch: true, fullAccessDisclosure: true,
     failurePreservesBrief: true, retry: true, openFolder: true, editedBriefSavedBeforeLaunch: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close();

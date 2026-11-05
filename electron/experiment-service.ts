@@ -21,6 +21,8 @@ import { listArtifacts, safeFile, sourceHash } from './storage.js';
 import { experimentContractHash } from '../harness/experiment-contract.js';
 import { runExperimentRegressionChecks } from './experiment-regression.js';
 import { briefFingerprint } from './run-checkpoint.js';
+import { resolveReasoningEffort } from '../shared/reasoning.js';
+import { piReasoningMetadata } from './reasoning.js';
 
 type WorkerServices = Pick<ExperimentWorkers, 'sharedPlanner' | 'candidateWorker' | 'selectProfiles' | 'verifyCandidate' | 'compiled' | 'shared' | 'evidence' | 'preview'>;
 interface SelectionReceipt { schemaVersion: 1; projectId: string; candidate: CandidateRecord; metadata: NonNullable<NonNullable<Project['report']>['quality']>['experiment'] }
@@ -84,7 +86,13 @@ export class ExperimentService implements ExperimentAPI {
       runtime: options.runtime, codex: options.codex, operations: async () => { await this.operationWrites; return structuredClone(this.operations); },
       integrations: (candidateId, operations) => this.integrationLease(candidateId, operations), notify: () => this.changed() });
     this.coordinator = new ExperimentCoordinator({ store: this.learning, profiles: options.profiles ?? experimentProfiles,
-      project: id => options.store.project(id), modelConfig: () => ({ backend: options.store.state.settings.backend ?? 'pi', provider: options.store.state.settings.provider, model: options.store.state.settings.model }),
+      project: id => options.store.project(id), modelConfig: () => {
+        const { backend = 'pi', provider, model, reasoningEffort: preference } = options.store.state.settings;
+        const piModel = backend === 'pi' ? options.runtime.getModel(provider, model) : undefined;
+        const metadata = backend === 'codex' ? options.codex?.models.find(value => value.id === model) : piModel ? piReasoningMetadata(piModel) : undefined;
+        const reasoningEffort = resolveReasoningEffort(metadata, preference);
+        return { backend, provider, model, ...(reasoningEffort ? { reasoningEffort } : {}) };
+      },
       readiness: async () => { const value = await this.availability(); return { supported: value.available, reason: value.reason }; },
       acquire: (projectId, experimentId) => options.acquire(projectId, experimentId),
       sharedPlanner: context => this.workers.sharedPlanner(context), candidateWorker: context => this.workers.candidateWorker(context),

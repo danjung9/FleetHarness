@@ -35,7 +35,7 @@ try {
   assert.equal(await page.getByLabel('Challenge title', { exact: true }).inputValue(), 'Paperless Underway');
   assert.match(await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?').inputValue(), /offline/i);
   assert.equal(await page.locator('.catalog-results').count(), 0);
-  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByRole('button', { name: 'Save challenge', exact: true }).click();
   await page.getByRole('heading', { name: 'Build phases', exact: true }).waitFor();
   assert.equal(await page.locator('.run-title h1').textContent(), 'Paperless Underway');
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].challengeId, '36');

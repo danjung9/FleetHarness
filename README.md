@@ -18,11 +18,13 @@ Build and verification agents can [open and interact with their app](docs/agent-
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
-On the **`codex/one-shot-goal` experiment**, submitting a new brief uses **Save & open Codex** to open a real Codex CLI goal in macOS Terminal. The complete brief and attached data go into a fresh folder; Codex owns implementation, testing and repair in one session. The existing pipeline remains available for comparison. See [the Codex goal experiment](docs/codex-goal-experiment.md) for usage, authentication and result boundaries.
+On the **`codex/one-shot-goal` experiment**, save the brief, then choose **Open new Codex goal** on Build to open a real Codex CLI goal with full access in macOS Terminal. Saving a brief or starting a pipeline build does not open Terminal. The complete brief and attached data go into a fresh folder; Codex owns implementation, testing and repair in one session. The existing pipeline remains available for comparison. See [the Codex goal experiment](docs/codex-goal-experiment.md) for usage, authentication and result boundaries.
 
 Use **Data & storage** to browse current and previous builds, inspect and export files, archive projects, and clean up through recoverable Trash. See [storage and recovery](docs/data-storage.md) for scope and verification behavior.
 
 The **tokens** counter in the toolbar shows recorded workspace usage. Open it for each project's share, input/output counts, and cached input. Counts update during agent work and persist across builds; see [token usage](docs/token-usage.md) for coverage and limitations.
+
+The **Reasoning** bar beside the model picker adjusts effort from faster responses to deeper thinking. Drag it or use the arrow keys; the current level is named above the bar and saved locally. Choices come from the selected model's capabilities. The control is unavailable for fixed-effort models and while agents are working. Pi and Codex apply the choice when starting or resuming work; experiment candidates retain the effort pinned when their comparison began. An explicit choice also applies to new Terminal goals when the CLI's own model supports it.
 
 Before handing off a change, run `npm run check`. It captures the current source and runs the frontend build, Electron and harness builds, foundation checksum validation, and both test suites in a private workspace. Logs, source hashes and results remain in `output/checks/`; shared build directories stay untouched. See [build validation](docs/build-validation.md) for prerequisites and result interpretation.
 

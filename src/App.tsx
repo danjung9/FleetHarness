@@ -1,5 +1,6 @@
 import { Home } from './Home';
 import { DataStorage } from './DataStorage';
+import { Connectors } from './Connectors';
 import { Mark } from './Mark';
 import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
@@ -18,7 +19,7 @@ import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type React
 import {
   Activity, Archive, ArrowRight, Bot, Check, CheckCircle2, CircleDot,
   Code2, FileCode2, FolderOpen, GitBranch, HardDrive, Inbox, LayoutDashboard,
-  Play, Plus, RefreshCw, Search, Settings2, ShieldCheck, TerminalSquare, X, XCircle, Info, FlaskConical
+  Play, Plug, Plus, RefreshCw, Search, Settings2, ShieldCheck, TerminalSquare, X, XCircle, Info, FlaskConical
 } from 'lucide-react';
 import type { AppState, Artifact, Bootstrap, BriefDataInput, NewProject, Project, StageId, View } from '../shared/types';
 import { starters } from '../shared/types';
@@ -96,7 +97,7 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
     </div>
     <div className="requirements-footer">
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : isDesktop ? 'Saves your brief, then opens a Codex goal in Terminal.' : 'Saved locally. Build when ready.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
+    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : isDesktop ? 'Saved locally. Open a Codex goal from Build when ready.' : 'Saved locally. Build when ready.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
     </div>
   </form>;
 }
@@ -124,12 +125,11 @@ function Intake({ close, action, created, busy, initialCatalogId, catalog }: { c
     {template !== -2 && <details className="starter-choices"><summary>Use a starter brief</summary><div className="template-picker" role="group" aria-label="Starter brief">{starters.map((p, i) => <button key={p.title} disabled={readingInputs} aria-pressed={template === i} className={template === i ? 'selected' : ''} onClick={() => setTemplate(i)}>{['Message parsing', 'Scheduling', 'Offline workflow'][i]}</button>)}</div></details>}
     {template === -2 && catalogExpanded && <><div className="intake-source"><span role="status">{refreshing ? 'Refreshing Norfolk challenges…' : `Norfolk source saved ${date(catalog.fetchedAt)}`}</span><button className="text-button" disabled={refreshing || !isDesktop} title={isDesktop ? undefined : 'Refresh is available in the desktop app.'} onClick={() => void refresh()}><RefreshCw size={14}/>Refresh from Norfolk</button></div>{refreshError && <p className="form-error" role="alert">{refreshError}</p>}</>}
     {template === -2 && (catalogExpanded ? <div className="catalog-picker"><label>Find a published challenge<input value={catalogQuery} onChange={e => setCatalogQuery(e.target.value)} placeholder="Search title, category, or challenge ID"/></label><p className="catalog-count" role="status">{matches.length} of {challenges.length} challenges</p><div className="catalog-results">{matches.map(c => <button aria-pressed={catalogId === c.id} className={catalogId === c.id ? 'selected' : ''} key={c.id} disabled={refreshing || readingInputs} onClick={() => { setCatalogId(c.id); setCatalogInput(toProjectInput(c.id, challenges)); setCatalogExpanded(false); }}><span className="catalog-id">#{c.id}</span><span>{c.title}<small>{c.category || 'Uncategorized'} · {c.recipe}</small></span>{catalogId === c.id && <Check size={16}/>}</button>)}{!matches.length && <div className="catalog-empty"><p>No challenges match “{catalogQuery}”.</p><button className="text-button" onClick={() => setCatalogQuery('')}>Clear search</button></div>}</div></div> : <div className="intake-source"><span>Starting from Norfolk challenge #{catalogId}</span><button className="text-button" disabled={readingInputs} onClick={() => setCatalogExpanded(true)}>Change challenge</button></div>)}
-    {(template !== -2 || catalogInput) && <div className="intake-form" hidden={template === -2 && catalogExpanded}><RequirementsForm key={draftKey} initial={drafts.current[draftKey] ?? (template === -2 ? catalogInput! : template < 0 ? { title: '', description: '', criteria: [] } : starters[template])} onDraftChange={draft => { drafts.current[draftKey] = draft; }} onReadingChange={setReadingInputs} busy={busy} submitLabel={isDesktop ? 'Save & open Codex' : 'Save challenge'} submit={async input => {
+    {(template !== -2 || catalogInput) && <div className="intake-form" hidden={template === -2 && catalogExpanded}><RequirementsForm key={draftKey} initial={drafts.current[draftKey] ?? (template === -2 ? catalogInput! : template < 0 ? { title: '', description: '', criteria: [] } : starters[template])} onDraftChange={draft => { drafts.current[draftKey] = draft; }} onReadingChange={setReadingInputs} busy={busy} submitLabel="Save challenge" submit={async input => {
       await action(async () => {
         const p = await api.createProject(input);
         close(); created(p);
-        if (isDesktop) await api.launchCodexGoal(p.id);
-      }, isDesktop ? 'Brief saved. Codex opened in Terminal.' : 'Challenge saved.');
+      }, 'Challenge saved.');
     }}/></div>}
   </Modal>;
 }
@@ -287,18 +287,18 @@ export default function App() {
   ];
   const results = useMemo(() => state?.projects.filter(p => !p.archivedAt && (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
   if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
-  const globalView = active === 'settings' || active === 'storage';
+  const globalView = active === 'settings' || active === 'storage' || active === 'connectors';
   const showHome = active === 'portfolio' || (!p && !globalView);
   const journey = p ? getJourneyState(p) : null;
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
       <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running' || experimentRunning(project.experiment)) && <i className="live-dot"/>}</IconButton>)}</nav>
-      <div className="rail-bottom"><IconButton label="Data & storage" placement="right" className={'settings-link ' + (active === 'storage' ? 'active' : '')} aria-current={active === 'storage' ? 'page' : undefined} onClick={() => navigate('storage')}><HardDrive size={21}/><span>Storage</span></IconButton><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
+      <div className="rail-bottom"><IconButton label="Connectors" placement="right" className={'settings-link connectors-link ' + (active === 'connectors' ? 'active' : '')} aria-current={active === 'connectors' ? 'page' : undefined} onClick={() => navigate('connectors')}><Plug size={21}/><span>Connectors</span></IconButton><IconButton label="Data & storage" placement="right" className={'settings-link ' + (active === 'storage' ? 'active' : '')} aria-current={active === 'storage' ? 'page' : undefined} onClick={() => navigate('storage')}><HardDrive size={21}/><span>Storage</span></IconButton><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar">
-        {showHome || !p || active === 'storage' ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'storage' ? 'Data & storage' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{visibleProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
+        {showHome || !p || active === 'storage' || active === 'connectors' ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'storage' ? 'Data & storage' : active === 'connectors' ? 'Connectors' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{visibleProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
         <div className="top-actions">
           {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
           {p && !showHome && !globalView && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
@@ -321,11 +321,11 @@ export default function App() {
       {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact} onManage={() => navigate('storage')}/>}
       {active === 'storage' && <DataStorage projects={state.projects} onOpenProject={openProject} onLearning={() => { navigate('settings'); setLearningRequested(true); }}/>}
-      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{isDesktop ? 'Save your requirements and open a new Codex goal in Terminal. The pipeline remains available on Build for comparison.' : 'Describe the problem and what a successful app should do.'}{p.runId ? ' Saving changes resets pipeline test results and approval.' : ''}</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running' || experimentRunning(experiment)} submitLabel={isDesktop ? 'Save & open Codex' : 'Save brief'} submit={async input => {
+      {active === 'connectors' && <Connectors/>}
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{isDesktop ? 'Save your requirements, then open a Codex goal from Build when you’re ready. The pipeline remains available for comparison.' : 'Describe the problem and what a successful app should do.'}{p.runId ? ' Saving changes resets pipeline test results and approval.' : ''}</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running' || experimentRunning(experiment)} submitLabel="Save brief" submit={async input => {
         const saved = await action(() => api.updateProject(p.id, input), 'Brief saved.');
         if (!saved) return;
         setActive('factory');
-        if (isDesktop) await action(() => api.launchCodexGoal(p.id), 'Brief saved. Codex opened in Terminal.');
       }}/></div>}
       {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={updateBootstrap} busy={busy} onSaved={settingsSaved} onBack={p ? () => { setActive(settingsReturn.current ?? milestoneViews[getJourneyState(p).current]); settingsReturn.current = null; } : undefined}/>}
     </main>

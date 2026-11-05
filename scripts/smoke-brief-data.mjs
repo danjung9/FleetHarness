@@ -77,8 +77,8 @@ try {
   await screenshot(page, 'intake-connected-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
   // Saving the brief also saves the visibly pending paste, without a separate Add click.
-  await dialog.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await dialog.getByRole('button', { name: 'Save challenge', exact: true }).click();
+  await page.getByText('Challenge saved.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
   const expected = [
     { name: 'messages.csv', kind: 'file', content: fileContent },
@@ -99,8 +99,8 @@ try {
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
   await screenshot(page, 'brief-connected-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
-  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Save brief', exact: true }).click();
+  await page.getByText('Brief saved.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
   const provided = await waitBuild(page, id);
@@ -120,8 +120,8 @@ try {
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
   await screenshot(page, 'brief-synthetic-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
-  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Save brief', exact: true }).click();
+  await page.getByText('Brief saved.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Start new build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
   const synthetic = await waitBuild(page, id);

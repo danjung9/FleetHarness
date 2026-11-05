@@ -59,6 +59,19 @@ test('double clicks share one handoff; later launches retain earlier workspaces'
   assert.ok((await fs.stat(path.join(launch.workspace, 'brief.json'))).isFile());
 });
 
+test('handoff uses one saved reasoning selection for preparation and Terminal resume', async t => {
+  const prepared = [];
+  const { store, project, service, opened } = await fixture(t, { prepareThread: async args => {
+    prepared.push(args);
+    store.state.settings.reasoningEffort = 'low';
+    return 'reasoning-thread';
+  } });
+  store.state.settings.reasoningEffort = 'high';
+  await service.launch(project.id);
+  assert.equal(prepared[0].reasoningEffort, 'high');
+  assert.match(await fs.readFile(opened[0], 'utf8'), /'model_reasoning_effort="high"'/);
+});
+
 test('failed Terminal handoff keeps a recoverable snapshot and can retry', async t => {
   let fail = true;
   const { project, service, store } = await fixture(t, { openTerminal: async () => { if (fail) throw new Error('Terminal unavailable'); } });
@@ -106,10 +119,13 @@ test('the Terminal script preserves shell-sensitive paths as literal arguments',
   await fs.writeFile(executable, `#!${process.execPath}\nrequire('node:fs').writeFileSync('argv.json', JSON.stringify({args:process.argv.slice(2),home:process.env.CODEX_HOME,cwd:process.cwd()}));\n`, { mode: 0o700 });
   const home = path.join(root, "home ' $HOME $(touch THIRD)");
   const command = path.join(root, 'Open Codex.command');
-  await fs.writeFile(command, codexGoalCommand(executable, workspace, 'fixture-thread', home));
-  await exec('/bin/sh', [command]);
-  const result = JSON.parse(await fs.readFile(path.join(workspace, 'argv.json'), 'utf8'));
-  assert.deepEqual(result.args, ['--no-daemon', '--enable', 'goals', '--sandbox', 'workspace-write', '--ask-for-approval', 'on-request', '--cd', workspace, 'resume', 'fixture-thread']);
-  assert.equal(result.home, home); assert.equal(result.cwd, await fs.realpath(workspace));
+  for (const effort of [undefined, 'high']) {
+    await fs.writeFile(command, codexGoalCommand(executable, workspace, 'fixture-thread', home, effort));
+    await exec('/bin/sh', [command]);
+    const result = JSON.parse(await fs.readFile(path.join(workspace, 'argv.json'), 'utf8'));
+    assert.deepEqual(result.args, ['--no-daemon', '--enable', 'goals', '--sandbox', 'danger-full-access', '--ask-for-approval', 'never', '--cd', workspace,
+      ...(effort ? ['-c', 'model_reasoning_effort="high"'] : []), 'resume', 'fixture-thread']);
+    assert.equal(result.home, home); assert.equal(result.cwd, await fs.realpath(workspace));
+  }
   assert.deepEqual(await fs.readdir(workspace), ['argv.json']);
 });

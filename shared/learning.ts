@@ -1,4 +1,5 @@
 import type { AgentBackend, Project, StageId } from './types.js';
+import type { ReasoningEffort } from './reasoning.js';
 
 export type LearningPartition = 'development' | 'validation' | 'holdout' | 'test';
 export type LearningMode = 'off' | 'paired' | 'adaptive';
@@ -14,7 +15,7 @@ export interface LearningSettings {
 export const defaultLearningSettings: LearningSettings = {
   schemaVersion: 1, mode: 'off', memoryEnabled: true, automaticComparisons: true, maxHumanRequestsPerDay: 2,
 };
-export interface PinnedModelConfig { backend: AgentBackend; provider: string; model: string }
+export interface PinnedModelConfig { backend: AgentBackend; provider: string; model: string; reasoningEffort?: ReasoningEffort }
 export interface CandidateBudget { timeoutMs: number; maxModelCalls?: number; maxTokens?: number; maxCostUsd?: number }
 export interface ArchitectureProfile {
   id: string; version: string; label: string; instructions: string; budget: CandidateBudget;
@@ -83,6 +84,7 @@ export interface EvidenceEdge {
 export interface CohortContext {
   taskFamily: string; runtimeConstraints: string[]; budgetTier: string;
   backend: AgentBackend; provider: string; model: string;
+  reasoningEffort?: ReasoningEffort;
   profileVersions: Record<string, string>; evaluatorVersion: string; memoryPolicyVersion: string;
 }
 export interface ArmStatistics { profileId: string; successes: number; failures: number }

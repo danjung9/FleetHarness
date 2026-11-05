@@ -10,6 +10,7 @@ import type { QualityContract } from './quality.js';
 import { validateExecutionBudget } from './execution-budget.js';
 import type { PlanningReviewRecord } from './planning-review.js';
 import { validateFunctionalRepairState, type FunctionalRepairState } from './functional-repair.js';
+import { isReasoningEffort, type ReasoningEffort } from '../shared/reasoning.js';
 
 /** Each review can request another automatic revision; interruption preserves the pending work. */
 export interface PlanningReviewProgress {
@@ -52,7 +53,8 @@ export interface RunCheckpoint {
   visualReview?: import('../shared/visual-review.js').VisualReviewReport;
   /** Experimental workers preserve their pinned configuration and budget on recovery. */
   executionBudget?: import('./execution-budget.js').ExecutionBudgetState;
-  modelConfig?: { backend: import('../shared/types.js').AgentBackend; provider: string; model: string };
+  modelConfig?: import('../shared/learning.js').PinnedModelConfig;
+  reasoningEffort?: ReasoningEffort;
 }
 
 export const maxPriorClarificationsBytes = 100_000;
@@ -169,7 +171,9 @@ async function readCheckpoint(root: string, project: Project, planningContinuati
     }
     if (checkpoint.modelConfig && (!['pi', 'codex'].includes(checkpoint.modelConfig.backend)
       || typeof checkpoint.modelConfig.provider !== 'string' || !checkpoint.modelConfig.provider
-      || typeof checkpoint.modelConfig.model !== 'string' || !checkpoint.modelConfig.model)) throw new Error('Invalid pinned model configuration.');
+      || typeof checkpoint.modelConfig.model !== 'string' || !checkpoint.modelConfig.model
+      || (checkpoint.modelConfig.reasoningEffort !== undefined && !isReasoningEffort(checkpoint.modelConfig.reasoningEffort)))) throw new Error('Invalid pinned model configuration.');
+    if (checkpoint.reasoningEffort !== undefined && !isReasoningEffort(checkpoint.reasoningEffort)) throw new Error('Invalid reasoning effort in the run checkpoint.');
     validatePriorClarifications(checkpoint.priorClarifications);
     return checkpoint;
   } catch (error) {

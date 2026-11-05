@@ -27,6 +27,7 @@ import { DataStorageService } from './data-storage.js';
 import { storageMethodNames } from '../shared/data-storage.js';
 import { readPlanningContinuation } from './planning-continuation.js';
 import { briefFingerprint } from './run-checkpoint.js';
+import { savedReasoningEffort } from '../shared/reasoning.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -406,7 +407,7 @@ function registerIPC() {
     }
     return Reflect.apply(dataStorage[method], dataStorage, args);
   });
-  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing model settings or accounts.'); };
   for (const method of experimentMethodNames) handle('fleet:experiment:' + method, async (...args: unknown[]) => {
     if (quitting) throw new Error('AppYard is closing.');
     if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
@@ -447,10 +448,13 @@ function registerIPC() {
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
+    const selectedModel = backend.models().find(model => (model.backend ?? 'pi') === (settings.backend ?? 'pi') && model.provider === settings.provider && model.id === settings.model);
+    const reasoningEffort = savedReasoningEffort(selectedModel, settings.reasoningEffort, store.state.settings.reasoningEffort);
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
       if (codex.account.status !== 'connected' || !codex.account.planUsageEnabled || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT, allow plan usage, and select a Codex model first.');
-      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
+      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true,
+        ...(reasoningEffort ? { reasoningEffort } : {}) };
       await store.save(); notify(); return bootstrap();
     }
     if (!backend.runtime.getModel(settings.provider, settings.model)) throw new Error('Select a valid Pi model.');
@@ -461,7 +465,8 @@ function registerIPC() {
       if (settings.rememberKey) await fs.writeFile(keyFile, safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })), { mode: 0o600 });
     }
     if (!settings.rememberKey) await fs.rm(keyFile, { force: true });
-    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
+    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true,
+      ...(reasoningEffort ? { reasoningEffort } : {}) };
     await store.save(); notify(); return bootstrap();
   });
 }
@@ -472,7 +477,14 @@ async function createWindow() {
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
     webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false }
   });
-  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (url === 'https://mss.data.mil/' || url === 'https://mss.data.mil') {
+      void shell.openExternal('https://mss.data.mil/').catch(() => {
+        console.error('Could not open MSS Ontology in the system browser.');
+      });
+    }
+    return { action: 'deny' };
+  });
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   window.webContents.session.setPermissionCheckHandler(() => false);

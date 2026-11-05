@@ -16,13 +16,13 @@ export function CodexGoalPanel({ project, busy, desktop, launch, openWorkspace }
   return <section className="codex-goal-panel" aria-labelledby={heading}>
     <div className="codex-goal-copy">
       <div className="codex-goal-heading"><h2 id={heading}>Build with a Codex goal</h2>{status && <span className={'codex-goal-status' + (failed ? ' failed' : '')} role="status">{failed ? <XCircle size={14}/> : <TerminalSquare size={14}/>} {status}</span>}</div>
-      <p>{desktop ? 'Send the saved brief and attached inputs to Codex CLI for one complete build. Follow progress and results in Terminal.' : 'Open AppYard on a Mac to send this brief to Codex CLI in Terminal.'}</p>
+      <p>{desktop ? 'Open a new Codex goal from the saved brief and attached inputs, with full access to files, commands, and the network. Follow progress and results in Terminal.' : 'Open AppYard on a Mac to launch a Codex goal with full access from this saved brief.'}</p>
       {failed && <p className="codex-goal-error" role="alert">{goal.error || 'The workspace was saved, but Terminal could not be opened. Try again.'}</p>}
-      <details className="codex-goal-details"><summary>How the handoff works <ChevronRight size={13}/></summary><p>Codex uses its own sign-in and model preferences and may ask you to sign in or trust the workspace. Each launch creates a new folder. AppYard does not track completion or verify the result.</p>{goal && <p className="codex-goal-path">{goal.workspace}</p>}</details>
+      <details className="codex-goal-details"><summary>How the handoff works <ChevronRight size={13}/></summary><p>Codex uses its own sign-in and model. A reasoning choice made here also applies to new goals; the Codex model must support it. You may be asked to sign in or trust the workspace. Each launch creates a new folder. AppYard does not track completion or verify the result.</p>{goal && <p className="codex-goal-path">{goal.workspace}</p>}</details>
       {pipelineRunning && <p className="codex-goal-wait">Stop the pipeline build before opening a new Codex goal.</p>}
     </div>
     <div className="codex-goal-actions">
-      <button className="primary" type="button" disabled={busy || !desktop || pipelineRunning} onClick={launch}><TerminalSquare size={16}/>{busy ? 'Please wait…' : failed ? 'Try again in Terminal' : goal ? 'Open new Codex goal' : 'Open Codex goal'}</button>
+      <button className="primary" type="button" disabled={busy || !desktop || pipelineRunning} onClick={launch}><TerminalSquare size={16}/>{busy ? 'Please wait…' : failed ? 'Try again in Terminal' : 'Open new Codex goal'}</button>
       {goal && <button className="secondary" type="button" disabled={busy || !desktop} onClick={openWorkspace}><FolderOpen size={16}/>Open goal folder</button>}
     </div>
   </section>;

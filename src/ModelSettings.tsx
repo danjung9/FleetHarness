@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
+import { resolveReasoningEffort } from '../shared/reasoning';
 import './model-settings.css';
 import { LearningSettingsPanel } from './ExperimentReview';
 
@@ -36,7 +37,9 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
   }, [api, connecting]);
   return <><form className="model-settings-form" onSubmit={e => {
     e.preventDefault(); void action(async () => {
-      const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined);
+      const reasoningEffort = data.state.settings.reasoningEffort === undefined ? undefined
+        : resolveReasoningEffort(models.find(item => item.id === selectedModel), data.state.settings.reasoningEffort);
+      const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember, reasoningEffort }, backend === 'pi' ? key || undefined : undefined);
       updated(saved); setKey(''); onSaved?.(saved);
     }, 'Model settings saved.');
   }}>

@@ -100,8 +100,8 @@ try {
   await intake.getByLabel('Challenge title', { exact: true }).fill(title);
   await intake.getByLabel(/^Problem statement(?:\s|$)/).fill('Create a local synthetic message parser so a reviewer can inspect extracted tasks and their sources.');
   await intake.getByLabel('Evaluation criteria (optional)', { exact: false }).fill('Parse a synthetic task and recover from empty input.');
-  await intake.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await intake.getByRole('button', { name: 'Save challenge', exact: true }).click();
+  await page.getByText('Challenge saved.', { exact: true }).waitFor();
   projectId = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
   await openLead();
   await page.getByLabel('Message Project lead', { exact: true }).fill('Help me clarify this brief.');

@@ -5,6 +5,7 @@ import type { AgentSessionEvent, AgentToolResult, ToolDefinition } from '@earend
 import type { StageSession } from './agent-runner.js';
 import type { IsolationProfile } from './isolated-executor.js';
 import { normalizeTokenTotals, type TokenTotals } from '../shared/token-usage.js';
+import { isReasoningEffort, type ReasoningEffort } from '../shared/reasoning.js';
 import { CHATGPT_ACCESS_TOKEN_ENV, CHATGPT_MODEL_PROVIDER, CodexRpc, codexExecutable, codexProcessConfig, type CodexCredentials, type RpcMessage } from './codex-rpc.js';
 
 type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<Pick<AgentToolResult, 'content' | 'isError'>> };
@@ -57,12 +58,14 @@ function toolContent(content: AgentToolResult['content']): CodexToolContent[] {
 }
 export async function createCodexSession(options: {
   home: string; cwd: string; model: string; signal: AbortSignal; tools: ToolDefinition[]; skillPaths?: string[];
+  reasoningEffort?: ReasoningEffort;
   conversationInstructions?: string;
   /** Host-created confinement policy; never supplied by an agent or renderer. */
   permissionProfile?: IsolationProfile;
   getCredentials: () => Promise<CodexCredentials>;
   launch?: (home: string, credentials: Pick<CodexCredentials, 'accessToken'>) => CodexRpc;
 }): Promise<StageSession> {
+  if (options.reasoningEffort !== undefined && !isReasoningEffort(options.reasoningEffort)) throw new Error('Select a valid reasoning effort.');
   const permissionProfile = frozenPermissionProfile(options.permissionProfile);
   let rpc: CodexRpc | undefined;
   let accessToken = '', connectionError: Error | undefined, prompting = false;
@@ -175,6 +178,7 @@ export async function createCodexSession(options: {
       cwd: options.cwd, model: options.model, modelProvider: CHATGPT_MODEL_PROVIDER, approvalPolicy: 'never',
       ...(permissionProfile ? { permissions: candidatePermissionProfile, runtimeWorkspaceRoots: [options.cwd] } : { sandbox: options.conversationInstructions ? 'read-only' : 'workspace-write' }),
       config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled', 'features.code_mode_tool_search': false, 'features.image_generation': false, 'features.computer_use': false, 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV],
+        ...(options.reasoningEffort ? { model_reasoning_effort: options.reasoningEffort } : {}),
         ...(permissionProfile ? { ['permissions.' + candidatePermissionProfile]: permissionProfile, project_doc_max_bytes: 0,
           'features.shell_tool': false, 'features.view_image': false, 'features.multi_agent': false, 'features.apps': false, 'features.plugins': false, 'features.hooks': false, 'features.browser_use': false, 'features.in_app_browser': false } : {}),
         ...(options.conversationInstructions ? { 'features.shell_tool': false, 'features.view_image': false, 'features.multi_agent': false, 'features.apps': false, 'features.plugins': false, 'features.hooks': false, 'features.browser_use': false, 'features.in_app_browser': false } : {}) },
@@ -204,7 +208,8 @@ export async function createCodexSession(options: {
         const completion = new Promise<void>((resolve, reject) => { pending = { resolve, reject }; });
         // Handle early connection failure while the turn/start request is still pending.
         void completion.catch(() => {});
-        const result = await rpc!.request('turn/start', { threadId, input: [{ type: 'text', text, text_elements: [] }] });
+        const result = await rpc!.request('turn/start', { threadId, input: [{ type: 'text', text, text_elements: [] }],
+          ...(options.reasoningEffort ? { effort: options.reasoningEffort } : {}) });
         hasHistory = true;
         if (pending) turnId = result.turn.id;
         await completion;

@@ -11,6 +11,8 @@ import { runAgentStage, type AgentLimits, type StageSession } from './agent-runn
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { tokenUsageRecorder } from './token-usage.js';
+import { resolveReasoningEffort } from '../shared/reasoning.js';
+import { piThinkingLevel } from './reasoning.js';
 
 export function projectBrief(p: Project): NewProject {
   return { title: p.title, description: p.description, criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId };
@@ -52,7 +54,7 @@ export class ProjectLead {
   private async respond(p: Project, controller: AbortController, request: ConversationMessage) {
     const conversation = p.conversation!;
     const reply = { id: randomUUID(), role: 'assistant' as const, text: '', createdAt: new Date().toISOString(), runId: p.runId, status: 'streaming' as 'streaming' | 'complete' | 'error' };
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
+    const { provider, model: modelId, backend = 'pi', reasoningEffort: preference } = this.store.state.settings;
     const snapshotHash = briefHash(p), snapshotRunId = p.runId, workspace = p.workspace;
     let proposed = false;
     let stageSignal: AbortSignal | undefined;
@@ -146,14 +148,15 @@ export class ProjectLead {
           if (backend === 'codex') {
             await this.options.codex?.refresh(); signal.throwIfAborted();
             if (provider !== 'chatgpt' || this.options.codex?.account.status !== 'connected' || !this.options.codex.account.planUsageEnabled || !this.options.codex.models.some(m => m.id === modelId && m.configured)) throw new Error('Connect ChatGPT and choose a model in Settings to talk to the project lead.');
-            return (this.options.createCodexSession ?? createCodexSession)({ home: this.options.codex.home, getCredentials: () => this.options.codex!.credentials(), cwd, model: modelId, signal, tools: customTools, conversationInstructions: instructions });
+            const reasoningEffort = resolveReasoningEffort(this.options.codex.models.find(model => model.id === modelId), preference);
+            return (this.options.createCodexSession ?? createCodexSession)({ home: this.options.codex.home, getCredentials: () => this.options.codex!.credentials(), cwd, model: modelId, reasoningEffort, signal, tools: customTools, conversationInstructions: instructions });
           }
           const model = this.runtime.getModel(provider, modelId);
           if (!model || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Connect a model in Settings to talk to the project lead.');
           const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1 } });
           const loader = new DefaultResourceLoader({ cwd, agentDir: path.join(this.store.root, 'pi'), settingsManager, noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, agentsFilesOverride: () => ({ agentsFiles: [] }), systemPromptOverride: () => instructions });
           await loader.reload(); signal.throwIfAborted();
-          const { session } = await (this.options.createSession ?? createAgentSession)({ cwd, agentDir: path.join(this.store.root, 'pi'), modelRuntime: this.runtime, model, thinkingLevel: 'low', tools: customTools.map(t => t.name), excludeTools: ['mcp__*'], customTools, settingsManager, resourceLoader: loader, sessionManager: SessionManager.inMemory(cwd) });
+          const { session } = await (this.options.createSession ?? createAgentSession)({ cwd, agentDir: path.join(this.store.root, 'pi'), modelRuntime: this.runtime, model, thinkingLevel: piThinkingLevel(model, preference), tools: customTools.map(t => t.name), excludeTools: ['mcp__*'], customTools, settingsManager, resourceLoader: loader, sessionManager: SessionManager.inMemory(cwd) });
           return session;
         },
         onEvent: event => {

@@ -5,6 +5,9 @@ import { randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
+import { resolveReasoningEffort, type ReasoningEffort } from '../shared/reasoning.js';
+import type { PinnedModelConfig } from '../shared/learning.js';
+import { piReasoningMetadata, piThinkingLevel } from './reasoning.js';
 import { summarizeToolResult } from '../shared/activity.js';
 import { normalizeDataInputs } from '../shared/project-input.js';
 import { safeFile, sourceHash } from './storage.js';
@@ -74,7 +77,7 @@ function duringPreparation<T>(operation: Promise<T>, signal: AbortSignal): Promi
 }
 
 type RepairLease = { started: number; timer?: ReturnType<typeof setTimeout>; settled: boolean };
-type ActiveRun = { finalizing?: boolean; finished?: boolean; checkpointWrites?: Promise<void>; repairLease?: RepairLease; backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planningReview?: PlanningReviewProgress; repairUsed?: boolean; functionalRepair?: FunctionalRepairState; coreReportHash?: string; workflowReportHash?: string; helpers?: AgentHelperRuntime; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; foundationPlan?: string; clarifications?: string; priorClarifications?: string[]; review?: ReviewRecord; reviewSourceHash?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; executionBudget?: ExecutionBudgetState; budgetTimer?: ReturnType<typeof setTimeout>; modelConfig?: { backend: AgentBackend; provider: string; model: string } };
+type ActiveRun = { finalizing?: boolean; finished?: boolean; checkpointWrites?: Promise<void>; repairLease?: RepairLease; backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planningReview?: PlanningReviewProgress; repairUsed?: boolean; functionalRepair?: FunctionalRepairState; coreReportHash?: string; workflowReportHash?: string; helpers?: AgentHelperRuntime; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; foundationPlan?: string; clarifications?: string; priorClarifications?: string[]; review?: ReviewRecord; reviewSourceHash?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; executionBudget?: ExecutionBudgetState; budgetTimer?: ReturnType<typeof setTimeout>; modelConfig?: PinnedModelConfig; reasoningEffort?: ReasoningEffort };
 export interface ScopedPlanningContext {
   project: Project;
   acceptance: AcceptanceCriterion[];
@@ -116,7 +119,17 @@ export class FleetBackend {
   async init() { this.runtime = await ModelRuntime.create({ allowModelNetwork: false }); }
   models(): AgentModel[] {
     return [...(this.options.codex?.models ?? []), ...this.runtime.getModels().map(m => ({ backend: 'pi' as const, id: m.id, provider: m.provider, name: m.name,
-      configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
+      configured: this.runtime.hasConfiguredAuth(m.provider), ...piReasoningMetadata(m) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
+  }
+  private effort(backend: AgentBackend, provider: string, modelId: string, preference?: ReasoningEffort) {
+    const model = backend === 'pi' ? this.runtime.getModel(provider, modelId) : undefined;
+    const metadata = backend === 'codex' ? this.options.codex?.models.find(model => model.id === modelId)
+      : model ? piReasoningMetadata(model) : undefined;
+    const effort = resolveReasoningEffort(metadata, preference);
+    if (this.options.scoped && preference !== undefined && effort !== preference) {
+      throw new Error(`This experiment is pinned to ${preference} reasoning effort, which the model no longer reports as supported. Restore model support or start a new experiment with a supported effort.`);
+    }
+    return effort;
   }
   private async changed(p: Project) { p.updatedAt = new Date().toISOString(); this.notify(); await this.store.save(); }
   private log(p: Project, stage: StageId, kind: 'info' | 'text' | 'tool' | 'error', text: string, tool?: ToolEvent) {
@@ -159,7 +172,7 @@ export class FleetBackend {
       planningReview: run.planningReview,
       coreReportHash: run.coreReportHash,
       workflowReportHash: run.workflowReportHash, functionalRepair: run.functionalRepair,
-      executionBudget: run.executionBudget, modelConfig: run.modelConfig,
+      executionBudget: run.executionBudget, modelConfig: run.modelConfig, reasoningEffort: run.reasoningEffort,
       foundationPlan: run.foundationPlan,
       clarifications: run.clarifications, priorClarifications: run.priorClarifications,
       review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview };
@@ -244,7 +257,7 @@ export class FleetBackend {
     const p = this.store.project(id);
     const planningBriefHash = planning ? briefFingerprint(p) : undefined;
     const previousPlanningProject = planning ? structuredClone(p) : undefined;
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
+    const { provider, model: modelId, backend = 'pi', reasoningEffort: preference } = this.store.state.settings;
     const controller = new AbortController();
     let settled!: () => void;
     const preparation = { controller, done: new Promise<void>(resolve => { settled = resolve; }), resolve: () => settled() };
@@ -267,8 +280,9 @@ export class FleetBackend {
       }
       let resolve!: () => void;
       const done = new Promise<void>(settled => { resolve = settled; });
-      run = { backend, controller, done, resolve, review: revision?.review,
-        ...(this.options.scoped ? { modelConfig: { backend, provider, model: modelId },
+      const reasoningEffort = this.effort(backend, provider, modelId, preference);
+      run = { backend, controller, done, resolve, review: revision?.review, reasoningEffort,
+        ...(this.options.scoped ? { modelConfig: { backend, provider, model: modelId, ...(reasoningEffort ? { reasoningEffort } : {}) },
           executionBudget: createExecutionBudget(this.options.scoped.budget?.totalLimitMs, this.options.scoped.budget?.phaseLimitMs) } : {}) };
       this.active.set(id, run);
     } finally {
@@ -387,7 +401,7 @@ export class FleetBackend {
       // Read and authenticate without changing the recoverable build or its evidence.
       const initialCheckpoint = await readRunCheckpoint(this.store.root, p);
       if (this.options.scoped && (!initialCheckpoint.modelConfig || !initialCheckpoint.executionBudget)) throw new Error('This experiment has no pinned recovery configuration. Start a new attempt.');
-      const { provider, model: modelId, backend = 'pi' } = this.options.scoped ? initialCheckpoint.modelConfig! : this.store.state.settings;
+      const { provider, model: modelId, backend = 'pi', reasoningEffort: preference } = this.options.scoped ? initialCheckpoint.modelConfig! : this.store.state.settings;
       if (backend === 'codex') {
         await duringPreparation(this.options.codex?.refresh() ?? Promise.resolve(), controller.signal);
         if (this.options.codex?.account.status !== 'connected' || this.options.codex.account.planUsageEnabled !== true || !this.options.codex.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
@@ -397,7 +411,7 @@ export class FleetBackend {
       const saved = await readRunCheckpoint(this.store.root, p);
       let resolve!: () => void;
       const done = new Promise<void>(settled => { resolve = settled; });
-      const run: ActiveRun = { ...saved, backend, controller, done, resolve,
+      const run: ActiveRun = { ...saved, backend, controller, done, resolve, reasoningEffort: this.effort(backend, provider, modelId, preference),
         checkpointStage: saved.stage, resumedStage: saved.stage, previousError: p.error };
       await this.checkRecoveryInputs(p, run);
       p = available();
@@ -572,7 +586,7 @@ export class FleetBackend {
             ...(this.options.scoped ? createIsolatedAgentTools({ workspace: p.workspace!, executable: this.executable, signal, immutablePaths }) : []),
             ...(broker && clarificationPhase ? createClarificationTools(broker, p, clarificationPhase, signal, () => { requestedClarification = true; }) : [])];
           if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
-            home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill)),
+            home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd: p.workspace!, model: modelId, reasoningEffort: run.reasoningEffort, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill)),
             ...(this.options.scoped ? { permissionProfile: await createCandidatePermissionProfile({ workspace: p.workspace!, writable: true, immutablePaths }) } : {})
           });
           const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 2 } });
@@ -587,7 +601,7 @@ export class FleetBackend {
           signal.throwIfAborted();
           const { session } = await (this.options.createSession ?? createAgentSession)({
             cwd: p.workspace!, agentDir: path.join(this.store.root, 'pi'), modelRuntime: this.runtime,
-            model: this.runtime.getModel(provider, modelId), thinkingLevel: 'medium',
+            model: this.runtime.getModel(provider, modelId), thinkingLevel: piThinkingLevel(this.runtime.getModel(provider, modelId)!, run.reasoningEffort),
             tools: allowedTools, excludeTools: ['mcp__*'], customTools, resourceLoader: loader, settingsManager,
             sessionManager: SessionManager.create(p.workspace!, path.join(this.store.root, 'sessions', p.id))
           });
@@ -802,7 +816,7 @@ export class FleetBackend {
         ledger = new PlanningReviewLedger(snapshot, signal);
         const customTools = ledger.tools();
         if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
-          home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd, model: modelId,
+          home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd, model: modelId, reasoningEffort: run.reasoningEffort,
           signal, tools: customTools, conversationInstructions: instructions
         });
         const settingsManager = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1 } });
@@ -812,7 +826,7 @@ export class FleetBackend {
         await resourceLoader.reload(); signal.throwIfAborted();
         const { session } = await (this.options.createSession ?? createAgentSession)({
           cwd, agentDir: path.join(this.store.root, 'pi'), modelRuntime: this.runtime, model: this.runtime.getModel(provider, modelId),
-          thinkingLevel: 'medium', tools: customTools.map(tool => tool.name), excludeTools: ['mcp__*'], customTools,
+          thinkingLevel: piThinkingLevel(this.runtime.getModel(provider, modelId)!, run.reasoningEffort), tools: customTools.map(tool => tool.name), excludeTools: ['mcp__*'], customTools,
           resourceLoader, settingsManager, sessionManager: SessionManager.inMemory(cwd)
         });
         return session;

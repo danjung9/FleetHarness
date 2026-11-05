@@ -43,7 +43,7 @@ try {
   await page.getByLabel(/^Links \(optional\)/).scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'norfolk-fields-minimum.png'),scale:'css'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  await page.getByRole('button',{name:'Save & open Codex',exact:true}).click();
+  await page.getByRole('button',{name:'Save challenge',exact:true}).click();
   await page.getByRole('heading',{name:'Build phases',exact:true}).waitFor();
   const saved=(await page.evaluate(()=>window.fleetHarness.bootstrap())).state.projects[0];
   assert.equal(saved.challengeId,'37');assert.deepEqual(saved.criteria,expected.criteria);assert.equal(saved.resources,expected.resources);assert.deepEqual(saved.links,expected.links);

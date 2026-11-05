@@ -1,10 +1,11 @@
 import type { ExperimentAPI } from './experiments.js';
 import type { DataStorageAPI } from './data-storage.js';
+import type { ReasoningEffort } from './reasoning.js';
 
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'storage';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'storage' | 'connectors';
 export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
 export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
 export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string; tool?: ToolEvent }
@@ -44,8 +45,8 @@ export interface Project extends BriefContext {
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
 export type AgentBackend = 'pi' | 'codex';
-export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
+export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend; reasoningEfforts?: ReasoningEffort[]; defaultReasoningEffort?: ReasoningEffort }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean; reasoningEffort?: ReasoningEffort }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;

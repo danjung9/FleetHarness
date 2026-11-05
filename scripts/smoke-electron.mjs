@@ -37,8 +37,8 @@ try {
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');
   await page.locator('.catalog-results button').click();
   assert.match(await page.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
-  await page.getByRole('button',{name:'Save & open Codex',exact:true}).click();
-  await page.getByText('Brief saved. Codex opened in Terminal.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save challenge',exact:true}).click();
+  await page.getByText('Challenge saved.',{exact:true}).waitFor();
   const id=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
   const saved=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0]);
   assert.equal(saved.challengeId,'12');
@@ -54,6 +54,7 @@ try {
   const final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
   assert.equal(final.status,'review',final.error);
+  assert.deepEqual(await app.evaluate(()=>globalThis.__fleetCodexGoalFixture.calls),[], 'Starting a pipeline build never launches an external Codex goal');
   assert.equal(final.report.passed,1);
   assert.ok(final.logs.some(l=>l.text.includes('Starting functional final repair')));
   assert.ok(final.logs.some(l=>l.kind==='tool'&&l.text.includes('write')));

@@ -6,6 +6,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { NewProject } from '../shared/types.js';
 import type { CodexGoalLaunch } from '../shared/codex-goal.js';
+import type { ReasoningEffort } from '../shared/reasoning.js';
 import { normalizeProjectInput } from '../shared/project-input.js';
 import { Store } from './storage.js';
 import { prepareBriefData } from './brief-data.js';
@@ -66,11 +67,12 @@ function requirements(brief: NewProject) {
 }
 
 /** Values are quoted as shell arguments; brief contents never become shell code. */
-export function codexGoalCommand(executable: string, workspace: string, threadId: string, home: string) {
+export function codexGoalCommand(executable: string, workspace: string, threadId: string, home: string, reasoningEffort?: ReasoningEffort) {
   return '#!/bin/sh\nset -eu\n'
     + `export CODEX_HOME=${shellQuote(home)}\n`
     + `cd ${shellQuote(workspace)}\n`
-    + 'exec ' + [executable, '--no-daemon', '--enable', 'goals', '--sandbox', 'workspace-write', '--ask-for-approval', 'on-request', '--cd', workspace,
+    + 'exec ' + [executable, '--no-daemon', '--enable', 'goals', '--sandbox', 'danger-full-access', '--ask-for-approval', 'never', '--cd', workspace,
+      ...(reasoningEffort === undefined ? [] : ['-c', `model_reasoning_effort=${JSON.stringify(reasoningEffort)}`]),
       'resume', threadId]
       .map(shellQuote).join(' ') + '\n';
 }
@@ -110,6 +112,8 @@ export class CodexGoalService {
     const project = this.store.project(id);
     if (project.archivedAt) throw new Error('Restore this archived project before opening a Codex goal.');
     const brief = normalizeProjectInput(project);
+    // Snapshot the setting so changes while preparing cannot alter the resume command.
+    const reasoningEffort = this.store.state.settings.reasoningEffort;
     const executable = (this.options.executable ?? codexExecutable)();
     await fs.access(executable, constants.X_OK);
     const home = path.resolve(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'));
@@ -126,9 +130,9 @@ export class CodexGoalService {
       project.codexGoal = launch;
       await this.store.save();
       this.options.changed?.();
-      launch.threadId = await (this.options.prepareThread ?? prepareCodexGoalThread)({ workspace, objective: codexGoalObjective(), executable, home });
+      launch.threadId = await (this.options.prepareThread ?? prepareCodexGoalThread)({ workspace, objective: codexGoalObjective(), executable, home, reasoningEffort });
       const commandFile = path.join(workspace, 'Open Codex.command');
-      await fs.writeFile(commandFile, codexGoalCommand(executable, workspace, launch.threadId, home), { flag: 'wx', mode: 0o700 });
+      await fs.writeFile(commandFile, codexGoalCommand(executable, workspace, launch.threadId, home, reasoningEffort), { flag: 'wx', mode: 0o700 });
       await this.store.save();
       await (this.options.openTerminal ?? openCodexGoalTerminal)(commandFile);
     } catch (error) {
