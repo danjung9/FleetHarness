@@ -117,3 +117,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:38 Automatic QA at 16a6940 on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only. `Research/QA/Auto/16a6940.md`
 - 18:42 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`
 - 18:43 Astra genai started: Model settings tabs and the GenAI.mil framework.
+- 19:39 Mukul decided: build agents get full access (read, write, network) and the locks come out, including Pi containment and the sandbox around generated tests. Stop's process cleanup, secret redaction, safe writes, approval gates and repair baselines stay.
