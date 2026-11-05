@@ -311,6 +311,8 @@ requiredEnv lists uppercase environment variable NAMES (maximum 32), never crede
 
 ## evaluation-plan.json
 
+For every mandatory capability, include a valid input outside bundled examples and preset choices, a changed constraint that changes the required result, and an invalid or impossible case. Derive complete expected results from the declared rules before implementation. Prove the user can supply the new input through the delivered interface. When optimization is required, compare objective value against an independently computed bounded reference, not feasibility alone. Never derive the reference from candidate code or helper self-tests.
+
 {
   "schemaVersion": 1,
   "evaluations": [{

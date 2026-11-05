@@ -51,6 +51,7 @@ import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
 import { syntheticBrowser } from './helpers/synthetic-browser.mjs';
 import { runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
+import { CodexRpc } from '../dist-electron/electron/codex-rpc.js';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
 const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') ? 'repair'
   : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
@@ -89,7 +90,7 @@ async function harness(t, options = {}) {
   const store = new Store(root); await store.init();
   store.state.projects[0] = newProject(options.project ?? qualityFixtureProject);
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
-  const project = store.state.projects[0], sessions = [], judgeSessions = [], snapshots = [];
+  const project = store.state.projects[0], sessions = [], judgeSessions = [], auditSessions = [], snapshots = [];
   const broker = options.clarifications ? new ClarificationBroker(store, () => snapshots.push(structuredClone(project))) : undefined;
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
     // Discovery is injected for synthetic orchestration. Native discovery and
@@ -107,7 +108,22 @@ async function harness(t, options = {}) {
         assert.deepEqual(customTools.map(tool => tool.name), ['judge_read']);
         const listeners = new Set();
         const judge = { disposed: false, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-          async prompt() {
+          async prompt(text) {
+            if (text.startsWith('Use planning audit mode.')) {
+              judgeSessions.splice(judgeSessions.indexOf(this), 1);
+              auditSessions.push(this);
+              this.prompts = [text];
+              const inputs = {};
+              for (const name of ['requirements.md', 'challenge-card.json', 'acceptance-inventory.json', 'scope.md', 'plan.md', 'test-matrix.md', 'acceptance-plan.json', 'solution-contract.json', 'evaluation-plan.json']) {
+                inputs[name] = JSON.parse((await customTools[0].execute('audit', { path: name })).content[0].text).text;
+              }
+              await assert.rejects(customTools[0].execute('audit', { path: 'core.cjs' }), /not in the judge snapshot/);
+              await options.audit?.({ cwd, inputs, session: this, index: auditSessions.length - 1 });
+              const answer = options.auditAnswers?.[auditSessions.length - 1] ?? { approved: true, corrections: [] };
+              for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
+                usage: options.usage, content: [{ type: 'text', text: typeof answer === 'string' ? answer : JSON.stringify(answer) }] } });
+              return;
+            }
             for (const name of ['requirements.md', 'test-report.json']) await customTools[0].execute('judge', { path: name });
             const contractRead = await customTools[0].execute('judge', { path: 'solution-contract.json' });
             const solution = JSON.parse(JSON.parse(contractRead.content[0].text).text);
@@ -119,7 +135,7 @@ async function harness(t, options = {}) {
             for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
               usage: options.usage,
               content: [{ type: 'text', text: JSON.stringify(options.judgeAnswers?.[judgeSessions.indexOf(this)] ?? { verdict: 'SATISFACTORY', gaps: [] }) }] } });
-          }, abort() {}, dispose() { this.disposed = true; }
+          }, abort() { options.auditAbort?.(); }, dispose() { this.disposed = true; }
         };
         judgeSessions.push(judge); return { session: judge };
       }
@@ -168,7 +184,7 @@ async function harness(t, options = {}) {
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
     assert.equal(saved.status, status); assert.equal(saved.error, project.error);
   };
-  return { root, store, project, backend, broker, sessions, judgeSessions, snapshots, run, settle, assertSettled };
+  return { root, store, project, backend, broker, sessions, judgeSessions, auditSessions, snapshots, run, settle, assertSettled };
 }
 
 async function syntheticReport(p, run, failed = false, detail = 'step 3: expected inspect pump, received wrong result') {
@@ -192,6 +208,204 @@ async function syntheticReport(p, run, failed = false, detail = 'step 3: expecte
 
 const measuredUsage = { input: 70, cacheRead: 30, cacheWrite: 0, output: 20, totalTokens: 120 };
 const judgeNot = { verdict: 'NOT', gaps: [{ requirement: 'Synthetic task output', evidence: 'Output is missing.', fix: 'Implement the missing output.' }] };
+
+const auditApproved = { approved: true, corrections: [] };
+const auditCorrections = { approved: false, corrections: ['R1: The proposed output omits the total. Define the complete result and a changed-input check.'] };
+const auditCheckpoint = async h => JSON.parse(await fs.readFile(path.join(h.root, 'run-checkpoints', h.project.runId + '.json'), 'utf8'));
+
+test('planning audit: approval proceeds without an extra planning turn and is retained for review', { timeout: 15000 }, async t => {
+  const h = await harness(t, { verify: syntheticReport, audit: async ({ inputs }) => {
+    assert.match(inputs['requirements.md'], /TASK/);
+    assert.ok(JSON.parse(inputs['acceptance-inventory.json']).length);
+    assert.ok(JSON.parse(inputs['evaluation-plan.json']).evaluations.length);
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(h.auditSessions.length, 1, JSON.stringify((await auditCheckpoint(h)).planningAudit));
+  assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 1);
+  assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 1);
+  assert.ok(h.auditSessions[0].disposed);
+  const saved = await auditCheckpoint(h);
+  assert.equal(saved.planningAudit.attempts[0].status, 'approved');
+  assert.match(saved.planningAudit.attempts[0].inputHash, /^[a-f0-9]{64}$/);
+  assert.equal(saved.planningAudit.complete, true);
+  assert.equal(saved.quality.planningAudit, undefined);
+  assert.match(h.project.report.output, /approved planning coverage only/);
+  assert.match(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')).output, /Planning correction turns used: 0 of 1/);
+});
+
+for (const second of [auditApproved, auditCorrections, 'unreadable second audit']) {
+  test(`planning audit: corrections allow exactly one correction turn, then continue with ${JSON.stringify(second)}`, { timeout: 15000 }, async t => {
+    const h = await harness(t, { verify: syntheticReport, auditAnswers: [auditCorrections, second],
+      scenario: async ({ cwd, stage, session }) => {
+        if (stage !== 'plan' || !session.prompts[0].includes('single planning correction turn')) return false;
+        assert.ok(session.prompts[0].includes(auditCorrections.corrections[0]));
+        await fs.appendFile(path.join(cwd, 'plan.md'), '\nAdd the complete total and changed-input check.');
+        return true;
+      }, audit: ({ inputs, index }) => {
+        if (index === 1) assert.match(inputs['plan.md'], /complete total/);
+      } });
+    await h.run(); await h.assertSettled('review');
+    const planners = h.sessions.filter(s => s.stage === 'plan');
+    assert.equal(planners.length, 2); assert.deepEqual(planners.map(s => s.prompts.length), [1, 1]);
+    assert.equal(h.auditSessions.length, 2);
+    const audit = (await auditCheckpoint(h)).planningAudit;
+    assert.equal(audit.correctionStarted, true); assert.equal(audit.complete, true);
+    assert.notEqual(audit.attempts[0].inputHash, audit.attempts[1].inputHash);
+    assert.ok(h.project.report.output.includes(auditCorrections.corrections[0]));
+    if (second !== auditApproved) assert.match(h.project.report.output, /Remaining gaps:/);
+    assert.match(h.project.logs.map(log => log.text).join('\n'), /Planning correction turns used: 1 of 1/);
+  });
+}
+
+for (const failure of ['model error', 'unreadable response', 'contradictory response', 'timeout']) {
+  test(`planning audit: ${failure} logs unconfirmed coverage and continues without a correction turn`, { timeout: 15000 }, async t => {
+    const h = await harness(t, { verify: syntheticReport,
+      auditAnswers: [failure === 'contradictory response' ? { approved: true, corrections: ['Missing primary work'] } : 'not JSON'],
+      audit: () => {
+        if (failure === 'model error') throw new Error('Synthetic provider error: 503');
+        if (failure === 'timeout') return never();
+      } });
+    // Shorten only the host audit deadline after the planner has finished.
+    if (failure === 'timeout') {
+      const auditPlan = h.backend.auditPlan.bind(h.backend);
+      h.backend.auditPlan = async (...args) => {
+        const limits = h.backend.options.agentLimits;
+        h.backend.options.agentLimits = { timeoutMs: 80, idleMs: 40 };
+        try { return await auditPlan(...args); } finally { h.backend.options.agentLimits = limits; }
+      };
+    }
+    await h.run(); await h.assertSettled('review');
+    assert.equal(h.auditSessions.length, 1);
+    assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 1);
+    assert.equal((await auditCheckpoint(h)).planningAudit.attempts[0].status, 'unavailable');
+    assert.match(h.project.report.output, /Coverage remains unconfirmed/);
+    assert.ok(h.project.logs.some(log => /Coverage remains unconfirmed/.test(log.text)));
+  });
+}
+
+test('planning audit: Stop during the read-only audit ends the run before sealing or build', { timeout: 15000 }, async t => {
+  const entered = deferred(), released = deferred();
+  const h = await harness(t, { verify: syntheticReport, audit: () => { entered.resolve(); return released.promise; }, auditAbort: () => released.resolve() });
+  await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
+  await h.assertSettled('stopped');
+  assert.equal(h.auditSessions.length, 1); assert.ok(h.auditSessions[0].disposed);
+  assert.equal(h.sessions.some(s => s.stage === 'build'), false);
+  assert.equal(h.project.runCheckpoint.qualityHash, undefined);
+  assert.ok(await fs.stat(path.join(h.project.workspace, 'evaluation-plan.json')));
+});
+
+test('planning audit: a failed correction gets no transport retry or completion turn', { timeout: 15000 }, async t => {
+  const h = await harness(t, { verify: syntheticReport, auditAnswers: [auditCorrections, auditCorrections], scenario: ({ stage, session }) => {
+    if (stage === 'plan' && session.prompts[0].includes('single planning correction turn')) throw new Error('Synthetic provider error: 503');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.filter(s => s.stage === 'plan').map(s => s.prompts.length), [1, 1]);
+  assert.equal(h.auditSessions.length, 2);
+  assert.match((await auditCheckpoint(h)).planningAudit.correctionError, /could not complete/);
+  assert.match(h.project.report.output, /Remaining gaps:/);
+});
+
+test('planning audit: Resume after planning restores its result without repeating it', { timeout: 15000 }, async t => {
+  let fail = true;
+  const h = await harness(t, { verify: syntheticReport, auditAnswers: ['unreadable audit'], scenario: ({ stage }) => {
+    if (stage === 'build' && fail) throw new Error('Synthetic build interruption'); return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  const before = (await auditCheckpoint(h)).planningAudit;
+  const restored = new Store(h.root); await restored.init();
+  const project = restored.project(h.project.id);
+  const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
+  resumed.runtime = h.backend.runtime; resumed.verify = syntheticReport; resumed.evaluateCore = async () => true; fail = false;
+  await resumed.resume(project.id); await resumed.active.get(project.id)?.done;
+  assert.equal(project.status, 'review', project.error);
+  assert.equal(h.auditSessions.length, 1);
+  assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 1);
+  assert.deepEqual((await auditCheckpoint(h)).planningAudit, before);
+  assert.match(project.report.output, /Coverage remains unconfirmed/);
+});
+
+test('planning audit: Stop during correction cannot grant another correction turn on Resume', { timeout: 15000 }, async t => {
+  const entered = deferred(), released = deferred();
+  const h = await harness(t, { verify: syntheticReport, auditAnswers: [auditCorrections, auditApproved],
+    abort: () => released.resolve(true), scenario: ({ stage, session }) => {
+      if (stage === 'plan' && session.prompts[0].includes('single planning correction turn')) { entered.resolve(); return released.promise; }
+      return false;
+    } });
+  await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
+  await h.assertSettled('stopped');
+  assert.equal((await auditCheckpoint(h)).planningAudit.correctionStarted, true);
+  await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('review');
+  assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 2);
+  assert.equal(h.auditSessions.length, 2);
+});
+
+test('planning audit: Codex lifecycle uses the read-only snapshot adapter and exactly one correction', { timeout: 15000 }, async t => {
+  const threads = [], reads = [], denied = [], clients = [];
+  let audits = 0;
+  // Only the external RPC transport is scripted. The production audit adapter,
+  // snapshot tool, correction lifecycle, sealing and review persistence execute.
+  t.mock.method(CodexRpc, 'launch', () => {
+    let listener, audit = false, answer, pending = [];
+    const emit = (method, params, id) => listener({ method, id, params: { threadId: 'synthetic-thread', turnId: 'synthetic-turn', ...params } });
+    const complete = () => {
+      emit('item/completed', { item: { type: 'agentMessage', phase: 'final_answer', text: JSON.stringify(answer) } });
+      emit('turn/completed', { turn: { id: 'synthetic-turn', status: 'completed' } });
+    };
+    const readNext = () => {
+      const name = pending.shift();
+      if (name) emit('item/tool/call', { callId: name, tool: 'judge_read', arguments: { path: name } }, name);
+      else complete();
+    };
+    const rpc = { disposed: false, async initialize() {}, onClose() {}, subscribe(fn) { listener = fn; },
+      dispose() { this.disposed = true; },
+      send(message) {
+        if (message.id === 'shell' || message.id === 'write') { denied.push(message); return; }
+        reads.push({ audit, path: message.id, result: message.result });
+        readNext();
+      },
+      async request(method, params) {
+        if (method === 'thread/start') { threads.push(params); return { thread: { id: 'synthetic-thread' } }; }
+        if (method === 'turn/start') {
+          audit = params.input[0].text.startsWith('Use planning audit mode.');
+          answer = audit ? (++audits === 1 ? auditCorrections : auditApproved) : { verdict: 'SATISFACTORY', gaps: [] };
+          emit('turn/started', { turn: { id: 'synthetic-turn' } });
+          emit('item/tool/call', { tool: 'shell', arguments: { command: 'false' } }, 'shell');
+          emit('item/tool/call', { tool: 'write', arguments: { path: 'plan.md', content: 'invalid' } }, 'write');
+          pending = audit ? ['requirements.md', 'challenge-card.json', 'acceptance-inventory.json', 'scope.md', 'plan.md', 'test-matrix.md', 'acceptance-plan.json', 'solution-contract.json', 'evaluation-plan.json'] : ['test-report.json'];
+          readNext();
+          return { turn: { id: 'synthetic-turn' } };
+        }
+        return {};
+      }
+    };
+    clients.push(rpc); return rpc;
+  });
+  const h = await harness(t, { verify: syntheticReport });
+  h.store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture', rememberKey: false };
+  h.backend.options.codex = { home: h.root, account: { status: 'connected', planUsageEnabled: true },
+    credentials: async () => ({}), refresh: async () => {},
+    models: [{ id: 'fixture', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }] };
+  h.backend.options.createCodexSession = async ({ cwd, tools, skillPaths }) => (await h.backend.options.createSession({ cwd, customTools: tools,
+    tools: tools.map(tool => tool.name), resourceLoader: { getSkills: () => ({ skills: skillPaths.map(file => ({ name: path.basename(file) })) }) } })).session;
+  await h.run(); await h.assertSettled('review');
+  assert.equal(audits, 2); assert.equal(clients.length, 3);
+  assert.ok(clients.every(client => client.disposed));
+  assert.deepEqual(h.sessions.filter(s => s.stage === 'plan').map(s => s.prompts.length), [1, 1]);
+  assert.equal(reads.filter(read => read.audit).length, 18);
+  assert.ok(reads.every(read => read.result.success));
+  assert.equal(denied.length, 6); assert.ok(denied.every(message => message.error.code === -32601));
+  for (const thread of threads) {
+    assert.equal(thread.sandbox, 'read-only'); assert.equal(thread.approvalPolicy, 'never');
+    assert.equal(thread.config['features.shell_tool'], false);
+    assert.equal(thread.config['features.apply_patch_freeform'], false);
+    assert.equal(thread.config['features.multi_agent'], false);
+    assert.equal(thread.config.web_search, 'disabled');
+    assert.deepEqual(thread.dynamicTools.map(tool => tool.name), ['judge_read']);
+  }
+  assert.equal((await auditCheckpoint(h)).planningAudit.attempts[1].status, 'approved');
+  assert.match(h.project.report.output, /Planning correction turns used: 1 of 1/);
+});
 
 test('verification, host repair, judge and judge repair share persisted usage and timing', async t => {
   let verifications = 0;

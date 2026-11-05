@@ -24,14 +24,14 @@ import type { CodexAccount } from './codex-account.js';
 import { runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
 import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
-import { runIndependentJudge } from './independent-judge.js';
+import { runIndependentJudge, runPlanningAudit, planningAuditSummary, type PlanningAuditRecord } from './independent-judge.js';
 import { GENAI_MIL_PROVIDER, type GenAiMil } from './genai-mil.js';
 import type { ConnectorStore } from './connectors/store.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -121,7 +121,7 @@ export class FleetBackend {
     const checkpoint: RunCheckpoint = { version: 1, projectId: p.id, runId: p.runId!, workspace: p.workspace!, briefHash: run.briefHash, stage,
       context: run.context, phases: run.phases, globalTools: run.globalTools, packetHash: run.packetHash, requirements: run.requirements,
       acceptance: run.acceptance, data: run.data, quality: run.quality, foundation: run.foundation,
-      foundationPlan: run.foundationPlan,
+      foundationPlan: run.foundationPlan, planningAudit: run.planningAudit,
       clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview };
     await writeRunCheckpoint(this.store.root, p, checkpoint);
     run.checkpointStage = stage;
@@ -396,6 +396,7 @@ export class FleetBackend {
     let saved: RunCheckpoint | undefined;
     if (p.resumeStage || p.qualityVersion === 3) saved = await readRunCheckpoint(this.store.root, p);
     run.briefHash = briefFingerprint(p);
+    run.planningAudit = saved?.planningAudit;
     run.visualReview = saved?.visualReview; run.foundationPlan = saved?.foundationPlan;
     const first = p.stages.find(s => s.status !== 'complete');
     if (!first || !['intake', 'research', 'plan', 'build', 'verify', 'review'].includes(first.id)) throw new Error('No incomplete build stage can resume. Start a new run.');
@@ -546,7 +547,7 @@ export class FleetBackend {
     if (!confirmed) throw new Error((failed ? String(failure) + '\n' : '') + 'Writer shutdown was not confirmed. Recovery in this workspace is blocked. Stop and clean up the old workers, then start a new run in a fresh workspace.');
     if (failed) throw failure;
   }
-  private async agentAttempt(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }) {
+  private async agentAttempt(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }, singleTurn = false) {
     this.check(run);
     const textLog = secretTextBuffer(text => this.log(p, stage, 'text', text));
     const phase = variant?.phase ?? run.phases!.find(phase => phase.id === stage)!;
@@ -554,7 +555,7 @@ export class FleetBackend {
     const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
     const agentLabel = variant?.label ?? stage + ' agent';
     const broker = this.options.clarifications;
-    const clarificationPhase = !variant && (stage === 'research' || stage === 'plan') ? stage : undefined;
+    const clarificationPhase = !singleTurn && !variant && (stage === 'research' || stage === 'plan') ? stage : undefined;
     if (stage === 'verify') {
       const checkpoint = p.runCheckpoint!;
       if (checkpoint.verificationAgent) {
@@ -587,7 +588,8 @@ export class FleetBackend {
         throw new Error('Visual review requires an image-capable model. Select a model with image input in Model settings, then resume this phase.');
       }
       try { await this.trackedAgent(p, run, {
-        label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: this.options.agentLimits,
+        label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: singleTurn
+          ? { ...this.options.agentLimits, timeoutMs: Math.min(this.options.agentLimits?.timeoutMs ?? 120_000, 120_000) } : this.options.agentLimits,
         onMetrics: measured => this.recordInference(p, stage, measured),
         create: async signal => {
           if (visualRequired && run.quality?.solution && (stage === 'build' || stage === 'verify')) {
@@ -687,7 +689,7 @@ export class FleetBackend {
           const complete = async (text: string, required: string[], requireComponents = true) => {
             await prompt(text);
             check(); await this.checkInputs(p, run); check();
-            if (awaitingClarification()) return;
+            if (awaitingClarification() || singleTurn) return;
             let missing = await validateOutputs(required, requireComponents); check();
             if (missing.length) {
               this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
@@ -865,6 +867,50 @@ export class FleetBackend {
   private appendTestChanges(p: Project) {
     p.report!.testBaseline = { hashes: { ...p.runCheckpoint!.buildTests! }, changes: [...p.runCheckpoint!.testChanges ?? []], policy: testBaselinePolicy };
     if (p.runCheckpoint!.testChanges?.length) p.report!.output += '\n' + p.runCheckpoint!.testChanges.join('\n');
+    const audit = this.active.get(p.id)?.planningAudit;
+    if (audit) p.report!.output += '\n' + planningAuditSummary(audit);
+  }
+  private async auditPlan(p: Project, run: ActiveRun, provider: string, model: string) {
+    const audit = run.planningAudit ??= { attempts: [], correctionStarted: false, complete: false };
+    if (audit.complete) return;
+    const inspect = async () => {
+      this.check(run);
+      this.log(p, 'plan', 'info', 'Checking the proposed plan against the original obligations before freezing it.');
+      const result = await runPlanningAudit({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot,
+        signal: run.controller.signal, limits: this.options.agentLimits,
+        onMetrics: measured => this.recordInference(p, 'plan', measured),
+        engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
+          codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession } });
+      this.check(run);
+      audit.attempts.push(redactValue(result));
+      await this.checkpoint(p, run);
+    };
+    if (!audit.attempts.length) await inspect();
+    if (audit.attempts[0].status === 'corrections') {
+      if (!audit.correctionStarted) {
+        // Spend before calling the writer. Stop or restart cannot grant another correction turn.
+        audit.correctionStarted = true;
+        await this.checkpoint(p, run); this.check(run);
+        this.log(p, 'plan', 'info', 'Planning audit requested corrections. Using the one allowed planning correction turn.');
+        try {
+          await this.agentAttempt(p, run, 'plan', provider, model,
+            'You are the planning agent. This is the single planning correction turn before freeze. Read the original requirements and current planning files. Correct scope.md, plan.md, test-matrix.md, acceptance-plan.json, solution-contract.json and evaluation-plan.json as needed, keeping ux-spec.json and foundation-plan.json consistent. Preserve the original obligations, record unresolved prerequisites plainly, and do not implement. No additional completion turn is available. Concrete audit corrections:\n' + audit.attempts[0].corrections.map(item => '- ' + item).join('\n'),
+            [], false, undefined, undefined, true);
+        } catch (error) {
+          this.check(run);
+          if (p.runCheckpoint?.writerState !== 'idle') throw error;
+          await this.checkInputs(p, run);
+          audit.correctionError = 'Planning correction could not complete. Remaining gaps need review. ' + redactSecrets(error instanceof Error ? error.message : String(error)).slice(0, 4000);
+        }
+      }
+      if (audit.attempts.length === 1) await inspect();
+    }
+    this.check(run);
+    audit.complete = true;
+    // This is private host evidence, never part of the sealed quality contract.
+    await this.checkpoint(p, run);
+    for (const line of planningAuditSummary(audit).split('\n')) this.log(p, 'plan', 'info', line);
+    await this.changed(p);
   }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
     try {
@@ -903,8 +949,10 @@ export class FleetBackend {
       if (p.stages.find(s => s.id === 'plan')!.status !== 'complete') {
       await this.stage(p, 'plan', 'active');
       if (!run.quality) {
-      await this.agent(p, run, 'plan', provider, model,
+      if (!run.planningAudit) await this.agent(p, run, 'plan', provider, model,
         'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/foundation-guide.md and .fleet/foundation-catalog.json; write foundation-plan.json selecting a versioned starter and computation pack with a concrete reason. Align solution-contract.json with that starter runtime and all its files. The host copies the foundation after planning; do not generate scaffold files yourself. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Read .fleet/solution-contract.md. Produce solution-contract.json and evaluation-plan.json, and acceptance-plan.json schemaVersion 2. Identify the mandatory computational capabilities, independently derived evaluation cases, baselines and thresholds. In solution-contract.json include invocation with public input, output and rules: every action, field type, exact status/error string, array ordering and validation precedence. The builder must be able to implement the complete wire protocol without seeing evaluation-plan.json; never leave interface details only in sealed cases. Derive held-out cases from these public rules without copying answer pairs into the public contract. Choose browser, CLI or service runtime with a complete file manifest, locked dependencies and explicit model environment requirements. Use a shared implementation for the delivered runtime and tests. The host seals the answer key outside the builder workspace. Browser/service profiles need primary and recovery journeys; CLI can have no browser journeys. Keep Node orchestration tests named *.test.cjs or *.test.mjs. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'foundation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json']);
+      await this.auditPlan(p, run, provider, model);
+      this.check(run);
       run.quality = await loadQualityContract(p.workspace!, run.acceptance!, true);
       run.foundationPlan = await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8');
       await this.checkpoint(p, run);

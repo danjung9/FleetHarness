@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "4ef045fcfee1fd83f852f0528b77b00572267222b41de94d3e9535afe646929c",
+  "electron/pi-backend.ts": "3ed8565005751793402c83c5c8b90b911166b70ec8b11faec095d643d1bf318c",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -53,7 +53,7 @@ const errorInventory = {
   "electron/codex-account.ts": "2d711e84ada731b8f50b15e977dd642e78711eec8eb8492c4eeae62ae7ceeded",
   "electron/chatgpt-oauth.ts": "0ca0327dadc0c210ab712024aa614ed49b4760a28a7ab6292b5789fa6473e9dd",
   "electron/genai-mil.ts": "149b1bf5f65e95e0cd1461c6fa0d654463d860d9de10d5784f9027dcd62da818",
-  "electron/independent-judge.ts": "2310050943864aff76f5a3dd241c7a176323a8107c900e3a3e26a8e172f036d5",
+  "electron/independent-judge.ts": "a11bbea1d3fcf7003de32c20c863e77e268b6a75f4720b0250624feebd9bdbf2",
   "electron/connectors/store.ts": "e42422dbdf1f5a4271031a0c908ad1194f4d79d580fcf6351ba8088c6f2540a1",
   "electron/connectors/sample-data.ts": "ce5a604160b1b1df0cbffcfef7ce3d195474c216613c5a9d028f756713eb35ec",
   "electron/delivery.ts": "c563ef3aec35ee6118502c8ff3d53afb02981b8ba4e31bcf6773b60eb5d03d86",
