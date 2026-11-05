@@ -46,6 +46,7 @@ type Generation = {
 };
 type Result = { content: ({ type: 'text'; text: string } | { type: 'image'; data: string; mimeType: 'image/png' })[]; details: Record<string, unknown>; isError: boolean };
 const maxImageBytes = 8_000_000, maxImages = 100, maxTotalImageBytes = 128_000_000;
+const finalCheckImages = 8;
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 1800);
 
 async function within<T>(operation: Promise<T>, timeout: number, signal?: AbortSignal): Promise<T> {
@@ -364,6 +365,12 @@ export class AgentBrowserSession {
     if (this.artifacts.base !== base) throw new Error('Browser workspace location changed during the session.');
     await assertDirectory(path.join(base, this.artifacts.relative));
     return this.artifacts;
+  }
+
+  /** The final visual recheck must fit, however many screenshots the agent used before it. */
+  allowFinalCheck() {
+    this.imageCount = Math.min(this.imageCount, maxImages - finalCheckImages);
+    this.imageBytes = Math.min(this.imageBytes, maxTotalImageBytes - finalCheckImages * maxImageBytes);
   }
 
   private async saveImage(png: Buffer, signal: AbortSignal) {

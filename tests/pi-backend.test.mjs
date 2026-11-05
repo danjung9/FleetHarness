@@ -498,19 +498,86 @@ test('verification, host repair, judge and judge repair share persisted usage an
   assert.deepEqual(report.stageMetrics.find(s => s.stage === 'verify'), { stage: 'verify', ...verify });
 });
 
-test('an exhausted host repair budget cannot start another fixer for a negative judge', async t => {
+test('test repairs leave the judge its own repairs', async t => {
   let verifications = 0;
   const h = await harness(t, { judgeAnswers: [judgeNot], verify: (p, run) => syntheticReport(p, run, ++verifications < 3),
     scenario: async ({ stage, cwd, sessions }) => {
       if (stage === 'repair') await fs.writeFile(path.join(cwd, 'repair-progress.txt'), String(sessions.length));
     } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.project.runCheckpoint.repairAttempts, 2);
-  assert.equal(h.sessions.filter(s => s.stage === 'repair').length, 2);
-  assert.equal(h.judgeSessions.length, 1);
+  assert.equal(h.project.runCheckpoint.repairAttempts, 3);
+  assert.equal(h.sessions.filter(s => s.stage === 'repair').length, 3);
+  assert.equal(h.judgeSessions.length, 2);
+  assert.equal(h.project.report.independentJudge.verdict, 'SATISFACTORY');
+});
+
+test('the judge stops after its own two repairs and the build goes to review with the gaps', async t => {
+  let verifications = 0;
+  const h = await harness(t, { judgeAnswers: [judgeNot, judgeNot, judgeNot], verify: (p, run) => syntheticReport(p, run, ++verifications < 3),
+    scenario: async ({ stage, cwd, sessions }) => {
+      if (stage === 'repair') await fs.writeFile(path.join(cwd, 'repair-progress.txt'), String(sessions.length));
+    } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(h.project.runCheckpoint.repairAttempts, 4);
+  assert.equal(h.judgeSessions.length, 3);
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
   assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('a judge repair that breaks verification is undone and the verified application reaches review', async t => {
+  const broken = p => fs.access(path.join(p.workspace, 'repair-left.txt')).then(() => true, () => false);
+  const h = await harness(t, { judgeAnswers: [judgeNot], verify: async (p, run) => syntheticReport(p, run, await broken(p)),
+    scenario: async ({ stage, cwd }) => {
+      if (stage !== 'repair') return;
+      await fs.writeFile(path.join(cwd, 'repair-left.txt'), 'left by the repair');
+      await fs.rm(path.join(cwd, 'README.md'), { force: true });
+    } });
+  await h.run();
+  const readme = await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8').catch(() => '');
+  await h.assertSettled('review');
+  assert.equal(await broken(h.project), false);
+  assert.ok(readme.length, 'The repair deleted README.md, so the undo must bring it back');
+  assert.equal(h.judgeSessions.length, 1);
+  assert.equal(h.project.report.independentJudge.verdict, 'NOT');
+  assert.equal(h.project.report.independentJudge.repairs, 1);
+  assert.ok(h.project.report.independentJudge.gaps.some(gap => /repair was undone/.test(gap.evidence)));
+  assert.ok(h.project.logs.some(entry => /did not hold, so it was undone/.test(entry.text ?? entry.message ?? '')));
+  assert.equal(reportPassed(h.project.report, true), true);
+  assert.deepEqual((await fs.readdir(os.tmpdir())).filter(name => name.startsWith('appyard-judge-repair-')), []);
+});
+
+test('a judge repair agent that cannot finish is undone and the verified application reaches review', async t => {
+  let repairs = 0;
+  const h = await harness(t, { judgeAnswers: [judgeNot], verify: syntheticReport,
+    scenario: async ({ stage, cwd }) => {
+      if (stage !== 'repair') return;
+      repairs++;
+      await fs.writeFile(path.join(cwd, 'repair-left.txt'), 'left by the repair');
+      throw new Error('The model refused this request.');
+    } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(repairs, 1);
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'repair-left.txt')));
+  assert.equal(h.project.report.independentJudge.verdict, 'NOT');
+  assert.ok(h.project.report.independentJudge.gaps.some(gap => /could not finish\. The repair was undone/.test(gap.evidence)));
+  assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('Stop during a judge repair still stops the run instead of undoing the repair', { timeout: 10000 }, async t => {
+  const entered = deferred();
+  const h = await harness(t, { judgeAnswers: [judgeNot], verify: syntheticReport, abort: () => Promise.resolve(),
+    scenario: async ({ stage, session }) => {
+      if (stage !== 'repair') return;
+      entered.resolve();
+      await new Promise(() => {});
+    } });
+  const started = h.run();
+  await entered.promise;
+  await h.backend.stop(h.project.id);
+  await started;
+  assert.notEqual(h.project.status, 'review');
+  assert.equal(h.judgeSessions.length, 1);
 });
 
 test('resume keeps failed-attempt usage and timing and adds the resumed attempt', async t => {
@@ -542,14 +609,14 @@ test('resume keeps failed-attempt usage and timing and adds the resumed attempt'
   assert.deepEqual(project.report.stageMetrics.find(s => s.stage === 'research'), { stage: 'research', ...resumed });
 });
 
-test('a transient judge repair retry spends the remaining budget before the next judgment', async t => {
+test('a transient judge repair retry spends the shared budget before the next judgment', async t => {
   let repairs = 0;
-  const h = await harness(t, { judgeAnswers: [judgeNot, judgeNot], verify: syntheticReport,
+  const h = await harness(t, { judgeAnswers: [judgeNot, judgeNot, judgeNot], verify: syntheticReport,
     scenario: async ({ stage }) => { if (stage === 'repair' && ++repairs === 1) throw new Error('503 temporary interruption'); } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(repairs, 2);
-  assert.equal(h.project.runCheckpoint.repairAttempts, 2);
-  assert.equal(h.judgeSessions.length, 2);
+  assert.equal(repairs, 3);
+  assert.equal(h.project.runCheckpoint.repairAttempts, 3);
+  assert.equal(h.judgeSessions.length, 3);
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
   assert.equal(reportPassed(h.project.report, true), true);
