@@ -146,3 +146,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 01:45 Astra conn-core started: Connectors, final integration. The overseer started merging the combined branch, which now has the teammate's whole back
 - 01:45 Astra genai started: The overseer started merging the combined branch, which now has the teammate's whole backend plus API-key sign-in, with 
 - 01:48 Astra genai finished, exit 0. Report: `Research/Backend-Audit/genai.md`
+- 01:55 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`

@@ -56,3 +56,22 @@ Passed: 30 core tests, frontend and Electron type checks, both script syntax che
 Could not run native Electron, browser or keychain checks here. Changes remain uncommitted. No frontend changes.
 
 COMMIT: Add guarded encryption fallback for connector smoke tests
+
+## 01:55 report
+
+Resolved all seven conflicts, preserving both sides. Connected sources now use the shared provided-data flow, skip record generation, retain integrity checks, and appear in the project lead’s source summary. Updated smoke checks for current contracts and image-capable visual review.
+
+Passed: all three type checks, 157 focused tests, and both pipeline regressions. No assertions weakened.
+
+Could not run the real Electron screen smoke, native keychain/browser/process checks, or full external suite here.
+
+Existing frontend lines changed, relative to the incoming version:
+
+- `src/App.tsx`: 2, 61, 70, 71, 76, 88, 89, 264, 273, 278, 283, 293, 294, 295.
+- `src/BriefDataInputs.tsx`: 20, 26, 99.
+
+Every old and new line is reproduced in the [integration report](~/Documents/CDAO/fh-org/astra-c1/docs/connectors-integration.md).
+
+Changes remain in the working tree. Git’s merge index is untouched.
+
+COMMIT: Integrate connectors with shared brief data and merged backend
