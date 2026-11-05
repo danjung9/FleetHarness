@@ -55,6 +55,8 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   refreshNorfolkCatalog: () => ipcRenderer.invoke('fleet:norfolk:refresh'),
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),
   updateProject: (id: string, input: NewProject) => ipcRenderer.invoke('fleet:update', id, input),
+  launchCodexGoal: (id: string) => ipcRenderer.invoke('fleet:codex-goal:launch', id),
+  openCodexGoalWorkspace: (id: string) => ipcRenderer.invoke('fleet:codex-goal:open', id),
   startRun: (id: string) => ipcRenderer.invoke('fleet:start', id),
   resumeRun: (id: string) => ipcRenderer.invoke('fleet:resume', id),
   stopRun: (id: string) => ipcRenderer.invoke('fleet:stop', id),

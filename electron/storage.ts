@@ -10,6 +10,7 @@ import { normalizeProjectInput } from '../shared/project-input.js';
 import type { Challenge } from '../harness/types.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { RunProcessSweep } from './process-sweep.js';
+import { isReasoningEffort } from '../shared/reasoning.js';
 import { artifactInventoryExclusions, isRuntimeDataPath } from '../shared/runtime-artifacts.js';
 
 export function validateInput(input: NewProject, catalog?: readonly Challenge[]): NewProject {
@@ -40,6 +41,7 @@ export class Store {
       this.state = { version: 1, projects: starters.map(input => newProject(input)), settings: { provider: '', model: '', rememberKey: false, developerMode: false } };
     }
     this.state.settings.developerMode = this.state.settings.developerMode === true;
+    if (!isReasoningEffort(this.state.settings.reasoningEffort)) delete this.state.settings.reasoningEffort;
     for (const p of this.state.projects) {
       if (p.conversation) {
         p.conversation.status = 'idle';

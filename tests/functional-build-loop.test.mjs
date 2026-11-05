@@ -11,7 +11,7 @@ import { readRunCheckpoint } from '../dist-electron/electron/run-checkpoint.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 import { structuredSolutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
-import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { completeFixtureUiFlow, completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
 import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 
 const digest = body => createHash('sha256').update(body).digest('hex');
@@ -132,13 +132,15 @@ async function fixture(t, options = {}) {
           const saved = await readCheckpoint();
           assert.ok(saved.coreReportHash); assert.equal(saved.workflowReportHash === undefined || initialBuilds > 1, true);
           // Deliberately leave the disconnected UI for the independent host gate.
+          if (options.discoverOnRepairOnly) await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
         } else if (step === 'workflow-repair') {
           workflowRepairs++;
           const saved = await readCheckpoint(), report = JSON.parse(await fs.readFile(path.join(cwd, '.quality-evidence/workflow-report.json'), 'utf8'));
           assert.equal(saved.functionalRepair.active.gate, 'workflow');
           assert.equal(saved.functionalRepair.gates.workflow.attempts, workflowRepairs);
           assert.equal(report.status, 'failed'); assert.equal(report.journeys.length, 2);
-          assert.ok(report.journeys.every(journey => journey.status === 'failed'));
+          assert.ok(report.journeys.every(journey => journey.status === (options.discoverOnRepairOnly ? 'passed' : 'failed')));
+          if (options.discoverOnRepairOnly) assert.ok(report.uiFlow.errors.length, 'Passing scripts cannot replace actual UI exploration.');
           failures.push({ gate: 'workflow', report });
           await options.onWorkflowRepair?.({ attempt: workflowRepairs, cwd });
           if (options.interruptWorkflowOnce && workflowRepairs === 1) {
@@ -171,6 +173,7 @@ async function fixture(t, options = {}) {
             componentId: 'parser', status: 'generated', detail: 'Shared implementation written; host verification determines correctness.'
           });
         }
+        if (step === 'workflow-repair' || (step === 'workflow' && !options.discoverOnRepairOnly)) await completeFixtureUiFlow(customTools, { emit });
         if (['guide', 'verify', 'final-repair'].includes(step)) await completeFixtureVisualReview(customTools, { emit });
         emit({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop' } }); emit({ type: 'turn_end' });
       },
@@ -209,6 +212,7 @@ test('real application traverses independent core, primary workflow and final re
   const quality = h.project.report.quality;
   assert.equal(quality.package.cleanCopy, true); assert.equal(quality.package.filesHash, quality.solutionEvaluation.runtime.filesHash);
   assert.equal(quality.contractHash, h.reports[0].contractHash); assert.equal(quality.package.filesHash, h.reports[0].filesHash);
+  assert.deepEqual(h.reports[0].uiFlow.errors, [], 'The early checkpoint requires observed Playwright flow at both widths.');
   assert.equal(quality.journeys.length, 4); assert.ok(quality.journeys.every(journey => journey.status === 'passed'));
   for (const [name, body] of h.frozen) assert.equal(await fs.readFile(path.join(h.project.workspace, name), 'utf8'), body);
   await assert.rejects(fs.access(path.join(h.project.workspace, 'evaluation-plan.json')), { code: 'ENOENT' });
@@ -216,6 +220,19 @@ test('real application traverses independent core, primary workflow and final re
   assert.equal(h.project.runCheckpoint.coreRepairAttempts, 1);
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   assert.ok(h.project.report.testBaseline.hashes['app.test.cjs']);
+});
+
+test('passing frozen journeys cannot advance the primary gate until Playwright discovers the UI flow', { timeout: 90_000 }, async t => {
+  const h = await fixture(t, { brokenCore: false, discoverOnRepairOnly: true }); await h.run();
+  assert.equal(h.project.status, 'review', h.project.error);
+  const failures = h.failures.filter(item => item.gate === 'workflow');
+  assert.equal(failures.length, 1);
+  assert.ok(failures[0].report.journeys.every(journey => journey.status === 'passed'));
+  assert.ok(failures[0].report.uiFlow.errors.length);
+  assert.equal(h.reports[0].filesHash, failures[0].report.filesHash, 'The repair supplies missing real exploration without changing the already-working application.');
+  assert.deepEqual(h.reports[0].uiFlow.errors, []);
+  assert.equal((await h.readCheckpoint()).functionalRepair.gates.workflow.attempts, 1);
+  assert.ok(h.steps.indexOf('workflow-repair') < h.steps.indexOf('guide'));
 });
 
 test('resume preserves workflow reservations and restores tampered diagnostic evidence before model work', { timeout: 90_000 }, async t => {

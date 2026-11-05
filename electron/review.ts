@@ -54,7 +54,7 @@ export async function recordReview(store: Pick<Store, 'save' | 'saveProject'>, p
   let published = false;
   try {
     await atomicHostWrite(project.workspace, 'review.json', evidenceJson(next.approval ?? { ...record,
-      scope: 'Prototype delivery only. Operational readiness is unverified.', history: next.reviewHistory }));
+      scope: 'Application delivery. Operational readiness is unverified.', history: next.reviewHistory }));
     published = true;
     if (decision === 'approved') await verifiedManifest(next, true);
     await store.saveProject(next);

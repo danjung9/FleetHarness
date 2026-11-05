@@ -1,3 +1,5 @@
+import type { ReasoningEffort } from '../shared/reasoning.js';
+import { piThinkingLevel } from './reasoning.js';
 import { redactValue } from './secrets.js';
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager, type CreateAgentSessionOptions, type ModelRuntime, type ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
@@ -23,7 +25,7 @@ export interface IndependentJudgment extends Verdict {
 }
 type JudgedReport = TestReport & { independentJudge: IndependentJudgment };
 interface JudgeEngine {
-  backend: AgentBackend; model: string; provider: string; runtime: ModelRuntime; agentDir: string; codexHome?: string;
+  backend: AgentBackend; reasoningEffort?: ReasoningEffort; model: string; provider: string; runtime: ModelRuntime; agentDir: string; codexHome?: string;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   getCodexCredentials?: () => Promise<CodexCredentials>;
   launchCodex?: (home: string) => CodexRpc;
@@ -182,7 +184,7 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
     signal.throwIfAborted(); await rpc.initialize(); signal.throwIfAborted();
     const result = await rpc.request('thread/start', {
       cwd: workspace, model: engine.model, modelProvider: credentials?.authType === 'apiKey' ? 'openai' : CHATGPT_MODEL_PROVIDER, approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
-      config: { 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV], web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
+      config: { ...(engine.reasoningEffort ? { model_reasoning_effort: engine.reasoningEffort } : {}), 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV], web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
         'features.multi_agent': false, 'features.goals': false, 'features.view_image': false, 'features.apps': false, 'features.plugins': false },
       baseInstructions: instructions, developerInstructions: instructions,
       dynamicTools: [{ type: 'function', name: tool.name, description: tool.description, inputSchema: tool.parameters }]
@@ -197,7 +199,7 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
       const completed = new Promise<void>((resolve, reject) => { pending = { resolve, reject }; });
       void completed.catch(() => {});
       try {
-        const result = await rpc.request('turn/start', { threadId: thread, input: [{ type: 'text', text, text_elements: [] }] });
+        const result = await rpc.request('turn/start', { threadId: thread, input: [{ type: 'text', text, text_elements: [] }], ...(engine.reasoningEffort ? { effort: engine.reasoningEffort } : {}) });
         if (pending) identifyTurn(result.turn.id);
         await completed;
       }
@@ -231,7 +233,7 @@ async function readOnlyEvaluation(options: ReadOnlyOptions, files: Map<string, s
           appendSystemPromptOverride: () => [] });
         await loader.reload(); signal.throwIfAborted();
         return (await (engine.createSession ?? createAgentSession)({ cwd: options.workspace, agentDir: engine.agentDir,
-          modelRuntime: engine.runtime, model: engine.runtime.getModel(engine.provider, engine.model), thinkingLevel: 'medium',
+          modelRuntime: engine.runtime, model: engine.runtime.getModel(engine.provider, engine.model), thinkingLevel: piThinkingLevel(engine.runtime.getModel(engine.provider, engine.model)!, engine.reasoningEffort),
           tools: ['judge_read'], excludeTools: ['mcp__*'], customTools: [tool], resourceLoader: loader, settingsManager,
           sessionManager: SessionManager.inMemory(options.workspace) })).session;
       },

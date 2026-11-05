@@ -1,7 +1,7 @@
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
 import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
-import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { completeFixtureUiFlow, completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
 import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,6 +16,7 @@ import { CodexAccount } from '../dist-electron/electron/codex-account.js';
 import { prepareCodexHome } from '../dist-electron/electron/codex-rpc.js';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store, newProject } from '../dist-electron/electron/storage.js';
+import { generatedApplicationContract } from '../dist-electron/harness/application-policy.js';
 
 class FakeRpc {
   listeners = new Set(); closers = new Set(); calls = []; sent = []; disposed = false;
@@ -523,12 +524,13 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
         return createFixturePlanningReviewSession(options.tools);
       }
       const rpc = new FakeRpc();
-      const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
+      const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)), prompts: [] };
       sessions.push(session);
       let phase;
       rpc.handler = async (method, params) => {
         if (method !== 'turn/start') return;
         const text = params.input[0].text;
+        session.prompts.push(text);
         phase ??= text.includes('You are the synthetic data agent') ? 'synthetic-data' : /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
         session.phase = phase;
         const guide = text.startsWith('Implementation is complete.');
@@ -539,6 +541,13 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
             const checkpoint = JSON.parse(await fs.readFile(path.join(options.cwd, '.quality-evidence/workflow-report.json'), 'utf8'));
             assert.equal(checkpoint.status, 'passed');
             assert.equal(checkpoint.journeys.length, 2, 'Codex completes the primary workflow at both widths before its guide');
+            assert.deepEqual(checkpoint.uiFlow.errors, []);
+            for (const viewport of ['desktop', 'narrow']) {
+              const flow = checkpoint.uiFlow.report;
+              assert.ok(flow.transitions.some(edge => edge.grounded && edge.status === 'changed'
+                && flow.observations.some(node => node.id === edge.to && node.viewport === viewport)),
+              `Codex manually discovers a working UI transition at ${viewport} before its guide`);
+            }
           }
         }
         const files = guide ? { 'README.md': runtimeProfile === 'browser' ? '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' : '# Fixture guide\nWith Node installed, pipe a JSON message into `node evaluate.cjs`. The input `"TASK: inspect pump"` returns `"inspect pump"`; an empty JSON string returns null. Run `node --test app.test.cjs` for developer tests.' }
@@ -558,12 +567,16 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
         const tool = options.tools.find(t => t.name === (phase === 'plan' ? 'fleet_system_design' : 'fleet_component_progress'));
         const args = phase === 'plan' ? { title: 'Fixture', description: 'Application architecture', components: [{ id: 'app', label: 'App', description: 'Task parser', kind: runtimeProfile === 'browser' ? 'interface' : 'logic', files: [runtimeProfile === 'browser' ? 'index.html' : 'core.cjs'] }], connections: [] } : { componentId: 'app', status: 'generated', detail: 'Source written' };
         if (tool) await tool.execute('architecture', args);
+        if (runtimeProfile === 'browser' && (text.startsWith('Implement the first complete user workflow now:')
+          || text.startsWith('The primary user workflow checkpoint failed.'))) await completeFixtureUiFlow(options.tools);
         if (runtimeProfile === 'browser' && (guide || phase === 'verify')) await completeFixtureVisualReview(options.tools);
         setImmediate(() => rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }));
         return { turn: { id: 'turn-1' } };
       };
       const value = await createCodexSession({ ...options, launch: () => rpc });
       const instructions = rpc.calls.find(call => call.method === 'thread/start').params.developerInstructions;
+      assert.match(instructions, /without mock\/demo branding or default fixture records/);
+      assert.doesNotMatch(instructions, /clearly labeled synthetic examples/);
       for (const skillPath of options.skillPaths) {
         assert.ok(instructions.includes(await fs.readFile(path.join(skillPath, 'SKILL.md'), 'utf8')), `${path.basename(skillPath)} is delivered to Codex`);
       }
@@ -574,9 +587,19 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, runtimeProfile === 'browser' ? 4 : 0);
   assert.equal(project.runtimeProfile, runtimeProfile);
-  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', ...Array(runtimeProfile === 'browser' ? 3 : 2).fill('build'), 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.deepEqual(phases.slice(0, 4), ['intake', 'synthetic-data', 'research', 'plan']);
+  assert.equal(phases.at(-1), 'verify');
+  const construction = phases.slice(4, -1);
+  assert.ok(construction.every(phase => phase === 'build'), 'Core construction, UI discovery and the guide remain within the build role.');
+  if (runtimeProfile === 'browser') assert.equal(construction.length, 3, 'Browser builds construct the core and primary workflow before completing the guide.');
+  else assert.equal(construction.length, 2, 'CLI builds do not allocate a browser discovery step.');
+  assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
   assert.equal(project.report.independentJudge.verdict, 'SATISFACTORY');
   for (const session of sessions) {
+    if (['plan', 'build', 'verify'].includes(session.phase)) {
+      assert.ok(session.prompts[0].includes(generatedApplicationContract), `${session.phase} receives the real-app contract through Codex`);
+      assert.doesNotMatch(session.prompts[0], /Keep synthetic provenance visible in the application|Embed needed fixture data/);
+    }
     assert.equal(session.skills.includes('ponytail'), ['research', 'plan', 'build', 'verify'].includes(session.phase), `${session.phase} Ponytail access`);
     assert.equal(session.skills.includes('impeccable'), session.phase === 'plan' || runtimeProfile === 'browser' && ['build', 'verify'].includes(session.phase), `${session.phase} Impeccable access`);
     const phase = project.phasePlan.find(phase => phase.id === session.phase);

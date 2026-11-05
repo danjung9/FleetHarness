@@ -8,6 +8,7 @@ import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash }
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { applicationTestFiles, portableTestCommand } from './verification.js';
+import { CodexGoalService, openCodexGoalTerminal } from './codex-goal.js';
 import { applicationTestRerunCommand, reportPassed } from './verification.js';
 import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
@@ -36,6 +37,7 @@ import { DataStorageService } from './data-storage.js';
 import { storageMethodNames } from '../shared/data-storage.js';
 import { readPlanningContinuation } from './planning-continuation.js';
 import { briefFingerprint } from './run-checkpoint.js';
+import { savedReasoningEffort } from '../shared/reasoning.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -62,6 +64,7 @@ const previewStarts = new Map<string, AbortController>();
 const previews = new ApplicationPreviews(process.execPath, {
   clearStorage: origin => window!.webContents.session.clearStorageData({ origin })
 });
+let codexGoals: CodexGoalService;
 let experiments: ExperimentService;
 let dataStorage: DataStorageService;
 const storageMutations = new Map<string, Promise<void>>();
@@ -112,6 +115,7 @@ const bootstrap = () => ({
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
+  if (codexGoals?.isLaunching(id)) throw new Error('Wait for Codex to open before changing this project.');
   if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this project.');
   if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before changing this project.');
   if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
@@ -291,6 +295,15 @@ function registerIPC() {
     const p = newProject(input, currentCatalog()); store.state.projects.unshift(p); await store.save(); notify(); return p;
   });
   handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
+  handle('fleet:codex-goal:launch', (id: string) => {
+    if (quitting) throw new Error('AppYard is closing. Reopen it to start a Codex goal.');
+    requireIdle(id);
+    return codexGoals.launch(id);
+  });
+  handle('fleet:codex-goal:open', async (id: string) => {
+    const error = await shell.openPath(await codexGoals.workspace(id));
+    if (error) throw new Error('Could not open the Codex workspace: ' + error);
+  });
   handle('fleet:start', (id: string) => startRun(id));
   handle('fleet:resume', (id: string) => startRun(id, false, true));
   handle('fleet:stop', async (id: string) => {
@@ -403,7 +416,7 @@ function registerIPC() {
               'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
               'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
             ] : []),
-            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
+            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; approval does not complete them.'),
             ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ': ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
           ...(p.approval?.judgeGapsAccepted ? ['The reviewer read and accepted these independent check gaps for this prototype:',
@@ -498,7 +511,7 @@ function registerIPC() {
     }
     return Reflect.apply(dataStorage[method], dataStorage, args);
   });
-  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing model settings or accounts.'); };
   for (const method of experimentMethodNames) handle('fleet:experiment:' + method, async (...args: unknown[]) => {
     if (quitting) throw new Error('AppYard is closing.');
     if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
@@ -548,16 +561,20 @@ function registerIPC() {
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
+    const selectedModel = backend.models().find(model => (model.backend ?? 'pi') === (settings.backend ?? 'pi') && model.provider === settings.provider && model.id === settings.model);
+    const reasoningEffort = savedReasoningEffort(selectedModel, settings.reasoningEffort, store.state.settings.reasoningEffort);
     if (settings.provider === GENAI_MIL_PROVIDER) {
       if (key) throw new Error('Save the key in the GenAI.mil tab.');
       genAiMil.assertModel(settings.backend ?? 'pi', settings.model);
-      store.state.settings = { backend: 'pi', provider: GENAI_MIL_PROVIDER, model: settings.model, rememberKey: true, developerMode: store.state.settings.developerMode === true };
+      store.state.settings = { backend: 'pi', provider: GENAI_MIL_PROVIDER, model: settings.model, rememberKey: true, developerMode: store.state.settings.developerMode === true,
+        ...(reasoningEffort ? { reasoningEffort } : {}) };
       await store.save(); notify(); return bootstrap();
     }
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('Use the Codex API-key sign-in control before saving model settings.');
       if (codex.account.status !== 'connected' || (codex.account.authType !== 'apiKey' && !codex.account.planUsageEnabled) || !codex.models.some(m => (!settings.model || m.id === settings.model) && m.configured) || settings.provider !== 'chatgpt') throw new Error('Connect ChatGPT or an API key and select a Codex model first.');
-      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
+      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true,
+        ...(reasoningEffort ? { reasoningEffort } : {}) };
       await store.save(); notify(); return bootstrap();
     }
     if (!backend.runtime.getModel(settings.provider, settings.model)) throw new Error('Select a valid Pi model.');
@@ -569,7 +586,8 @@ function registerIPC() {
       if (settings.rememberKey) await atomicHostWrite(store.root, 'credentials.enc', safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })));
     }
     if (!settings.rememberKey) await fs.rm(keyFile, { force: true });
-    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
+    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true,
+      ...(reasoningEffort ? { reasoningEffort } : {}) };
     await store.save(); notify(); return bootstrap();
   });
 }
@@ -580,7 +598,14 @@ async function createWindow() {
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
     webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: false, webviewTag: false }
   });
-  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (url === 'https://mss.data.mil/' || url === 'https://mss.data.mil') {
+      void shell.openExternal('https://mss.data.mil/').catch(() => {
+        console.error('Could not open MSS Ontology in the system browser.');
+      });
+    }
+    return { action: 'deny' };
+  });
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   window.webContents.session.setPermissionCheckHandler(() => false);
@@ -621,6 +646,10 @@ if (ownsInstance) app.whenReady().then(async () => {
     });
     await connectors.registerInstalledAdapters(connectorConfig);
     await connectors.init();
+    codexGoals = new CodexGoalService(store, { connectorStore: connectors.store, changed: notify, openTerminal: async file => {
+      if (quitting) throw new Error('AppYard is closing. Your prepared workspace is saved.');
+      await openCodexGoalTerminal(file);
+    } });
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
     clarifications = new ClarificationBroker(store, notify);
     backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
@@ -633,7 +662,7 @@ if (ownsInstance) app.whenReady().then(async () => {
         if (quitting) throw new Error('AppYard is closing.');
         // These synchronous checks and reservation form one admission transaction.
         if (store.project(projectId).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
-        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
+        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId) || codexGoals.isLaunching(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
         requireRunCapacity(); experimentReservations.set(projectId, experimentId);
         return () => { if (experimentReservations.get(projectId) === experimentId) experimentReservations.delete(projectId); };
       } });
@@ -641,7 +670,7 @@ if (ownsInstance) app.whenReady().then(async () => {
     lead = new ProjectLead(store, backend.runtime, notify, { codex });
     dataStorage = new DataStorageService({
       store, changed: notify,
-      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id)
+      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || codexGoals.isLaunching(id)
         || deliveries.has(id) || storageMutations.has(id) || approvals.has(id) || conversationActions.has(id) || lead.active.has(id) || experiments.isActive(id),
       beforeMutation: async id => {
         if (quitting) throw new Error('AppYard is closing.');
@@ -686,7 +715,7 @@ app.on('before-quit', event => {
   if (!quitting && (experiments || connectors?.busy || previewing.size || backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...(codexGoals?.pending() ?? []), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });

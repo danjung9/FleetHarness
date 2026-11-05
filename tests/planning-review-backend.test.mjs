@@ -111,6 +111,9 @@ async function harness(t, options = {}) {
   store.state.projects = [project]; await store.save();
   const sessions = [], backends = [], plans = [], reviews = [];
   let planCalls = 0, reviewCalls = 0;
+  // Cases needing a saved unfinished plan inject a host interruption after two
+  // reviews, then after each later review. Production planning has no count cap.
+  let interruptAfterReview = 2;
   const context = session => ({ root, store, project, workspace: project.workspace, session, sessions, planCalls, reviewCalls });
   const create = async sessionOptions => {
     const customTools = sessionOptions.customTools ?? sessionOptions.tools;
@@ -179,6 +182,16 @@ async function harness(t, options = {}) {
   const makeBackend = () => {
     const value = new FleetBackend(store, process.execPath, () => {}, resourcesRoot, backendOptions);
     value.runtime = { getModel: () => ({ input: ['text'] }), hasConfiguredAuth: () => true };
+    const checkpoint = value.checkpoint.bind(value);
+    value.checkpoint = async (...args) => {
+      await checkpoint(...args);
+      const run = args[1];
+      if (options.correctOnRevision === false && run.planningReview?.phase === 'revision'
+        && reviewCalls >= interruptAfterReview && !run.finalizing) {
+        interruptAfterReview = reviewCalls + 1;
+        throw new Error('Fixture host interruption after planning review.');
+      }
+    };
     backends.push(value); return value;
   };
   let backend = makeBackend();
@@ -233,7 +246,7 @@ async function assertReachedBuild(h) {
   return checkpoint;
 }
 
-test('a rejected ordinary plan pauses until explicit resume grants one correction and fresh review in the saved workspace', { timeout }, async t => {
+test('host interruption preserves automatic planning findings and completed work across repeated resumes', { timeout }, async t => {
   const h = await harness(t, { initialWeak: true, correctOnRevision: false });
   await h.run();
   assert.equal(h.project.status, 'failed');
@@ -243,12 +256,12 @@ test('a rejected ordinary plan pauses until explicit resume grants one correctio
   const savedFiles = await Promise.all(completedFiles.map(file => fs.readFile(path.join(workspace, file), 'utf8')));
   await fs.writeFile(path.join(workspace, 'saved-planning-note.md'), 'Keep this work for the next correction.');
   assert.equal(h.plans.length, 2, 'Both weak versions are structurally valid.');
-  assert.equal(h.planCalls, 2, 'The planner has one semantic correction attempt.');
+  assert.equal(h.planCalls, 2, 'The fixture interrupts after the second reviewed plan.');
   assert.equal(h.reviewCalls, 2, 'The correction receives a fresh independent review.');
-  assert.equal(checkpoint.planningReview.phase, 'rejected');
+  assert.equal(checkpoint.planningReview.phase, 'revision');
   assert.equal(checkpoint.planningReview.revisionUsed, true);
   assert.equal(checkpoint.planningReview.review.verdict, 'revise');
-  assert.match(h.project.error, /Continue planning to revise the saved plan/);
+  assert.ok(h.project.logs.some(log => log.text.includes('Fixture host interruption after planning review.')));
   assert.doesNotMatch(h.project.error, /start a new build/i);
   for (const continuation of [1, 2]) {
     const count = h.sessions.length;
@@ -258,10 +271,10 @@ test('a rejected ordinary plan pauses until explicit resume grants one correctio
     assert.equal(h.project.status, 'failed');
     assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
     assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['plan', 'planning-review']);
-    assert.equal(h.planCalls, 2 + continuation, 'Each explicit continuation grants exactly one correction.');
+    assert.equal(h.planCalls, 2 + continuation, 'Each resume reaches the next fixture interruption after a reviewed correction.');
     assert.equal(h.reviewCalls, 2 + continuation, 'Every correction receives one new independent review.');
     const rejected = await assertUnfrozen(h);
-    assert.equal(rejected.planningReview.phase, 'rejected');
+    assert.equal(rejected.planningReview.phase, 'revision');
     assert.equal(rejected.planningReview.revisionUsed, true);
     assert.equal(rejected.planningReview.review.verdict, 'revise');
     assert.ok(h.sessions.slice(count)[0].prompts[0].includes(gap), 'The saved independent findings reach the next planner.');
@@ -291,14 +304,14 @@ test('a resumed correction restores its latest valid plan after invalid output w
   await h.restart(); await h.resume();
   const checkpoint = await assertUnfrozen(h);
   assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3, h.project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'));
-  assert.equal(checkpoint.planningReview.phase, 'rejected');
+  assert.equal(checkpoint.planningReview.phase, 'revision');
   assert.ok(checkpoint.planningAudit.correctionDiscarded);
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8'), before);
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'acceptance-plan.json'), 'utf8'), acceptance);
-  assert.equal(checkpoint.planningSnapshot.files.find(([name]) => name === 'plan.md')[1], before);
+  assert.equal(checkpoint.planningSnapshot, undefined, 'The next correction will snapshot the latest restored valid plan.');
 });
 
-for (const backend of ['pi', 'codex']) test(`${backend} manual planning continuation preserves findings and waits for fresh approval before freezing`, { timeout }, async t => {
+for (const backend of ['pi', 'codex']) test(`${backend} interrupted automatic planning preserves findings and waits for fresh approval before freezing`, { timeout }, async t => {
   const entered = deferred(), release = deferred(); let continuing = false, previousReview;
   const options = { backend, initialWeak: true, correctOnRevision: false, onPrompt: async ({ stage, workspace, prompt }) => {
     if (!continuing) return false;
@@ -306,7 +319,7 @@ for (const backend of ['pi', 'codex']) test(`${backend} manual planning continua
       const checkpoint = await h.checkpoint();
       assert.equal(checkpoint.planningReview.phase, 'revision');
       assert.equal(checkpoint.planningReview.revisionUsed, true);
-      assert.deepEqual(checkpoint.planningReview.review, previousReview, 'Manual continuation retains the last trusted findings.');
+      assert.deepEqual(checkpoint.planningReview.review, previousReview, 'Resume retains the last trusted findings.');
       assert.ok(prompt.includes(gap));
       assert.equal(await fs.readFile(path.join(workspace, 'plan.md'), 'utf8'), 'Implement extraction only; defer input rejection.');
     }
@@ -444,7 +457,7 @@ test('revised planning preserves answered clarification history through successi
     assert.deepEqual(h.sessions.slice(count).map(session => session.stage), continuation === 1 ? ['plan', 'planning-review'] : ['plan', 'planning-review', 'build']);
     const reviewer = h.sessions.filter(session => session.stage === 'planning-review').at(-1);
     assert.ok(reviewer.reviewedDocuments['requirements.md'].includes(answer), 'Independent reviewers receive the inherited human decision.');
-    if (continuation === 1) assert.equal((await assertUnfrozen(h)).planningReview.phase, 'rejected');
+    if (continuation === 1) assert.equal((await assertUnfrozen(h)).planningReview.phase, 'revision');
     else await assertReachedBuild(h);
   }
   assert.equal(await fs.readFile(path.join(source.workspace, 'clarifications.json'), 'utf8'), body);
@@ -772,7 +785,7 @@ test('an interrupted first review resumes in a fresh reviewer without replaying 
   assert.notEqual(h.sessions.filter(session => session.stage === 'planning-review').at(-1), oldReviewer);
 });
 
-for (const manuallyContinued of [false, true]) for (const interrupted of ['revision', 'rereview']) test(`restart during ${manuallyContinued ? 'manually continued' : 'initial'} ${interrupted} preserves the single planning correction allowance`, { timeout }, async t => {
+for (const manuallyContinued of [false, true]) for (const interrupted of ['revision', 'rereview']) test(`restart during ${manuallyContinued ? 'manually continued' : 'initial'} ${interrupted} preserves completed corrections and the current review findings`, { timeout }, async t => {
   const entered = deferred(); let pause = !manuallyContinued;
   const correctionCall = manuallyContinued ? 3 : 2;
   const h = await harness(t, { initialWeak: true, correctOnRevision: false, onPrompt: ({ stage, planCalls, reviewCalls }) => {
@@ -783,7 +796,7 @@ for (const manuallyContinued of [false, true]) for (const interrupted of ['revis
   } });
   if (manuallyContinued) {
     await h.run();
-    assert.equal((await h.checkpoint()).planningReview.phase, 'rejected');
+    assert.equal((await h.checkpoint()).planningReview.phase, 'revision');
     pause = true;
     await h.backend.resume(h.project.id);
   } else await h.backend.start(h.project.id);
@@ -796,10 +809,10 @@ for (const manuallyContinued of [false, true]) for (const interrupted of ['revis
   pause = false; await h.restart(); await h.resume();
   assert.equal(h.project.status, 'failed');
   const rejected = await assertUnfrozen(h);
-  assert.equal(rejected.planningReview.phase, 'rejected');
+  assert.equal(rejected.planningReview.phase, 'revision');
   assert.equal(rejected.planningReview.revisionUsed, true);
-  assert.equal(h.planCalls, correctionCall + (interrupted === 'revision' ? 1 : 0), 'Only an interrupted correction may be resumed; rereview never replays it.');
-  assert.equal(h.reviews.length, correctionCall, 'Resuming an interrupted correction cannot grant another completed attempt.');
+  assert.equal(h.planCalls, correctionCall + (interrupted === 'revision' ? 1 : 0), 'An interrupted correction is resumed; rereview never replays completed planning.');
+  assert.equal(h.reviews.length, correctionCall, 'The fixture interrupts only after the resumed correction receives its review.');
 });
 
 for (const stage of ['plan', 'build']) test(`resuming an already frozen ${stage} checkpoint preserves its approval and contracts without another correction`, { timeout }, async t => {
@@ -820,7 +833,7 @@ for (const stage of ['plan', 'build']) test(`resuming an already frozen ${stage}
   assert.deepEqual(resumed.foundation, frozen.foundation);
 });
 
-test('scoped recovery does not grant the ordinary manual planning correction allowance', { timeout }, async t => {
+test('scoped recovery preserves its interrupted planning review state', { timeout }, async t => {
   const h = await harness(t, { initialWeak: true, correctOnRevision: false });
   await h.run();
   const rejected = await assertUnfrozen(h), count = h.sessions.length;
@@ -847,6 +860,7 @@ for (const retained of ['foundationPlan', 'coreReportHash']) test(`rejected plan
   const h = await harness(t, { initialWeak: true, correctOnRevision: false });
   await h.run();
   const saved = await assertUnfrozen(h), count = h.sessions.length;
+  saved.planningReview.phase = 'rejected'; // Explicit legacy fixture with retained frozen evidence.
   const plan = await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8');
   saved[retained] = retained === 'foundationPlan'
     ? await fs.readFile(path.join(h.project.workspace, 'foundation-plan.json'), 'utf8')
@@ -891,7 +905,7 @@ test('an already frozen legacy checkpoint resumes implementation without retroac
   assert.equal((await h.checkpoint()).quality.hash, checkpoint.quality.hash);
 });
 
-for (const backend of ['pi', 'codex']) test(`${backend} continues planning with explicit authorization and reviews each correction before approval`, { timeout }, async t => {
+for (const backend of ['pi', 'codex']) test(`${backend} automatically repeats planning and reviews each correction before approval`, { timeout }, async t => {
   const entered = deferred(), release = deferred();
   const h = await harness(t, { backend, initialWeak: true, weakPlanCalls: 3,
     reviseFindings: ({ reviewCalls }) => [`${gap} Independent review ${reviewCalls}.`],
@@ -914,13 +928,7 @@ for (const backend of ['pi', 'codex']) test(`${backend} continues planning with 
       return false;
     }
   });
-  await h.run();
-  assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2);
-  assert.equal(h.project.status, 'failed');
-  await h.resume();
-  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3);
-  assert.equal(h.project.status, 'failed');
-  const running = h.resume();
+  const running = h.run();
   await Promise.race([entered.promise, running.then(() => { throw new Error('Expected fourth independent review: ' + h.project.error); })]);
   const pending = await assertUnfrozen(h);
   assert.equal(pending.planningReview.phase, 'rereview');
@@ -957,7 +965,7 @@ for (const backend of ['pi', 'codex']) test(`${backend} resumes legacy rejected 
   };
   const h = await harness(t, options);
   await h.run();
-  assert.match(h.project.error, /Independent planning review still requires changes/);
+  assert.ok(h.project.logs.some(log => log.text.includes('Fixture host interruption after planning review.')));
   const rejected = await assertUnfrozen(h), { runId, workspace } = h.project;
   rejected.planningReview.phase = 'rejected';
   await fs.writeFile(h.checkpointFile(), JSON.stringify(rejected));
@@ -987,7 +995,7 @@ for (const backend of ['pi', 'codex']) test(`${backend} resumes legacy rejected 
   assert.notEqual(h.sessions.filter(session => session.stage === 'planning-review').at(-1), h.sessions.filter(session => session.stage === 'planning-review').at(-2));
 });
 
-for (const backend of ['pi', 'codex']) for (const interrupted of ['revision', 'rereview']) test(`${backend} restart during a later ${interrupted} resumes explicitly continued planning without replaying completed work`, { timeout }, async t => {
+for (const backend of ['pi', 'codex']) for (const interrupted of ['revision', 'rereview']) test(`${backend} restart during a later ${interrupted} resumes automatic planning without replaying completed work`, { timeout }, async t => {
   const entered = deferred(); let pause = true;
   const h = await harness(t, { backend, initialWeak: true, weakPlanCalls: 2,
     onPrompt: ({ stage, planCalls, reviewCalls }) => {
@@ -997,9 +1005,7 @@ for (const backend of ['pi', 'codex']) for (const interrupted of ['revision', 'r
       return false;
     }
   });
-  await h.run();
-  assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2);
-  await h.backend.resume(h.project.id); await entered.promise;
+  await h.backend.start(h.project.id); await entered.promise;
   const { runId, workspace } = h.project;
   const oldSession = h.sessions.at(-1);
   await h.backend.stop(h.project.id);

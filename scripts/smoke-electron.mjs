@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -17,6 +18,7 @@ let app;
 try {
   app=await electron.launch({ ...(executablePath?{executablePath,args:[]}:{args:['.']}), env:{...process.env,FLEET_USER_DATA:path.join(root,'state'),PI_CODING_AGENT_DIR:piDir},timeout:45000});
   const page=await app.firstWindow();await page.locator('.app-shell').waitFor({timeout:45000});
+  await stubCodexGoalLaunch(app);
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   assert.equal(await page.evaluate(()=>typeof window.fleetHarness?.startRun),'function');
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
@@ -69,6 +71,7 @@ try {
   }
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
   assert.equal(final.status,'review',final.error||'no error recorded');
+  assert.deepEqual(await app.evaluate(()=>globalThis.__fleetCodexGoalFixture.calls),[], 'Starting a pipeline build never launches an external Codex goal');
   assert.equal(final.report.passed,1);
   assert.ok(final.logs.some(l=>l.text.includes('Starting functional final repair')));
   assert.ok(final.logs.some(l=>l.kind==='tool'&&l.text.includes('write')));
@@ -85,8 +88,8 @@ try {
   await page.getByRole('navigation',{name:'Challenge progress',exact:true}).getByRole('button',{name:'Review',exact:true}).click();
   await page.getByLabel('Review notes').fill('Inspected the fixture preview and test output. This is an integration test only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
-  await page.getByRole('button',{name:'Approve prototype',exact:true}).click();
-  await page.getByText('Prototype approved for delivery.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Approve app',exact:true}).click();
+  await page.getByText('App approved for delivery.',{exact:true}).waitFor();
   await page.getByRole('heading',{name:'Deliver',exact:true}).waitFor();
   const destination=path.join(root,'delivery');await fs.mkdir(destination);
   await app.evaluate(({dialog},dir)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[dir]});},destination);

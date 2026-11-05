@@ -1,5 +1,6 @@
 import type { ExperimentAPI } from './experiments.js';
 import type { DataStorageAPI } from './data-storage.js';
+import type { ReasoningEffort } from './reasoning.js';
 
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
@@ -64,6 +65,7 @@ export interface ReviewRecord {
   judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[];
 }
 export interface Project extends BriefContext {
+  codexGoal?: import('./codex-goal.js').CodexGoalLaunch;
   tokenUsage?: import('./token-usage.js').ProjectTokenUsage;
   archivedAt?: string;
   reviewHistory?: ReviewRecord[];
@@ -91,8 +93,8 @@ export interface Project extends BriefContext {
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
 export type AgentBackend = 'pi' | 'codex';
-export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
+export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend; reasoningEfforts?: ReasoningEffort[]; defaultReasoningEffort?: ReasoningEffort }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean; reasoningEffort?: ReasoningEffort }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   authType?: 'chatgpt' | 'apiKey';
@@ -119,6 +121,8 @@ export interface FleetAPI extends ExperimentAPI, DataStorageAPI {
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;
   updateProject(id: string, input: NewProject): Promise<Project>;
+  launchCodexGoal(id: string): Promise<import('./codex-goal.js').CodexGoalLaunch>;
+  openCodexGoalWorkspace(id: string): Promise<void>;
   startRun(id: string): Promise<void>;
   // Optional for web-only clients that cannot execute backend builds.
   resumeRun(id: string): Promise<void>;

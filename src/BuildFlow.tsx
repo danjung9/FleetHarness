@@ -14,10 +14,10 @@ type BuildPhaseId = Exclude<StageId, 'review' | 'deliver'>;
 type PhaseState = StageStatus | 'stopped' | 'waiting';
 
 const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]; next: string }[] = [
-  { id: 'intake', name: 'Understand brief', purpose: 'Define the app’s scope and prepare connected inputs or synthetic data for this use case.', files: ['scope.md', 'inputs/manifest.json', 'data/synthetic-data.json', 'data/README.md'], next: 'Research starts automatically once the scope and data are ready.' },
+  { id: 'intake', name: 'Understand brief', purpose: 'Define the app’s scope, input requirements, and integration points.', files: ['scope.md', 'inputs/manifest.json', 'data/synthetic-data.json', 'data/README.md'], next: 'Research starts automatically once the scope and inputs are ready.' },
   { id: 'research', name: 'Research', purpose: 'Assess reusable approaches, source evidence, and integration risks.', files: ['research.md'], next: 'Planning starts automatically once the research is ready.' },
   { id: 'plan', name: 'Plan', purpose: 'Map the app’s components, user tasks, and acceptance checks before implementation.', files: ['plan.md', 'test-matrix.md', 'acceptance-plan.json', 'ux-spec.json'], next: 'Implementation starts automatically once the plan is ready.' },
-  { id: 'build', name: 'Implement', purpose: 'Create the working app, its application tests, and a guide to using it.', files: ['index.html', 'README.md'], next: 'Testing starts automatically once the implementation is ready.' },
+  { id: 'build', name: 'Implement', purpose: 'Create the working app, its application tests, and a guide to setup and integrations.', files: ['index.html', 'README.md'], next: 'Testing starts automatically once the implementation is ready.' },
   { id: 'verify', name: 'Test', purpose: 'Run the application tests and planned browser checks, then repair failures once if needed.', files: ['test-report.json', 'verification.md'], next: 'Your review comes next when the automated checks pass.' },
 ];
 

@@ -95,6 +95,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
   }
   return <article className="connector-card" aria-label={card.label}>
     <h2>{card.label}</h2><p>{card.summary}</p>
+    {card.kind === 'maven-smart-system' && <p><a href="https://mss.data.mil" target="_blank" rel="noopener noreferrer">Open MSS Ontology site</a> (opens in your browser; no AppYard connection is created).</p>}
     <p className="connector-readonly">AppYard can only read. It cannot send, change or delete anything.</p>
     {!card.available && <p>{sampleOnly ? 'Live connection is not configured. Try sample data to explore this source.' : 'Sign-in is not set up for this source. Ask your administrator to turn it on.'}</p>}
     {card.signedIn && <p role="status">Connected. Choose what to include below.</p>}
@@ -134,11 +135,17 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
 }
 export function Connectors() {
   const { cards, error, refresh, model } = useSources();
+  const [query, setQuery] = useState('');
+  const search = query.trim().toLowerCase();
+  const matches = cards.filter(card => `${card.label} ${card.summary}`.toLowerCase().includes(search));
   return <div className="page connectors-page"><div className="page-heading"><div><h1>Connectors</h1><p>Choose data to help build your app. Start with samples, with no sign-in or setup.</p></div></div>
     <p>Event builds use sample data; live connections support local preview only.</p>
     <p>All samples are invented Navy training examples. Check each sample, choose Use this, then select it in your brief.</p>
     {error && <p role="alert" className="form-error">{error} {api.connectors && <button className="text-button" onClick={() => void refresh()}>Try again</button>}</p>}
-    <div className="connector-grid">{cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
+    <label className="connector-search">Search connectors<input type="search" aria-label="Search connectors" placeholder="Search connectors…" value={query} onChange={event => setQuery(event.target.value)}/></label>
+    {!!cards.length && <p role="status">{matches.length} {matches.length === 1 ? 'connector' : 'connectors'}</p>}
+    {!!cards.length && !matches.length && <p>No connectors found. <button className="text-button" type="button" onClick={() => setQuery('')}>Clear search</button></p>}
+    <div className="connector-grid">{matches.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
   </div>;
 }
 export function ConnectedDataSection({ value, onChange, disabled }: { value: ConnectedDataSelection[]; onChange: (value: ConnectedDataSelection[]) => void; disabled: boolean }) {

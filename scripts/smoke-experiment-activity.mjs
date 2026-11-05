@@ -71,7 +71,7 @@ try {
   await page.evaluate(() => window.completeCandidateFixture());
   await page.getByRole('button', { name: 'Review candidates', exact: true }).click();
   await page.getByRole('button', { name: 'Use candidate A', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).count(), 0, 'Reviewing a candidate does not approve or promote it');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).count(), 0, 'Reviewing a candidate does not approve or promote it');
   assert.equal(await page.evaluate(() => window.experimentCalls.some(call => call.name === 'selectCandidate')), false);
   await page.getByRole('button', { name: 'Use candidate A', exact: true }).click();
   assert.deepEqual(await page.evaluate(() => window.experimentCalls.find(call => call.name === 'selectCandidate').args), ['ordinary-experiment', 'ordinary-candidate', 'verified-source']);

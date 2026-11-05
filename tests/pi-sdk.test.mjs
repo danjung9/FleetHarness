@@ -134,6 +134,40 @@ test('real Pi SDK recovers a 503, executes file tools, repairs a failing test an
   assert.ok(h.project.logs.some(l => l.text.includes('Provider retry 1/2')));
   assert.ok(h.project.logs.some(l => l.text.includes('Starting functional final repair')));
   assert.ok(h.project.logs.some(l => l.kind === 'tool' && l.text.startsWith('write')));
+  const contentText = message => typeof message.content === 'string' ? message.content
+    : (message.content ?? []).map(part => part.text ?? '').join('\n');
+  const manualTransitions = new Map();
+  for (const request of fixture.requests) {
+    const taskIndex = request.messages.findLastIndex(message => message.role === 'user' && contentText(message).trim()
+      && !(Array.isArray(message.content) && message.content.some(part => part.type === 'image_url')));
+    const turn = request.messages.slice(taskIndex), prompt = contentText(turn[0]);
+    const stage = prompt.startsWith('Implement the first complete user workflow now:') ? 'workflow'
+      : prompt.startsWith('Implementation is complete.') ? 'guide'
+      : prompt.includes('The independent test run failed') ? 'repair'
+      : prompt.includes('You are the verification agent') ? 'verify' : undefined;
+    if (!stage) continue;
+    const browserCalls = new Map(turn.flatMap(message => message.tool_calls ?? [])
+      .filter(call => call.function?.name === 'fleet_browser').map(call => [call.id, JSON.parse(call.function.arguments)]));
+    for (let index = 0; index < turn.length; index++) for (const call of turn[index].tool_calls ?? []) {
+      const action = browserCalls.get(call.id);
+      if (action?.action !== 'click' || manualTransitions.has(call.id)) continue;
+      const observed = turn.slice(0, index).findLast(message => message.role === 'tool' && browserCalls.has(message.tool_call_id));
+      const clicked = turn.find(message => message.role === 'tool' && message.tool_call_id === call.id);
+      if (!clicked) continue;
+      const before = JSON.parse(contentText(observed)), after = JSON.parse(contentText(clicked));
+      assert.ok(before.controls.some(control => control.selector === action.selector && !control.disabled),
+        `${stage} selects a control the SDK actually received from Playwright`);
+      assert.deepEqual(after.errors, []);
+      assert.ok(after.flow.viewports.find(viewport => viewport.viewport === after.viewport).transitionIds.length > 0,
+        `${stage} receives a host-observed state change after activation`);
+      manualTransitions.set(call.id, `${stage}/${after.viewport}`);
+    }
+  }
+  assert.deepEqual([...new Set(manualTransitions.values())].sort(),
+    ['guide/desktop', 'guide/narrow', 'repair/desktop', 'repair/narrow', 'verify/desktop', 'verify/narrow', 'workflow/desktop', 'workflow/narrow']);
+  const checkpoint = JSON.parse(await fs.readFile(path.join(h.root, 'run-checkpoints', h.project.runId + '.json'), 'utf8'));
+  assert.equal(checkpoint.functionalRepair.gates.workflow.attempts, 0, 'SDK exploration passes the first primary checkpoint.');
+  assert.equal(checkpoint.functionalRepair.gates.final.attempts, 1, 'The independent failing application test still requires repair.');
   const visualCalls = fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? [])).filter(call => call.function?.name === 'fleet_visual_review');
   assert.ok(new Set(visualCalls.map(call => call.id)).size >= 12, 'Build, verification and repair each compare initial and fresh captures at both widths.');
   const journeyCalls = new Map(fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? []))

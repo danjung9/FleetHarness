@@ -92,6 +92,50 @@ test('continuous activity cannot bypass the absolute deadline', async t => {
   assert.equal(s.aborts, 1); assert.equal(s.disposals, 1);
 });
 
+for (const [description, limits] of [['omitted limits', undefined], ['an undefined timeout', { timeoutMs: undefined }]]) {
+  test(`productive initial and artifact prompts can each exceed thirty minutes with ${description}`, async t => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    let elapsed = 0;
+    const s = session(s => {
+      for (let i = 0; i < 8; i++) {
+        t.mock.timers.tick(4 * 60_000); elapsed += 4 * 60_000;
+        s.emit({ type: 'tool_execution_update' });
+      }
+    });
+    await runAgentStage({ label: 'Test agent', signal: new AbortController().signal,
+      ...(limits === undefined ? {} : { limits }), create: async () => s, onEvent() {},
+      work: async prompt => { await prompt('Implementation'); await prompt('Complete missing artifacts'); } });
+    assert.equal(elapsed, 64 * 60_000);
+    assert.deepEqual(s.prompts, ['Implementation', 'Complete missing artifacts']);
+    t.mock.timers.tick(60 * 60_000);
+    assert.equal(s.aborts, 0); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+  });
+}
+
+test('a default stage still fails after five idle minutes following more than thirty minutes of activity', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const s = session();
+  const rejected = assert.rejects(run(s, { limits: undefined }), /no progress for 300 seconds.*waiting for the model/);
+  await setImmediate();
+  for (let i = 0; i < 8; i++) { t.mock.timers.tick(4 * 60_000); s.emit({ type: 'tool_execution_update' }); }
+  t.mock.timers.tick(5 * 60_000 - 1); await setImmediate();
+  assert.equal(s.aborts, 0); assert.equal(s.disposals, 0); assert.equal(s.listeners, 1);
+  t.mock.timers.tick(1); await rejected;
+  assert.equal(s.aborts, 1); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+});
+
+test('a default stage remains cancellable after more than thirty minutes of activity', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const controller = new AbortController(), s = session(), events = [];
+  const rejected = assert.rejects(run(s, { limits: undefined, signal: controller.signal, onEvent: event => events.push(event) }), /stopped by you/);
+  await setImmediate();
+  for (let i = 0; i < 8; i++) { t.mock.timers.tick(4 * 60_000); s.emit({ type: 'tool_execution_update' }); }
+  assert.equal(events.length, 8); assert.equal(s.aborts, 0);
+  controller.abort(); await rejected;
+  s.emit(assistant()); assert.equal(events.length, 8);
+  assert.equal(s.aborts, 1); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+});
+
 test('worker agents can exceed 40 turns across prompts without an explicit turn budget', async () => {
   for (const limits of [undefined, { idleMs: 1000, timeoutMs: 10_000 }, { maxTurns: undefined }]) {
     let turns = 0;
@@ -384,6 +428,12 @@ for (const status of ['failed', 'stopped']) for (const cleanupFails of [false, t
   assert.match(saved.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Could not save.*report/);
   assert.deepEqual(saved.report.stageMetrics, project.report.stageMetrics);
 });
+test('optional deadlines reject invalid explicit values before initializing a session', async () => {
+  for (const timeoutMs of [0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, null, '30000']) {
+    await assert.rejects(run(session(), { limits: { timeoutMs }, create: () => assert.fail('Must not initialize') }), /Invalid agent limit: timeoutMs/);
+  }
+});
+
 test('private activity masks synchronous and asynchronous session setup errors', async () => {
   for (const create of [() => { throw new Error('SEALED-private-setup'); }, async () => { throw new Error('SEALED-private-setup'); }]) {
     await assert.rejects(run(session(), { create, privateActivity: true, recoveryHint: 'Resume planning with saved files.' }), error => {

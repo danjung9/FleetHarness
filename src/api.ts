@@ -33,6 +33,7 @@ function save(nextState: AppState) {
   for (const fn of listeners) fn(structuredClone(browserState));
 }
 const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to run coding agents and access local artifacts.'); };
+const codexGoalDesktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app on a Mac to launch Codex CLI in Terminal. Your brief is saved in this browser.'); };
 export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(window.fleetHarness) : {
   storageOverview: desktopOnly, storageFiles: desktopOnly, storageReadFile: desktopOnly,
   storageOpen: desktopOnly, storageExport: desktopOnly, storageTrash: desktopOnly,
@@ -51,6 +52,7 @@ export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(wind
   dismissConversationAction: desktopOnly,
   bootstrap: async () => ({ state: structuredClone(browserState), models: [], storagePath: 'Browser preview — local to this browser', credentialStatus: 'Desktop app required', runtime: 'Browser preview' }),
   refreshNorfolkCatalog: desktopOnly,
+  launchCodexGoal: codexGoalDesktopOnly, openCodexGoalWorkspace: codexGoalDesktopOnly,
   createProject: async input => { const p = makeProject(input); save({ ...browserState, projects: [p, ...browserState.projects] }); return p; },
   updateProject: async (id, input) => {
     const nextState = structuredClone(browserState);

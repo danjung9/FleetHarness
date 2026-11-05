@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -57,6 +58,7 @@ try {
   app = await electron.launch({ ...(executablePath ? { executablePath, args: [] } : { args: ['.'] }),
     env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDir, VITE_DEV_SERVER_URL: '' }, timeout: 45000 });
   page = await app.firstWindow();
+  await stubCodexGoalLaunch(app);
   await app.evaluate(({ BrowserWindow, shell }) => {
     const testWindow = BrowserWindow.getAllWindows()[0];
     // Keep this isolated fixture out of the user's foreground workspace while
@@ -92,7 +94,9 @@ try {
   await progress.getByRole('button', { name: 'Brief', exact: true }).click();
   await page.getByRole('heading', { name: 'Brief', exact: true }).waitFor();
   await captureCompact(page, 'journey-brief-minimum.png');
-  await page.getByRole('button', { name: 'Save & start build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save brief', exact: true }).click();
+  await page.getByText('Brief saved.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start build', exact: true }).click();
   const start = page.getByRole('dialog', { name: 'Start build', exact: true });
   await start.waitFor();
   assert.match(await start.innerText(), /automatically.*You review the result before delivery/s);
@@ -119,7 +123,7 @@ try {
   assert.equal(await progress.getByRole('button', { name: 'Review', exact: true }).getAttribute('aria-current'), 'step');
   await page.getByRole('button', { name: 'Review build', exact: true }).click();
   await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true, 'Sending a build back requires review comments');
 
   const reviewNotes = 'Tried the synthetic parser and checked the test evidence. This is a local integration fixture only.';
@@ -137,7 +141,7 @@ try {
   await page.getByRole('button', { name: 'Review build', exact: true }).click();
   assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), reviewNotes, 'Review notes survive a trip to preview');
   assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), true, 'The review acknowledgment survives a trip to preview');
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
 
   await page.getByRole('button', { name: 'Activity — agent work', exact: true }).click();
   await page.getByRole('heading', { name: 'Activity', exact: true }).waitFor();
@@ -154,7 +158,7 @@ try {
   const changeNotes = 'Improve the empty-message guidance so reviewers know to enter a TASK: message before trying again.';
   await page.getByLabel('Review notes', { exact: true }).fill(changeNotes);
   await page.getByLabel(acknowledgment, { exact: true }).uncheck();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'Changes can be requested without the approval acknowledgment');
   const iterationRequestStart = fixture.requests.length;
   await page.getByRole('button', { name: 'Request changes', exact: true }).click();
@@ -187,12 +191,12 @@ try {
   await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), '', 'The previous build’s notes do not become the new review draft');
   assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), false, 'The new build needs a fresh inspection acknowledgment');
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true);
   await page.getByLabel('Review notes', { exact: true }).fill('Inspected the new iteration and its fresh test evidence. Ready for local prototype delivery.');
   await page.getByLabel(acknowledgment, { exact: true }).check();
   await captureCompact(page, 'journey-review-after-iteration-minimum.png');
-  await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
+  await page.getByRole('button', { name: 'Approve app', exact: true }).click();
   await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
   assert.equal(await progress.getByRole('button', { name: 'Deliver', exact: true }).getAttribute('aria-current'), 'step');
   assert.equal(await page.getByRole('button', { name: 'Download app', exact: true }).isEnabled(), true);
@@ -220,7 +224,9 @@ try {
 
   await progress.getByRole('button', { name: 'Brief', exact: true }).click();
   await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?', { exact: true }).fill('Revise the synthetic message parser to recognize additional task formats and preserve source excerpts.');
-  await page.getByRole('button', { name: 'Save & start new build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save brief', exact: true }).click();
+  await page.getByText('Brief saved.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start new build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.locator('.journey-steps button[aria-current="step"][title^="Brief"]').waitFor();
   const revised = await page.evaluate(async challengeId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === challengeId), id);
@@ -236,7 +242,7 @@ try {
   assert.match(await page.locator('.previous-build-note').innerText(), /do not reflect your updated brief/);
   await progress.getByRole('button', { name: 'Review', exact: true }).click();
   await page.getByRole('heading', { name: 'No test evidence yet', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).count(), 0);
   await progress.getByRole('button', { name: 'Deliver', exact: true }).click();
   await page.getByRole('heading', { name: 'Nothing to deliver yet', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Download app', exact: true }).count(), 0);

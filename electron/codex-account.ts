@@ -6,6 +6,8 @@ import type { AgentModel, ChatGPTAccount } from '../shared/types.js';
 import { CHATGPT_AGENT_NAME, CodexRpc, prepareCodexHome, protectCodexKey, type CodexCredentials } from './codex-rpc.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { registerCredential } from './secrets.js';
+import type { ReasoningModel } from '../shared/reasoning.js';
+import { codexReasoningCatalog, codexReasoningMetadata } from './reasoning.js';
 import { CHATGPT_ISSUER, CHATGPT_RESOURCE, CHATGPT_SCOPES, ChatGPTAuthError, ChatGPTIdentityVerifier,
   authError, authJSON, chatGPTTokenSet, planEnabled, readChatGPTState, secretString, writeChatGPTState,
   type ChatGPTRegistration, type ChatGPTState } from './chatgpt-oauth.js';
@@ -16,7 +18,7 @@ interface LoginAttempt {
   redirectUri?: string; authUrl?: string; timer?: ReturnType<typeof setTimeout>;
   registrationId?: string;
 }
-interface Options { fetch?: typeof fetch; now?: () => number; loginTimeoutMs?: number; launch?: typeof CodexRpc.launch }
+interface Options { fetch?: typeof fetch; now?: () => number; loginTimeoutMs?: number; launch?: typeof CodexRpc.launch; reasoningCatalog?: typeof codexReasoningCatalog }
 const random = () => randomBytes(32).toString('base64url');
 const unusableRefresh = new Set(['invalid_grant', 'invalid_refresh_token', 'token_expired', 'refresh_token_expired', 'refresh_token_invalidated', 'refresh_token_reused']);
 
@@ -44,6 +46,7 @@ export class CodexAccount {
   private keyRpc?: CodexRpc;
   private keyInitialization?: Promise<CodexRpc>;
   get route() { return this.apiMode ? { provider: 'openai', label: 'API key' } : { provider: 'chatgpt', label: 'ChatGPT subscription' }; }
+  private reasoningCatalog?: Promise<Map<string, ReasoningModel>>;
 
   constructor(root: string, private openExternal: (url: string) => Promise<void>, private options: Options = {}) {
     this.home = path.join(root, 'codex');
@@ -98,6 +101,7 @@ export class CodexAccount {
     ++this.epoch;
     if (this.pending) { this.pending.controller.abort(); this.finish(this.pending); }
     this.models = [];
+    this.reasoningCatalog = undefined;
   }
   private tokenRequest(fields: Record<string, string>, signal?: AbortSignal) {
     return authJSON(this.request, `${CHATGPT_ISSUER}/api/accounts/oauth/token`, {
@@ -288,8 +292,21 @@ export class CodexAccount {
         const body = await authJSON(this.request, `${CHATGPT_RESOURCE}/models`, { headers: { Authorization: `Bearer ${token.accessToken}` } });
         if (!Array.isArray(body?.models)) throw new ChatGPTAuthError('The ChatGPT model catalog is unavailable. Refresh the connection to try again.');
         if (epoch !== this.epoch || this.pending || this.disposed) return;
-        this.models = body.models.filter((m: any) => m?.visibility === 'list' && secretString(m.slug) && typeof m.display_name === 'string')
-          .map((m: any) => ({ id: m.slug, name: m.display_name, provider: 'chatgpt', backend: 'codex' as const, configured: true }));
+        const visible = body.models.filter((m: any) => m?.visibility === 'list' && secretString(m.slug) && typeof m.display_name === 'string');
+        let capabilities: Map<string, ReasoningModel> | undefined;
+        if (visible.some((model: unknown) => codexReasoningMetadata(model).reasoningEfforts === undefined)) {
+          // The account catalog remains authoritative for available models. Use
+          // exact ID matches from app-server only to fill capability metadata.
+          const lookup = this.reasoningCatalog ??= (this.options.reasoningCatalog ?? codexReasoningCatalog)(this.home, token);
+          try { capabilities = await lookup; }
+          catch { if (this.reasoningCatalog === lookup) this.reasoningCatalog = undefined; }
+        }
+        if (epoch !== this.epoch || this.pending || this.disposed) return;
+        this.models = visible.map((model: any) => {
+          const metadata = codexReasoningMetadata(model);
+          return { id: model.slug, name: model.display_name, provider: 'chatgpt', backend: 'codex' as const, configured: true,
+            ...(metadata.reasoningEfforts !== undefined ? metadata : capabilities?.get(model.slug)) };
+        });
         this.lastError = this.models.length ? undefined : 'No models are available for this ChatGPT connection. Manage usage or reconnect to check your plan permission.';
         this.snapshot();
       } catch (error) {
@@ -387,7 +404,7 @@ export class CodexAccount {
     let cursor: string | null = null;
     if (account?.type === 'apiKey') do {
       const page = await rpc.request('model/list', { limit: 100, ...(cursor ? { cursor } : {}) });
-      models.push(...page.data.filter((model: any) => !model.hidden).map((model: any) => ({ id: model.model, name: model.displayName, provider: 'chatgpt', backend: 'codex' as const, configured: true })));
+      models.push(...page.data.filter((model: any) => !model.hidden).map((model: any) => ({ id: model.model, name: model.displayName, provider: 'chatgpt', backend: 'codex' as const, configured: true, ...codexReasoningMetadata(model) })));
       cursor = page.nextCursor;
     } while (cursor);
     if (epoch !== this.epoch || this.disposed || !this.apiMode) return;

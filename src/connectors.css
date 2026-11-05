@@ -27,3 +27,6 @@
 .connector-progress form{margin:12px 0}
 .connector-progress button,.connector-choices button{margin-top:12px}
 .connector-address input,.connector-progress input,.connector-progress select,.connector-choices input,.connector-choices select{width:100%;box-sizing:border-box}
+
+.connector-search{display:grid;gap:6px;max-width:440px;margin:20px 0 12px}
+.connector-search input{width:100%;box-sizing:border-box}

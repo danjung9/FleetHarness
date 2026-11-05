@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -17,6 +18,7 @@ try {
   await fs.writeFile(path.join(stateDir, 'state.json'), JSON.stringify({ version: 1, projects: [], settings: { provider: '', model: '', rememberKey: false } }));
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: path.join(root, 'pi') } });
   const page = await app.firstWindow();
+  await stubCodexGoalLaunch(app);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.getByRole('heading', { name: 'AppYard', exact: true }).waitFor();

@@ -6,6 +6,7 @@ import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
 import { canContinuePlanning, experimentRunning, getJourneyState, getResumeStage, pendingExperiment } from '../shared/journey';
 import { BuildFlow } from './BuildFlow';
+import { CodexGoalPanel } from './CodexGoalPanel';
 import { ExperimentActivity } from './ExperimentActivity';
 import { SystemDesign } from './SystemDesign';
 import { ReviewWorkspace, DeliveryWorkspace } from './ReviewFlow';
@@ -93,7 +94,7 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
     <ConnectedDataSection value={connectedData} onChange={setConnectedData} disabled={busy}/>
     <label>Evaluation criteria (optional)<span className="field-hint">One measurable outcome per line. You can refine this during planning.</span><textarea rows={2} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="Every extracted item links to an exact source excerpt."/></label>
     <details className="brief-context" open={contextOpen} onToggle={e => setContextOpen(e.currentTarget.open)}><summary>Add resources & links <span>{resources.trim() || links.trim() ? 'Context included' : 'Optional'}</span></summary>
-    <label>Resources (optional)<span className="field-hint">Describe available datasets, documents, tools, or reference material.</span><textarea maxLength={16000} rows={3} value={resources} onChange={e => setResources(e.target.value)} placeholder="Synthetic sample messages, a blank report template, or an existing API."/></label>
+    <label>Resources (optional)<span className="field-hint">Describe available datasets, documents, tools, or reference material.</span><textarea maxLength={16000} rows={3} value={resources} onChange={e => setResources(e.target.value)} placeholder="Message formats, a report template, or API documentation."/></label>
     <label>Links (optional)<span className="field-hint">Add one complete http:// or https:// URL per line.</span><textarea rows={3} value={links} onChange={e => setLinks(e.target.value)} placeholder="https://example.com/reference" spellCheck={false}/></label>
     </details>
     </div>
@@ -325,6 +326,7 @@ export default function App() {
       {p && !showHome && !globalView && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
       {p && !showHome && !globalView && <ClarificationNotice project={p} onOpen={openConversation}/>}
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
+      {p && active === 'factory' && <CodexGoalPanel project={p} busy={busy} desktop={isDesktop} launch={() => void action(() => api.launchCodexGoal(p.id), 'Codex opened in Terminal. Follow the goal there.')} openWorkspace={() => void action(() => api.openCodexGoalWorkspace(p.id))}/>}
       {p && active === 'factory' && (experiment ? <ExperimentActivity key={experiment.id} experiment={experiment} onReview={() => navigate('evidence')}/> : <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>)}
       {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')} onReview={() => navigate('evidence')}/>}
@@ -333,20 +335,15 @@ export default function App() {
       {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact} onManage={() => navigate('storage')}/>}
       {active === 'storage' && <DataStorage projects={state.projects} onOpenProject={openProject} onLearning={() => { navigate('settings'); setLearningRequested(true); }}/>}
-      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{editingPlan ? 'Update the brief and continue planning with your saved intake, research and data. Changing attached inputs requires a new build.' : p.runId ? 'Saving changes resets test results and approval. Unfrozen planning can continue with the same inputs; later phases need a new build.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={briefDrafts.current[p.id] ?? p} onDraftChange={draft => { briefDrafts.current[p.id] = draft; }} busy={busy || p.status === 'running' || experimentRunning(experiment)} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : editingPlan ? 'Save & continue planning' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{editingPlan ? 'Update the brief and continue planning with your saved intake, research and data. Changing attached inputs requires a new build.' : p.runId ? 'Saving changes resets test results and approval. Unfrozen planning can continue with the same inputs; later phases need a new build.' : 'Describe the problem and what a successful app should do.'}{isDesktop && ' Save the brief, then choose a Codex goal or pipeline build from Build.'}</p></div></div><RequirementsForm key={p.id} initial={briefDrafts.current[p.id] ?? p} onDraftChange={draft => { briefDrafts.current[p.id] = draft; }} busy={busy || p.status === 'running' || experimentRunning(experiment)} submitLabel="Save brief" submit={async input => {
         if (isDesktop && editingPlan && data.capabilities?.planningContinuation !== true) {
           setError('Restart AppYard before saving this planning revision. Your saved work will be kept.');
           return;
         }
-        let savedProject: Project | undefined;
-        const saved = await action(async () => { savedProject = await api.updateProject(p.id, input); }, 'Brief saved.');
+        const saved = await action(() => api.updateProject(p.id, input), 'Brief saved.');
         if (!saved) return;
         delete briefDrafts.current[p.id];
         setActive('factory');
-        if (isDesktop && configured && savedProject && getResumeStage(savedProject) === 'plan') {
-          await action(() => api.resumeRun(p.id), 'Planning continued. Completed intake and research are kept.');
-        } else if (isDesktop && configured) setStart(true);
-        else if (isDesktop) { settingsReturn.current = 'factory'; setActive('settings'); }
       }}/></div>}
       {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={updateBootstrap} busy={busy} onSaved={settingsSaved} onBack={p ? () => { setActive(settingsReturn.current ?? milestoneViews[getJourneyState(p).current]); settingsReturn.current = null; } : undefined}/>}
     </main>
