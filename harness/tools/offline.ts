@@ -1,4 +1,4 @@
-import { array, canonical, compareText, integer, object, strings, text, timestamp, unique } from './validation.js';
+import { array, canonical, compareText, integer, object, requireTimestamp, strings, text, unique } from './validation.js';
 
 export interface Revision {id: string; recordId: string; parents: string[]; actor: string; value: string | null}
 export function reconcileRecords(input: unknown) {
@@ -45,9 +45,9 @@ export function reconcileRecords(input: unknown) {
 export function planUploads(input: unknown) {
   const data = object(input);
   const budget = integer(data.budgetBytes, 'budgetBytes');
-  const items = unique(array(data.items, 'items', 2000).map(x => {
+  const items = unique(array(data.items, 'items', 2000).map((x, i) => {
     const v = object(x); const bytes = integer(v.bytes, 'bytes', 1);
-    const createdAt = timestamp(v.createdAt); if (!createdAt) throw new Error('createdAt must be a valid timestamp with timezone.');
+    const createdAt = requireTimestamp(v.createdAt, `items[${i}].createdAt`);
     return {id: text(v.id, 'id', 200), bytes, uploadedBytes: integer(v.uploadedBytes, 'uploadedBytes', 0, bytes),
       priority: integer(v.priority, 'priority', 0, 5), createdAt};
   }), 'items').sort((a,b) => b.priority-a.priority || compareText(a.createdAt,b.createdAt) || compareText(a.id,b.id));

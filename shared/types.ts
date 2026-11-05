@@ -1,7 +1,10 @@
+import type { ExperimentAPI } from './experiments.js';
+import type { DataStorageAPI } from './data-storage.js';
+
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'connectors';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'connectors' | 'storage';
 /** Token counts reported by the engine, never estimates. Reasoning is part of output. */
 export interface StageTokenUsage {
   inputTokens: number | null; cachedInputTokens: number | null; uncachedInputTokens: number | null;
@@ -61,13 +64,16 @@ export interface ReviewRecord {
   judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[];
 }
 export interface Project extends BriefContext {
+  archivedAt?: string;
   reviewHistory?: ReviewRecord[];
   processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };
   verification?: { runId: string; reportHash: string };
   approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string; id?: string; decision?: ReviewRecord['decision']; createdAt?: string; history?: ReviewRecord[]; judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[] };
   runCheckpoint?: RunCheckpoint;
   conversation?: import('./conversation.js').ProjectConversation;
-  qualityVersion?: 1 | 2 | 3;
+  qualityVersion?: 1 | 2 | 3 | 4;
+  experiment?: import('./learning.js').ExperimentSummary;
+  executionFailure?: 'infrastructure' | 'integrity' | 'implementation' | 'budget' | 'cancelled';
   visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
@@ -98,10 +104,10 @@ export interface ChatGPTAccount {
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
 export interface GenAiMilIssue { message: string; nextStep: string; unlockUrl?: string; replacementModel?: string; retryAt?: number }
 export interface GenAiMilConnection { address: string; hasKey: boolean; connected: boolean; models: string[]; issue?: GenAiMilIssue }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean }; genAiMil?: GenAiMilConnection }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean; experiments?: boolean; planningContinuation?: boolean }; genAiMil?: GenAiMilConnection }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
-export interface FleetAPI {
+export interface FleetAPI extends ExperimentAPI, DataStorageAPI {
   connectors?: import('./connectors.js').ConnectorsAPI;
   sendMessage(id: string, text: string): Promise<void>;
   cancelMessage(id: string): Promise<void>;

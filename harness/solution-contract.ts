@@ -1,4 +1,8 @@
 import type { AcceptanceCriterion } from './types.js';
+import { isClassificationLabel, isDeterministicEvaluator } from '../shared/solution.js';
+import { assertRuntimeSourceFiles } from '../shared/runtime-artifacts.js';
+import { retrievalFixtureProblem } from '../shared/retrieval-fixture.js';
+import { scheduleFixtureProblem } from '../shared/schedule-fixture.js';
 import type {
   CapabilityKind, DatasetDescriptor, EvaluationPlan, EvaluatorKind, JsonValue,
   RuntimeCommand, RuntimeManifest, SolutionCapability, SolutionContract, SolutionEvaluation
@@ -106,7 +110,7 @@ function runtime(value: unknown): RuntimeManifest {
   const entry = object(value, name, ['profile', 'files', 'requiredEnv', 'entrypoint', 'command', 'evaluator', 'dependencies', 'healthPath', 'invokePath', 'port']);
   if (entry.profile !== 'browser' && entry.profile !== 'cli' && entry.profile !== 'service') throw new Error('runtime.profile must be browser, cli or service.');
   const files = unique(array(entry.files, 'runtime.files', 1, solutionLimits.files).map((item, i) => file(item, `runtime.files[${i}]`)), 'runtime.files');
-  if (new Set(files.map(path => path.toLowerCase())).size !== files.length) throw new Error('runtime.files cannot contain case-insensitive path collisions.');
+  assertRuntimeSourceFiles(files);
   const names = new Set(files);
   const requiredEnv = unique(array(entry.requiredEnv, 'runtime.requiredEnv', 0, solutionLimits.environmentNames).map((item, i) => {
     const env = text(item, `runtime.requiredEnv[${i}]`, 100);
@@ -227,7 +231,7 @@ function validateExpected(expected: JsonValue, evaluator: EvaluatorKind, name: s
     unique(array(data.ids, `${name}.ids`, 0, 200).map((id, i) => text(id, `${name}.ids[${i}]`, 200)), `${name}.ids`);
   } else if (evaluator === 'classification') {
     const values = Array.isArray(expected) ? array(expected, name, 1, 1_000) : [expected];
-    if (values.some(item => !['string', 'boolean', 'number'].includes(typeof item))) throw new Error(`${name} must be a scalar label or a nonempty array of scalar labels.`);
+    if (!values.every(isClassificationLabel)) throw new Error(`${name} must be a scalar label (string, boolean or finite number) or a nonempty array of those labels.`);
   } else if (evaluator === 'numeric') {
     const containsNumber = (value: JsonValue): boolean => typeof value === 'number' || (Array.isArray(value) ? value.some(containsNumber) : value !== null && typeof value === 'object' && Object.values(value).some(containsNumber));
     if (!containsNumber(expected)) throw new Error(`${name} must contain at least one numeric value for the numeric evaluator.`);
@@ -235,7 +239,7 @@ function validateExpected(expected: JsonValue, evaluator: EvaluatorKind, name: s
 }
 
 /** Freeze independently specified answer keys; candidate processes receive only each case's input. */
-export function parseEvaluationPlan(value: unknown, solution: SolutionContract): EvaluationPlan {
+export function parseEvaluationPlan(value: unknown, solution: Pick<SolutionContract, 'capabilities'> & Partial<Pick<SolutionContract, 'runtime'>>): EvaluationPlan {
   const entry = object(value, 'evaluation-plan.json', ['schemaVersion', 'evaluations']);
   version(entry.schemaVersion, 'evaluation-plan.json');
   const capabilities = new Map(solution.capabilities.map(cap => [cap.id, cap]));
@@ -250,13 +254,32 @@ export function parseEvaluationPlan(value: unknown, solution: SolutionContract):
     if (!evaluators.includes(item.evaluator as EvaluatorKind)) throw new Error(`${name}.evaluator must be one of ${evaluators.join(', ')}.`);
     const evaluator = item.evaluator as EvaluatorKind;
     const threshold = number(item.threshold, `${name}.threshold`, Number.MIN_VALUE, 1);
+    if (isDeterministicEvaluator(evaluator) && threshold !== 1) {
+      throw new Error(`${name}.threshold must be 1 for the ${evaluator} evaluator; every case and trial must pass.`);
+    }
     const trials = number(item.trials, `${name}.trials`, 1, solutionLimits.trials, true);
     const cases = array(item.cases, `${name}.cases`, capability.required ? 2 : 1, solutionLimits.cases).map((value, j) => {
       const caseName = `${name}.cases[${j}]`;
-      const data = object(value, caseName, ['id', 'input', 'expected']);
+      const data = object(value, caseName, ['id', 'input', 'expected', 'expectedStatus']);
+      let expectedStatus: number | undefined;
+      if (Object.hasOwn(data, 'expectedStatus')) {
+        expectedStatus = number(data.expectedStatus, `${caseName}.expectedStatus`, 400, 499, true);
+        if (evaluator !== 'exact' || solution.runtime?.profile !== 'service') {
+          throw new Error(`${caseName}.expectedStatus requires the exact evaluator and a service runtime; architecture-neutral experiment plans cannot assert HTTP status.`);
+        }
+      }
       const expected = json(data.expected, `${caseName}.expected`);
       validateExpected(expected, evaluator, `${caseName}.expected`);
-      return { id: identifier(data.id, `${caseName}.id`), input: json(data.input, `${caseName}.input`), expected };
+      const input = json(data.input, `${caseName}.input`);
+      if (evaluator === 'retrieval') {
+        const problem = retrievalFixtureProblem(input, expected);
+        if (problem) throw new Error(`Invalid evaluation case ${caseName}.${problem}`);
+      }
+      if (evaluator === 'schedule') {
+        const problem = scheduleFixtureProblem(input, expected);
+        if (problem) throw new Error(`Invalid evaluation case ${caseName}.${problem}`);
+      }
+      return { id: identifier(data.id, `${caseName}.id`), input, expected, ...(expectedStatus === undefined ? {} : { expectedStatus }) };
     });
     unique(cases.map(item => item.id), `${name} case IDs`);
     const inputs = new Set(cases.map(item => canonical(item.input)));
@@ -305,7 +328,7 @@ Runtime profiles:
 - cli: command replaces evaluator; omit browser entrypoint. The command reads exactly one JSON input from stdin and writes exactly one JSON result to stdout. Send diagnostic logs to stderr. The host launches a fresh process per case.
 - service: command replaces evaluator; omit browser entrypoint. Include healthPath (for example /health) and invokePath (for example /invoke), distinct local paths. Bind using the host-provided HOST and PORT: loopback during verification, 0.0.0.0 inside an exported container. Optional port (integer 1 to 65535, default 8080) declares the delivery port; verification still assigns an ephemeral port. Health requests must return success; POST invokePath receives a JSON input and returns one JSON result. Process startup, health and invocation have host-enforced budgets. Dockerfile and compose.yaml at the bundle root are host-written delivery files and must not be listed in runtime.files.
 
-Every command has runtime (node or python), entrypoint (a relative file) and args (0–32 strings). The host uses executable arguments, not a shell. files is an explicit 1–256-file deployment allowlist, using portable relative paths with no traversal. Include all imported modules, static assets, runtime data and dependency manifests. Entry points and dependency files must occur in this allowlist. No host contracts/answer keys (solution-contract.json, evaluation-plan.json, acceptance-plan.json, ux-spec.json, packet.json), inputs/manifest.json host metadata, .fleet, .git, evidence directories, node_modules, .venv or secret .env files. Ordinary supplied data files may be listed. Do not package hidden copies of evaluation cases or expected outputs. The host verifies regular files and rejects symlinks before copying into a clean temporary directory. Declared deployment files must remain unchanged during execution; write mutable state to new files outside the allowlist or OS temporary storage. Deployment isolation is not an OS security sandbox.
+Every command has runtime (node or python), entrypoint (a relative file) and args (0–32 strings). The host uses executable arguments, not a shell. files is an explicit 1–256-file deployment allowlist, using portable relative paths with no traversal. Include all imported modules, static assets, runtime data and dependency manifests. Entry points and dependency files must occur in this allowlist. Each entry must name a distinct file, ignoring letter case; never list a directory alongside a child file (for example assets and assets/data.json). No host contracts/answer keys (solution-contract.json, evaluation-plan.json, acceptance-plan.json, ux-spec.json, packet.json), inputs/manifest.json host metadata, .fleet, .git, evidence directories, node_modules, .venv or secret .env files. Ordinary supplied data files may be listed. The artifact inventory excludes .pi, .DS_Store, .git and node_modules at every depth; runtime paths cannot contain those segments or case aliases. Move application code and data to an included path such as data/value.json. Root test-report.json, review.json and DELIVERY.md are reserved for host-written evidence and delivery notes, including case variants and directories at those paths; use separate application data paths such as data/review.json. Do not package hidden copies of evaluation cases or expected outputs. The host verifies regular files and rejects symlinks before copying into a clean temporary directory. Declared deployment files must remain unchanged during execution; write mutable state to new files outside the allowlist or OS temporary storage. Deployment isolation is not an OS security sandbox.
 
 requiredEnv lists uppercase environment variable NAMES (maximum 32), never credentials or values. Host settings such as PATH, HOME, PORT, HOST, NODE_OPTIONS, PYTHONPATH and package-manager settings are reserved. Missing required values must fail visibly; do not substitute canned responses for live inference. Use real runtime model adapters for AI calls and record versions in output/evidence as appropriate. Optional dependencies is {"manager":"npm","manifest":"package.json","lockfile":"package-lock.json"} for node, or {"manager":"pip","manifest":"requirements.in","lockfile":"requirements.txt"} for python. Both manifest and lockfile must be distinct listed files; dependencies install from the lockfile in the clean runtime. npm installation disables lifecycle scripts; pip requires fully pinned, hashed requirements and binary wheels. The runtime installation budget may reject heavy dependencies. CLI/service processes need their own interface; the application quality plan still proves any promised user interaction.
 
@@ -325,14 +348,16 @@ For every mandatory capability, include a valid input outside bundled examples a
 
 Each evaluation requires id, capabilityId, description, dataset, evaluator, threshold, trials and cases. dataset requires name, version and provenance (synthetic, supplied or reviewed); description is optional and should explain the source and independent basis for expected values. The host treats provenance as a declaration, not proof of expert review or a hidden holdout. For predictive or AI systems establish a separate reviewed holdout and prevent training/preprocessing leakage. Builder-authored fixtures alone establish only those declared cases. Human/domain review is still required where independent reference data is unavailable.
 
-Each case has a unique id, input JSON and expected JSON. The candidate receives ONLY input; expected answers stay in host memory and outside the deployment. Required evaluations need at least two distinct inputs (object key order does not create a new input). Use boundary cases, invalid or missing data, counterexamples and appropriate failure/recovery cases. A plan may contain at most 100 cases per evaluation, 10 trials per case and 1,000 total invocations. JSON must be finite, at most 20 levels deep and 100,000 UTF-8 bytes per input/expected value; the complete plan is capped at 2,000,000 UTF-8 bytes. threshold is a score in (0,1]; optional baseline is a score in [0,1] and threshold must meet or exceed it. Choose a domain-appropriate meaningful threshold; deterministic correctness/constraint checks should require 1. Model-based behavior should use multiple trials and independent representative examples, including abstention and unsupported-claim cases. Do not lower thresholds to make broken output pass.
+Each case has a unique id, input JSON and expected JSON. The candidate receives ONLY input; expected answers stay in host memory and outside the deployment. Required evaluations need at least two distinct inputs (object key order does not create a new input). Use boundary cases, invalid or missing data, counterexamples and appropriate failure/recovery cases. A plan may contain at most 100 cases per evaluation, 10 trials per case and 1,000 total invocations. JSON must be finite, at most 20 levels deep and 100,000 UTF-8 bytes per input/expected value; the complete plan is capped at 2,000,000 UTF-8 bytes. threshold is a score in (0,1]; optional baseline is a score in [0,1] and threshold must meet or exceed it. The exact, numeric and schedule evaluators require threshold 1: every case in every trial must pass. Lower deterministic thresholds are rejected during planning, evaluation and report approval. Only classification and retrieval support fractional aggregate thresholds; justify them using independent representative data and the domain objective. Runtime errors, malformed outputs and invalid citations or constraints still fail independently of aggregate scores. Model-based behavior should use multiple trials and independent representative examples, including abstention and unsupported-claim cases. Do not lower thresholds to make broken output pass.
+
+For a service runtime with the exact evaluator, a case may also declare expectedStatus, an integer from 400 to 499. Example: {"id":"invalid","input":{"values":null},"expectedStatus":422,"expected":{"error":"values must be an array"}}. The host must observe both that HTTP status and the exact expected JSON body; unexpected success, a different status/body, redirects, crashes, timeouts and malformed JSON fail. Cases without expectedStatus still require successful invocation. Health checks still require success. Specify rejection status and error vocabulary in the public invocation rules and include a corrected-input recovery case. CLI/browser process errors and architecture-neutral experiment plans do not support expectedStatus; use ordinary JSON error results for those protocols, or prove process-exit behavior with application tests. An adapter without HTTP observation fails explicitly.
 
 Host-owned evaluators:
 - exact: exact structural JSON equality; object key order is ignored, array order matters. State the ordering rule for each output array in invocation.rules, and check that every expected array follows that rule before freezing the plan: a contradiction between them cannot be repaired later.
 - numeric: exact JSON shape and exact nonnumeric values; numbers compare with absolute tolerance (optional, default 0). Expected JSON must contain a number. tolerance is valid only for numeric.
-- classification: expected/output are a scalar string/number/boolean label or a nonempty array of such labels. Array length must match; score is label accuracy.
-- schedule: input uses windows [{start,end}], people [{id,qualifications,windows,maxMinutes,restMinutes}], requests [{id,duration,starts,people,resources,qualifications}] in nonnegative integer minutes. expected is {"status":"feasible"} or {"status":"infeasible"}. Output contains status and assignments [{id,start,end,people,resources}]. Feasible results are independently checked for complete coverage, candidate starts, duration, qualifications, availability, shared-resource/person overlap, rest and duty budgets. Infeasible results are compared with the frozen answer key; this is not a general infeasibility proof. budget_exhausted cannot pass as infeasible.
-- retrieval: input contains documents [{id,text,source?,approved?}] and any query/context needed by the engine. expected is {"ids":["relevant-document"]}, with unique IDs (empty for no-answer cases). Output is {"results":[{"id":"relevant-document","source":"optional-matching-source","excerpt":{"start":0,"end":5,"text":"exact"}}]}. Each result must reference a permitted input document with an exact matching excerpt and source when present, and IDs must be unique. Score is set F1 against expected IDs. Unsupported or fabricated citations fail independently of relevance.
+- classification: expected/output are a scalar string/finite-number/boolean label or a nonempty array of such labels. Array length must match; score is label accuracy. Nulls, objects, nested arrays and other malformed labels fail the evaluation regardless of aggregate accuracy. Valid incorrect labels remain ordinary accuracy misses.
+- schedule: input uses windows [{start,end}], people [{id,qualifications,windows,maxMinutes,restMinutes}], requests [{id,duration,starts,people,resources,qualifications}] in nonnegative safe integer minutes, with positive durations and window ends greater than starts. Both feasible and infeasible fixtures are validated before freezing: person/request IDs must be unique strings, personnel references must exist, and qualifications, people and resources must be arrays of unique strings. Empty availability windows or candidate starts are valid inputs for infeasibility checks. expected is {"status":"feasible"} or {"status":"infeasible"}. Output contains status and assignments [{id,start,end,people,resources}]. Feasible results are independently checked for complete coverage, candidate starts, duration, qualifications, availability, shared-resource/person overlap, rest and duty budgets. Infeasible results are compared with the frozen answer key; this is not a general infeasibility proof. budget_exhausted cannot pass as infeasible.
+- retrieval: input contains documents [{id,text,source?,approved?}] and any query/context needed by the engine. Each document needs a unique string id and string text; source, when supplied, must be a string locator. expected is {"ids":["relevant-document"]}, with unique IDs (empty for no-answer cases). Every expected ID must name a supplied document whose approved field is not false and whose text contains at least one character so a nonempty citation is possible; invalid fixtures are rejected during planning before contracts freeze. Empty document arrays and empty-text documents not named in expected IDs remain valid, including abstention cases. Output is {"results":[{"id":"relevant-document","source":"optional-matching-source","excerpt":{"start":0,"end":5,"text":"exact"}}]}. Each result must reference a permitted input document with an exact matching nonempty excerpt, and IDs must be unique. Copy the document's source string exactly when supplied, including an empty string; omit source from the result when the document omits it. Source strings and excerpt text are matched literally without trimming or normalization. Score is set F1 against expected IDs. Unsupported or fabricated citations fail independently of relevance.
 
 Record honest limitations. These evaluators establish bounded evidence about the frozen cases and clean runtime; they do not certify all domain behavior, general model quality or production readiness. Use exact/state JSON checks for calculation and workflow outcomes; the current runtime restarts commands for independent cases, so cross-process persistence and UI integration also need explicit integration/browser evidence. Compare a useful baseline, inspect failure evidence, repair within the run budget, and verify the delivered package rather than only a demonstration screen.
 `;

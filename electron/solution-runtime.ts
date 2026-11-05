@@ -4,13 +4,15 @@ import { VerificationShutdownError } from './verification.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { artifactManifest } from './storage.js';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { isUtf8 } from 'node:buffer';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { createHash } from 'node:crypto';
+import { createRuntimeFilesHasher } from './runtime-files-hash.js';
 import { createServer } from 'node:http';
 import { PreviewServers } from './preview.js';
 import type { JsonValue, RuntimeCommand, RuntimeManifest, SolutionEvaluationReport } from '../shared/solution.js';
+import { assertRuntimeSourceFiles } from '../shared/runtime-artifacts.js';
 
 export interface SolutionRuntimeLimits {
   totalTimeoutMs: number;
@@ -23,10 +25,14 @@ export interface SolutionRuntimeLimits {
 export interface SolutionRuntime {
   root: string;
   url?: string;
+  /** Host-owned static preview mount; application routes are relative to this prefix. */
+  routeBase?: string;
   provenance: SolutionEvaluationReport['runtime'];
   /** For host-run tests only; never serialize this environment into evidence. */
   testEnvironment: NodeJS.ProcessEnv;
   invoke(input: JsonValue): Promise<JsonValue>;
+  /** Service-only HTTP observation. Receives input only; expectations remain in the host. */
+  invokeHttp?(input: JsonValue): Promise<{ status: number; output: JsonValue }>;
   assertIntegrity(): Promise<void>;
   redactOutput(value: JsonValue): JsonValue;
   redactMessage(message: string): string;
@@ -62,9 +68,12 @@ async function executable(name: string) {
 function kill(child: ChildProcess) {
   try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch { /* already stopped */ }
 }
-function json(text: string): JsonValue {
+function json(bytes: Uint8Array): JsonValue {
+  // Decode only complete, valid output: replacement decoding can turn broken
+  // engine bytes into a different JSON answer that passes the frozen checks.
+  if (!isUtf8(bytes)) throw new Error('Engine JSON must contain valid UTF-8.');
   let parsed: JsonValue;
-  try { parsed = JSON.parse(text); } catch { throw new Error('The engine must return exactly one JSON value on stdout.'); }
+  try { parsed = JSON.parse(Buffer.from(bytes).toString('utf8')); } catch { throw new Error('The engine must return exactly one JSON value on stdout.'); }
   const pending = [{ value: parsed, depth: 0 }];
   let count = 0;
   while (pending.length) {
@@ -143,6 +152,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   signal?: AbortSignal, options: Partial<SolutionRuntimeLimits> & { preferredPort?: number } = {}): Promise<SolutionRuntime> {
   const { preferredPort, ...requestedLimits } = options;
   const limits = { ...defaults, ...requestedLimits };
+  assertRuntimeSourceFiles(manifest.files);
   for (const [key, value] of Object.entries(limits)) if (!Number.isSafeInteger(value) || value <= 0) throw new Error('Invalid solution runtime limit: ' + key);
   signal?.throwIfAborted();
   if (manifest.profile === 'browser' && (manifest.requiredEnv.length || manifest.evaluator?.runtime !== 'node')) {
@@ -201,11 +211,11 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     const stdout: Buffer[] = [], stderr: Buffer[] = []; let bytes = 0;
     let rejectExecution!: (error: Error) => void;
     let settled = false;
-    const finished = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    const finished = new Promise<{ stdout: Buffer; stderr: string }>((resolve, reject) => {
       rejectExecution = reject;
       child.once('error', error => reject(error));
       child.once('close', code => {
-        const out = Buffer.concat(stdout).toString('utf8'), err = Buffer.concat(stderr).toString('utf8');
+        const out = Buffer.concat(stdout), err = Buffer.concat(stderr).toString('utf8');
         if (code === 0) resolve({ stdout: out, stderr: err });
         else reject(new Error('Runtime process exited with ' + code + (err ? ': ' + redact(err).slice(0, 1500) : '.')));
       });
@@ -235,7 +245,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
       if (parent === path.dirname(parent)) break;
     }
-    const base = await fs.realpath(sourceRoot), hash = createHash('sha256');
+    const base = await fs.realpath(sourceRoot), hash = createRuntimeFilesHasher();
     const validated = await artifactManifest(base);
     let size = 0;
     if (!manifest.files.length || manifest.files.length > 256 || new Set(manifest.files).size !== manifest.files.length) throw new Error('Runtime files must be a nonempty unique allowlist of at most 256 files.');
@@ -246,17 +256,17 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       if (size > limits.maxPackageBytes) throw new Error('Runtime package exceeded the size limit.');
       const bytes = validated.find(item => item.path === file)?.contents;
       if (!bytes) throw new Error('Runtime file is absent from the validated manifest: ' + file);
-      hash.update(file + '\0').update(bytes).update('\0');
+      hash.add(file, bytes);
       const target = path.join(root, file);
       await fs.mkdir(path.dirname(target), { recursive: true });
       await atomicHostWrite(root, file, bytes);
     }
-    const filesHash = hash.digest('hex');
+    const filesHash = hash.digest();
     const assertIntegrity = async () => {
       check();
-      const current = createHash('sha256');
-      for (const file of [...manifest.files].sort()) current.update(file + '\0').update(await fs.readFile(await ordinaryFile(root, file))).update('\0');
-      if (current.digest('hex') !== filesHash) throw new Error('Declared runtime files changed during execution. Keep mutable state outside the deployment file allowlist.');
+      const current = createRuntimeFilesHasher();
+      for (const file of [...manifest.files].sort()) current.add(file, await fs.readFile(await ordinaryFile(root, file)));
+      if (current.digest() !== filesHash) throw new Error('Declared runtime files changed during execution. Keep mutable state outside the deployment file allowlist.');
     };
     for (const file of [manifest.entrypoint, manifest.command?.entrypoint, manifest.evaluator?.entrypoint, manifest.dependencies?.manifest, manifest.dependencies?.lockfile].filter((file): file is string => !!file)) {
       if (!manifest.files.includes(file)) throw new Error('Runtime entrypoint or dependency is absent from its file allowlist: ' + file);
@@ -284,25 +294,27 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       env.PATH = path.dirname(python) + path.delimiter + env.PATH;
     }
     const commandFor = (command: RuntimeCommand): [string, string[]] => {
-      if (command.runtime === 'node') return [nodeExecutable, ['--no-global-search-paths', command.entrypoint, ...command.args]];
+      // Use a literal path: option-like names must not become Node flags, and
+      // even after `--`, a bare `-` would execute stdin instead of the file.
+      if (command.runtime === 'node') return [nodeExecutable, ['--no-global-search-paths', './' + command.entrypoint, ...command.args]];
       // Ignore ambient user paths/site packages, while retaining this package's modules.
       const bootstrap = 'import os,runpy,sys;sys.path.insert(0,os.getcwd());p=sys.argv[1];sys.argv=sys.argv[1:];runpy.run_path(p,run_name="__main__")';
       return [python!, ['-I', '-B', ...(manifest.dependencies?.manager === 'pip' ? [] : ['-S']), '-c', bootstrap, command.entrypoint, ...command.args]];
     };
     const selected = manifest.profile === 'browser' ? manifest.evaluator : manifest.command;
     const actualRuntime = selected?.runtime === 'python' ? python! : nodeExecutable;
-    const version = (await (await launch(actualRuntime, ['--version'], limits.startupTimeoutMs)).result).stdout.trim();
+    const version = (await (await launch(actualRuntime, ['--version'], limits.startupTimeoutMs)).result).stdout.toString('utf8').trim();
     let url: string | undefined, serviceFailure: Error | undefined;
-    const request = async (address: string, init?: RequestInit) => {
+    const request = async (address: string, init?: RequestInit, observeStatus = false) => {
       check();
       const requestSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(limits.invocationTimeoutMs), ...(init?.signal ? [init.signal] : [])]);
       const response = await fetch(address, { ...init, redirect: 'error', signal: requestSignal });
-      if (!response.ok) { await response.body?.cancel(); throw new Error('Runtime HTTP request failed with status ' + response.status); }
+      if (!response.ok && !observeStatus) { await response.body?.cancel(); throw new Error('Runtime HTTP request failed with status ' + response.status); }
       const reader = response.body?.getReader();
       let bytes = 0; const chunks: Uint8Array[] = [];
       if (reader) try { for (;;) { const chunk = await reader.read(); if (chunk.done) break; bytes += chunk.value.length; if (bytes > limits.maxOutputBytes) throw new Error('Runtime response exceeded its output limit.'); chunks.push(chunk.value); } }
       finally { await reader.cancel().catch(() => {}); }
-      return Buffer.concat(chunks).toString('utf8');
+      return { status: response.status, bytes: Buffer.concat(chunks) };
     };
     if (manifest.profile === 'service') {
       if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
@@ -315,8 +327,12 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       const until = Date.now() + limits.startupTimeoutMs;
       for (;;) {
         check(); if (serviceFailure) throw serviceFailure;
-        try { await request(new URL(manifest.healthPath, url).href, { signal: AbortSignal.timeout(Math.min(1000, limits.startupTimeoutMs)) }); break; }
-        catch (error) { if (Date.now() >= until) throw new Error('Runtime service did not become healthy before the startup deadline.'); }
+        const remaining = until - Date.now();
+        if (remaining > 0) try {
+          await request(new URL(manifest.healthPath, url).href, { signal: AbortSignal.timeout(Math.min(1000, remaining)) });
+          if (Date.now() < until) break;
+        } catch { /* Retry failed health checks only within the original startup budget. */ }
+        if (Date.now() >= until) throw new Error('Runtime service did not become healthy before the startup deadline.');
         await new Promise(resolve => setTimeout(resolve, Math.min(50, Math.max(1, until - Date.now()))));
       }
     } else if (manifest.profile === 'browser') {
@@ -324,19 +340,30 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       url = await previews.url(root, manifest.files);
     }
     await assertIntegrity();
-    return { root, url, testEnvironment: { ...env }, provenance: { profile: manifest.profile, filesHash, runtime: version || selected?.runtime || 'node', environmentNames: [...manifest.requiredEnv] },
+    const encodeInput = async (input: JsonValue) => {
+      check(); if (serviceFailure) throw serviceFailure;
+      await assertIntegrity();
+      const encoded = JSON.stringify(input);
+      if (Buffer.byteLength(encoded) > limits.maxOutputBytes) throw new Error('Runtime input exceeded the size limit.');
+      return encoded;
+    };
+    const invokeService = async (input: JsonValue, observeStatus = false) => {
+      const encoded = await encodeInput(input);
+      const response = await request(new URL(manifest.invokePath!, url!).href,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: encoded }, observeStatus);
+      const output = json(response.bytes);
+      await assertIntegrity();
+      return { status: response.status, output };
+    };
+    return { root, url, routeBase: manifest.profile === 'browser' ? new URL(url!).pathname.slice(0, -'/index.html'.length) : '',
+      testEnvironment: { ...env }, provenance: { profile: manifest.profile, filesHash, runtime: version || selected?.runtime || 'node', environmentNames: [...manifest.requiredEnv] },
+      ...(manifest.profile === 'service' ? { invokeHttp: (input: JsonValue) => invokeService(input, true) } : {}),
       async invoke(input) {
-        check(); if (serviceFailure) throw serviceFailure;
-        await assertIntegrity();
-        const encoded = JSON.stringify(input);
-        if (Buffer.byteLength(encoded) > limits.maxOutputBytes) throw new Error('Runtime input exceeded the size limit.');
-        let output: JsonValue;
-        if (manifest.profile === 'service') output = json(await request(new URL(manifest.invokePath!, url!).href, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: encoded }));
-        else {
-          if (!selected) throw new Error('This browser package has no callable evaluation entrypoint.');
-          const [program, args] = commandFor(selected);
-          output = json((await (await launch(program, args, limits.invocationTimeoutMs, encoded + '\n')).result).stdout);
-        }
+        if (manifest.profile === 'service') return (await invokeService(input)).output;
+        const encoded = await encodeInput(input);
+        if (!selected) throw new Error('This browser package has no callable evaluation entrypoint.');
+        const [program, args] = commandFor(selected);
+        const output = json((await (await launch(program, args, limits.invocationTimeoutMs, encoded + '\n')).result).stdout);
         await assertIntegrity(); return output;
       }, assertIntegrity, redactOutput, redactMessage: redact, close };
   } catch (error) { await close(); throw error; }

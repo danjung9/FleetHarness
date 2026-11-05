@@ -7,7 +7,10 @@ import { AgentHelperRuntime } from '../dist-electron/electron/agent-helpers.js';
 import { applicationTestFiles } from '../dist-electron/electron/verification.js';
 import { registerCredential } from '../dist-electron/electron/secrets.js';
 
-const passedTests = { exitCode: 0, stdout: 'TAP version 13\n# Subtest: sums actual records\n# tests 1\n# pass 1\n# fail 0\n# skipped 0\n# todo 0\n', stderr: '', timedOut: false, outputLimited: false };
+const counts = { tests: 1, passed: 1, failed: 0, cancelled: 0, skipped: 0, todo: 0 };
+const passedTests = { exitCode: 0, stdout: JSON.stringify({ type: 'summary', summaries: [
+  { file: 'run.test.mjs', success: true, counts }, { success: true, counts }
+], skippedSuites: 0 }) + '\n', stderr: '', timedOut: false, outputLimited: false };
 test('helper catalog and execution redact synthetic credentials in both text and structured results', async t => {
   const secret = 'synthetic-helper-secret-distinctive-0137'; registerCredential(secret);
   const h = await fixture(t, async options => options.command.includes('--test') ? passedTests : { ...passedTests, stdout: JSON.stringify({ diagnostic: secret }), stderr: secret });

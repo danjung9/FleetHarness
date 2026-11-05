@@ -36,6 +36,23 @@ export function cliSolutionFixture(ids) {
   return files;
 }
 
+// Current live planning contract; keep solutionFixture for saved-version compatibility tests.
+export function structuredSolutionFixture(ids) {
+  const files = solutionFixture(ids);
+  const ux = JSON.parse(files['ux-spec.json']);
+  ux.schemaVersion = 2;
+  ux.structure = { pattern: 'single-task', rationale: 'The fixture performs one small message-parsing task.',
+    entryScreenId: 'parser', navigation: 'The task is completed on the entry screen.', persistentElements: 'None.' };
+  ux.screens = [{ ...ux.screens[0], id: 'parser', route: '/index.html', selector: 'body',
+    layout: 'Message input and Parse message action precede the readable result.', secondaryContent: 'None.',
+    narrowLayout: 'Input, action and result fit a single fluid column.' }];
+  const plan = JSON.parse(files['acceptance-plan.json']);
+  for (const journey of plan.journeys) journey.steps.unshift({ action: 'expectScreen', screenId: 'parser' });
+  files['ux-spec.json'] = JSON.stringify(ux, null, 2);
+  files['acceptance-plan.json'] = JSON.stringify(plan, null, 2);
+  return files;
+}
+
 // Invoke the same pure function embedded in the actual UI, not copied test logic.
 export const solutionFixtureEvaluator = String.raw`const fs=require('node:fs');
 const vm=require('node:vm');

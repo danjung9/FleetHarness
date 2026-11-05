@@ -1,7 +1,8 @@
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
-import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -482,8 +483,11 @@ test('factory admission rejects stale model catalogs without an active ChatGPT p
     createCodexSession: () => { throw new Error('No session should start without plan permission'); } });
   for (const account of [{ status: 'disconnected', planUsageEnabled: true }, { status: 'connecting', planUsageEnabled: true }, { status: 'connected', planUsageEnabled: false }]) {
     codex.account = account;
-    await assert.rejects(backend.start(store.state.projects[0].id), /build service is not connected/);
-    assert.equal(backend.active.size, 0); assert.equal(store.state.projects[0].status, 'failed');
+    const before = structuredClone(store.state.projects[0]);
+    await assert.rejects(backend.start(store.state.projects[0].id), error => {
+      assert.match(String(error.cause ?? error), /sign in with ChatGPT/i); return true;
+    });
+    assert.equal(backend.active.size, 0); assert.deepEqual(store.state.projects[0], before);
   }
 });
 
@@ -513,6 +517,11 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
     preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
+      // Reviewer lifecycle is covered separately; these assertions track the
+      // ordinary phase skills while the reviewer still submits through its host ledger.
+      if (options.tools.some(tool => tool.name === 'fleet_submit_planning_review')) {
+        return createFixturePlanningReviewSession(options.tools);
+      }
       const rpc = new FakeRpc();
       const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
       sessions.push(session);

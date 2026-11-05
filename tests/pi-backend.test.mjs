@@ -45,14 +45,15 @@ async function resumeRefused(backend, project, expected) {
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const workflowTimeout = functionalTimeout;
-import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
 import { syntheticBrowser } from './helpers/synthetic-browser.mjs';
 import { runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
 import { CodexRpc } from '../dist-electron/electron/codex-rpc.js';
-import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { completeFixtureVisualReview, fixtureVisualReviewInput } from '../scripts/visual-review-fixture.mjs';
+import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') || prompt.includes('broke checks that passed before it') ? 'repair'
   : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
   : prompt.includes('You are the intake agent') ? 'intake'
@@ -147,6 +148,11 @@ async function harness(t, options = {}) {
         };
         judgeSessions.push(judge); return { session: judge };
       }
+      // Keep phase lifecycle assertions scoped to workflow sessions. The separate
+      // planning-review backend suite covers reviewer lifecycle and rejection.
+      if (customTools.some(tool => tool.name === 'fleet_submit_planning_review')) {
+        return { session: createFixturePlanningReviewSession(customTools) };
+      }
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
       const disposal = deferred();
@@ -155,6 +161,10 @@ async function harness(t, options = {}) {
         emit(event) { for (const listener of listeners) listener(event); },
         async prompt(text) {
           this.stage ??= stageOf(text); this.prompts.push(text); this.emit({ type: 'turn_start' });
+          if (this.stage === 'plan' && (options.legacyAudit || options.audit || options.auditAnswers || options.auditAbort)) {
+            // Exercise compatibility with an in-flight checkpoint from the original audit gate.
+            backend.active.get(project.id).planningAudit ??= { attempts: [], correctionStarted: false, complete: false };
+          }
           if (this.stage === 'plan' && !project.systemDesign) await customTools.find(tool => tool.name === 'fleet_system_design').execute('design', {
             title: 'Task parser', description: 'Local fixture application',
             components: [{ id: 'parser', label: 'Parser', description: 'Extract task text', kind: 'logic', files: [options.componentFile ?? 'core.cjs'] }], connections: []
@@ -209,7 +219,7 @@ async function syntheticReport(p, run, failed = false, detail = 'step 3: expecte
       visualReview: run.visualReview, package: { status, cleanCopy: true, profile: run.quality.solution.runtime.profile, filesHash },
       solutionEvaluation: { schemaVersion: 1, status, errors: [], runtime: { profile: run.quality.solution.runtime.profile, filesHash },
         capabilities: capabilities.map(({ id, required, status }) => ({ id, required, status })),
-        evaluations: run.quality.evaluation.evaluations.map(evaluation => ({ ...evaluation, status, actual: failed ? 0 : 1 })) }
+        evaluations: run.quality.evaluation.evaluations.map(evaluation => ({ ...evaluation, status, actual: failed ? 0 : 1, cases: evaluation.cases.flatMap(item => Array.from({ length: evaluation.trials }, (_, index) => ({ id: item.id, trial: index + 1, score: failed ? 0 : 1, passed: !failed, expected: item.expected, actual: item.expected }))) })) }
     } };
 
 }
@@ -390,7 +400,7 @@ test('planning audit: Codex lifecycle uses the read-only snapshot adapter and ex
     };
     clients.push(rpc); return rpc;
   });
-  const h = await harness(t, { verify: syntheticReport });
+  const h = await harness(t, { verify: syntheticReport, legacyAudit: true });
   h.store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture', rememberKey: false };
   h.backend.options.codex = { home: h.root, account: { status: 'connected', planUsageEnabled: true },
     credentials: async () => ({}), refresh: async () => {},
@@ -1539,7 +1549,7 @@ test('build agents interact with their declared app, see images, reopen changed 
     assert.equal(session.customTools.some(tool => tool.name === 'fleet_browser'), ['build', 'verify'].includes(session.stage));
   }
   const logs = h.project.logs.filter(log => log.tool?.name === 'fleet_browser' && log.tool?.phase === 'complete');
-  assert.equal(logs.length, 12);
+  assert.equal(logs.length, 16, 'Manual interactions and every frozen journey deliver their screenshots to the agent.');
   assert.ok(logs.every(log => log.text.includes('Image delivered to the agent')));
   assert.ok(logs.every(log => !log.text.includes('iVBORw0KGgo')));
   const stale = await browserTool.execute('late-screenshot', { action: 'screenshot' });
@@ -1556,26 +1566,132 @@ for (const stage of ['guide', 'verify']) for (const recover of [true, false]) {
     let attempts = 0;
     const h = await harness(t, { ...visualOptions, visualReview: ({ stage: current }) => current === stage && (++attempts === 1 || !recover) });
     await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
-    assert.equal(attempts, 2, 'Missing comparison gets exactly one completion prompt.');
+    assert.equal(attempts, 2, 'A first completion prompt can recover; unchanged evidence must not cause more prompts.');
     const session = h.sessions.find(session => session.stage === (stage === 'guide' ? 'build' : 'verify'));
     assert.match(session.prompts.at(-1), /visual|screenshot/i);
     if (recover) assert.equal(reportPassed(h.project.report), true);
     else {
-      assert.match(h.project.error, /visual|screenshot/i);
+      assert.match(h.project.error, /visual review/i);
+      assert.ok(h.project.logs.some(item => /visual review made no progress/i.test(item.text)));
       assert.equal(h.project.report, undefined);
       if (stage === 'guide') assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
     }
   });
 }
 
-test(visualLabel + 'editing runtime source after every visual recheck blocks the stage instead of accepting old screenshots', { timeout: workflowTimeout }, async t => {
-  let edits = 0;
-  const h = await harness(t, { ...visualOptions, afterVisualReview: async ({ cwd, stage }) => {
-    if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
+test('visual completion continues through useful findings and fixes before all frozen journeys pass', { timeout: workflowTimeout * 2 }, async t => {
+  let attempts = 0, findingId;
+  const h = await harness(t, { visualReview: async ({ cwd, stage, session }) => {
+    if (stage !== 'guide') return false;
+    attempts++;
+    if (attempts > 2) return false;
+    const browser = session.customTools.find(tool => tool.name === 'fleet_browser');
+    const reviewer = session.customTools.find(tool => tool.name === 'fleet_visual_review');
+    const captureAndReview = async (args, changes = {}) => {
+      const capture = await browser.execute('iteration-capture', args);
+      assert.equal(capture.isError, false, JSON.stringify(capture.details));
+      const review = await reviewer.execute('iteration-review', { ...fixtureVisualReviewInput(capture.details), ...changes });
+      assert.equal(review.isError, false, JSON.stringify(review.details));
+      return review.details.review;
+    };
+    if (attempts === 1) {
+      findingId = (await captureAndReview({ action: 'open', viewport: 'desktop' }, {
+        findings: ['The primary button needs an explicit 44 pixel minimum target height.']
+      })).findings[0].id;
+      await captureAndReview({ action: 'screenshot', viewport: 'narrow' });
+    } else {
+      assert.match(session.prompts.at(-1), new RegExp(findingId));
+      assert.match(session.prompts.at(-1), /parse-task.*recover-empty/);
+      assert.match(session.prompts.at(-1), /action journey.*BOTH desktop and narrow/);
+      await fs.appendFile(path.join(cwd, 'index.html'), '\n<style>#parse{min-height:44px}</style>');
+      await captureAndReview({ action: 'open', viewport: 'desktop' }, {
+        resolutions: [{ findingId, change: 'Added min-height:44px to the primary parse button.' }]
+      });
+    }
+    return true;
   } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(attempts, 3, 'The changed source and new comparison earn a second visual completion prompt.');
+  assert.equal(h.project.visualReview.reviews.some(review => review.resolutions.some(resolution => resolution.findingId === findingId)), true);
+  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 2);
+  assert.equal(h.sessions.some(session => session.stage === 'repair'), false, 'Visual completion does not consume the independent repair attempt.');
+  assert.equal(reportPassed(h.project.report), true);
+});
+
+test('Stop cancels a pending visual completion iteration without entering verification', { timeout: workflowTimeout }, async t => {
+  const entered = deferred(); let attempts = 0;
+  const h = await harness(t, { visualReview: async ({ stage }) => {
+    if (stage !== 'guide') return false;
+    if (++attempts === 2) { entered.resolve(); await never(); }
+    return true;
+  } });
+  await h.backend.start(h.project.id); await entered.promise;
+  const session = h.sessions.at(-1);
+  await h.backend.stop(h.project.id); await h.assertSettled('stopped');
+  assert.equal(attempts, 2);
+  assert.equal(session.disposed, true);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+  assert.equal(h.project.stages.find(stage => stage.id === 'review').status, 'queued');
+});
+
+test('changed runtime files cannot extend visual completion beyond three retries', { timeout: workflowTimeout }, async t => {
+  let attempts = 0, edits = 0;
+  const h = await harness(t, {
+    visualReview: ({ stage }) => {
+      if (stage !== 'guide') return false;
+      attempts++;
+      // Real source changes exercise progress accounting without repeated browser work.
+      return true;
+    },
+    afterVisualReview: async ({ cwd, stage }) => {
+      if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- incomplete visual attempt ${++edits} -->`);
+    }
+  });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(edits, 2);
-  assert.match(h.project.error, /visual|screenshot|changed|current/i);
+  assert.equal(attempts, 4, 'The initial attempt and three retries execute the same production completion loop.');
+  assert.equal(edits, 4, 'Three useful but still incomplete visual iterations are the bounded maximum.');
+  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 3);
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.filter(prompt => prompt.startsWith('The stage is incomplete.')).length, 3);
+  assert.deepEqual(h.project.visualReview.captures, []);
+  assert.deepEqual(h.project.visualReview.reviews, []);
+  assert.match(h.project.error, /after 3 visual review iterations/);
+  assert.doesNotMatch(h.project.error, /exceeded|no progress/i);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+  assert.equal(h.project.report, undefined);
+});
+
+test('editing runtime source after visual rechecks rejects stale screenshots and journeys at both widths', { timeout: workflowTimeout }, async t => {
+  let attempts = 0, edits = 0;
+  const h = await harness(t, {
+    visualReview: ({ stage }) => {
+      if (stage !== 'guide') return false;
+      return ++attempts > 1;
+    },
+    afterVisualReview: async ({ cwd, stage }) => {
+      if (stage === 'guide' && attempts === 1) {
+        await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
+      }
+    }
+  });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(attempts, 2, 'The stale review prompts one retry; unchanged evidence then makes no progress.');
+  assert.equal(edits, 1);
+  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 1);
+  const visual = h.project.visualReview;
+  assert.equal(visual.captures.length, 6, 'Only the first attempt obtains real host browser captures.');
+  assert.equal(visual.reviews.length, 6);
+  assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 2);
+  assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 4);
+  assert.equal(visual.captures.filter(capture => capture.journey?.status === 'passed').length, 4);
+  assert.ok(visual.captures.every(capture => capture.filesHash !== visual.filesHash), 'Every retained capture predates the source edit.');
+  assert.match(h.project.error, /visual review/i);
+      assert.ok(h.project.logs.some(item => /visual review made no progress/i.test(item.text)));
+  for (const viewport of ['desktop', 'narrow']) {
+    assert.match(h.project.error, new RegExp(`The final ${viewport} screenshot is stale`));
+    for (const journeyId of ['parse-task', 'recover-empty']) {
+      assert.match(h.project.error, new RegExp(`Journey ${journeyId} at ${viewport} is stale`));
+    }
+  }
   assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
   assert.equal(h.project.report, undefined);
 });
@@ -2141,9 +2257,10 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the complete ${runtimePro
   assert.equal(h.project.report.quality.visualReview?.status, runtimeProfile === 'browser' ? 'passed' : undefined);
   if (runtimeProfile === 'browser') {
     const visual = h.project.report.quality.visualReview;
-    assert.equal(visual.captures.length, 8);
+    assert.equal(visual.captures.length, 12);
     assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 4);
-    assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 4);
+    assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 8);
+    assert.equal(visual.captures.filter(capture => capture.journey?.status === 'passed').length, 8, 'Every frozen journey is exercised in both viewports by both agents.');
     assert.deepEqual(visual.sessions.map(session => session.stage), ['build', 'verify']);
     assert.ok(visual.sessions.every(session => session.status === 'passed'));
     assert.deepEqual(h.project.visualReview, visual);
@@ -2222,19 +2339,25 @@ test('the host materializes a service foundation before implementation and verif
       const solution = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
       solution.runtime = foundationRuntime(selection);
       const plan = JSON.parse(await fs.readFile(path.join(cwd, 'acceptance-plan.json'), 'utf8'));
+      const ux = JSON.parse(await fs.readFile(path.join(cwd, 'ux-spec.json'), 'utf8'));
+      ux.screens[0].route = '/';
+      ux.screens[0].primaryAction = 'Run computation';
+      ux.screens[0].layout = 'A labeled JSON input and Run computation action precede the backend result and validation feedback.';
       plan.journeys = [
         { id: 'parse-task', title: 'Parse using the backend', kind: 'primary', steps: [
+          { action: 'expectScreen', screenId: ux.structure.entryScreenId },
           { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
           { action: 'expectText', selector: '#result', text: '"inspect pump"' }
         ] },
         { id: 'recover-empty', title: 'Recover from invalid JSON', kind: 'recovery', steps: [
+          { action: 'expectScreen', screenId: ux.structure.entryScreenId },
           { action: 'fill', selector: '#input', value: '{ invalid' }, { action: 'click', selector: '#run' },
           { action: 'expectVisible', selector: '#error' },
           { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
           { action: 'expectText', selector: '#result', text: '"inspect pump"' }
         ] }
       ];
-      for (const [name, value] of Object.entries({ 'solution-contract.json': solution, 'acceptance-plan.json': plan, 'foundation-plan.json': selection })) {
+      for (const [name, value] of Object.entries({ 'solution-contract.json': solution, 'acceptance-plan.json': plan, 'ux-spec.json': ux, 'foundation-plan.json': selection })) {
         await fs.writeFile(path.join(cwd, name), JSON.stringify(value));
       }
       return true;
@@ -2287,6 +2410,83 @@ test('core evaluation precedes completed application component tracking', { time
   assert.equal(completedApplication, true);
   assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2, 'Incomplete UI components must not trigger artifact repair before the core gate');
   assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('host core evidence survives agent edits and deletion through guide, verification and repair', { timeout: workflowTimeout }, async t => {
+  let original;
+  const h = await harness(t, { brokenBuild: true, scenario: async ({ cwd, stage }) => {
+    const target = path.join(cwd, '.quality-evidence/core-report.json');
+    if (stage === 'guide') {
+      original = await fs.readFile(target, 'utf8');
+      const report = JSON.parse(original);
+      report.status = 'local-tests-passed-host-core-pass-reported';
+      report.tests = report.passed = 7;
+      await fs.writeFile(target, JSON.stringify(report));
+    } else if (stage === 'verify' || stage === 'repair') {
+      assert.equal(await fs.readFile(target, 'utf8'), original, 'The next agent must receive exact host evidence');
+      if (stage === 'verify') await fs.rm(target);
+      else await fs.writeFile(target, '{"status":"agent-claimed-pass"}');
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'), original);
+  assert.equal(h.project.logs.filter(log => log.text.includes('Restored host core evaluation evidence')).length, 3);
+  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2);
+  assert.equal(reportPassed(h.project.report, true), true);
+  assert.equal(await sourceHash(h.project.workspace), h.project.report.sourceHash);
+});
+
+test('resuming verification restores host core evidence from private storage after a restart', { timeout: workflowTimeout }, async t => {
+  let original, interrupt = true;
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (stage !== 'verify') return false;
+    const target = path.join(cwd, '.quality-evidence/core-report.json');
+    if (interrupt) {
+      interrupt = false;
+      original = await fs.readFile(target, 'utf8');
+      await fs.writeFile(target, '{"status":"agent-claimed-pass"}');
+      throw new Error('Interrupted verification after editing evidence');
+    }
+    assert.equal(await fs.readFile(target, 'utf8'), original);
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  const count = h.sessions.length, { runId, workspace } = h.project;
+  const restored = new Store(h.root); await restored.init();
+  Object.assign(h.project, restored.project(h.project.id));
+  const restarted = new PiBackend(h.store, process.execPath, () => {}, resourcesRoot, h.backend.options);
+  restarted.runtime = h.backend.runtime;
+  t.after(() => restarted.stopAll());
+  await restarted.resume(h.project.id); await restarted.active.get(h.project.id)?.done;
+  assert.equal(h.project.status, 'review', h.project.error);
+  assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
+  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['verify']);
+  assert.equal(await fs.readFile(path.join(workspace, '.quality-evidence/core-report.json'), 'utf8'), original);
+  assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('a timed-out core evaluation cannot publish evidence or overwrite its recovery checkpoint', { timeout: workflowTimeout }, async t => {
+  const finished = deferred();
+  const h = await harness(t, { agentLimits: { idleMs: 500, timeoutMs: 10_000 }, scenario: async ({ cwd, stage }) => {
+    if (stage !== 'build') return false;
+    await artifacts(cwd, stage);
+    await fs.writeFile(path.join(cwd, 'evaluate.cjs'), 'setTimeout(() => {\n' + solutionFixtureEvaluator + '\n}, 1000);');
+    return true;
+  } });
+  const evaluate = h.backend.evaluateCore.bind(h.backend);
+  h.backend.evaluateCore = async (...args) => {
+    try { return await evaluate(...args); }
+    finally { finished.resolve(); }
+  };
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /build agent made no progress/);
+  const checkpoint = path.join(h.root, 'run-checkpoints', h.project.runId + '.json');
+  const saved = await fs.readFile(checkpoint, 'utf8');
+  await finished.promise;
+  assert.equal(await fs.readFile(checkpoint, 'utf8'), saved, 'Late work must not replace settled recovery state');
+  await assert.rejects(fs.access(path.join(h.project.workspace, '.quality-evidence/core-report.json')), { code: 'ENOENT' });
 });
 
 for (const repair of [true, false]) test(`required core evaluation ${repair ? 'repairs the engine' : 'blocks application completion'}`, { timeout: 20000 }, async t => {
@@ -2368,22 +2568,47 @@ test('an unreadable answer check keeps the frozen answers', { timeout: 30000 }, 
 });
 
 for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: functionalTimeout }, async t => {
+  let attempts = 0, findingId, nodeReport;
   const h = await harness(t, { verificationLimits: { browserStepTimeoutMs: 1000 }, scenario: async ({ cwd, stage }) => {
     if (stage === 'build') {
       await artifacts(cwd, stage);
       await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main><script>' + qualityFixtureHtml.match(/\/\* CORE_START \*\/[\s\S]*?\/\* CORE_END \*\//)[0] + '</script>');
       return true;
     }
-    if (stage === 'repair' && repair) await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
     return false;
+  }, visualReview: async ({ cwd, stage, session }) => {
+    if (stage !== 'guide') return false;
+    attempts++;
+    if (attempts > 1 && !repair) return true;
+    const browser = session.customTools.find(tool => tool.name === 'fleet_browser');
+    const reviewer = session.customTools.find(tool => tool.name === 'fleet_visual_review');
+    if (attempts === 1) nodeReport = await verifyWorkspace(cwd, process.execPath, () => {});
+    else await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
+    const result = await browser.execute('exercise-static-app', { action: 'journey', journeyId: 'parse-task', viewport: 'desktop' });
+    assert.equal(result.isError, attempts === 1);
+    assert.equal(result.details.journey.status, attempts === 1 ? 'failed' : 'passed');
+    const comparison = await reviewer.execute('review-static-app', {
+      ...fixtureVisualReviewInput(result.details),
+      ...(attempts === 1 ? { findings: ['The rendered application has no message input or Parse message action.'] }
+        : { resolutions: [{ findingId, change: 'Implemented the message input, parse action and persistent result in index.html.' }] })
+    });
+    assert.equal(comparison.isError, false, JSON.stringify(comparison.details));
+    if (attempts === 1) findingId = comparison.details.review.findings[0].id;
+    return attempts === 1;
   } });
   await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
-  assert.equal(h.project.report.passed, 2);
-  assert.equal(h.project.report.failed, 0);
-  assert.equal(reportPassed(h.project.report, true), repair, JSON.stringify(h.project.report));
-  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, repair ? 1 : 2);
-  assert.equal(h.project.report.quality.status, repair ? 'passed' : 'failed');
-  assert.ok(h.project.logs.some(log => log.text.includes('Browser journeys: 0/4 passed')));
+  assert.equal(nodeReport.passed, 2);
+  assert.equal(nodeReport.failed, 0);
+  assert.equal(reportPassed(h.project.report, true), repair);
+  assert.equal(attempts, 2);
+  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 0, 'The development journey gate catches the broken UI before independent verification.');
+  assert.equal(h.project.visualReview.captures.some(capture => capture.journey?.status === 'failed'), true);
+  if (repair) assert.equal(h.project.report.quality.status, 'passed');
+  else {
+    assert.equal(h.project.report, undefined);
+    assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+    assert.match(h.project.error, /visual review made no progress/);
+  }
 });
 
 test('builder cannot weaken a planned browser expectation', { timeout: workflowTimeout }, async t => {
@@ -2392,7 +2617,7 @@ test('builder cannot weaken a planned browser expectation', { timeout: workflowT
     await artifacts(cwd, stage);
     const file = path.join(cwd, 'acceptance-plan.json');
     const plan = JSON.parse(await fs.readFile(file, 'utf8'));
-    plan.journeys[0].steps[2].text = 'incorrect result';
+    plan.journeys[0].steps.find(step => step.action === 'expectText').text = 'incorrect result';
     await fs.writeFile(file, JSON.stringify(plan));
     return true;
   } });
@@ -2618,3 +2843,21 @@ test('a hung generated test is bounded, repaired once, then reaches review on ac
   assert.equal(h.project.report.total, 3);
   assert.ok(h.project.logs.some(l => l.text.includes('Verification exceeded'))); assert.equal(h.sessions.at(-1).stage, 'repair');
 });
+
+
+for (const syntheticChecks of [false, true]) {
+const visualLabel = syntheticChecks ? 'synthetic visual gates: ' : '';
+const visualOptions = syntheticChecks ? { verify: syntheticReport } : {};
+test(visualLabel + 'editing runtime source after every visual recheck blocks the stage instead of accepting old screenshots', { timeout: workflowTimeout }, async t => {
+  let edits = 0;
+  const h = await harness(t, { ...visualOptions, afterVisualReview: async ({ cwd, stage }) => {
+    if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.equal(edits, 4, 'Source changes earn at most three visual iterations after the initial capture.');
+  assert.match(h.project.error, /visual|screenshot|changed|current/i);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+  assert.equal(h.project.report, undefined);
+});
+
+}

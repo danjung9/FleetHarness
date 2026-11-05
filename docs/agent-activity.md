@@ -8,6 +8,8 @@ New tool events save the SDK call ID and phase alongside the existing text recor
 
 Live activity follows the newest event until the user scrolls away. “Jump to latest” resumes following. The inspector shows the latest four actions, with a link to the full Agents view.
 
+Independent planning review records host-written milestones for model activity, document-page reads, verdict submission and provider retries. Review text, tool arguments, tool results and provider error details stay out of public activity because they can contain sealed evaluation answers. The planner finishing its files does not complete the phase: reviewer approval and contract freeze must also succeed. A timed-out review keeps the saved plan; **Resume planning** starts a fresh reviewer without repeating completed phases or resetting the one-revision allowance. Architecture comparisons use **Resume comparison** for the same recovery.
+
 ## Verification
 
 - `npm test` includes parsing, call correlation, legacy records, interrupted runs, truncated data, unknown tools, and result decoding.

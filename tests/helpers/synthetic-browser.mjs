@@ -33,9 +33,11 @@ export function syntheticBrowser(t) {
       const screenshot = '.browser-observations/' + randomUUID() + '/' + createHash('sha256').update(bytes).digest('hex').slice(0, 12) + '-' + randomUUID() + '.png';
       await fs.mkdir(path.dirname(path.join(browser.options.root, screenshot)), { recursive: true });
       await fs.writeFile(path.join(browser.options.root, screenshot), bytes);
-      const captureId = await browser.options.onCapture({ viewport, screenshot, filesHash: await runtimeFilesHash(browser.options.root, manifest),
+      const definition = input.action === 'journey' ? browser.options.journeys?.find(item => item.id === input.journeyId) : undefined;
+      const journey = definition ? { id: definition.id, status: 'passed', completedSteps: definition.steps.length, totalSteps: definition.steps.length, detail: 'Synthetic orchestration journey' } : undefined;
+      const captureId = await browser.options.onCapture({ viewport, screenshot, ...(journey ? { journey } : {}), filesHash: await runtimeFilesHash(browser.options.root, manifest),
         screenshotHash: createHash('sha256').update(bytes).digest('hex') });
-      const details = { captureId, viewport, dimensions: viewport === 'desktop' ? { width: 1280, height: 800 } : { width: 390, height: 844 },
+      const details = { captureId, viewport, journeys: browser.options.journeys ?? [], ...(journey ? { journey } : {}), dimensions: viewport === 'desktop' ? { width: 1280, height: 800 } : { width: 390, height: 844 },
         pageText: 'Synthetic orchestration image, not browser evidence.', controls: [] };
       return { content: [{ type: 'text', text: JSON.stringify(details) }, { type: 'image', mimeType: 'image/png', data: bytes.toString('base64') }], details, isError: false };
     } }));

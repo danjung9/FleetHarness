@@ -17,6 +17,11 @@ async function evaluate(t, script, item = evaluation(), contract = solution) {
   t.after(() => runtime.close());
   return runSolutionEvaluation(runtime, contract, { schemaVersion: 1, evaluations: [item] });
 }
+function evaluateWithRuntime(invoke, item) {
+  const runtime = { provenance: { profile: 'cli', filesHash: 'known', runtime: 'node', environmentNames: [] },
+    invoke, redactOutput: output => output, redactMessage: message => message };
+  return runSolutionEvaluation(runtime, solution, { schemaVersion: 1, evaluations: [item] });
+}
 
 test('host evaluates the real engine for all cases and repeated trials with dataset provenance', async t => {
   const report = await evaluate(t, 'console.log(input*2);');
@@ -36,7 +41,7 @@ test('a hardcoded answer passes the first example but is rejected by the indepen
 });
 
 test('engine failures cannot be hidden by an aggregate threshold', async t => {
-  const report = await evaluate(t, 'if(input===2)console.log(4);else process.exit(1);', evaluation({ threshold: 0.5 }));
+  const report = await evaluate(t, 'if(input===2)console.log(4);else process.exit(1);', evaluation({ evaluator: 'classification', threshold: 0.5 }));
   assert.equal(report.evaluations[0].actual, 0.5);
   assert.equal(report.status, 'failed');
   assert.match(report.evaluations[0].cases[1].detail, /exited/);
@@ -239,4 +244,161 @@ test('retrieval scores relevant ids and rejects fabricated citations or excluded
   const excluded = { id: 'b', source: 'source-b', excerpt: { start: 0, end: 10, text: 'Other fact' } };
   assert.match(scoreSolutionOutput(options, input, { results: [excluded] }, expected).detail, /excluded source/);
   assert.equal(scoreSolutionOutput(options, input, { results: [] }, { ids: [] }).score, 1);
+});
+
+function invalidRetrievalFixtures() {
+  const document = { id: 'a', text: 'Known fact' };
+  return [
+    { name: 'missing documents', input: { query: 'Known facts' }, expected: { ids: ['a'] } },
+    { name: 'non-array documents', input: { documents: {} }, expected: { ids: ['a'] } },
+    { name: 'non-object document', input: { documents: [null] }, expected: { ids: ['a'] } },
+    { name: 'non-string document ID', input: { documents: [{ id: 1, text: 'Known fact' }] }, expected: { ids: ['a'] } },
+    { name: 'missing document text', input: { documents: [{ id: 'a' }] }, expected: { ids: ['a'] } },
+    { name: 'non-string document text', input: { documents: [{ id: 'a', text: 7 }] }, expected: { ids: ['a'] } },
+    { name: 'duplicate document IDs', input: { documents: [document, { ...document, text: 'Conflicting fact' }] }, expected: { ids: ['a'] } },
+    { name: 'absent answer-key reference', input: { documents: [document] }, expected: { ids: ['missing'] } },
+    { name: 'excluded answer-key reference', input: { documents: [{ ...document, approved: false }] }, expected: { ids: ['a'] } }
+  ];
+}
+
+test('retrieval scoring remains fatal for invalid fixtures even when planning validation is bypassed', () => {
+  for (const fixture of invalidRetrievalFixtures()) {
+    const result = scoreSolutionOutput({ evaluator: 'retrieval' }, fixture.input, { results: [] }, fixture.expected);
+    assert.equal(result.score, 0, fixture.name);
+    assert.equal(result.fatal, true, fixture.name);
+    assert.match(result.detail, /document|source|fixture/i, fixture.name);
+  }
+});
+
+test('invalid retrieval fixtures cannot hide behind a passing fractional aggregate', async () => {
+  const valid = { id: 'valid', input: { documents: [{ id: 'a', text: 'Known fact' }] }, expected: { ids: ['a'] } };
+  const output = { results: [{ id: 'a', excerpt: { start: 0, end: 10, text: 'Known fact' } }] };
+  for (const fixture of invalidRetrievalFixtures()) {
+    let calls = 0;
+    const item = evaluation({ evaluator: 'retrieval', threshold: 0.5, trials: 1,
+      cases: [valid, { id: 'invalid', input: fixture.input, expected: fixture.expected }] });
+    const report = await evaluateWithRuntime(async () => ++calls === 1 ? structuredClone(output) : { results: [] }, item);
+    assert.equal(report.evaluations[0].actual, 0.5, fixture.name);
+    assert.deepEqual(report.evaluations[0].cases.map(entry => entry.passed), [true, false], fixture.name);
+    assert.equal(report.evaluations[0].status, 'failed', fixture.name);
+    assert.equal(report.capabilities[0].status, 'failed', fixture.name);
+    assert.equal(report.status, 'failed', fixture.name);
+  }
+});
+
+test('retrieval scoring still accepts implicit approval, empty sources, and empty abstention', () => {
+  const options = { evaluator: 'retrieval' }, output = { results: [{ id: 'a', excerpt: { start: 0, end: 10, text: 'Known fact' } }] };
+  const allowed = scoreSolutionOutput(options, { documents: [{ id: 'a', text: 'Known fact' }] }, output, { ids: ['a'] });
+  assert.equal(allowed.score, 1); assert.notEqual(allowed.fatal, true);
+  for (const documents of [[], [{ id: 'empty', text: '' }], [{ id: 'excluded', text: 'Excluded fact', approved: false }]]) {
+    const abstention = scoreSolutionOutput(options, { documents }, { results: [] }, { ids: [] });
+    assert.equal(abstention.score, 1); assert.notEqual(abstention.fatal, true);
+  }
+});
+
+function deterministicFixtures() {
+  const infeasible = structuredClone(scheduleInput); infeasible.people[0].maxMinutes = 30;
+  return [
+    { evaluator: 'exact', cases: evaluation().cases, constant: 4, correct: input => input * 2 },
+    { evaluator: 'numeric', cases: evaluation().cases, constant: 4, correct: input => input * 2 },
+    { evaluator: 'schedule', cases: [
+      { id: 'feasible', input: scheduleInput, expected: { status: 'feasible' } },
+      { id: 'infeasible', input: infeasible, expected: { status: 'infeasible' } }
+    ], constant: validSchedule, correct: input => input.people[0].maxMinutes === 30 ? { status: 'infeasible', assignments: [] } : validSchedule }
+  ];
+}
+
+test('deterministic evaluators reject low-threshold plans with partially correct constant answers', async () => {
+  for (const fixture of deterministicFixtures()) {
+    const item = evaluation({ evaluator: fixture.evaluator, cases: fixture.cases, threshold: 0.5 });
+    const report = await evaluateWithRuntime(async () => structuredClone(fixture.constant), item);
+    const result = report.evaluations[0];
+    assert.equal(result.actual, 0.5, fixture.evaluator);
+    assert.deepEqual(result.cases.map(entry => entry.score), [1, 0, 1, 0], fixture.evaluator);
+    assert.equal(result.threshold, 0.5, 'The frozen threshold must not be silently rewritten.');
+    assert.equal(result.status, 'failed', fixture.evaluator);
+    assert.equal(report.capabilities[0].status, 'failed', fixture.evaluator);
+    assert.equal(report.status, 'failed', fixture.evaluator);
+    const diagnostic = report.errors.join('\n');
+    assert.match(diagnostic, /core-eval/);
+    assert.match(diagnostic, new RegExp(fixture.evaluator));
+    assert.match(diagnostic, /threshold.*1/i);
+  }
+});
+
+test('deterministic thresholds must equal one even when every output is correct', async () => {
+  for (const fixture of deterministicFixtures()) {
+    const threshold = 1 - Number.EPSILON;
+    const item = evaluation({ evaluator: fixture.evaluator, cases: fixture.cases, threshold });
+    const report = await evaluateWithRuntime(async input => structuredClone(fixture.correct(input)), item);
+    assert.equal(report.evaluations[0].actual, 1, fixture.evaluator);
+    assert.ok(report.evaluations[0].cases.every(entry => entry.passed), fixture.evaluator);
+    assert.equal(report.evaluations[0].threshold, threshold);
+    assert.equal(report.evaluations[0].status, 'failed', fixture.evaluator);
+    assert.equal(report.capabilities[0].status, 'failed', fixture.evaluator);
+    assert.equal(report.status, 'failed', fixture.evaluator);
+    assert.match(report.errors.join('\n'), /threshold.*1/i);
+  }
+});
+
+test('a failed repeated trial prevents deterministic evaluation and capability success', async () => {
+  for (const fixture of deterministicFixtures()) {
+    let invocations = 0;
+    const item = evaluation({ evaluator: fixture.evaluator, cases: fixture.cases, threshold: 1, trials: 2 });
+    const report = await evaluateWithRuntime(async input => structuredClone(++invocations === 4 ? fixture.constant : fixture.correct(input)), item);
+    const result = report.evaluations[0];
+    assert.equal(result.actual, 0.75, fixture.evaluator);
+    assert.deepEqual(result.cases.map(entry => [entry.trial, entry.passed]), [[1, true], [1, true], [2, true], [2, false]], fixture.evaluator);
+    assert.equal(result.status, 'failed', fixture.evaluator);
+    assert.equal(report.capabilities[0].status, 'failed', fixture.evaluator);
+    assert.equal(report.status, 'failed', fixture.evaluator);
+    assert.deepEqual(report.errors, []);
+  }
+});
+
+function statisticalFixtures() {
+  const documents = [{ id: 'a', text: 'Known fact' }, { id: 'b', text: 'Other fact' }];
+  const results = documents.map(document => ({ id: document.id, excerpt: { start: 0, end: document.text.length, text: document.text } }));
+  return [
+    { evaluator: 'classification', cases: [
+      { id: 'first', input: [1, -1], expected: ['yes', 'no'] },
+      { id: 'second', input: [-1, 1], expected: ['no', 'yes'] }
+    ], partial: ['yes', 'yes'], score: 0.5, threshold: 0.5, correct: input => input.map(value => value > 0 ? 'yes' : 'no'), invalid: ['yes'] },
+    { evaluator: 'retrieval', cases: [
+      { id: 'first', input: { query: 'facts', documents }, expected: { ids: ['a', 'b'] } },
+      { id: 'second', input: { query: 'known facts', documents }, expected: { ids: ['a', 'b'] } }
+    ], partial: { results: [results[0]] }, score: 2 / 3, threshold: 0.6, correct: () => ({ results }),
+    invalid: { results: [{ ...results[0], excerpt: { ...results[0].excerpt, text: 'Fabricated' } }] } }
+  ];
+}
+
+test('classification and retrieval can pass valid fractional scores without perfect cases', async () => {
+  for (const fixture of statisticalFixtures()) {
+    const item = evaluation({ evaluator: fixture.evaluator, cases: fixture.cases, threshold: fixture.threshold, baseline: 0.5, trials: 1 });
+    const report = await evaluateWithRuntime(async () => structuredClone(fixture.partial), item);
+    assert.equal(report.evaluations[0].actual, fixture.score, fixture.evaluator);
+    assert.ok(report.evaluations[0].cases.every(entry => !entry.passed), fixture.evaluator);
+    assert.equal(report.evaluations[0].status, 'passed', fixture.evaluator);
+    assert.equal(report.capabilities[0].status, 'passed', fixture.evaluator);
+    assert.equal(report.status, 'passed', fixture.evaluator);
+    assert.deepEqual(report.errors, []);
+  }
+});
+
+test('fractional thresholds cannot hide invalid statistical outputs or invocation failures', async () => {
+  for (const fixture of statisticalFixtures()) for (const failure of ['invalid-output', 'invocation-error']) {
+    let invocations = 0;
+    const item = evaluation({ evaluator: fixture.evaluator, cases: fixture.cases, threshold: 0.5, trials: 1 });
+    const report = await evaluateWithRuntime(async input => {
+      if (++invocations === 1) return structuredClone(fixture.correct(input));
+      if (failure === 'invocation-error') throw new Error('Fixture invocation failed.');
+      return structuredClone(fixture.invalid);
+    }, item);
+    assert.equal(report.evaluations[0].actual, 0.5, fixture.evaluator);
+    assert.equal(report.evaluations[0].status, 'failed', `${fixture.evaluator}: ${failure}`);
+    assert.equal(report.capabilities[0].status, 'failed', fixture.evaluator);
+    assert.equal(report.status, 'failed', fixture.evaluator);
+    if (failure === 'invocation-error') assert.match(report.evaluations[0].cases[1].detail, /Fixture invocation failed/);
+    else assert.match(report.evaluations[0].cases[1].detail, fixture.evaluator === 'classification' ? /label shape/ : /source span/);
+  }
 });

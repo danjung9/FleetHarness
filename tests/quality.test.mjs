@@ -249,6 +249,62 @@ test('version 2 gate rejects failed or missing computational evidence even with 
   assert.equal(reportPassed(cli, true), true);
 });
 
+for (const evaluator of ['exact', 'numeric', 'schedule']) {
+  test(`deterministic approval rejects incomplete ${evaluator} saved evidence despite passing summaries`, () => {
+    const complete = v2Report();
+    complete.quality.solutionEvaluation.evaluations[0].evaluator = evaluator;
+    assert.equal(reportPassed(complete, true), true, 'Complete deterministic evidence remains approvable.');
+    const mutations = [
+      ['legacy half-correct evaluation', result => {
+        result.threshold = 0.5; result.actual = 0.5;
+        Object.assign(result.cases[1], { passed: false, score: 0 });
+      }],
+      ['weakened threshold with currently passing cases', result => { result.threshold = 0.5; }],
+      ['inflated aggregate score', result => { result.actual = 1.1; }],
+      ['failed case hidden by a perfect aggregate', result => { result.cases[1].passed = false; }],
+      ['non-boolean case pass flag', result => { result.cases[1].passed = 'true'; }],
+      ['partial case score hidden by a pass flag', result => { result.cases[1].score = 0.5; }],
+      ['missing case score', result => { delete result.cases[1].score; }]
+    ];
+    for (const [label, mutate] of mutations) {
+      const report = structuredClone(complete);
+      mutate(report.quality.solutionEvaluation.evaluations[0]);
+      assert.equal(reportPassed(report, true), false, label);
+    }
+  });
+}
+
+test('statistical approval preserves fractional classification and retrieval evidence', () => {
+  for (const evaluator of ['classification', 'retrieval']) {
+    const report = v2Report(), result = report.quality.solutionEvaluation.evaluations[0];
+    Object.assign(result, { evaluator, threshold: 0.6, actual: 0.625, baseline: 0.5,
+      metric: evaluator === 'classification' ? 'mean_label_accuracy' : 'mean_relevant_id_f1' });
+    Object.assign(result.cases[0], { passed: false, score: 0.75 });
+    Object.assign(result.cases[1], { passed: false, score: 0.5 });
+    assert.equal(reportPassed(report, true), true, `${evaluator} may pass its frozen aggregate threshold without perfect cases.`);
+    result.threshold = 0.7;
+    assert.equal(reportPassed(report, true), false, `${evaluator} still must meet its frozen threshold.`);
+  }
+});
+
+test('deterministic approval checks optional evaluations even when their criterion is deferred', () => {
+  for (const evaluator of ['exact', 'numeric', 'schedule']) {
+    const report = v2Report(), quality = report.quality, evaluation = quality.solutionEvaluation;
+    quality.requirementsMet = false;
+    quality.criteria.push({ criterionId: 'R2', requirement: 'Compute an optional result', status: 'unverified',
+      detail: 'The optional workflow is deferred.', capabilityIds: [] });
+    quality.capabilities.push({ id: 'optional', required: false, criterionIds: ['R2'], evaluationIds: ['optional-reference'],
+      status: 'passed', detail: 'Evaluated but not used by an implemented criterion.' });
+    evaluation.capabilities.push({ id: 'optional', required: false, status: 'passed' });
+    const optional = { ...structuredClone(evaluation.evaluations[0]), id: 'optional-reference', capabilityId: 'optional', evaluator };
+    evaluation.evaluations.push(optional);
+    assert.equal(reportPassed(report, true), true, `${evaluator}: complete optional evidence does not prevent prototype approval.`);
+    optional.threshold = 0.5; optional.actual = 0.5;
+    Object.assign(optional.cases[1], { passed: false, score: 0 });
+    assert.equal(reportPassed(report, true), false, `${evaluator}: deferral must not hide incomplete recorded deterministic evidence.`);
+  }
+});
+
 function visuallyReviewedReport() {
   const report = v2Report(), filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64), sessionId = 'verifier';
   Object.assign(report.quality, { schemaVersion: 3, contractHash });
@@ -325,6 +381,28 @@ test('version 3 approval gate requires complete verifier comparisons of the deli
   cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
   cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
   assert.equal(reportPassed(cli, 3), true, 'CLI delivery has no visual review requirement.');
+});
+
+test('workflow-aware visual reports must cover the same journeys as independent verification before approval', () => {
+  const report = visuallyReviewedReport(), visual = report.quality.visualReview;
+  const ids = [...new Set(report.quality.journeys.map(journey => journey.id))];
+  visual.schemaVersion = 2;
+  visual.sessions[0].requiredJourneyIds = ids;
+  for (const [index, capture] of visual.captures.entries()) {
+    capture.journey = { id: ids[Math.floor(index / 2)], status: 'passed', completedSteps: 2, totalSteps: 2, detail: 'All workflow steps completed.' };
+    capture.errors = [];
+  }
+  assert.equal(reportPassed(report, 3), true);
+  for (const mutate of [
+    value => { value.quality.visualReview.sessions[0].requiredJourneyIds = []; },
+    value => { delete value.quality.visualReview.captures[0].journey; },
+    value => { value.quality.visualReview.captures[0].journey.status = 'failed'; },
+    value => { value.quality.visualReview.captures[0].errors = ['The application threw while saving.']; },
+    value => { value.quality.visualReview.captures[0].filesHash = 'd'.repeat(64); },
+  ]) {
+    const changed = structuredClone(report); mutate(changed);
+    assert.equal(reportPassed(changed, 3), false, String(mutate));
+  }
 });
 
 test('clean CLI verification passes real computation and rejects a hardcoded demo despite passing developer tests', async t => {

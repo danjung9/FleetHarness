@@ -35,6 +35,10 @@ export async function runAgentStage(options: {
   label: string;
   signal: AbortSignal;
   limits?: Partial<AgentLimits>;
+  /** Recovery guidance for stages that can retry from a saved checkpoint. */
+  recoveryHint?: string;
+  /** Keep model/session errors and event-supplied tool names out of public failures. */
+  privateActivity?: boolean;
   create: (signal: AbortSignal) => Promise<StageSession>;
   work: (prompt: (text: string) => Promise<void>, signal: AbortSignal, hostWork: <T>(work: () => Promise<T>) => Promise<T>) => Promise<void>;
   onEvent: (event: StageEvent) => void;
@@ -69,20 +73,25 @@ export async function runAgentStage(options: {
   const heartbeat = () => {
     clearTimeout(idleTimer);
     if (hostWorking) return;
-    idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. Inspect the saved activity and start a new run.`), limits.idleMs);
+    idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. ${options.recoveryHint ?? 'Inspect the saved activity and start a new run.'}`), limits.idleMs);
   };
   const abort = () => fail(stoppedMessage);
   const check = () => { if (failure) throw failure; controller.signal.throwIfAborted(); };
+  const modelFailure = (error: unknown, activity: string) => options.privateActivity
+    ? new Error(`Agent stage failure: ${options.label} ${activity}. ${options.recoveryHint ?? 'Check the model connection and retry.'}`)
+    : error;
   const release = (target: StageSession, cancel: boolean) => {
     // abort() waits for idle in Pi. Cleanup must not depend on that promise settling.
     if (cancel) { try { void Promise.resolve(target.abort()).catch(() => {}); } catch {} }
     try { void Promise.resolve(target.dispose()).catch(() => {}); } catch {}
   };
   options.signal.addEventListener('abort', abort, { once: true });
-  const deadline = setTimeout(() => fail(`${options.label} exceeded the ${limits.timeoutMs / 60_000}-minute limit. Inspect the saved artifacts before retrying.`), limits.timeoutMs);
+  const deadline = setTimeout(() => fail(`${options.label} exceeded the ${limits.timeoutMs / 60_000}-minute limit. ${options.recoveryHint ?? 'Inspect the saved artifacts before retrying.'}`), limits.timeoutMs);
   heartbeat();
   const work = (async () => {
-    const created = await options.create(controller.signal);
+    let created: StageSession;
+    try { created = await options.create(controller.signal); }
+    catch (error) { check(); throw modelFailure(error, 'could not initialize its model session'); }
     if (closed || failure) { release(created, true); check(); return; }
     session = created;
     unsubscribe = created.subscribe(event => {
@@ -111,9 +120,9 @@ export async function runAgentStage(options: {
         case 'summarization_retry_finished':
           lastActivity = 'compacting the agent context'; heartbeat(); break;
         case 'tool_execution_start':
-          lastActivity = `running ${event.toolName}`; heartbeat(); break;
+          lastActivity = options.privateActivity ? 'running an agent tool' : `running ${event.toolName}`; heartbeat(); break;
         case 'turn_start':
-          if (limits.maxTurns !== undefined && ++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. Inspect its artifacts before retrying.`); return; }
+          if (limits.maxTurns !== undefined && ++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. ${options.recoveryHint ?? 'Inspect its artifacts before retrying.'}`); return; }
           lastActivity = 'waiting for the model'; heartbeat(); break;
       }
       // A transient provider error can be followed by a successful SDK retry or compaction.
@@ -121,7 +130,7 @@ export async function runAgentStage(options: {
       if (event.type === 'message_end' && event.message.role === 'assistant') {
         accumulate(tokenUsage(event.message.usage, 'pi'));
         const reason = event.message.stopReason;
-        assistantError = reason === 'error' ? event.message.errorMessage || 'The model provider returned an error.'
+        assistantError = reason === 'error' ? (!options.privateActivity && event.message.errorMessage) || 'The model provider returned an error.'
           : reason === 'aborted' ? 'The model stopped before completing this stage.'
           : reason === 'length' ? 'The model exhausted its response limit before completing this stage.' : '';
       }
@@ -132,12 +141,15 @@ export async function runAgentStage(options: {
       const before = receipts;
       pendingPromptReceipts = before;
       try { await created.prompt(text); }
+      catch (error) { check(); throw modelFailure(error, 'could not complete the model request'); }
       finally {
         if (!closed && receipts === before) accumulate(null);
         pendingPromptReceipts = undefined;
       }
       check();
-      if (assistantError) throw new Error(assistantError);
+      if (assistantError) throw options.privateActivity
+        ? new Error(`Agent stage failure: ${options.label}: ${assistantError} ${options.recoveryHint ?? 'Check the model connection and retry.'}`)
+        : new Error(assistantError);
       lastActivity = 'checking stage artifacts'; heartbeat();
     }, controller.signal, async hostWork => {
       check(); hostWorking = true; clearTimeout(idleTimer);

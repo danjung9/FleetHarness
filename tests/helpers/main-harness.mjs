@@ -16,32 +16,37 @@ import { readVisualCapture } from '../../dist-electron/electron/visual-review.js
 import { registerConnectorIPC } from '../../dist-electron/electron/connectors/index.js';
 import { GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilUnlockUrl } from '../../dist-electron/electron/genai-mil.js';
 
+import { PreviewBoundary } from '../../dist-electron/electron/preview-boundary.js';
+import { experimentMethodNames } from '../../dist-electron/shared/experiments.js';
+import { storageMethodNames } from '../../dist-electron/shared/data-storage.js';
+
 // Exercise the actual IPC handlers. Only Electron's window/IPC transport and
 // unrelated startup services are replaced. Filesystem and delivery gates are real.
 export async function mainHarness(store, backend = { active: new Map() }, source = 'electron/main.ts', overrides = {}) {
   const handlers = new Map(), events = new Map();
   const webContents = { mainFrame: {}, send() {} };
   const app = {
-    isPackaged: false, getAppPath: () => process.cwd(), getPath: () => store.root,
+    commandLine: { appendSwitch() {} }, isPackaged: false, getAppPath: () => process.cwd(), getPath: () => store.root,
     setPath() {}, setName() {}, requestSingleInstanceLock: () => true, whenReady: () => ({ then() {} }),
     on: (name, callback) => events.set(name, callback), quit() {},
   };
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
-    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
+    PreviewBoundary, experimentMethodNames, storageMethodNames, redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },
     dialog: {}, safeStorage: {}, Menu: {}, BrowserWindow: class {},
     setTimeout, clearTimeout, AbortController, structuredClone, console,
     hostStore: store, hostBackend: backend,
+    hostExperiments: { activeCount: 0, activeExperiment: () => undefined, isActive: () => false, learning: { getSettings: () => ({ mode: 'off' }) }, refreshProjectSummaries() {}, async assertSelectedVerified() {}, async exportReference() {}, async closeCandidatePreview() {} },
     hostCodex: { account: { status: 'disconnected' } }, hostLead: { active: new Map() }, hostConnectors: undefined,
     hostGenAiMil: { view: () => ({ address: GENAI_MIL_ADDRESS, hasKey: false, connected: false, models: [] }) },
     hostWindow: { webContents, isDestroyed: () => false },
     ...overrides,
   };
-  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
+  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; experiments = hostExperiments; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
   return {
     handlers, events,
     invoke: (channel, ...args) => handlers.get(channel)({ sender: webContents, senderFrame: webContents.mainFrame }, ...args),

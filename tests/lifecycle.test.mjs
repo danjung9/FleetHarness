@@ -613,7 +613,7 @@ test('production startup discovers and stops a persisted orphan before reporting
 test('single-instance lock follows the selected profile and a rejected owner never initializes', async t => {
   const { store } = await fixture(t), calls = [], events = new Map();
   let owns = false, selected;
-  const app = { isPackaged: false, getAppPath: () => process.cwd(), getPath: name => name === 'userData' ? selected : store.root,
+  const app = { commandLine: { appendSwitch() {} }, isPackaged: false, getAppPath: () => process.cwd(), getPath: name => name === 'userData' ? selected : store.root,
     setPath(name, value) { if (name === 'userData') selected = value; calls.push('path'); }, setName() {},
     requestSingleInstanceLock() { assert.ok(selected); calls.push('lock'); return owns; }, quit() { calls.push('quit'); },
     whenReady() { calls.push('ready'); return { then() {} }; }, on(name, fn) { events.set(name, fn); } };

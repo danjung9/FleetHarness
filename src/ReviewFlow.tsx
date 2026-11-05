@@ -2,10 +2,12 @@ import { useEffect, useId, useState } from 'react';
 import { CheckCircle2, ClipboardCheck, Code2, Download, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
 import type { Project } from '../shared/types';
 import { judgeAccepted, judgeGaps, reportPassed } from '../shared/verification';
+import { pendingExperiment } from '../shared/journey';
 import { api, isDesktop } from './api';
 import { ExecutableDownload } from './ExecutableDownload';
 import { QualityEvidence } from './QualityEvidence';
 import { VisualReview } from './VisualReview';
+import { ExperimentReview } from './ExperimentReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
@@ -46,6 +48,7 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
   const gateId = useId();
   const changesGateId = useId();
   const report = project.report;
+  const choosingCandidate = !!pendingExperiment(project);
   const passed = reportPassed(report, project.qualityVersion ?? false);
   const needsGapAcceptance = !judgeAccepted(report);
   const gaps = judgeGaps(report);
@@ -72,13 +75,14 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
     if (approvalSubmitted && approved) onApproved();
   }, [approvalSubmitted, approved, onApproved]);
 
-  const unmetCondition = project.status === 'running' ? 'Wait for this build to finish before approving.'
+  const unmetCondition = choosingCandidate ? 'Choose a passing candidate before approving.'
+    : project.status === 'running' ? 'Wait for this build to finish before approving.'
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to approve it.'
       : !passed || !project.workspace ? 'Resolve failed or missing checks with a new build before approval.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what you checked and any limitations.'
           : !draft.reviewed ? 'Confirm that you inspected the app, test evidence, and limitations.'
             : needsGapAcceptance && !acceptedGaps ? 'Read and accept the independent check gaps before approving this prototype.' : '';
-  const changesUnmetCondition = project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
+  const changesUnmetCondition = choosingCandidate ? 'Choose a candidate before requesting changes.' : project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to request changes.'
       : !project.workspace || !report || !['review', 'failed'].includes(project.status) ? 'Finish a build before requesting changes.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what needs to change.' : '';
@@ -104,7 +108,9 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
 
   return <div className="page review-workspace">
     <div className="review-content">
-      <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      <div className="page-heading"><div><h1>Review</h1><p>{choosingCandidate ? 'Compare the candidate evidence and choose a build to review.' : approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      <ExperimentReview project={project} busy={busy} action={action}/>
+      {choosingCandidate ? <p className="review-pending" role="status">Choose a passing candidate above before approving or requesting changes.{report && ' Your previous build remains saved until you select a candidate.'}</p> : <>
       {report && needsGapAcceptance && <section className="review-criteria">
         <h2>The independent check found {gaps.length} gaps</h2>
         <ul>{gaps.map((gap, index) => <li key={index}>{gap.plain ? <><strong>{gap.plain}</strong><details><summary>Technical detail</summary><p>{gap.requirement}</p><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></details></> : <><strong>{gap.requirement}</strong><p>Evidence: {gap.evidence}</p><p>Fix: {gap.fix}</p></>}</li>)}</ul>
@@ -153,6 +159,7 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
           </>}
         </li>
       </ol>}
+      </>}
     </div>
   </div>;
 }

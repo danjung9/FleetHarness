@@ -10,7 +10,7 @@ export const reportHash = (report: TestReport) => createHash('sha256').update(ev
 
 export function assertReviewState(p: Project, approved = false) {
   if (approved && (!p.approvedAt || !['approved', 'delivered'].includes(p.status))) throw new Error('Review and approve this prototype before delivery.');
-  if (!['review', 'approved', 'delivered'].includes(p.status) || !['review', 'complete'].includes(p.stages.find(s => s.id === 'review')?.status ?? '')) throw new Error('A successfully completed run in review is required.');
+  if (!['review', 'approved', 'delivered'].includes(p.status) || !['review', 'complete'].includes(p.stages?.find(s => s.id === 'review')?.status ?? '')) throw new Error('A successfully completed run in review is required.');
   if (!p.runId || p.processScope?.runId !== p.runId || p.processScope.cleanup !== 'confirmed') throw new Error('Process cleanup must be confirmed for this run before approval or delivery.');
   if (!p.workspace || !reportPassed(p.report, p.qualityVersion ?? false)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
   if (p.verification?.runId !== p.runId || p.verification.reportHash !== reportHash(p.report!)) throw new Error('Authoritative verification evidence is missing or changed. Run verification again.');

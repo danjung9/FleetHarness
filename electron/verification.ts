@@ -8,6 +8,7 @@ import path from 'node:path';
 import { listArtifacts, sourceHash } from './storage.js';
 import type { TestReport } from '../shared/types.js';
 import { runProcessEnvironment } from './process-sweep.js';
+import { ApplicationTestEvidence, applicationTestCommand, applicationTestReporter } from './application-test-evidence.js';
 export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
@@ -21,7 +22,7 @@ export class VerificationShutdownError extends Error {
     this.name = 'VerificationShutdownError';
   }
 }
-export async function applicationTestFiles(root: string, includeEmpty = false) {
+export async function applicationTestFiles(root: string, includeEmpty = true) {
   return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.(?:fleet|review-source|agent-tools|agent-output|browser-observations|quality-evidence)(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 const shellArgument = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
@@ -29,57 +30,17 @@ export function portableTestCommand(files: string[]) {
   if (!files.length) throw new Error('No application test files were verified.');
   return 'node --test ' + files.map(file => shellArgument('./' + file)).join(' ');
 }
+
+/** Derive delivery instructions from the verified inventory, including for older reports. */
+export async function applicationTestRerunCommand(root: string): Promise<string> {
+  const files = await applicationTestFiles(root);
+  if (!files.length) throw new Error('No application test files are available to rerun.');
+  return applicationTestCommand(['--test', ...files.map(file => './' + file)]);
+}
+
 export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
   return { total: count('tests'), passed: count('pass'), failed: count('fail'), skipped: count('skipped') + count('todo') };
-}
-// The host-owned reporter runs in Node's coordinator, outside generated test
-// workers. Encode TAP as data, so worker stdout can never forge a summary record.
-// Both the TAP and per-file registered-case evidence come from this ONE run.
-const registeredReporter = 'data:text/javascript;base64,' + Buffer.from(`
-import { tap } from 'node:test/reporters';
-export default async function* (events) {
-  const summaries = [];
-  async function* observe() {
-    for await (const event of events) {
-      if (event.type === 'test:summary' && event.data.file) summaries.push(event.data);
-      yield event;
-    }
-  }
-  for await (const text of tap(observe())) yield JSON.stringify({ type: 'output', text }) + '\\n';
-  yield JSON.stringify({ type: 'registered', summaries }) + '\\n';
-}
-`).toString('base64');
-
-async function registeredEvidence(root: string, files: string[], wire: string) {
-  type Summary = { file: string; counts: { tests: number; passed: number; failed: number; skipped: number; todo: number; cancelled: number } };
-  let summaries: Summary[] | undefined, output = '', invalid = false;
-  for (const line of wire.split('\n').filter(Boolean)) {
-    try {
-      const record = JSON.parse(line);
-      if (record.type === 'output' && typeof record.text === 'string') output += record.text;
-      else if (record.type === 'registered' && Array.isArray(record.summaries) && !summaries) summaries = record.summaries;
-      else invalid = true;
-    } catch { output += line + '\n'; invalid = true; }
-  }
-  const registeredTests: NonNullable<TestReport['registeredTests']> = [];
-  const counts = { total: 0, passed: 0, failed: 0, skipped: 0 };
-  const missing: string[] = [];
-  for (const file of files) {
-    const resolved = await fs.realpath(path.join(root, file));
-    const matches = summaries?.filter(summary => typeof summary.file === 'string' && path.resolve(summary.file) === resolved) ?? [];
-    const c = matches.length === 1 ? matches[0].counts : undefined;
-    if (!c || !['tests', 'passed', 'failed', 'skipped', 'todo', 'cancelled'].every(key => Number.isSafeInteger(c[key as keyof typeof c]) && c[key as keyof typeof c] >= 0) || c.tests <= 0) {
-      missing.push(file); continue;
-    }
-    registeredTests.push({ file, tests: c.tests });
-    counts.total += c.tests; counts.passed += c.passed;
-    counts.failed += c.failed + c.cancelled; counts.skipped += c.skipped + c.todo;
-  }
-  const problem = invalid || !summaries ? 'Registered-test evidence did not complete successfully.'
-    : missing.length ? 'No registered application tests in: ' + missing.join(', ') : '';
-  if (problem) { counts.total = 0; counts.passed = 0; counts.failed = 0; counts.skipped = 0; output += '\n' + problem; }
-  return { ...counts, output, registeredTests, problem };
 }
 const runtimeFailure = 'Could not start the verification runtime.';
 
@@ -87,7 +48,7 @@ async function runtimeCommand(root: string, executable: string, testArgs: string
   const ready = 'appyard-verification-ready-' + randomUUID() + '\n';
   // The host bootstrap distinguishes runtime startup from application test failure.
   const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(testArgs)},{stdio:'inherit'});child.once('error',e=>{console.error('Could not start Node tests: '+e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
-  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: 'node ' + testArgs.map(arg => JSON.stringify(arg)).join(' ') };
+  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: applicationTestCommand(testArgs) };
 }
 export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}, runtimeEnvironment?: NodeJS.ProcessEnv): Promise<TestReport> {
   const { launcher = runtimeCommand, ...overrides } = options;
@@ -96,12 +57,12 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid verification limit: ${key}`);
   }
   const files = await applicationTestFiles(root, true);
-  if (!files.length || !(await applicationTestFiles(root)).length) throw new Error('Pi did not produce any .test.js, .test.cjs, or .test.mjs files. No verification claim was made.');
+  if (!files.length) throw new Error('Pi did not produce any .test.js, .test.cjs, or .test.mjs files. No verification claim was made.');
   if (signal?.aborted) throw new Error('Run stopped.');
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
+  const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', applicationTestReporter, ...files.map(file => './' + file)];
   let command: VerificationCommand, home: string;
   try {
     command = await launcher(root, executable, args);
@@ -144,6 +105,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
         })]);
       } finally { clearTimeout(timer); }
     };
+    const stdout: Buffer[] = [], stderr: Buffer[] = [];
     let output = '', outputBytes = 0, timedOut = false, overflow = false;
     let interrupt!: () => void;
     const interrupted = new Promise<null>(resolve => { interrupt = () => resolve(null); });
@@ -152,12 +114,12 @@ export async function verifyWorkspace(root: string, executable: string, onProces
       child.once('error', error => resolve({ code: null, error: new Error(runtimeFailure + ' ' + error.message, { cause: error }) }));
       child.once('close', code => resolve({ code }));
     });
-    const collect = (chunk: Buffer) => {
+    const collect = (chunk: Buffer, stream: Buffer[]) => {
       const remaining = Math.max(0, limits.maxOutputBytes - outputBytes);
-      output += chunk.subarray(0, remaining).toString(); outputBytes += chunk.length;
+      stream.push(chunk.subarray(0, remaining)); outputBytes += chunk.length;
       if (outputBytes > limits.maxOutputBytes) { overflow = true; interrupt(); }
     };
-    child.stdout?.on('data', collect); child.stderr?.on('data', collect);
+    child.stdout?.on('data', chunk => collect(chunk, stdout)); child.stderr?.on('data', chunk => collect(chunk, stderr));
     const timer = setTimeout(() => { timedOut = true; interrupt(); }, limits.timeoutMs);
     signal?.addEventListener('abort', interrupt, { once: true });
     if (signal?.aborted) interrupt();
@@ -175,20 +137,29 @@ export async function verifyWorkspace(root: string, executable: string, onProces
       finally { child.stdout?.destroy(); child.stderr?.destroy(); }
     }
     if (signal?.aborted) throw new Error('Run stopped.');
+    output = Buffer.concat(stdout).toString('utf8');
+    const diagnostics = Buffer.concat(stderr);
+    // A missing bootstrap marker cannot count as a completed test run.
+    if (!output.includes(command.ready)) throw new Error(runtimeFailure + '\n' + output + diagnostics.toString('utf8')
+      + (timedOut ? `\nVerification exceeded the ${limits.timeoutMs / 1000}-second limit.` : '')
+      + (overflow ? '\nVerification exceeded the output limit.' : ''));
+    output = output.replace(command.ready, '');
+    const collector = new ApplicationTestEvidence();
+    collector.stdout(Buffer.from(output)); collector.stderr(diagnostics);
+    const expectedFiles = await Promise.all(files.map(file => fs.realpath(path.join(root, file))));
+    const evidence = collector.finish(files.length, 'Application verification', expectedFiles);
+    output = evidence.output;
+    const missing = files.filter((_, index) => !evidence.registeredTests?.some(item => item.file === expectedFiles[index] && item.tests > 0));
+    if (missing.length) output += '\nNo registered application tests in: ' + missing.join(', ') + '.\n';
     if (timedOut) output += `\nVerification exceeded the ${limits.timeoutMs / 1000}-second limit.`;
     if (overflow) output += '\nVerification exceeded the output limit.';
-    // A missing bootstrap marker cannot count as a completed test run.
-    if (!output.includes(command.ready)) throw new Error(runtimeFailure + '\n' + output);
-    output = output.replace(command.ready, '');
-    const evidence = await registeredEvidence(root, files, output);
-    output = evidence.output;
     const hash = await sourceHash(root);
     if (signal?.aborted) throw new Error('Run stopped.');
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
       portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment: Object.fromEntries(Object.entries(environment).map(([key, value]) => [key, runtimeEnvironment?.[key] && !['PATH', 'HOME', 'TMPDIR', 'TEMP', 'TMP', 'ELECTRON_RUN_AS_NODE', 'LANG', 'PYTHONDONTWRITEBYTECODE', 'VIRTUAL_ENV'].includes(key) ? '[redacted]' : value])) },
-      exitCode: timedOut || overflow ? null : evidence.problem ? 1 : exitCode,
+      exitCode: timedOut || overflow ? null : !evidence.valid && exitCode === 0 ? 1 : exitCode,
       total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
-      registeredTests: evidence.registeredTests, output: redactSecrets(output), durationMs: Math.round(performance.now() - started), sourceHash: hash };
+      registeredTests: evidence.registeredTests?.map(item => ({ ...item, file: path.relative(root, item.file).split(path.sep).join('/') })), output: redactSecrets(output), durationMs: Math.round(performance.now() - started), sourceHash: hash };
   } finally { await fs.rm(home, { recursive: true, force: true }); }
 }

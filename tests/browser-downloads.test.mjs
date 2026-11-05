@@ -10,7 +10,7 @@ function pageFixture() {
   let captures = 0, current = 'original', pending;
   const page = { locator(selector) { return {
     async click() { captures++; pending?.({ suggestedFilename: () => selector.slice(4) + '.txt',
-      createReadStream: async () => Readable.from([current + ' alpha beta gamma']), failure: async () => null, cancel: async () => {} }); },
+      createReadStream: async () => Readable.from([current + ' alpha beta gamma']), failure: async () => null, cancel: async () => {}, delete: async () => {} }); },
     async fill(value) { current = value; }, async selectOption(value) { current = value; },
     async press(value) { current = value; }, async check() { current = 'checked'; },
     async waitFor() {}, async innerText() { return current; }, async inputValue() { return current; }

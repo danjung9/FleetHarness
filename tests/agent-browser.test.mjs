@@ -4,12 +4,14 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createServer } from 'node:http';
+import { createSocket } from 'node:dgram';
 import { performance } from 'node:perf_hooks';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { chromium } from 'playwright';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
+import { createRuntimeFilesHasher } from '../dist-electron/electron/runtime-files-hash.js';
 import { AgentBrowserSession } from '../dist-electron/electron/agent-browser.js';
 import { VisualReviewLedger, runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
 
@@ -32,6 +34,7 @@ for (const stopped of [false, true]) test(`browser launch and its service retain
   let killRequests = 0;
   t.mock.method(chromium, 'launchServer', async options => {
     assert.equal(options.chromiumSandbox, false);
+    assert.equal(options.proxy, undefined, 'Ordinary browser launches have full network access.');
     assert.equal(options.env.APPYARD_RUN_PROCESS, scope.marker);
     await start(options.env);
     return { wsEndpoint: () => 'ws://synthetic-browser', kill: async () => { killRequests++; throw new Error('Synthetic lost browser shutdown response'); } };
@@ -69,8 +72,10 @@ document.querySelector('#api').onclick=()=>fetch('/api',{method:'POST',headers:{
 test('browser startup has a separate bounded budget from short interaction deadlines', async t => {
   const root = await workspace(t), controller = new AbortController();
   let launchedWith, navigatedWith, closed = 0;
-  const page = { on() {}, async goto(_url, options) { navigatedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30)); }, async close() {} };
-  const context = { on() {}, setDefaultTimeout(value) { assert.equal(value, 5); }, async route() {}, async routeWebSocket() {}, async newPage() { return page; }, async close() {} };
+  const page = { on() {}, context: () => context, async goto(_url, options) { navigatedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30)); }, async close() {} };
+  const context = { on() {}, setDefaultTimeout(value) { assert.equal(value, 5); }, async route() {}, async routeWebSocket() {},
+    async newCDPSession() { return { on() {}, async send() {}, async detach() {} }; },
+    async newPage() { return page; }, async close() {} };
   t.mock.method(chromium, 'launchServer', async options => {
     launchedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30));
     return { wsEndpoint: () => 'ws://synthetic-startup', async kill() { closed++; } };
@@ -115,11 +120,13 @@ async function session(t, root, overrides = {}) {
           const chunks = [];
           for await (const chunk of request) chunks.push(chunk);
           response.writeHead(200, { 'Content-Type': 'application/json' }).end(Buffer.concat(chunks));
-        } else if (request.url === '/internal-redirect') response.writeHead(302, { location: '/' }).end();
+        } else if (request.url === '/export.json') response.writeHead(200, { 'Content-Type': 'application/json', 'Content-Disposition': 'attachment; filename="tasks.json"' }).end('{"task":"Inspect pump"}');
+        else if (request.url === '/internal-redirect') response.writeHead(302, { location: '/' }).end();
         else if (request.url?.startsWith('/escape')) response.writeHead(302, { location: new URL(request.url, 'http://example.invalid').searchParams.get('target') }).end();
         else response.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }).end(html);
       });
-      return { url: runtime.url, filesHash: createHash('sha256').update('index.html\0').update(html).update('\0').digest('hex'), close: async () => { state.closed++; await runtime.close(); } };
+      const hash = createRuntimeFilesHasher(); hash.add('index.html', Buffer.from(html));
+      return { url: runtime.url, filesHash: hash.digest(), close: async () => { state.closed++; await runtime.close(); } };
     }, ...overrides });
   t.after(() => browser.close());
   const tool = browser.tools()[0];
@@ -127,8 +134,8 @@ async function session(t, root, overrides = {}) {
   return { browser, run, state, controller, tool };
 }
 
-function image(result, expectedWidth = 1280, expectedHeight = 800) {
-  assert.equal(result.isError, false, JSON.stringify(result.details));
+function image(result, expectedWidth = 1280, expectedHeight = 800, expectedError = false) {
+  assert.equal(result.isError, expectedError, JSON.stringify(result.details));
   const content = result.content.find(item => item.type === 'image');
   assert.ok(content, 'The tool response must contain an actual image, not only its file path.');
   assert.equal(content.mimeType, 'image/png');
@@ -214,14 +221,14 @@ test('failed selectors still return the current image, page state and runtime er
   assert.ok(failed.details.errors.some(error => /visible runtime failure/.test(error)));
 });
 
-test('external fetch, navigation, redirect escapes and WebSockets never reach another server', { timeout: 20_000 }, async t => {
+test('optional comparison browser blocks external fetch, navigation, redirects and WebSockets', { timeout: 20_000 }, async t => {
   let remoteRequests = 0, upgrades = 0;
   const remote = await serve((_request, response) => { remoteRequests++; response.end('unexpected'); });
   remote.server.on('upgrade', (_request, socket) => { upgrades++; socket.destroy(); });
   t.after(() => remote.close());
   const html = application.replace('</script>', `fetch(${JSON.stringify(remote.url)}).catch(()=>{});new WebSocket(${JSON.stringify(remote.url.replace('http:', 'ws:'))});</script>`)
     .replace('</main>', `<a id="external" href="${remote.url}">External</a><a id="escape" href="/escape?target=${encodeURIComponent(remote.url)}">Redirect escape</a></main>`);
-  const root = await workspace(t, html), { run } = await session(t, root);
+  const root = await workspace(t, html), { run } = await session(t, root, { isolateNetwork: true });
   const opened = await run({ action: 'open' });
   image(opened);
   assert.ok(opened.details.errors.some(error => /Blocked resource/.test(error)));
@@ -234,10 +241,27 @@ test('external fetch, navigation, redirect escapes and WebSockets never reach an
   assert.equal(upgrades, 0);
 });
 
+test('the optional comparison browser cannot bypass its origin proxy with WebRTC UDP', { timeout: 10_000 }, async t => {
+  const udp = createSocket('udp4');
+  let datagrams = 0;
+  udp.on('message', () => { datagrams++; });
+  await new Promise(resolve => udp.bind(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => udp.close(resolve)));
+  const root = await workspace(t, `<!doctype html><p id="result">Checking</p><script>
+    const peer = new RTCPeerConnection({iceServers:[{urls:'stun:127.0.0.1:${udp.address().port}'}]});
+    peer.createDataChannel('probe');
+    peer.createOffer().then(offer=>peer.setLocalDescription(offer)).then(()=>setTimeout(()=>{peer.close();document.querySelector('#result').textContent='Checked';},1000));
+  </script>`);
+  const { run } = await session(t, root, { isolateNetwork: true, stepTimeoutMs: 2500, journeys: [{ id: 'network', title: 'Check network boundaries', kind: 'primary', steps: [{ action: 'expectText', selector: '#result', text: 'Checked' }] }] });
+  const result = await run({ action: 'journey', journeyId: 'network' });
+  assert.equal(result.details.journey?.status, 'passed', JSON.stringify(result.details));
+  assert.equal(datagrams, 0, 'The browser must not send non-proxied STUN packets.');
+});
+
 test('dialogs, popups and downloads are dismissed or cancelled and reported', { timeout: 15_000 }, async t => {
   const html = application.replace('</main>', '<button id="dialog">Dialog</button><button id="popup">Popup</button><button id="download">Download</button></main>')
     .replace('</script>', `document.querySelector('#dialog').onclick=()=>alert('Test dialog');document.querySelector('#popup').onclick=()=>window.open('/');document.querySelector('#download').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['test']));a.download='test.txt';a.click();};</script>`);
-  const root = await workspace(t, html), { run } = await session(t, root);
+  const root = await workspace(t, html), { run } = await session(t, root, { isolateNetwork: true });
   image(await run({ action: 'open' }));
   const dialog = await run({ action: 'click', selector: '#dialog' });
   image(dialog); assert.ok(dialog.details.errors.some(error => /Dismissed alert dialog/.test(error)));
@@ -325,7 +349,9 @@ test('hung renderer reaches the overall deadline and closes the prepared runtime
   assert.match(result.details.error, /limit/);
   assert.ok(performance.now() - started < 6000);
   assert.equal(state.closed, 1);
-  assert.match((await run({ action: 'open' })).details.error, /limit/);
+  await fs.writeFile(path.join(root, 'index.html'), application);
+  image(await run({ action: 'open' }));
+  assert.equal(state.prepared, 2, 'A timed-out renderer must not permanently disable the stage browser.');
 });
 
 test('cancelling a tool action closes its browser promptly and allows a fresh open', { timeout: 15_000 }, async t => {
@@ -420,4 +446,176 @@ test('the final visual recheck still has screenshots after the observation limit
   session.allowFinalCheck();
   assert.equal(session.imageCount, 3);
   assert.equal(session.imageBytes, 10);
+});
+
+const journeyApplication = application.replace("console.error('save diagnostic');", "localStorage.setItem('task',task.value);")
+  .replace('</main>', '<label><input id="confirmed" type="checkbox"> Confirm details</label><button id="export">Export</button></main>')
+  .replace('</script>', `task.value=localStorage.getItem('task')||'';
+  document.querySelector('#export').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({task:task.value})],{type:'application/json'}));a.download='tasks.json';a.click();};</script>`);
+const frozenJourneys = () => [{ id: 'save', title: 'Save, export and reload a task', kind: 'primary', steps: [
+  { action: 'expectValue', selector: '#task', value: '' },
+  { action: 'fill', selector: '#task', value: 'Inspect pump' },
+  { action: 'select', selector: '#priority', value: 'High' },
+  { action: 'check', selector: '#confirmed' },
+  { action: 'press', selector: '#task', key: 'Enter' },
+  { action: 'expectText', selector: '#result', text: 'Saved: Inspect pump (High)' },
+  { action: 'expectDownload', selector: '#export', fileName: 'tasks.json', text: '"task":"Inspect pump"' },
+  { action: 'reload' },
+  { action: 'expectValue', selector: '#task', value: 'Inspect pump' },
+] }];
+
+test('a frozen journey failure returns reviewable PNG evidence, then source fixes rerun all steps in fresh desktop and narrow runtimes', { timeout: 25_000 }, async t => {
+  const root = await workspace(t, journeyApplication.replace("result.textContent='Saved: '+task.value", "result.textContent='Wrong: '+task.value"));
+  const registrations = [], journeys = frozenJourneys();
+  const ledger = new VisualReviewLedger({ root, manifest: { profile: 'browser', files: ['index.html'], requiredEnv: [], entrypoint: 'index.html' }, contractHash: 'a'.repeat(64), runId: 'journey-proof', stage: 'build', journeys });
+  const review = (captureId, extra = {}) => ledger.tool().execute('journey-review', { captureId,
+    expected: 'Saving produces the requested task and priority, export contains the task, and reload preserves it.',
+    observed: 'The task field and controls fit in the image; the host journey reports the observed workflow result.',
+    findings: [], resolutions: [], ...extra });
+  const { run, state } = await session(t, root, { journeys, stepTimeoutMs: 1000, onCapture: async capture => { registrations.push(capture); return ledger.registerCapture(capture); } });
+  const failed = await run({ action: 'journey', journeyId: 'save' });
+  image(failed, 1280, 800, true);
+  assert.ok(failed.details.captureId, 'The agent must be able to review a failed journey screenshot.');
+  assert.deepEqual(failed.details.journeys, [{ id: 'save', title: 'Save, export and reload a task' }]);
+  assert.equal(failed.details.journey.status, 'failed');
+  assert.equal(failed.details.journey.completedSteps, 5);
+  assert.equal(failed.details.journey.totalSteps, 9);
+  assert.match(failed.details.journey.detail, /Step 6/);
+  assert.ok(failed.details.errors.length);
+  assert.match(failed.details.pageText, /Wrong: Inspect pump/);
+  assert.deepEqual(registrations[0].journey, failed.details.journey);
+  assert.deepEqual(registrations[0].errors, failed.details.errors);
+  const failedReview = await review(failed.details.captureId, { findings: ['The saved task result starts with Wrong instead of Saved.'] });
+  assert.equal(failedReview.isError, false);
+  assert.ok((await ledger.problems()).some(problem => /failed|finding|journey/i.test(problem)), 'Reviewed failure evidence cannot pass the host gate.');
+  const findingId = failedReview.details.review.findings[0].id;
+  const before = registrations[0].filesHash;
+  // Mutating caller data cannot weaken the host snapshot stored by the browser.
+  journeys[0].steps.length = 0;
+  await fs.writeFile(path.join(root, 'index.html'), journeyApplication);
+  const desktop = await run({ action: 'journey', journeyId: 'save' });
+  image(desktop);
+  assert.equal(desktop.details.journey.status, 'passed');
+  assert.equal(desktop.details.journey.completedSteps, 9);
+  assert.notEqual(registrations[1].filesHash, before);
+  assert.deepEqual(desktop.details.errors, []);
+  assert.equal(desktop.details.controls.find(control => control.selector === '#task').value, 'Inspect pump');
+  assert.equal((await review(desktop.details.captureId, { resolutions: [{ findingId, change: 'Corrected the saved task success label so the complete frozen journey passes.' }] })).isError, false);
+  const narrow = await run({ action: 'journey', journeyId: 'save', viewport: 'narrow' });
+  image(narrow, 390, 844);
+  assert.equal(narrow.details.journey.status, 'passed');
+  assert.equal(narrow.details.journey.completedSteps, 9);
+  assert.deepEqual(narrow.details.errors, []);
+  assert.equal(state.prepared, 3);
+  assert.equal(state.closed, 2);
+  assert.equal(ledger.report().captures.length, 3);
+  assert.equal((await review(narrow.details.captureId)).isError, false);
+  assert.ok((await ledger.problems()).some(problem => /fresh narrow/.test(problem)), 'Narrow review also requires a fresh recheck.');
+  const recheck = await run({ action: 'journey', journeyId: 'save', viewport: 'narrow' });
+  image(recheck, 390, 844);
+  assert.equal((await review(recheck.details.captureId)).isError, false);
+  assert.deepEqual(await ledger.problems(), [], 'Current, clean, reviewed journey rechecks at both widths satisfy the gate after the fix.');
+});
+
+test('journey selection accepts only frozen IDs and exposes available journeys on open', { timeout: 10_000 }, async t => {
+  const root = await workspace(t, journeyApplication), { run, state } = await session(t, root, { journeys: frozenJourneys() });
+  for (const input of [
+    { action: 'journey' }, { action: 'journey', journeyId: 'invented' },
+    { action: 'journey', journeyId: 'save', steps: [] },
+    { action: 'journey', journeyId: 'save', url: 'http://example.com' },
+  ]) assert.equal((await run(input)).isError, true);
+  assert.equal(state.prepared, 0);
+  const opened = await run({ action: 'open' });
+  image(opened);
+  assert.deepEqual(opened.details.journeys, [{ id: 'save', title: 'Save, export and reload a task' }]);
+});
+
+test('console, page and request errors are preserved in capture metadata and fail otherwise completed journeys', { timeout: 15_000 }, async t => {
+  const html = journeyApplication.replace('</script>', `console.error('broken console');for(let i=0;i<100;i++)console.log('noise '+i);setTimeout(()=>{throw Error('broken runtime')},0);fetch('http://127.0.0.1:1/blocked').catch(()=>{});</script>`);
+  const root = await workspace(t, html), captures = [];
+  const { run } = await session(t, root, { journeys: frozenJourneys(), onCapture: async input => { captures.push(input); return 'capture-' + captures.length; } });
+  const opened = await run({ action: 'open' }); image(opened);
+  assert.ok(captures[0].errors.some(error => /broken console/.test(error)), 'Later console logging cannot erase an earlier console error.');
+  assert.ok(captures[0].errors.some(error => /broken runtime/.test(error)));
+  assert.ok(captures[0].errors.some(error => /Request failed/.test(error)));
+  const result = await run({ action: 'journey', journeyId: 'save' });
+  image(result, 1280, 800, true);
+  assert.equal(result.details.journey.completedSteps, 9);
+  assert.equal(result.details.journey.status, 'failed');
+  assert.ok(result.details.captureId);
+  assert.ok(captures[1].errors.some(error => /broken console/.test(error)));
+  assert.ok(captures[1].errors.some(error => /broken runtime/.test(error)));
+  assert.ok(captures[1].errors.some(error => /Request failed/.test(error)));
+});
+
+test('downloads remain blocked outside frozen expectations and wrong or oversized expected exports fail', { timeout: 25_000 }, async t => {
+  const root = await workspace(t, journeyApplication), { run } = await session(t, root, { journeys: frozenJourneys() });
+  image(await run({ action: 'open' }));
+  await run({ action: 'click', selector: '#export' });
+  assert.ok((await run({ action: 'screenshot' })).details.errors.some(error => /Blocked download/.test(error)));
+  // Even in a download-enabled journey, only its expectDownload step is allowed one export.
+  await fs.writeFile(path.join(root, 'index.html'), journeyApplication.replace("localStorage.setItem('task',task.value);", "localStorage.setItem('task',task.value);document.querySelector('#export').click();"));
+  const unexpected = await run({ action: 'journey', journeyId: 'save' });
+  assert.equal(unexpected.details.journey.status, 'failed');
+  assert.ok(unexpected.details.errors.some(error => /Blocked download/.test(error)));
+  await fs.writeFile(path.join(root, 'index.html'), journeyApplication.replace("a.download='tasks.json'", "a.download='wrong.json'"));
+  const wrong = await run({ action: 'journey', journeyId: 'save' });
+  assert.equal(wrong.details.journey.status, 'failed');
+  assert.match(wrong.details.journey.detail, /Expected download.*wrong.json/);
+  await fs.writeFile(path.join(root, 'index.html'), journeyApplication.replaceAll('JSON.stringify({task:task.value})', "'x'.repeat(8_000_001)"));
+  const huge = await run({ action: 'journey', journeyId: 'save' });
+  assert.equal(huge.details.journey.status, 'failed');
+  assert.match(huge.details.journey.detail, /8 MB/);
+});
+
+test('idle editing does not expire the browser and a timed-out journey can run again after a source fix', { timeout: 15_000 }, async t => {
+  const root = await workspace(t, journeyApplication), { run, state } = await session(t, root, { journeys: frozenJourneys(), timeoutMs: 2500, stepTimeoutMs: 800 });
+  image(await run({ action: 'open' }));
+  await new Promise(resolve => setTimeout(resolve, 2600));
+  image(await run({ action: 'journey', journeyId: 'save', viewport: 'narrow' }), 390, 844);
+  await fs.writeFile(path.join(root, 'index.html'), '<!doctype html><script>while(true){}</script>');
+  const expired = await run({ action: 'journey', journeyId: 'save' });
+  assert.equal(expired.isError, true);
+  assert.equal(expired.details.journey.status, 'failed');
+  assert.match(expired.details.error, /limit/);
+  await fs.writeFile(path.join(root, 'index.html'), journeyApplication);
+  const recovered = await run({ action: 'journey', journeyId: 'save' }); image(recovered);
+  assert.equal(recovered.details.journey.status, 'passed');
+  assert.equal(state.prepared, 4);
+});
+
+test('frozen export expectations accept same-origin HTTP attachments without treating download navigation as a request failure', { timeout: 10_000 }, async t => {
+  const html = journeyApplication.replace("a.href=URL.createObjectURL(new Blob([JSON.stringify({task:task.value})],{type:'application/json'}))", "a.href='/export.json'")
+    .replace("a.download='tasks.json';", '');
+  const root = await workspace(t, html), { run } = await session(t, root, { journeys: frozenJourneys() });
+  const result = await run({ action: 'journey', journeyId: 'save' });
+  image(result);
+  assert.equal(result.details.journey.status, 'passed');
+  assert.deepEqual(result.details.errors, []);
+  const invalid = frozenJourneys();
+  invalid[0].steps.find(step => step.action === 'expectDownload').text = 'Missing expected export content';
+  const rejected = await session(t, root, { journeys: invalid });
+  const failure = await rejected.run({ action: 'journey', journeyId: 'save' });
+  image(failure, 1280, 800, true);
+  assert.match(failure.details.journey.detail, /Downloaded content/);
+  assert.ok(failure.details.errors.some(error => /Request failed:.*export.json.*ERR_ABORTED/.test(error)), 'A failed export expectation must not suppress its request diagnostics.');
+  const unexpected = await run({ action: 'click', selector: '#export' });
+  assert.ok(unexpected.details.errors.some(error => /Blocked download/.test(error)));
+  assert.ok(unexpected.details.errors.some(error => /Request failed:.*export.json.*ERR_ABORTED/.test(error)), 'An unrelated later request cannot borrow a previous successful export exemption.');
+});
+
+test('a stalled evidence callback obeys the action deadline and permits a fresh browser action', { timeout: 12_000 }, async t => {
+  const root = await workspace(t), captures = [];
+  const { run, state } = await session(t, root, { timeoutMs: 1800, stepTimeoutMs: 5000, onCapture: async input => {
+    captures.push(input);
+    if (captures.length === 1) return new Promise(() => {});
+    return 'recovered-capture';
+  } });
+  const failed = await run({ action: 'open' });
+  assert.equal(failed.isError, true);
+  assert.match(failed.details.error, /limit/);
+  assert.equal(state.closed, 1);
+  const recovered = await run({ action: 'open' }); image(recovered);
+  assert.equal(recovered.details.captureId, 'recovered-capture');
+  assert.equal(state.prepared, 2);
 });

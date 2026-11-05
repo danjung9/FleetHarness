@@ -1,10 +1,12 @@
 import { Home } from './Home';
 import { Connectors, ConnectedDataSection } from './Connectors';
+import { DataStorage } from './DataStorage';
 import { Mark } from './Mark';
 import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
-import { getJourneyState } from '../shared/journey';
+import { canContinuePlanning, experimentRunning, getJourneyState, getResumeStage, pendingExperiment } from '../shared/journey';
 import { BuildFlow } from './BuildFlow';
+import { ExperimentActivity } from './ExperimentActivity';
 import { SystemDesign } from './SystemDesign';
 import { ReviewWorkspace, DeliveryWorkspace } from './ReviewFlow';
 import { ModelSettings } from './ModelSettings';
@@ -14,7 +16,7 @@ import { BriefDataInputs, emptyDataInputEditor, includePastedInput, type DataInp
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Activity, Archive, ArrowRight, Bot, Check, CheckCircle2, CircleDot,
-  Code2, FileCode2, FolderOpen, GitBranch, Inbox, LayoutDashboard,
+  Code2, FileCode2, FolderOpen, GitBranch, HardDrive, Inbox, LayoutDashboard,
   Play, Plus, RefreshCw, Search, Settings2, ShieldCheck, Square, TerminalSquare, X, XCircle, Info, FlaskConical
 } from 'lucide-react';
 import type { AppState, Artifact, Bootstrap, BriefDataInput, NewProject, Project, StageId, View } from '../shared/types';
@@ -148,7 +150,7 @@ function Development({ project, action, onBuild, onReview }: { project: Project;
     <div className="preview-footer"><ShieldCheck size={13}/> App preview</div>
   </section></div>;
 }
-function Artifacts({ project, action, requested }: { project: Project; action: Action; requested: string }) {
+function Artifacts({ project, action, requested, onManage }: { project: Project; action: Action; requested: string; onManage: () => void }) {
   const [files, setFiles] = useState<Artifact[]>([]), [selected, setSelected] = useState(''), [content, setContent] = useState('');
   const [readError, setReadError] = useState(false), [readAttempt, setReadAttempt] = useState(0);
   const consumedRequest = useRef('');
@@ -167,7 +169,7 @@ function Artifacts({ project, action, requested }: { project: Project; action: A
     });
     return () => { current = false; };
   }, [project.id, project.runId, selected, readAttempt]);
-  return <div className="page artifact-page"><div className="page-heading"><div><h1>Files</h1></div><button className="secondary" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={16}/> Open folder</button></div>
+  return <div className="page artifact-page"><div className="page-heading"><div><h1>Files</h1><button className="text-button" onClick={onManage}>Manage all builds & storage <ArrowRight size={14}/></button></div><button className="secondary" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={16}/> Open folder</button></div>
     {!files.length ? <Empty icon={<Archive size={30}/>} title="No generated artifacts">Files appear after the first build.</Empty> : <div className="artifact-browser"><div className="file-list">{files.map(f => <button key={f.path} className={selected === f.path ? 'selected' : ''} onClick={() => setSelected(f.path)}><FileCode2 size={15}/><span>{f.path}</span><small>{Math.ceil(f.size / 1024)} KB</small></button>)}</div><div className="file-content"><h3>{selected || 'Select a file'}</h3>
       {readError ? <div role="alert"><p>Could not open this file. Try again.</p><button type="button" className="secondary" onClick={() => setReadAttempt(value => value + 1)}>Retry</button></div> : <pre>{selected ? content || 'This file is empty.' : 'Choose an artifact to inspect its saved contents.'}</pre>}
     </div></div>}
@@ -215,6 +217,12 @@ export default function App() {
   const developerMode = state?.settings.developerMode === true;
   const active = selectedView === 'design' && !developerMode ? 'factory' : selectedView;
   const [requestedArtifact, setRequestedArtifact] = useState('');
+  const [learningRequested, setLearningRequested] = useState(false);
+  useEffect(() => {
+    if (active !== 'settings' || !learningRequested) return;
+    const panel = document.querySelector<HTMLDetailsElement>('.learning-settings');
+    if (panel) { panel.open = true; panel.scrollIntoView({ block: 'center' }); panel.querySelector('summary')?.focus(); setLearningRequested(false); }
+  }, [active, learningRequested]);
   const settingsReturn = useRef<View | null>(null);
   const [intakeCatalogId, setIntakeCatalogId] = useState('');
   const intakeDrafts = useRef<Record<string, IntakeDraft>>({});
@@ -227,7 +235,7 @@ export default function App() {
   const conversationTrigger = useRef<HTMLButtonElement>(null);
   function openConversation() { setConversationOpen(true); setConversationFocus(value => value + 1); }
   function closeConversation() { setConversationOpen(false); requestAnimationFrame(() => conversationTrigger.current?.focus({ preventScroll: true })); }
-  useEffect(() => { api.bootstrap().then(b => { setData(b); setState(b.state); setCurrent(b.state.projects[0]?.id || ''); }).catch(e => setError(String(e))); return api.onState(setState); }, []);
+  useEffect(() => { api.bootstrap().then(b => { setData(b); setState(b.state); setCurrent(b.state.projects.find(project => !project.archivedAt)?.id || ''); }).catch(e => setError(String(e))); return api.onState(setState); }, []);
   useEffect(() => { const handler = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearch(v => !v); } }; window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler); }, []);
   useEffect(() => { if (!message) return; const timer = setTimeout(() => setMessage(''), 5000); return () => clearTimeout(timer); }, [message]);
   useEffect(() => {
@@ -242,7 +250,10 @@ export default function App() {
     catch (e) { setError((e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': Error: /, '')); return false; }
     finally { setBusy(false); }
   };
-  const p = state?.projects.find(p => p.id === current) || state?.projects[0];
+  const visibleProjects = state?.projects.filter(project => !project.archivedAt) ?? [];
+  const p = visibleProjects.find(project => project.id === current) || visibleProjects[0];
+  const experiment = p ? pendingExperiment(p) : undefined;
+  const editingPlan = !!p && getResumeStage(p) === 'plan';
   const configured = data?.models.some(m => (!state?.settings.model || m.id === state.settings.model) && m.provider === state?.settings.provider && m.configured && (m.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
   function navigate(view: View) {
     if (view === 'settings' && active !== 'settings') settingsReturn.current = active === 'portfolio' ? null : active;
@@ -261,6 +272,10 @@ export default function App() {
   function createChallenge(challengeId = '') { setIntakeCatalogId(challengeId); setIntake(true); }
   async function resumeRun() {
     if (!p || busy || resumeInFlight.current || !isDesktop || !configured) return;
+    if (canContinuePlanning(p) && data?.capabilities?.planningContinuation !== true) {
+      setError('Restart AppYard to enable planning continuation. Your saved work will be kept.');
+      return;
+    }
     resumeInFlight.current = true;
     setResuming(true);
     try { await action(async () => { await api.resumeRun(p.id); setActive('factory'); }, 'Phase resumed. Saved work is kept.'); }
@@ -268,6 +283,7 @@ export default function App() {
   }
   function openProject(id: string) {
     const project = state?.projects.find(item => item.id === id);
+    if (!project || project.archivedAt) { setActive('storage'); setSearch(false); return; }
     setCurrent(id); setRequestedArtifact('');
     setActive(project ? milestoneViews[getJourneyState(project).current] : 'requirements'); setSearch(false);
   }
@@ -279,51 +295,60 @@ export default function App() {
     { id: 'agents', label: 'Activity — agent work', shortLabel: 'Activity', icon: Activity },
     { id: 'artifacts', label: 'Files — artifacts', shortLabel: 'Files', icon: Archive }
   ];
-  const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
+  const results = useMemo(() => state?.projects.filter(p => !p.archivedAt && (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
   if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
-  const showHome = active === 'portfolio' || (!p && active !== 'settings' && active !== 'connectors');
+  const globalView = active === 'settings' || active === 'storage' || active === 'connectors';
+  const showHome = active === 'portfolio' || (!p && !globalView);
   const journey = p ? getJourneyState(p) : null;
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
-      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio' && item.id !== 'connectors'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running') && <i className="live-dot"/>}</IconButton>)}</nav>
-      <div className="rail-bottom"><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
+      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio' && item.id !== 'connectors'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running' || experimentRunning(project.experiment)) && <i className="live-dot"/>}</IconButton>)}</nav>
+      <div className="rail-bottom"><IconButton label="Data & storage" placement="right" className={'settings-link ' + (active === 'storage' ? 'active' : '')} aria-current={active === 'storage' ? 'page' : undefined} onClick={() => navigate('storage')}><HardDrive size={21}/><span>Storage</span></IconButton><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar">
-        {showHome || !p || active === 'connectors' ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'connectors' ? 'Connectors' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
+        {showHome || !p || globalView ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'storage' ? 'Data & storage' : active === 'connectors' ? 'Connectors' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{visibleProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
         <div className="top-actions">
           {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
-          {p && !showHome && active !== 'settings' && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
+          {p && !showHome && !globalView && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
           <ModelSelector data={{ ...data, state }} api={api} busy={busy} action={action} updated={updateBootstrap} desktop={isDesktop} openSettings={() => navigate('settings')}/>
           <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
           {showHome ? <button className="primary" onClick={() => createChallenge()}><Plus size={16}/>New challenge</button> : <IconButton label="New challenge" onClick={() => createChallenge()}><Plus size={20}/></IconButton>}
         </div>
       </header>
-      {state.projects.filter(project => project.status === 'running' && (showHome || active === 'settings' || active === 'connectors' || project.id !== p?.id)).map(project => <header className="run-header" aria-label="Running build" key={project.id}><div className="run-title"><p title={project.title}>Building: {project.title}</p></div><button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(project.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop build</button></header>)}
-      {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
+      {state.projects.filter(project => project.status === 'running' && (showHome || globalView || project.id !== p?.id)).map(project => <header className="run-header" aria-label="Running build" key={project.id}><div className="run-title"><p title={project.title}>Building: {project.title}</p></div><button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(project.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop build</button></header>)}
       {active === 'connectors' && <Connectors/>}
-      {p && !showHome && active !== 'settings' && active !== 'connectors' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
-      {p && !showHome && active !== 'settings' && active !== 'connectors' && <ClarificationNotice project={p} onOpen={openConversation}/>}
+      {showHome && <Home projects={visibleProjects} open={openProject} create={createChallenge}/>}
+      {p && !showHome && !globalView && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
+      {p && !showHome && !globalView && <ClarificationNotice project={p} onOpen={openConversation}/>}
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
-      {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
+      {p && active === 'factory' && (experiment ? <ExperimentActivity key={experiment.id} experiment={experiment} onReview={() => navigate('evidence')}/> : <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>)}
       {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')} onReview={() => navigate('evidence')}/>}
-      {p && active === 'agents' && <AgentSessions key={p.id} project={p} onReview={() => navigate('evidence')}/>}
+      {p && active === 'agents' && (experiment ? <ExperimentActivity key={experiment.id} experiment={experiment} onReview={() => navigate('evidence')}/> : <AgentSessions key={p.id} project={p} onReview={() => navigate('evidence')}/>)}
       {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onGuide={() => { setRequestedArtifact('README.md'); setActive('artifacts'); }} onApproved={() => navigate('delivery')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')} onChangesRequested={() => navigate('factory')}/>}
-      {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact}/>}
-      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{p.runId ? 'Saving changes resets test results and approval. A new build starts fresh.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={briefDrafts.current[p.id] ?? p} onDraftChange={draft => { briefDrafts.current[p.id] = draft; }} busy={busy || p.status === 'running'} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
-        const saved = await action(() => api.updateProject(p.id, input), 'Brief saved.');
+      {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact} onManage={() => navigate('storage')}/>}
+      {active === 'storage' && <DataStorage projects={state.projects} onOpenProject={openProject} onLearning={() => { navigate('settings'); setLearningRequested(true); }}/>}
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{editingPlan ? 'Update the brief and continue planning with your saved intake, research and data. Changing attached inputs requires a new build.' : p.runId ? 'Saving changes resets test results and approval. Unfrozen planning can continue with the same inputs; later phases need a new build.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={briefDrafts.current[p.id] ?? p} onDraftChange={draft => { briefDrafts.current[p.id] = draft; }} busy={busy || p.status === 'running' || experimentRunning(experiment)} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : editingPlan ? 'Save & continue planning' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
+        if (isDesktop && editingPlan && data.capabilities?.planningContinuation !== true) {
+          setError('Restart AppYard before saving this planning revision. Your saved work will be kept.');
+          return;
+        }
+        let savedProject: Project | undefined;
+        const saved = await action(async () => { savedProject = await api.updateProject(p.id, input); }, 'Brief saved.');
         if (!saved) return;
         delete briefDrafts.current[p.id];
         setActive('factory');
-        if (isDesktop && configured) setStart(true);
+        if (isDesktop && configured && savedProject && getResumeStage(savedProject) === 'plan') {
+          await action(() => api.resumeRun(p.id), 'Planning continued. Completed intake and research are kept.');
+        } else if (isDesktop && configured) setStart(true);
         else if (isDesktop) { settingsReturn.current = 'factory'; setActive('settings'); }
       }}/></div>}
       {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={updateBootstrap} busy={busy} onSaved={settingsSaved} onBack={p ? () => { setActive(settingsReturn.current ?? milestoneViews[getJourneyState(p).current]); settingsReturn.current = null; } : undefined}/>}
     </main>
-    {p && !showHome && active !== 'settings' && <ProjectConversation
+    {p && !showHome && !globalView && <ProjectConversation
       key={p.id} project={p} open={conversationOpen} focusRequest={conversationFocus} onClose={closeConversation}
       api={api} desktop={isDesktop} configured={!!configured} restartRequired={isDesktop && data.capabilities?.projectConversation !== true} openSettings={() => navigate('settings')}
       onApplied={proposal => { if (proposal.type !== 'stop') setActive('factory'); }}

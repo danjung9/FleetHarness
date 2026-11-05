@@ -1,6 +1,39 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
+import type { ExperimentAPI } from '../shared/experiments.js';
+import type { DataStorageAPI } from '../shared/data-storage.js';
+const storageAPI: DataStorageAPI = {
+  storageOverview: () => ipcRenderer.invoke('fleet:storage:storageOverview'),
+  storageFiles: id => ipcRenderer.invoke('fleet:storage:storageFiles', id),
+  storageReadFile: (id, file) => ipcRenderer.invoke('fleet:storage:storageReadFile', id, file),
+  storageOpen: (id, file) => ipcRenderer.invoke('fleet:storage:storageOpen', id, file),
+  storageExport: (id, file) => ipcRenderer.invoke('fleet:storage:storageExport', id, file),
+  storageTrash: (id, file) => ipcRenderer.invoke('fleet:storage:storageTrash', id, file),
+  storageRestore: id => ipcRenderer.invoke('fleet:storage:storageRestore', id),
+  storageDeleteForever: id => ipcRenderer.invoke('fleet:storage:storageDeleteForever', id),
+  storageArchiveProject: (id, archived) => ipcRenderer.invoke('fleet:storage:storageArchiveProject', id, archived),
+};
+const experimentAPI: ExperimentAPI = {
+  experimentState: projectId => ipcRenderer.invoke('fleet:experiment:experimentState', projectId),
+  startExperiment: (projectId, input) => ipcRenderer.invoke('fleet:experiment:startExperiment', projectId, input),
+  resumeExperiment: experimentId => ipcRenderer.invoke('fleet:experiment:resumeExperiment', experimentId),
+  stopExperiment: experimentId => ipcRenderer.invoke('fleet:experiment:stopExperiment', experimentId),
+  inspectCandidate: (experimentId, candidateId) => ipcRenderer.invoke('fleet:experiment:inspectCandidate', experimentId, candidateId),
+  previewCandidate: (experimentId, candidateId) => ipcRenderer.invoke('fleet:experiment:previewCandidate', experimentId, candidateId),
+  closeCandidatePreview: () => ipcRenderer.invoke('fleet:experiment:closeCandidatePreview'),
+  candidateArtifacts: (experimentId, candidateId) => ipcRenderer.invoke('fleet:experiment:candidateArtifacts', experimentId, candidateId),
+  readCandidateArtifact: (experimentId, candidateId, file) => ipcRenderer.invoke('fleet:experiment:readCandidateArtifact', experimentId, candidateId, file),
+  selectCandidate: (experimentId, candidateId, sourceHash) => ipcRenderer.invoke('fleet:experiment:selectCandidate', experimentId, candidateId, sourceHash),
+  submitExperimentPreference: (experimentId, input) => ipcRenderer.invoke('fleet:experiment:submitExperimentPreference', experimentId, input),
+  skipExperimentPreference: (experimentId, requestId) => ipcRenderer.invoke('fleet:experiment:skipExperimentPreference', experimentId, requestId),
+  saveLearningSettings: settings => ipcRenderer.invoke('fleet:experiment:saveLearningSettings', settings),
+  forgetProjectLearning: projectId => ipcRenderer.invoke('fleet:experiment:forgetProjectLearning', projectId),
+  rollbackLearningPolicy: projectId => ipcRenderer.invoke('fleet:experiment:rollbackLearningPolicy', projectId),
+  integrationOperations: () => ipcRenderer.invoke('fleet:experiment:integrationOperations'),
+  saveIntegrationOperation: (operation, secret) => ipcRenderer.invoke('fleet:experiment:saveIntegrationOperation', operation, secret),
+  removeIntegrationOperation: operationId => ipcRenderer.invoke('fleet:experiment:removeIntegrationOperation', operationId),
+};
 contextBridge.exposeInMainWorld('fleetHarness', {
   connectors: {
     list: () => ipcRenderer.invoke('fleet:connectors:list'),
@@ -12,6 +45,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
     cancel: (kind: string) => ipcRenderer.invoke('fleet:connectors:cancel', kind),
     disconnect: (id: string) => ipcRenderer.invoke('fleet:connectors:disconnect', id)
   },
+  ...experimentAPI, ...storageAPI,
   sendMessage: (id: string, text: string) => ipcRenderer.invoke('fleet:conversation:send', id, text),
   cancelMessage: (id: string) => ipcRenderer.invoke('fleet:conversation:cancel', id),
   answerClarification: (id: string, questionId: string, answer: string | ClarificationAnswer) => ipcRenderer.invoke('fleet:conversation:answer', id, questionId, answer),

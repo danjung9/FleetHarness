@@ -28,11 +28,20 @@ export async function completeFixtureVisualReview(tools, { emit } = {}) {
     return result.details ?? JSON.parse(result.content.find(item => item.type === 'text').text);
   };
   const records = [];
+  let journeys = [];
   for (const viewport of ['desktop', 'narrow']) {
     const initial = await execute(browser, { action: viewport === 'desktop' ? 'open' : 'screenshot', viewport });
+    journeys = initial.journeys ?? journeys;
     records.push(await execute(review, fixtureVisualReviewInput(initial)));
-    const recheck = await execute(browser, { action: 'screenshot', viewport });
-    records.push(await execute(review, fixtureVisualReviewInput(recheck)));
+    if (journeys.length) {
+      for (const journey of journeys) {
+        const exercised = await execute(browser, { action: 'journey', journeyId: journey.id, viewport });
+        records.push(await execute(review, fixtureVisualReviewInput(exercised)));
+      }
+    } else {
+      const recheck = await execute(browser, { action: 'screenshot', viewport });
+      records.push(await execute(review, fixtureVisualReviewInput(recheck)));
+    }
   }
   return records;
 }

@@ -1,0 +1,2249 @@
+--- MERGE_HEAD:tests/agent-browser.test.mjs
++++ tests/agent-browser.test.mjs
+@@ -7,9 +7,56 @@
+ import { createSocket } from 'node:dgram';
+ import { performance } from 'node:perf_hooks';
+ import { createHash } from 'node:crypto';
++import { spawn } from 'node:child_process';
++import { once } from 'node:events';
++import { chromium } from 'playwright';
++import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
+ import { createRuntimeFilesHasher } from '../dist-electron/electron/runtime-files-hash.js';
+ import { AgentBrowserSession } from '../dist-electron/electron/agent-browser.js';
+ import { VisualReviewLedger, runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
++
++for (const stopped of [false, true]) test(`browser launch and its service retain the run marker through ${stopped ? 'Stop' : 'completion'} even when browser teardown fails`, { timeout: 5000 }, async t => {
++  const root = await workspace(t), jobs = [], controller = new AbortController();
++  // Real detached processes and OS signals. Chrome and native discovery are
++  // separate permitted-host checks; this exercises production launch wiring.
++  const start = async env => {
++    const child = spawn(process.execPath, ['-e', 'process.on("SIGTERM",()=>{});setInterval(()=>{},1000);process.send(process.env.APPYARD_RUN_PROCESS);'], {
++      detached: true, env, stdio: ['ignore', 'ignore', 'ignore', 'ipc']
++    });
++    const job = { child, env, exited: false };
++    job.exit = once(child, 'exit').then(() => { job.exited = true; }); jobs.push(job);
++    t.after(async () => { if (!job.exited) child.kill('SIGKILL'); await job.exit; });
++    assert.equal((await once(child, 'message'))[0], scope.marker);
++    return child;
++  };
++  const scope = new RunProcessSweep({ graceMs: 10, killMs: 1000,
++    scan: async marker => jobs.filter(job => !job.exited && job.env.APPYARD_RUN_PROCESS === marker).map(job => ({ pid: job.child.pid, started: String(job.child.pid) })) });
++  let killRequests = 0;
++  t.mock.method(chromium, 'launchServer', async options => {
++    assert.equal(options.chromiumSandbox, false);
++    assert.equal(options.proxy, undefined, 'Ordinary browser launches have full network access.');
++    assert.equal(options.env.APPYARD_RUN_PROCESS, scope.marker);
++    await start(options.env);
++    return { wsEndpoint: () => 'ws://synthetic-browser', kill: async () => { killRequests++; throw new Error('Synthetic lost browser shutdown response'); } };
++  });
++  t.mock.method(chromium, 'connect', async () => ({ newContext: async () => { throw new Error('Synthetic closed renderer'); } }));
++  const browser = new AgentBrowserSession({ root, signal: controller.signal, executable: 'synthetic-browser',
++    prepare: async () => {
++      await start(runProcessEnvironment());
++      return { url: 'http://127.0.0.1:1/', close: async () => {} };
++    } });
++  t.after(() => browser.close());
++  const result = await scope.run(() => browser.tools()[0].execute('probe', { action: 'open' }));
++  assert.equal(result.isError, true);
++  assert.equal(jobs.length, 2);
++  assert.ok(jobs.every(job => !job.exited), 'Fixture processes must survive the failed normal shutdown');
++  if (stopped) controller.abort();
++  await browser.close();
++  assert.ok(killRequests > 0);
++  await scope.stop();
++  assert.ok(jobs.every(job => job.exited), 'Browser or service survived run cleanup');
++  assert.throws(() => scope.run(() => runProcessEnvironment()), /closed/);
++});
+ 
+ const application = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Task editor</title>
+ <style>*{box-sizing:border-box}body{font:16px sans-serif;padding:16px;margin:0}input,select,button{max-width:100%}label{display:block;margin:8px 0}</style>
+@@ -21,6 +68,27 @@
+ task.onkeydown=e=>{if(e.key==='Enter')document.querySelector('#save').click();};
+ document.querySelector('#api').onclick=()=>fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({task:task.value})}).then(r=>r.json()).then(data=>{result.textContent='API saved: '+data.task;});
+ </script></html>`;
++
++test('browser startup has a separate bounded budget from short interaction deadlines', async t => {
++  const root = await workspace(t), controller = new AbortController();
++  let launchedWith, navigatedWith, closed = 0;
++  const page = { on() {}, context: () => context, async goto(_url, options) { navigatedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30)); }, async close() {} };
++  const context = { on() {}, setDefaultTimeout(value) { assert.equal(value, 5); }, async route() {}, async routeWebSocket() {},
++    async newCDPSession() { return { on() {}, async send() {}, async detach() {} }; },
++    async newPage() { return page; }, async close() {} };
++  t.mock.method(chromium, 'launchServer', async options => {
++    launchedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30));
++    return { wsEndpoint: () => 'ws://synthetic-startup', async kill() { closed++; } };
++  });
++  t.mock.method(chromium, 'connect', async () => ({ async newContext() { return context; }, async close() {} }));
++  const browser = new AgentBrowserSession({ root, signal: controller.signal, stepTimeoutMs: 5, startupTimeoutMs: 1000,
++    prepare: async () => ({ url: 'http://127.0.0.1:1/', async close() {} }) });
++  t.after(() => browser.close());
++  await browser.open('desktop', controller.signal);
++  assert.ok(launchedWith > 5 && launchedWith <= 1000);
++  assert.ok(navigatedWith > 5 && navigatedWith < launchedWith, 'Startup shares one bounded deadline');
++  await browser.close(); assert.equal(closed, 1);
++});
+ 
+ async function workspace(t, html = application) {
+   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-agent-browser-'));
+@@ -153,14 +221,14 @@
+   assert.ok(failed.details.errors.some(error => /visible runtime failure/.test(error)));
+ });
+ 
+-test('external fetch, navigation, redirect escapes and WebSockets never reach another server', { timeout: 20_000 }, async t => {
++test('optional comparison browser blocks external fetch, navigation, redirects and WebSockets', { timeout: 20_000 }, async t => {
+   let remoteRequests = 0, upgrades = 0;
+   const remote = await serve((_request, response) => { remoteRequests++; response.end('unexpected'); });
+   remote.server.on('upgrade', (_request, socket) => { upgrades++; socket.destroy(); });
+   t.after(() => remote.close());
+   const html = application.replace('</script>', `fetch(${JSON.stringify(remote.url)}).catch(()=>{});new WebSocket(${JSON.stringify(remote.url.replace('http:', 'ws:'))});</script>`)
+     .replace('</main>', `<a id="external" href="${remote.url}">External</a><a id="escape" href="/escape?target=${encodeURIComponent(remote.url)}">Redirect escape</a></main>`);
+-  const root = await workspace(t, html), { run } = await session(t, root);
++  const root = await workspace(t, html), { run } = await session(t, root, { isolateNetwork: true });
+   const opened = await run({ action: 'open' });
+   image(opened);
+   assert.ok(opened.details.errors.some(error => /Blocked resource/.test(error)));
+@@ -173,7 +241,7 @@
+   assert.equal(upgrades, 0);
+ });
+ 
+-test('the agent browser cannot bypass its origin proxy with WebRTC UDP', { timeout: 10_000 }, async t => {
++test('the optional comparison browser cannot bypass its origin proxy with WebRTC UDP', { timeout: 10_000 }, async t => {
+   const udp = createSocket('udp4');
+   let datagrams = 0;
+   udp.on('message', () => { datagrams++; });
+@@ -184,7 +252,7 @@
+     peer.createDataChannel('probe');
+     peer.createOffer().then(offer=>peer.setLocalDescription(offer)).then(()=>setTimeout(()=>{peer.close();document.querySelector('#result').textContent='Checked';},1000));
+   </script>`);
+-  const { run } = await session(t, root, { stepTimeoutMs: 2500, journeys: [{ id: 'network', title: 'Check network boundaries', kind: 'primary', steps: [{ action: 'expectText', selector: '#result', text: 'Checked' }] }] });
++  const { run } = await session(t, root, { isolateNetwork: true, stepTimeoutMs: 2500, journeys: [{ id: 'network', title: 'Check network boundaries', kind: 'primary', steps: [{ action: 'expectText', selector: '#result', text: 'Checked' }] }] });
+   const result = await run({ action: 'journey', journeyId: 'network' });
+   assert.equal(result.details.journey?.status, 'passed', JSON.stringify(result.details));
+   assert.equal(datagrams, 0, 'The browser must not send non-proxied STUN packets.');
+@@ -193,7 +261,7 @@
+ test('dialogs, popups and downloads are dismissed or cancelled and reported', { timeout: 15_000 }, async t => {
+   const html = application.replace('</main>', '<button id="dialog">Dialog</button><button id="popup">Popup</button><button id="download">Download</button></main>')
+     .replace('</script>', `document.querySelector('#dialog').onclick=()=>alert('Test dialog');document.querySelector('#popup').onclick=()=>window.open('/');document.querySelector('#download').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['test']));a.download='test.txt';a.click();};</script>`);
+-  const root = await workspace(t, html), { run } = await session(t, root);
++  const root = await workspace(t, html), { run } = await session(t, root, { isolateNetwork: true });
+   image(await run({ action: 'open' }));
+   const dialog = await run({ action: 'click', selector: '#dialog' });
+   image(dialog); assert.ok(dialog.details.errors.some(error => /Dismissed alert dialog/.test(error)));
+@@ -366,6 +434,18 @@
+   assert.equal(result.details.captureId, undefined);
+   assert.ok(result.details.errors.some(error => /changed during execution/.test(error)));
+   assert.equal(registered, 0);
++});
++
++test('the final visual recheck still has screenshots after the observation limit is reached', () => {
++  const session = new AgentBrowserSession({ root: os.tmpdir(), signal: new AbortController().signal, prepare: async () => { throw new Error('unused'); } });
++  session.imageCount = 100; session.imageBytes = 128_000_000;
++  session.allowFinalCheck();
++  assert.equal(session.imageCount, 92);
++  assert.equal(session.imageBytes, 64_000_000);
++  session.imageCount = 3; session.imageBytes = 10;
++  session.allowFinalCheck();
++  assert.equal(session.imageCount, 3);
++  assert.equal(session.imageBytes, 10);
+ });
+ 
+ const journeyApplication = application.replace("console.error('save diagnostic');", "localStorage.setItem('task',task.value);")
+--- HEAD:tests/agent-helper-runtime.test.mjs
++++ tests/agent-helper-runtime.test.mjs
+@@ -7,7 +7,10 @@
+ import { applicationTestFiles } from '../dist-electron/electron/verification.js';
+ import { registerCredential } from '../dist-electron/electron/secrets.js';
+ 
+-const passedTests = { exitCode: 0, stdout: 'TAP version 13\n# Subtest: sums actual records\n# tests 1\n# pass 1\n# fail 0\n# skipped 0\n# todo 0\n', stderr: '', timedOut: false, outputLimited: false };
++const counts = { tests: 1, passed: 1, failed: 0, cancelled: 0, skipped: 0, todo: 0 };
++const passedTests = { exitCode: 0, stdout: JSON.stringify({ type: 'summary', summaries: [
++  { file: 'run.test.mjs', success: true, counts }, { success: true, counts }
++], skippedSuites: 0 }) + '\n', stderr: '', timedOut: false, outputLimited: false };
+ test('helper catalog and execution redact synthetic credentials in both text and structured results', async t => {
+   const secret = 'synthetic-helper-secret-distinctive-0137'; registerCredential(secret);
+   const h = await fixture(t, async options => options.command.includes('--test') ? passedTests : { ...passedTests, stdout: JSON.stringify({ diagnostic: secret }), stderr: secret });
+--- HEAD:tests/agent-runner.test.mjs
++++ tests/agent-runner.test.mjs
+@@ -384,3 +384,12 @@
+   assert.match(saved.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Could not save.*report/);
+   assert.deepEqual(saved.report.stageMetrics, project.report.stageMetrics);
+ });
++test('private activity masks synchronous and asynchronous session setup errors', async () => {
++  for (const create of [() => { throw new Error('SEALED-private-setup'); }, async () => { throw new Error('SEALED-private-setup'); }]) {
++    await assert.rejects(run(session(), { create, privateActivity: true, recoveryHint: 'Resume planning with saved files.' }), error => {
++      assert.match(error.message, /could not initialize its model session.*Resume planning/);
++      assert.doesNotMatch(error.message, /SEALED/);
++      return true;
++    });
++  }
++});
+--- MERGE_HEAD:tests/application-test-command.test.mjs
++++ tests/application-test-command.test.mjs
+@@ -19,6 +19,7 @@
+   t.after(() => fs.rm(root, { recursive: true, force: true }));
+   const workspace = path.join(root, 'workspace'), parent = path.join(root, 'exports');
+   await fs.mkdir(workspace); await fs.mkdir(parent);
++  await fs.writeFile(path.join(workspace, 'index.html'), '<!doctype html><title>Synthetic test command fixture</title>');
+   await fs.writeFile(path.join(workspace, filename), source);
+   return { root, workspace, parent };
+ }
+@@ -36,7 +37,7 @@
+   assert.equal(report.exitCode, 0, report.output);
+   assert.equal(report.total, 1, report.output);
+   assert.equal(report.passed, 1, report.output);
+-  const destination = await exportVerifiedBundle({ ...input, title: 'Application tests', verifiedHash: report.sourceHash,
++  const destination = await exportVerifiedBundle({ evidence: { report: 'Synthetic host verification', review: 'Synthetic human review' },  ...input, title: 'Application tests', verifiedHash: report.sourceHash,
+     deliveryMarkdown: 'Tests: follow the prerequisites in README.md, then run: ' + report.command });
+   const notes = await fs.readFile(path.join(destination, 'DELIVERY.md'), 'utf8');
+   assert.ok(notes.includes(report.command), 'The exported notes retain the advertised test command.');
+@@ -82,7 +83,7 @@
+   const legacyCommand = 'node "--test" "--test-reporter=<host application evidence>" "./original.test.mjs"';
+   report.command = legacyCommand;
+   const command = await verification.applicationTestRerunCommand(input.workspace);
+-  const destination = await exportVerifiedBundle({ ...input, title: 'Saved application', verifiedHash: report.sourceHash,
++  const destination = await exportVerifiedBundle({ evidence: { report: 'Synthetic host verification', review: 'Synthetic human review' },  ...input, title: 'Saved application', verifiedHash: report.sourceHash,
+     deliveryMarkdown: 'Rerun application tests: ' + command });
+   const result = rerun(command, destination, input.root);
+   assert.equal(result.error, undefined);
+@@ -121,7 +122,7 @@
+   const report = await verifyWorkspace(workspace, process.execPath, () => {});
+   assert.equal(reportPassed(report), false, JSON.stringify(report));
+   if (name === 'an empty module' || name === 'standalone assertions') {
+-    assert.equal(report.exitCode, null);
++    assert.equal(report.exitCode, 1);
+     assert.match(report.output, /completed node:test cases in every test file/);
+   } else assert.equal(report.skipped, 1);
+ });
+--- MERGE_HEAD:tests/backend-startup-cancellation.test.mjs
++++ tests/backend-startup-cancellation.test.mjs
+@@ -5,6 +5,7 @@
+ import path from 'node:path';
+ import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
+ import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
++import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
+ import { ExperimentWorkers } from '../dist-electron/electron/experiment-workers.js';
+ 
+ const resourcesRoot = path.resolve('.');
+@@ -34,7 +35,7 @@
+ }
+ function rejected(result, pattern) {
+   assert.equal(result.status, 'rejected');
+-  assert.match(result.error.message, pattern);
++  assert.match(String(result.error.cause ?? result.error), pattern);
+ }
+ 
+ async function fixture(t, { previousBuild = false } = {}) {
+@@ -63,16 +64,17 @@
+   await store.save();
+   const authentications = [], starts = [], executions = [];
+   const codex = {
+-    account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture', configured: true }],
++    account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }],
+     refresh() { const pending = deferred(); authentications.push(pending); return pending.promise; }
+   };
+-  const backend = new FleetBackend(store, process.execPath, () => {}, resourcesRoot, { codex });
++  const backend = new FleetBackend(store, process.execPath, () => {}, resourcesRoot, { codex,
++    processSweep: () => new RunProcessSweep({ scan: async () => [] }) });
+   backend.runtime = { getModel: () => ({ input: ['text', 'image'] }), hasConfiguredAuth: () => true };
+   // Retain the real public authentication and workspace preparation path. The
+   // execution boundary is observed without making a model call or building an app.
+   backend.execute = async (project, run) => {
+     executions.push({ id: project.id, runId: project.runId, workspace: project.workspace });
+-    project.status = 'review'; await backend.finish(project, run);
++    run.outcome = 'review'; project.status = 'review'; await backend.finish(project, run);
+   };
+   t.after(async () => {
+     for (const auth of authentications) auth.resolve();
+@@ -215,7 +217,7 @@
+   let refreshes = 0;
+   const workers = new ExperimentWorkers({ root, executable: process.execPath, resourcesRoot,
+     runtime: { getModel: () => ({ input: ['text', 'image'] }), hasConfiguredAuth: () => true },
+-    codex: { account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture', configured: true }],
++    codex: { account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }],
+       refresh() { refreshes++; return authentication.promise; } },
+     operations: () => [], integrations() { throw new Error('The startup fixture never invokes integrations.'); },
+     createCodexSession: async options => {
+--- HEAD:tests/browser-downloads.test.mjs
++++ tests/browser-downloads.test.mjs
+@@ -10,7 +10,7 @@
+   let captures = 0, current = 'original', pending;
+   const page = { locator(selector) { return {
+     async click() { captures++; pending?.({ suggestedFilename: () => selector.slice(4) + '.txt',
+-      createReadStream: async () => Readable.from([current + ' alpha beta gamma']), failure: async () => null, cancel: async () => {} }); },
++      createReadStream: async () => Readable.from([current + ' alpha beta gamma']), failure: async () => null, cancel: async () => {}, delete: async () => {} }); },
+     async fill(value) { current = value; }, async selectOption(value) { current = value; },
+     async press(value) { current = value; }, async check() { current = 'checked'; },
+     async waitFor() {}, async innerText() { return current; }, async inputValue() { return current; }
+--- /dev/null
++++ tests/browser-network-policy.test.mjs
+@@ -0,0 +1,40 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { promises as fs } from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { chromium } from 'playwright';
++import { verifyBrowserJourneys } from '../dist-electron/electron/browser-verification.js';
++
++for (const isolateNetwork of [false, true]) test(`${isolateNetwork ? 'optional comparison' : 'ordinary'} verification selects the intended browser network policy`, async t => {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'browser-policy-'));
++  t.after(() => fs.rm(root, { recursive: true, force: true }));
++  const launches = [], contexts = []; let websocketPolicies = 0;
++  t.mock.method(chromium, 'launchServer', async options => {
++    launches.push(options);
++    return { wsEndpoint: () => 'ws://synthetic-browser', kill: async () => {} };
++  });
++  t.mock.method(chromium, 'connect', async () => ({
++    close: async () => {},
++    newContext: async options => {
++      contexts.push(options);
++      return { setDefaultTimeout() {}, route: async () => {}, routeWebSocket: async () => { websocketPolicies++; },
++        tracing: { start: async () => {}, stop: async () => {} }, close: async () => {},
++        newPage: async () => { throw new Error('Synthetic renderer stops after policy setup.'); } };
++    }
++  }));
++  const plan = { schemaVersion: 1, criteria: [], journeys: ['primary', 'recovery'].map(kind => ({
++    id: kind, title: kind, kind, steps: [{ action: 'expectText', selector: 'body', text: 'Ready' }]
++  })) };
++  const result = await verifyBrowserJourneys({ root, plan, contractHash: 'policy-fixture',
++    url: 'http://127.0.0.1:1/', ...(isolateNetwork ? { isolateNetwork: true } : {}) });
++  assert.equal(launches.length, 1); assert.equal(contexts.length, 4);
++  assert.equal(launches[0].chromiumSandbox, false);
++  assert.equal(Boolean(launches[0].proxy), isolateNetwork);
++  assert.equal(websocketPolicies, isolateNetwork ? 4 : 0);
++  for (const context of contexts) {
++    assert.equal(Boolean(context.proxy), isolateNetwork);
++    assert.equal(context.serviceWorkers, isolateNetwork ? 'block' : 'allow');
++  }
++  assert.ok(result.journeys.every(journey => journey.status === 'failed'), 'Policy setup alone never supplies browser evidence.');
++});
+--- MERGE_HEAD:tests/browser-runtime-isolation.test.mjs
++++ tests/browser-runtime-isolation.test.mjs
+@@ -99,7 +99,7 @@
+   assert.deepEqual(events, Array.from({ length: 4 }, () => ['start', 'integrity', 'close']).flat());
+ });
+ 
+-test('fresh per-context proxies reject redirect hops to another localhost origin', { timeout: 20_000 }, async t => {
++test('optional comparison per-context proxies reject redirect hops to another localhost origin', { timeout: 20_000 }, async t => {
+   const root = await workspace(t);
+   let remoteRequests = 0, redirects = 0, allowedRequests = 0;
+   const remote = createServer((_request, response) => { remoteRequests++; response.end('Forbidden destination'); });
+@@ -118,7 +118,7 @@
+     const close = () => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); });
+     t.after(close);
+     return { url: `http://127.0.0.1:${server.address().port}/`, assertIntegrity: async () => {}, redactMessage: value => value, close };
+-  });
++  }, { isolateNetwork: true });
+   assert.deepEqual(result.errors, []);
+   assert.equal(redirects, 4); assert.equal(allowedRequests, 4);
+   assert.equal(remoteRequests, 0, 'Redirects must obey the current attempt origin at the transport boundary.');
+--- HEAD:tests/browser-verification.test.mjs
++++ tests/browser-verification.test.mjs
+@@ -5,6 +5,7 @@
+ import path from 'node:path';
+ import { performance } from 'node:perf_hooks';
+ import { createServer } from 'node:http';
++import { createSocket } from 'node:dgram';
+ import { verifyBrowserJourneys } from '../dist-electron/electron/browser-verification.js';
+ import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verification.js';
+ 
+@@ -150,6 +151,46 @@
+   assert.match(result.journeys.find(j => j.viewport === 'narrow').detail, /Horizontal overflow/);
+ });
+ 
++test('optional comparison verification blocks redirect, WebSocket and WebRTC egress while preserving same-origin service calls', { timeout: 20_000 }, async t => {
++  let remoteRequests = 0, upgrades = 0, datagrams = 0, serviceCalls = 0, redirects = 0;
++  const remote = createServer((_request, response) => { remoteRequests++; response.end('unexpected'); });
++  remote.on('upgrade', (_request, socket) => { upgrades++; socket.destroy(); });
++  await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
++  t.after(() => new Promise(resolve => { remote.closeAllConnections(); remote.close(resolve); }));
++  const udp = createSocket('udp4');
++  udp.on('message', () => { datagrams++; });
++  await new Promise(resolve => udp.bind(0, '127.0.0.1', resolve));
++  t.after(() => new Promise(resolve => udp.close(resolve)));
++  const remoteUrl = `http://127.0.0.1:${remote.address().port}/`;
++  const html = `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><p id="result">Checking</p><script>
++    fetch('/redirect').catch(()=>{});
++    const socket = new WebSocket(${JSON.stringify(remoteUrl.replace('http:', 'ws:'))});
++    const peer = new RTCPeerConnection({iceServers:[{urls:'stun:127.0.0.1:${udp.address().port}'}]});
++    peer.createDataChannel('probe');
++    peer.createOffer().then(offer=>peer.setLocalDescription(offer)).catch(()=>{});
++    fetch('/health').then(response=>response.text()).then(text=>setTimeout(()=>{document.querySelector('#result').textContent=text;peer.close();socket.close();},1000));
++  </script>`;
++  const root = await workspace(t, html);
++  const runtime = createServer((request, response) => {
++    if (request.url === '/redirect') { redirects++; response.writeHead(302, { Location: remoteUrl }).end(); }
++    else if (request.url === '/health') { serviceCalls++; response.end('Same-origin service works'); }
++    else response.writeHead(200, { 'Content-Type': 'text/html' }).end(html);
++  });
++  await new Promise(resolve => runtime.listen(0, '127.0.0.1', resolve));
++  t.after(() => new Promise(resolve => { runtime.closeAllConnections(); runtime.close(resolve); }));
++  const checks = plan([{ action: 'expectText', selector: '#result', text: 'Same-origin service works' }]);
++  checks.journeys = checks.journeys.slice(0, 1);
++  const result = await verify(root, { url: `http://127.0.0.1:${runtime.address().port}/`, isolateNetwork: true, allowSameOrigin: true, stepTimeoutMs: 2500, plan: checks });
++  assert.deepEqual(result.errors, []);
++  assert.equal(serviceCalls, 2, 'Both verification viewports must complete the allowed service call.');
++  assert.equal(redirects, 2, 'The test must exercise an allowed first redirect hop.');
++  assert.ok(result.journeys.every(journey => journey.status === 'failed' && /blocked WebSocket/.test(journey.detail)), JSON.stringify(result));
++  assert.ok(result.journeys.every(journey => !/expectText|step exceeded/i.test(journey.detail)), JSON.stringify(result));
++  assert.equal(remoteRequests, 0, 'Redirect destinations must pass the same-origin transport policy.');
++  assert.equal(upgrades, 0, 'WebSocket upgrades must never reach another server.');
++  assert.equal(datagrams, 0, 'WebRTC must never send non-proxied UDP datagrams.');
++});
++
+ test('a hung browser script hits the overall deadline and releases the browser and preview', { timeout: 12_000 }, async t => {
+   const root = await workspace(t, '<!doctype html><script>while(true){}</script>');
+   const started = performance.now();
+--- MERGE_HEAD:tests/browser-wasm.test.mjs
++++ tests/browser-wasm.test.mjs
+@@ -53,8 +53,8 @@
+ }
+ 
+ async function browserPage(t) {
+-  const browser = await chromium.launch({ channel: 'chromium', headless: true, chromiumSandbox: true, timeout: 5_000 })
+-    .catch(() => chromium.launch({ channel: 'chrome', headless: true, chromiumSandbox: true, timeout: 5_000 }));
++  const browser = await chromium.launch({ channel: 'chromium', headless: true, chromiumSandbox: false, timeout: 5_000 })
++    .catch(() => chromium.launch({ channel: 'chrome', headless: true, chromiumSandbox: false, timeout: 5_000 }));
+   t.after(() => browser.close());
+   return browser.newPage();
+ }
+@@ -65,18 +65,18 @@
+   return page.evaluate(() => window.wasmResult);
+ }
+ 
+-function assertApplicationResult(result) {
++function assertApplicationResult(result, restricted = false) {
+   assert.equal(result.inline, true, 'ordinary inline scripts remain available');
+   assert.equal(result.module, true, 'ordinary module scripts remain available');
+-  assert.equal(result.evalBlocked, true, 'JavaScript eval stays blocked');
+-  assert.equal(result.functionBlocked, true, 'JavaScript Function construction stays blocked');
++  assert.equal(result.evalBlocked, restricted, 'Only optional comparison previews restrict JavaScript eval');
++  assert.equal(result.functionBlocked, restricted, 'Only optional comparison previews restrict Function construction');
+   assert.equal(result.undeclaredStatus, 404, 'the undeclared WASM resource stays unavailable');
+   assert.equal(result.streaming, 42, result.error);
+   assert.equal(result.bytes, -7, result.error);
+   assert.equal(result.error, undefined);
+ }
+ 
+-test('declared browser preview executes streaming and byte WebAssembly without enabling JavaScript eval', { timeout: 20_000 }, async t => {
++test('declared browser preview executes streaming and byte WebAssembly with JavaScript eval available', { timeout: 20_000 }, async t => {
+   const root = await fixture(t), previews = new PreviewServers();
+   t.after(() => previews.close());
+   const page = await browserPage(t);
+@@ -92,11 +92,11 @@
+     assert.equal(await runtime.invoke({ a: 17, b: 25 }), 42);
+     assert.equal(await runtime.invoke({ a: -12, b: 5 }), -7);
+     const page = await browserPage(t);
+-    assertApplicationResult(await resultAt(page, runtime.url));
++    assertApplicationResult(await resultAt(page, runtime.url), true);
+     await runtime.assertIntegrity();
+   });
+ 
+-test('legacy inline preview executes embedded WebAssembly and keeps JavaScript eval blocked', { timeout: 20_000 }, async t => {
++test('legacy inline preview executes embedded WebAssembly and permits JavaScript eval', { timeout: 20_000 }, async t => {
+   const legacy = `<!doctype html><title>Embedded WebAssembly</title><script>window.inlineScriptRan=true;
+ (async()=>{${javascriptChecks}
+ try { const {instance}=await WebAssembly.instantiate(new Uint8Array(${JSON.stringify([...wasm])}));
+@@ -106,8 +106,8 @@
+   t.after(() => previews.close());
+   const result = await resultAt(await browserPage(t), await previews.url(root));
+   assert.equal(result.inline, true);
+-  assert.equal(result.evalBlocked, true);
+-  assert.equal(result.functionBlocked, true);
++  assert.equal(result.evalBlocked, false);
++  assert.equal(result.functionBlocked, false);
+   assert.equal(result.first, 42, result.error);
+   assert.equal(result.second, -7, result.error);
+   assert.equal(result.error, undefined);
+@@ -148,7 +148,7 @@
+ 
+ test('emitted standalone responses execute the same WASM core and retain resource and eval restrictions', { timeout: 20_000 }, async t => {
+   const root = await fixture(t), url = await standaloneUrl(t, root);
+-  assertApplicationResult(await resultAt(await browserPage(t), url));
++  assertApplicationResult(await resultAt(await browserPage(t), url), true);
+ });
+ 
+ for (const broken of [false, true]) test(`host browser acceptance ${broken ? 'rejects incorrect' : 'accepts correct'} shared WASM output at both widths`,
+--- HEAD:tests/codex.test.mjs
++++ tests/codex.test.mjs
+@@ -1,7 +1,8 @@
+ import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
+-import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
++import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+ import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
+ import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
++import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { spawn } from 'node:child_process';
+@@ -482,8 +483,11 @@
+     createCodexSession: () => { throw new Error('No session should start without plan permission'); } });
+   for (const account of [{ status: 'disconnected', planUsageEnabled: true }, { status: 'connecting', planUsageEnabled: true }, { status: 'connected', planUsageEnabled: false }]) {
+     codex.account = account;
+-    await assert.rejects(backend.start(store.state.projects[0].id), /build service is not connected/);
+-    assert.equal(backend.active.size, 0); assert.equal(store.state.projects[0].status, 'failed');
++    const before = structuredClone(store.state.projects[0]);
++    await assert.rejects(backend.start(store.state.projects[0].id), error => {
++      assert.match(String(error.cause ?? error), /sign in with ChatGPT/i); return true;
++    });
++    assert.equal(backend.active.size, 0); assert.deepEqual(store.state.projects[0], before);
+   }
+ });
+ 
+@@ -513,6 +517,11 @@
+     preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
+     createSession: () => { throw new Error('Pi must not run'); },
+     createCodexSession: async options => {
++      // Reviewer lifecycle is covered separately; these assertions track the
++      // ordinary phase skills while the reviewer still submits through its host ledger.
++      if (options.tools.some(tool => tool.name === 'fleet_submit_planning_review')) {
++        return createFixturePlanningReviewSession(options.tools);
++      }
+       const rpc = new FakeRpc();
+       const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
+       sessions.push(session);
+--- MERGE_HEAD:tests/experiment-contract.test.mjs
++++ tests/experiment-contract.test.mjs
+@@ -75,6 +75,22 @@
+   assert.throws(() => parseCandidateExecutionContract(credentials, shared, acceptance), /configured host operations/);
+   const restricted = parseBehavioralContract({ ...input, delivery: { profiles: ['node-service'], network: 'offline', operationIds: [] } }, acceptance);
+   assert.throws(() => parseCandidateExecutionContract(execution(restricted, 'python'), restricted, acceptance), /allowed by the frozen delivery/);
++});
++
++test('comparison contracts retain primary synthetic coverage and require its named output in the shared journey', () => {
++  const requirements = [...acceptance, { id: 'R2', requirement: 'Prepare a synthetic draft for publication after owner approval.', method: 'automated', scenario: 'Prepare a draft without publishing.' }];
++  const input = behavior('browser');
++  const coverage = { assumptions: 'Fictional local draft only; no publication or authority is granted.', journeyIds: ['primary'], outputs: [{ sourceCriterionId: 'R2', name: 'synthetic draft' }] };
++  input.criteria.push({ criterionId: 'R2', disposition: 'deferred', expectedOutcome: 'Owner approval remains necessary before publication.', capabilityIds: [], scenarioIds: [],
++    reason: 'human-authority: Publication requires owner approval. A local synthetic draft is demonstrated without publication.', syntheticCoverage: coverage });
++  input.scenarios[0].steps.push({ id: 'draft', action: 'expectText', text: 'Synthetic draft ready for owner review' });
++  const shared = parseBehavioralContract(input, requirements);
++  const contracts = compilePublicContracts(shared, parseCandidateExecutionContract(execution(shared), shared, requirements));
++  assert.deepEqual(contracts.plan.criteria.find(item => item.criterionId === 'R2').syntheticCoverage, coverage);
++  const missing = structuredClone(input); delete missing.criteria[1].syntheticCoverage;
++  assert.throws(() => parseBehavioralContract(missing, requirements), /synthetic|primary/i);
++  const unobserved = structuredClone(input); unobserved.scenarios[0].steps.pop();
++  assert.throws(() => parseBehavioralContract(unobserved, requirements), /output|assert|synthetic/i);
+ });
+ 
+ test('a candidate cannot escape a common browser requirement or rewrite shared expectations', () => {
+--- MERGE_HEAD:tests/experiment-planning-review.test.mjs
++++ tests/experiment-planning-review.test.mjs
+@@ -57,6 +57,7 @@
+   const createSession = async sessionOptions => {
+     const { cwd } = sessionOptions, customTools = sessionOptions.customTools ?? sessionOptions.tools;
+     const reviewing = customTools.some(tool => tool.name === 'fleet_submit_planning_review'), listeners = new Set();
++    const aborted = deferred();
+     const session = { options: sessionOptions, cwd, customTools, stage: reviewing ? 'review' : undefined, disposed: false, aborts: 0,
+       subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+       async prompt(prompt) {
+@@ -64,7 +65,9 @@
+         if (this.stage === 'plan') planCalls++;
+         if (this.stage === 'review') reviewCalls++;
+         for (const listener of listeners) listener({ type: 'turn_start' });
+-        if (await options.onPrompt?.({ stage: this.stage, session: this, planCalls, reviewCalls, prompt })) return;
++        const handled = await Promise.race([Promise.resolve(options.onPrompt?.({ stage: this.stage, session: this, planCalls, reviewCalls, prompt })), aborted.promise]);
++        if (this.aborts) throw new Error('Run stopped');
++        if (handled) return;
+         if (this.stage === 'intake') await write(cwd, 'scope.md', 'Return the sum of all supplied numbers.');
+         else if (this.stage === 'research') await write(cwd, 'research.md', 'A reduction over a numeric array is sufficient.');
+         else if (this.stage === 'plan') {
+@@ -83,7 +86,7 @@
+           await options.afterVerdict?.({ behavior, evaluation, session: this, workspace: projections.get(initial.id)?.workspace });
+         }
+         for (const listener of listeners) { listener({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop' } }); listener({ type: 'turn_end' }); }
+-      }, async abort() { this.aborts++; }, dispose() { this.disposed = true; listeners.clear(); } };
++      }, async abort() { this.aborts++; aborted.resolve(true); }, dispose() { this.disposed = true; listeners.clear(); } };
+     sessions.push(session); return { session };
+   };
+   const workers = new ExperimentWorkers({ root, executable: process.execPath, resourcesRoot: path.resolve('.'),
+@@ -91,7 +94,7 @@
+     integrations: () => { throw new Error('Shared planning cannot use candidate runtime integrations.'); }, createSession,
+     createCodexSession: async options => (await createSession(options)).session,
+     codex: { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true },
+-      models: [{ id: 'fixture-v1', configured: true }], async refresh() {}, async credentials() { return { accessToken: 'fixture', expiresAt: Date.now() + 60_000 }; } } });
++      models: [{ id: 'fixture-v1', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }], async refresh() {}, async credentials() { return { accessToken: 'fixture', expiresAt: Date.now() + 60_000 }; } } });
+   const context = project => ({ experiment, project, modelConfig: { backend, provider, model: 'fixture-v1' }, signal: new AbortController().signal,
+     saveProjection: value => projections.set(value.id, structuredClone(value)) });
+   worker = await workers.sharedPlanner(context(initial));
+@@ -193,7 +196,8 @@
+   } });
+   await h.start();
+   await assertUnfrozen(h);
+-  assert.match(h.project.error, /did not submit a planning verdict/);
++  assert.match(h.project.error, /plan review could not finish/);
++  assert.ok(h.project.logs.some(log => /did not submit a planning verdict/.test(log.text)));
+   assert.equal((await h.progress()).phase, 'reviewing');
+   assert.equal(h.reviewCalls, 1);
+ });
+@@ -222,7 +226,8 @@
+   } });
+   await h.start();
+   await assertUnfrozen(h);
+-  assert.match(h.project.error, /did not submit a planning verdict/);
++  assert.match(h.project.error, /plan review could not finish/);
++  assert.ok(h.project.logs.some(log => /did not submit a planning verdict/.test(log.text)));
+   assert.equal(h.planCalls, 1);
+   assert.equal(h.reviewCalls, 1);
+   assert.equal((await h.progress()).phase, 'reviewing');
+@@ -271,7 +276,7 @@
+   assert.equal(h.sessions.length, count, 'A durable approval is reused or invalidated before dispatching any model session.');
+   if (changed) {
+     await assertUnfrozen(h); assert.equal(h.project.executionFailure, 'integrity');
+-    assert.match(h.project.error, /approval.*inputs/);
++    assert.ok(h.project.logs.some(log => /approval.*inputs/.test(log.text)), h.project.error);
+   } else {
+     assert.equal(h.project.status, 'review', h.project.error);
+     assert.equal((await h.artifact()).planningReview.inputHash, (await h.progress()).review.inputHash);
+@@ -297,7 +302,7 @@
+   if (changed) {
+     await assertUnfrozen(h);
+     assert.equal(h.project.executionFailure, 'integrity');
+-    assert.match(h.project.error, /approval.*inputs/);
++    assert.ok(h.project.logs.some(log => /approval.*inputs/.test(log.text)), h.project.error);
+   } else {
+     assert.equal(h.project.status, 'review', h.project.error);
+     assert.deepEqual((await h.artifact()).planningReview, progress.review);
+--- MERGE_HEAD:tests/experiment-resource-parity.test.mjs
++++ tests/experiment-resource-parity.test.mjs
+@@ -106,7 +106,7 @@
+   for (const [name, bytes] of Object.entries(resources)) await write(workspace, name, bytes);
+   for (const name of ['engine.cjs', 'assets/hidden.CJS', 'undeclared.csv']) await write(workspace, name, 'must not be served');
+   await scoped.assertInputs(project);
+-  const destination = await exportVerifiedBundle({ workspace, parent: root, title: 'Resource parity', verifiedHash: await sourceHash(workspace), deliveryMarkdown: 'Run the bundled runtime adapter.' });
++  const destination = await exportVerifiedBundle({ evidence: { report: 'Synthetic host verification', review: 'Synthetic human review' },  workspace, parent: root, title: 'Resource parity', verifiedHash: await sourceHash(workspace), deliveryMarkdown: 'Run the bundled runtime adapter.' });
+   assert.deepEqual(JSON.parse(await fs.readFile(path.join(destination, 'integration-config.json'), 'utf8')), configuration);
+   return { destination, configuration, adapter, application };
+ }
+--- MERGE_HEAD:tests/helper-execution.test.mjs
++++ tests/helper-execution.test.mjs
+@@ -27,7 +27,7 @@
+ 
+ const supported = ['darwin', 'linux'].includes(process.platform);
+ 
+-test('helper sandbox runs argv and stdin without inheriting credentials or loader hooks', { skip: !supported }, async t => {
++test('helper runs argv and stdin without inheriting credentials or loader hooks', { skip: !supported }, async t => {
+   const f = await fixture(t, `
+     import fs from 'node:fs/promises';
+     let input = ''; for await (const chunk of process.stdin) input += chunk;
+@@ -66,11 +66,11 @@
+   assert.match(tested.stdout, /canonical test entrypoint/);
+ });
+ 
+-test('helper sandbox denies outside reads/writes and preserves source, inputs, own scripts and host evidence', { skip: !supported }, async t => {
++test('full-access helpers can read and write workspace and outside synthetic fixtures', { skip: !supported }, async t => {
+   const f = await fixture(t, `
+     import fs from 'node:fs/promises';
+     const failures = {};
+-    const attempt = async (name, task) => { try { await task(); failures[name] = 'unexpected success'; } catch (error) { failures[name] = error.code; } };
++    const attempt = async (name, task) => { try { await task(); failures[name] = 'success'; } catch (error) { failures[name] = error.code; } };
+     await attempt('outsideRead', () => fs.readFile(process.argv[2]));
+     await attempt('outsideWrite', () => fs.writeFile(process.argv[2], 'changed'));
+     for (const file of ['requirements.md', 'app.mjs', 'inputs/input.txt', '.fleet/packet.json', '.agent-tools/example/run.mjs']) {
+@@ -96,12 +96,13 @@
+   const result = await f.run({ command: [process.execPath, f.script, outside] });
+   assert.equal(result.exitCode, 0, result.stderr);
+   const failures = JSON.parse(result.stdout);
+-  for (const [operation, code] of Object.entries(failures)) assert.match(code, /^(EPERM|EACCES)$/, `${operation}: ${code}`);
+-  assert.equal(await fs.readFile(outside, 'utf8'), 'private');
+-  assert.equal(await fs.readFile(path.join(f.workspace, 'app.mjs'), 'utf8'), 'original');
+-});
+-
+-test('helper sandbox blocks even loopback network connections', { skip: !supported }, async t => {
++  assert.equal(Object.keys(failures).length, 12);
++  for (const [operation, code] of Object.entries(failures)) assert.equal(code, 'success', operation);
++  assert.equal(await fs.readFile(outside, 'utf8'), 'changed');
++  assert.equal(await fs.readFile(path.join(f.workspace, 'app.mjs'), 'utf8'), 'changed');
++});
++
++test('helpers can connect to a self-hosted server', { skip: !supported }, async t => {
+   const server = createServer((_request, response) => response.end('network was reached'));
+   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+   t.after(() => new Promise(resolve => server.close(resolve)));
+@@ -113,10 +114,10 @@
+   `);
+   const result = await f.run({ command: [process.execPath, f.script, String(server.address().port)] });
+   assert.equal(result.exitCode, 0, result.stderr);
+-  assert.match(result.stdout.trim(), /^(EPERM|EACCES)$/);
+-});
+-
+-test('helper timeout and combined stdout/stderr limits stop the sandbox', { skip: !supported, timeout: 10000 }, async t => {
++  assert.equal(result.stdout.trim(), 'connected');
++});
++
++test('helper timeout and combined stdout/stderr limits stop the process', { skip: !supported, timeout: 10000 }, async t => {
+   const f = await fixture(t, 'setInterval(() => {}, 1000);');
+   const hanging = await f.run({ timeoutMs: 150 });
+   assert.equal(hanging.exitCode, null); assert.equal(hanging.timedOut, true);
+@@ -130,7 +131,7 @@
+   assert.ok(Buffer.byteLength(binary.stdout) + Buffer.byteLength(binary.stderr) <= 32);
+ });
+ 
+-test('helper validation can execute the Node test runner inside the same sandbox', { skip: !supported }, async t => {
++test('helper validation can execute the Node test runner directly', { skip: !supported }, async t => {
+   const f = await fixture(t, `import test from 'node:test'; import assert from 'node:assert/strict'; test('parser fixture', () => assert.deepEqual(JSON.parse('{"value":7}'), {value:7}));`);
+   const result = await f.run({ command: [process.execPath, '--test', f.script] });
+   assert.equal(result.exitCode, 0, result.stderr);
+@@ -139,15 +140,17 @@
+   assert.equal(testEvidence(result).valid, true);
+ });
+ 
+-test('helper test workers cannot spawn processes, create workers or load native addons', { skip: !supported }, async t => {
++test('helper test workers retain full process and worker access', { skip: !supported }, async t => {
+   const f = await fixture(t, `
+     import test from 'node:test'; import assert from 'node:assert/strict';
+     import { spawnSync } from 'node:child_process'; import { Worker } from 'node:worker_threads';
+-    test('worker permissions remain restricted', () => {
+-      assert.equal(process.execArgv.includes('--allow-child-process'), false);
+-      assert.throws(() => spawnSync(process.execPath, ['-e', 'console.log(1)']), {code:'ERR_ACCESS_DENIED'});
+-      assert.throws(() => new Worker('1', {eval:true}), {code:'ERR_ACCESS_DENIED'});
+-      assert.throws(() => process.dlopen({exports:{}}, '/missing-addon.node'), {code:'ERR_DLOPEN_DISABLED'});
++    test('worker access remains unrestricted', async () => {
++      assert.equal(process.permission?.has('child'), undefined);
++      const child = spawnSync(process.execPath, ['-e', 'console.log(1)'], { encoding: 'utf8' });
++      assert.equal(child.status, 0); assert.equal(child.stdout.trim(), '1');
++      const worker = new Worker('1', {eval:true});
++      await new Promise((resolve, reject) => { worker.once('exit', resolve); worker.once('error', reject); });
++      assert.throws(() => process.dlopen({exports:{}}, '/missing-addon.node'), {code:'ERR_DLOPEN_FAILED'});
+     });
+   `);
+   const result = await f.run({ command: [process.execPath, '--test', '--test-reporter=tap', f.script] });
+@@ -238,33 +241,33 @@
+   });
+ });
+ 
+-test('helpers cannot spawn detached daemons, workers or disable runtime permissions', { skip: !supported }, async t => {
++test('helpers can spawn detached children and workers while the host keeps fixed entrypoint argv', { skip: !supported }, async t => {
+   const f = await fixture(t, `
+     import { spawn } from 'node:child_process'; import { Worker } from 'node:worker_threads';
+-    const failures = {};
+-    try { const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {detached:true,stdio:'ignore'}); child.unref(); failures.spawn = 'unexpected success'; }
+-    catch (error) { failures.spawn = error.code; }
+-    try { new Worker('setInterval(() => {}, 1000)', {eval:true}); failures.worker = 'unexpected success'; }
+-    catch (error) { failures.worker = error.code; }
+-    console.log(JSON.stringify(failures));
++    const child = spawn(process.execPath, ['-e', 'process.exit(0)'], {detached:true,stdio:'ignore'});
++    const code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
++    const worker = new Worker('require("node:worker_threads").parentPort.postMessage("running")', {eval:true});
++    const message = await new Promise((resolve, reject) => { worker.once('error', reject); worker.once('message', resolve); });
++    await worker.terminate();
++    console.log(JSON.stringify({spawn:code, worker:message}));
+   `);
+   const result = await f.run({});
+   assert.equal(result.exitCode, 0, result.stderr);
+-  assert.deepEqual(JSON.parse(result.stdout), {spawn:'ERR_ACCESS_DENIED', worker:'ERR_ACCESS_DENIED'});
++  assert.deepEqual(JSON.parse(result.stdout), {spawn:0, worker:'running'});
+   for (const flag of ['--no-permission', '--allow-child-process', '--allow-worker', '--allow-addons', '--require=bootstrap.cjs']) {
+     await assert.rejects(f.run({ command: [process.execPath, flag, f.script] }), /Unsupported helper runtime flag/);
+   }
+ });
+ 
+-test('bundled Electron executes helper files and tests with Node permission enforcement', { skip: process.platform !== 'darwin' }, async t => {
++test('bundled Electron executes helper files and tests with full subprocess access', { skip: process.platform !== 'darwin' }, async t => {
+   const { default: electron } = await import('electron');
+   const f = await fixture(t, `
+-    import test from 'node:test'; import assert from 'node:assert/strict'; import {spawn} from 'node:child_process';
+-    test('blocks subprocesses', () => assert.throws(() => spawn(process.execPath, ['-e', 'console.log(1)']), {code:'ERR_ACCESS_DENIED'}));
++    import test from 'node:test'; import assert from 'node:assert/strict'; import {spawnSync} from 'node:child_process';
++    test('allows subprocesses', () => assert.equal(spawnSync(process.execPath, ['-e', 'console.log(1)'], {encoding:'utf8'}).stdout.trim(), '1'));
+   `);
+   const result = await f.run({ executable: electron, command: [electron, '--no-global-search-paths', '--test', '--test-reporter=tap', f.script] });
+   assert.equal(result.exitCode, 0, result.stderr);
+-  assert.match(result.stdout, /blocks subprocesses/);
++  assert.match(result.stdout, /allows subprocesses/);
+   assert.match(result.stdout, /pass 1/);
+ });
+ 
+--- /dev/null
++++ tests/helpers/approved-evidence.mjs
+@@ -0,0 +1,14 @@
++import { reportHash } from '../../dist-electron/electron/delivery.js';
++import { judgeAccepted, judgeGaps } from '../../dist-electron/shared/verification.js';
++
++// Synthetic admission state for tests of deeper delivery validation. This is not a native run receipt.
++export function bindSyntheticApproval(project) {
++  project.runId ??= 'synthetic-approved-run';
++  project.feedback ??= '';
++  project.stages = [{ id: 'review', status: 'complete' }];
++  project.processScope = { runId: project.runId, marker: 'synthetic-marker', cleanup: 'confirmed' };
++  project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
++  project.approval = { runId: project.runId, reportHash: project.verification.reportHash, sourceHash: project.report.sourceHash,
++    approvedAt: project.approvedAt, feedback: project.feedback,
++    ...(!judgeAccepted(project.report) ? { judgeGapsAccepted: true, acceptedJudgeGaps: structuredClone(judgeGaps(project.report)) } : {}) };
++}
+--- HEAD:tests/helpers/main-harness.mjs
++++ tests/helpers/main-harness.mjs
+@@ -16,32 +16,37 @@
+ import { registerConnectorIPC } from '../../dist-electron/electron/connectors/index.js';
+ import { GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilUnlockUrl } from '../../dist-electron/electron/genai-mil.js';
+ 
++import { PreviewBoundary } from '../../dist-electron/electron/preview-boundary.js';
++import { experimentMethodNames } from '../../dist-electron/shared/experiments.js';
++import { storageMethodNames } from '../../dist-electron/shared/data-storage.js';
++
+ // Exercise the actual IPC handlers. Only Electron's window/IPC transport and
+ // unrelated startup services are replaced. Filesystem and delivery gates are real.
+ export async function mainHarness(store, backend = { active: new Map() }, source = 'electron/main.ts', overrides = {}) {
+   const handlers = new Map(), events = new Map();
+   const webContents = { mainFrame: {}, send() {} };
+   const app = {
+-    isPackaged: false, getAppPath: () => process.cwd(), getPath: () => store.root,
++    commandLine: { appendSwitch() {} }, isPackaged: false, getAppPath: () => process.cwd(), getPath: () => store.root,
+     setPath() {}, setName() {}, requestSingleInstanceLock: () => true, whenReady: () => ({ then() {} }),
+     on: (name, callback) => events.set(name, callback), quit() {},
+   };
+   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
+   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
+   const scope = {
+-    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
++    PreviewBoundary, experimentMethodNames, storageMethodNames, redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
+     __moduleUrl: pathToFileURL(path.resolve(source)).href,
+     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },
+     dialog: {}, safeStorage: {}, Menu: {}, BrowserWindow: class {},
+     setTimeout, clearTimeout, AbortController, structuredClone, console,
+     hostStore: store, hostBackend: backend,
++    hostExperiments: { activeCount: 0, activeExperiment: () => undefined, isActive: () => false, learning: { getSettings: () => ({ mode: 'off' }) }, refreshProjectSummaries() {}, async assertSelectedVerified() {}, async exportReference() {}, async closeCandidatePreview() {} },
+     hostCodex: { account: { status: 'disconnected' } }, hostLead: { active: new Map() }, hostConnectors: undefined,
+     hostGenAiMil: { view: () => ({ address: GENAI_MIL_ADDRESS, hasKey: false, connected: false, models: [] }) },
+     hostWindow: { webContents, isDestroyed: () => false },
+     ...overrides,
+   };
+-  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
++  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; experiments = hostExperiments; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
+   return {
+     handlers, events,
+     invoke: (channel, ...args) => handlers.get(channel)({ sender: webContents, senderFrame: webContents.mainFrame }, ...args),
+--- /dev/null
++++ tests/helpers/planning-contract-fixture.mjs
+@@ -0,0 +1,12 @@
++import { solutionFixture } from '../../scripts/solution-fixture.mjs';
++
++export function planningContractFixture(acceptance) {
++  const files = solutionFixture(['R1']);
++  const plan = JSON.parse(files['acceptance-plan.json']);
++  for (const criterion of acceptance.filter(item => item.id !== 'R1')) plan.criteria.push({
++    criterionId: criterion.id, disposition: 'deferred', expectedOutcome: criterion.requirement,
++    journeyIds: [], capabilityIds: [], reason: 'real-system: The operational feed requires an authenticated connection supplied by its owner.'
++  });
++  files['acceptance-plan.json'] = JSON.stringify(plan);
++  return files;
++}
+--- HEAD:tests/helpers/synthetic-browser.mjs
++++ tests/helpers/synthetic-browser.mjs
+@@ -33,9 +33,11 @@
+       const screenshot = '.browser-observations/' + randomUUID() + '/' + createHash('sha256').update(bytes).digest('hex').slice(0, 12) + '-' + randomUUID() + '.png';
+       await fs.mkdir(path.dirname(path.join(browser.options.root, screenshot)), { recursive: true });
+       await fs.writeFile(path.join(browser.options.root, screenshot), bytes);
+-      const captureId = await browser.options.onCapture({ viewport, screenshot, filesHash: await runtimeFilesHash(browser.options.root, manifest),
++      const definition = input.action === 'journey' ? browser.options.journeys?.find(item => item.id === input.journeyId) : undefined;
++      const journey = definition ? { id: definition.id, status: 'passed', completedSteps: definition.steps.length, totalSteps: definition.steps.length, detail: 'Synthetic orchestration journey' } : undefined;
++      const captureId = await browser.options.onCapture({ viewport, screenshot, ...(journey ? { journey } : {}), filesHash: await runtimeFilesHash(browser.options.root, manifest),
+         screenshotHash: createHash('sha256').update(bytes).digest('hex') });
+-      const details = { captureId, viewport, dimensions: viewport === 'desktop' ? { width: 1280, height: 800 } : { width: 390, height: 844 },
++      const details = { captureId, viewport, journeys: browser.options.journeys ?? [], ...(journey ? { journey } : {}), dimensions: viewport === 'desktop' ? { width: 1280, height: 800 } : { width: 390, height: 844 },
+         pageText: 'Synthetic orchestration image, not browser evidence.', controls: [] };
+       return { content: [{ type: 'text', text: JSON.stringify(details) }, { type: 'image', mimeType: 'image/png', data: bytes.toString('base64') }], details, isError: false };
+     } }));
+--- HEAD:tests/independent-judge.test.mjs
++++ tests/independent-judge.test.mjs
+@@ -179,7 +179,7 @@
+       package: { status: 'passed', cleanCopy: true, profile: runtimeProfile, filesHash },
+       solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime: { profile: runtimeProfile, filesHash },
+         capabilities: [{ id: 'compute', required: true, status: 'passed' }],
+-        evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', actual: 1, threshold: 1, trials: 1, cases: [{ passed: true }, { passed: true }] }] } };
++        evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', evaluator: 'exact', actual: 1, threshold: 1, trials: 1, cases: [{ id: 'ordinary', trial: 1, score: 1, passed: true }, { id: 'boundary', trial: 1, score: 1, passed: true }] }] } };
+     if (schemaVersion === 3 && runtimeProfile !== 'cli') {
+       const sessionId = 'synthetic-verifier', time = '2026-11-05T12:00:00.000Z';
+       const captures = [], reviews = [];
+@@ -488,7 +488,8 @@
+     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
+     const { RunProcessSweep } = await import('./dist-electron/electron/process-sweep.js');
+     const { qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
+-    const { solutionFixture } = await import('./scripts/solution-fixture.mjs');
++    const { structuredSolutionFixture: solutionFixture } = await import('./scripts/solution-fixture.mjs');
++    const { createFixturePlanningReviewSession } = await import('./scripts/planning-review-fixture.mjs');
+     const { syntheticDataFiles } = await import('./scripts/data-fixture.mjs');
+     const store = new Store(process.env.JUDGE_TEST_ROOT); await store.init();
+     store.state.projects[0] = newProject(qualityFixtureProject);
+@@ -500,6 +501,7 @@
+       preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
+       processSweep: () => new RunProcessSweep({ scan: async () => [] }),
+       createSession: async config => {
++        if (config.customTools.some(tool => tool.name === 'fleet_submit_planning_review')) return { session: createFixturePlanningReviewSession(config.customTools) };
+         assert.deepEqual(config.tools, ['judge_read']); const listeners = new Set();
+         return { session: { subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }, abort() {}, dispose() {},
+           async prompt() { judgments++; if (evaluationError) throw new Error('Synthetic evaluator unavailable'); for (const fn of listeners) fn({ type: 'message_end', message: {
+@@ -516,7 +518,12 @@
+           await fs.writeFile(path.join(p.workspace, name), body);
+         }
+       }
++      if (stage === 'intake') await fs.writeFile(path.join(p.workspace, 'scope.md'), 'Synthetic task parser scope');
++      if (stage === 'research') await fs.writeFile(path.join(p.workspace, 'research.md'), 'Synthetic local research');
+       if (stage === 'plan') {
++        const definition = { title: 'Parser', description: 'Synthetic parser', components: [{ id: 'parser', label: 'Parser', description: 'Parse a task', kind: 'logic', files: ['core.cjs'] }], connections: [] };
++        p.systemDesign = { definition, progress: { parser: { status: 'generated', detail: 'Synthetic fixture', updatedAt: 'fixture' } }, updatedAt: 'fixture' };
++        await fs.writeFile(path.join(p.workspace, 'system-design.json'), JSON.stringify(definition));
+         for (const [name, body] of Object.entries(solutionFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
+         await fs.writeFile(path.join(p.workspace, 'plan.md'), 'Synthetic implementation plan');
+         await fs.writeFile(path.join(p.workspace, 'test-matrix.md'), 'Synthetic acceptance mapping');
+@@ -531,7 +538,7 @@
+       }
+     };
+     await backend.start(project.id); await backend.active.get(project.id)?.done;
+-    assert.equal(project.status, 'review', project.error);
++    assert.equal(project.status, 'review', JSON.stringify({ error: project.error, logs: project.logs }));
+     assert.equal(project.error, undefined);
+     assert.equal(project.logs.filter(log => log.kind === 'error').length, 0);
+     assert.equal(project.stages.find(s => s.id === 'verify').status, 'complete');
+--- MERGE_HEAD:tests/journey.test.mjs
++++ tests/journey.test.mjs
+@@ -40,7 +40,8 @@
+   }
+   const selected = project({ status: 'review', report: report(), workspace: '/new-workspace',
+     experiment: { ...experiment, status: 'complete', selectedCandidateId: 'candidate' } });
+-  assert.match(getJourneyState(selected).message, /Try the app/);
++  assert.match(getJourneyState(selected).message, /Your review is needed/);
++  assert.match(getJourneyState(selected).message, /accept them or request changes/);
+   const conversationUpdated = project({ updatedAt: '2026-11-06T12:00:00Z', experiment: { ...experiment, status: 'review' } });
+   assert.equal(getJourneyState(conversationUpdated).current, 'review', 'Conversation timestamps do not hide candidate review');
+   assert.equal(getJourneyState({ ...conversationUpdated, experiment: undefined }).current, 'brief', 'The host clears stale summaries after a brief or build revision changes');
+@@ -200,6 +201,16 @@
+   }
+ });
+ 
++test('negative or unavailable independent checks need review after automatic checks pass', () => {
++  for (const independentJudge of [undefined, { verdict: 'NOT', gaps: [] }, { verdict: 'NOT', evaluationError: 'Synthetic error', gaps: [] }]) {
++    const state = getJourneyState(project({ status: 'review', workspace: '/synthetic', qualityVersion: 1,
++      report: report({ quality: quality(), independentJudge }) }));
++    assert.equal(state.current, 'review'); assert.equal(state.activeStage, 'review');
++    assert.match(state.message, /review is needed.*independent check gaps/);
++    assert.doesNotMatch(state.message, /failed|Verification needs attention/);
++  }
++});
++
+ test('source export and a saved app are distinct delivery outcomes', () => {
+   const approved = project({ status: 'delivered', approvedAt: '2026-11-04T12:01:00Z' });
+   const source = getJourneyState({ ...approved, exportedTo: '/delivery' });
+--- HEAD:tests/lifecycle.test.mjs
++++ tests/lifecycle.test.mjs
+@@ -613,7 +613,7 @@
+ test('single-instance lock follows the selected profile and a rejected owner never initializes', async t => {
+   const { store } = await fixture(t), calls = [], events = new Map();
+   let owns = false, selected;
+-  const app = { isPackaged: false, getAppPath: () => process.cwd(), getPath: name => name === 'userData' ? selected : store.root,
++  const app = { commandLine: { appendSwitch() {} }, isPackaged: false, getAppPath: () => process.cwd(), getPath: name => name === 'userData' ? selected : store.root,
+     setPath(name, value) { if (name === 'userData') selected = value; calls.push('path'); }, setName() {},
+     requestSingleInstanceLock() { assert.ok(selected); calls.push('lock'); return owns; }, quit() { calls.push('quit'); },
+     whenReady() { calls.push('ready'); return { then() {} }; }, on(name, fn) { events.set(name, fn); } };
+--- HEAD:tests/merged-ux.test.mjs
++++ tests/merged-ux.test.mjs
+@@ -61,7 +61,7 @@
+           export const useState = initial => globalThis.${key}.useState(initial);
+           export const useRef = initial => globalThis.${key}.useRef(initial);
+           export const useEffect = (work, deps) => globalThis.${key}.useEffect(work, deps);
+-          export const useMemo = work => work(); export const useId = () => 'synthetic-id';`) };
++          export const useCallback = callback => callback; export const useMemo = work => work(); export const useId = () => 'synthetic-id';`) };
+         if (specifier === './api') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`export const isDesktop = true; export const api = globalThis.${key}.api;`) };
+         if (specifier.startsWith('.')) return next(/\.[a-z]+$/i.test(specifier) ? specifier : specifier + '.js', context);
+       }
+@@ -189,7 +189,7 @@
+   await ui.click('API key');
+   assert.match(text(ui.component('ModelSettings')), /ChatGPT is still connected; choose Switch to API key/);
+   assert.equal(ui.button('Save model settings').props.disabled, true);
+-  await ui.component('ModelSettings').rendered.props.onSubmit({ preventDefault() {} });
++  await find(ui.component('ModelSettings'), node => node.type === 'form').props.onSubmit({ preventDefault() {} });
+   assert.deepEqual(calls, []);
+   await ui.click('Switch to API key');
+   assert.deepEqual(calls, ['disconnect']);
+@@ -198,7 +198,7 @@
+   ui.node(n => n.type === 'input' && n.props.type === 'password').props.onChange({ target: { value: 'synthetic-input-only' } });
+   await ui.click('Sign in with API key');
+   assert.equal(ui.button('Save model settings').props.disabled, false);
+-  await ui.component('ModelSettings').rendered.props.onSubmit({ preventDefault() {} }); await ui.flush();
++  await find(ui.component('ModelSettings'), node => node.type === 'form').props.onSubmit({ preventDefault() {} }); await ui.flush();
+   assert.deepEqual(calls, ['disconnect', 'save']);
+ });
+ 
+--- HEAD:tests/pi-backend.test.mjs
++++ tests/pi-backend.test.mjs
+@@ -45,14 +45,15 @@
+ 
+ const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+ const workflowTimeout = functionalTimeout;
+-import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
++import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+ import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
+ import { foundationRuntime } from '../dist-electron/harness/foundations.js';
+ import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
+ import { syntheticBrowser } from './helpers/synthetic-browser.mjs';
+ import { runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
+ import { CodexRpc } from '../dist-electron/electron/codex-rpc.js';
+-import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
++import { completeFixtureVisualReview, fixtureVisualReviewInput } from '../scripts/visual-review-fixture.mjs';
++import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
+ const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') || prompt.includes('broke checks that passed before it') ? 'repair'
+   : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
+   : prompt.includes('You are the intake agent') ? 'intake'
+@@ -147,6 +148,11 @@
+         };
+         judgeSessions.push(judge); return { session: judge };
+       }
++      // Keep phase lifecycle assertions scoped to workflow sessions. The separate
++      // planning-review backend suite covers reviewer lifecycle and rejection.
++      if (customTools.some(tool => tool.name === 'fleet_submit_planning_review')) {
++        return { session: createFixturePlanningReviewSession(customTools) };
++      }
+       if (options.createSession) return options.createSession({ cwd, sessions });
+       const listeners = new Set();
+       const disposal = deferred();
+@@ -155,6 +161,10 @@
+         emit(event) { for (const listener of listeners) listener(event); },
+         async prompt(text) {
+           this.stage ??= stageOf(text); this.prompts.push(text); this.emit({ type: 'turn_start' });
++          if (this.stage === 'plan' && (options.legacyAudit || options.audit || options.auditAnswers || options.auditAbort)) {
++            // Exercise compatibility with an in-flight checkpoint from the original audit gate.
++            backend.active.get(project.id).planningAudit ??= { attempts: [], correctionStarted: false, complete: false };
++          }
+           if (this.stage === 'plan' && !project.systemDesign) await customTools.find(tool => tool.name === 'fleet_system_design').execute('design', {
+             title: 'Task parser', description: 'Local fixture application',
+             components: [{ id: 'parser', label: 'Parser', description: 'Extract task text', kind: 'logic', files: [options.componentFile ?? 'core.cjs'] }], connections: []
+@@ -209,7 +219,7 @@
+       visualReview: run.visualReview, package: { status, cleanCopy: true, profile: run.quality.solution.runtime.profile, filesHash },
+       solutionEvaluation: { schemaVersion: 1, status, errors: [], runtime: { profile: run.quality.solution.runtime.profile, filesHash },
+         capabilities: capabilities.map(({ id, required, status }) => ({ id, required, status })),
+-        evaluations: run.quality.evaluation.evaluations.map(evaluation => ({ ...evaluation, status, actual: failed ? 0 : 1 })) }
++        evaluations: run.quality.evaluation.evaluations.map(evaluation => ({ ...evaluation, status, actual: failed ? 0 : 1, cases: evaluation.cases.flatMap(item => Array.from({ length: evaluation.trials }, (_, index) => ({ id: item.id, trial: index + 1, score: failed ? 0 : 1, passed: !failed, expected: item.expected, actual: item.expected }))) })) }
+     } };
+ 
+ }
+@@ -390,7 +400,7 @@
+     };
+     clients.push(rpc); return rpc;
+   });
+-  const h = await harness(t, { verify: syntheticReport });
++  const h = await harness(t, { verify: syntheticReport, legacyAudit: true });
+   h.store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture', rememberKey: false };
+   h.backend.options.codex = { home: h.root, account: { status: 'connected', planUsageEnabled: true },
+     credentials: async () => ({}), refresh: async () => {},
+@@ -1539,7 +1549,7 @@
+     assert.equal(session.customTools.some(tool => tool.name === 'fleet_browser'), ['build', 'verify'].includes(session.stage));
+   }
+   const logs = h.project.logs.filter(log => log.tool?.name === 'fleet_browser' && log.tool?.phase === 'complete');
+-  assert.equal(logs.length, 12);
++  assert.equal(logs.length, 16, 'Manual interactions and every frozen journey deliver their screenshots to the agent.');
+   assert.ok(logs.every(log => log.text.includes('Image delivered to the agent')));
+   assert.ok(logs.every(log => !log.text.includes('iVBORw0KGgo')));
+   const stale = await browserTool.execute('late-screenshot', { action: 'screenshot' });
+@@ -1556,26 +1566,132 @@
+     let attempts = 0;
+     const h = await harness(t, { ...visualOptions, visualReview: ({ stage: current }) => current === stage && (++attempts === 1 || !recover) });
+     await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
+-    assert.equal(attempts, 2, 'Missing comparison gets exactly one completion prompt.');
++    assert.equal(attempts, 2, 'A first completion prompt can recover; unchanged evidence must not cause more prompts.');
+     const session = h.sessions.find(session => session.stage === (stage === 'guide' ? 'build' : 'verify'));
+     assert.match(session.prompts.at(-1), /visual|screenshot/i);
+     if (recover) assert.equal(reportPassed(h.project.report), true);
+     else {
+-      assert.match(h.project.error, /visual|screenshot/i);
++      assert.match(h.project.error, /visual review/i);
++      assert.ok(h.project.logs.some(item => /visual review made no progress/i.test(item.text)));
+       assert.equal(h.project.report, undefined);
+       if (stage === 'guide') assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+     }
+   });
+ }
+ 
+-test(visualLabel + 'editing runtime source after every visual recheck blocks the stage instead of accepting old screenshots', { timeout: workflowTimeout }, async t => {
+-  let edits = 0;
+-  const h = await harness(t, { ...visualOptions, afterVisualReview: async ({ cwd, stage }) => {
+-    if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
+-  } });
+-  await h.run(); await h.assertSettled('failed');
+-  assert.equal(edits, 2);
+-  assert.match(h.project.error, /visual|screenshot|changed|current/i);
++test('visual completion continues through useful findings and fixes before all frozen journeys pass', { timeout: workflowTimeout * 2 }, async t => {
++  let attempts = 0, findingId;
++  const h = await harness(t, { visualReview: async ({ cwd, stage, session }) => {
++    if (stage !== 'guide') return false;
++    attempts++;
++    if (attempts > 2) return false;
++    const browser = session.customTools.find(tool => tool.name === 'fleet_browser');
++    const reviewer = session.customTools.find(tool => tool.name === 'fleet_visual_review');
++    const captureAndReview = async (args, changes = {}) => {
++      const capture = await browser.execute('iteration-capture', args);
++      assert.equal(capture.isError, false, JSON.stringify(capture.details));
++      const review = await reviewer.execute('iteration-review', { ...fixtureVisualReviewInput(capture.details), ...changes });
++      assert.equal(review.isError, false, JSON.stringify(review.details));
++      return review.details.review;
++    };
++    if (attempts === 1) {
++      findingId = (await captureAndReview({ action: 'open', viewport: 'desktop' }, {
++        findings: ['The primary button needs an explicit 44 pixel minimum target height.']
++      })).findings[0].id;
++      await captureAndReview({ action: 'screenshot', viewport: 'narrow' });
++    } else {
++      assert.match(session.prompts.at(-1), new RegExp(findingId));
++      assert.match(session.prompts.at(-1), /parse-task.*recover-empty/);
++      assert.match(session.prompts.at(-1), /action journey.*BOTH desktop and narrow/);
++      await fs.appendFile(path.join(cwd, 'index.html'), '\n<style>#parse{min-height:44px}</style>');
++      await captureAndReview({ action: 'open', viewport: 'desktop' }, {
++        resolutions: [{ findingId, change: 'Added min-height:44px to the primary parse button.' }]
++      });
++    }
++    return true;
++  } });
++  await h.run(); await h.assertSettled('review');
++  assert.equal(attempts, 3, 'The changed source and new comparison earn a second visual completion prompt.');
++  assert.equal(h.project.visualReview.reviews.some(review => review.resolutions.some(resolution => resolution.findingId === findingId)), true);
++  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 2);
++  assert.equal(h.sessions.some(session => session.stage === 'repair'), false, 'Visual completion does not consume the independent repair attempt.');
++  assert.equal(reportPassed(h.project.report), true);
++});
++
++test('Stop cancels a pending visual completion iteration without entering verification', { timeout: workflowTimeout }, async t => {
++  const entered = deferred(); let attempts = 0;
++  const h = await harness(t, { visualReview: async ({ stage }) => {
++    if (stage !== 'guide') return false;
++    if (++attempts === 2) { entered.resolve(); await never(); }
++    return true;
++  } });
++  await h.backend.start(h.project.id); await entered.promise;
++  const session = h.sessions.at(-1);
++  await h.backend.stop(h.project.id); await h.assertSettled('stopped');
++  assert.equal(attempts, 2);
++  assert.equal(session.disposed, true);
++  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
++  assert.equal(h.project.stages.find(stage => stage.id === 'review').status, 'queued');
++});
++
++test('changed runtime files cannot extend visual completion beyond three retries', { timeout: workflowTimeout }, async t => {
++  let attempts = 0, edits = 0;
++  const h = await harness(t, {
++    visualReview: ({ stage }) => {
++      if (stage !== 'guide') return false;
++      attempts++;
++      // Real source changes exercise progress accounting without repeated browser work.
++      return true;
++    },
++    afterVisualReview: async ({ cwd, stage }) => {
++      if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- incomplete visual attempt ${++edits} -->`);
++    }
++  });
++  await h.run(); await h.assertSettled('failed');
++  assert.equal(attempts, 4, 'The initial attempt and three retries execute the same production completion loop.');
++  assert.equal(edits, 4, 'Three useful but still incomplete visual iterations are the bounded maximum.');
++  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 3);
++  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.filter(prompt => prompt.startsWith('The stage is incomplete.')).length, 3);
++  assert.deepEqual(h.project.visualReview.captures, []);
++  assert.deepEqual(h.project.visualReview.reviews, []);
++  assert.match(h.project.error, /after 3 visual review iterations/);
++  assert.doesNotMatch(h.project.error, /exceeded|no progress/i);
++  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
++  assert.equal(h.project.report, undefined);
++});
++
++test('editing runtime source after visual rechecks rejects stale screenshots and journeys at both widths', { timeout: workflowTimeout }, async t => {
++  let attempts = 0, edits = 0;
++  const h = await harness(t, {
++    visualReview: ({ stage }) => {
++      if (stage !== 'guide') return false;
++      return ++attempts > 1;
++    },
++    afterVisualReview: async ({ cwd, stage }) => {
++      if (stage === 'guide' && attempts === 1) {
++        await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
++      }
++    }
++  });
++  await h.run(); await h.assertSettled('failed');
++  assert.equal(attempts, 2, 'The stale review prompts one retry; unchanged evidence then makes no progress.');
++  assert.equal(edits, 1);
++  assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 1);
++  const visual = h.project.visualReview;
++  assert.equal(visual.captures.length, 6, 'Only the first attempt obtains real host browser captures.');
++  assert.equal(visual.reviews.length, 6);
++  assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 2);
++  assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 4);
++  assert.equal(visual.captures.filter(capture => capture.journey?.status === 'passed').length, 4);
++  assert.ok(visual.captures.every(capture => capture.filesHash !== visual.filesHash), 'Every retained capture predates the source edit.');
++  assert.match(h.project.error, /visual review/i);
++      assert.ok(h.project.logs.some(item => /visual review made no progress/i.test(item.text)));
++  for (const viewport of ['desktop', 'narrow']) {
++    assert.match(h.project.error, new RegExp(`The final ${viewport} screenshot is stale`));
++    for (const journeyId of ['parse-task', 'recover-empty']) {
++      assert.match(h.project.error, new RegExp(`Journey ${journeyId} at ${viewport} is stale`));
++    }
++  }
+   assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+   assert.equal(h.project.report, undefined);
+ });
+@@ -2141,9 +2257,10 @@
+   assert.equal(h.project.report.quality.visualReview?.status, runtimeProfile === 'browser' ? 'passed' : undefined);
+   if (runtimeProfile === 'browser') {
+     const visual = h.project.report.quality.visualReview;
+-    assert.equal(visual.captures.length, 8);
++    assert.equal(visual.captures.length, 12);
+     assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 4);
+-    assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 4);
++    assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 8);
++    assert.equal(visual.captures.filter(capture => capture.journey?.status === 'passed').length, 8, 'Every frozen journey is exercised in both viewports by both agents.');
+     assert.deepEqual(visual.sessions.map(session => session.stage), ['build', 'verify']);
+     assert.ok(visual.sessions.every(session => session.status === 'passed'));
+     assert.deepEqual(h.project.visualReview, visual);
+@@ -2222,19 +2339,25 @@
+       const solution = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
+       solution.runtime = foundationRuntime(selection);
+       const plan = JSON.parse(await fs.readFile(path.join(cwd, 'acceptance-plan.json'), 'utf8'));
++      const ux = JSON.parse(await fs.readFile(path.join(cwd, 'ux-spec.json'), 'utf8'));
++      ux.screens[0].route = '/';
++      ux.screens[0].primaryAction = 'Run computation';
++      ux.screens[0].layout = 'A labeled JSON input and Run computation action precede the backend result and validation feedback.';
+       plan.journeys = [
+         { id: 'parse-task', title: 'Parse using the backend', kind: 'primary', steps: [
++          { action: 'expectScreen', screenId: ux.structure.entryScreenId },
+           { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
+           { action: 'expectText', selector: '#result', text: '"inspect pump"' }
+         ] },
+         { id: 'recover-empty', title: 'Recover from invalid JSON', kind: 'recovery', steps: [
++          { action: 'expectScreen', screenId: ux.structure.entryScreenId },
+           { action: 'fill', selector: '#input', value: '{ invalid' }, { action: 'click', selector: '#run' },
+           { action: 'expectVisible', selector: '#error' },
+           { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
+           { action: 'expectText', selector: '#result', text: '"inspect pump"' }
+         ] }
+       ];
+-      for (const [name, value] of Object.entries({ 'solution-contract.json': solution, 'acceptance-plan.json': plan, 'foundation-plan.json': selection })) {
++      for (const [name, value] of Object.entries({ 'solution-contract.json': solution, 'acceptance-plan.json': plan, 'ux-spec.json': ux, 'foundation-plan.json': selection })) {
+         await fs.writeFile(path.join(cwd, name), JSON.stringify(value));
+       }
+       return true;
+@@ -2289,6 +2412,83 @@
+   assert.equal(reportPassed(h.project.report, true), true);
+ });
+ 
++test('host core evidence survives agent edits and deletion through guide, verification and repair', { timeout: workflowTimeout }, async t => {
++  let original;
++  const h = await harness(t, { brokenBuild: true, scenario: async ({ cwd, stage }) => {
++    const target = path.join(cwd, '.quality-evidence/core-report.json');
++    if (stage === 'guide') {
++      original = await fs.readFile(target, 'utf8');
++      const report = JSON.parse(original);
++      report.status = 'local-tests-passed-host-core-pass-reported';
++      report.tests = report.passed = 7;
++      await fs.writeFile(target, JSON.stringify(report));
++    } else if (stage === 'verify' || stage === 'repair') {
++      assert.equal(await fs.readFile(target, 'utf8'), original, 'The next agent must receive exact host evidence');
++      if (stage === 'verify') await fs.rm(target);
++      else await fs.writeFile(target, '{"status":"agent-claimed-pass"}');
++    }
++    return false;
++  } });
++  await h.run(); await h.assertSettled('review');
++  assert.equal(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'), original);
++  assert.equal(h.project.logs.filter(log => log.text.includes('Restored host core evaluation evidence')).length, 3);
++  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
++  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2);
++  assert.equal(reportPassed(h.project.report, true), true);
++  assert.equal(await sourceHash(h.project.workspace), h.project.report.sourceHash);
++});
++
++test('resuming verification restores host core evidence from private storage after a restart', { timeout: workflowTimeout }, async t => {
++  let original, interrupt = true;
++  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
++    if (stage !== 'verify') return false;
++    const target = path.join(cwd, '.quality-evidence/core-report.json');
++    if (interrupt) {
++      interrupt = false;
++      original = await fs.readFile(target, 'utf8');
++      await fs.writeFile(target, '{"status":"agent-claimed-pass"}');
++      throw new Error('Interrupted verification after editing evidence');
++    }
++    assert.equal(await fs.readFile(target, 'utf8'), original);
++    return false;
++  } });
++  await h.run(); await h.assertSettled('failed');
++  const count = h.sessions.length, { runId, workspace } = h.project;
++  const restored = new Store(h.root); await restored.init();
++  Object.assign(h.project, restored.project(h.project.id));
++  const restarted = new PiBackend(h.store, process.execPath, () => {}, resourcesRoot, h.backend.options);
++  restarted.runtime = h.backend.runtime;
++  t.after(() => restarted.stopAll());
++  await restarted.resume(h.project.id); await restarted.active.get(h.project.id)?.done;
++  assert.equal(h.project.status, 'review', h.project.error);
++  assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
++  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['verify']);
++  assert.equal(await fs.readFile(path.join(workspace, '.quality-evidence/core-report.json'), 'utf8'), original);
++  assert.equal(reportPassed(h.project.report, true), true);
++});
++
++test('a timed-out core evaluation cannot publish evidence or overwrite its recovery checkpoint', { timeout: workflowTimeout }, async t => {
++  const finished = deferred();
++  const h = await harness(t, { agentLimits: { idleMs: 500, timeoutMs: 10_000 }, scenario: async ({ cwd, stage }) => {
++    if (stage !== 'build') return false;
++    await artifacts(cwd, stage);
++    await fs.writeFile(path.join(cwd, 'evaluate.cjs'), 'setTimeout(() => {\n' + solutionFixtureEvaluator + '\n}, 1000);');
++    return true;
++  } });
++  const evaluate = h.backend.evaluateCore.bind(h.backend);
++  h.backend.evaluateCore = async (...args) => {
++    try { return await evaluate(...args); }
++    finally { finished.resolve(); }
++  };
++  await h.run(); await h.assertSettled('failed');
++  assert.match(h.project.error, /build agent made no progress/);
++  const checkpoint = path.join(h.root, 'run-checkpoints', h.project.runId + '.json');
++  const saved = await fs.readFile(checkpoint, 'utf8');
++  await finished.promise;
++  assert.equal(await fs.readFile(checkpoint, 'utf8'), saved, 'Late work must not replace settled recovery state');
++  await assert.rejects(fs.access(path.join(h.project.workspace, '.quality-evidence/core-report.json')), { code: 'ENOENT' });
++});
++
+ for (const repair of [true, false]) test(`required core evaluation ${repair ? 'repairs the engine' : 'blocks application completion'}`, { timeout: 20000 }, async t => {
+   let coreAttempts = 0;
+   const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+@@ -2368,22 +2568,47 @@
+ });
+ 
+ for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: functionalTimeout }, async t => {
++  let attempts = 0, findingId, nodeReport;
+   const h = await harness(t, { verificationLimits: { browserStepTimeoutMs: 1000 }, scenario: async ({ cwd, stage }) => {
+     if (stage === 'build') {
+       await artifacts(cwd, stage);
+       await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main><script>' + qualityFixtureHtml.match(/\/\* CORE_START \*\/[\s\S]*?\/\* CORE_END \*\//)[0] + '</script>');
+       return true;
+     }
+-    if (stage === 'repair' && repair) await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
+     return false;
++  }, visualReview: async ({ cwd, stage, session }) => {
++    if (stage !== 'guide') return false;
++    attempts++;
++    if (attempts > 1 && !repair) return true;
++    const browser = session.customTools.find(tool => tool.name === 'fleet_browser');
++    const reviewer = session.customTools.find(tool => tool.name === 'fleet_visual_review');
++    if (attempts === 1) nodeReport = await verifyWorkspace(cwd, process.execPath, () => {});
++    else await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
++    const result = await browser.execute('exercise-static-app', { action: 'journey', journeyId: 'parse-task', viewport: 'desktop' });
++    assert.equal(result.isError, attempts === 1);
++    assert.equal(result.details.journey.status, attempts === 1 ? 'failed' : 'passed');
++    const comparison = await reviewer.execute('review-static-app', {
++      ...fixtureVisualReviewInput(result.details),
++      ...(attempts === 1 ? { findings: ['The rendered application has no message input or Parse message action.'] }
++        : { resolutions: [{ findingId, change: 'Implemented the message input, parse action and persistent result in index.html.' }] })
++    });
++    assert.equal(comparison.isError, false, JSON.stringify(comparison.details));
++    if (attempts === 1) findingId = comparison.details.review.findings[0].id;
++    return attempts === 1;
+   } });
+   await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
+-  assert.equal(h.project.report.passed, 2);
+-  assert.equal(h.project.report.failed, 0);
+-  assert.equal(reportPassed(h.project.report, true), repair, JSON.stringify(h.project.report));
+-  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, repair ? 1 : 2);
+-  assert.equal(h.project.report.quality.status, repair ? 'passed' : 'failed');
+-  assert.ok(h.project.logs.some(log => log.text.includes('Browser journeys: 0/4 passed')));
++  assert.equal(nodeReport.passed, 2);
++  assert.equal(nodeReport.failed, 0);
++  assert.equal(reportPassed(h.project.report, true), repair);
++  assert.equal(attempts, 2);
++  assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 0, 'The development journey gate catches the broken UI before independent verification.');
++  assert.equal(h.project.visualReview.captures.some(capture => capture.journey?.status === 'failed'), true);
++  if (repair) assert.equal(h.project.report.quality.status, 'passed');
++  else {
++    assert.equal(h.project.report, undefined);
++    assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
++    assert.match(h.project.error, /visual review made no progress/);
++  }
+ });
+ 
+ test('builder cannot weaken a planned browser expectation', { timeout: workflowTimeout }, async t => {
+@@ -2392,7 +2617,7 @@
+     await artifacts(cwd, stage);
+     const file = path.join(cwd, 'acceptance-plan.json');
+     const plan = JSON.parse(await fs.readFile(file, 'utf8'));
+-    plan.journeys[0].steps[2].text = 'incorrect result';
++    plan.journeys[0].steps.find(step => step.action === 'expectText').text = 'incorrect result';
+     await fs.writeFile(file, JSON.stringify(plan));
+     return true;
+   } });
+@@ -2618,3 +2843,21 @@
+   assert.equal(h.project.report.total, 3);
+   assert.ok(h.project.logs.some(l => l.text.includes('Verification exceeded'))); assert.equal(h.sessions.at(-1).stage, 'repair');
+ });
++
++
++for (const syntheticChecks of [false, true]) {
++const visualLabel = syntheticChecks ? 'synthetic visual gates: ' : '';
++const visualOptions = syntheticChecks ? { verify: syntheticReport } : {};
++test(visualLabel + 'editing runtime source after every visual recheck blocks the stage instead of accepting old screenshots', { timeout: workflowTimeout }, async t => {
++  let edits = 0;
++  const h = await harness(t, { ...visualOptions, afterVisualReview: async ({ cwd, stage }) => {
++    if (stage === 'guide') await fs.appendFile(path.join(cwd, 'index.html'), `\n<!-- source edit after visual review ${++edits} -->`);
++  } });
++  await h.run(); await h.assertSettled('failed');
++  assert.equal(edits, 4, 'Source changes earn at most three visual iterations after the initial capture.');
++  assert.match(h.project.error, /visual|screenshot|changed|current/i);
++  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
++  assert.equal(h.project.report, undefined);
++});
++
++}
+--- HEAD:tests/pi-sdk.test.mjs
++++ tests/pi-sdk.test.mjs
+@@ -111,6 +111,11 @@
+   assert.ok(h.project.logs.some(l => l.kind === 'tool' && l.text.startsWith('write')));
+   const visualCalls = fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? [])).filter(call => call.function?.name === 'fleet_visual_review');
+   assert.ok(new Set(visualCalls.map(call => call.id)).size >= 12, 'Build, verification and repair each compare initial and fresh captures at both widths.');
++  const journeyCalls = new Map(fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? []))
++    .filter(call => call.function?.name === 'fleet_browser' && JSON.parse(call.function.arguments).action === 'journey').map(call => [call.id, JSON.parse(call.function.arguments)]));
++  assert.ok(journeyCalls.size >= 12, 'The real SDK runs both workflows at both widths in build, verification and repair.');
++  assert.deepEqual([...new Set([...journeyCalls.values()].map(call => call.journeyId + '/' + call.viewport))].sort(),
++    ['parse-task/desktop', 'parse-task/narrow', 'recover-empty/desktop', 'recover-empty/narrow']);
+   assert.equal(h.project.report.passed, 1); assert.equal(h.project.report.failed, 0);
+   assert.equal(h.project.report.sourceHash, await sourceHash(h.project.workspace));
+   assert.ok((await fs.readdir(path.join(h.root, 'sessions', h.project.id))).filter(name => name.endsWith('.jsonl')).length >= 4);
+--- MERGE_HEAD:tests/planning-review-backend.test.mjs
++++ tests/planning-review-backend.test.mjs
+@@ -6,6 +6,8 @@
+ import { setImmediate } from 'node:timers/promises';
+ import { Store, newProject } from '../dist-electron/electron/storage.js';
+ import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
++import { defaultAgentLimits } from '../dist-electron/electron/agent-runner.js';
++import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
+ import { loadQualityContract } from '../dist-electron/electron/quality.js';
+ import { createExecutionBudget } from '../dist-electron/electron/execution-budget.js';
+ import { retainCoreReport } from '../dist-electron/electron/core-evidence.js';
+@@ -49,13 +51,13 @@
+ }
+ 
+ function makeReviewRecord(plan, evaluation) {
+-  const weak = plan.criteria.some(item => item.disposition === 'deferred');
++  const weak = evaluation.evaluations[0].cases.length < 4;
+   return {
+     verdict: weak ? 'revise' : 'approved',
+     minimumUsefulOutcome: 'Extract supplied task text and reject messages without the required prefix, including blank input.',
+     scope: plan.criteria.map(item => ({ criterionId: item.criterionId,
+-      assessment: item.disposition === 'deferred' ? 'gap' : 'covered',
+-      reason: item.disposition === 'deferred' ? 'Input rejection is mandatory and needs no external integration.' : 'The required parser capability covers this outcome.' })),
++      assessment: weak ? 'gap' : 'covered',
++      reason: weak ? 'The plan claims input rejection but its implementation narrative and examples omit it.' : 'The required parser capability covers this outcome.' })),
+     evaluations: evaluation.evaluations.map(item => ({ evaluationId: item.id,
+       assessment: weak ? 'gap' : 'adequate',
+       reason: weak ? 'Only ordinary inputs are checked; rejection behavior is untested.' : 'Independent examples cover ordinary, blank and non-task inputs.' })),
+@@ -65,21 +67,23 @@
+ }
+ 
+ async function writePlanningArtifacts(workspace, acceptance, weak) {
+-  const ids = acceptance.map(item => item.id), files = solutionFixture(ids);
++  const ids = acceptance.map(item => item.id), files = solutionFixture(['R1']);
+   const plan = JSON.parse(files['acceptance-plan.json']);
+   const solution = JSON.parse(files['solution-contract.json']);
+   const evaluation = JSON.parse(files['evaluation-plan.json']);
++  plan.criteria = ids.map(criterionId => ({ ...structuredClone(plan.criteria[0]), criterionId }));
+   solution.runtime = { profile: 'cli', command: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] },
+     files: ['evaluate.cjs', 'core.cjs'], requiredEnv: [] };
+   plan.journeys = [];
+   plan.criteria.forEach(item => { item.journeyIds = []; });
+   if (weak) evaluation.evaluations[0].cases = evaluation.evaluations[0].cases.slice(0, 2);
+-  else {
++  {
+     solution.capabilities[0].criterionIds = ids;
+     plan.criteria.forEach(item => {
+       item.disposition = 'implemented'; item.capabilityIds = ['parse'];
+       item.expectedOutcome = 'Extract task text and return null for blank or non-task messages.';
+       delete item.reason;
++      delete item.syntheticCoverage;
+     });
+   }
+   Object.assign(files, {
+@@ -112,6 +116,7 @@
+     const customTools = sessionOptions.customTools ?? sessionOptions.tools;
+     const reviewing = customTools.some(tool => tool.name === 'fleet_submit_planning_review');
+     const listeners = new Set();
++    const aborted = deferred();
+     const session = {
+       options: sessionOptions, cwd: sessionOptions.cwd, customTools, stage: reviewing ? 'planning-review' : undefined,
+       prompts: [], disposed: false, aborts: 0,
+@@ -125,7 +130,8 @@
+         this.prompts.push(prompt); this.emit({ type: 'turn_start' });
+         if (this.stage === 'plan') planCalls++;
+         if (this.stage === 'planning-review') reviewCalls++;
+-        const handled = await options.onPrompt?.({ ...context(this), stage: this.stage, prompt });
++        const handled = await Promise.race([Promise.resolve(options.onPrompt?.({ ...context(this), stage: this.stage, prompt })), aborted.promise]);
++        if (this.aborts) throw new Error('Run stopped');
+         if (!handled) {
+           if (this.stage === 'intake') await fs.writeFile(path.join(this.cwd, 'scope.md'), 'A useful parser extracts task text and rejects blank or non-task messages.');
+           else if (this.stage === 'synthetic') {
+@@ -155,17 +161,19 @@
+           ?? { role: 'assistant', stopReason: 'stop' } });
+         this.emit({ type: 'turn_end' });
+       },
+-      abort() { this.aborts++; return never(); },
++      async abort() { this.aborts++; aborted.resolve(true); },
+       dispose() { this.disposed = true; }
+     };
+     sessions.push(session); return session;
+   };
+   const backendOptions = {
++    // These fixtures launch no child process. Native process inspection has its own integration checks.
++    processSweep: () => new RunProcessSweep({ scan: async () => [] }),
+     agentLimits: Object.hasOwn(options, 'agentLimits') ? options.agentLimits : { idleMs: 5000, timeoutMs: 15_000 },
+     createSession: async sessionOptions => ({ session: await create(sessionOptions) }),
+     createCodexSession: create,
+     codex: { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true },
+-      models: [{ id: 'fixture', configured: true }], async refresh() {}, async credentials() { return { accessToken: 'fixture', expiresAt: Date.now() + 60_000 }; } }
++      models: [{ id: 'fixture', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }], async refresh() {}, async credentials() { return { accessToken: 'fixture', expiresAt: Date.now() + 60_000 }; } }
+   };
+   const makeBackend = () => {
+     const value = new FleetBackend(store, process.execPath, () => {}, resourcesRoot, backendOptions);
+@@ -207,7 +215,7 @@
+ 
+ async function assertReachedBuild(h) {
+   assert.equal(h.project.status, 'failed');
+-  assert.match(h.project.error, /Fixture reached implementation/);
++  assert.ok(h.project.logs.some(log => /Fixture reached implementation/.test(log.text)), h.project.error);
+   assert.equal(h.project.resumeStage, 'build');
+   const checkpoint = await h.checkpoint();
+   assert.equal(checkpoint.planningReview.phase, 'approved');
+@@ -239,7 +247,7 @@
+   assert.equal(checkpoint.planningReview.phase, 'rejected');
+   assert.equal(checkpoint.planningReview.revisionUsed, true);
+   assert.equal(checkpoint.planningReview.review.verdict, 'revise');
+-  assert.match(h.project.error, /Resume planning to revise the saved files/);
++  assert.match(h.project.error, /Continue planning to revise the saved plan/);
+   assert.doesNotMatch(h.project.error, /start a new build/i);
+   for (const continuation of [1, 2]) {
+     const count = h.sessions.length;
+@@ -263,6 +271,30 @@
+     assert.deepEqual(await Promise.all(completedFiles.map(file => fs.readFile(path.join(workspace, file), 'utf8'))), savedFiles);
+     assert.equal(await fs.readFile(path.join(workspace, 'saved-planning-note.md'), 'utf8'), 'Keep this work for the next correction.');
+   }
++});
++
++test('a resumed correction restores its latest valid plan after invalid output without another correction turn', { timeout }, async t => {
++  const h = await harness(t, { initialWeak: true, correctOnRevision: false, afterPlan: async ({ workspace, planCalls }) => {
++    if (planCalls === 2) await fs.appendFile(path.join(workspace, 'plan.md'), '\nRetain this second-version planning note.');
++    if (planCalls === 3) await fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{invalid correction');
++  } });
++  await h.run(); await assertUnfrozen(h);
++  const before = await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8');
++  const acceptance = await fs.readFile(path.join(h.project.workspace, 'acceptance-plan.json'), 'utf8');
++  await h.restart(); await h.resume();
++  const interrupted = await assertUnfrozen(h);
++  assert.equal(interrupted.planningReview.phase, 'rereview');
++  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 2);
++  assert.equal(await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8'), before);
++  assert.equal(await fs.readFile(path.join(h.project.workspace, 'acceptance-plan.json'), 'utf8'), acceptance);
++  await h.restart(); await h.resume();
++  const checkpoint = await assertUnfrozen(h);
++  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3, h.project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'));
++  assert.equal(checkpoint.planningReview.phase, 'rejected');
++  assert.ok(checkpoint.planningAudit.correctionDiscarded);
++  assert.equal(await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8'), before);
++  assert.equal(await fs.readFile(path.join(h.project.workspace, 'acceptance-plan.json'), 'utf8'), acceptance);
++  assert.equal(checkpoint.planningSnapshot.files.find(([name]) => name === 'plan.md')[1], before);
+ });
+ 
+ for (const backend of ['pi', 'codex']) test(`${backend} manual planning continuation preserves findings and waits for fresh approval before freezing`, { timeout }, async t => {
+@@ -428,18 +460,20 @@
+   const before = structuredClone(h.project);
+   if (failure === 'authentication') h.backend.runtime.hasConfiguredAuth = () => false;
+   else {
+-    const writeFile = fs.writeFile.bind(fs);
+-    t.mock.method(fs, 'writeFile', async (file, ...args) => {
++    const rename = fs.rename.bind(fs);
++    t.mock.method(fs, 'rename', async (from, file, ...args) => {
+       if (String(file).endsWith('/requirements.md') && file !== path.join(source.workspace, 'requirements.md')) {
+         throw new Error('Fixture revised planning setup failed.');
+       }
+-      return writeFile(file, ...args);
++      return rename(from, file, ...args);
+     });
+   }
+-  await assert.rejects(h.continuePlanning(), failure === 'authentication' ? /connect its provider/ : /Fixture revised planning setup failed/);
++  await assert.rejects(h.continuePlanning(), error => {
++    assert.match(String(error.cause ?? error), failure === 'authentication' ? /connect it in Model settings/ : /Fixture revised planning setup failed/); return true;
++  });
+   assert.deepEqual(JSON.parse(JSON.stringify(h.project)), JSON.parse(JSON.stringify(before)), 'The persisted project is restored, including its revised brief.');
+   assert.equal(h.backend.active.size, 0);
+-  assert.equal(h.backend.preparing.size, 0);
++  assert.equal(h.backend.active.has(h.project.id), false, 'Startup reservations share the active-run registry.');
+   assert.equal(h.sessions.length, count);
+   assert.equal(await fs.readFile(h.checkpointFile(), 'utf8'), sourceCheckpoint);
+   assert.equal(await fs.readFile(path.join(source.workspace, 'requirements.md'), 'utf8'), sourceRequirements);
+@@ -528,7 +562,8 @@
+   await h.run();
+   assert.equal(h.project.status, 'failed');
+   await assertUnfrozen(h);
+-  assert.match(h.project.error, /did not submit a planning verdict/);
++  assert.match(h.project.error, /plan review could not finish/);
++  assert.ok(h.project.logs.some(log => /did not submit a planning verdict/.test(log.text)));
+   assert.equal((await h.checkpoint()).planningReview.phase, 'reviewing');
+   assert.equal(h.reviewCalls, 1);
+ });
+@@ -546,7 +581,7 @@
+   await h.run();
+   assert.equal(h.project.status, 'failed');
+   assert.ok(h.reviewCalls > 0, 'The host must still invoke its independent reviewer.');
+-  assert.match(h.project.error, /review|verdict|submit/i);
++  assert.match(h.project.error, /plan review could not finish/i);
+   await assertUnfrozen(h);
+ });
+ 
+@@ -565,7 +600,8 @@
+   await h.run();
+   assert.equal(h.project.status, 'failed');
+   await assertUnfrozen(h);
+-  assert.match(h.project.error, /did not submit a planning verdict/);
++  assert.match(h.project.error, /plan review could not finish/);
++  assert.ok(h.project.logs.some(log => /did not submit a planning verdict/.test(log.text)));
+   assert.equal(h.planCalls, 1);
+   assert.equal(h.reviewCalls, 1);
+   assert.equal((await h.checkpoint()).planningReview.phase, 'reviewing');
+@@ -613,7 +649,7 @@
+   assert.equal(h.planCalls, 1); assert.equal(h.reviewCalls, 1);
+ });
+ 
+-test('five quiet minutes stop only the reviewer and Resume planning reuses its saved plan', { timeout }, async t => {
++test('the worker idle limit stops only the reviewer and Resume planning reuses its saved plan', { timeout }, async t => {
+   t.mock.timers.enable({ apis: ['setTimeout'] });
+   const entered = deferred(); let pause = true;
+   const h = await harness(t, { agentLimits: undefined, onPrompt: ({ stage }) => {
+@@ -624,11 +660,11 @@
+   const reviewer = h.sessions.at(-1), { runId, workspace } = h.project;
+   const files = ['plan.md', 'test-matrix.md', 'acceptance-plan.json', 'solution-contract.json', 'evaluation-plan.json'];
+   const saved = await Promise.all(files.map(file => fs.readFile(path.join(workspace, file), 'utf8')));
+-  t.mock.timers.tick(5 * 60_000 - 1); await setImmediate();
++  t.mock.timers.tick(defaultAgentLimits.idleMs - 1); await setImmediate();
+   assert.equal(reviewer.aborts, 0); assert.equal(reviewer.disposed, false);
+   t.mock.timers.tick(1); await running;
+   assert.equal(h.project.status, 'failed');
+-  assert.match(h.project.error, /Independent planning review made no progress for 300 seconds/);
++  assert.ok(h.project.logs.some(log => log.text.includes('Independent planning review made no progress for ' + defaultAgentLimits.idleMs / 1000 + ' seconds')));
+   assert.match(h.project.error, /Planning files are saved\. Resume planning/);
+   assert.doesNotMatch(h.project.error, /start a new run/i);
+   const interrupted = await assertUnfrozen(h);
+@@ -802,7 +838,7 @@
+   assert.deepEqual(observed, rejected.planningReview);
+   assert.deepEqual((await h.checkpoint()).planningReview, rejected.planningReview);
+   assert.equal(h.sessions.length, count, 'Scoped recovery cannot dispatch an ordinary planning correction.');
+-  assert.match(h.project.error, /Fixture scoped planning remains paused/);
++  assert.ok(h.project.logs.some(log => /Fixture scoped planning remains paused/.test(log.text)), h.project.error);
+   await assertUnfrozen(h);
+ });
+ 
+@@ -834,7 +870,7 @@
+   const changed = JSON.stringify(checkpoint);
+   await fs.writeFile(h.checkpointFile(), changed);
+   await h.restart();
+-  await assert.rejects(h.resume(), /independent planning review checkpoint/);
++  await assert.rejects(h.resume(), error => { assert.match(String(error.cause ?? error), /independent planning review checkpoint/); return true; });
+   assert.equal(h.sessions.length, count, 'A mismatched approval cannot allocate another model session.');
+   assert.equal(await fs.readFile(h.checkpointFile(), 'utf8'), changed, 'Invalid recovery evidence remains preserved.');
+ });
+@@ -848,7 +884,7 @@
+   await fs.writeFile(h.checkpointFile(), JSON.stringify(checkpoint));
+   await h.restart(); await h.resume();
+   assert.equal(h.project.status, 'failed');
+-  assert.match(h.project.error, /Fixture reached implementation/);
++  assert.ok(h.project.logs.some(log => /Fixture reached implementation/.test(log.text)), h.project.error);
+   assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
+   assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['build']);
+   assert.equal((await h.checkpoint()).quality.hash, checkpoint.quality.hash);
+--- MERGE_HEAD:tests/planning-review-shared.test.mjs
++++ tests/planning-review-shared.test.mjs
+@@ -3,7 +3,7 @@
+ import { promises as fs } from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+-import { solutionFixture } from '../scripts/solution-fixture.mjs';
++import { planningContractFixture } from './helpers/planning-contract-fixture.mjs';
+ import { parseBehavioralContract, parseExperimentEvaluationPlan, experimentContractHash } from '../dist-electron/harness/experiment-contract.js';
+ import { loadQualityContract } from '../dist-electron/electron/quality.js';
+ import { createPlanningReviewSnapshot, createSharedPlanningReviewSnapshot, assertSharedPlanningReviewSnapshot,
+@@ -11,7 +11,7 @@
+ 
+ const acceptance = [
+   { id: 'R1', requirement: 'Calculate the supplied workload and recover from invalid input.', method: 'automated', scenario: 'Ordinary and empty sums with visible validation recovery.' },
+-  { id: 'R2', requirement: 'Connect a future operational feed.', method: 'integration', scenario: 'A separately commissioned operational integration.' }
++  { id: 'R2', provenance: [{ kind: 'recipe', id: 'optional-feed', path: 'synthetic/optional-feed' }], requirement: 'Connect a future operational feed.', method: 'integration', scenario: 'A separately commissioned operational integration.' }
+ ];
+ function behaviorInput(surface = 'browser') {
+   return { schemaVersion: 1, objective: 'Calculate the total of supplied workload minutes.', surface,
+@@ -20,7 +20,7 @@
+     delivery: { profiles: surface === 'browser' ? ['browser-js', 'node-service'] : ['node-cli', 'python-cli'], network: 'offline', operationIds: [] },
+     criteria: [
+       { criterionId: 'R1', disposition: 'implemented', expectedOutcome: 'The independently calculated workload is returned.', capabilityIds: ['total'], scenarioIds: surface === 'browser' ? ['primary', 'recovery'] : [] },
+-      { criterionId: 'R2', disposition: 'deferred', expectedOutcome: 'Operational data will be imported.', capabilityIds: [], scenarioIds: [], reason: 'The original brief explicitly commissions this integration separately.' }
++      { criterionId: 'R2', disposition: 'deferred', expectedOutcome: 'Operational data will be imported.', capabilityIds: [], scenarioIds: [], reason: 'real-system: The operational feed requires a separately commissioned authenticated connection.' }
+     ],
+     ux: { audience: 'An operator', primaryTask: 'Calculate workload', successOutcome: 'A correct total',
+       states: { empty: 'Explain input', loading: 'Show progress', error: 'Explain validation', success: 'Show total' },
+@@ -260,7 +260,7 @@
+ 
+ test('shared support preserves regular snapshot and ledger approval semantics', async t => {
+   const h = await setup(t);
+-  const files = { ...solutionFixture(['R1', 'R2']), 'plan.md': 'Implement the task parser.', 'test-matrix.md': 'Verify parsing and recovery.',
++  const files = { ...planningContractFixture(acceptance), 'plan.md': 'Implement the task parser.', 'test-matrix.md': 'Verify parsing and recovery.',
+     'system-design.json': JSON.stringify({ title: 'Task parser', description: 'Shared parser', components: [], connections: [] }) };
+   await Promise.all(Object.entries(files).map(([name, body]) => fs.writeFile(path.join(h.workspace, name), body)));
+   const quality = await loadQualityContract(h.workspace, acceptance, true);
+--- MERGE_HEAD:tests/planning-review.test.mjs
++++ tests/planning-review.test.mjs
+@@ -3,7 +3,7 @@
+ import { promises as fs } from 'node:fs';
+ import path from 'node:path';
+ import os from 'node:os';
+-import { solutionFixture } from '../scripts/solution-fixture.mjs';
++import { planningContractFixture } from './helpers/planning-contract-fixture.mjs';
+ import { loadQualityContract } from '../dist-electron/electron/quality.js';
+ import { createPlanningReviewSnapshot, assertPlanningReviewSnapshot, PlanningReviewLedger, planningReviewInstructions } from '../dist-electron/electron/planning-review.js';
+ 
+@@ -12,10 +12,10 @@
+   t.after(() => fs.rm(workspace, { recursive: true, force: true }));
+   const acceptance = [
+     { id: 'R1', requirement: options.constant ? 'Return the fixed offline availability flag for any input.' : 'Extract a task and recover from invalid input.', method: 'automated', scenario: 'Exercise the public invocation protocol.' },
+-    { id: 'R2', requirement: 'Connect a future operational feed.', method: 'integration', scenario: 'Requires a separate operational integration.' },
+-    ...Array.from({ length: options.extraCriteria ?? 0 }, (_, index) => ({ id: 'R' + (index + 3), requirement: 'An additional operational integration.', method: 'integration', scenario: 'Requires independent later verification.' }))
++    { id: 'R2', provenance: [{ kind: 'recipe', id: 'optional-feed', path: 'synthetic/optional-feed' }], requirement: 'Connect a future operational feed.', method: 'integration', scenario: 'Requires a separate operational integration.' },
++    ...Array.from({ length: options.extraCriteria ?? 0 }, (_, index) => ({ id: 'R' + (index + 3), provenance: [{ kind: 'recipe', id: 'optional-feed', path: 'synthetic/optional-feed' }], requirement: 'An additional operational integration.', method: 'integration', scenario: 'Requires independent later verification.' }))
+   ];
+-  const files = { ...solutionFixture(acceptance.map(criterion => criterion.id)), 'requirements.md': 'Deliver a useful offline task parser; operational integration is outside this prototype.',
++  const files = { ...planningContractFixture(acceptance), 'requirements.md': 'Deliver a useful offline task parser; operational integration is outside this prototype.',
+     'scope.md': 'Parse task messages from local inputs.', 'research.md': 'Use a small deterministic parser.',
+     'plan.md': 'Implement the shared parser and accessible input form.', 'test-matrix.md': 'R1 maps to parse-cases and primary/recovery journeys.',
+     'system-design.json': JSON.stringify({ title: 'Task parser', description: 'Shared parser', components: [], connections: [] }) };
+--- MERGE_HEAD:tests/quality-browser-isolation.test.mjs
++++ tests/quality-browser-isolation.test.mjs
+@@ -86,7 +86,7 @@
+     const { root, contract } = await fixture(t, { isolated, disk: mode.endsWith('files') });
+     const tracked = trackFactory(isolated ? prepareIsolatedSolutionRuntime : prepareSolutionRuntime);
+     const report = await verifyApplication(root, process.execPath, contract, undefined, {
+-      prepareRuntime: tracked.factory, ...(isolated ? { verifyTests: verifyIsolatedWorkspace } : {}), browserTimeoutMs: 30_000, browserStepTimeoutMs: 2_000
++      prepareRuntime: tracked.factory, isolateNetwork: isolated, ...(isolated ? { verifyTests: verifyIsolatedWorkspace } : {}), browserTimeoutMs: 30_000, browserStepTimeoutMs: 2_000
+     });
+     assert.equal(reportPassed(report, true), true, report.output);
+     assert.equal(report.quality.journeys.length, 4);
+--- MERGE_HEAD:tests/quality-capability-evidence.test.mjs
++++ tests/quality-capability-evidence.test.mjs
+@@ -10,7 +10,7 @@
+ import { reportPassed } from '../dist-electron/shared/verification.js';
+ 
+ const { parseQualityPlan } = qualityContract;
+-const acceptance = ['R1', 'R2', 'R3'].map(id => ({ id, requirement: 'Compute the independently specified ' + id + ' result.', method: 'automated', scenario: 'Compare reference results.' }));
++const acceptance = ['R1', 'R2', 'R3'].map(id => ({ id, ...(id === 'R1' ? {} : { provenance: [{ kind: 'recipe', id: 'optional-result', path: 'synthetic/optional-result' }] }), requirement: 'Compute the independently specified ' + id + ' result.', method: 'automated', scenario: 'Compare reference results.' }));
+ const ux = { schemaVersion: 1, audience: 'An operator', primaryTask: 'Calculate independent results', successOutcome: 'Correct results',
+   screens: [{ name: 'Calculator', purpose: 'Enter values and inspect results.', primaryAction: 'Calculate' }],
+   states: { empty: 'Explain valid input.', loading: 'Show calculation progress.', error: 'Explain invalid values.', success: 'Return the result.' },
+@@ -29,7 +29,7 @@
+   const plan = { schemaVersion: 2, journeys: [], criteria: [
+     { criterionId: 'R1', disposition: 'implemented', expectedOutcome: 'Core reference values match.', journeyIds: [], capabilityIds: ['core'] },
+     { criterionId: 'R2', disposition: 'implemented', expectedOutcome: 'Optional reference values match.', journeyIds: [], capabilityIds: ['optional'] },
+-    { criterionId: 'R3', disposition: 'deferred', expectedOutcome: 'Another independent result.', journeyIds: [], capabilityIds: [], reason: 'This optional feature is outside the current implementation.' }
++    { criterionId: 'R3', disposition: 'deferred', expectedOutcome: 'Another independent result.', journeyIds: [], capabilityIds: [], reason: 'real-system: The separate result needs an authenticated operational feed.' }
+   ] };
+   const evaluation = { schemaVersion: 1, evaluations: solution.capabilities.map(capability => ({
+     id: capability.evaluationIds[0], capabilityId: capability.id, description: 'Independent identity examples.',
+@@ -45,7 +45,7 @@
+ }
+ 
+ function deferOptional(value) {
+-  Object.assign(value.plan.criteria[1], { disposition: 'deferred', capabilityIds: [], reason: 'This optional result is deferred.' });
++  Object.assign(value.plan.criteria[1], { disposition: 'deferred', capabilityIds: [], reason: 'real-system: The optional result needs an authenticated operational feed.' });
+ }
+ 
+ const invalidClaims = [
+--- HEAD:tests/quality.test.mjs
++++ tests/quality.test.mjs
+@@ -249,6 +249,62 @@
+   assert.equal(reportPassed(cli, true), true);
+ });
+ 
++for (const evaluator of ['exact', 'numeric', 'schedule']) {
++  test(`deterministic approval rejects incomplete ${evaluator} saved evidence despite passing summaries`, () => {
++    const complete = v2Report();
++    complete.quality.solutionEvaluation.evaluations[0].evaluator = evaluator;
++    assert.equal(reportPassed(complete, true), true, 'Complete deterministic evidence remains approvable.');
++    const mutations = [
++      ['legacy half-correct evaluation', result => {
++        result.threshold = 0.5; result.actual = 0.5;
++        Object.assign(result.cases[1], { passed: false, score: 0 });
++      }],
++      ['weakened threshold with currently passing cases', result => { result.threshold = 0.5; }],
++      ['inflated aggregate score', result => { result.actual = 1.1; }],
++      ['failed case hidden by a perfect aggregate', result => { result.cases[1].passed = false; }],
++      ['non-boolean case pass flag', result => { result.cases[1].passed = 'true'; }],
++      ['partial case score hidden by a pass flag', result => { result.cases[1].score = 0.5; }],
++      ['missing case score', result => { delete result.cases[1].score; }]
++    ];
++    for (const [label, mutate] of mutations) {
++      const report = structuredClone(complete);
++      mutate(report.quality.solutionEvaluation.evaluations[0]);
++      assert.equal(reportPassed(report, true), false, label);
++    }
++  });
++}
++
++test('statistical approval preserves fractional classification and retrieval evidence', () => {
++  for (const evaluator of ['classification', 'retrieval']) {
++    const report = v2Report(), result = report.quality.solutionEvaluation.evaluations[0];
++    Object.assign(result, { evaluator, threshold: 0.6, actual: 0.625, baseline: 0.5,
++      metric: evaluator === 'classification' ? 'mean_label_accuracy' : 'mean_relevant_id_f1' });
++    Object.assign(result.cases[0], { passed: false, score: 0.75 });
++    Object.assign(result.cases[1], { passed: false, score: 0.5 });
++    assert.equal(reportPassed(report, true), true, `${evaluator} may pass its frozen aggregate threshold without perfect cases.`);
++    result.threshold = 0.7;
++    assert.equal(reportPassed(report, true), false, `${evaluator} still must meet its frozen threshold.`);
++  }
++});
++
++test('deterministic approval checks optional evaluations even when their criterion is deferred', () => {
++  for (const evaluator of ['exact', 'numeric', 'schedule']) {
++    const report = v2Report(), quality = report.quality, evaluation = quality.solutionEvaluation;
++    quality.requirementsMet = false;
++    quality.criteria.push({ criterionId: 'R2', requirement: 'Compute an optional result', status: 'unverified',
++      detail: 'The optional workflow is deferred.', capabilityIds: [] });
++    quality.capabilities.push({ id: 'optional', required: false, criterionIds: ['R2'], evaluationIds: ['optional-reference'],
++      status: 'passed', detail: 'Evaluated but not used by an implemented criterion.' });
++    evaluation.capabilities.push({ id: 'optional', required: false, status: 'passed' });
++    const optional = { ...structuredClone(evaluation.evaluations[0]), id: 'optional-reference', capabilityId: 'optional', evaluator };
++    evaluation.evaluations.push(optional);
++    assert.equal(reportPassed(report, true), true, `${evaluator}: complete optional evidence does not prevent prototype approval.`);
++    optional.threshold = 0.5; optional.actual = 0.5;
++    Object.assign(optional.cases[1], { passed: false, score: 0 });
++    assert.equal(reportPassed(report, true), false, `${evaluator}: deferral must not hide incomplete recorded deterministic evidence.`);
++  }
++});
++
+ function visuallyReviewedReport() {
+   const report = v2Report(), filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64), sessionId = 'verifier';
+   Object.assign(report.quality, { schemaVersion: 3, contractHash });
+@@ -325,6 +381,28 @@
+   cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
+   cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
+   assert.equal(reportPassed(cli, 3), true, 'CLI delivery has no visual review requirement.');
++});
++
++test('workflow-aware visual reports must cover the same journeys as independent verification before approval', () => {
++  const report = visuallyReviewedReport(), visual = report.quality.visualReview;
++  const ids = [...new Set(report.quality.journeys.map(journey => journey.id))];
++  visual.schemaVersion = 2;
++  visual.sessions[0].requiredJourneyIds = ids;
++  for (const [index, capture] of visual.captures.entries()) {
++    capture.journey = { id: ids[Math.floor(index / 2)], status: 'passed', completedSteps: 2, totalSteps: 2, detail: 'All workflow steps completed.' };
++    capture.errors = [];
++  }
++  assert.equal(reportPassed(report, 3), true);
++  for (const mutate of [
++    value => { value.quality.visualReview.sessions[0].requiredJourneyIds = []; },
++    value => { delete value.quality.visualReview.captures[0].journey; },
++    value => { value.quality.visualReview.captures[0].journey.status = 'failed'; },
++    value => { value.quality.visualReview.captures[0].errors = ['The application threw while saving.']; },
++    value => { value.quality.visualReview.captures[0].filesHash = 'd'.repeat(64); },
++  ]) {
++    const changed = structuredClone(report); mutate(changed);
++    assert.equal(reportPassed(changed, 3), false, String(mutate));
++  }
+ });
+ 
+ test('clean CLI verification passes real computation and rejects a hardcoded demo despite passing developer tests', async t => {
+--- MERGE_HEAD:tests/runtime-host-artifacts.test.mjs
++++ tests/runtime-host-artifacts.test.mjs
+@@ -1,3 +1,4 @@
++import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { promises as fs } from 'node:fs';
+@@ -51,7 +52,7 @@
+ 
+ async function exportInput(root, parent) {
+   return { workspace: root, parent, title: 'Coefficient multiplier', verifiedHash: await sourceHash(root),
+-    deliveryMarkdown: '# Approved prototype\nSee README.md for usage.' };
++    evidence: { report: '{"passed":1}', review: '{"approved":true}' }, deliveryMarkdown: '# Approved prototype\nSee README.md for usage.' };
+ }
+ 
+ function sharedContracts(value) {
+@@ -140,6 +141,7 @@
+       'solution-contract.json': JSON.stringify(value.solution), '.fleet/packet.json': JSON.stringify({ acceptance }) });
+     const project = { title: 'Multiplier', workspace: root, status: 'approved', approvedAt: new Date().toISOString(),
+       report: { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(root) } };
++    bindSyntheticApproval(project);
+     await assert.rejects(assertExecutableSource(project), diagnostic, file);
+   }
+ });
+--- MERGE_HEAD:tests/runtime-inventory-parity.test.mjs
++++ tests/runtime-inventory-parity.test.mjs
+@@ -1,3 +1,4 @@
++import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { promises as fs } from 'node:fs';
+@@ -52,7 +53,7 @@
+ }
+ 
+ const exportInput = async (root, parent) => ({ workspace: root, parent, title: 'Coefficient multiplier',
+-  verifiedHash: await sourceHash(root), deliveryMarkdown: '# Approved prototype\nFollow README.md.' });
++  verifiedHash: await sourceHash(root), evidence: { report: '{"passed":1}', review: '{"approved":true}' }, deliveryMarkdown: '# Approved prototype\nFollow README.md.' });
+ 
+ function sharedContracts(value) {
+   const { schemaVersion: _version, screens: _screens, ...sharedUx } = ux;
+@@ -138,6 +139,7 @@
+     // Real clean verification and delivery are exercised by the controls below.
+     const project = { id: 'inventory-fixture', title: 'Multiplier', workspace: root, status: 'approved', approvedAt: new Date().toISOString(),
+       report: { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(root) } };
++    bindSyntheticApproval(project);
+     await assert.rejects(assertExecutableSource(project), diagnostic);
+     await assert.rejects(stageExecutable(project, parent), diagnostic);
+     assert.deepEqual(await fs.readdir(parent), []);
+@@ -179,7 +181,7 @@
+ test('undeclared agent metadata remains omitted from source exports', async t => {
+   const { root, parent } = await workspace(t, { 'index.html': '<p>Legacy app</p>', '.pi/private.json': 'agent state', '.DS_Store': 'filesystem metadata' });
+   const input = await exportInput(root, parent), destination = await exportVerifiedBundle(input);
+-  assert.deepEqual((await listArtifacts(destination)).map(file => file.path), ['DELIVERY.md', 'index.html']);
++  assert.deepEqual((await listArtifacts(destination)).map(file => file.path), ['DELIVERY.md', 'index.html', 'review.json', 'test-report.json']);
+   await assert.rejects(fs.access(path.join(destination, '.pi')), { code: 'ENOENT' });
+   await assert.rejects(fs.access(path.join(destination, '.DS_Store')), { code: 'ENOENT' });
+   assert.equal(await sourceHash(destination), input.verifiedHash);
+--- MERGE_HEAD:tests/runtime.test.mjs
++++ tests/runtime.test.mjs
+@@ -11,7 +11,34 @@
+ import { verifyBrowserJourneys } from '../dist-electron/electron/browser-verification.js';
+ 
+ const temp = () => fs.mkdtemp(path.join(os.tmpdir(), 'fleet-test-'));
+-test('saved challenges survive reload and interrupted runs become stopped', async () => {
++// Checked-in synthetic fixtures explicitly select their host launcher. This is
++// test wiring only; production uses its own direct Node launcher.
++function fixtureLauncher(_root, executable, args) {
++  const ready = 'synthetic-runtime-verification-ready\n';
++  const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(args)},{stdio:'inherit'});child.once('error',e=>{console.error(e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
++  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: 'synthetic runtime fixture launcher' };
++}
++function verifyFixture(root, launcher = fixtureLauncher) {
++  return verifyWorkspace(root, process.execPath, () => {}, undefined, { launcher });
++}
++test('runtime evidence fixtures explicitly launch each source revision exactly once', async () => {
++  const dir = await temp(); let launches = 0;
++  const launcher = (...args) => { launches++; return fixtureLauncher(...args); };
++  try {
++    const file = path.join(dir, 'synthetic.test.cjs');
++    for (const value of [1, 2]) {
++      await fs.writeFile(file, `require('node:test')('synthetic revision ${value}', () => require('node:assert/strict').equal(${value}, 2));`);
++      const report = await verifyFixture(dir, launcher);
++      assert.equal(launches, value);
++      assert.equal(report.command, 'synthetic runtime fixture launcher');
++      assert.deepEqual(report.registeredTests, [{ file: 'synthetic.test.cjs', tests: 1 }]);
++      assert.equal(report.failed, value === 1 ? 1 : 0);
++      assert.equal(reportPassed(report), value === 2);
++      assert.equal(report.sourceHash, await sourceHash(dir));
++    }
++  } finally { await fs.rm(dir, { recursive: true, force: true }); }
++});
++test('saved challenges survive reload and interrupted runs without markers remain blocked', async () => {
+   const dir=await temp(); try {
+     const store=new Store(dir);await store.init();
+     assert.equal(store.state.projects.length,3);
+@@ -21,7 +48,8 @@
+     delete store.state.projects[1].inputs; delete store.state.projects[1].outputs;
+     store.state.projects[0].status='running';await store.save();
+     const restored=new Store(dir);await restored.init();
+-    assert.equal(restored.state.projects[0].status,'stopped');
++    assert.equal(restored.state.projects[0].status,'failed');
++    assert.equal(restored.state.projects[0].processScope.cleanup,'unconfirmed');
+     assert.deepEqual(restored.state.projects[0].criteria,[]);
+     assert.equal(restored.state.projects[0].inputs,'Images');
+     assert.equal(restored.state.projects[0].outputs,'Classification of images');
+@@ -38,14 +66,18 @@
+   const store = new Store(dir); await store.init();
+   const project = store.state.projects[0];
+   project.status = 'running'; project.runId = 'saved-run'; project.resumeStage = 'build';
++  project.processScope = { runId: project.runId, marker: 'synthetic-reload-marker', cleanup: 'pending' };
+   project.workspace = path.join(dir, 'workspaces', project.id, project.runId);
+   await fs.mkdir(project.workspace, { recursive: true });
+   await fs.writeFile(path.join(project.workspace, 'app.mjs'), 'export const draft = "saved implementation";');
+   for (const stage of project.stages) stage.status = ['intake', 'research', 'plan'].includes(stage.id) ? 'complete' : stage.id === 'build' ? 'active' : 'queued';
+   project.logs.push({ id: 'saved-log', stage: 'build', kind: 'info', time: '2026-01-01T00:00:00.000Z', text: 'Implementation was in progress.' });
+   await store.save();
+-  const restored = new Store(dir); await restored.init();
++  const recoveredMarkers = [];
++  const restored = new Store(dir, async marker => { recoveredMarkers.push(marker); }); await restored.init();
+   const recovered = restored.project(project.id);
++  assert.deepEqual(recoveredMarkers, ['synthetic-reload-marker']);
++  assert.equal(recovered.processScope.cleanup, 'confirmed');
+   assert.equal(recovered.status, 'stopped');
+   assert.equal(recovered.resumeStage, 'build');
+   assert.equal(recovered.runId, project.runId); assert.equal(recovered.workspace, project.workspace);
+@@ -63,14 +95,18 @@
+   const store = new Store(dir); await store.init();
+   const project = store.state.projects[0];
+   project.status = 'running'; project.runId = 'legacy-run';
++  project.processScope = { runId: project.runId, marker: 'synthetic-legacy-marker', cleanup: 'pending' };
+   project.workspace = path.join(dir, 'workspaces', project.id, project.runId);
+   await fs.mkdir(project.workspace, { recursive: true });
+   await fs.writeFile(path.join(project.workspace, 'plan.md'), 'Preserved older planning output.');
+   project.stages.find(stage => stage.id === 'intake').status = 'complete';
+   project.stages.find(stage => stage.id === 'research').status = 'active';
+   await store.save();
+-  const restored = new Store(dir); await restored.init();
++  const recoveredMarkers = [];
++  const restored = new Store(dir, async marker => { recoveredMarkers.push(marker); }); await restored.init();
+   const recovered = restored.project(project.id);
++  assert.deepEqual(recoveredMarkers, ['synthetic-legacy-marker']);
++  assert.equal(recovered.processScope.cleanup, 'confirmed');
+   assert.equal(recovered.status, 'stopped'); assert.equal(recovered.resumeStage, undefined);
+   assert.equal(recovered.runId, project.runId); assert.equal(recovered.workspace, project.workspace);
+   assert.equal(recovered.stages.find(stage => stage.id === 'intake').status, 'complete');
+@@ -126,22 +162,22 @@
+     await fs.symlink(path.join(dir,'secret'),path.join(inner,'escape'));
+     await assert.rejects(safeFile(inner,'../secret'));
+     await assert.rejects(safeFile(inner,'escape'));
+-    assert.deepEqual(await listArtifacts(inner),[]);
++    await assert.rejects(listArtifacts(inner), /symlinks/);
+   } finally {await fs.rm(dir,{recursive:true,force:true});}
+ });
+ test('test evidence records actual failures, success, skipped cases and source changes', async () => {
+   const dir=await temp();try {
+     const file=path.join(dir,'behavior.test.cjs');
+     await fs.writeFile(file,'require("node:test")("fails",()=>require("node:assert/strict").equal(1,2));');
+-    let report=await verifyWorkspace(dir,process.execPath,()=>{});
++    let report=await verifyFixture(dir);
+     assert.equal(report.failed,1);assert.equal(reportPassed(report),false);
+     await fs.writeFile(file,'require("node:test")("passes",()=>require("node:assert/strict").equal(2,2));');
+-    report=await verifyWorkspace(dir,process.execPath,()=>{});
++    report=await verifyFixture(dir);
+     assert.equal(reportPassed(report),true);
+     assert.equal(report.sourceHash,await sourceHash(dir));
+     await fs.writeFile(file,'require("node:test")("skipped",{skip:true},()=>{});');
+     assert.notEqual(report.sourceHash,await sourceHash(dir));
+-    report=await verifyWorkspace(dir,process.execPath,()=>{});
++    report=await verifyFixture(dir);
+     assert.equal(report.skipped,1);assert.equal(reportPassed(report),false);
+   } finally {await fs.rm(dir,{recursive:true,force:true});}
+ });
+@@ -149,12 +185,12 @@
+   const dir=await temp();try {await assert.rejects(verifyWorkspace(dir,process.execPath,()=>{}),/did not produce/);}
+   finally {await fs.rm(dir,{recursive:true,force:true});}
+ });
+-test('preview has a dedicated origin, token route, and restrictive network policy', async () => {
++test('preview has a dedicated origin and token route without a network restriction', async () => {
+   const dir=await temp();const previews=new PreviewServers();try {
+     await fs.writeFile(path.join(dir,'index.html'),'<h1>Preview</h1>');
+     const url=await previews.url(dir);const response=await fetch(url);
+     assert.equal(await response.text(),'<h1>Preview</h1>');
+-    assert.match(response.headers.get('content-security-policy'),/connect-src 'none'/);
++    assert.equal(response.headers.get('content-security-policy'), null);
+     assert.equal((await fetch(new URL('/wrong-token',url))).status,404);
+     assert.equal(await previews.url(dir),url);
+   } finally {previews.close();await fs.rm(dir,{recursive:true,force:true});}
+@@ -184,8 +220,7 @@
+   assert.equal(await previews.url(root, files), url);
+   const script = await fetch(new URL('./assets/core.mjs', url));
+   assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
+-  assert.match(script.headers.get('content-security-policy'), /script-src 'self'/);
+-  assert.match(script.headers.get('content-security-policy'), /connect-src 'self'/);
++  assert.equal(script.headers.get('content-security-policy'), null);
+   assert.equal(script.headers.get('x-content-type-options'), 'nosniff');
+   assert.deepEqual(await (await fetch(new URL('./assets/data.json', url))).json(), { scale: 2 });
+   for (const address of ['./.env', './evaluation-plan.json', '/index.html', './assets/missing.mjs', '../index.html']) {
+--- MERGE_HEAD:tests/solution-contract.test.mjs
++++ tests/solution-contract.test.mjs
+@@ -43,6 +43,21 @@
+   assert.deepEqual(result.evaluations[0].cases[0].input, { values: [1, 2] });
+ });
+ 
++test('delivery ports are optional service-only integers', () => {
++  for (const port of [1, 8080, 65535]) {
++    const value = solution('service'); value.runtime.port = port;
++    assert.equal(parseSolutionContract(value, acceptance).runtime.port, port);
++  }
++  for (const port of [0, 65536, -1, 1.5, '8080', null]) {
++    const value = solution('service'); value.runtime.port = port;
++    assert.throws(() => parseSolutionContract(value, acceptance), /runtime.port must be an integer/);
++  }
++  for (const profile of ['browser', 'cli']) {
++    const value = solution(profile); value.runtime.port = 8080;
++    assert.throws(() => parseSolutionContract(value, acceptance), /Only service/);
++  }
++});
++
+ test('a required core capability cannot be omitted, disconnected from acceptance, or left untested', () => {
+   invalidSolution(value => { value.capabilities[0].required = false; }, /core capability must be required/);
+   invalidSolution(value => { value.capabilities[0].evaluationIds = []; }, /must contain 1/);
+--- MERGE_HEAD:tests/solution-evaluation.test.mjs
++++ tests/solution-evaluation.test.mjs
+@@ -139,7 +139,12 @@
+   assert.match(score({ tasks: [1] }, { tasks: [1, 2] }).detail, /\$\.tasks: array length mismatch/);
+   assert.match(score({ tasks: [{ id: 'same' }, { id: 'actual' }] }, { tasks: [{ id: 'same' }, { id: 'expected' }] }).detail, /\$\.tasks\[1\]\.id: value mismatch/);
+   assert.match(score({ tasks: [1, '2'] }, { tasks: [1, 2] }).detail, /\$\.tasks\[1\]: type mismatch/);
+-  assert.match(score([1, 2], [2, 1]).detail, /\$\[0\]: value mismatch/);
++  assert.match(score([1, 2], [3, 1]).detail, /\$\[0\]: value mismatch/);
++  // Right values in another order get their own message, and it never reveals an answer.
++  const reordered = score({ ids: ['D3:OP2', 'D5:OP1'] }, { ids: ['D5:OP1', 'D3:OP2'] });
++  assert.equal(reordered.score, 0);
++  assert.match(reordered.detail, /\$\.ids: array order differs/);
++  assert.match(score({ ids: ['a', 'a', 'b'] }, { ids: ['a', 'b', 'b'] }).detail, /value mismatch/);
+ });
+ 
+ test('numeric diagnostics separate nested tolerance failures from structural and text failures', () => {
+--- HEAD:tests/source-export.test.mjs
++++ tests/source-export.test.mjs
+@@ -3,6 +3,7 @@
+ import { promises as fs } from 'node:fs';
+ import path from 'node:path';
+ import os from 'node:os';
++import { createHash } from 'node:crypto';
+ import { sourceHash } from '../dist-electron/electron/storage.js';
+ import { exportVerifiedBundle } from '../dist-electron/electron/source-export.js';
+ 
+@@ -148,3 +149,37 @@
+   assert.equal(await fs.readFile(path.join(destination, 'test-report.json'), 'utf8'), input.evidence.report);
+   assert.equal(await fs.readFile(path.join(destination, 'review.json'), 'utf8'), input.evidence.review);
+ });
++
++test('experiment export separates the verified source from the public reproducibility bundle', async t => {
++  const input = await fixture(t);
++  await fs.writeFile(path.join(input.workspace, 'memory-context.md'), 'Private installation learning');
++  input.verifiedHash = await sourceHash(input.workspace);
++  input.reference = { runtime: { profile: 'browser', entrypoint: 'index.html', files: ['index.html'], requiredEnv: [], evaluator: { runtime: 'node', entrypoint: 'app.mjs', args: [] } },
++    operations: [{ id: 'lookup', origin: 'https://api.example.com', path: '/lookup', method: 'POST', responseType: 'json', auth: { type: 'bearer', credentialId: 'private-vault-reference', envName: 'LOOKUP_TOKEN' } }],
++    experiment: { experimentId: 'experiment-id', candidateId: 'candidate-id', behaviorHash: 'a'.repeat(64), evaluationSetHash: 'b'.repeat(64), executionHash: 'c'.repeat(64) } };
++  const destination = await exportVerifiedBundle(input);
++  await assert.rejects(fs.access(path.join(destination, 'memory-context.md')), { code: 'ENOENT' });
++  const body = await fs.readFile(path.join(destination, 'reproducibility/manifest.json'), 'utf8'), manifest = JSON.parse(body);
++  assert.equal(manifest.verifiedSourceHash, input.verifiedHash);
++  assert.equal(body.includes('private-vault-reference'), false); assert.equal(body.includes('Private installation learning'), false);
++  assert.equal(manifest.operations[0].auth.envName, 'LOOKUP_TOKEN');
++  const bundle = createHash('sha256');
++  for (const file of manifest.files) {
++    const bytes = await fs.readFile(path.join(destination, file.path));
++    assert.equal(file.sha256, createHash('sha256').update(bytes).digest('hex'));
++    bundle.update(file.path + '\0').update(bytes).update('\0');
++  }
++  assert.equal(bundle.digest('hex'), manifest.bundleHash);
++  assert.equal(await sourceHash(input.workspace), input.verifiedHash, 'Export never modifies the reviewed candidate.');
++});
++
++test('experiment exports reject evaluation keys and references to omitted private context', async t => {
++  const input = await fixture(t);
++  input.reference = { runtime: { profile: 'cli', files: ['memory-context.md'], requiredEnv: [] }, operations: [],
++    experiment: { experimentId: 'experiment-id', candidateId: 'candidate-id', behaviorHash: 'a'.repeat(64), evaluationSetHash: 'b'.repeat(64), executionHash: 'c'.repeat(64) } };
++  await assert.rejects(exportVerifiedBundle(input), /private learning/); await onlyExisting(input.parent);
++  input.reference.runtime.files = ['index.html'];
++  await fs.writeFile(path.join(input.workspace, 'evaluation-plan.json'), '{"private":"expected"}');
++  input.verifiedHash = await sourceHash(input.workspace);
++  await assert.rejects(exportVerifiedBundle(input), /answer keys/); await onlyExisting(input.parent);
++});
+--- MERGE_HEAD:tests/source-hash-integrity.test.mjs
++++ tests/source-hash-integrity.test.mjs
+@@ -13,7 +13,7 @@
+   t.after(() => fs.rm(root, { recursive: true, force: true }));
+   const workspace = path.join(root, 'workspace'), parent = path.join(root, 'exports');
+   await fs.mkdir(workspace); await fs.mkdir(parent);
+-  return { root, workspace, parent, title: 'Verified source', deliveryMarkdown: '# Verified application\n' };
++  return { root, workspace, parent, title: 'Verified source', deliveryMarkdown: '# Verified application\n', evidence: { report: '{"synthetic":true}', review: '{"synthetic":true}' } };
+ }
+ 
+ async function write(root, name, bytes) {
+@@ -23,6 +23,7 @@
+ 
+ test('a changed verified engine cannot export by shifting source across an adjacent file boundary', async t => {
+   const input = await fixture(t);
++  await write(input.workspace, 'index.html', '<h1>Synthetic source fixture</h1>');
+   const base = 'export let answer = 2;\n//';
+   const shift = '\nif (typeof answer !== "undefined") answer = 4;\n//';
+   const suffix = '\nexport const filler = 1;\n';
+@@ -75,7 +76,7 @@
+ 
+ test('source hashes remain deterministic across creation order and verified export copies', async t => {
+   const input = await fixture(t), reordered = path.join(input.root, 'reordered');
+-  const entries = [['nested/empty', Buffer.alloc(0)], ['engine.mjs', 'export const answer = 4;\n'],
++  const entries = [['index.html', '<h1>Synthetic source fixture</h1>'], ['nested/empty', Buffer.alloc(0)], ['engine.mjs', 'export const answer = 4;\n'],
+     ['assets/évidence.bin', Buffer.from([0x00, 0xff, 0x80])], ['.quality-evidence/desktop.png', 'Recorded screenshot']];
+   for (const [name, bytes] of entries) await write(input.workspace, name, bytes);
+   for (const [name, bytes] of [...entries].reverse()) await write(reordered, name, bytes);
+--- MERGE_HEAD:tests/system-design.test.mjs
++++ tests/system-design.test.mjs
+@@ -70,7 +70,7 @@
+     await fs.writeFile(path.join(root, 'outside.cjs'), 'outside');
+     await fs.symlink(path.join(root, 'outside.cjs'), path.join(p.workspace, 'core.cjs'));
+     const update = createSystemDesignTools(p, 'build', controller.signal, async () => {})[0];
+-    await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'generated', detail: 'Done' }), /inside its workspace/);
++    await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'generated', detail: 'Done' }), /Artifact symlinks are not allowed/);
+     controller.abort();
+     await assert.rejects(publish.execute('publish', fixtureSystemDesign));
+     await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'building', detail: 'Working' }));
+--- MERGE_HEAD:tests/verification-evaluation-evidence.test.mjs
++++ tests/verification-evaluation-evidence.test.mjs
+@@ -1,3 +1,4 @@
++import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { promises as fs } from 'node:fs';
+@@ -187,5 +188,6 @@
+   assert.equal(journey.current, 'build');
+   assert.match(journey.message, /Verification needs attention/);
+   saved.status = 'approved'; saved.approvedAt = '2026-11-05T10:01:00Z';
+-  await assert.rejects(assertExecutableSource(saved), /Passing required capability, runtime and application checks/);
++  bindSyntheticApproval(saved);
++  await assert.rejects(assertExecutableSource(saved), /Passing automated tests and required browser journeys/);
+ });
+--- MERGE_HEAD:tests/verification-version.test.mjs
++++ tests/verification-version.test.mjs
+@@ -1,3 +1,4 @@
++import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { promises as fs } from 'node:fs';
+@@ -134,7 +135,8 @@
+   project.status = 'approved';
+   project.approvedAt = '2026-11-05T12:01:00Z';
+   assert.equal(await sourceHash(project.workspace), project.report.sourceHash);
+-  await assert.rejects(assertExecutableSource(project), /Passing required capability, runtime and application checks/);
++  bindSyntheticApproval(project);
++    await assert.rejects(assertExecutableSource(project), /Passing automated tests and required browser journeys/);
+ });
+ 
+ test('executable staging rejects a downgraded version 2 report before writing package files', async t => {
+@@ -142,7 +144,8 @@
+   project.status = 'approved';
+   project.approvedAt = '2026-11-05T12:01:00Z';
+   assert.equal(await sourceHash(project.workspace), project.report.sourceHash);
+-  await assert.rejects(stageExecutable(project, root), /Passing required capability, runtime and application checks/);
++  bindSyntheticApproval(project);
++  await assert.rejects(stageExecutable(project, root), /Passing automated tests and required browser journeys/);
+   await assert.rejects(fs.access(path.join(root, 'source')), { code: 'ENOENT' });
+ });
+ 
+@@ -151,6 +154,7 @@
+   project.qualityVersion = 1;
+   project.status = 'approved';
+   project.approvedAt = '2026-11-05T12:01:00Z';
++  bindSyntheticApproval(project);
+   await assertExecutableSource(project);
+   const staged = await stageExecutable(project, root);
+   assert.equal(await fs.readFile(path.join(staged.source, 'index.html'), 'utf8'), '<h1>Verified offline application</h1>');
+--- HEAD:tests/verification.test.mjs
++++ tests/verification.test.mjs
+@@ -46,7 +46,7 @@
+   if (mixed) await fs.writeFile(path.join(root, 'real.test.cjs'), 'require("node:test")("actual case", () => {});');
+   const report = await verifyPlain(root, process.execPath, () => {});
+   assert.equal(reportPassed(report), false, report.output);
+-  assert.equal(report.passed, 0);
++  assert.equal(report.passed, mixed ? 1 : 0);
+   assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
+ });
+ 
+@@ -393,8 +393,13 @@
+   const root = await workspace(t, 'require("node:test")("toolkit only", () => {});', '.fleet/toolkit/reference.test.cjs');
+   await fs.mkdir(path.join(root, '.browser-observations', 'session'), { recursive: true });
+   await fs.writeFile(path.join(root, '.browser-observations', 'session', 'snapshot.test.mjs'), 'throw new Error("This is not an application test");');
++  await assert.rejects(verifyPlain(root, process.execPath, () => {}), /did not produce/);
+   await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
+-  await assert.rejects(verifyPlain(root, process.execPath, () => {}), /did not produce/);
++  const report = await verifyPlain(root, process.execPath, () => {});
++  assert.equal(reportPassed(report), false);
++  assert.equal(report.passed, 0);
++  assert.equal(report.exitCode, 1);
++  assert.match(report.output, /completed node:test cases in every test file/);
+ });
+ 
+ test('test filenames containing spaces are passed as single paths', async t => {

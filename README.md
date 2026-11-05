@@ -16,6 +16,10 @@ Build and verification agents can [open and interact with their app](docs/agent-
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
+Use **Data & storage** to browse current and previous builds, inspect and export files, archive projects, and clean up through recoverable Trash. See [storage and recovery](docs/data-storage.md) for scope and verification behavior.
+
+Before handing off a change, run `npm run check`. It captures the current source and runs the frontend build, Electron and harness builds, foundation checksum validation, and both test suites in a private workspace. Logs, source hashes and results remain in `output/checks/`; shared build directories stay untouched. See [build validation](docs/build-validation.md) for prerequisites and result interpretation.
+
 Use **Project lead** inside a saved project to discuss the brief, inspect progress and apply proposed build changes. Research and planning can ask focused questions there, closing their model sessions while waiting for your answer. Read [project conversations and clarification](docs/project-conversation.md) for behavior and validation.
 
 Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). New builds declare computational capabilities and a browser, CLI, or local-service runtime. Host-owned evaluations, clean package execution and applicable browser checks gate delivery. Operational integrations and field readiness remain unverified. Read [solution contracts and evaluation](docs/solution-evaluation.md) for supported scorers, runtime profiles and factory benchmarks. The product vision below describes the broader goal.

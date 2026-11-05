@@ -111,6 +111,11 @@ test('real Pi SDK recovers a 503, executes file tools, repairs a failing test an
   assert.ok(h.project.logs.some(l => l.kind === 'tool' && l.text.startsWith('write')));
   const visualCalls = fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? [])).filter(call => call.function?.name === 'fleet_visual_review');
   assert.ok(new Set(visualCalls.map(call => call.id)).size >= 12, 'Build, verification and repair each compare initial and fresh captures at both widths.');
+  const journeyCalls = new Map(fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? []))
+    .filter(call => call.function?.name === 'fleet_browser' && JSON.parse(call.function.arguments).action === 'journey').map(call => [call.id, JSON.parse(call.function.arguments)]));
+  assert.ok(journeyCalls.size >= 12, 'The real SDK runs both workflows at both widths in build, verification and repair.');
+  assert.deepEqual([...new Set([...journeyCalls.values()].map(call => call.journeyId + '/' + call.viewport))].sort(),
+    ['parse-task/desktop', 'parse-task/narrow', 'recover-empty/desktop', 'recover-empty/narrow']);
   assert.equal(h.project.report.passed, 1); assert.equal(h.project.report.failed, 0);
   assert.equal(h.project.report.sourceHash, await sourceHash(h.project.workspace));
   assert.ok((await fs.readdir(path.join(h.root, 'sessions', h.project.id))).filter(name => name.endsWith('.jsonl')).length >= 4);
