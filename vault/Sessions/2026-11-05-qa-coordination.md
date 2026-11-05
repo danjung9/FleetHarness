@@ -64,3 +64,13 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 [E] Final source check found clean astra-test advanced to 7c8b663. Targeted delta review confirms both scripts remain compatible for their browser-fixture scope; all five provider fixture modules are unchanged. Current receipt verdicts remain attributed to 3da8ad8. Added post-delivery iteration and offline/container packaging to the unmeasured coverage. Commands, hashes and limits are in Review-3da8ad8. Tool ledger, prior-work and current-status notes are updated.
 
 [R] Main executes and returns unique result.json receipts. Neither a deterministic judge nor automated review acknowledgment counts as human acceptance. Full combined acceptance remains pending.
+
+## 0666861 failure classification and UX compatibility
+
+[P] Main supplied baseline Resume ERROR and native delivery FAIL at clean 0666861, requested fixture-versus-product classification with exact source locations, and requested dual support for old/new model connection labels.
+
+[E] Baseline is a checker error: qa-native-baseline-resume waited for Resume verification while shared/journey and the screenshot show Resume testing. Three prior rows preserve the original special-filename test baseline through Stop and full process restart. No Resume request occurred. Delivery is a product defect: all four input outcomes pass, then native Reload preview changes localhost port and hides the saved task/draft. Product main.ts stops/recreates the preview server on each request. The real persistence expectation is retained. Sent both classifications to main; details in Review-0666861.
+
+[E] Updated all five requested scripts to match Other providers or Other model providers exactly. Corrected the Resume button and fixed desktop case isolation for the new intentionally retained intake drafts using visible Remove controls. Input oracles, Stop workers and timing are unchanged. All five syntax/pure validations pass; no product/native execution occurred here. Original receipts remain unchanged. Current source had advanced to bbb92ac while compiled files retained the 0666861 receipt identity; main must supply the selected matching build.
+
+[R] Rerun baseline with the corrected fixture. Repair native preview reload, then rerun delivery through its remaining seven rows. Full acceptance remains pending. Tool ledger, friction, prior work and Team/Now updated.
