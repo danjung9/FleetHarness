@@ -39,7 +39,7 @@ summary: "Review two new R6 artifacts independently, retire completed triage and
 
 ## qa-runner and main QA lead coverage
 
-[R] Runner has no new assignment. Reopen the completed native triage only when main supplies new exact-target evidence; retain the same report. Main owns all real builds, native execution and driver recovery.
+[R] Runner has no new assignment. Product's prior native-triage request is satisfied by the 04:01 report in feed-194; coalesce any equivalent queued request. Reopen the completed native triage only when main supplies new exact-target evidence; retain the same report. Main owns all real builds, native execution and driver recovery.
 
 | Existing owner and coverage | Remaining proof or action |
 | --- | --- |
