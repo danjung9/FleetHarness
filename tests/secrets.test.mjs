@@ -10,6 +10,7 @@ import { exportVerifiedBundle } from '../dist-electron/electron/source-export.js
 import { stageExecutable } from '../dist-electron/electron/executable.js';
 import { redactedSessionManager } from '../dist-electron/electron/session-logs.js';
 import { reportHash, deliveryEvidence, verifiedManifest } from '../dist-electron/electron/delivery.js';
+import { judgeAccepted, judgeGaps } from '../dist-electron/shared/verification.js';
 
 async function fixture(t) {
   const parent = path.resolve('output/secrets-tests'); await fs.mkdir(parent, { recursive: true });
@@ -23,7 +24,8 @@ function bindApproval(project) {
   project.stages.find(stage => stage.id === 'review').status = 'complete';
   project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
   project.approval = { runId: project.runId, sourceHash: project.report.sourceHash,
-    reportHash: project.verification.reportHash, approvedAt: project.approvedAt, feedback: project.feedback };
+    reportHash: project.verification.reportHash, approvedAt: project.approvedAt, feedback: project.feedback,
+    ...(!judgeAccepted(project.report) ? { judgeGapsAccepted: true, acceptedJudgeGaps: structuredClone(judgeGaps(project.report)) } : {}) };
 }
 
 test('one redactor removes configured values, escaped values and authorization fields', () => {

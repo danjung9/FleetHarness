@@ -268,15 +268,16 @@ function visuallyReviewedReport() {
   return report;
 }
 
-test('the authoritative approval gate keeps visual review, judge and same-run cleanup together', () => {
+test('the review gate keeps visual review and same-run cleanup while judge gaps await human acceptance', () => {
   const project = { qualityVersion: 3, runId: 'current-run', workspace: 'synthetic-gate-only', status: 'review',
     stages: [{ id: 'review', status: 'review' }], processScope: { runId: 'current-run', cleanup: 'confirmed' }, report: visuallyReviewedReport() };
   const bind = () => { project.verification = { runId: project.runId, reportHash: reportHash(project.report) }; };
   bind(); assert.doesNotThrow(() => assertReviewState(project));
   project.report = v2Report(); bind();
   assert.throws(() => assertReviewState(project), /Passing automated tests/);
-  project.report = visuallyReviewedReport(); project.report.independentJudge = { verdict: 'NOT' }; bind();
-  assert.throws(() => assertReviewState(project), /Passing automated tests/);
+  project.report = visuallyReviewedReport(); project.report.independentJudge = { verdict: 'NOT', gaps: [{ requirement: 'R1', evidence: 'Synthetic gap', fix: 'Implement the missing output.' }] }; bind();
+  assert.doesNotThrow(() => assertReviewState(project));
+  assert.equal(reportPassed(project.report, 3), true);
   project.report = visuallyReviewedReport(); bind(); project.processScope.cleanup = 'pending';
   assert.throws(() => assertReviewState(project), /cleanup must be confirmed/);
   project.processScope.cleanup = 'confirmed'; project.processScope.runId = 'other-run';

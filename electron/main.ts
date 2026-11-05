@@ -251,12 +251,12 @@ function registerIPC() {
     const p = store.project(id); if (!p.workspace) throw new Error('This challenge has no workspace yet.');
     const error = await shell.openPath(p.workspace); if (error) throw new Error(error);
   });
-  handle('fleet:approve', async (id: string, feedback: string) => {
+  handle('fleet:approve', async (id: string, feedback: string, acceptJudgeGaps?: boolean) => {
     reviewFeedback(feedback);
     await stopPreview(id);
     const p = requireIdle(id);
     approvals.add(id);
-    try { await recordReview(store, p, 'approved', feedback); }
+    try { await recordReview(store, p, 'approved', feedback, acceptJudgeGaps); }
     finally { approvals.delete(id); notify(); }
   });
   handle('fleet:export', async (id: string) => {
@@ -285,8 +285,11 @@ function registerIPC() {
               'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
             ] : []),
             'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
-            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
+            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ': ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
+          ...(p.approval?.judgeGapsAccepted ? ['The reviewer read and accepted these independent check gaps for this prototype:',
+            ...p.approval.acceptedJudgeGaps!.map(gap => '- ' + gap.requirement + ': ' + gap.evidence + ' Fix: ' + gap.fix)] : []),
+          ...(p.report!.independentJudge?.humanSteps?.length ? ['Steps for a person:', ...p.report!.independentJudge.humanSteps.map(step => '- ' + step)] : []),
           'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
           'Run ' + p.runId
         ].join('\n') }, controller.signal);

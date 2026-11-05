@@ -437,12 +437,13 @@ test('an exhausted host repair budget cannot start another fixer for a negative 
     scenario: async ({ stage, cwd, sessions }) => {
       if (stage === 'repair') await fs.writeFile(path.join(cwd, 'repair-progress.txt'), String(sessions.length));
     } });
-  await h.run(); await h.assertSettled('failed');
+  await h.run(); await h.assertSettled('review');
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   assert.equal(h.sessions.filter(s => s.stage === 'repair').length, 2);
   assert.equal(h.judgeSessions.length, 1);
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
+  assert.equal(reportPassed(h.project.report, true), true);
 });
 
 test('resume keeps failed-attempt usage and timing and adds the resumed attempt', async t => {
@@ -478,12 +479,13 @@ test('a transient judge repair retry spends the remaining budget before the next
   let repairs = 0;
   const h = await harness(t, { judgeAnswers: [judgeNot, judgeNot], verify: syntheticReport,
     scenario: async ({ stage }) => { if (stage === 'repair' && ++repairs === 1) throw new Error('503 temporary interruption'); } });
-  await h.run(); await h.assertSettled('failed');
+  await h.run(); await h.assertSettled('review');
   assert.equal(repairs, 2);
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   assert.equal(h.judgeSessions.length, 2);
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
+  assert.equal(reportPassed(h.project.report, true), true);
 });
 
 test('cleanup integration: resumed stages and verifier launches retain a new run process scope', { timeout: 10000 }, async t => {

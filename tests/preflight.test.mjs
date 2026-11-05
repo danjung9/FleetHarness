@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { runPreflight, findVerificationBrowser, verificationBrowserCandidates } from '../dist-electron/electron/preflight.js';
+import { runPreflight, preflightTimeoutMs, findVerificationBrowser, verificationBrowserCandidates } from '../dist-electron/electron/preflight.js';
 import { spawn, execFileSync } from 'node:child_process';
 import { registerHooks } from 'node:module';
 import { pathToFileURL } from 'node:url';
@@ -20,9 +20,18 @@ const ready = extra => ({
 });
 const start = async (options, callModel) => { const selection = await runPreflight(options); callModel(selection); return selection; };
 
+test('the production readiness budget allows a connection taking longer than 1500 ms', async () => {
+  assert.equal(preflightTimeoutMs, 15000);
+  const selected = await runPreflight(ready({ engine: async () => {
+    await new Promise(resolve => setTimeout(resolve, 1600));
+    return { connected: true, models: [model()] };
+  } }));
+  assert.equal(selected.model, 'gpt-6.1-sol');
+});
+
 // Production Start acceptance, with synthetic connection and inference boundaries.
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
-const readyProbes = { browser: async () => {}, freeBytes: async () => 1024 ** 3 };
+const readyProbes = { timeoutMs: 1500, browser: async () => {}, freeBytes: async () => 1024 ** 3 };
 async function backendFixture(t, { backend = 'pi', chosen = 'gpt-6.1-sol', probes = {}, models = ['small-model', 'gpt-6.1-sol'], resourcesRoot = path.resolve('.') } = {}) {
   const root = await fs.mkdtemp(path.resolve('.tmp/preflight-start-'));
   const store = new Store(root); await store.init();
@@ -382,9 +391,9 @@ test('one shared deadline bounds hanging engine, browser, browser and disk check
   }
 });
 
-test('production deadline also refuses a hung browser in under two seconds', async () => {
+test('an explicit short deadline refuses a hung browser in under two seconds', async () => {
   const began = performance.now();
-  await assert.rejects(runPreflight(ready({ browser: () => new Promise(() => {}) })), { code: 'browser' });
+  await assert.rejects(runPreflight(ready({ timeoutMs: 1500, browser: () => new Promise(() => {}) })), { code: 'browser' });
   assert.ok(performance.now() - began < 2000);
 });
 

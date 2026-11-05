@@ -7,7 +7,7 @@ import { loadQualityContract, sealEvaluationPlan, verifyApplication } from '../d
 import { prepareSolutionRuntime } from '../dist-electron/electron/solution-runtime.js';
 import { runSolutionEvaluation } from '../dist-electron/electron/solution-evaluation.js';
 import { parseSolutionContract, parseEvaluationPlan } from '../dist-electron/harness/solution-contract.js';
-import { reportPassed } from '../dist-electron/shared/verification.js';
+import { judgeAccepted, reportPassed } from '../dist-electron/shared/verification.js';
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sum = 'input => ({total: input.values.reduce((sum, value) => sum + value, 0)})';
@@ -189,7 +189,7 @@ export async function benchmarkLiveFactory({ provider, model, runs = 1, output, 
         if (done) await Promise.race([done, new Promise(resolve => { timer = setTimeout(() => { timedOut = true; void backend.stop(project.id).then(resolve, resolve); }, timeoutMs); })]);
       } catch { /* Provider details remain in the saved run; never print authentication/provider payloads. */ }
       finally { clearTimeout(timer); }
-      const pipelineAccepted = project.status === 'review' && reportPassed(project.report, true);
+      const pipelineAccepted = project.status === 'review' && reportPassed(project.report, true) && judgeAccepted(project.report);
       let holdoutAccepted = false, holdoutScore = null;
       if (pipelineAccepted && project.workspace) {
         let runtime;

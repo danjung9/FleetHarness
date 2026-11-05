@@ -174,12 +174,63 @@ async function fixture(t) {
   // Synthetic prior verification. No native browser or sandbox success is claimed.
   p.report = { time: new Date().toISOString(), command: 'synthetic host sandbox', portableCommand: "node --test './app.test.cjs'", exitCode: 0,
     passed: 1, failed: 0, skipped: 0, total: 1, output: 'Synthetic prior evidence', durationMs: 1,
-    sourceHash: await sourceHash(p.workspace),
+    sourceHash: await sourceHash(p.workspace), independentJudge: { verdict: 'SATISFACTORY', gaps: [] },
     quality: { schemaVersion: 1, status: 'passed', errors: [], journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] } };
   p.verification = { runId: p.runId, reportHash: reportHash(p.report) };
   await store.save();
   return { store, p, root };
 }
+
+for (const kind of ['NOT', 'evaluation error', 'missing judgment']) test('IPC approval requires explicit acceptance and exports gaps: ' + kind, async t => {
+  const { store, p, root } = await fixture(t);
+  const gaps = [{ requirement: 'Schedule export', evidence: 'Assignments are missing.', fix: 'Include all assignments.' }];
+  p.report.independentJudge = kind === 'missing judgment' ? undefined : { verdict: 'NOT', gaps,
+    humanSteps: ['Have an operator review the schedule.'], ...(kind === 'evaluation error' ? { evaluationError: 'Synthetic evaluator unavailable' } : {}) };
+  p.verification.reportHash = reportHash(p.report);
+  const main = await mainHarness(store, undefined, 'electron/main.ts', { dialog: { async showOpenDialog() { return { filePaths: [root] }; } } });
+  const before = structuredClone(p);
+  for (const flag of [undefined, false, 'true', 1]) await assert.rejects(main.invoke('fleet:approve', p.id, 'Reviewed this synthetic application.', flag),
+    { message: 'Read and accept the independent check gaps before approving this prototype.' });
+  assert.deepEqual(p, before);
+  await main.invoke('fleet:approve', p.id, 'Reviewed this synthetic application.', true);
+  assert.equal(p.approval.judgeGapsAccepted, true);
+  if (kind !== 'missing judgment') assert.deepEqual(p.approval.acceptedJudgeGaps, gaps);
+  const exported = await main.invoke('fleet:export', p.id);
+  const receipt = JSON.parse(await fs.readFile(path.join(exported, 'review.json'), 'utf8'));
+  assert.equal(receipt.judgeGapsAccepted, true); assert.deepEqual(receipt.acceptedJudgeGaps, p.approval.acceptedJudgeGaps);
+  const instructions = await fs.readFile(path.join(exported, 'DELIVERY.md'), 'utf8');
+  assert.match(instructions, /reviewer read and accepted these independent check gaps for this prototype/);
+  for (const gap of receipt.acceptedJudgeGaps) for (const text of Object.values(gap)) assert.ok(instructions.includes(text));
+  if (kind !== 'missing judgment') assert.match(instructions, /Steps for a person:\n- Have an operator review the schedule/);
+  await assert.rejects(main.invoke('fleet:approve', p.id, 'Reviewed the same application again.'), /Read and accept/);
+  p.approval.acceptedJudgeGaps = [];
+  await assert.rejects(main.invoke('fleet:export', p.id), /Read and accept/);
+});
+
+test('gap acceptance does not carry into a change-request iteration', async t => {
+  const { store, p } = await fixture(t);
+  const gaps = [{ requirement: 'Schedule export', evidence: 'Assignments are missing.', fix: 'Include all assignments.' }];
+  p.report.independentJudge = { verdict: 'NOT', gaps }; p.verification.reportHash = reportHash(p.report);
+  const { backend, entered } = iterationBackend(t, store);
+  const main = await mainHarness(store, backend);
+  await main.invoke('fleet:approve', p.id, 'Accept these gaps for the synthetic prototype.', true);
+  const approved = structuredClone(p.approval), previousRun = p.runId;
+  await main.invoke('fleet:request-changes', p.id, 'Include all assignments in the export.');
+  await entered.promise;
+  assert.notEqual(p.runId, previousRun); assert.equal(p.approval, undefined);
+  assert.equal(p.reviewHistory.at(-1).judgeGapsAccepted, undefined);
+  await backend.stop(p.id);
+  // Supply a new synthetic automatic receipt to isolate the second approval gate.
+  await fs.writeFile(path.join(p.workspace, 'index.html'), '<h1>Synthetic second iteration</h1>');
+  p.status = 'review'; p.qualityVersion = 1; p.stages.find(s => s.id === 'review').status = 'review';
+  p.report = { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(p.workspace),
+    independentJudge: { verdict: 'NOT', gaps }, quality: { schemaVersion: 1, status: 'passed', errors: [], journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] } };
+  p.verification = { runId: p.runId, reportHash: reportHash(p.report) };
+  await assert.rejects(main.invoke('fleet:approve', p.id, 'Review this synthetic second iteration.'), /Read and accept/);
+  await main.invoke('fleet:approve', p.id, 'Review this synthetic second iteration.', true);
+  assert.notEqual(p.approval.id, approved.id); assert.equal(p.approval.runId, p.runId);
+  assert.deepEqual(p.approval.acceptedJudgeGaps, gaps);
+});
 
 test('failed cleanup cannot be approved, exported, or packaged', async t => {
   const { store, p } = await fixture(t);

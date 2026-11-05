@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   startRun: (id: string) => ipcRenderer.invoke('fleet:start', id),
   resumeRun: (id: string) => ipcRenderer.invoke('fleet:resume', id),
   stopRun: (id: string) => ipcRenderer.invoke('fleet:stop', id),
-  approve: (id: string, feedback: string) => ipcRenderer.invoke('fleet:approve', id, feedback),
+  approve: (id: string, feedback: string, acceptJudgeGaps?: boolean) => ipcRenderer.invoke('fleet:approve', id, feedback, acceptJudgeGaps),
   requestChanges: (id: string, feedback: string) => ipcRenderer.invoke('fleet:request-changes', id, feedback),
   exportProject: (id: string) => ipcRenderer.invoke('fleet:export', id),
   downloadExecutable: (id: string) => ipcRenderer.invoke('fleet:download-executable', id),
