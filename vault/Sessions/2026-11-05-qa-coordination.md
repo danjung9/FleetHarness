@@ -38,3 +38,5 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 [E] Main received the ready note and three script paths through the bridge. Tool disclosures were added. No combined native receipt has arrived yet.
 
 [R] Next: review main's clean landed revision, compilation identity and actual receipts; fix checker artifacts separately from real defects; update Overnight with results. Complete actual sign-in/build, interruption/resume, changed-input review and fresh-delivery journeys before accepting the combined app.
+
+[E] The clean-target/receipt bridge question timed out after ten minutes. Source remains at 8053707 with 13 unmerged index paths. Native restart/resume fixture preparation continues; this is a test-preparation handoff, not completed acceptance.

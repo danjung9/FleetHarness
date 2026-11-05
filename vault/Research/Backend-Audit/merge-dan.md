@@ -49,3 +49,15 @@ Passed all three type checks, 182 selected unit checks and 84 harness tests.
 Could not validate native `ps`, Chrome, GUI smoke tests or complete clean-runtime workflows here. No additional frontend edits. Intentional assertion changes and exact limitations are listed in the [handoff](docs/browser-merge-handoff.md).
 
 COMMIT: Merge browser helpers with run cleanup and review protections
+
+## 01:36 report
+
+Resolved all 13 conflicts, retaining both sides. Unified resume preserves metrics, frozen answers, repair baselines and the remaining repair budget. Added browser/process cleanup and visual-evidence regressions. No frontend edits or git writes.
+
+All three type checks passed, along with 93 runnable harness tests and targeted backend suites. Native ps, Chrome/Electron, clean-runtime workflows and the blocked mkfifo test still need the overseer.
+
+New skills add approximately 11.6k tokens across the initial Codex phase prompts. Optional verification references add roughly 13.6k more.
+
+[Handoff with exact results and test reconciliations](~/Documents/CDAO/fh-org/astra-merge/docs/skills-merge-handoff.md)
+
+COMMIT: Merge skills and visual review with guarded resume

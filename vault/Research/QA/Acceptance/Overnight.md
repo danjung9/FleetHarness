@@ -102,3 +102,5 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-stop-detached.m
 ## Receipt review log
 
 [E] Preparation only so far. Main receives script paths through the bridge. Append landed revision, build identity, receipt path, independently confirmed results and limits as they arrive. Combined acceptance remains pending.
+
+[E, runtime coordination November 5] The bridge delivered the ready handoff and module-loading correction. A subsequent request for the clean landed target and native receipts timed out after ten minutes. Latest source recheck still shows HEAD 8053707 with 13 unmerged index paths. No test was run against that unfinished integration and no combined runtime PASS is inferred. Native restart/resume fixture preparation continues independently.

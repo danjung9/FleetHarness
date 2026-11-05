@@ -44,7 +44,7 @@ summary: "Submission wording needs reconciliation with the current factory and c
 
 ### Explicitly unproven items, already labeled correctly
 
-[E] Draft.md:15-22 and Next-30-60-90.md:15-21 leave user/problem confirmation, measured burden, team/terms, category disposition, rights split, owners/resources, final human acceptance and submission format/authorization blank. Draft.md:47 and64-68 withhold benefit, government-device readiness, durable action history and fielding commitments. No supporting completion receipt was found; these are correctly declared gaps, not fabricated achievements. Do not replace them with invented names, approvals or savings.
+[E] Draft.md:15-22 and Next-30-60-90.md:15-21 leave user/problem confirmation, measured burden, team/terms, category disposition, rights split, owners/resources, final human acceptance and submission format/authorization blank. Draft.md:47 and 64-68 withhold benefit, government-device readiness, durable action history and fielding commitments. No supporting completion receipt was found; these are correctly declared gaps, not fabricated achievements. Do not replace them with invented names, approvals or savings.
 
 ### Claims checked without a new defect
 

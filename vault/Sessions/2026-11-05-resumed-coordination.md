@@ -33,3 +33,11 @@ summary: "Resumed observation of current integration and evidence readiness."
 [E, 01:25 follow-up] Recovered and inspected the newer native Stop receipt 6b784ff0: all seven checks pass at clean 16a6940, independently reviewed by existing QA. Corrected submission-review wording to credit that bounded closure. The current combined build remains a separate acceptance target. The pinned merge review found an evidence-binding gap; an isolated production-function probe reproduced a retained satisfactory verdict after an injected application mutation, with zero reverifications. See [[Research/Backend-Audit/Merge-Evidence-Review]].
 
 [E, 01:26 handoff] Current merge and submission audits are delivered. Bridge read markers confirm the substantive findings were read. Requested a direct task callback with the corrected final commit and full native receipts. The current integration still has unresolved merge entries; no release or full project completion is claimed.
+
+[P, overnight assignment] Continue read-only merge, submission and per-round scoreboard audit. Compare both branch histories, honor the intentional full-access decision, and send exact material findings through the bridge. Main owns builds, GUI and the runner restart after landing.
+
+[E, 01:37 review] Two bounded parent reviews completed against pinned 8053707. No test files disappeared and no additional unexplained Dan-side loss was found. [[Research/Backend-Audit/Merge-Parent-Review]] records a preview-startup Stop race and filename-triggered corruption of persisted Resume baselines. These source interleavings were not executed. The subsequent 29ac921 merge is still in progress and excluded from committed-loss claims.
+
+[E] Extended [[Research/Backend-Audit/Submission-Claims-Review]] to every Submission document, including the hidden journal, with exact source lines and correctly labeled evidence gaps. Historical closed-profile evidence is supported but cannot describe the current full-access product.
+
+[E] [[Research/QA/Ten/Round-Reconciliation-2026-11-05]] reconciles all 18 saved final receipts across four rounds. Actual defects are Round 2's false completion headline, one stale experiment verdict and five broken experiment evidence links. No satisfactory benchmark result is established. No new round was present in the inspected runtime directories.
