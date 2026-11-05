@@ -55,11 +55,11 @@ const rules: [PlainCode, RegExp][] = [
   ['planning-review', /^Independent planning review still requires changes/i],
 
   ['judge-acceptance', /^Read and accept the independent check gaps before approving this prototype\.$/],
-  ['download-source', /This app uses Python or a command-line engine/i],
+  ['download-source', /This app uses Python or a command-line engine|verified comparison runtime is missing its delivery adapter/i],
   ['download-dependencies', /This app needs dependencies that are unavailable offline/i],
   ['app-stop', /The app could not stop/i],
   ['app-start', /The app could not start|The app has no free local address/i],
-  ['app-settings', /The app needs settings before it can start/i],
+  ['app-settings', /The app needs settings before it can start|verified comparison runtime has invalid delivery settings/i],
   ['download', /Packaging stopped|Packaging exceeded|Could not package the app|Executable downloads support|processor is not supported for executable downloads|No local Electron runtime|packager did not produce|Invalid Electron runtime version|Could not roll back the download/i],
   ['files', /Save the download outside|Choose an archive file/i],
   ['output', /standalone app needs an index.html/i],

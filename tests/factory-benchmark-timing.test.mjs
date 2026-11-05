@@ -93,8 +93,11 @@ async function timingFixture(t, { acceptedCli = false, timedOut = false, failGra
     } catch (error) { setupErrors.push(error); throw error; }
   });
   t.mock.method(fs, 'open', async function (file, ...args) {
-    if (active && path.basename(path.dirname(String(file))) === 'run-checkpoints') {
+    if (active && path.basename(path.dirname(String(file))) === 'run-checkpoints' && args[0] !== 'wx') {
       elapse(0.5); active.grading += 0.5; active.repairReads++;
+    }
+    if (active && accepted && String(file).startsWith(accepted.workspace + path.sep) && args[0] !== 'wx') {
+      elapse(1.25); active.grading += 1.25; active.sourceReads++;
     }
     return original.open(file, ...args);
   });

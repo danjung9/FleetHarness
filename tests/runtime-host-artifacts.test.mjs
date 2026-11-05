@@ -34,7 +34,7 @@ function fixture(file = 'data/coefficient.json') {
     cases: [{ id: 'first', input: 2, expected: 4 }, { id: 'second', input: 3, expected: 6 }] }] };
   const engine = `import { readFileSync } from 'node:fs'; const input=JSON.parse(readFileSync(0,'utf8')); console.log(JSON.stringify(input*Number(readFileSync(${JSON.stringify(file)},'utf8'))));`;
   const tests = `import test from 'node:test'; import assert from 'node:assert/strict'; import {readFileSync} from 'node:fs'; test('bundled coefficient',()=>assert.equal(Number(readFileSync(${JSON.stringify(file)},'utf8')),2));`;
-  return { solution, plan, evaluation, files: { 'solution-contract.json': JSON.stringify(solution), 'acceptance-plan.json': JSON.stringify(plan),
+  return { solution, plan, evaluation, files: { '.fleet/packet.json': JSON.stringify({ acceptance }), 'solution-contract.json': JSON.stringify(solution), 'acceptance-plan.json': JSON.stringify(plan),
     'evaluation-plan.json': JSON.stringify(evaluation), 'ux-spec.json': JSON.stringify(ux), 'engine.mjs': engine, 'engine.test.mjs': tests, [file]: '2' } };
 }
 

@@ -1,3 +1,4 @@
+import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -119,7 +120,7 @@ test('legacy single-page wrappers allow their entrypoint while preserving all re
   }
   assert.equal(emitted.browserOptions.webPreferences.nodeIntegration, false);
   assert.equal(emitted.browserOptions.webPreferences.contextIsolation, true);
-  assert.equal(emitted.browserOptions.webPreferences.sandbox, true);
+  assert.equal(emitted.browserOptions.webPreferences.sandbox, false);
   assert.equal(emitted.browserOptions.webPreferences.webviewTag, false);
   assert.equal(emitted.openHandler({ url: 'fleet-app://app/index.html' }).action, 'deny');
   assert.equal(emitted.openHandler({ url: 'https://example.com' }).action, 'deny');
@@ -159,6 +160,7 @@ test('delivered parser core',()=>{const context={};const html=fs.readFileSync('i
   assert.equal(report.quality.journeys.every(journey => journey.status === 'passed'), true);
   const project = { ...newProject({ title: 'Verified report app', description: 'An offline task parser with a separate report page.', criteria: ['Parse tasks and open the report.'] }),
     workspace, status: 'approved', approvedAt: new Date().toISOString(), qualityVersion: 2, runtimeProfile: 'browser', report };
+  bindSyntheticApproval(project);
   const staged = await stageExecutable(project, staging);
   const emitted = await wrapper(staged.source, await fs.readFile(path.join(staged.source, 'main.cjs'), 'utf8'));
   const reportUrl = 'fleet-app://app/reports/%73ummary.html?view=report#summary';

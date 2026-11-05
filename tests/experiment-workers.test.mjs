@@ -59,7 +59,7 @@ async function fixture(t, options = {}) {
           const candidate = await fs.stat(path.join(cwd, 'runtime-guide.md')).then(() => true, () => false);
           if (!candidate) {
             const packet = JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8'));
-            const contract = behavior(packet.acceptance); options.behaviorTransform?.(contract);
+            const contract = behavior(packet.acceptance); options.behaviorTransform?.(contract, packet.acceptance);
             await write(cwd, { 'behavior-contract.json': contract, 'evaluation-plan.json': evaluation });
           } else {
             const shared = JSON.parse(await fs.readFile(path.join(cwd, 'behavior-contract.json'), 'utf8')), contract = execution(shared, python); options.executionTransform?.(contract);
@@ -96,7 +96,7 @@ async function fixture(t, options = {}) {
   const sharedProject = { ...structuredClone(source), id: 'shared-fixture' };
   const sharedWorker = await workers.sharedPlanner(context(sharedProject));
   t.after(async () => { await sharedWorker.stop(); await fs.rm(root, { recursive: true, force: true }); });
-  const plan = async () => { await sharedWorker.start(); await sharedWorker.wait(); return sharedWorker.result(); };
+  const plan = async () => { await sharedWorker.start(); await sharedWorker.wait(); try { return await sharedWorker.result(); } catch (error) { error.message += '\n' + snapshots.get(sharedProject.id).logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'); throw error; } };
   const candidate = async (shared, profileId = 'node-cli') => {
     const profile = experimentProfiles.find(value => value.id === profileId), record = { id: profileId === 'node-cli' ? 'candidate-fixture' : 'candidate-python-fixture', experimentId: experiment.id, profileId: profile.id, profileVersion: profile.version, baseline: profileId === 'node-cli', status: 'queued', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     const project = { ...structuredClone(source), id: record.id };
@@ -182,16 +182,19 @@ test('shared recovery after immutable commit does not regenerate private referen
 });
 
 test('shared explicit deferral remains visible while required computational scope can pass', { timeout: 60_000 }, async t => {
-  const h = await fixture(t, { behaviorTransform: contract => {
-    assert.ok(contract.criteria.length >= 2); const deferred = contract.criteria.at(-1);
-    deferred.disposition = 'deferred'; deferred.reason = 'Operational review occurs after this local prototype.'; deferred.capabilityIds = [];
+  let deferredId;
+  const h = await fixture(t, { behaviorTransform: (contract, acceptance) => {
+    const optional = acceptance.find(item => item.method === 'human' && item.provenance?.length && item.provenance.every(source => source.kind === 'recipe'));
+    assert.ok(optional, 'Defer an optional recipe review while retaining all primary outputs.');
+    deferredId = optional.id; const deferred = contract.criteria.find(item => item.criterionId === deferredId);
+    deferred.disposition = 'deferred'; deferred.reason = 'human-authority: The operational owner must review the prototype on the intended device before deployment; the local calculation remains implemented.'; deferred.capabilityIds = [];
     contract.capabilities[0].criterionIds = contract.capabilities[0].criterionIds.filter(id => id !== deferred.criterionId);
   } });
   const shared = await h.plan(), { worker, record } = await h.candidate(shared); await worker.start(); await worker.wait();
   const outcome = await worker.result(), projection = h.snapshots.get(record.id);
   assert.equal(projection.status, 'review', projection.error); assert.equal(projection.report.quality.requirementsMet, false);
   assert.equal(outcome.mandatoryPassed, true); assert.equal(outcome.requiredScopePassed, true);
-  assert.equal(projection.report.quality.criteria.at(-1).status, 'unverified');
+  assert.equal(projection.report.quality.criteria.find(item => item.criterionId === deferredId).status, 'unverified');
 });
 
 test('structured provider failures are censored and frozen-input violations retain integrity classification', { timeout: 30_000 }, async t => {
@@ -212,7 +215,7 @@ test('candidate planning cannot include private learning context in the delivere
   const h = await fixture(t, { executionTransform: contract => { contract.runtime.files.push('memory-context.md'); }, classifyFailure: () => 'implementation' });
   const shared = await h.plan(), { worker, record } = await h.candidate(shared); await worker.start(); await worker.wait();
   const result = await worker.result(); assert.equal(result.mandatoryPassed, false);
-  assert.match(h.snapshots.get(record.id).error, /learning guidance|reserved|memory-context/);
+  assert.match(h.snapshots.get(record.id).logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /learning guidance|reserved|memory-context/);
   await assert.rejects(h.workers.compiled(record));
   const evidence = await h.workers.failureEvidence(record);
   assert.equal(experimentContractHash(evidence), result.evidenceHash);

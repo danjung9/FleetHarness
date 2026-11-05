@@ -72,10 +72,10 @@ async function savedResume(t, backend) {
 for (const account of [undefined, { status: 'disconnected' }]) test(`Codex Start requires a connected account even with configured models (${account?.status ?? 'missing'})`, async t => {
   const h = await backendFixture(t, { backend: 'codex' });
   h.codex.account = account;
-  await assert.rejects(h.backend.start(h.project.id), /build service is not connected/);
+  const saved = structuredClone(h.project);
+  await assert.rejects(h.backend.start(h.project.id), error => { assert.match(error.message, /reconnect.*Model settings/); assert.match(error.cause.message, /sign in.*API key/); return true; });
   assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
-  assert.equal(h.project.status, 'failed');
-  assert.match(h.project.error, /build service is not connected/);
+  assert.deepEqual(h.project, saved, 'Authentication refusal must preserve the prior project.');
   assert.doesNotMatch(h.errors(), /TypeError/);
 });
 

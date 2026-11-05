@@ -1,3 +1,4 @@
+import { deliveryRuntime } from './delivery-runtime.js';
 import { assertCredentialFreeDelivery } from './delivery-secrets.js';
 import { redactSecrets } from './secrets.js';
 import { constants, promises as fs } from 'node:fs';
@@ -157,7 +158,7 @@ net.Server.prototype.listen = function(...args) {
 };\n`);
   }
   await atomicHostWrite(source, 'main.cjs', service
-    ? standaloneServiceMain(project.title, appId, solution.runtime, payloadHash.digest('hex'))
+    ? standaloneServiceMain(project.title, appId, deliveryRuntime(solution.runtime, manifest, Boolean(project.report?.quality?.experiment)), payloadHash.digest('hex'))
     : standaloneMain(project.title, appId, declared, payloadDirectory));
   await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);

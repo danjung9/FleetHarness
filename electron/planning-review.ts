@@ -59,12 +59,22 @@ function canonical(value: unknown): string {
     ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 }
 function assertDataInventory(data: BriefDataSnapshot) {
+  const connected = data?.connectedSources ?? [];
+  const contextFiles = Array.isArray(connected) && connected.length ? ['context/README.md', ...connected.map(source => source?.path)] : [];
+  if (!Array.isArray(connected) || connected.length > 7 || connected.some(source =>
+    !source || !/^[a-f0-9-]{36}$/.test(source.id) || source.path !== 'context/' + source.id + '.json')
+    || new Set(contextFiles).size !== contextFiles.length
+    || (connected.length && (data.mode !== 'provided' || !/^[a-f0-9]{64}$/.test(data.connectedContextHash ?? '')
+      || contextFiles.some(name => !data.files?.includes(name))))) {
+    throw new Error('Planning review prepared data has an invalid file inventory or identity.');
+  }
   if (!data || !['provided', 'synthetic'].includes(data.mode) || !/^[a-f0-9]{64}$/.test(data.hash)
-    || !Array.isArray(data.files) || !data.files.length || data.files.length > 11
+    || !Array.isArray(data.files) || !data.files.length || data.files.length > 19
     || new Set(data.files).size !== data.files.length || !data.files.includes('inputs/manifest.json')
     || data.files.some(name => typeof name !== 'string'
       || !(name.startsWith('inputs/') && /^[^/\\\u0000-\u001f]+$/.test(name.slice(7)) && !['.', '..'].includes(name.slice(7)))
-        && !(data.mode === 'synthetic' && syntheticDataFiles.includes(name)))
+        && !(data.mode === 'synthetic' && syntheticDataFiles.includes(name))
+        && !contextFiles.includes(name))
     || (data.mode === 'provided' ? data.files.length < 2
       : data.files.length !== 3 || syntheticDataFiles.some(name => !data.files.includes(name)))) {
     throw new Error('Planning review prepared data has an invalid file inventory or identity.');

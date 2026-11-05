@@ -1,3 +1,4 @@
+import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -43,6 +44,7 @@ async function fixture(t) {
   const project = { ...newProject({ title: 'Staging integrity', description: 'An offline fixture for verified application staging.', criteria: ['Parse tasks.'] }),
     workspace, status: 'approved', approvedAt: new Date().toISOString(),
     report: { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(workspace) } };
+  bindSyntheticApproval(project);
   await assertExecutableSource(project);
   return { root, workspace, staging, project, files };
 }
@@ -55,17 +57,18 @@ async function assertRejectedCleanly(input, stage) {
 }
 
 async function interceptAssetCopy(input, action, run) {
-  const originalCopyFile = fs.copyFile;
-  const asset = await fs.realpath(path.join(input.workspace, 'assets/status.mjs'));
+  const originalRename = fs.rename;
+  const asset = path.join(await fs.realpath(input.staging), 'source/application/assets/status.mjs');
   let injected = false;
-  fs.copyFile = async (source, destination, ...args) => {
-    if (source !== asset) return originalCopyFile(source, destination, ...args);
+  fs.rename = async (temporary, destination, ...args) => {
+    if (destination !== asset || injected) return originalRename(temporary, destination, ...args);
     injected = true;
-    return action({ source, destination, copy: () => originalCopyFile(source, destination, ...args) });
+    return action({ source: path.join(input.workspace, 'assets/status.mjs'), destination,
+      copy: () => originalRename(temporary, destination, ...args) });
   };
   try { await run(); }
-  finally { fs.copyFile = originalCopyFile; }
-  assert.equal(injected, true, 'The controlled secondary-asset copy boundary was exercised.');
+  finally { fs.rename = originalRename; }
+  assert.equal(injected, true, 'The controlled atomic payload publication boundary was exercised.');
 }
 
 test('executable staging preserves exact nested, binary, empty and dependency payload bytes', { concurrency: false }, async t => {
@@ -84,14 +87,18 @@ test('executable staging preserves exact nested, binary, empty and dependency pa
   assert.equal(await fs.readFile(path.join(input.staging, 'caller-owned.txt'), 'utf8'), 'Keep this unrelated file.');
 });
 
-test('executable staging rejects secondary bytes copied during a source edit restored before final verification', { concurrency: false }, async t => {
+test('executable staging retains approved snapshot bytes during a restored source edit', { concurrency: false }, async t => {
   const input = await fixture(t);
   await interceptAssetCopy(input, async ({ source, copy }) => {
     const approved = await fs.readFile(source);
     await fs.writeFile(source, 'document.body.dataset.result="UNVERIFIED";');
     try { return await copy(); }
     finally { await fs.writeFile(source, approved); }
-  }, () => assertRejectedCleanly(input, () => stageExecutable(input.project, input.staging)));
+  }, async () => {
+    const staged = await stageExecutable(input.project, input.staging);
+    assert.deepEqual(await fs.readFile(path.join(staged.source, 'application/assets/status.mjs')), input.files.get('assets/status.mjs'));
+    assert.equal(await sourceHash(input.workspace), input.project.report.sourceHash);
+  });
 });
 
 for (const relative of ['assets/status.mjs', 'index.html']) {
@@ -136,6 +143,7 @@ test('executable staging rejects a payload symlink to another declared file with
   // ordinary files even when a link would currently resolve inside its root.
   await fs.writeFile(path.join(input.workspace, 'evaluate.cjs'), input.files.get('assets/status.mjs'));
   input.project.report.sourceHash = await sourceHash(input.workspace);
+  bindSyntheticApproval(input.project);
   await interceptAssetCopy(input, async ({ destination, copy }) => {
     await copy();
     await fs.rm(destination);

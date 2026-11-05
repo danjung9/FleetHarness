@@ -60,7 +60,8 @@ export class RuntimeBroker {
         writePaths: options.writePaths, signal, timeoutMs: options.timeoutMs,
         maxOutputBytes: options.maxOutputBytes ?? runtimeBrokerLimits.outputBytes,
         onStdout: chunk => broker.receive(chunk), onStderr: chunk => options.onLog?.(broker.redact(chunk.toString('utf8'))) });
-      void broker.process.done.then(result => broker.fail(new Error('Runtime broker exited with ' + result.exitCode + '.')), error => broker.fail(error));
+      void broker.process.done.then(result => broker.fail(new Error('Runtime broker exited with ' + result.exitCode + '.'
+        + (result.stderr ? '\n' + result.stderr : ''))), error => broker.fail(error));
       await broker.ready; clearTimeout(timer); return broker;
     } catch (error) {
       // The readiness timer can abort sandbox setup before it returns a process.

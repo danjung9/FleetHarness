@@ -1,3 +1,4 @@
+import { briefHash } from '../dist-electron/electron/pi-backend.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -14,17 +15,17 @@ const additional = { name: 'observations.csv', kind: 'file', content: 'name,valu
 const legacyInputHash = '454ae8dfccf43ee2f66ca620cc97e2cc720c5ebecb8c416a045c22ad39d8e98d';
 const legacyNoInputHash = '0d1e8e9077fd945faa2b6fa9932b90197eb7a510b9f7ac498527e32b89c1581c';
 
-function projectWith(inputs = [sample]) {
+function projectWith(inputs = [sample], connectedData) {
   return newProject({ title: 'Resume supplied data', description: 'Resume a command-line build with supplied example inputs.',
-    criteria: ['Calculate sum.'], dataInputs: structuredClone(inputs) });
+    criteria: ['Calculate sum.'], dataInputs: structuredClone(inputs), connectedData });
 }
 
-async function fixture(t, inputs = [sample], savedHash) {
+async function fixture(t, inputs = [sample], savedHash, connectedData) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-checkpoint-inputs-'));
   const store = new LearningStore(root);
   t.after(async () => { store.close(); await fs.rm(root, { recursive: true, force: true }); });
   await store.init();
-  const project = projectWith(inputs);
+  const project = projectWith(inputs, connectedData);
   project.runId = 'input-recovery-run';
   project.workspace = path.join(root, 'workspace');
   project.status = 'stopped'; project.resumeStage = 'build';
@@ -60,6 +61,7 @@ for (const order of keyOrders) {
     project.dataInputs = [Object.fromEntries(order.map(key => [key, sample[key]]))];
     const before = JSON.stringify(project);
     assert.equal(briefFingerprint(project), legacyInputHash);
+    assert.equal(briefHash(project), briefHash(projectWith()));
     assert.equal(JSON.stringify(project), before, 'Fingerprinting must not rewrite the supplied input object.');
   });
 }
@@ -76,6 +78,7 @@ for (const [label, inputs, savedHash] of [
     const before = await fs.readFile(h.checkpointFile, 'utf8');
     assert.deepEqual(await readRunCheckpoint(h.root, h.persisted), h.checkpoint);
     assert.equal(briefFingerprint(h.persisted), briefFingerprint(h.project));
+    assert.equal(briefHash(h.persisted), briefHash(h.project));
     assert.equal(await fs.readFile(h.checkpointFile, 'utf8'), before);
   });
 }
@@ -98,6 +101,7 @@ for (const [label, edit] of edits) {
     const changed = structuredClone(h.project);
     edit(changed);
     assert.notEqual(briefFingerprint(changed), h.checkpoint.briefHash);
+    assert.notEqual(briefHash(changed), briefHash(h.project));
     const before = await fs.readFile(h.checkpointFile, 'utf8');
     await assert.rejects(readRunCheckpoint(h.root, changed), /brief or attached inputs changed/);
     assert.equal(await fs.readFile(h.checkpointFile, 'utf8'), before);
@@ -112,4 +116,23 @@ test('no-input SQLite recovery and omitted inputs preserve the existing fingerpr
   delete omitted.dataInputs;
   assert.equal(briefFingerprint(omitted), legacyNoInputHash);
   assert.deepEqual(await readRunCheckpoint(h.root, omitted), h.checkpoint);
+});
+
+test('SQLite reload preserves connector identity while actual selection edits reject recovery', async t => {
+  const selection = { id: '12345678-1234-1234-1234-123456789abc', digest: 'a'.repeat(64), includeInApp: true };
+  const h = await fixture(t, [sample], undefined, [selection]);
+  assert.deepEqual(Object.keys(h.project.connectedData[0]), ['id', 'digest', 'includeInApp']);
+  assert.deepEqual(Object.keys(h.persisted.connectedData[0]), ['digest', 'id', 'includeInApp']);
+  const before = await fs.readFile(h.checkpointFile, 'utf8');
+  assert.equal(briefFingerprint(h.persisted), briefFingerprint(h.project));
+  assert.equal(briefHash(h.persisted), briefHash(h.project));
+  assert.deepEqual(await readRunCheckpoint(h.root, h.persisted), h.checkpoint);
+  for (const edit of [{ id: '22345678-1234-1234-1234-123456789abc' }, { digest: 'b'.repeat(64) }, { includeInApp: false }]) {
+    const changed = structuredClone(h.project);
+    Object.assign(changed.connectedData[0], edit);
+    assert.notEqual(briefFingerprint(changed), briefFingerprint(h.project));
+    assert.notEqual(briefHash(changed), briefHash(h.project));
+    await assert.rejects(readRunCheckpoint(h.root, changed), /brief or attached inputs changed/);
+  }
+  assert.equal(await fs.readFile(h.checkpointFile, 'utf8'), before);
 });

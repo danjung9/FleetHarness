@@ -1,3 +1,4 @@
+import { syntheticRuntimeExport } from './helpers/exported-runtime-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -92,7 +93,7 @@ async function fixture(t, runtime, surface, custom = true) {
     await response.arrayBuffer();
     return { origin: new URL(lease).origin, cookie };
   }
-  const destination = await exportVerifiedBundle({ workspace, parent: root, title: 'Chunked transport',
+  const destination = await exportVerifiedBundle({ ...syntheticRuntimeExport(runtime, entrypoint, [entrypoint, adapter]), workspace, parent: root, title: 'Chunked transport',
     verifiedHash: await sourceHash(workspace), deliveryMarkdown: 'Run the included standalone adapter.' });
   const origin = await standalone(t, execution.executable, [...(runtime === 'python' ? ['-I', '-B'] : []),
     path.join(destination, adapter), '--serve', path.join(destination, entrypoint)]);

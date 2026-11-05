@@ -65,6 +65,17 @@ export async function prepareMacosIsolation(profile: IsolationProfile, scratch: 
   const nodeRuntime = actual === await fs.realpath(process.execPath);
   let nodeBin: string | undefined;
   if (nodeRuntime) {
+    // Homebrew runtimes load versioned libraries from Cellar, not from the
+    // /opt/homebrew/lib aliases in the minimal policy. Use the host loader's
+    // actual library inventory, including transitive dependencies. Never grant
+    // the entire installation prefix or override an explicit denied subtree.
+    const report = process.report?.getReport() as { sharedObjects?: string[] } | undefined;
+    for (const library of report?.sharedObjects ?? []) {
+      if (!path.isAbsolute(library) || library.startsWith('/System/') || library.startsWith('/usr/lib/')) continue;
+      const resolved = await fs.realpath(library);
+      if (Object.entries(profile.filesystem).some(([root, access]) => access === 'deny' && inside(root, resolved))) continue;
+      profile.filesystem[resolved] ??= 'read';
+    }
     nodeBin = path.join(scratch, 'bin');
     await fs.mkdir(nodeBin, { mode: 0o700 });
     await fs.writeFile(path.join(nodeBin, 'node'),

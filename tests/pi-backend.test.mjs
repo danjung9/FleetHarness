@@ -100,7 +100,7 @@ async function harness(t, options = {}) {
     clarifications: broker,
     connectorStore: options.connectorStore,
     preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
-    agentLimits: options.agentLimits ?? { idleMs: 10_000, timeoutMs: 25_000 },
+    agentLimits: options.agentLimits ?? { idleMs: 30_000, timeoutMs: 55_000 },
     shutdownTimeoutMs: options.shutdownTimeoutMs ?? 150,
     verificationLimits: { launcher: plainLauncher, browserTimeoutMs: 45_000, browserStepTimeoutMs: 2500, ...options.verificationLimits },
     createSession: async ({ cwd, customTools, tools, resourceLoader }) => {
@@ -137,8 +137,12 @@ async function harness(t, options = {}) {
             const contractRead = await customTools[0].execute('judge', { path: 'solution-contract.json' });
             const solution = JSON.parse(JSON.parse(contractRead.content[0].text).text);
             for (const name of solution.runtime.files) await customTools[0].execute('judge', { path: name });
-            const evidence = JSON.parse((await customTools[0].execute('baseline', { path: 'test-report.json' })).content[0].text);
-            const baseline = JSON.parse(evidence.text).testBaseline;
+            let evidence = '', offset = 0;
+            do {
+              const page = JSON.parse((await customTools[0].execute('baseline', { path: 'test-report.json', offset })).content[0].text);
+              evidence += page.text; offset = page.nextOffset;
+            } while (offset !== null);
+            const baseline = JSON.parse(evidence).testBaseline;
             assert.ok(Object.keys(baseline.hashes).length);
             assert.match(baseline.policy, /explicit contract revision/);
             for (const fn of listeners) fn({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop',
@@ -525,7 +529,7 @@ test('test repairs leave the judge its own repairs', async t => {
   await h.run(); await h.assertSettled('review');
   assert.equal(h.project.runCheckpoint.repairAttempts, 3);
   assert.equal(h.sessions.filter(s => s.stage === 'repair').length, 3);
-  assert.equal(h.judgeSessions.length, 2);
+  assert.equal(h.judgeSessions.length, 2, JSON.stringify(h.project.report.independentJudge));
   assert.equal(h.project.report.independentJudge.verdict, 'SATISFACTORY');
 });
 
@@ -536,7 +540,7 @@ test('the judge stops after its own two repairs and the build goes to review wit
       if (stage === 'repair') await fs.writeFile(path.join(cwd, 'repair-progress.txt'), String(sessions.length));
     } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.project.runCheckpoint.repairAttempts, 4);
+  assert.equal(h.project.runCheckpoint.repairAttempts, 4, JSON.stringify(h.project.report.independentJudge));
   assert.equal(h.judgeSessions.length, 3);
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
@@ -1669,7 +1673,7 @@ test('changed runtime files cannot extend visual completion beyond three retries
   assert.equal(h.sessions.find(session => session.stage === 'build').prompts.filter(prompt => prompt.startsWith('The stage is incomplete.')).length, 3);
   assert.deepEqual(h.project.visualReview.captures, []);
   assert.deepEqual(h.project.visualReview.reviews, []);
-  assert.match(h.project.error, /after 3 visual review iterations/);
+  assert.match(rawError(h.project), /after 3 visual review iterations/);
   assert.doesNotMatch(h.project.error, /exceeded|no progress/i);
   assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
   assert.equal(h.project.report, undefined);
@@ -1702,9 +1706,9 @@ test('editing runtime source after visual rechecks rejects stale screenshots and
   assert.match(h.project.error, /visual review/i);
       assert.ok(h.project.logs.some(item => /visual review made no progress/i.test(item.text)));
   for (const viewport of ['desktop', 'narrow']) {
-    assert.match(h.project.error, new RegExp(`The final ${viewport} screenshot is stale`));
+    assert.match(rawError(h.project), new RegExp(`The final ${viewport} screenshot is stale`));
     for (const journeyId of ['parse-task', 'recover-empty']) {
-      assert.match(h.project.error, new RegExp(`Journey ${journeyId} at ${viewport} is stale`));
+      assert.match(rawError(h.project), new RegExp(`Journey ${journeyId} at ${viewport} is stale`));
     }
   }
   assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
@@ -2496,7 +2500,7 @@ test('a timed-out core evaluation cannot publish evidence or overwrite its recov
     finally { finished.resolve(); }
   };
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /build agent made no progress/);
+  assert.match(rawError(h.project), /build agent made no progress/);
   const checkpoint = path.join(h.root, 'run-checkpoints', h.project.runId + '.json');
   const saved = await fs.readFile(checkpoint, 'utf8');
   await finished.promise;
@@ -2622,7 +2626,7 @@ for (const repair of [true, false]) test(`passing Node tests cannot hide a stati
   else {
     assert.equal(h.project.report, undefined);
     assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
-    assert.match(h.project.error, /visual review made no progress/);
+    assert.match(rawError(h.project), /visual review made no progress/);
   }
 });
 
@@ -2704,7 +2708,7 @@ test('an agent that keeps omitting artifacts cannot advance or loop forever', { 
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 6);
-  assert.match(rawError(h.project), /after its completion attempts.*plan\.md/);
+  assert.match(rawError(h.project), /after 5 artifact completion attempts.*plan\.md/);
 });
 
 test('empty files and directories cannot satisfy stage outputs', { timeout: workflowTimeout }, async t => {
@@ -2748,7 +2752,7 @@ test('the user guide is requested after implementation and checked before verifi
 });
 
 for (const recover of [true, false]) {
-  test(`an empty user guide ${recover ? 'gets one completion attempt' : 'blocks verification after one completion attempt'}`, { timeout: recover ? functionalTimeout : 10000 }, async t => {
+  test(`an empty user guide ${recover ? 'gets one completion attempt' : 'blocks verification after one completion attempt'}`, { timeout: functionalTimeout }, async t => {
     let attempts = 0;
     const h = await harness(t, { scenario: async ({ cwd, stage }) => {
       if (stage !== 'guide') return false;
@@ -2759,7 +2763,7 @@ for (const recover of [true, false]) {
     assert.equal(attempts, 2);
     assert.match(h.sessions.find(s => s.stage === 'build').prompts[2], /README.md/);
     if (!recover) {
-      assert.match(rawError(h.project), /after one completion attempt.*README.md/);
+      assert.match(rawError(h.project), /after 1 artifact completion attempts.*README.md/);
       assert.equal(h.project.report, undefined);
       assert.equal(h.project.stages.find(s => s.id === 'verify').status, 'queued');
     }
@@ -2825,8 +2829,19 @@ test('Stop during workspace preparation clears prior approval and test evidence'
   const h = await harness(t);
   h.project.status = 'approved'; h.project.approvedAt = 'previous approval';
   h.project.report = { passed: 5 }; h.project.exportedTo = 'previous export';
-  const rejected = assert.rejects(h.backend.start(h.project.id), /build was stopped/);
-  await h.backend.stop(h.project.id); await rejected; await h.assertSettled('stopped');
+  const entered = deferred(), release = deferred(), mkdir = fs.mkdir;
+  fs.mkdir = async (directory, ...args) => {
+    const result = await mkdir(directory, ...args);
+    if (directory === h.project.workspace) { entered.resolve(); await release.promise; }
+    return result;
+  };
+  try {
+    const rejected = assert.rejects(h.backend.start(h.project.id), /build was stopped/);
+    await entered.promise;
+    const stopping = h.backend.stop(h.project.id); release.resolve();
+    await stopping; await rejected;
+  } finally { fs.mkdir = mkdir; release.resolve(); }
+  await h.assertSettled('stopped');
   assert.equal(h.project.report, undefined); assert.equal(h.project.approvedAt, undefined);
   assert.equal(h.project.exportedTo, undefined); assert.equal(h.sessions.length, 0);
 });

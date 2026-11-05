@@ -193,7 +193,7 @@ test('version 2 browser staging isolates dependency manifests and generated main
   assert.equal(browserOptions.webPreferences.sandbox, false);
   const script = await handler({ url: 'fleet-app://app/assets/status.mjs', method: 'GET' });
   assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
-  assert.equal(script.headers.get('content-security-policy'), null);
+  assert.match(script.headers.get('content-security-policy'), /script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'/);
   assert.equal(await script.text(), 'document.body.dataset.assetLoaded="yes";');
   const dependencyManifest = await handler({ url: 'fleet-app://app/package.json', method: 'GET' });
   assert.equal(dependencyManifest.status, 200);

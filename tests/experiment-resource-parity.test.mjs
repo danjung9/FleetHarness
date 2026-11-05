@@ -71,6 +71,7 @@ async function plannedExport(t, runtime) {
   const project = { id: candidate.id, workspace, phasePlan: [{ id: 'plan' }], systemDesign: { definition: execution.systemDesign } };
   const scoped = await workers.candidateWorker({ experiment, candidate, profile, project, signal: new AbortController().signal });
   await scoped.initialize(project);
+  await write(workspace, ".fleet/packet.json", { acceptance });
   const planned = await scoped.plan({ project, acceptance, agent: async (_prompt, _outputs, _phase, validate) => {
     await write(workspace, 'execution-contract.json', execution); await validate();
   } });

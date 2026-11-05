@@ -71,13 +71,13 @@ test('live benchmark interrupts pending startup and waits for stop cleanup befor
   let stoppedWhilePreparing = false, startupSettled = false, cleanupSettled = false;
   const harness = await fixture(t, async ({ backend, id, index }) => {
     if (index) return;
-    backend.preparing.set(id, { done: startup.promise });
+    backend.active.set(id, { done: startup.promise });
     await startup.promise;
-    backend.preparing.delete(id);
+    backend.active.delete(id);
     startupSettled = true;
   }, async ({ backend, id, index, project }) => {
     if (index) return;
-    stoppedWhilePreparing = backend.preparing.has(id);
+    stoppedWhilePreparing = backend.active.has(id);
     startup.resolve();
     await cleanup.promise;
     cleanupSettled = true;

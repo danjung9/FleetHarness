@@ -7,6 +7,7 @@ import { Store, newProject, sourceHash } from '../dist-electron/electron/storage
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
 import { ExperimentWorkers } from '../dist-electron/electron/experiment-workers.js';
+import { preflightMessages } from '../dist-electron/electron/preflight.js';
 
 const resourcesRoot = path.resolve('.');
 const immediate = () => new Promise(resolve => setImmediate(resolve));
@@ -152,7 +153,11 @@ test('pending fresh authentications reserve all three backend capacity slots', {
 test('failed authentication releases its reservation and preserves the saved project', { timeout: 6000 }, async t => {
   const h = await fixture(t), first = h.start();
   h.authentications[0].reject(new Error('Account service unavailable'));
-  rejected(await first.promise, /Account service unavailable/);
+  const failure = await first.promise;
+  assert.equal(failure.status, 'rejected');
+  assert.equal(failure.error.message, preflightMessages.engine);
+  assert.equal(failure.error.cause.name, 'PreflightError');
+  assert.equal(failure.error.cause.cause.message, 'Account service unavailable');
   await h.unchanged();
   const next = h.start(); assert.equal(h.authentications.length, 2);
   h.authentications[1].resolve();

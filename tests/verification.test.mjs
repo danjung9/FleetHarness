@@ -407,3 +407,17 @@ test('test filenames containing spaces are passed as single paths', async t => {
   const report = await verifyPlain(root, process.execPath, () => {});
   assert.equal(reportPassed(report), true); assert.equal(report.passed, 1);
 });
+
+test('production verification records workspace-relative registered paths through a directory alias', async t => {
+  const root = await workspace(t, 'require("node:test")("real case through alias", () => {});');
+  await fs.mkdir(path.join(root, 'workspace'));
+  await fs.rename(path.join(root, 'app.test.cjs'), path.join(root, 'workspace/app.test.cjs'));
+  const alias = root + '-alias';
+  await fs.symlink(root, alias, 'dir');
+  t.after(() => fs.rm(alias, { force: true }));
+  let launches = 0;
+  const report = await verifyWorkspace(path.join(alias, 'workspace'), process.execPath, () => { launches++; });
+  assert.equal(reportPassed(report), true, report.output);
+  assert.equal(launches, 1);
+  assert.deepEqual(report.registeredTests, [{ file: 'app.test.cjs', tests: 1 }]);
+});

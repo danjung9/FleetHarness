@@ -1,3 +1,4 @@
+import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -35,41 +36,35 @@ async function fixture(t) {
   const project = { ...newProject({ title: 'Manifest integrity', description: 'An offline fixture for verified deployment manifests.', criteria: ['Parse tasks.'] }),
     workspace, status: 'approved', approvedAt: new Date().toISOString(),
     report: { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(workspace) } };
+  bindSyntheticApproval(project);
   return { workspace, staging, project, solution, packet };
 }
 
 async function rejectTransientMetadata(input, relative, replacement) {
-  const originalRead = fs.readFile, metadata = path.join(input.workspace, relative);
-  const approved = await originalRead(metadata);
+  const originalOpen = fs.open, metadata = path.join(input.workspace, relative);
+  const approved = await fs.readFile(metadata);
   let injected = false;
-  fs.readFile = async (file, ...args) => {
-    if (file === metadata && !injected) {
-      // Initial approval checks precede staging. Change the actual file only
-      // when staging reads metadata, then restore it before later source checks.
-      const started = await fs.stat(path.join(input.staging, 'source')).then(() => true, error => {
-        if (error.code === 'ENOENT') return false;
-        throw error;
-      });
-      if (started) {
-        injected = true;
-        if (replacement === undefined) {
-          const hidden = path.join(input.staging, 'temporarily-removed-metadata.json');
-          await fs.rename(metadata, hidden);
-          try { return await originalRead(file, ...args); }
-          finally { await fs.rename(hidden, metadata); }
-        } else {
-          await fs.writeFile(metadata, JSON.stringify(replacement));
-          try { return await originalRead(file, ...args); }
-          finally { await fs.writeFile(metadata, approved); }
-        }
-      }
+  fs.open = async (file, ...args) => {
+    if (file !== metadata || injected) return originalOpen(file, ...args);
+    injected = true;
+    if (replacement === undefined) {
+      const hidden = path.join(input.staging, 'temporarily-removed-metadata.json');
+      await fs.rename(metadata, hidden);
+      try { return await originalOpen(file, ...args); }
+      finally { await fs.rename(hidden, metadata); }
     }
-    return originalRead(file, ...args);
+    await fs.writeFile(metadata, JSON.stringify(replacement));
+    const handle = await originalOpen(file, ...args), read = handle.readFile.bind(handle);
+    handle.readFile = async (...readArgs) => {
+      try { return await read(...readArgs); }
+      finally { await fs.writeFile(metadata, approved); }
+    };
+    return handle;
   };
   try {
     await assert.rejects(() => stageExecutable(input.project, input.staging),
       'A restored metadata edit must not authorize a different deployment payload.');
-  } finally { fs.readFile = originalRead; }
+  } finally { fs.open = originalOpen; await fs.writeFile(metadata, approved); }
   assert.equal(injected, true, 'The staging metadata read experienced the temporary file edit.');
   assert.deepEqual(await fs.readFile(metadata), approved);
   assert.equal(await sourceHash(input.workspace), input.project.report.sourceHash, 'Source is restored to its approved fingerprint.');

@@ -156,7 +156,7 @@ test('dependency host exhaustion is unscored and resumes the same candidate with
   const stageCount = h.stages.length;
   await h.coordinator.resume(run.id); await h.coordinator.wait(run.id);
   const after = h.store.getCandidate(before.id);
-  assert.equal(h.store.getExperiment(run.id).status, 'review', h.store.getExperiment(run.id).error);
+  assert.equal(h.store.getExperiment(run.id).status, 'review', JSON.stringify({ error: h.store.getExperiment(run.id).error, logs: after.executionState.logs.filter(log => log.kind === 'error') }));
   assert.equal(after.status, 'passed', after.error); assert.equal(after.outcome.terminalReason, 'completed');
   assert.equal(after.outcome.mandatoryPassed, true); assert.equal(after.outcome.requiredScopePassed, true);
   assert.equal(after.outcome.repairCount, 0); assert.equal(after.executionState.runId, before.executionState.runId);

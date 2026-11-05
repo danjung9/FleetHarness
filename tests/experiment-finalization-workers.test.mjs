@@ -216,6 +216,7 @@ async function persistenceFixture(t, { failStatus = 'review', createSession } = 
 test('a passing candidate with a failed final save remains unscored and resumes verification to success', { timeout: 60_000 }, async t => {
   const h = await persistenceFixture(t);
   await h.worker.start(); await h.worker.wait();
+  assert.ok(h.failedProjection, JSON.stringify(h.store.getCandidate(h.candidate.id).executionState.logs.filter(log => log.kind === 'error')));
   assert.equal(h.failedProjection.status, 'review');
   assert.equal(h.failedProjection.report.exitCode, 0);
   assert.equal(h.failedProjection.report.failed, 0);
@@ -223,7 +224,7 @@ test('a passing candidate with a failed final save remains unscored and resumes 
   const checkpointPath = path.join(h.root, 'run-checkpoints', h.failedProjection.runId + '.json');
   const checkpointBefore = await fs.readFile(checkpointPath, 'utf8');
   await assert.rejects(h.worker.result(), error => error.classification === 'infrastructure'
-    && /final-state persistence failure/.test(error.message));
+    && /final-state persistence failure/.test(h.store.getCandidate(h.candidate.id).executionState.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n')));
   const projection = h.store.getCandidate(h.candidate.id).executionState;
   assert.equal(projection.status, 'failed'); assert.equal(projection.executionFailure, 'infrastructure');
   assert.equal(projection.resumeStage, 'verify');
@@ -262,7 +263,7 @@ for (const classification of ['implementation', 'budget', 'integrity']) {
     const checkpointBefore = await fs.readFile(checkpointPath, 'utf8');
     const expected = classification === 'integrity' ? 'integrity' : 'infrastructure';
     await assert.rejects(h.worker.result(), error => error.classification === expected
-      && /final-state persistence failure/.test(error.message));
+      && /final-state persistence failure/.test(h.store.getCandidate(h.candidate.id).executionState.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n')));
     const projection = h.store.getCandidate(h.candidate.id).executionState;
     assert.equal(projection.status, 'failed'); assert.equal(projection.executionFailure, expected);
     assert.equal(await fs.readFile(checkpointPath, 'utf8'), checkpointBefore);
@@ -285,7 +286,7 @@ test('stopping a candidate remains cancelled when its final save also fails', { 
   assert.equal(h.failedProjection.status, 'stopped'); assert.equal(h.failedProjection.executionFailure, 'cancelled');
   const outcome = await h.worker.result(), projection = h.store.getCandidate(h.candidate.id).executionState;
   assert.equal(projection.status, 'stopped'); assert.equal(projection.executionFailure, 'cancelled');
-  assert.match(projection.error, /final-state persistence failure/);
+  assert.match(projection.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /final-state persistence failure/);
   assert.equal(outcome.terminalReason, 'cancelled'); assert.equal(outcome.mandatoryPassed, false);
   await h.noTerminalEvidence();
 });

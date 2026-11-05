@@ -280,7 +280,9 @@ async function acquireDependencies(options: IsolatedDependencyOptions, acquisiti
       }
       await fs.writeFile(path.join(installer, 'requirements.lock'), lock, { flag: 'wx' });
       const venv = path.join(installer, 'venv');
-      await run([python!, '-I', '-m', 'venv', '--without-pip', '--copies', venv]);
+      // Host sitecustomize can rewrite sys._base_executable to a Homebrew alias
+      // outside the resolved toolchain grant. Venv setup only needs the stdlib.
+      await run([python!, '-I', '-S', '-m', 'venv', '--without-pip', '--copies', venv]);
       const venvPython = path.join(venv, 'bin', 'python');
       if (process.platform === 'darwin') {
         const actual = await macosRuntimeExecutable(python!);

@@ -97,7 +97,7 @@ test('shared worker rejects help-only recovery before freezing after its bounded
   const h = await fixture(t, false);
   await h.worker.start(); await h.worker.wait();
   await assert.rejects(h.worker.result(), error => error instanceof ExperimentWorkerFailure && error.classification === 'implementation'
-    && /recovery must act.*observe.*correct or retry.*literal outcome/s.test(error.message));
+    && /recovery must act.*observe.*correct or retry.*literal outcome/s.test(h.projections.at(-1).logs.filter(log => log.kind === 'error').map(log => log.text).join('\n')));
   const project = h.projections.at(-1);
   assert.equal(project.status, 'failed');
   assert.equal(project.resumeStage, 'plan');

@@ -1,3 +1,4 @@
+import { syntheticRuntimeExport } from './helpers/exported-runtime-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -79,7 +80,7 @@ async function fixture(t, runtime, surface, execution) {
     await response.arrayBuffer();
     return { origin: new URL(lease).origin, cookie };
   }
-  const exported = await exportVerifiedBundle({ workspace, parent: root, title: 'Static charset parity',
+  const exported = await exportVerifiedBundle({ ...syntheticRuntimeExport(runtime, entrypoint, [entrypoint, adapter]), workspace, parent: root, title: 'Static charset parity',
     verifiedHash: await sourceHash(workspace), deliveryMarkdown: 'Run the included standalone adapter and integration-config.json.' });
   const origin = await standalone(cleanup, execution.executable, [...(runtime === 'python' ? ['-I', '-B'] : []),
     path.join(exported, adapter), '--serve', path.join(exported, entrypoint), path.join(exported, 'integration-config.json')]);

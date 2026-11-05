@@ -28,7 +28,7 @@ import { createSystemDesignTools, systemDesignPrompt, checkSystemDesign, incompl
 
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
-import { runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
+import { PreflightError, runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
 import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runAnswerCheck, runIndependentJudge, runPlanningAudit, planningAuditSummary, planningAuditEvidence, type AnswerCorrection, type AnswerDispute, type PlanningAuditRecord } from './independent-judge.js';
@@ -41,7 +41,7 @@ import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBasel
 const judgeRepairCopy = { recursive: true, force: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fsConstants.COPYFILE_FICLONE };
 type ActiveRun = { planningReview?: PlanningReviewProgress; repairUsed?: boolean; coreReportHash?: string; priorClarifications?: string[]; executionBudget?: ExecutionBudgetState; budgetTimer?: ReturnType<typeof setTimeout>; modelConfig?: { backend: AgentBackend; provider: string; model: string }; answerCorrections?: AnswerCorrection[]; judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
-export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
+export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', (p.dataInputs ?? []).map(({ name, kind, content }) => ({ name, kind, content })), p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData.map(({ id, digest, includeInApp }) => ({ id, digest, includeInApp }))] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
 // Retry transport/provider interruptions, never artifact, integrity or safety failures.
 function transientFailure(error: unknown) {
@@ -331,7 +331,8 @@ export class FleetBackend {
         backend = settings.backend ?? 'pi'; provider = settings.provider; modelId = settings.model; run.backend = backend;
       }
       if (backend === 'codex') {
-        await duringPreparation(this.options.codex?.refresh() ?? Promise.resolve(), run.controller.signal);
+        try { await duringPreparation(this.options.codex?.refresh() ?? Promise.resolve(), run.controller.signal); }
+        catch (error) { if (run.controller.signal.aborted) throw error; throw new PreflightError('engine', error); }
         this.check(run);
         if (this.options.codex?.account?.status !== 'connected' || (this.options.codex.account.authType !== 'apiKey' && this.options.codex.account.planUsageEnabled !== true) || provider !== 'chatgpt') {
           throw new Error('Choose a model and sign in with ChatGPT or an API key in Model settings first.');
@@ -884,7 +885,7 @@ export class FleetBackend {
             let visualAttempts = 0, artifactAttempts = 0, stoppedForNoProgress = false;
             while (missing.length && !singleTurn) {
               const needsVisual = missing.some(problem => problem.startsWith('visual review:'));
-              if (needsVisual ? visualAttempts >= 3 : artifactAttempts >= (stage === 'plan' ? 5 : 1)) break;
+              if (needsVisual ? visualAttempts >= 3 : artifactAttempts >= (stage === 'plan' && !variant ? 5 : 1)) break;
               const before = needsVisual ? await visualProgress() : undefined;
               check();
               if (needsVisual) visualAttempts++;
@@ -903,7 +904,7 @@ export class FleetBackend {
                 break;
               }
             }
-            if (missing.length) throw new ClassifiedExecutionFailure('implementation', engine + ' did not complete the required stage checks ' + (stoppedForNoProgress ? 'because visual review made no progress' : visualAttempts ? `after ${visualAttempts} visual review iterations` : 'after one completion attempt') + ': ' + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
+            if (missing.length) throw new ClassifiedExecutionFailure('implementation', engine + ' did not complete the required stage checks ' + (stoppedForNoProgress ? 'because visual review made no progress' : visualAttempts ? `after ${visualAttempts} visual review iterations` : `after ${artifactAttempts} artifact completion attempts`) + ': ' + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
           };
           await complete([run.context, run.resumedStage === stage ? 'This phase is resuming in the same workspace after an interrupted or failed attempt. Inspect and continue the existing artifacts; preserve completed work and all frozen inputs/contracts. The previous phase error was: ' + (run.previousError ?? 'The previous run was interrupted.') : '', run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, processPolicy, tests ? testBaselinePolicy : undefined, variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);

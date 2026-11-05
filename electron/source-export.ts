@@ -45,7 +45,7 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
   assertCredentialFreeManifest(manifest);
   assertNoCredentials(input.deliveryMarkdown); assertNoCredentials(input.title);
   assertNoCredentials(input.evidence.report); assertNoCredentials(input.evidence.review);
-  const container = containerExport(manifest, input.verifiedRuntime);
+  const container = containerExport(manifest, input.verifiedRuntime, Boolean(input.reference));
   await checkSource();
   // Older frozen plans can predate the parser's reservations. Host reports and
   // delivery notes must never replace a file used by the approved application.

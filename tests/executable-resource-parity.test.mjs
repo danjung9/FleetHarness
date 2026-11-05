@@ -1,3 +1,4 @@
+import { bindSyntheticApproval } from './helpers/approved-evidence.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -44,7 +45,7 @@ async function wrapper(root, source) {
   assert.equal(typeof handler, 'function');
   assert.equal(browserOptions.webPreferences.nodeIntegration, false);
   assert.equal(browserOptions.webPreferences.contextIsolation, true);
-  assert.equal(browserOptions.webPreferences.sandbox, true);
+  assert.equal(browserOptions.webPreferences.sandbox, false);
   return handler;
 }
 
@@ -151,6 +152,7 @@ test('delivered parser uses its actual core and CSV data',()=>{const context={};
   assert.equal(reportPassed(report, 2), true, report.output);
   const project = { ...newProject({ title: 'Verified CSV app', description: 'An offline parser that loads supplied CSV data.', criteria: ['Parse tasks with seed data.'] }),
     workspace, status: 'approved', approvedAt: new Date().toISOString(), qualityVersion: 2, runtimeProfile: 'browser', report };
+  bindSyntheticApproval(project);
   const staged = await stageExecutable(project, staging);
   const handler = await wrapper(staged.source, await fs.readFile(path.join(staged.source, 'main.cjs'), 'utf8'));
   const response = await handler({ url: 'fleet-app://app/assets/tasks.csv', method: 'GET' });

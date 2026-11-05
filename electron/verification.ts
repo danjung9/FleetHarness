@@ -160,6 +160,6 @@ export async function verifyWorkspace(root: string, executable: string, onProces
       portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment: Object.fromEntries(Object.entries(environment).map(([key, value]) => [key, runtimeEnvironment?.[key] && !['PATH', 'HOME', 'TMPDIR', 'TEMP', 'TMP', 'ELECTRON_RUN_AS_NODE', 'LANG', 'PYTHONDONTWRITEBYTECODE', 'VIRTUAL_ENV'].includes(key) ? '[redacted]' : value])) },
       exitCode: timedOut || overflow ? null : !evidence.valid && exitCode === 0 ? 1 : exitCode,
       total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
-      registeredTests: evidence.registeredTests?.map(item => ({ ...item, file: path.relative(root, item.file).split(path.sep).join('/') })), output: redactSecrets(output), durationMs: Math.round(performance.now() - started), sourceHash: hash };
+      registeredTests: evidence.registeredTests?.map(item => ({ ...item, file: files[expectedFiles.indexOf(item.file)] ?? item.file })), output: redactSecrets(output), durationMs: Math.round(performance.now() - started), sourceHash: hash };
   } finally { await fs.rm(home, { recursive: true, force: true }); }
 }
