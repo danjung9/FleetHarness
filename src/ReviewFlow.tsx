@@ -121,6 +121,7 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
         </li>
         <li>
           <h2>Check evidence and limitations</h2>
+          {report.output.includes('Planning audit:') && <p className="review-report-time">Planning audit details: open Activity and select the Plan agent.</p>}
           <div className={'review-check-result ' + (passed ? 'passed' : 'failed')}>
             {passed ? <CheckCircle2 size={18}/> : <XCircle size={18}/>}
             <p><strong>{passed ? 'Automated checks passed' : 'Verification needs attention'}</strong><span>Node tests: {report.passed} passed · {report.failed} failed · {report.skipped} skipped{report.quality && <> · Browser journeys: {report.quality.journeys.filter(journey => journey.status === 'passed').length}/{report.quality.journeys.length} passed</>}</span></p>

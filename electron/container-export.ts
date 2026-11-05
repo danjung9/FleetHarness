@@ -3,7 +3,7 @@ import { parseSolutionContract } from '../harness/solution-contract.js';
 import type { ArtifactManifest } from './storage.js';
 
 /** Generate deployment instructions from the verified contract, without running or fetching anything. */
-export function containerExport(manifest: ArtifactManifest) {
+export function containerExport(manifest: ArtifactManifest, verifiedRuntime?: string) {
   const read = (name: string) => manifest.find(file => file.path.split(path.sep).join('/') === name)?.contents.toString('utf8');
   const contract = read('solution-contract.json');
   if (!contract) return undefined;
@@ -17,8 +17,13 @@ export function containerExport(manifest: ArtifactManifest) {
   for (const file of runtime.files) {
     if (!files.has(file)) throw new Error('Container runtime file is absent from the verified source: ' + file);
   }
+  let nodeVersion = '22.19.0';
+  if (command.runtime === 'node' && verifiedRuntime !== undefined) {
+    if (typeof verifiedRuntime !== 'string' || verifiedRuntime.trim() !== verifiedRuntime || !/^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(verifiedRuntime)) throw new Error('The verified Node runtime version is invalid. Verify the app again before exporting.');
+    nodeVersion = verifiedRuntime.replace(/^v/, '');
+  }
   const dockerfile = [
-    `FROM ${command.runtime === 'node' ? 'node:22.19.0-bookworm-slim' : 'python:3.12.9-slim-bookworm'}`,
+    `FROM ${command.runtime === 'node' ? 'node:' + nodeVersion + '-bookworm-slim' : 'python:3.12.9-slim-bookworm'}`,
     'WORKDIR /app',
     // JSON instruction forms keep filenames and arguments out of a shell.
     ...runtime.files.map(file => 'COPY ' + JSON.stringify(['./' + file, './' + file])),

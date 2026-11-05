@@ -11,6 +11,7 @@ export interface SourceExport {
   parent: string;
   title: string;
   verifiedHash: string;
+  verifiedRuntime?: string;
   deliveryMarkdown: string;
   evidence: { report: string; review: string };
 }
@@ -33,7 +34,7 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
   assertCredentialFreeManifest(manifest);
   assertNoCredentials(input.deliveryMarkdown); assertNoCredentials(input.title);
   assertNoCredentials(input.evidence.report); assertNoCredentials(input.evidence.review);
-  const container = containerExport(manifest);
+  const container = containerExport(manifest, input.verifiedRuntime);
   const slug = input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'challenge';
   const destination = await fs.mkdtemp(path.join(parent, 'AppYard-' + slug + '-'));
   try {

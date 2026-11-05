@@ -72,6 +72,23 @@ test('legacy service contract without a port exports port 8080', async t => {
   assert.equal(await sourceHash(bundle), input.verifiedHash);
 });
 
+for (const version of ['v24.22.2', '24.22.2']) test(`Node export uses the exact verified runtime ${version}`, async t => {
+  const { input } = await fixture(t);
+  input.verifiedRuntime = version;
+  const bundle = await exportVerifiedBundle(input);
+  assert.match(await fs.readFile(path.join(bundle, 'Dockerfile'), 'utf8'), /^FROM node:24\.22\.2-bookworm-slim\n/);
+  assert.equal(await sourceHash(bundle), input.verifiedHash);
+});
+
+test('Node export rejects malformed runtime provenance before creating a bundle', async t => {
+  const { input } = await fixture(t);
+  for (const version of ['', 'node', 'v24', 'v24.22', 'v024.22.2', 'v24.22.2-preview', 'v24.22.2+build', ' v24.22.2', 'v24.22.2\n', 'v24.22.2\nRUN bad', 'v24.22.2;bad', null, 24]) {
+    input.verifiedRuntime = version;
+    await assert.rejects(exportVerifiedBundle(input), /verified Node runtime version is invalid/);
+    assert.deepEqual(await fs.readdir(input.parent), []);
+  }
+});
+
 for (const profile of ['browser', 'cli']) test(`${profile} exports contain no container files`, async t => {
   const { input, refresh } = await fixture(t, profile);
   await fs.writeFile(path.join(input.workspace, 'Dockerfile'), 'FROM unwanted:latest');

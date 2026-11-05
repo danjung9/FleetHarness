@@ -141,3 +141,54 @@ test('a service preview reload keeps its origin', { timeout: 15_000 }, async t =
   assert.equal(after.origin, before.origin);
   assert.equal((await fetch(new URL('/health', after))).status, 200);
 });
+
+test('preview storage clears before each origin owner change, but survives a same-owner reload', async t => {
+  const first = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-preview-owner-'));
+  const second = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-preview-owner-'));
+  const clears = [], storage = new Map();
+  let release;
+  const previews = new ApplicationPreviews(process.execPath, { clearStorage: async origin => {
+    clears.push(origin);
+    if (release) await new Promise(resolve => { release.resolve = resolve; });
+    storage.delete(origin);
+  } });
+  t.after(async () => { await previews.close(); await fs.rm(first, { recursive: true, force: true }); await fs.rm(second, { recursive: true, force: true }); });
+  for (const root of [first, second]) await fs.writeFile(path.join(root, 'index.html'), '<h1>Synthetic</h1>');
+  const before = new URL(await previews.url(first));
+  assert.deepEqual(clears, [before.origin], 'Even the first owner clears old app-session storage');
+  storage.set(before.origin, 'first workspace data');
+  await previews.stop(first);
+  assert.equal(new URL(await previews.url(first)).origin, before.origin);
+  assert.deepEqual(clears, [before.origin]);
+  assert.equal(storage.get(before.origin), 'first workspace data');
+  await previews.stop(first);
+  // Force reuse through the real HTTP server and port binding path.
+  previews.browser.ports.set(second + '\0[]', Number(before.port));
+  release = {};
+  let handedOut = false;
+  const opening = previews.url(second).then(url => { handedOut = true; return url; });
+  await waitUntil(() => !!release.resolve, 'Storage clear should start');
+  assert.equal(handedOut, false, 'The URL cannot reach the iframe before clearing completes');
+  release.resolve();
+  const after = new URL(await opening); release = undefined;
+  assert.equal(after.origin, before.origin);
+  assert.equal(storage.has(before.origin), false);
+  assert.equal((await fetch(after)).status, 200);
+  storage.set(after.origin, 'second workspace data');
+  await previews.stop(second);
+  assert.equal(new URL(await previews.url(first)).origin, before.origin);
+  assert.deepEqual(clears, [before.origin, before.origin, before.origin]);
+  assert.equal(storage.has(before.origin), false);
+});
+
+test('a failed storage clear withholds the preview and is retried', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-preview-clear-'));
+  let calls = 0;
+  const previews = new ApplicationPreviews(process.execPath, { clearStorage: async () => { if (++calls === 1) throw new Error('Synthetic clear failure'); } });
+  t.after(async () => { await previews.close(); await fs.rm(root, { recursive: true, force: true }); });
+  await fs.writeFile(path.join(root, 'index.html'), '<h1>Synthetic</h1>');
+  await assert.rejects(previews.url(root), /Synthetic clear failure/);
+  assert.equal(previews.origins.size, 0);
+  assert.ok(await previews.url(root));
+  assert.equal(calls, 2);
+});

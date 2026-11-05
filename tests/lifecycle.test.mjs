@@ -17,6 +17,34 @@ import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 
+test('preview storage clearing uses the iframe window session', async t => {
+  const { store } = await fixture(t), cleared = [];
+  let clearStorage;
+  await mainHarness(store, undefined, 'electron/main.ts', {
+    ApplicationPreviews: class { constructor(_executable, options) { clearStorage = options.clearStorage; } },
+    hostWindow: { webContents: { session: { async clearStorageData(options) { cleared.push(options); } } } }
+  });
+  await clearStorage('http://127.0.0.1:43210');
+  assert.equal(cleared.length, 1);
+  assert.equal(cleared[0].origin, 'http://127.0.0.1:43210');
+  assert.deepEqual(Object.keys(cleared[0]), ['origin']);
+});
+
+test('source export receives the verified runtime from the authoritative report', async t => {
+  const { store, p, root } = await fixture(t);
+  p.report.quality.solutionEvaluation = { runtime: { runtime: 'v24.22.2' } };
+  p.verification.reportHash = reportHash(p.report);
+  let received;
+  const { exportVerifiedBundle } = await import('../dist-electron/electron/source-export.js');
+  const main = await mainHarness(store, undefined, 'electron/main.ts', {
+    dialog: { async showOpenDialog() { return { filePaths: [root] }; } },
+    async exportVerifiedBundle(input, signal) { received = input.verifiedRuntime; return exportVerifiedBundle(input, signal); }
+  });
+  await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
+  await main.invoke('fleet:export', p.id);
+  assert.equal(received, 'v24.22.2');
+});
+
 // Exercise IPC, real startup, disk copies, persistence and delivery gates. Model
 // sessions and native readiness/process discovery are synthetic here. These
 // checks do not establish native process cleanup or generated-app correctness.
@@ -286,6 +314,27 @@ test('a Stop proposal is recorded as applied only after the backend Stop promise
   assert.equal(p.conversation.messages.at(-1).text, 'Build stopped. Saved outputs remain available.');
   const persisted = JSON.parse(await fs.readFile(path.join(store.root, 'state.json'), 'utf8')).projects.find(project => project.id === p.id);
   assert.equal(persisted.status, 'stopped'); assert.equal(persisted.conversation.actions[0].status, 'applied');
+});
+
+test('a reload during a starting preview replaces it without failing', async t => {
+  const { store, p } = await fixture(t);
+  p.status = 'review';
+  let calls = 0, stops = 0, cancel, reached;
+  const entered = new Promise(resolve => { reached = resolve; });
+  const main = await mainHarness(store, { active: new Map(), async stop() {} }, 'electron/main.ts', {
+    ApplicationPreviews: class {
+      url() { if (++calls > 1) return Promise.resolve('http://127.0.0.1:2/'); reached(); return new Promise(resolve => { cancel = () => resolve(null); }); }
+      cancel() { cancel?.(); }
+      async stop() { stops++; }
+    },
+    RunProcessSweep: class { run(work) { return work(); } async stop() {} }
+  });
+  const first = main.invoke('fleet:preview', p.id);
+  await entered;
+  const second = main.invoke('fleet:preview', p.id);
+  assert.equal(await first, null);
+  assert.equal(await second, 'http://127.0.0.1:2/');
+  assert.equal(calls, 2);
 });
 
 test('Stop cancels a preview reserved before its first state save resumes', async t => {
