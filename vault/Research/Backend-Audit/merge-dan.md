@@ -22,3 +22,20 @@ Every frontend line changed beyond the teammate’s version:
 The [exact frontend patch](~/Documents/CDAO/fh-org/astra-merge/docs/backend-integration-frontend.patch) contains those changes. No studio, index.html or CSS changes.
 
 COMMIT: Merge API-key sign-in, remove execution sandboxes, and fix runtime integration
+
+## 00:55 report
+
+Implemented:
+
+- Judge snapshots include service and CLI delivery manifests.
+- Verification preserves scratch directories and propagates unconfirmed shutdown.
+- Redaction avoids repeated environment scans. The fake-engine workflow fell from 2.3 seconds to 0.86 seconds.
+- Preview tests await cleanup before checking package removal.
+
+Only behavioral assertion changed: the obsolete CSP restriction now expects no CSP header. Browser staging’s outer deadline increased to 60 seconds for three package installs, cleanup sweeps and browser verification. Other deadlines remain unchanged. No frontend changes.
+
+Passed: 102 focused tests, 84 harness tests and all three TypeScript checks.
+
+Could not run the complete native ps/Chrome suite or clean-runtime integration here. Those eight original cases still need the overseer’s rerun. [Detailed findings and test changes](~/Documents/CDAO/fh-org/astra-merge/docs/native-failure-followup.md).
+
+COMMIT: Fix judge delivery snapshots, verification cleanup and redaction performance

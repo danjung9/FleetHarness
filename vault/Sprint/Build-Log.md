@@ -131,3 +131,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 20:21 Combined branch, Dan's work plus ours with the locks out and API-key sign-in: unit 588 of 596, harness 84 of 84, outside the sandbox. Eight failures going back to the fixer.
 - 20:21 Astra merge-dan started: Your batch is committed (0ad7b73), and the smoke script fix is merged on top. Full run outside the sandbox, with real ps
 - 00:52 Mukul back: rip everything overnight with the Codex agents and council, pull all of Dan's work, test in the real app. Plan in `Sprint/Plan.md`.
+- 00:55 Astra merge-dan finished, exit 0. Report: `Research/Backend-Audit/merge-dan.md`
+- 00:55 Astra merge-dan started: The overseer committed your fixes (a6d42c6) and started merging the teammate's newest commit, 34f82b3, which lets agents
