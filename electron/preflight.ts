@@ -143,7 +143,7 @@ export async function probeVerificationSandbox(options: {
     const runtimeRoot = runtime.match(/^(.*\.app)[/\\]Contents[/\\]/)?.[1]
       ?? (runtime.startsWith('/opt/homebrew/') ? '/opt/homebrew' : path.dirname(runtime));
     // Match the verifier's fleet-build boundary, including the packaged Electron runtime.
-    const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
+    const toolchains = [...new Set([...(process.platform === 'win32' ? [] : ['/Library/Developer', '/opt/homebrew', '/usr/local']), path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
     const filesystem = { ':root': 'deny', ':minimal': 'read', ':workspace_roots': 'write',
       ...Object.fromEntries(toolchains.map(folder => [folder, 'read'])) };
     const toml = '{' + Object.entries(filesystem).map(([key, value]) => JSON.stringify(key) + '=' + JSON.stringify(value)).join(',') + '}';

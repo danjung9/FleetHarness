@@ -162,7 +162,10 @@ export async function createCodexSession(options: {
     await prepareCodexHome(options.home); checkOpen();
     const skills = await Promise.all((options.skillPaths ?? []).map(async dir => fs.readFile(path.join(dir, 'SKILL.md'), 'utf8')));
     threadConfig = {
-      cwd: options.cwd, model: options.model, modelProvider: options.getCredentials ? CHATGPT_MODEL_PROVIDER : 'openai', approvalPolicy: 'never', sandbox: options.conversationInstructions ? 'read-only' : 'workspace-write',
+      cwd: options.cwd, model: options.model, modelProvider: options.getCredentials ? CHATGPT_MODEL_PROVIDER : 'openai', approvalPolicy: 'never',
+      // Build threads inherit the restricted fleet-build permission profile. A legacy
+      // workspace-write selection would replace its explicit read allowlist.
+      ...(options.conversationInstructions ? { sandbox: 'read-only' } : {}),
       config: { 'sandbox_workspace_write.network_access': false, web_search: 'disabled', 'features.code_mode_tool_search': false, 'features.image_generation': false, 'features.computer_use': false, 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV],
         'shell_environment_policy.set': runProcessEnvironment({}),
         ...(options.conversationInstructions ? { 'features.shell_tool': false, 'features.view_image': false, 'features.multi_agent': false, 'features.apps': false, 'features.plugins': false, 'features.hooks': false, 'features.browser_use': false, 'features.in_app_browser': false } : {}) },

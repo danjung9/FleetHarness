@@ -98,7 +98,7 @@ async function sandboxCommand(root: string, executable: string, testArgs: string
   const bundle = runtime.match(/^(.*\.app)[/\\]Contents[/\\]/)?.[1];
   const runtimeRoot = bundle ?? (runtime.startsWith('/opt/homebrew/') ? '/opt/homebrew' : path.dirname(runtime));
   // Match the agents' fleet-build policy, using a fresh scratch home with no credentials.
-  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
+  const toolchains = [...new Set([...(process.platform === 'win32' ? [] : ['/Library/Developer', '/opt/homebrew', '/usr/local']), path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
   const filesystem = { ':root': 'deny', ':minimal': 'read', ':workspace_roots': 'write',
     ...Object.fromEntries(toolchains.map(folder => [folder, 'read'])) };
   const toml = '{' + Object.entries(filesystem).map(([key, value]) => JSON.stringify(key) + '=' + JSON.stringify(value)).join(',') + '}';

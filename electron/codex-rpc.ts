@@ -47,7 +47,7 @@ export async function prepareCodexHome(home: string) {
   home = path.resolve(home);
   const temporary = path.join(home, 'tmp');
   await fs.mkdir(temporary, { recursive: true, mode: 0o700 });
-  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(codexExecutable())])];
+  const toolchains = [...new Set([...(process.platform === 'win32' ? [] : ['/Library/Developer', '/opt/homebrew', '/usr/local']), path.dirname(process.execPath), path.dirname(codexExecutable())])];
   const config = [
     'default_permissions = "fleet-build"',
     'web_search = "disabled"', '',

@@ -89,9 +89,10 @@ export class Store {
     await this.save();
   }
   save() {
-    const json = JSON.stringify(this.state, null, 2);
-    const summaries = this.state.projects.filter(p => p.workspace && p.runSummary).map(p => ({ workspace: p.workspace!, json: JSON.stringify(p.runSummary, null, 2) }));
     this.writes = this.writes.catch(() => {}).then(async () => {
+      // Capture after earlier saveProject transactions have committed to the in-memory state.
+      const json = JSON.stringify(this.state, null, 2);
+      const summaries = this.state.projects.filter(p => p.workspace && p.runSummary).map(p => ({ workspace: p.workspace!, json: JSON.stringify(p.runSummary, null, 2) }));
       await atomicHostWrite(this.root, 'state.json', json);
       for (const summary of summaries) {
         try { await atomicHostWrite(summary.workspace, 'run-summary.json', summary.json); }

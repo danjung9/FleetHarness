@@ -28,8 +28,8 @@ export function tokenUsage(raw: unknown, engine: 'pi' | 'codex'): StageTokenUsag
     uncachedPlusOutputTokens: add(uncachedInputTokens, outputTokens) };
 }
 export class AgentShutdownError extends Error { constructor(message: string) { super(message); this.name = 'AgentShutdownError'; } }
-export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns: number }
-export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000, maxTurns: 40 };
+export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns?: number }
+export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
 
 /** Bound setup, model/tool work and artifact recovery even when the SDK ignores abort. */
