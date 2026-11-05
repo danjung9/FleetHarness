@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "suite": "native-complete-review-source-delivery",
+  "startedAt": "2026-11-05T09:53:35.498Z",
+  "result": "ERROR",
+  "behaviorVerdict": "ERROR",
+  "scope": "Actual native UI build, preview, review and source export using a deterministic local provider and judge. Independent literal parser answers in native preview and a fresh offline exported-copy browser. No live model, authentication, independent substantive judge assessment, packaged executable, human acceptance or operational-readiness claim.",
+  "identityPolicy": "Clean supplied HEAD and stable complete dist/dist-electron hashes. Identifies existing compiled bytes; does not prove they were built from that HEAD.",
+  "rows": [
+    {
+      "id": "NATIVE-COMPLETE-BUILD",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "REVIEW-EVIDENCE",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "NATIVE-PREVIEW-CHANGED-INPUTS",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "HUMAN-REVIEW-GATES",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "STALE-APPROVAL-DENIED",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "RESTORED-SOURCE-APPROVED",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "STALE-EXPORT-DENIED",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "ACTUAL-SOURCE-EXPORT",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "FRESH-EXPORTED-COPY",
+      "result": "NOT RUN"
+    },
+    {
+      "id": "FINAL-NATIVE-STATE",
+      "result": "NOT RUN"
+    }
+  ],
+  "errors": [],
+  "pageErrors": [],
+  "exportPageErrors": [],
+  "snapshots": [],
+  "tampers": [],
+  "ownedProcesses": [],
+  "repo": "/Users/mukul/Documents/CDAO/fh-org/astra-test",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/native-delivery-c40a3290-e057-48d3-b817-27c151ba3d32"
+}
