@@ -49,7 +49,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
   }}>
     {!desktop && <div className="desktop-setup-notice"><h3>Builds run in the desktop app</h3><p>This browser preview lets you explore AppYard and save briefs. To run a build, open the AppYard desktop app, add your brief, then connect a model in Settings.</p><p>Briefs saved here stay in this browser; they do not sync to the desktop app.</p></div>}
     <div className="model-settings-tabs" role="tablist" aria-label="Model connection">
-      {tabs.map((item, index) => <button key={item.id} id={'model-tab-' + item.id} type="button" role="tab" aria-selected={tab === item.id} aria-controls="model-settings-panel" tabIndex={tab === item.id ? 0 : -1} disabled={disabled || connecting} onClick={() => chooseTab(item.id)} onKeyDown={event => {
+      {tabs.map((item, index) => <button key={item.id} id={'model-tab-' + item.id} type="button" role="tab" aria-selected={tab === item.id} aria-controls="model-settings-panel" tabIndex={tab === item.id ? 0 : -1} disabled={connecting || (disabled && item.id !== 'genai-mil')} onClick={() => chooseTab(item.id)} onKeyDown={event => {
         const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1;
         if (next < 0) return; event.preventDefault(); chooseTab(tabs[next].id); document.getElementById('model-tab-' + tabs[next].id)?.focus();
       }}>{item.name}</button>)}
