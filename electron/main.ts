@@ -230,7 +230,23 @@ function registerIPC() {
     const bytes = await readVisualCapture(p.workspace, capture);
     return 'data:image/png;base64,' + bytes.toString('base64');
   });
-  handle('fleet:preview', async (id: string) => {
+  // Reload can arrive while the last request is still starting. Cancel that start and take turns,
+  // so one request's cleanup can never stop the next request's preview.
+  const previewRequests = new Map<string, Promise<unknown>>();
+  handle('fleet:preview', (id: string) => {
+    const earlier = previewRequests.get(id);
+    if (earlier) {
+      previewStarts.get(id)?.abort();
+      const workspace = store.project(id).workspace;
+      if (workspace) previews.cancel?.(workspace);
+    }
+    const current = (earlier ?? Promise.resolve()).catch(() => {}).then(() => openPreview(id));
+    previewRequests.set(id, current);
+    const forget = () => { if (previewRequests.get(id) === current) previewRequests.delete(id); };
+    current.then(forget, forget);
+    return current;
+  });
+  const openPreview = async (id: string) => {
     try {
       await stopPreview(id);
       const p = requireIdle(id);
@@ -248,7 +264,7 @@ function registerIPC() {
       finally { if (previewStarts.get(id) === starting) previewStarts.delete(id); }
     }
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || !store.project(id).workspace) return null; throw error; }
-  });
+  };
   handle('fleet:open', async (id: string) => {
     const p = store.project(id); if (!p.workspace) throw new Error('This challenge has no workspace yet.');
     const error = await shell.openPath(p.workspace); if (error) throw new Error(error);

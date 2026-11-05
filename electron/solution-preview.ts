@@ -70,6 +70,8 @@ export class ApplicationPreviews {
     if (runtime.url) this.servicePorts.set(root, Number(new URL(runtime.url).port));
     return runtime.url ?? null;
   }
+  /** Abandon a start that is still in progress. The caller then runs stop or a new url. */
+  cancel(root: string) { this.controllers.get(root)?.abort(); }
   async stop(root: string) {
     this.controllers.get(root)?.abort();
     await this.pending.get(root)?.catch(() => {});

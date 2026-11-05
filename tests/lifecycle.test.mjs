@@ -316,6 +316,27 @@ test('a Stop proposal is recorded as applied only after the backend Stop promise
   assert.equal(persisted.status, 'stopped'); assert.equal(persisted.conversation.actions[0].status, 'applied');
 });
 
+test('a reload during a starting preview replaces it without failing', async t => {
+  const { store, p } = await fixture(t);
+  p.status = 'review';
+  let calls = 0, stops = 0, cancel, reached;
+  const entered = new Promise(resolve => { reached = resolve; });
+  const main = await mainHarness(store, { active: new Map(), async stop() {} }, 'electron/main.ts', {
+    ApplicationPreviews: class {
+      url() { if (++calls > 1) return Promise.resolve('http://127.0.0.1:2/'); reached(); return new Promise(resolve => { cancel = () => resolve(null); }); }
+      cancel() { cancel?.(); }
+      async stop() { stops++; }
+    },
+    RunProcessSweep: class { run(work) { return work(); } async stop() {} }
+  });
+  const first = main.invoke('fleet:preview', p.id);
+  await entered;
+  const second = main.invoke('fleet:preview', p.id);
+  assert.equal(await first, null);
+  assert.equal(await second, 'http://127.0.0.1:2/');
+  assert.equal(calls, 2);
+});
+
 test('Stop cancels a preview reserved before its first state save resumes', async t => {
   const { store, p } = await fixture(t), entered = deferred(), release = deferred();
   const save = store.save.bind(store); let first = true, starts = 0, sweeps = 0;
