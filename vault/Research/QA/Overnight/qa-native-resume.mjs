@@ -313,10 +313,11 @@ try {
   await launch();
   await row('UI-SETUP-AND-HELD-IMPLEMENTATION', async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await page.getByRole('radio', { name: 'Pi Model providers', exact: true }).check();
-    await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
-    await page.getByLabel('Model', { exact: true }).selectOption('fixture-model');
-    await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
+    await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: 'Other providers', exact: true }).click();
+    const modelPanel = page.getByRole('tabpanel', { name: 'Other providers', exact: true });
+    await modelPanel.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
+    await modelPanel.getByLabel('Model', { exact: true }).selectOption('fixture-model');
+    await modelPanel.getByRole('button', { name: 'Save model settings', exact: true }).click();
     await page.getByText('Model settings saved.', { exact: true }).waitFor();
     await page.locator('header.topbar').getByRole('button', { name: 'New challenge', exact: true }).click();
     const intake = page.getByRole('dialog', { name: 'New challenge', exact: true });
