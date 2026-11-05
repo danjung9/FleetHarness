@@ -35,7 +35,9 @@ export function sampleAdapter(kind: ConnectorKind): ConnectorAdapter {
     async fetch(_secrets, options) {
       options.signal.throwIfAborted();
       const source = kind === 'gmail' || kind === 'outlook' ? mail : kind.includes('calendar') ? calendar : kind === 'custom-api' ? records : files;
-      const when = new Date().toISOString().slice(0, 10) + 'T09:00:00.000Z';
+      // 09:00 on this computer's clock, so the sample agrees with the 09:00 in its own email.
+      const morning = new Date(); morning.setHours(9, 0, 0, 0);
+      const when = morning.toISOString();
       const query = options.query?.trim().toLowerCase();
       return structuredClone(source).map(item => ({ ...item, when })).filter(item => !query || (item.title + ' ' + item.body).toLowerCase().includes(query));
     },
