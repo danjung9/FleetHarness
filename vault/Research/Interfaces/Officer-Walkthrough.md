@@ -16,7 +16,7 @@ summary: "A hypothetical first-ten-minute officer walkthrough exposes Studio's c
 
 [A] This is a cognitive walkthrough, not an observed usability test. The officer is a hypothetical training coordinator trying to turn fictional room/time requests into a draft schedule with visible conflicts. They know their task but not coding, agents or model providers. [A] Minute ranges allocate an orientation exercise; they are not measured completion times or a promise that generation finishes in ten minutes.
 
-[E] The starting screens are the supplied PNGs at 1440 by 900. Other screens are reconstructed from `src/App.tsx`, `src/studio/Studio.tsx`, `src/studio/brief.ts`, `src/ModelSettings.tsx`, `src/PhaseDetails.tsx` and `src/SystemDesign.tsx` at `0f175a8`. All these paths are under `/Users/mukul/Documents/CDAO/FleetHarness`. [E] Quoted interface labels below are reproduced for this requested label audit. [A] Each stated comprehension problem is a hypothesis to check with a person, not a claim about every naval officer.
+[E] The starting screens are the supplied PNGs at 1440 by 900. Other screens are reconstructed from `src/App.tsx`, `src/studio/Studio.tsx`, `src/studio/brief.ts`, `src/ModelSettings.tsx`, `src/PhaseDetails.tsx` and `src/SystemDesign.tsx` at `0f175a8`. All these paths are under `~/Documents/CDAO/FleetHarness`. [E] Quoted interface labels below are reproduced for this requested label audit. [A] Each stated comprehension problem is a hypothesis to check with a person, not a claim about every naval officer.
 
 ## Original, minutes zero to ten in the supplied browser mode
 
@@ -79,6 +79,6 @@ summary: "A hypothetical first-ten-minute officer walkthrough exposes Studio's c
 ## Sources
 
 - [E] Pinned source, not fetched: https://github.com/danjung9/FleetHarness/tree/0f175a8ce346521c4462fc134d40c0973eac1323
-- [E] `/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens/original-1-home.png`, `original-2-new-challenge.png`, `original-3-settings.png`, `studio-1-home.png`, `studio-2-new-challenge.png`, `studio-3-my-builds.png`, `studio-4-settings.png`.
+- [E] `~/Documents/CDAO/Fleethacker-Vault/Research/FleetHarness-MVP/screens/original-1-home.png`, `original-2-new-challenge.png`, `original-3-settings.png`, `studio-1-home.png`, `studio-2-new-challenge.png`, `studio-3-my-builds.png`, `studio-4-settings.png`.
 - [E] Source paths cited above; [[Research/Interfaces/Side-by-Side]] for backend and browser boundaries.
 - [R] Existing proposed usability criteria: [[Research/Naval-User/Simplicity-Requirements]], [[Research/Landscape/App-Builders/Simplicity-Patterns]].

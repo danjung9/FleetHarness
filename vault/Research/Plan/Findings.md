@@ -14,7 +14,7 @@ summary: "Ranked findings and council rulings for one bounded FleetHarness demon
 
 ## How to read the findings
 
-[E] Inspection date: November 4, 2026. The read-only branch `mvp` resolved to `0f175a8ce346521c4462fc134d40c0973eac1323` in `/Users/mukul/Documents/CDAO/FleetHarness`. File paths below are relative to that repository unless stated otherwise. Source was read with Git; no application, repository script, test, install or model build was executed. Test outcomes are attributed to [[Research/Plan/Test-Results]], not to a new run.
+[E] Inspection date: November 4, 2026. The read-only branch `mvp` resolved to `0f175a8ce346521c4462fc134d40c0973eac1323` in `~/Documents/CDAO/FleetHarness`. File paths below are relative to that repository unless stated otherwise. Source was read with Git; no application, repository script, test, install or model build was executed. Test outcomes are attributed to [[Research/Plan/Test-Results]], not to a new run.
 
 [E] **Confirmed** means the narrow stated fact is supported by the named source, including confirmation that a vendor makes a claim. It does not turn documentation into observed performance. **Weak** means the source supports only part of the inference. **Not verified** means the needed evidence is absent. [R] Recommendation rows inherit the confidence of their supporting premise, not a prediction of success. Rankings run across the requested groups.
 

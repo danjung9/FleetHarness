@@ -108,7 +108,7 @@ summary: "How the FleetHarness proposal fits every captured event requirement an
 
 ## Sources
 
-- [P] Project README: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. Its web URL and commit were not independently checked.
+- [P] Project README: `~/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. Its web URL and commit were not independently checked.
 - [P] [[Event/Rules]], local restatement of portal rules, read 2026-11-04.
 - [P] [[Event/Judging]], local restatement of the five criteria and weights, read 2026-11-04.
 - [P] [[Sprint/Submission-Checklist]], local checklist including terms-derived requirements, read 2026-11-04.

@@ -156,7 +156,7 @@ summary: "A line-by-line reading of the FleetHarness proposal, its vocabulary an
 
 ## Sources
 
-- [P] Project README: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. No project web URL, branch or commit was independently verified.
+- [P] Project README: `~/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. No project web URL, branch or commit was independently verified.
 - [P] Research instructions: [[Research/00-Brief]].
 - [P] Data restrictions used to qualify line 39: [[Event/Rules]], rule 4. The source portal URL is not supplied in the local snapshot and was not verified.
 - [E] No public web source was used; there are no verified full web URLs to list. Source paths and known vault links identify the actual material read.

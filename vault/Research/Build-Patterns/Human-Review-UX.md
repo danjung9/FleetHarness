@@ -71,5 +71,5 @@ Actions: try this example | ask for a change | reject
 
 ## Sources
 
-- [P] [[Event/Rules]], rule 6; project README at `/Users/mukul/Documents/CDAO/FleetHarness/README.md`.
+- [P] [[Event/Rules]], rule 6; project README at `~/Documents/CDAO/FleetHarness/README.md`.
 - [V] https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents

@@ -131,7 +131,7 @@ summary: "Questions left open by the README, ordered by the decisions needed to 
 
 ## Sources
 
-- [P] Project README: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04; project web URL and repository history not checked.
+- [P] Project README: `~/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04; project web URL and repository history not checked.
 - [P] [[Research/00-Brief]], deadline and assignment scope.
 - [P] [[Event/Rules]], [[Event/Judging]] and [[Sprint/Submission-Checklist]], local event snapshots read 2026-11-04.
 - [E] [[Reference/Open-Questions]], unresolved portal and category context. Full portal URLs were not supplied in the allowed files and were not verified. No public web source was used or full web URL invented.

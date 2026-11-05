@@ -2,75 +2,34 @@
 type: research
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Automatic QA at 16a6940 on dev/reviewed: failures: smoke-electron, smoke-norfolk. Fixture provider only."
+updated: 2026-11-05
+summary: "Automatic QA at f2e5422 on dev/reviewed: all passed. Fixture provider only."
 ---
 
-# Automatic QA at 16a6940
+# Automatic QA at f2e5422
 
-[E, automatic run, 18:32 to 18:38 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
+[E, automatic run, 02:43 to 02:55 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.
 
 | Step | Exit | Seconds | Counts |
 | --- | --- | --- | --- |
-| typecheck | 0 | 3 |  |
-| electron compile | 0 | 1 |  |
-| web build | 0 | 3 |  |
-| unit tests | 0 | 111 | tests 125, pass 125, fail 0 |
+| typecheck | 0 | 1 |  |
+| electron compile | 0 | 0 |  |
+| web build | 0 | 1 |  |
+| unit tests | 0 | 451 | tests 934, pass 934, fail 0 |
 | harness compile | 0 | 0 |  |
-| harness tests | 0 | 2 | tests 51, pass 51, fail 0 |
+| harness tests | 0 | 2 | tests 94, pass 94, fail 0 |
 | smoke-activity | 0 | 13 |  |
-| smoke-chatgpt | 0 | 11 |  |
-| smoke-electron | 1 | 34 |  |
+| smoke-brief-data | 0 | 26 |  |
+| smoke-chatgpt | 0 | 4 |  |
+| smoke-connectors | 0 | 15 |  |
+| smoke-conversation | 0 | 19 |  |
+| smoke-electron | 0 | 16 |  |
 | smoke-home | 0 | 3 |  |
-| smoke-journey | 0 | 12 |  |
-| smoke-model-selector | 0 | 5 |  |
-| smoke-norfolk | 1 | 12 |  |
-| smoke-phases | 0 | 5 |  |
-| smoke-quality | 0 | 2 |  |
-| smoke-system-design | 0 | 29 |  |
-
-## smoke-electron
-
-
-```text
-node:internal/modules/run_main:107
-    triggerUncaughtException(
-    ^
-
-locator.click: Timeout 30000ms exceeded.
-Call log:
-  - waiting for getByRole('button', { name: 'Norfolk catalog · 34' })
-
-    at ~/Documents/CDAO/fh-org/qa-auto/scripts/smoke-electron.mjs:34:64 {
-  log: [
-    "  - waiting for getByRole('button', { name: 'Norfolk catalog · 34' })"
-  ],
-  name: 'TimeoutError'
-}
-
-Node.js v26.0.0
-
-```
-
-## smoke-norfolk
-
-
-```text
-node:internal/modules/run_main:107
-    triggerUncaughtException(
-    ^
-
-locator.waitFor: Timeout 10000ms exceeded.
-Call log:
-  - waiting for getByRole('heading', { name: 'Build flow', exact: true }) to be visible
-
-    at ~/Documents/CDAO/fh-org/qa-auto/scripts/smoke-norfolk.mjs:45:66 {
-  log: [
-    "  - waiting for getByRole('heading', { name: 'Build flow', exact: true }) to be visible"
-  ],
-  name: 'TimeoutError'
-}
-
-Node.js v26.0.0
-
-```
+| smoke-journey | 0 | 57 |  |
+| smoke-model-selector | 0 | 12 |  |
+| smoke-norfolk | 0 | 5 |  |
+| smoke-phases | 0 | 24 |  |
+| smoke-quality | 0 | 3 |  |
+| smoke-resume | 0 | 2 |  |
+| smoke-system-design | 0 | 68 |  |
+| smoke-visual-review | 0 | 6 |  |

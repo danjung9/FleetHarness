@@ -14,7 +14,7 @@ summary: "A small controller, independent evidence and enforced limits matter mo
 
 ## What a harness is
 
-[R] Use this working definition: a harness is the software surrounding a model that supplies context, tools, execution boundaries, durable state, feedback and termination rules. [R] A model proposes actions; the harness decides which actions can execute and which evidence changes the job's status. [P] The project README describes FleetHarness as a development system whose resulting applications can have different architectures, read at `/Users/mukul/Documents/CDAO/FleetHarness/README.md` on November 4.
+[R] Use this working definition: a harness is the software surrounding a model that supplies context, tools, execution boundaries, durable state, feedback and termination rules. [R] A model proposes actions; the harness decides which actions can execute and which evidence changes the job's status. [P] The project README describes FleetHarness as a development system whose resulting applications can have different architectures, read at `~/Documents/CDAO/FleetHarness/README.md` on November 4.
 
 ## Parts in priority order
 
@@ -79,4 +79,4 @@ release/manifest.json       approved output and dependency identities
 
 - [V] https://openai.com/index/harness-engineering/ (February 11, 2026; opened November 4).
 - [V] https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents (November 26, 2025; opened November 4).
-- [P] `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4; [[Event/Rules]] and [[Event/Judging]].
+- [P] `~/Documents/CDAO/FleetHarness/README.md`, read November 4; [[Event/Rules]] and [[Event/Judging]].

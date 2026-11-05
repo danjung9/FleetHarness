@@ -14,7 +14,7 @@ summary: "Dated rules and rubric assessment, submission gaps, dependency license
 
 ## Assessment boundary
 
-[P] Rules and weights below come from the November 4 captured summaries in [[Event/Rules]], [[Event/Judging]] and [[Sprint/Submission-Checklist]], as directed by [[Research/00-Brief]]. [E] The live portal form, current eligibility interpretation and acceptance of a challenge subset were not checked here. Source was read in `/Users/mukul/Documents/CDAO/FleetHarness`; no app, install, test, model call or credential was used in this review. Static implementation findings are not compliance certification.
+[P] Rules and weights below come from the November 4 captured summaries in [[Event/Rules]], [[Event/Judging]] and [[Sprint/Submission-Checklist]], as directed by [[Research/00-Brief]]. [E] The live portal form, current eligibility interpretation and acceptance of a challenge subset were not checked here. Source was read in `~/Documents/CDAO/FleetHarness`; no app, install, test, model call or credential was used in this review. Static implementation findings are not compliance certification.
 
 [E] The final clone HEAD was `0f175a8`, after an observed advance during review. This assessment and all 497 dependency rows remain pinned to the requested `f72c5dc`, with critical source and lockfile checks against Git objects. Later commits are outside this assessment.
 
@@ -646,7 +646,7 @@ summary: "Dated rules and rubric assessment, submission gaps, dependency license
 
 ## Sources
 
-- [E] `/Users/mukul/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`: source files cited above, `package.json`, `package-lock.json`, `src/studio/fonts/OFL.txt`, docs and tests.
+- [E] `~/Documents/CDAO/FleetHarness`, `mvp`, `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`: source files cited above, `package.json`, `package-lock.json`, `src/studio/fonts/OFL.txt`, docs and tests.
 - [P] [[Event/Rules]], [[Event/Judging]], [[Sprint/Submission-Checklist]] and [[Research/00-Brief]].
 - [E] [[Research/FleetHarness-MVP/What-Exists]], [[Research/Council/Officer/Decision]], [[Research/Council/Builder/Decision]] and [[Research/Council/Judge/Decision]].
 - [V] https://pi.dev/docs/latest/sdk

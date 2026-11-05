@@ -27,7 +27,7 @@ summary: "Local tool disclosure, friction, prior work and session record for the
 
 ## Prior work
 
-- [P] FleetHarness already proposes requirements, research, building, testing, repair and packaging in its README at `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
+- [P] FleetHarness already proposes requirements, research, building, testing, repair and packaging in its README at `~/Documents/CDAO/FleetHarness/README.md`, read November 4, 2026.
 - [E] This seat contributes a public-source landscape review. It does not claim to have invented or implemented the products or their features.
 - [E] A read-only `git status --short` showed an existing modification to `Team/Now.md` outside this folder. This seat did not edit it.
 

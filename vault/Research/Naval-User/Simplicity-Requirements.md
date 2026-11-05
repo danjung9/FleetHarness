@@ -90,4 +90,4 @@ summary: "Evidence-linked, testable usability and resilience targets for the off
 - [V] S3, GAO-24-106525, September 2024: https://www.gao.gov/assets/880/872778.pdf
 - [V] S4, NETCSTAFFINST 5216.1H, January 27, 2025: https://www.netc.navy.mil/Portals/46/NETC/staff%20inst/52161H.pdf
 - [V] S5, War on the Rocks, firsthand development account, February 27, 2020: https://warontherocks.com/fixing-the-navys-software/
-- [P] Local project README, read November 4, 2026, at `/Users/mukul/Documents/CDAO/FleetHarness/README.md`; [[Event/Rules]], [[Event/Judging]], [[UseCases/36-paperless-underway]], [[UseCases/37-sailor-built-to-fleet-fielded]].
+- [P] Local project README, read November 4, 2026, at `~/Documents/CDAO/FleetHarness/README.md`; [[Event/Rules]], [[Event/Judging]], [[UseCases/36-paperless-underway]], [[UseCases/37-sailor-built-to-fleet-fielded]].

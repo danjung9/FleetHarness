@@ -30,7 +30,7 @@ summary: "Use desktop Studio for the demo entry after closing run-consent and ev
 
 ## Prioritized work
 
-[E] File paths below are relative to `/Users/mukul/Documents/CDAO/FleetHarness`, reviewed at `0f175a8ce346521c4462fc134d40c0973eac1323`. [A] Hours are rough active engineering/review effort for someone familiar with the code, including the listed focused check. They exclude model waiting, account recovery and unrelated defects. They are not commitments by danjung9. [R] Reconcile each item against his current changes before editing; no source change was made by this review.
+[E] File paths below are relative to `~/Documents/CDAO/FleetHarness`, reviewed at `0f175a8ce346521c4462fc134d40c0973eac1323`. [A] Hours are rough active engineering/review effort for someone familiar with the code, including the listed focused check. They exclude model waiting, account recovery and unrelated defects. They are not commitments by danjung9. [R] Reconcile each item against his current changes before editing; no source change was made by this review.
 
 | Tag and change | Specific files and bounded action [R] | Done means [R] | Estimate [A] |
 | --- | --- | --- | --- |

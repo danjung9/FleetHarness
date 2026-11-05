@@ -55,7 +55,7 @@ summary: "Reading guide, verdict and local activity record for the FleetHarness 
 
 ## Sources
 
-- [P] Project README: `/Users/mukul/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. Its web URL, branch and commit were not verified; no repository URL is constructed from its name.
+- [P] Project README: `~/Documents/CDAO/FleetHarness/README.md`, lines 1 to 95, read locally on 2026-11-04. Its web URL, branch and commit were not verified; no repository URL is constructed from its name.
 - [P] Local assignment: [[Research/00-Brief]].
 - [P] Local event snapshots: [[Event/Rules]], [[Event/Judging]] and [[Sprint/Submission-Checklist]]. Their source portal URLs were not supplied in these files and were not invented.
 - [E] Local context: [[Team/Now]] and [[Reference/Open-Questions]], read on 2026-11-04.

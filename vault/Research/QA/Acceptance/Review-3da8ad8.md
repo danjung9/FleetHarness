@@ -1,6 +1,6 @@
 ---
 type: review
-status: active
+status: next-checks-ready
 owner: mukul
 updated: 2026-11-05
 summary: "Four native/browser receipts hold within scope; remaining combined-app gaps and the next delivery and persisted-baseline checks."
@@ -10,7 +10,7 @@ summary: "Four native/browser receipts hold within scope; remaining combined-app
 
 **[E] All four reported PASS results hold within their stated scope. No reviewed result needs to be downgraded.** The browser saved-state startup defect closes for the five tested cases. Detached Pi Stop and orderly application restart/Resume also pass their specific reproductions. These receipts do not establish complete acceptance of the combined app, completed sign-in, useful live-model output or delivery.
 
-[E] Main executed the receipts on clean `3da8ad831b7794bd65232ab074e986e8adbb8272`, tree `d705c5cb4b6a57539ce0a91f4c0c9e407130f183`, in `fh-org/astra-test`. Review compared raw observations, checker assertions, screenshots, source, retained worker evidence and hashes. Native receipts' 59 frontend and 93 backend files match the inspected checkout; the browser receipt covers the same 59 frontend files. Before/after identities agree and checker hashes match. Retained dependency/runtime identities also match. This establishes which compiled bytes ran and stayed stable; derivation from source still depends on main's separate build receipt. No product code or native application was executed during this review.
+[E] Main executed the receipts on clean `3da8ad831b7794bd65232ab074e986e8adbb8272`, tree `d705c5cb4b6a57539ce0a91f4c0c9e407130f183`, in `fh-org/astra-test`. Review compared raw observations, checker assertions, screenshots, source, retained worker evidence and hashes. Native receipts' 59 frontend and 93 backend files matched the checkout while it remained at that revision; the browser receipt covers the same 59 frontend files. Before/after identities agree and checker hashes match. Retained dependency/runtime identities also matched. This establishes which compiled bytes ran and stayed stable; derivation from source still depends on main's separate build receipt. No product code or native application was executed during this review.
 
 ## What the receipts actually establish
 
@@ -73,6 +73,23 @@ Paths below are relative to `Research/QA/Overnight/`. Original receipts are unch
 
 [E] The first new script is ready: `Research/QA/Overnight/qa-native-baseline-resume.mjs`, SHA256 `e53ee61b7a80af13690252ff3e4f1f092c7000dd6922118b02f69dafb1d1bcbf`. Source review, syntax and pure negative controls pass. Main received its path. It changes only literal fixture filename references from `parser.test.cjs` to `token.test.cjs`, records original/transformed hashes, and checks exact saved baseline bytes/hash maps before Stop, after full process exit, after restart and during resumed verification. It requires a newly written verification artifact without rerunning earlier phases, then stops. It does not complete verification or execute the preserved tests after that gate. No native result is claimed yet.
 
-[R] The second script completes the build-to-source-delivery path with independent changed-input checks. It is still being prepared; final commands, hash and validation will be recorded before handoff. Main retains native execution.
+[E] The second script is ready: `Research/QA/Overnight/qa-native-delivery.mjs`, SHA256 `81d9d7cc75e2d2446aef10ab2040be125bb6affddddc47b90e1397310d246e35`. Syntax, pure negative controls and separate source review pass. Ten rows cover a complete native fixture build, visible evidence/limitations, four independent native-preview inputs, review notes/acknowledgment gates, stale-source refusal before approval, exact byte restoration and actual approval, stale-source refusal before export, actual source export, four different inputs in a fresh offline exported-copy browser, and final state. Both stale denials must leave evidence unchanged and occur before any folder chooser or destination. The script retains raw observations, screenshots, source/build/dependency identity, owned mutation/restoration records and separate cleanup status. A cleanup, recording or identity error cannot produce PASS.
+
+[E] The only native UI hook in the delivery checker is the folder chooser, directed to an owned output directory. Production IPC, report and approval state are unchanged. Provider and judge are explicitly deterministic local fixtures. Literal app expectations are separate from generated tests and reports. A PASS would establish these fixture behaviors, not live-model judgment, a person's acceptance, packaging, a useful arbitrary generated app or a completed revision request. The exported source remains available for inspection; the owned profile is removed only after confirmed cleanup.
+
+[R] Main runs both against a stable clean compiled checkout, preserving its build receipt. They are unpinned and record the actual revision. Each output directory below already exists; each script creates a unique child containing `result.json`. Delivery requires an existing Chrome installation; optional `--chrome /absolute/executable` overrides discovery without installing anything. Run these separately from checkout mutations.
+
+```sh
+node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-delivery.mjs ~/Documents/CDAO/fh-org/astra-test ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-baseline-resume.mjs ~/Documents/CDAO/fh-org/astra-test ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
+```
+
+[E] Only syntax and pure checker controls were executed during preparation. The baseline script's runtime watchdog is 360 seconds; delivery's is 600 seconds. Native execution and resulting verdicts belong to main. Original four receipt checkers remain unchanged in this turn.
+
+## Descendant source compatibility
+
+[E] Before final handoff, astra-test advanced to clean `7c8b66339efe7fd10ebc5a1e5d52786f60115b55`. Source review compared the intervening UI, review, backend, storage, export and contract changes. Both new scripts remain compatible with their browser-fixture scope; neither requires an edit. All five provider fixture modules, original baseline capture and ordinary Resume remain unchanged. Approval/export selectors and guards remain. The new root Dockerfile/compose exclusions do not change this fixture's manifest because it contains neither file.
+
+[E] The descendant adds changes requested after approval/delivery, local Electron runtime packaging and service container exports. Those expand the unproven F22/F23 journeys: exercise the new Deliver feedback controls and run-specific history, verify the resulting requested behavior and fresh approval, launch an actual packaged app offline, and run/stop a service container from its delivered instructions. These source additions have no native acceptance receipt in this review. The four reviewed PASS results stay attributed to 3da8ad8; compatibility inspection is not a transferred runtime result.
 
 [R] After those checks, prioritize the owner-controlled intended event-key/Codex build and Stop route, a concrete requested behavior change, and native service/CLI delivery. Retain the target's exact lifecycle/judge regression receipts rather than substituting a broad test count. Windows and hosted deployment remain separate platform/branch acceptance.

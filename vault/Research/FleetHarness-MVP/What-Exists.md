@@ -10,11 +10,11 @@ summary: "Source trace of the implemented factory, its bounded toolkit, review c
 
 ## Bottom line
 
-[E] FleetHarness has an implemented Electron software factory, with two React interfaces, a captured challenge catalog, Pi coding sessions, test execution, repair and reviewed local export. This was established by reading branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`, in `/Users/mukul/Documents/CDAO/FleetHarness`; read-only Git status showed no changes. [E] It targets generated browser prototypes, and its catalog does not constitute 34 completed applications. [E] Approval gates local delivery, while coding agents already have shell access before that approval. [A] Hosted-model generation, event-key compatibility, packaged-app operation and current test results remain not verified because this review did not execute repository software.
+[E] FleetHarness has an implemented Electron software factory, with two React interfaces, a captured challenge catalog, Pi coding sessions, test execution, repair and reviewed local export. This was established by reading branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`, in `~/Documents/CDAO/FleetHarness`; read-only Git status showed no changes. [E] It targets generated browser prototypes, and its catalog does not constitute 34 completed applications. [E] Approval gates local delivery, while coding agents already have shell access before that approval. [A] Hosted-model generation, event-key compatibility, packaged-app operation and current test results remain not verified because this review did not execute repository software.
 
 ## Reading the evidence
 
-[E] Every repository path below is relative to `/Users/mukul/Documents/CDAO/FleetHarness` at the full commit above. Implemented means a concrete source path exists, not that this seat observed it running. [P] Mukul identified this as teammate danjung9's pushed working branch. [E] The tests were read as test definitions; no pass count in this report is a newly observed result.
+[E] Every repository path below is relative to `~/Documents/CDAO/FleetHarness` at the full commit above. Implemented means a concrete source path exists, not that this seat observed it running. [P] Mukul identified this as teammate danjung9's pushed working branch. [E] The tests were read as test definitions; no pass count in this report is a newly observed result.
 
 [E] The clone advanced during this review: the final HEAD check returned `0f175a8ce346521c4462fc134d40c0973eac1323`, following `1f32d87`. Critical execution/approval sources were reread directly with `git show f72c5dc:<path>`, and the dependency inventory was rebuilt from that commit's Git object. This report describes the requested `f72c5dc`, not the later commits. [R] Recheck these findings against a newer submission revision before acting on its gaps.
 
@@ -113,7 +113,7 @@ summary: "Source trace of the implemented factory, its bounded toolkit, review c
 
 ## Sources
 
-- [E] Repository root: `/Users/mukul/Documents/CDAO/FleetHarness`, branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`; files named above, `package.json`, `package-lock.json`, `docs/desktop.md`, `docs/pipeline.md`, `docs/studio.md` and `README.md`.
+- [E] Repository root: `~/Documents/CDAO/FleetHarness`, branch `mvp`, commit `f72c5dc15aa6c34d2b9080c1c0b87742230cc16e`; files named above, `package.json`, `package-lock.json`, `docs/desktop.md`, `docs/pipeline.md`, `docs/studio.md` and `README.md`.
 - [E] [[Research/00-Brief]], [[Team/Now]] and [[Research/Council/Officer/Decision]].
 - [V] https://pi.dev/docs/latest/sdk
 - [V] https://pi.dev/docs/latest/models

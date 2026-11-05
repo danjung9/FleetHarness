@@ -37,7 +37,7 @@ summary: "Borrow Aperant's workflow patterns, but do not adopt its desktop engin
 
 ## Inspection scope and session record
 
-[E] Inspected the supplied read-only clone at `/private/tmp/claude-501/-Users-mukul-Documents-CDAO/9689cc99-a233-4d19-b7d4-0952c97d9106/scratchpad/fleethacker/repos/Aperant`. `git rev-parse HEAD` returned `20250db069a849ab001ac6ab9e3e9779886ab9e2`; the checkout is shallow. Code paths in these notes are relative to that repository unless specified otherwise. For compact references, `ai/` means `apps/desktop/src/main/ai/`.
+[E] Inspected the supplied read-only clone at `<local clones>/Aperant`. `git rev-parse HEAD` returned `20250db069a849ab001ac6ab9e3e9779886ab9e2`; the checkout is shallow. Code paths in these notes are relative to that repository unless specified otherwise. For compact references, `ai/` means `apps/desktop/src/main/ai/`.
 
 [E] Used read-only shell inspection (`rg`, `cat`, `sed`, file listing, Git metadata) and public web search/open on 2026-11-04. No repository code, installation scripts, builds, or tests were executed. No account was connected and no outward message, commit, or push was made.
 
@@ -57,4 +57,4 @@ summary: "Borrow Aperant's workflow patterns, but do not adopt its desktop engin
 - [V] Project: https://github.com/AndyMik90/Aperant
 - [V] Public source at inspected revision: https://github.com/AndyMik90/Aperant/tree/20250db069a849ab001ac6ab9e3e9779886ab9e2
 - [V] Product claims: https://aperant.com/
-- [P] Assigned local sources: `Research/00-Brief.md`, `Event/Rules.md`, `Event/Judging.md`, `Event/Terms.md`, and `/Users/mukul/Documents/CDAO/FleetHarness/README.md`.
+- [P] Assigned local sources: `Research/00-Brief.md`, `Event/Rules.md`, `Event/Judging.md`, `Event/Terms.md`, and `~/Documents/CDAO/FleetHarness/README.md`.

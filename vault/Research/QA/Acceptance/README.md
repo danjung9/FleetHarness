@@ -17,10 +17,10 @@ summary: "Independent browser acceptance of the exact delivered synthetic ID 11 
 [R] Replace the two placeholder paths with the actual final candidate folder and its existing stopped-writer receipt. Use the same frozen script on both candidates. The output folder receives a unique run directory. `--chrome` may name an existing Chrome binary if the default installed path differs.
 
 ```sh
-node /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.mjs \
+node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/accept-training.mjs \
   /absolute/path/to/final-task-app \
-  /Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results \
-  --deps /Users/mukul/Documents/CDAO/fh-org/gui-631849f \
+  ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Acceptance/Results \
+  --deps ~/Documents/CDAO/fh-org/gui-631849f \
   --writers-stopped-evidence /absolute/path/to/operator-receipt.md
 ```
 

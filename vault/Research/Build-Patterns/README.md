@@ -65,7 +65,7 @@ summary: "Research verdict: build a bounded, evidence-producing factory for one 
 ## Sources
 
 - [P] [[Research/00-Brief]], [[Event/Rules]], [[Event/Judging]], [[Team/Now]] and [[Reference/Open-Questions]].
-- [P] `/Users/mukul/Documents/CDAO/FleetHarness/README.md`.
+- [P] `~/Documents/CDAO/FleetHarness/README.md`.
 - [V] https://openai.com/index/harness-engineering/
 - [V] https://openai.com/index/separating-signal-from-noise-coding-evaluations/
 - [V] https://arxiv.org/abs/2407.01489
