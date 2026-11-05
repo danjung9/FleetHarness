@@ -128,3 +128,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 19:55 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`
 - 20:15 Connectors through the real screen against fake servers: seven sample cards, custom API, Gmail and Outlook sign-in, restart and token refresh all pass. Unit 399 of 399 before the last test-only changes. The final step, a fixture build using connected data, is not yet passing and is rerun after the backend merge. Real keychain and real Google or Microsoft sign-in are not tested.
 - 20:15 Astra merge-dan finished, exit 0. Report: `Research/Backend-Audit/merge-dan.md`
+- 20:21 Combined branch, Dan's work plus ours with the locks out and API-key sign-in: unit 588 of 596, harness 84 of 84, outside the sandbox. Eight failures going back to the fixer.
+- 20:21 Astra merge-dan started: Your batch is committed (0ad7b73), and the smoke script fix is merged on top. Full run outside the sandbox, with real ps
