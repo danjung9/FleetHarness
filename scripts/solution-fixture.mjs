@@ -6,13 +6,17 @@ export function solutionFixture(ids) {
   files['foundation-plan.json'] = JSON.stringify({ schemaVersion: 1, templateId: 'custom', version: '1.0.0', computePack: 'custom', reason: 'This regression fixture deliberately exercises the existing browser-only runtime and inline evaluator, without a backend service.' }, null, 2);
   const plan = JSON.parse(files['acceptance-plan.json']);
   plan.schemaVersion = 2;
-  plan.criteria.forEach((criterion, index) => { criterion.capabilityIds = index === 0 ? ['parse'] : []; });
+  // An empty criteria field puts deferred recipe outcomes before the prose task.
+  // Bind computation to an implemented parser obligation, never array position.
+  const parserCriterion = plan.criteria.find(criterion => criterion.disposition === 'implemented')?.criterionId;
+  if (!parserCriterion) throw new Error('The parser fixture requires an implemented parser obligation.');
+  plan.criteria.forEach(criterion => { criterion.capabilityIds = criterion.criterionId === parserCriterion ? ['parse'] : []; });
   files['acceptance-plan.json'] = JSON.stringify(plan, null, 2);
   files['solution-contract.json'] = JSON.stringify({ schemaVersion: 1,
     objective: 'Extract a task from a supplied synthetic message.',
     invocation: { input: 'A JSON string containing a message.', output: 'A JSON string or null, without an envelope.', rules: ['If the message starts with TASK: followed by one space, return the remaining text. Otherwise return null.'] },
     runtime: { profile: 'browser', entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] }, files: ['index.html', 'evaluate.cjs', 'core.cjs'], requiredEnv: [] },
-    capabilities: [{ id: 'parse', kind: 'algorithm', description: 'Extract task text using the delivered browser parser.', criterionIds: [ids[0]], required: true, evaluationIds: ['parse-cases'] }]
+    capabilities: [{ id: 'parse', kind: 'algorithm', description: 'Extract task text using the delivered browser parser.', criterionIds: [parserCriterion], required: true, evaluationIds: ['parse-cases'] }]
   }, null, 2);
   files['evaluation-plan.json'] = JSON.stringify({ schemaVersion: 1, evaluations: [{ id: 'parse-cases', capabilityId: 'parse', description: 'Independent synthetic extraction examples.',
     dataset: { name: 'task-parser', version: '1', provenance: 'synthetic' }, evaluator: 'exact', threshold: 1, trials: 1,

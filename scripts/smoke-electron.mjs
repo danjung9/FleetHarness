@@ -21,7 +21,7 @@ try {
   assert.equal(await page.evaluate(()=>typeof window.fleetHarness?.startRun),'function');
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
   const firstId=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
-  await assert.rejects(page.evaluate(id=>window.fleetHarness.startRun(id),firstId),/Choose a model/);
+  await assert.rejects(page.evaluate(id=>window.fleetHarness.startRun(id),firstId),/The build service is not connected; connect it in Model settings and try again\./);
   await page.screenshot({path:path.join(output,'factory-desktop.png'),scale:'css'});
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1120,720));
   await page.screenshot({path:path.join(output,'factory-minimum.png'),scale:'css'});

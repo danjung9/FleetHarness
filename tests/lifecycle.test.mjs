@@ -12,6 +12,8 @@ import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
 import { reportHash, deliveryEvidence } from '../dist-electron/electron/delivery.js';
 import { atomicHostWrite } from '../dist-electron/shared/host-files.js';
 import { mainHarness } from './helpers/main-harness.mjs';
+import { briefHash as conversationBriefHash } from '../dist-electron/electron/conversation.js';
+import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 async function fixture(t) {
@@ -62,6 +64,32 @@ test('late helper writes during cleanup cannot acquire authoritative passing evi
   assert.ok(p.logs.some(log => log.text.includes('Source changed during final process cleanup')));
   const main = await mainHarness(store, backend);
   await assert.rejects(main.invoke('fleet:approve', p.id, 'Synthetic approval'), /review|verification/i);
+});
+
+test('a Stop proposal is recorded as applied only after the backend Stop promise settles', async t => {
+  const { store, p } = await fixture(t), entered = deferred(), release = deferred();
+  t.after(() => release.resolve());
+  p.status = 'running';
+  const action = { id: 'synthetic-stop', type: 'stop', title: 'Stop build', reason: 'Synthetic lifecycle check',
+    status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
+  p.conversation = { status: 'idle', messages: [], actions: [action], questions: [] };
+  const backend = { active: new Map([[p.id, {}]]), async stop(id) {
+    assert.equal(id, p.id);
+    p.status = 'stopped'; await store.save(); entered.resolve();
+    await release.promise; this.active.delete(id);
+  } };
+  const main = await mainHarness(store, backend, 'electron/main.ts', {
+    briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} }
+  });
+  const applying = main.invoke('fleet:conversation:apply', p.id, action.id);
+  await entered.promise;
+  assert.equal(p.status, 'stopped'); assert.equal(action.status, 'proposed');
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /current project operation/);
+  release.resolve(); await applying;
+  assert.equal(action.status, 'applied');
+  assert.equal(p.conversation.messages.at(-1).text, 'Build stopped. Saved outputs remain available.');
+  const persisted = JSON.parse(await fs.readFile(path.join(store.root, 'state.json'), 'utf8')).projects.find(project => project.id === p.id);
+  assert.equal(persisted.status, 'stopped'); assert.equal(persisted.conversation.actions[0].status, 'applied');
 });
 
 test('Stop cancels a preview reserved before its first state save resumes', async t => {

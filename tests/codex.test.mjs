@@ -401,7 +401,7 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
     await new Promise(resolve => server.close(resolve));
     // dispose initiates shutdown; wait until Codex stops writing its local state.
     await Promise.all(processClosures);
-    await fs.rm(home, { recursive: true, force: true });
+    await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -465,10 +465,12 @@ for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex sur
       { type: 'input_image', image_url: `data:image/png;base64,${screenshotPng}` }
     ]);
   } finally {
-    value?.dispose(); server.closeAllConnections();
+    await value?.dispose(); server.closeAllConnections();
     await new Promise(resolve => server.close(resolve));
     await Promise.all(processClosures);
-    await fs.rm(home, { recursive: true, force: true });
+    // Directory removal can race final filesystem activity under suite load.
+    // Keep cleanup mandatory, with bounded retries after the process has closed.
+    await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 

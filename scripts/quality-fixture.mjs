@@ -10,6 +10,11 @@ export const cliFixtureProject = {
   description: 'Parse an invented TASK: prefix through a JSON command-line protocol.',
   criteria: ['Parse a synthetic task and recover from empty input.']
 };
+export const briefDataFixtureProject = {
+  title: 'Connected inputs regression',
+  description: 'Create a local message parser to inspect a task and retain source context.',
+  criteria: []
+};
 
 export function qualityFixture(criterionIds) {
   const recipeOutcomes = {

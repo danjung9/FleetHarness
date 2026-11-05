@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { briefDataFixtureProject } from './quality-fixture.mjs';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-brief-data-ui-'));
 const output = path.resolve('output/playwright/brief-data');
@@ -54,8 +55,8 @@ try {
 
   await page.getByRole('button', { name: 'New challenge', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'New challenge', exact: true });
-  await dialog.getByLabel('Challenge title', { exact: true }).fill('Connected inputs regression');
-  await dialog.getByLabel(/^Problem statement(?:\s|$)/).fill('Create a local message parser to inspect a task and retain source context.');
+  await dialog.getByLabel('Challenge title', { exact: true }).fill(briefDataFixtureProject.title);
+  await dialog.getByLabel(/^Problem statement(?:\s|$)/).fill(briefDataFixtureProject.description);
   await dialog.getByLabel('Attach data files', { exact: true }).setInputFiles(file);
   await dialog.getByRole('button', { name: 'Paste data', exact: true }).click();
   await dialog.getByLabel('Input name', { exact: true }).fill('task-notes.txt');
@@ -134,7 +135,7 @@ try {
     await page.screenshot({ path: path.join(output, 'failure.png'), scale: 'css' }).catch(() => {});
     await fs.writeFile(path.join(output, 'failure.json'), JSON.stringify(await page.evaluate(async () => ({
       labels: [...document.querySelectorAll('dialog label')].map(label => label.textContent),
-      projects: (await window.fleetHarness.bootstrap()).state.projects.map(project => ({ id: project.id, status: project.status, error: project.error }))
+      projects: (await window.fleetHarness.bootstrap()).state.projects.map(project => ({ id: project.id, status: project.status, error: project.error, logs: project.logs.slice(-20) }))
     })), null, 2)).catch(() => {});
   }
   throw error;

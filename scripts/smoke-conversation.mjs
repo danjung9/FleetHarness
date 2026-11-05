@@ -236,7 +236,9 @@ try {
   await send('Stop the current build.');
   const stopProposal = (await project()).conversation.actions.at(-1);
   await page.getByRole('region', { name: 'Proposed action: Stop build', exact: true }).getByRole('button', { name: 'Stop build', exact: true }).click();
-  const stopped = await stateWhere(state => state.status === 'stopped', 'stop pending research');
+  // The run settles before its enclosing proposal IPC records the action result.
+  const stopped = await stateWhere(state => state.status === 'stopped'
+    && state.conversation.actions.find(action => action.id === stopProposal.id)?.status === 'applied', 'stop pending research and record the applied proposal');
   const cancelled = stopped.conversation.questions.find(question => question.runId === stopped.runId && question.phase === 'research');
   assert.equal(cancelled.status, 'cancelled');
   assert.equal(stopped.conversation.actions.find(action => action.id === stopProposal.id).status, 'applied');
