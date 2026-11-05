@@ -168,3 +168,6 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 03:13 Real build, round 5, id12-optask: failed in 17 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo
 - 03:18 Real build, round 5, id36-paperless: failed in 22.6 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo
 - 03:20 Real build, round 5, id11-training: failed in 24.6 minutes, tests None, journeys 0/0. The app did not pass its checks; review the failed checks in the activity log before trying again.
+- 03:37 Judge, R5-id11-training: NOT. The automatic bar failed. `final.json:3,73-79,95-113` records failed build, queued verification/review/delivery and a null final report. The retained core report records 
+- 03:37 Astra planning-audit started: Project: AppYard, repo FleetHarness. An Electron app that takes a challenge brief and runs an agent pipeline to a delive
+- 03:37 Real build, round 5, id20-contact-brief: failed in 18.9 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo

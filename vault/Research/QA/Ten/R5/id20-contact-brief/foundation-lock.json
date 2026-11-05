@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "selection": {
+    "schemaVersion": 1,
+    "templateId": "node-service",
+    "version": "1.0.0",
+    "computePack": "evidence",
+    "reason": "Reuse dependency-free Node HTTP service and lexical evidence primitive; extend compute.mjs for conservative identity, family-specific freshness, exact claim spans, integrity and structured brief assembly. Sixteen snapshots need no SQLite/embedding dependency. Embedded HTML sample records remain inert; the UI and tests use the same backend."
+  },
+  "templateHash": "bf1ddfcd47b41d94828161c7db765f416c1c45e40d3defac013a948a4f488992",
+  "files": {
+    "compute.mjs": "1dc67ecdb40317ce9d80e4bb7c09f9b38722d59faa11057c58463c1d6f0993c1",
+    "example-input.json": "6dce0c7fe5904195eab93d3b4baf0e3c4d25a500816090221716759cea7b0b25",
+    "FOUNDATION.md": "54478d77b77e1c561e867c2f9058c8e87e7afb5bf13696545f1fbd5d5e88480b",
+    "lib/evidence.js": "1444be76f46c0dc5d74934e2898441e1a533bb284953aaa53bc11912633d9617",
+    "lib/validation.js": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f",
+    "package.json": "92ed1ff0bbc999477871bb4faf6327c6d8261ab9a57eec87ef874782223cd455",
+    "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+    "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+    "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+    "server.mjs": "b4ee7c4947312a15dca5e3e81eb34226fbd79238b1fc575632e342e7310e6864"
+  },
+  "copiedFiles": 10,
+  "copiedBytes": 25297,
+  "scope": "Original starter bytes before agent edits; not application verification or measured token savings."
+}

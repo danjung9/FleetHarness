@@ -1,0 +1,24 @@
+{
+  "query": "training log",
+  "asOf": "2026-11-04T12:00Z",
+  "maxAgeDays": 90,
+  "limit": 5,
+  "documents": [
+    {
+      "id": "doc-1",
+      "title": "Synthetic training note",
+      "source": "fixture://training-note",
+      "text": "The training log is reviewed by the assigned instructor before the record is filed.",
+      "approved": true,
+      "updatedAt": "2026-11-01T09:00Z"
+    },
+    {
+      "id": "doc-2",
+      "title": "Excluded draft",
+      "source": "fixture://excluded",
+      "text": "Training log training log training log.",
+      "approved": false,
+      "updatedAt": "2026-11-01T09:00Z"
+    }
+  ]
+}

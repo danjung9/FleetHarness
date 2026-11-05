@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "objective": "Compute conservative identity resolution and a complete claim-grounded structured contact brief from invented maritime snapshots; render and export a concise human-review draft without unsupported inference.",
+  "invocation": {
+    "input": "POST raw JSON object to /api/invoke. No action discriminator: exactly one research operation. Required records: nonempty array of synthetic vessel records in the data/README.md nested schema (vesselId,name,aliases,imo,mmsi,provenance,policy,snapshots; snapshots include snapshotId,sourceFamily,publisher,title,location,localCitation,provenance,permitted,capturedAt,publishedAt,eventAt,identity,content,sha256,claims with field,value,citation{snapshotId,start,end,excerpt}). queryType is Name|IMO|MMSI, queryValue string. Optional asOf UTC ISO string defaults 2026-11-05T12:00:00Z; selectedVesselId nullable string defaults null; nameConstraint nullable string defaults null; question and inspectSnapshotId nullable strings default null and are non-operative UI context. Do not pass expected, fixtureMutation or scenario answers. Missing optional null means default. Unknown top-level keys are rejected. Structural malformed records are validation_error except snapshot evidence defects defined below. No remote fetch or mutation action. Nested types: record vesselId/name/imo/mmsi/provenance are nonblank strings; aliases is string[]; policy is object with schemaVersion integer 1, asOf UTC string and provenance/identity/freshness/conflict/sanctions/permission/integrity/format/availability explanatory strings, not executable instructions. snapshots is array (may be empty). snapshot snapshotId/sourceFamily/publisher/title/location/localCitation/provenance/content/sha256 are strings; permitted boolean; capturedAt required UTC string; publishedAt/eventAt nullable UTC strings (missing treated null); identity is {vesselId:string,name:string,imo:string,mmsi:string}; claims is array of {field:string,value:string,citation:{snapshotId:string,start:integer,end:integer,excerpt:string}}. Record IDs and snapshot IDs must be unique and provenance must be synthetic. Unknown nested keys are ignored, never treated as instructions. Empty/missing content, invalid digest, invalid/missing claim citation or missing capture time are evidence_error for an otherwise structurally valid selected snapshot; malformed outer records/arrays/identity types are validation_error. Optional question/inspectSnapshotId are accepted only as nullable strings. Limits: 200 records, 200 snapshots total, each content at most 100000 code points; excess is validation_error. Input is caller-supplied synthetic data, not proof of real source approval.",
+    "output": "Exactly {status,candidateIds,selectedVesselId,includedSnapshotIds,excludedSnapshotIds,rejectedIdentitySnapshotIds,supportedFacts,unknownFields,staleSnapshotIds,conflicts}. status is resolved|ambiguous|identity_conflict|not_found|validation_error|evidence_error. selectedVesselId string or null. All *Ids and unknownFields are string arrays. supportedFacts is ordered array of {field:string,value:string,citation:{snapshotId:string,start:integer,end:integer,excerpt:string},eventAt:string|null,capturedAt:string}. conflicts is [{field:string,values:string[],snapshotIds:string[]}]. This is the authoritative structured brief; interface only renders these returned claims and abstentions with filtered source metadata and content from the submitted corpus, never recomputes identity/freshness/claim eligibility. No extra envelope or response fields.",
+    "rules": [
+      "Validation precedence: malformed request/field types, missing required fields or unknown keys first; invalid queryType/queryValue next; invalid asOf then invalid candidate selection. These yield validation_error, selectedVesselId null and all arrays empty. No exception for ordinary domain errors. JSON transport errors use HTTP 400 with {error:\"Invalid JSON\"}; domain responses use HTTP 200. Unexpected service failures use HTTP 500 with {error:\"Internal error\"}.",
+      "Name queries trim and lowercase for exact matching to names/aliases; blank invalid. IMO trims, removes case-insensitive prefix IMO followed by optional spaces, then requires exactly seven ASCII digits. MMSI trims and requires exactly nine ASCII digits. No checksum/real identity validation. asOf is valid calendar UTC ISO YYYY-MM-DDTHH:mm:ssZ. Identifier fields remain strings.",
+      "Find candidates from record identity metadata, lexically ordered by vesselId. nameConstraint if nonblank must exact-normalized match a name/alias of a numeric-query candidate; disagreement yields identity_conflict with unknownFields [\"identity\"] and all other arrays empty. For Name queries nameConstraint ignored. Candidate selection must belong to query candidates or validation_error; absent/null selection with multiple matches yields ambiguous, candidates retained, unknownFields [\"identity\",\"intent\"], selected null and no evidence arrays. Zero candidates yields not_found, unknownFields [\"identity\",\"sanctions\",\"intent\"], otherwise empty. Single candidate selects automatically.",
+      "For a selected record, process snapshots in original record order. Filter permitted=false and capturedAt later than asOf before retrieval, inspection or export. excludedSnapshotIds contains those selected-record snapshot IDs in record order. Never return their claims/content. A simulated permission flag is not access control. Exact numeric linkage (IMO or MMSI agreeing and no conflicting provided numeric key) is required for source identity; name-only sanctions matching is forbidden.",
+      "rejectedIdentitySnapshotIds: in corpus record/snapshot order, list permitted available snapshots on other vessels sharing the selected normalized name when their numeric identifiers disagree, only when the selected record has AIS evidence and all its available AIS observations are stale, and at least one such other snapshot is OFAC/EU evidence. This rejects the entire same-name other-vessel evidence set. Do not merge identities. Unrelated differently named records are implicit nonmatches.",
+      "Validate eligible selected-record snapshots: capturedAt required valid UTC; content and sha256 required, lowercase SHA-256 of exact UTF-8 content; citations require matching snapshotId, integer 0<=start<end, exact Unicode code-point slice equals excerpt and full key=value line with field/value equality. Allowed families AIS,registry,OFAC,EU_sanctions,port_log. Missing eventAt/publishedAt is allowed null. Non-null timestamps must be valid UTC. A missing/invalid required capture time, digest mismatch or invalid claim span yields evidence_error, preserving candidates/selection, included/facts/stale/conflicts/rejected arrays empty. Excluded IDs combine invalid snapshots and permission/future exclusions in record order. UnknownFields lists affected AIS [\"current_position\",\"speed_knots\",\"navigation_status\"], affected port_log [\"port\",\"port_event_time\"], otherwise [\"evidence\"], deduplicate and append \"intent\". On any such error suppress the whole draft and export. No partial successful brief.",
+      "On success includedSnapshotIds is all selected eligible valid snapshots in record order (including notes whose only claim is identity). supportedFacts copies every validated claim in snapshot/claim order, appending eventAt and capturedAt. Do not parse note or instruction_text into claims, execute source content, or trust supplied claims without validating line and span. question never suppresses the full brief; inspectSnapshotId does not change computation.",
+      "Stale uses asOf minus eventAt strictly greater than family limit: AIS 48 hours, registry 30 days, OFAC/EU_sanctions 7 days, port_log 14 days. Equality fresh, negative age not stale, null eventAt freshness UNKNOWN. staleSnapshotIds follows included order. Capture controls availability separately; capture never substitutes for event/publication.",
+      "Conflicts group distinct permitted values for the same field across included claims in order of first field occurrence. Ignore identity fields, entry_id, listing_date, listed_status across different source families; compare those only within a family. Distinct owner values always conflict. values and snapshotIds are deduplicated in first-occurrence order; retain both supported source assertions but display final conflicted value UNKNOWN.",
+      "unknownFields for resolved brief in this order: if all registry evidence unavailable because captured after asOf, use [\"registry_at_query_time\",\"sanctions\",\"intent\"] only. Otherwise add \"EU_sanctions\" first when OFAC exists but EU absent; add \"current_position\" when AIS exists but no nonstale AIS with known eventAt exists, or when neither AIS nor port-log evidence exists; if port evidence has null eventAt add \"port_event_time\",\"port_freshness\"; add \"owner\" if absent or conflicted; add \"sanctions\" if neither exact-linked OFAC nor EU exists; always add \"cargo\" if absent, then \"intent\". Deduplicate. A registry-supported owner may be displayed only if not conflicted. Historical AIS remains historical even though supportedFacts retains its source assertions.",
+      "All affirmative displayed facts must use supportedFacts citations, including vessel identifiers; identity metadata is a resolution index, not uncited evidence. Source inspection shows original permitted content, offsets, SHA revision, source identity/location, event/publication/capture times and asOf separately. UNKNOWN is literal uppercase. No local sanctions match is UNKNOWN, never cleared. Intent is always UNKNOWN; no legal/intent inference or model call.",
+      "Public UI error messages: malformed IMO \"Enter seven numeric IMO digits (optional IMO prefix).\"; malformed MMSI \"Enter nine numeric MMSI digits.\"; blank Name \"Enter a vessel name.\". Status text ambiguous \"Ambiguous identity \u2014 select a vessel\"; identity_conflict \"Identity conflict \u2014 name and identifier disagree\"; not_found \"UNKNOWN \u2014 no matching vessel\"; evidence_error \"Evidence integrity error \u2014 restore synthetic corpus\". Invalid other inputs use \"Invalid request\". Service unavailable uses \"Local service unavailable \u2014 retry after restarting the service\". Never retain an old brief as a new query result.",
+      "Print/download are presentation of the same structured result, no separate inference. Download synthetic-contact-brief.html includes a concise US Letter portrait one-page summary with compact citation anchors and timestamp legend and local source content available on screen; hide expanded source content in print. Keep SYNTHETIC \u2014 not validated against the real format, conflicts, UNKNOWN, asOf and source timestamps visible. Every cited factual claim must link to exact local source content. No publication, external transmission, approval or operational readiness implied."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "contact-evidence",
+      "kind": "retrieval",
+      "description": "Required deterministic vessel identity, source-specific ingestion validation, permitted exact-span evidence, freshness/conflict/UNKNOWN structured brief; interface and evaluation invoke the same compute.mjs.",
+      "criterionIds": [
+        "UC20-2",
+        "RET-01",
+        "RET-02",
+        "DESC20-1",
+        "DESC20-2",
+        "DESC20-3",
+        "SUMMARY20-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "contact-reference"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/evidence.js",
+      "example-input.json"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

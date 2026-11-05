@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "evidence",
+  "reason": "Reuse dependency-free Node HTTP service and lexical evidence primitive; extend compute.mjs for conservative identity, family-specific freshness, exact claim spans, integrity and structured brief assembly. Sixteen snapshots need no SQLite/embedding dependency. Embedded HTML sample records remain inert; the UI and tests use the same backend."
+}

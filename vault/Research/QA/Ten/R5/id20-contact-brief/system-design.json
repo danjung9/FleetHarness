@@ -1,0 +1,84 @@
+{
+  "title": "Synthetic Cited Contact Brief",
+  "description": "Local synthetic vessel research and cited draft; named feed integrations are simulated. No operational ingestion or publication.",
+  "components": [
+    {
+      "id": "query",
+      "label": "Watchstander query and identity review",
+      "description": "Name/IMO/MMSI form, candidate selection and recovery.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local HTTP service",
+      "description": "Foundation loopback health and invocation transport.",
+      "kind": "integration",
+      "files": [
+        "server.mjs"
+      ]
+    },
+    {
+      "id": "corpus",
+      "label": "Embedded synthetic maritime snapshots",
+      "description": "Preserved fictional AIS, IMO registry, OFAC/EU and port logs; simulated integrations. Sample records embedded without scenario answers.",
+      "kind": "data",
+      "files": [
+        "public/index.html"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Identity and evidence computation",
+      "description": "Shared backend validates digests/spans, filters permissions/availability, resolves identity and evaluates conflicts/freshness.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "lib/evidence.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "brief",
+      "label": "Cited brief and source inspection",
+      "description": "One-page draft, local snapshot citations, UNKNOWN warnings and labeled HTML download for human interpretation.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "corpus",
+      "to": "query",
+      "label": "inert embedded sample records"
+    },
+    {
+      "from": "query",
+      "to": "api",
+      "label": "raw request plus records"
+    },
+    {
+      "from": "api",
+      "to": "evidence",
+      "label": "shared invocation"
+    },
+    {
+      "from": "evidence",
+      "to": "brief",
+      "label": "computed supported facts and abstentions"
+    },
+    {
+      "from": "brief",
+      "to": "query",
+      "label": "new query or explicit candidate selection"
+    }
+  ]
+}

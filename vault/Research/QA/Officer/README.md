@@ -2,11 +2,13 @@
 type: research
 status: draft
 owner: mukul
-updated: 2026-11-04
-summary: "Challenge 20 round 101 is NOT: usable sample briefing lacks source ingestion and immutable capture."
+updated: 2026-11-05
+summary: "R5 ID 11 is NOT: supplied operational ordering conflicts with protocol; host output follows the protocol, with sealed-key limits."
 ---
 
 # Synthetic pilot answer keys
+
+[E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R5-id11-training]] is the canonical NOT for R5/id11-training and any equivalent automatic judgment of the same evidence hashes. The automatic bar failed. Independent ordering and complete JSON comparison support the supplied-key contradiction, with the sealed host expectation still unavailable. A generic consistency regression and new versioned run are requested through the existing factory owner. No candidate execution or broad acceptance review occurred. Local continuity and disclosure: [[Research/QA/Officer/Sessions/2026-11-05-judge-r5-id11-training]] and [[Research/QA/Officer/Sprint/Judge-R5-id11-training]].
 
 [E, latest assigned judgment] [[Research/QA/Officer/JUDGE-R101-id20-contact-brief]] records NOT for Ten/Exp1/R101/id20-contact-brief. Real citation review, UNKNOWN answers and export support the sample, but no interface accepts new sources and immutable capture is absent. Limits are disclosed and requirementsMet is false. The latest receipt reports 18 tests and 18 browser runs passing, superseding stale guide wording. All requested screenshots and actual tests were inspected; no fresh execution or Sailor trial occurred. Local records: [[Research/QA/Officer/Sprint/Judge-R101-id20-contact-brief]] and [[Research/QA/Officer/Sessions/2026-11-04-judge-r101-id20-contact-brief]].
 

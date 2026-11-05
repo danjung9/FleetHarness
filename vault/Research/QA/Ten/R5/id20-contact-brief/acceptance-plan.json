@@ -1,0 +1,610 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC20-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Live AIS, IMO registry and OFAC/EU feed ingestion remains unverified. Synthetic ingestion demonstrates every named source and a cited one-page draft.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-system: Approved AIS, IMO registry, OFAC and EU feed access and captured registry snapshots are absent; synthetic-only scope withholds live ingestion. Fictional named-source ingestion and the complete cited brief are demonstrated.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional identities, LF key=value source grammars, snapshots and matching/freshness rules from the supplied fixtures; synthetic, not validated against the real format. No live connector or real immutable storage.",
+        "journeyIds": [
+          "synthetic-primary"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC20-1",
+            "name": "AIS"
+          },
+          {
+            "sourceCriterionId": "UC20-1",
+            "name": "IMO ship registries"
+          },
+          {
+            "sourceCriterionId": "UC20-1",
+            "name": "OFAC/EU sanctions"
+          },
+          {
+            "sourceCriterionId": "DESC20-3",
+            "name": "1-page intelligence brief"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "UC20-2",
+      "disposition": "implemented",
+      "expectedOutcome": "All affirmative structured brief claims cite exact preserved permitted spans with SHA-256 integrity, event and capture timestamps; unsupported/conflicting facts are UNKNOWN. Local consistency is demonstrated, not real immutable infrastructure.",
+      "journeyIds": [
+        "synthetic-primary",
+        "invalid-recovery",
+        "integrity-recovery"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "RET-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every returned fact has an exact permitted full-line span; excluded best lexical match A-EXCLUDED-01 contributes no content to results, inspection or export.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "RET-02",
+      "disposition": "implemented",
+      "expectedOutcome": "C-AIS-OLD is visibly historical and current position UNKNOWN; D-PORT-UNDATED event time and freshness UNKNOWN; equality at the freshness threshold is fresh.",
+      "journeyIds": [
+        "stale-missing"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "RET-03",
+      "disposition": "deferred",
+      "expectedOutcome": "Owner participation in relevance and latency review remains unverified. Prepare synthetic benchmark, hardware, corpus size, p50/p95 and relevance/coverage for review.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Owner must participate in relevance and latency assessment. Withhold owner endorsement; prepare synthetic benchmark results and environment for owner review."
+    },
+    {
+      "criterionId": "DESC20-1",
+      "disposition": "implemented",
+      "expectedOutcome": "A supplied vessel identifier yields consolidated registry, AIS, sanctions and port-log evidence for human interpretation; intent UNKNOWN and no measured operational time-saving claim.",
+      "journeyIds": [
+        "synthetic-primary",
+        "ambiguity"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "DESC20-2",
+      "disposition": "implemented",
+      "expectedOutcome": "A reviewer can inspect all affirmative claims against unchanged exact captured source content; unsupported factual interpretation withheld. Official suitability is unverified.",
+      "journeyIds": [
+        "synthetic-primary",
+        "integrity-recovery"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "DESC20-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Name, IMO and MMSI produce a concise printable US Letter one-page intelligence brief with local source links, exact event/capture timestamps and UNKNOWN abstention. Duplicate names require selection; export retains citations, warnings and synthetic label.",
+      "journeyIds": [
+        "synthetic-primary",
+        "identifier-types",
+        "ambiguity",
+        "identity-recovery"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY20-1",
+      "disposition": "implemented",
+      "expectedOutcome": "The supplied fictional identifier yields a short evidence-linked draft with unsupported owner/cargo/intent UNKNOWN; download and print preserve provenance.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "contact-evidence"
+      ]
+    },
+    {
+      "criterionId": "SCOPE20-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements heading retains the two canonical source obligations and their implementation/deferral boundaries in provenance.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE20-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Application provenance and documentation retain the exact challenge Source URL, clearly separate from vessel evidence.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "synthetic-primary",
+      "title": "Research all named sources, inspect citation and export a draft",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9001003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#disclosure",
+          "text": "SYNTHETIC \u2014 not validated against the real format"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-title",
+          "text": "1-page intelligence brief"
+        },
+        {
+          "action": "expectText",
+          "selector": "#vessel-name",
+          "text": "LANTERN REACH"
+        },
+        {
+          "action": "expectText",
+          "selector": "#imo-value",
+          "text": "9001003"
+        },
+        {
+          "action": "expectText",
+          "selector": "#mmsi-value",
+          "text": "990001001"
+        },
+        {
+          "action": "expectText",
+          "selector": "#ais-finding",
+          "text": "AIS: Under way using engine; speed 11.2 knots"
+        },
+        {
+          "action": "expectText",
+          "selector": "#registry-finding",
+          "text": "IMO ship registries: flag Example Isles; owner UNKNOWN (conflicting evidence)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sanctions-finding",
+          "text": "OFAC/EU sanctions: Listed in fictional OFAC snapshot; Listed in fictional EU snapshot"
+        },
+        {
+          "action": "expectText",
+          "selector": "#port-finding",
+          "text": "Port logs: Departure \u2014 Glasshaven \u2014 2026-11-04T18:20:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-value",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#cargo-value",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#ais-event",
+          "text": "2026-11-05T09:45:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#ais-capture",
+          "text": "2026-11-05T11:00:00Z"
+        },
+        {
+          "action": "click",
+          "selector": "#cite-A-AIS-01-speed_knots"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-excerpt",
+          "text": "speed_knots=11.2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-offsets",
+          "text": "147\u2013163"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-capture",
+          "text": "2026-11-05T11:00:00Z"
+        },
+        {
+          "action": "click",
+          "selector": "#close-source"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-contact-brief.html",
+          "text": "not validated against the real format"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "speed_knots=11.2"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "2026-11-05T09:45:00Z"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "click",
+          "selector": "#provenance"
+        },
+        {
+          "action": "expectText",
+          "selector": "#requirements-heading",
+          "text": "Requirements"
+        },
+        {
+          "action": "expectText",
+          "selector": "#challenge-source",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/20"
+        }
+      ]
+    },
+    {
+      "id": "identifier-types",
+      "title": "Resolve MMSI and exact alias",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "MMSI"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "990001001"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#vessel-name",
+          "text": "LANTERN REACH"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "Name"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "LANTERN REACH II"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#imo-value",
+          "text": "9001003"
+        }
+      ]
+    },
+    {
+      "id": "ambiguity",
+      "title": "Resolve duplicate names by deliberate selection",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "Name"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": " lantern reach "
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Ambiguous identity \u2014 select a vessel"
+        },
+        {
+          "action": "select",
+          "selector": "#candidate",
+          "value": "VES-B"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-candidate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#imo-value",
+          "text": "9001015"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sanctions-finding",
+          "text": "OFAC/EU sanctions: UNKNOWN"
+        }
+      ]
+    },
+    {
+      "id": "stale-missing",
+      "title": "Review stale and undated sources without inference",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9001027"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-position",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#stale-warning",
+          "text": "Historical AIS: 2026-10-30T08:00:00Z \u2014 STALE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sanctions-finding",
+          "text": "OFAC/EU sanctions: UNKNOWN"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "Name"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "MISTED QUAY"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#port-finding",
+          "text": "Port logs: Arrival \u2014 Paperbay \u2014 UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#port-freshness",
+          "text": "UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-value",
+          "text": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "id": "invalid-recovery",
+      "title": "Recover invalid IMO and no match without previous facts",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "90A1003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Enter seven numeric IMO digits (optional IMO prefix)."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#query-value",
+          "value": "90A1003"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9999999"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "UNKNOWN \u2014 no matching vessel"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9001003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#vessel-name",
+          "text": "LANTERN REACH"
+        }
+      ]
+    },
+    {
+      "id": "identity-recovery",
+      "title": "Reject conflicting identity and recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#name-constraint",
+          "value": "MISTED QUAY"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9001003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Identity conflict \u2014 name and identifier disagree"
+        },
+        {
+          "action": "fill",
+          "selector": "#name-constraint",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#imo-value",
+          "text": "9001003"
+        }
+      ]
+    },
+    {
+      "id": "integrity-recovery",
+      "title": "Demonstrate isolated corruption and restore preserved corpus",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#diagnostics"
+        },
+        {
+          "action": "select",
+          "selector": "#diagnostic-case",
+          "value": "tampered-ais"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "IMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#query-value",
+          "value": "9001003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Evidence integrity error \u2014 restore synthetic corpus"
+        },
+        {
+          "action": "click",
+          "selector": "#restore-corpus"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#ais-finding",
+          "text": "AIS: Under way using engine; speed 11.2 knots"
+        }
+      ]
+    }
+  ]
+}

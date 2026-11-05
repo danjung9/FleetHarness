@@ -2,20 +2,22 @@
 type: memo
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Finish existing corrections, reject task substitution and keep research idle."
+updated: 2026-11-05
+summary: "Finish current benchmark repairs and delivery evidence without duplicate work."
 ---
 
 # Product decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern allocation. [E, current boards] Round one finished ten, with nine automatic passes, nine negative judgments and zero satisfactory. Round 101 finished five: all pass automatically, four are NOT satisfactory and ID 20 awaits judgment.
+[P, Flow-Goals] Ten satisfactory catalog builds remain the goal. [E, Scoreboard] R5 has three failures, zero automatic passes and zero satisfactory results at f2e5422 plus scratch changes.
 
-[R] Return format substitution, preset scheduling and simulated delivery to dev-5's existing source-coverage correction. Include omitted narrative obligations and missing starting artifacts. Preserve the now-reproduced rejection of the old ID 12 label-only bypass; it does not establish semantic completeness. No competing parser or generated-app hand edits.
+[E, JUDGE-R5-id11-training] The prepared key contradicts public ordering; retained output follows the protocol. The sealed evaluator key is missing, so full causation remains unverified. [R] Accept this completed NOT judgment. Return the planning inconsistency to the existing factory owner, preserve frozen evidence and retire duplicate judgments.
 
-[R] Agree with Engineering and Quality: finish current integration and unique judgments. Retire held ID 32, ID 36 and UX duplicates. Research seats remain idle; write an empty new-task list.
+[R] Quality's runner finishes IDs 12/36 chronology, separating frozen-plan errors from cleanup rejection. Main owns shutdown recovery, missing native evidence and real runs. Do not revive historical review returns without current proof.
 
-[R] Dev-1 retains recovery/verifier integration. Serialize preflight, canonical source coverage and telemetry through explicit file transfers. Builder's overlapping verifier work supplies evidence to that owner. Require exact-commit review and native runtime receipts.
+[E, Merged-Walkthrough] Six operator findings are complete as a source/screenshot handoff. [R] Prioritize lost brief edits and account-switch clarity for Dan, then reachable Stop. No duplicate walkthrough or competing frontend edit.
 
-[E, relay] Preserve Dan's 7a4c6cc Settings/Developer mode, hosted merge 98b8334 and Windows test adaptation fae8180. Hosted demo success is separate from catalog acceptance.
+[R] Keep research idle and existing integration, packaging and writer ownership intact. Architect's planning-consistency proposal now has a concrete failure to address. Do not launch three parallel enhancements.
 
-[R] No new walkthrough, connector, deployment or sharing task. Keep Thursday noon freeze, exact-byte human acceptance and the morning decision list in Status. Another full round needs evidence that the current correction changes outcomes.
+[E, Auto/f2e5422] 934 unit and 94 harness tests pass with fixtures. Its table lists 15 screen scripts; the charter says 16. [R] Reconcile the count without inferring a product failure.
+
+[R] Preserve Dan's merged work, noon freeze, 1:15 PM submission target and human acceptance. New-task JSON is empty because useful work already has owners.

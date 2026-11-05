@@ -1,0 +1,90 @@
+verify tool fleet_browser
+{
+  "action": "screenshot",
+  "viewport": "desktop"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"screenshot\",\"url\":\"http://127.0.0.1:62174/\",\"viewport\":\"desktop\",\"dimensions\":{\"width\":1280,\"height\":800},\"screenshot\":\".browser-observations/2dc3623b-2ae7-4765-b503-842c810e693e/2e284a943aa9-bd11d71f-d63c-47ad-b4d5-20562d97e70d.png\",\"captureId\":\"713ccc37-c348-49ae-85cc-c570d0a40ba6\",\"pageText\":\"Contact re
+verify tool fleet_visual_review
+{
+  "captureId": "713ccc37-c348-49ae-85cc-c570d0a40ba6",
+  "expected": "Desktop resolved brief displays source timestamps, warnings, citations and export actions without overlap.",
+  "observed": "Fresh desktop image shows source legend, owner conflict and UNKNOWN warnings, source links, and Download/Print buttons within the white output panel with no overlap or clipping.",
+  "f
+verify tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"ff19f989-9809-4936-8723-33d782128329\",\"sessionId\":\"0ebf891d-0b1b-4c0f-a667-1a2bfbe5ba57\",\"stage\":\"verify\",\"captureId\":\"713ccc37-c348-49ae-85cc-c570d0a40ba6\",\"viewport\":\"desktop\",\"round\":\"recheck\",\"expected\":\"Desktop resolved brief displays source timestamps, warnings, citations and export actio
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node --input-type=module <<'EOF'\nimport {mkdtemp,readFile,mkdir,copyFile,rm} from 'node:fs/promises';\nimport {tmpdir} from 'node:os';\nimport path from 'node:path';\nimport {spawnSync} from 'node:child_process';\nconst contract=JSON.parse(await readFile('solution-contract.json','utf8'));\nconst dir=await mkdtemp(path.join(tmpdir(),'contact-clean-'));\ntry {\n 
+verify tool bash completed
+"✔ complete no-match, ambiguous, conflict and invalid response objects (5.047125ms)\n✔ complete novel Unicode record and exact threshold (0.969792ms)\n✔ full successful result preserves ordered claims and both conflicting owners (2.851375ms)\n✔ integrity errors suppress every fact and restoration recovers (2.1965ms)\n✔ excluded strongest match never leaks; source instructions are in
+verify tool fleet_browser
+{
+  "action": "click",
+  "selector": "#cite-A-AIS-01-speed_knots"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"click\",\"url\":\"http://127.0.0.1:62174/\",\"viewport\":\"desktop\",\"dimensions\":{\"width\":1280,\"height\":800},\"screenshot\":\".browser-observations/2dc3623b-2ae7-4765-b503-842c810e693e/90059b166870-33cdccd5-47b0-43f7-ae3c-0a63deb17b80.png\",\"captureId\":\"038f9484-b673-4e6f-8bf4-94ab60bb9ba3\",\"pageText\":\"Contact researc
+verify text All nine tests now pass both in the workspace and in a temporary copy containing only the declared runtime files and tests. Desktop and narrow visual reviews are complete with no open findings. I also confirmed invalid-IMO recovery and exact source inspection. The report will leave host browser journeys, download checks, pagination, and owner review unverified.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> verification.md <<'EOF'\n\n## Current verifier session - 2026-11-05\n\nThis session independently reran \"'`node --test contact.test.mjs verification-boundaries.test.mjs`: **9 passed, 0 failed, 0 skipped**. Original seven tests remain unchanged. The two added integration tests exercise cross-origin rejection (403), content type (415), size limit (413), su
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "query",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification evidence recorded. Runtime unchanged; host browser acceptance and documented deferrals remain separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Watchstander query and identity review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "api",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification evidence recorded. Runtime unchanged; host browser acceptance and documented deferrals remain separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local HTTP service: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "corpus",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification evidence recorded. Runtime unchanged; host browser acceptance and documented deferrals remain separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Embedded synthetic maritime snapshots: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evidence",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification evidence recorded. Runtime unchanged; host browser acceptance and documented deferrals remain separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Identity and evidence computation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "brief",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification evidence recorded. Runtime unchanged; host browser acceptance and documented deferrals remain separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Cited brief and source inspection: generated. The live diagram has been updated."}]
+verify tool fleet_browser
+{
+  "action": "press",
+  "selector": "#close-source",
+  "key": "Escape"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"press\",\"url\":\"http://127.0.0.1:62174/\",\"viewport\":\"desktop\",\"dimensions\":{\"width\":1280,\"height\":800},\"screenshot\":\".browser-observations/2dc3623b-2ae7-4765-b503-842c810e693e/49921c69771e-c2858379-b3dd-4bb0-83ad-34d4eb410586.png\",\"captureId\":\"5981ac0a-46e4-44eb-8460-e32f8c82d17b\",\"pageText\":\"Contact researc
+verify text Primary deferrals: UC20-1 live-feed ingestion and RET-03 owner assessment remain unverified.
+
+Nine application tests pass locally and in a clean runtime copy. Desktop and narrow visual reviews have no open findings. Updated verification.md, README.md, and test-matrix.md.
+
+Host browser/download checks and print pagination remain pending. Owner approval is required before delivery or deployment.
+verify error Error: Error: The frozen plan changed after planning. Restore it or start a new run.
+Writer shutdown was not confirmed. Recovery in this workspace is blocked. Stop and clean up the old workers, then start a new run in a fresh workspace.
+    at FleetBackend.trackedAgent (file://~/fhten/app/dist-electron/electron/pi-backend.js:667:19)
+    at async FleetBackend.agentAttempt (file:///Users/

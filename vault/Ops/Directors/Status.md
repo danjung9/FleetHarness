@@ -2,22 +2,22 @@
 type: status
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Meeting 118: no satisfactory builds yet; finish existing corrections and preserve teammate changes."
+updated: 2026-11-05
+summary: "Meeting 169: merged fixture checks pass, three current benchmark builds fail, and existing owners retain the remaining work."
 ---
 
 # Team status
 
-[E, [[Research/QA/Ten/Scoreboard]]] Round one finished ten builds: nine automatic passes, nine negative judgments, zero satisfactory. [E, [[Research/QA/Ten/Exp1/Round-101]]] The experiment finished five at 17:09 EST: five automatic passes, four NOT judgments and ID 20 pending. IDs 12 and 8 substitute formats, ID 11 restricts scheduling to presets, and ID 36 simulates delivery. Both rounds use disclosed scratch changes, not unmodified current mvp.
+[E, [[Research/QA/Auto/f2e5422]]] Done: 934/934 unit and 94/94 harness tests pass outside the sandbox with fixtures. The report lists 15 successful screen scripts; the charter says 16, so that count needs reconciliation. [[Research/QA/Acceptance/Review-3da8ad8]] independently confirms four bounded native/browser passes at its stated revision. Full delivered-app acceptance remains pending.
 
-[E, feed-118 and [[Research/QA/Review-Queue-Notes]]] Cleanup landed at c6ce52d; native detached-Stop closure remains unverified. Recovery's 49 independent checks pass, with mandatory-verifier integration pending. [E, [[Research/QA/Auto/c6ce52d]]] Desktop checks report 125 unit/51 harness passes and eight of ten smoke scripts passing. Electron and Norfolk stop before later assertions.
+[E, [[Research/QA/Ten/Scoreboard]] and R5 finals] Three of ten finished, zero automatic passes, zero satisfactory, at f2e5422 plus scratch changes. IDs 12/36 record frozen-plan errors before cleanup rejection. [[Research/QA/Officer/JUDGE-R5-id11-training]] now confirms ID 11's prepared-key ordering contradiction and retains NOT. The sealed evaluator plan is still missing.
 
-[E, relays] Dan pushed mvp 7a4c6cc: Settings and default-off Developer mode. Windows 98b8334 merges hosted work; fae8180 preserves hosted tests on Windows using loopback and junction fixtures. Preserve his frontend and shared backend contracts. These changes do not establish integrated runtime success.
+[E, relay analysis] Dan's work through 29ac921, connectors, model tabs, API-key sign-in and GenAI.mil framework are merged into mvp f2e5422. Separate budget a5e0bcf and Windows 2ee297a lack transferred mvp proof. Local/static main and hosted prod remain distinct.
 
-[R] In progress: dev-1 owns recovery/verifier integration; dev-2 actual preflight wiring; dev-5 source coverage and fixture corrections; builder telemetry returns after file transfer. Main owns native/browser proof, frozen artifacts and experiment assessment; Quality retains unique judgments. Working-source checks reject ID 12's label-only bypass, but the integrated contract and semantic completion still need proof.
+[E, [[Research/RandE/UX/Merged-Walkthrough]]] Research finished six source/screenshot findings. Lost brief edits, account switching and Stop reachability lead the handoff for Dan; those paths lack new runtime reproduction. Dev-3's local journal reports 188 passing connector wording checks; review/landing is unverified.
 
-[R] Decided: no new tasks. Retire duplicate ID 32/36 audits and held UX work; research idle. Send new failures to existing owners. Keep original requirements, independent judgments and exact-commit review. Preserve 6 PM/7 PM checkpoints, Thursday noon freeze and 1:15 PM submission target.
+[R] In progress: Quality's runner finishes IDs 12/36 triage; ID 11's review is complete. Main owns real runs, shutdown recovery and missing evaluator/native evidence. Existing integration, packaging, container and post-approval-change workers continue. Writer retains one submission package. Return the confirmed planning inconsistency to the existing factory owner. No duplicate tasks or research scans; protect Dan's frontend. Fix demonstrated factory failures without changing frozen expectations or hand-editing outputs.
 
-[R] Person-only morning decisions: accept final bytes and disclosed scope; confirm user/process and arrange the existing synthetic trial; resolve portal/team/form/terms, category and partial eligibility including sync; confirm contribution rights and mission/technical owners; approve submission and any move to mvp. No approval is presumed.
+[R] Person-only: approve final bytes and submission; confirm portal/team/form/terms, category and partial eligibility; confirm user/process and arrange the existing synthetic trial; resolve contribution rights and mission/technical owners. Full access is already decided. Keep noon freeze, 1:15 PM target and 2 PM EST deadline.
 
-[E, snapshot-118, 16:55:47 EST] Organization spend: 12,759,586 of 1,000,000,000 tokens, up 4,625,606 since snapshot-77. Meeting usage and dollar cost unknown. Central transfer remains pending in [[Ops/Directors/Sprint/Product-Meeting-118]].
+[E, snapshot-169, 02:49:23 EST] Organization tokens: 19,008,993 of 1,000,000,000, up 6,249,407 since snapshot-118. This predates R5; current meeting usage and dollar cost are unknown. Central log/session/status transfer remains pending in [[Ops/Directors/Sprint/Product-Meeting-169]].

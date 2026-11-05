@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Tactical watchstanders and reviewing analysts exploring fictional contact evidence locally.",
+  "primaryTask": "Enter Name, IMO or MMSI, resolve identity, inspect evidence and export a cited draft for human interpretation.",
+  "successOutcome": "A concise 1-page intelligence brief exposes all five named source families, every factual citation and timestamp, conflicts and UNKNOWN values, and downloads with synthetic provenance.",
+  "screens": [
+    {
+      "name": "Contact research",
+      "purpose": "Labeled identifier type/value and optional name constraint; explicit Research contact action. Example values are labeled synthetic. Desktop query rail and brief workspace; stacked narrow layout.",
+      "primaryAction": "Research contact"
+    },
+    {
+      "name": "Identity review",
+      "purpose": "Show distinct name, IMO and MMSI for each candidate; no merged result or preselected candidate.",
+      "primaryAction": "Use selected vessel"
+    },
+    {
+      "name": "Brief and source inspection",
+      "purpose": "Readable one-page draft with claim links opening exact highlighted source spans, metadata, source revision digest and timestamps. Secondary diagnostics and provenance; deliberate export for human review.",
+      "primaryAction": "Download draft"
+    }
+  ],
+  "states": {
+    "empty": "Explain Name/IMO/MMSI search, show synthetic scope and examples; no fabricated result or enabled export.",
+    "loading": "Announce Researching local synthetic evidence in a live status region, disable duplicate submit/export, clear previous result validity; no artificial delay.",
+    "error": "Specific input, identity conflict, no-match, service-unavailable or evidence-integrity message preserves query. Hide previous brief/export so it cannot be mistaken for current output.",
+    "success": "Show resolved identity, source-specific findings, owner conflict with both values and citations, historical/missing warnings and UNKNOWN. Export enabled only for resolved current result; no approval or operational recommendation."
+  },
+  "persistence": "Session-only query and selection survive opening/closing source/provenance panels. Reload clears the draft with an explicit session-only notice. No approval/save state is implied; export is the durable review boundary. New query clears previous candidate selection and result.",
+  "recovery": "Correct invalid identifier/name constraint without data loss. Choose ambiguous candidate explicitly. Secondary diagnostics mutate an isolated in-memory copy only; Restore synthetic corpus discards that copy, preserving query. Service errors explain restart/retry. Closing the app/server is shutdown; no background monitoring or external actions.",
+  "keyboard": "Native labels/selects/buttons, Enter submits query, logical Tab order and visible focus. Dialog Escape/Close returns focus to citation. Status and validation announced. Minimum 44px action targets, text and state labels with contrast, no color-only warnings; reduced motion. Narrow screens stack panels with wrapped long citations and no page-wide overflow. Print/export use US Letter portrait and retain citations/warnings; source detail appendices are screen-only."
+}
