@@ -34,7 +34,7 @@ class FakeRpc {
     return {};
   }
 }
-async function temp(t) { const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-codex-test-')); t.after(() => fs.rm(root, { recursive: true, force: true })); return root; }
+async function temp(t) { const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-codex-test-')); t.after(() => fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })); return root; }
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 const fixtureCredentials = () => Promise.resolve({ accessToken: 'fixture-subscription-token', expiresAt: Date.now() + 3600_000 });

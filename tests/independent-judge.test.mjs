@@ -522,7 +522,7 @@ test('local provider fixture returns a judge verdict without requesting a source
 test('native Codex judge advertises no shell, source-writing or delegation tools to a local fake provider', { timeout: 20000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const nativeRoot = await fs.mkdtemp(path.resolve('.tmp/native-judge-test-'));
-  t.after(() => fs.rm(nativeRoot, { recursive: true, force: true }));
+  t.after(() => fs.rm(nativeRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
   const home = path.join(nativeRoot, 'home'); await fs.mkdir(home);
   let receive, nativeController;
   const inventory = new Promise(resolve => { receive = resolve; });

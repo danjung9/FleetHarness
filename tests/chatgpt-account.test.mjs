@@ -105,7 +105,7 @@ async function fixture(t, options = {}) {
   const accounts = [account];
   t.after(async () => {
     for (const value of accounts) value.dispose();
-    await fs.rm(root, { recursive: true, force: true });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   });
   const authorize = async (accountId, target = account) => {
     await target.login(accountId);

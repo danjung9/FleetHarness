@@ -56,7 +56,7 @@ async function fixture(t, reject = false) {
     return rpc;
   };
   const account = new CodexAccount(root, async () => assert.fail('API-key login must not open a browser'), { launch });
-  t.after(async () => { await account.dispose(); await Promise.all(rpcs.map(rpc => rpc.dispose())); await fs.rm(root, { recursive: true, force: true }); });
+  t.after(async () => { await account.dispose(); await Promise.all(rpcs.map(rpc => rpc.dispose())); await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); });
   return { root, account, requests, notifications, rpcs };
 }
 async function assertNoKey(folder) {
