@@ -1,0 +1,25 @@
+{
+  "name": "offline-browser",
+  "action": "run",
+  "hash": "26f1f3f2680ac128658b4c3110a75c7da5ae63983774e7d8834e05659592fd95",
+  "passed": true,
+  "scope": "Project helper self-tests and execution only; not independent application acceptance.",
+  "exitCode": 0,
+  "stdout": "{\"exitCode\":0,\"stdout\":\"\u2714 actual disconnected reload, new parse, recovery, save, review and download (desktop) (971.072208ms)\\n\u2714 actual disconnected reload, new parse, recovery, save, review and download (narrow) (882.496125ms)\\n\u2139 tests 2\\n\u2139 suites 0\\n\u2139 pass 2\\n\u2139 fail 0\\n\u2139 cancelled 0\\n\u2139 skipped 0\\n\u2139 todo 0\\n\u2139 duration_ms 2017.5825\\n\",\"stderr\":\"\",\"error\":null}",
+  "stderr": "",
+  "timedOut": false,
+  "outputLimited": false,
+  "tests": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "explicit": true
+  },
+  "output": {
+    "exitCode": 0,
+    "stdout": "\u2714 actual disconnected reload, new parse, recovery, save, review and download (desktop) (971.072208ms)\n\u2714 actual disconnected reload, new parse, recovery, save, review and download (narrow) (882.496125ms)\n\u2139 tests 2\n\u2139 suites 0\n\u2139 pass 2\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 2017.5825\n",
+    "stderr": "",
+    "error": null
+  }
+}

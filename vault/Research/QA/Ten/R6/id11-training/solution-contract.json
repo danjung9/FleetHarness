@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "objective": "Negotiate a complete fictional PB4T week with hard constraints, qualified staffing, fatigue and recurrence; report honest unresolved outcomes and exact loads without operational compliance claims.",
+  "invocation": {
+    "input": "Object with exactly action (string) and data (PB4T object); action optional defaults solve. No null values or coercion. Allowed actions solve, status, allocations, loading, coverage, conflicts, check. data requires scenarioId/provenance nonblank strings, synthetic:true, weekStart ISO UTC midnight string, timezone:UTC, horizonMinutes:[integer start,integer end] with start<end; policy:{version:string,minimumRestMinutes:nonnegative integer,dailyDutyLimitMinutes:positive integer,rolling24hDutyLimitMinutes:positive integer,recurrenceMode:fixed-window,approvalStatus:unapproved-synthetic}; agents:[{id,department,name,proposalRule:nonblank strings,requestIds:string[]}]; personnel:[{id,displayName:strings,qualifications:string[],availability:interval[],priorDuty:interval[],dailyDutyLimitMinutes,rolling24hDutyLimitMinutes:positive integers}]; resources:[{id,name:strings,capacity:1,availability:interval[]}]; operations:{allowedWindows:interval[],blackouts:interval[]}; requests:[{id,agentId,family,ruleId,occurrenceId:strings,durationMinutes:positive integer,candidateWindows:interval[],requestedStartMinute:integer,roles:[{qualification:string,count:positive integer,preferredPersonIds:string[]}],resourceIds:string[],priority:integer,mandatory:boolean}]; trainingRules:[{id,family:strings,anchorMinute:integer,periodMinutes,windowMinutes,requiredCount:positive integers,requestIds:string[],mandatory:boolean}]; trainingHistory:[{id,ruleId,occurrenceId:strings,completedMinute:integer}]; search:{maxCandidateChecks:positive integer,requestOrder:priority-descending-then-id,candidateOrder:listed-windows-then-person-id,objective:first-feasible-complete-roster}; initialAssignments:Assignment[]. Interval is [signed integer start,end], end>start. Assignment is {requestId:string,startMinute:integer,endMinute:integer,personIds:string[],resourceIds:string[]}. Every field required except action; empty arrays allowed except personnel/resources/agents/requests/trainingRules, roles and candidateWindows. Unknown extra fields ignored inside data. IDs unique within entity arrays; references must exist, ownership and rule/occurrence links consistent. Distinct role staff, capacity 1, exact-duration windows, fixed-window recurrence windowMinutes=periodMinutes and requiredCount=1 are this synthetic grammar; other values invalid. Limits: 24 requests, 200 personnel, 100 windows per request, horizon at most 10080 minutes; over-limit invalid.",
+    "output": "All computation responses are JSON objects. Invalid request: exactly {status:\"invalid-input\",error:ErrorCode}. Valid status action: exactly {status:Status,error:null}. Valid allocations action: exactly {status:Status,assignments:Assignment[]}. Valid loading action: exactly {status:Status,loads:Load[]}. Valid coverage action: exactly {status:Status,coverage:Coverage[]}. Valid conflicts action: exactly {status:Status,initialConflicts:Conflict[],remainingConflicts:integer}. solve/check: exactly {status:Status,assignments:Assignment[],loads:Load[],coverage:Coverage[],initialConflicts:Conflict[],remainingConflicts:integer,negotiation:Decision[],reviewAllowed:boolean,synthetic:true,warning:string}. Status = feasible | infeasible | budget_exhausted | invalid-board. invalid-board is only for check. Load={personId:string,drillMinutes:integer,priorDutyMinutes:integer,totalDutyMinutes:integer,drillMinutesByDay:integer[]} with one day cell per UTC date intersecting horizon. Coverage={occurrenceId:string,status:satisfied-by-history|satisfied-by-schedule|unmet|pending-future,requestId:string|null,deadlineMinute:integer}. Conflict={requests:[string,string],personIds:string[],resourceIds:string[],overlapMinutes:[integer,integer]}. Decision={agentId:string,requestId:string,startMinute:integer,personIds:string[],outcome:accepted|rejected,reasons:string[]}. ErrorCode=INVALID_ACTION|INVALID_SCHEMA|DUPLICATE_ID|INVALID_INTERVAL|INVALID_REFERENCE|INVALID_LINK. warning is exactly \"Synthetic, not validated against the real format. No SFTRM compliance or operational approval.\". Diagnostic reasons are drawn only from PERSON_OVERLAP, RESOURCE_OVERLAP, QUALIFICATION, AVAILABILITY, OPERATIONS, REST, DAILY_DUTY, ROLLING_DUTY, OCCURRENCE, CANDIDATE, STAFFING, MISSING_ASSIGNMENT; reason arrays unique in this order. No model required.",
+    "rules": [
+      "POST /api/invoke receives the wrapper, HTTP 200 for computed domain results including invalid-input. Malformed JSON HTTP 400 with {status:\"invalid-input\",error:\"INVALID_SCHEMA\"}. No server-side state; health GET /health HTTP 200. UI and evaluation invoke compute.mjs which calls domain.mjs; tests import same entrypoint.",
+      "Validation before scheduling: invalid action first; missing/wrong field types (interval endpoints handled only in INVALID_INTERVAL), unsupported grammar or limits INVALID_SCHEMA; then duplicate IDs DUPLICATE_ID; then reversed/noninteger interval endpoints INVALID_INTERVAL; then unknown references INVALID_REFERENCE; then ownership, occurrence/history consistency INVALID_LINK. Return only first category by this precedence. Zero/string duration is INVALID_SCHEMA; absent minimum rest INVALID_SCHEMA. No defaults for policy. Initial assignments may violate scheduling constraints and be partial, but their schema and references must be valid.",
+      "Intervals are half-open integer UTC minutes relative to weekStart. Assignment inside complete availability/resource/operations interval, outside blackouts and within horizon. Touching boundaries do not overlap. Exact candidate window start only, no sliding; duration equals window length. Blackouts supersede operations.",
+      "Each role slot requires a distinct person with exact qualification. Candidate personnel: listed preferred IDs first (filter qualification), then remaining qualified IDs ascending. Roles in supplied order, Cartesian combinations lexicographic by these lists; skip duplicate person combinations. Do not prefilter unavailable qualified staff: each full combination counts as a candidate check. No qualified combination yields infeasible without checking a candidate.",
+      "Order requests descending priority then ascending ID. For each due unsatisfied request try supplied candidate windows in listed order then staffing combinations. Depth-first backtracking; stop first complete feasible roster. Candidate checks count each complete tested combination, including rejected ones. Before testing a new combination if count==maxCandidateChecks return budget_exhausted; if final complete solution occurs exactly at budget return feasible. Only exhausted finite space is infeasible. No optional request dropped: schedule all linked requests for due unsatisfied occurrences; nonmandatory supplied requests follow same rule in this prototype.",
+      "Use minimumRestMinutes between every pair of assigned and immutable prior duty intervals per person; zero gap allowed only when rest=0. Check no person/resource overlap. Effective daily and rolling caps=min(policy,person). Split at UTC midnight; any 1440-minute window total intersections with prior duty plus new drills <= rolling cap. Check extrema at duty boundaries and boundaries minus 1440. Count prior duty outside horizon too; reject incompatible prior history as infeasible, never move it.",
+      "For each rule strip RULE- prefix to form suffix; occurrence k is O-{suffix}-{k}, k>=0. Window [anchor+k*period,anchor+k*period+windowMinutes). Expand all intersecting horizon including carry-in and future deadlines; due if deadline<=horizon end. History only credits same rule/occurrence with timestamp inside window. History-satisfied requests need no assignment. Future-deadline status pending-future even if a linked proposal is outside operations. Due unsatisfied linked requests need full containment. No cross-window credit; missing due linkage invalid-link. Occurrence histories at end belong to next window and inconsistent explicit IDs invalid-link.",
+      "On infeasible or budget_exhausted discard partial assignments, loads are prior-duty only and due coverage remains satisfied-by-history or unmet; future stays pending-future. Never report a partial feasible subset as complete. reviewAllowed only for feasible and no unmet due occurrence.",
+      "Action check validates supplied initialAssignments without search: full constraints, role counts, candidates and complete due coverage required. Valid board returns feasible; otherwise invalid-board, preserving given assignments for diagnosis and recomputing their loads/coverage. initialConflicts report pairwise person/resource overlaps from initialAssignments, grouped once per request pair; remainingConflicts uses returned assignments. Conflict groups exclude prior duty; prior-duty violations appear in negotiation reasons.",
+      "Every projection action except check executes the same solver. Assignments ordered request priority descending then ID, personnel in role order and resources sorted ID. Loads sorted person ID, daily cells chronological with zeroes. PriorDutyMinutes is total full supplied prior intervals; totalDutyMinutes=prior+drill. Coverage rule input order then increasing k; history requestId=null; unmet/pending requestId=first linked request ID in rule list for that occurrence or null; scheduled requestId=assigned linked request. Conflicts sort the two request IDs lexically, sort groups lexically by that pair, person/resource IDs ascending.",
+      "Negotiation records every complete tested staffing/time candidate chronologically (including backtracked candidates): rejected with all violated reason categories in stated order or accepted with empty reasons for locally valid candidates. Accepted records may be backtracked; final assignments alone identify final agreement. For check emit one decision per provided assignment in request order, accepted if its checks pass, rejected otherwise; missing due requests get rejected decision at requestedStartMinute with empty personIds and MISSING_ASSIGNMENT. UI derives concise per-agent requested/blocking/accepted statements from trace, input and final assignments; never fabricates communication.",
+      "No model inference, external department messages, SFTRM policy lookup or operational publishing. Unknown policies are errors, no relaxation. All exports/UI retain warning and policy version. Owner approval before delivery/deployment; local acknowledgment conveys no approval.",
+      "For solve/check remainingConflicts is the number of returned-assignment overlap pair groups (not number of individual shared entities). For infeasible/budget_exhausted it is zero because no partial assignments are returned. These statuses still block review. A check result with no pairwise overlap can still be invalid-board due to staffing, coverage, duty or containment. Loading sums every provided prior interval, while drill day cells clip assignments to UTC day intersections within horizon; prior totals are shown separately. An invalid request always returns the same two-field invalid-input envelope for every action."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "allocation",
+      "kind": "optimization",
+      "description": "Complete deterministic candidate feasibility, qualified role allocation, honest infeasibility and budget exhaustion",
+      "criterionIds": [
+        "SCH-01",
+        "SCH-03",
+        "SUMMARY11-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "allocation-cases",
+        "status-cases"
+      ]
+    },
+    {
+      "id": "fatigue",
+      "kind": "algorithm",
+      "description": "Prior-duty, availability, minimum-rest, daily and rolling boundary enforcement",
+      "criterionIds": [
+        "SCH-02",
+        "SUMMARY11-1",
+        "SCOPE11-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "fatigue-cases"
+      ]
+    },
+    {
+      "id": "recurrence",
+      "kind": "algorithm",
+      "description": "Expand fixed windows; distinguish historical, due, unmet and future obligations",
+      "criterionIds": [
+        "SCH-04"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "recurrence-cases"
+      ]
+    },
+    {
+      "id": "loading",
+      "kind": "algorithm",
+      "description": "Exact personnel drill and prior-duty totals and daily heatmap",
+      "criterionIds": [
+        "DELIVERABLE11-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "loading-cases"
+      ]
+    },
+    {
+      "id": "negotiation",
+      "kind": "workflow",
+      "description": "Department-owned proposals, collision facts, ordered counterproposals and editable schedule evidence",
+      "criterionIds": [
+        "DELIVERABLE11-1",
+        "DESC11-2",
+        "DESC11-3",
+        "SCOPE11-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "collision-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/scheduling.js",
+      "example-input.json",
+      "domain.mjs",
+      "data/synthetic-data.json",
+      "data/README.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

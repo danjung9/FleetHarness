@@ -1,0 +1,120 @@
+{
+  "stage": "verify",
+  "verdict": "NOT",
+  "gaps": [
+    {
+      "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure all SFTRM-mandated training periodicities are satisfied",
+      "evidence": "domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+      "fix": "Obtain a releasable, owner-reviewed specification of applicable periodicity and completion-credit semantics. Implement those semantics and add independently reviewed synthetic cases with exact expected deadlines, history credit and unmet obligations. Retain compliance warnings until domain validation is complete; do not revise frozen test expectations to bypass this requirement."
+    },
+    {
+      "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+      "evidence": "public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision.",
+      "fix": "Conduct a supervised trial using fictional data on the delivered revision. Have an authorized operator review allocations, loading, coverage, unresolved outcomes and edit recovery, then record their actual acceptance or rejection with revision identification, separately from deployment authorization."
+    }
+  ],
+  "attempts": [
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities",
+          "evidence": "domain.mjs accepts only fictional fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. verification.md explicitly leaves approved SFTRM rules and compliance unverified. Synthetic recurrence tests do not establish the defining mandate.",
+          "fix": "Obtain domain-owner-reviewed, releasable rule specifications and independently expected examples; implement the required recurrence semantics and test complete deadline coverage. Retain the operational-approval boundary."
+        },
+        {
+          "requirement": "UC11-1 / SCOPE11-5 / DESC11-3 — Collaborative departmental agents",
+          "evidence": "domain.mjs implements one centralized depth-first search. Agent proposalRule strings are validated but never executed; agentId is attached to decision records. public/app.js derives departmental statements after scheduling rather than implementing departmental proposal and counterproposal behavior.",
+          "fix": "Implement executable department-owned proposal policies and a shared negotiation coordinator. Add changed-input tests demonstrating departmental counterproposals, constraint feedback and convergence or unresolved escalation."
+        },
+        {
+          "requirement": "DESC11-1 / DELIVERABLE11-1 — Usable weekly planning beyond prepared examples",
+          "evidence": "public/index.html and public/app.js provide scenario presets and a raw JSON textarea. Adding drills, changing availability, defining operational windows or editing recurrence requires manually maintaining nested JSON, references and minute offsets. Board controls only edit existing allocation starts and crew IDs.",
+          "fix": "Provide validated forms for requests, rosters, availability, operations and training rules, with calendar/time controls and automatic relationship maintenance. Test a non-coding user journey creating and deconflicting a new synthetic week without JSON editing."
+        },
+        {
+          "requirement": "DELIVERABLE11-1 / SCOPE11-8 — Personnel loading heatmaps",
+          "evidence": "public/app.js assigns the same loaded class to every positive-minute cell; public/styles.css defines one fixed background color. Consequently 60 and 240 minutes have identical intensity despite public/index.html claiming darker cells indicate more assigned minutes.",
+          "fix": "Map load values or duty-cap utilization to graduated colors with an accessible legend. Add assertions covering zero, low and high loads and verify distinct visual intensities."
+        },
+        {
+          "requirement": "SCH-05 — Operator acceptance of the proposed schedule",
+          "evidence": "verification.md explicitly records actual PB4T operator acceptance as unverified. public/app.js stores only a browser-local acknowledgment boolean; the acceptance-plan.json journey verifies that acknowledgment, not an operator review outcome.",
+          "fix": "Conduct and document an authorized operator trial using synthetic inputs, including allocations, loading, unresolved outcomes and recovery. Record the operator's actual acceptance or rejection separately from software acknowledgment, without implying deployment authorization."
+        }
+      ],
+      "durationMs": 46462,
+      "tokens": {
+        "inputTokens": 449360,
+        "cachedInputTokens": 358283,
+        "uncachedInputTokens": 91077,
+        "outputTokens": 1355,
+        "reasoningOutputTokens": 119,
+        "totalTokens": 450715,
+        "uncachedPlusOutputTokens": 92432
+      },
+      "sourceHash": "dca686307619eed53e487e4ffaa8545fd294683d7da79685468afcc730b68e9a"
+    },
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities are satisfied",
+          "evidence": "domain.mjs accepts only invented fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. data/README.md and verification.md explicitly state that owner-reviewed SFTRM rules and independent domain validation are unavailable. Passing synthetic recurrence tests does not establish the defining mandate.",
+          "fix": "Obtain a releasable, owner-reviewed rule specification and independently reviewed synthetic examples; implement its recurrence and completion-credit semantics and test every required deadline, missed occurrence and boundary. Retain the compliance warning until independently validated."
+        },
+        {
+          "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+          "evidence": "public/index.html explicitly separates local acknowledgment from owner acceptance. verification.md confirms that no authorized PB4T operator trial occurred; automated acknowledgment and reload tests establish software state only.",
+          "fix": "Conduct a supervised operator trial using fictional data, covering allocations, loading, unresolved obligations and edit recovery; record the operator's actual acceptance or rejection for the tested revision without implying deployment authorization."
+        },
+        {
+          "requirement": "DELIVERABLE11-1 — Accurate interactive weekly schedule board and personnel loading heatmaps",
+          "evidence": "public/app.js allows any week-start date through guidedUpdate('week'), but render() always labels day zero Mon and heatmap columns Mon–Sun. Selecting a non-Monday date therefore produces incorrect day headings, even though individual allocation descriptions calculate the actual weekday. repair.test.mjs tests only a Monday replacement.",
+          "fix": "Derive board and heatmap headings from weekStart and the horizon, or validate and enforce Monday starts. Add a browser test using a non-Monday date and assert consistent dates and weekdays across allocations, board columns and heatmap cells."
+        }
+      ],
+      "durationMs": 32099,
+      "tokens": {
+        "inputTokens": 477299,
+        "cachedInputTokens": 388700,
+        "uncachedInputTokens": 88599,
+        "outputTokens": 1192,
+        "reasoningOutputTokens": 84,
+        "totalTokens": 478491,
+        "uncachedPlusOutputTokens": 89791
+      },
+      "sourceHash": "d6881531bb9ea933dc40e8c0ba9bdd210910c33c30e9862b00eab3bac97fc05c"
+    },
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure all SFTRM-mandated training periodicities are satisfied",
+          "evidence": "domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+          "fix": "Obtain a releasable, owner-reviewed specification of applicable periodicity and completion-credit semantics. Implement those semantics and add independently reviewed synthetic cases with exact expected deadlines, history credit and unmet obligations. Retain compliance warnings until domain validation is complete; do not revise frozen test expectations to bypass this requirement."
+        },
+        {
+          "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+          "evidence": "public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision.",
+          "fix": "Conduct a supervised trial using fictional data on the delivered revision. Have an authorized operator review allocations, loading, coverage, unresolved outcomes and edit recovery, then record their actual acceptance or rejection with revision identification, separately from deployment authorization."
+        }
+      ],
+      "durationMs": 34825,
+      "tokens": {
+        "inputTokens": 401048,
+        "cachedInputTokens": 315928,
+        "uncachedInputTokens": 85120,
+        "outputTokens": 1075,
+        "reasoningOutputTokens": 100,
+        "totalTokens": 402123,
+        "uncachedPlusOutputTokens": 86195
+      },
+      "sourceHash": "9670656303d5e0911965cf47f47262bdb8a110ae68e195a589499be7011a9581"
+    }
+  ],
+  "repairs": 2,
+  "repairLimitReached": true,
+  "durationMs": 113386,
+  "evaluatorRetries": 0
+}

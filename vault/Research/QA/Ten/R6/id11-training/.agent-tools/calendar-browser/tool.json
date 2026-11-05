@@ -1,0 +1,1 @@
+{"schemaVersion":1,"name":"calendar-browser","description":"Run application calendar regression with an already installed Playwright browser.","version":"1.0.0","entrypoint":"run.mjs","tests":["run.test.mjs"],"inputDescription":"Object with modulePath to installed Playwright and executablePath to browser.","outputDescription":"Actual node test exit code and output."}

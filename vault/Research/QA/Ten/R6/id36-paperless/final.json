@@ -1,0 +1,117 @@
+{
+ "title": "Paperless Underway",
+ "status": "failed",
+ "error": "The app did not pass its checks; review the failed checks in the activity log before trying again.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:40:54.724Z",
+    "finishedAt": "2026-11-05T08:46:50.611Z",
+    "durationMs": 355883,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 355796,
+    "usage": {
+     "inputTokens": 614528,
+     "cachedInputTokens": 523383,
+     "uncachedInputTokens": 91145,
+     "outputTokens": 18695,
+     "reasoningOutputTokens": 540,
+     "totalTokens": 633223,
+     "uncachedPlusOutputTokens": 109840
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:46:50.627Z",
+    "finishedAt": "2026-11-05T08:49:42.233Z",
+    "durationMs": 171604,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 171525,
+    "usage": {
+     "inputTokens": 617986,
+     "cachedInputTokens": 548215,
+     "uncachedInputTokens": 69771,
+     "outputTokens": 7251,
+     "reasoningOutputTokens": 160,
+     "totalTokens": 625237,
+     "uncachedPlusOutputTokens": 77022
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:49:42.254Z",
+    "finishedAt": "2026-11-05T08:54:47.046Z",
+    "durationMs": 304789,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 304575,
+    "usage": {
+     "inputTokens": 876251,
+     "cachedInputTokens": 797799,
+     "uncachedInputTokens": 78452,
+     "outputTokens": 16286,
+     "reasoningOutputTokens": 1088,
+     "totalTokens": 892537,
+     "uncachedPlusOutputTokens": 94738
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T08:54:47.069Z",
+    "finishedAt": "2026-11-05T09:05:26.218Z",
+    "durationMs": 639195,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 638328,
+    "usage": {
+     "inputTokens": 5070499,
+     "cachedInputTokens": 4902678,
+     "uncachedInputTokens": 167821,
+     "outputTokens": 38365,
+     "reasoningOutputTokens": 6903,
+     "totalTokens": 5108864,
+     "uncachedPlusOutputTokens": 206186
+    }
+   }
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "queued"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 24.6,
+ "challengeId": "36",
+ "workspace": "~/fhten/ud-r6/workspaces/a69b2cd2-181a-4efc-9f6d-e4489a953cd7/baea898d-d079-443e-afd9-9d153d7d44b4"
+}

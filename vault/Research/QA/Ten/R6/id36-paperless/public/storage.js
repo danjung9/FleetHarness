@@ -1,0 +1,3 @@
+const opened=new Promise((resolve,reject)=>{const r=indexedDB.open('paperless-underway',1);r.onupgradeneeded=()=>r.result.createObjectStore('work');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+export async function load(){const db=await opened;return new Promise((resolve,reject)=>{const r=db.transaction('work').objectStore('work').get('packet');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+export async function save(value){const db=await opened;return new Promise((resolve,reject)=>{const tx=db.transaction('work','readwrite');tx.objectStore('work').put(value,'packet');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}

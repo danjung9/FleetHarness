@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "messages",
+  "reason": "Reuse the dependency-free Node HTTP service, browser client and messages pack. Extend the synthetic domain grammar in a browser-compatible shared public/domain.mjs imported by compute.mjs and the offline service worker; the baseline EVENT/TASK parser is insufficient for the three domain sets. No new runtime dependencies."
+}

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "scheduling",
+  "reason": "Reuse dependency-free Node HTTP transport and shared scheduling backend. Extend bounded candidate search for PB4T role selection, departmental counterproposals, prior duty, daily and rolling limits, recurrence/history and board validation. CP-SAT adds packaging complexity without a measured need for these small fixtures. First-feasible completion is explicitly not global optimization."
+}

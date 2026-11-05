@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Expeditionary tablet users, supply/admin staff and fictional role reviewers working with synthetic UC36 documents on a local device.",
+  "primaryTask": "Capture three forms and a week of tasking offline; correct uncertain extraction, review exact versions, queue locally and reconcile with an explicitly simulated peer.",
+  "successOutcome": "Cited completed forms, verified action list, six unsubmitted draft updates and four filing recommendations survive reload; one reviewed local receipt follows conflict resolution and acknowledged resumable transfer. Real endpoints remain untouched.",
+  "screens": [
+    {
+      "name": "Capture and review",
+      "purpose": "Source image/text beside extracted fields, citations and validation; show saved versus draft content.",
+      "primaryAction": "Save locally, then Review packet"
+    },
+    {
+      "name": "Weekly tasking",
+      "purpose": "Six proposed actions, duplicates, owner alternatives, missing values, dependencies and cited drafts.",
+      "primaryAction": "Confirm owner decision and Review actions"
+    },
+    {
+      "name": "Reconnect and records",
+      "purpose": "Queue, competing branches, explicit chosen merge, pending bytes, local simulated receipt and filing recommendations.",
+      "primaryAction": "Connect local peer and Resume transfer"
+    },
+    {
+      "name": "Evidence and path to fleet",
+      "purpose": "Export named outputs, source/audit history, fictional comparison, human worksheets and transition dependencies.",
+      "primaryAction": "Export reviewed package"
+    }
+  ],
+  "states": {
+    "empty": "Explain both tracks, offer Load synthetic packet; disclosure synthetic, not validated against the real format remains visible at all times.",
+    "loading": "While local service recognizes or IndexedDB commits, announce Processing or Saving, disable duplicate action only; keep sources and draft visible. No saved claim until transaction complete.",
+    "error": "Field-specific errors preserve drafts. Uncertain raster region stays null. Unsupported image retains source for manual transcription. Missing ancestry requests history; quota/import errors produce zero partial writes. Explain blocked routing and next correction.",
+    "success": "Show Saved locally separately from approved; queued, transferred, acknowledged, filed distinct. Review status and offsets visible; last acknowledgement and audit provide confirmation."
+  },
+  "persistence": "IndexedDB transactions atomically commit source/revision/review/queue/audit and acknowledged offsets. Preserve drafts per field and ordinary navigation/reload. Request persistent storage if available and explain eviction; export/reimport backup. This is not encrypted storage. Device-local Node service must remain available with external network disconnected; service unavailable yields explicit error and editable retained drafts, no invented result.",
+  "recovery": "Show both conflicting quantities or edit versus deleted; allow choose/edit final value and confirm all heads. Save or discard unsaved changes before review or routing. Retry failed storage; import is validated before atomic commit and never grants approval. Pause/stop preserves queue. Destructive reset requires backup and deliberate confirmation. Escalate uncertain fields/categories to reviewer and deployment to owner.",
+  "keyboard": "Native labeled buttons, inputs, selects, checkboxes and textarea; logical Tab order, visible focus, Enter only submits intended form, Escape closes confirmation with draft retained. Status changes use aria-live; errors link fields; text accompanies color. Desktop side-by-side source/review becomes single-column at narrow width with no hidden primary action; details expand inline."
+}

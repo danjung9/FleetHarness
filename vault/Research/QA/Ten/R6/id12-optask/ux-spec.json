@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders evaluating fictional OPTASK traffic; all content synthetic.",
+  "primaryTask": "Paste or load mock formatted text, select ship/day, extract the three named event types, inspect source evidence, correct issues, save and review a draft schedule.",
+  "successOutcome": "A synchronized 24-hour UTC timeline and readable schedule agree with the source and the reviewed JSON; all provenance and uncertainty remain visible.",
+  "screens": [
+    {
+      "name": "OPTASK review workspace",
+      "purpose": "Message input above timeline; on desktop evidence beside selected event, on narrow screens stacked with readable list. Three event-category lanes share one UTC axis; overlaps use separate rows and text labels.",
+      "primaryAction": "Parse message"
+    },
+    {
+      "name": "Source and review panel",
+      "purpose": "Show exact original text with selected field highlighted, line/offset and derived-time explanation; expose issues and saved-versus-unsaved state.",
+      "primaryAction": "Confirm reviewed draft"
+    }
+  ],
+  "states": {
+    "empty": "Show instructions, synthetic disclaimer, sample picker, ship/day and empty schedule. Preserve an empty saved draft deliberately.",
+    "loading": "Announce Parsing message or Preparing offline cache in a live region; disable duplicate submission until completed. Initial cache preparation must finish before promising offline readiness.",
+    "error": "Show literal issue with line/field, retain source and valid unrelated events, block review/export while unresolved. Transport/cache/storage failure preserves draft and offers retry or local download; never display stale schedule as current.",
+    "success": "Show extracted/selected/issue counts, three domain outputs, common UTC axis, save status and deliberate review. Download becomes available only for saved, current, issue-free reviewed input."
+  },
+  "persistence": "Save draft stores exact rawText, ship/day and committed revision locally; reload recomputes from saved input using shared core. Editing marks unsaved and invalidates review; require explicit Save draft or Discard draft before confirming review. Samples replace draft only after deliberate load; unsaved change prompts retain/cancel or discard. Storage failures are visible and do not erase input. Embed prepared fixture input data in public/index.html; do not fetch local fixture files.",
+  "recovery": "Correct source and reparse; quarantined sets stay visible as issues. Discard restores last saved source and selection. Clear requires explicit confirmation. Prepare offline caches only same-origin files; show actual readiness. Offline route control exercises service-worker local computation with network bypassed; mandatory manual/integration check disconnects browser itself and parses a distinct message. No remote service or operational action.",
+  "keyboard": "Native labeled textarea, selects, date input, buttons and checkbox; logical Tab order, visible focus, Enter/Space activate controls. Source links focus highlighted text without trapping focus. Timeline has category text plus accessible list; color never carries meaning alone. At 390px no page overflow, horizontal timeline scroll is labeled and list remains readable. Honor reduced motion."
+}

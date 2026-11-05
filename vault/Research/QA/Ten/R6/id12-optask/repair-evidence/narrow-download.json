@@ -1,0 +1,231 @@
+{
+  "provenance": "Synthetic; not validated against the real USMTF format.",
+  "messageId": "DISCONNECTED-NEW",
+  "selectedShip": "FS AURORA",
+  "selectedDay": "2026-11-05",
+  "timezone": "UTC",
+  "reviewStatus": "reviewed-draft",
+  "unresolvedIssueCodes": [],
+  "events": [
+    {
+      "category": "frequency plan",
+      "id": "NEW-FP",
+      "ship": "FS AURORA",
+      "label": "OFFLINE RADIO",
+      "startRaw": "2026-11-05T11:00Z",
+      "endRaw": "2026-11-05T12:00Z",
+      "frequency": 278.25,
+      "unit": "MHz",
+      "source": {
+        "start": 59,
+        "end": 147,
+        "text": "FREQPLAN/NEW-FP/FS AURORA/OFFLINE RADIO/2026-11-05T11:00Z/2026-11-05T12:00Z/278.25/MHz//",
+        "line": 3
+      },
+      "fields": {
+        "recordId": {
+          "start": 68,
+          "end": 74,
+          "text": "NEW-FP",
+          "line": 3
+        },
+        "ship": {
+          "start": 75,
+          "end": 84,
+          "text": "FS AURORA",
+          "line": 3
+        },
+        "label": {
+          "start": 85,
+          "end": 98,
+          "text": "OFFLINE RADIO",
+          "line": 3
+        },
+        "start": {
+          "start": 99,
+          "end": 116,
+          "text": "2026-11-05T11:00Z",
+          "line": 3
+        },
+        "end": {
+          "start": 117,
+          "end": 134,
+          "text": "2026-11-05T12:00Z",
+          "line": 3
+        },
+        "frequency": {
+          "start": 135,
+          "end": 141,
+          "text": "278.25",
+          "line": 3
+        },
+        "unit": {
+          "start": 142,
+          "end": 145,
+          "text": "MHz",
+          "line": 3
+        }
+      },
+      "messageIdSource": {
+        "start": 40,
+        "end": 56,
+        "text": "DISCONNECTED-NEW",
+        "line": 2
+      },
+      "categorySource": {
+        "start": 59,
+        "end": 67,
+        "text": "FREQPLAN",
+        "line": 3
+      },
+      "startUtc": "2026-11-05T11:00Z",
+      "endUtc": "2026-11-05T12:00Z",
+      "durationMinutes": 60,
+      "selected": true,
+      "selectionReason": "intersects selected UTC day and matches ship",
+      "displaySegment": {
+        "startMinute": 660,
+        "endMinute": 720
+      }
+    },
+    {
+      "category": "crypto change-over window",
+      "id": "NEW-CW",
+      "ship": "FS AURORA",
+      "label": "OFFLINE WINDOW",
+      "startRaw": "2026-11-05T12:00Z",
+      "endRaw": "2026-11-05T12:20Z",
+      "frequency": null,
+      "unit": null,
+      "source": {
+        "start": 148,
+        "end": 224,
+        "text": "CRYPTO/NEW-CW/FS AURORA/OFFLINE WINDOW/2026-11-05T12:00Z/2026-11-05T12:20Z//",
+        "line": 4
+      },
+      "fields": {
+        "recordId": {
+          "start": 155,
+          "end": 161,
+          "text": "NEW-CW",
+          "line": 4
+        },
+        "ship": {
+          "start": 162,
+          "end": 171,
+          "text": "FS AURORA",
+          "line": 4
+        },
+        "label": {
+          "start": 172,
+          "end": 186,
+          "text": "OFFLINE WINDOW",
+          "line": 4
+        },
+        "start": {
+          "start": 187,
+          "end": 204,
+          "text": "2026-11-05T12:00Z",
+          "line": 4
+        },
+        "end": {
+          "start": 205,
+          "end": 222,
+          "text": "2026-11-05T12:20Z",
+          "line": 4
+        }
+      },
+      "messageIdSource": {
+        "start": 40,
+        "end": 56,
+        "text": "DISCONNECTED-NEW",
+        "line": 2
+      },
+      "categorySource": {
+        "start": 148,
+        "end": 154,
+        "text": "CRYPTO",
+        "line": 4
+      },
+      "startUtc": "2026-11-05T12:00Z",
+      "endUtc": "2026-11-05T12:20Z",
+      "durationMinutes": 20,
+      "selected": true,
+      "selectionReason": "intersects selected UTC day and matches ship",
+      "displaySegment": {
+        "startMinute": 720,
+        "endMinute": 740
+      }
+    },
+    {
+      "category": "flight quarters",
+      "id": "NEW-FQ",
+      "ship": "FS AURORA",
+      "label": "OFFLINE FLIGHT",
+      "startRaw": "2026-11-05T23:45Z",
+      "endRaw": "2026-11-06T00:15Z",
+      "frequency": null,
+      "unit": null,
+      "source": {
+        "start": 225,
+        "end": 302,
+        "text": "FLIGHTQ/NEW-FQ/FS AURORA/OFFLINE FLIGHT/2026-11-05T23:45Z/2026-11-06T00:15Z//",
+        "line": 5
+      },
+      "fields": {
+        "recordId": {
+          "start": 233,
+          "end": 239,
+          "text": "NEW-FQ",
+          "line": 5
+        },
+        "ship": {
+          "start": 240,
+          "end": 249,
+          "text": "FS AURORA",
+          "line": 5
+        },
+        "label": {
+          "start": 250,
+          "end": 264,
+          "text": "OFFLINE FLIGHT",
+          "line": 5
+        },
+        "start": {
+          "start": 265,
+          "end": 282,
+          "text": "2026-11-05T23:45Z",
+          "line": 5
+        },
+        "end": {
+          "start": 283,
+          "end": 300,
+          "text": "2026-11-06T00:15Z",
+          "line": 5
+        }
+      },
+      "messageIdSource": {
+        "start": 40,
+        "end": 56,
+        "text": "DISCONNECTED-NEW",
+        "line": 2
+      },
+      "categorySource": {
+        "start": 225,
+        "end": 232,
+        "text": "FLIGHTQ",
+        "line": 5
+      },
+      "startUtc": "2026-11-05T23:45Z",
+      "endUtc": "2026-11-06T00:15Z",
+      "durationMinutes": 30,
+      "selected": true,
+      "selectionReason": "intersects selected UTC day and matches ship",
+      "displaySegment": {
+        "startMinute": 1425,
+        "endMinute": 1440
+      }
+    }
+  ],
+  "originalText": "SYNTHETIC OPTASK — NOT REAL USMTF\nMSGID/DISCONNECTED-NEW//\nFREQPLAN/NEW-FP/FS AURORA/OFFLINE RADIO/2026-11-05T11:00Z/2026-11-05T12:00Z/278.25/MHz//\nCRYPTO/NEW-CW/FS AURORA/OFFLINE WINDOW/2026-11-05T12:00Z/2026-11-05T12:20Z//\nFLIGHTQ/NEW-FQ/FS AURORA/OFFLINE FLIGHT/2026-11-05T23:45Z/2026-11-06T00:15Z//\nENDMSG//"
+}

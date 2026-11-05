@@ -1,0 +1,85 @@
+{
+  "stage": "verify",
+  "verdict": "NOT",
+  "gaps": [
+    {
+      "requirement": "UC12-1; DELIVERABLE12-1 — Parse USMTF raw text into the three-category synchronized 24-hour schedule.",
+      "evidence": "public/domain.mjs accepts only SYN-OPTASK/1 with an invented banner and FREQPLAN/CRYPTO/FLIGHTQ grammar. format-boundary.test.mjs explicitly asserts rejection of USMTF. domain.test.mjs tests the substitute grammar, not format-conforming mock messages. verification.md acknowledges the missing documented USMTF subset and reviewed mapping. Passing synthetic tests therefore does not establish the named input format or primary deliverable.",
+      "fix": "Implement a documented USMTF subset using an authorized, independently domain-reviewed mapping and synthetic format-conforming fixtures. Add held-out tests covering all three categories, non-events, ambiguous times and changed messages through extraction, source evidence and the 24-hour UI/export. Preserve original test expectations; do not alter the frozen acceptance plan to obtain a pass."
+    }
+  ],
+  "attempts": [
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC12-1 / DELIVERABLE12-1 — Parse USMTF raw text into the three-category 24-hour schedule",
+          "evidence": "public/domain.mjs requires an invented synthetic banner and FREQPLAN/CRYPTO/FLIGHTQ grammar. README.md explicitly states that only invented SYN-OPTASK/1 is supported. acceptance-plan.json and passing tests substitute this grammar for USMTF; no reviewed USMTF mapping establishes the named input format.",
+          "fix": "Implement a documented, domain-reviewed USMTF subset using authorized synthetic messages conforming to that format. Add independent fixtures and assertions covering all three categories, source evidence and resulting daily schedules without requiring conversion to the invented grammar."
+        },
+        {
+          "requirement": "MSG-05 — Keep the timeline usable offline",
+          "evidence": "acceptance-plan.json offline-primary toggles an X-Offline-Route code path but never disconnects the browser. test-report.json reports that journey passed, not an actual disconnected integration check. verification.md explicitly says genuine disconnection, offline reload and disconnected export remain unverified.",
+          "fix": "Add an integration test that activates the cache, actually disconnects browser networking, reloads the workspace, parses newly changed synthetic input, and saves, reviews and downloads its schedule. Assert the downloaded event values and original text, and record execution evidence."
+        }
+      ],
+      "durationMs": 41499,
+      "tokens": {
+        "inputTokens": 650059,
+        "cachedInputTokens": 549264,
+        "uncachedInputTokens": 100795,
+        "outputTokens": 1194,
+        "reasoningOutputTokens": 126,
+        "totalTokens": 651253,
+        "uncachedPlusOutputTokens": 101989
+      },
+      "sourceHash": "b7eb7969505c1469b1e8b3ac6e25a4b359472294aaad57a505f1908103b7405e"
+    },
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC12-1; DELIVERABLE12-1 — Parse USMTF raw text into a synchronized 24-hour schedule",
+          "evidence": "public/domain.mjs requires the invented SYN-OPTASK/1 envelope and synthetic banner, recognizing only custom FREQPLAN, CRYPTO and FLIGHTQ records. README.md explicitly confirms that no documented USMTF subset is supported. domain.test.mjs and tests/offline.integration.mjs exercise this substitute grammar, not mock messages conforming to USMTF. The working timeline therefore does not establish the original primary task.",
+          "fix": "Implement a documented, independently domain-reviewed USMTF subset using clearly synthetic messages. Add held-out format-conforming fixtures with independent expected frequency plans, crypto windows, flight quarters, source offsets and daily timeline segments; verify the complete browser workflow without manual conversion to the invented grammar. Preserve existing frozen tests and expectations."
+        }
+      ],
+      "durationMs": 25274,
+      "tokens": {
+        "inputTokens": 344904,
+        "cachedInputTokens": 266843,
+        "uncachedInputTokens": 78061,
+        "outputTokens": 921,
+        "reasoningOutputTokens": 140,
+        "totalTokens": 345825,
+        "uncachedPlusOutputTokens": 78982
+      },
+      "sourceHash": "90f26ec4d6670da2970b063a05eceb37fed154ec6b2004dc2aa2dcf780bab4d7"
+    },
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC12-1; DELIVERABLE12-1 — Parse USMTF raw text into the three-category synchronized 24-hour schedule.",
+          "evidence": "public/domain.mjs accepts only SYN-OPTASK/1 with an invented banner and FREQPLAN/CRYPTO/FLIGHTQ grammar. format-boundary.test.mjs explicitly asserts rejection of USMTF. domain.test.mjs tests the substitute grammar, not format-conforming mock messages. verification.md acknowledges the missing documented USMTF subset and reviewed mapping. Passing synthetic tests therefore does not establish the named input format or primary deliverable.",
+          "fix": "Implement a documented USMTF subset using an authorized, independently domain-reviewed mapping and synthetic format-conforming fixtures. Add held-out tests covering all three categories, non-events, ambiguous times and changed messages through extraction, source evidence and the 24-hour UI/export. Preserve original test expectations; do not alter the frozen acceptance plan to obtain a pass."
+        }
+      ],
+      "durationMs": 34919,
+      "tokens": {
+        "inputTokens": 527828,
+        "cachedInputTokens": 434418,
+        "uncachedInputTokens": 93410,
+        "outputTokens": 1032,
+        "reasoningOutputTokens": 120,
+        "totalTokens": 528860,
+        "uncachedPlusOutputTokens": 94442
+      },
+      "sourceHash": "426a4b55c3dafc5e0092f61864d510e6aaed3f89acf7c866077321bd7dfb9955"
+    }
+  ],
+  "repairs": 2,
+  "repairLimitReached": true,
+  "durationMs": 101692,
+  "evaluatorRetries": 0
+}

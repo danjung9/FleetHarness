@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "objective": "Offline on a device-local service, transform the preserved UC36 synthetic image/forms/task corpus into cited reviewed outputs, enforce authority and durable causal synchronization, and plan acknowledged bounded transfers without any real government integration.",
+  "invocation": {
+    "input": "One JSON object, action required string. Unknown keys are ignored; no coercion unless specified. All IDs/roles/source IDs are nonempty strings. Optional arrays default []; optional decision defaults null. Actions:\nextract: {action,kind: requisition|correspondence,sourceId,text:string}.\nrecognize: {action,regions:[{field:string,pixels:number[][],candidates:[{value:string|number,pixels:number[][]}]}]}; pixels are rectangular nonempty same-sized grayscale arrays with integer intensities 0..255, 0 black, 255 white.\nvalidate: {action,kind:training-log|requisition|correspondence,fields:object}; field shapes follow the public data/README.md and preserved source forms. sourceId identifies provenance. Optional recordCategory:string.\ntasks: {action,artifacts:[{sourceId,text,bodyStartLine:positive integer}],decision:null|{id,role,taskId,ownerRole}}.\nfiling: {action,records:[{recordId,kind:training-log|requisition|correspondence|tasking-week,date:YYYY-MM-DD}],scheduleText:string,sourceId:string}.\nreconcile: {action,revisions:[{revisionId,operationId,recordId,replicaId,parentIds:string[],payload:object|null,tombstone:boolean}]} (timestamp/logicalClock optional metadata retained but never wins).\ntransfer: {action,attachments:[{attachmentId,byteLength:nonnegative integer,priority:nonnegative integer,acknowledgedOffset:nonnegative integer}],budget:nonnegative integer,chunkLimit:positive integer default 128,acknowledgedChunks:nonnegative integer default 0}.\ngate: {action,heads:string[],revisionId:string,approvedRevisionId:string|null,errors:string[],unsaved:boolean default false,paused:boolean default false}.\nbenefits: {action,manualMinutes:finite nonnegative number,prototypeMinutes:finite nonnegative number,packetCount:nonnegative integer}.\nimport: {action,raw:string}. Export/import schema is {schemaVersion:1,classification:\"synthetic\",records:array of preserved fixture record-shaped objects}; every record requires recordId:string, packetId:string, classification:\"synthetic\",kind:string,source:object,revisions:array,reviews:array,routes:array,attachments:array,audit:array; expected is never required or imported as an extraction result.",
+    "output": "Every response has exactly {status:\"ok\"|\"error\",data:object|null,errors:string[]}. Error responses have data:null and one error except validate which returns all field errors. Success errors:[].\nextract data:{fields:object,citations:object}; fields/citations use public source field names, missing strings become \"\", missing numeric quantity becomes null, missing collection fields become [].\nrecognize data:{fields:object,uncertain:string[]}; all fields returned, uncertain values null.\nvalidate data:{valid:true} on success; invalid response has status:error,data:null,errors as specified.\ntasks data:{proposedActions:array,verifiedActions:array,verifiedTaskIds:string[],unresolvedTaskIds:string[],draftStatusUpdates:array,duplicateCount:integer}. Actions have exactly taskId,title,ownerRole:string|null,dueAt:string|null,status:string,dependsOn:string[],citations:string[],issues:string[]. verifiedActions includes unresolved rows too; verifiedTaskIds selects only no-issue rows. Draft objects have taskId,text,citations,state:\"draft-unsubmitted\".\nfiling data:{filingManifest:[{recordId,category,reviewOn,state:\"recommendation\",citation}],disposalAuthorized:false}.\nreconcile data:{heads:object mapping recordId to sorted revisionId[],conflicts:string[],missingParents:string[],uniqueOperations:integer}. Missing ancestry is a successful pending state, never routable.\ntransfer data:{scheduled:[{id,start,end}],plannedBytes:integer,acknowledgedBytes:integer,offsets:object mapping every attachmentId to acknowledged exclusive offset}.\ngate data:{eligible:boolean,state:\"blocked\"|\"eligible-for-queue\",reason:null|\"UNSAVED\"|\"PAUSED\"|\"VALIDATION\"|\"CONFLICT\"|\"UNAPPROVED\"}.\nbenefits data:{minutesSavedPerPacket:number,syntheticHours:number,measuredPrototypeMinutes:null}.\nimport data:{records:array,grantsApproval:false}; imported history is retained but requires fresh local review. Never execute source text.",
+    "rules": [
+      "All computational actions are pure; browser IndexedDB handles atomic persistence separately. Envelope validation precedes action dispatch. Malformed object, absent action, wrong types, nonfinite numbers, unrecognized kind, duplicate record IDs or structurally invalid action fields yield INVALID_INPUT. Unknown action yields UNKNOWN_ACTION. JSON parse failure at HTTP level yields the same error envelope with INVALID_INPUT. Valid computational requests return HTTP 200, including domain error envelopes.",
+      "Error precedence: INVALID_INPUT first; then action-specific errors in rule order. Import checks raw string type, then JSON parse INVALID_IMPORT_JSON, then schema INVALID_IMPORT_SCHEMA. Other actions validate complete shape before semantic rules. Empty arrays are valid except image regions/pixels/candidates which must be nonempty; unsupported or inconsistent image dimensions yield UNSUPPORTED_IMAGE.",
+      "Extraction obeys the invented case-sensitive forms in data/README.md: split label lines on first colon and trim; ignore title and unknown labels, use last duplicate label. Requisition fields: sourceId,documentId,requestDate,stockToken,description,unitOfIssue,quantity,priority,requestingRole,destinationRole. Quantity parses finite decimal numeric text; malformed numeric text becomes null. Citations are sourceId#Ln of the selected label line, one-based counting blank lines; absent labels have no citation.",
+      "Correspondence fields: sourceId,packageId,date,fromRole,toRole,subject,references,paragraphs,enclosures,routingChain. References split semicolons; routingChain splits >; trim and discard empty parts. Parse n. text into {number,text}; enclosure (n): recordId | title into {number,recordId,title}. Sort paragraphs/enclosures numerically; citations for each collection span first-last matching line (single line #Ln, otherwise #Ln-Lm). Other citations use the selected label line.",
+      "Recognition compares actual raster pixels, never SVG text nodes, hashes, record IDs or expected fields. For each candidate compute mean squared grayscale difference divided by 65025 across all pixels. Pick minimum error, breaking exact ties by input candidate order. If minimum error exceeds 0.01 OR region mean darkness (sum(255-pixel)/(255*pixelCount)) is below 0.02, return null and mark field uncertain. Otherwise return candidate value unchanged. Region order determines uncertain order. Duplicate field names invalid. UI rasterizes original image and independent font/vocabulary candidates at identical field dimensions, confirms visible source regions, and sends them to this backend; candidates are template recognition vocabulary, not field answer keys. Bounded font/layout recognition is explicitly not general handwriting OCR.",
+      "Validation uses required fields and Gregorian/date/time/quantity/paragraph/enclosure rules in data/README.md. Required null/empty emits REQUIRED:field (except durationMinutes null emits REVIEW_UNCERTAIN:durationMinutes). INVALID_DATE:field for nonempty invalid dates; INVALID_TIME:field for invalid start/end; INVALID_DURATION:durationMinutes for end<=start or mismatch; INVALID_QUANTITY:quantity unless integer 1..999; INVALID_UNIT:unitOfIssue unless EA/SET; INVALID_PRIORITY:priority unless routine/urgent; INVALID_COMPLETION:completion unless complete/incomplete; INVALID_SEQUENCE:paragraphs or INVALID_SEQUENCE:enclosures for nonconsecutive numbering. UNKNOWN_ENCLOSURE:n for references without a defined number. INVALID_CATEGORY for recordCategory not matching SYN-TRAIN/SYN-SUPPLY/SYN-ADMIN for its kind. Collect distinct errors, lexicographically sorted. Skip format checks for absent required values, avoiding duplicate REQUIRED and format errors. sourceId is provenance, not a required inferred field.",
+      "Tasks parse only the supplied controlled-English Assign/Repeat/Amend/Update/Request grammar, never generic EVENT/TASK substitutes. Process artifacts in input order and lines ascending. Strip final sentence punctuation from task titles. Assign records owner/due/status/dependencies; Repeat appends citation and increments duplicateCount. Amend due replaces due; conflicting owner amendments targeting the same old owner preserve alternatives, set ownerRole:null and issue CONFLICT_OWNER. Update changes status, without changing dependencies. Missing owner/due remain null with MISSING_OWNER/MISSING_DUE. Conditional Request containing \"if needed\" also has AMBIGUOUS_REQUEST. Unrecognized lines are retained in source but do not create actions. Amend/Repeat/Update unknown task yields INVALID_TASK_REFERENCE. A decision must target an existing owner conflict and one explicitly proposed alternative, otherwise INVALID_DECISION; it clears only CONFLICT_OWNER, appends decision.id citation, and does not resolve missing fields or complete dependencies.",
+      "Task arrays and IDs sort lexicographically by taskId. dependsOn and issues sort lexicographically. Citations preserve encounter order, coalesce contiguous lines from the same artifact into #Ln-Lm, deduplicate repeated exact citations; decision citation is last. verifiedActions is the post-decision full action list; proposedActions remains pre-decision. verifiedTaskIds are all no-issue rows, unresolvedTaskIds all issue rows. Each draft is TASK: STATUS; owner OWNER; due DUE. with unresolved for null values, and remains draft-unsubmitted. No automatic task submission.",
+      "Filing parses the fictional pipe-separated schedule: category | comma-separated kinds | integer calendar days after anchor | review-only. Match record kind, add days to input date excluding anchor day, UTC Gregorian arithmetic, citation to schedule line. Unknown/unmatched kind/category yields INVALID_CATEGORY; invalid date yields INVALID_DATE:date. Manifest preserves records input order. No actual destruction or external repository calls.",
+      "Reconciliation identifies both revisionId and operationId immutably. Exact duplicate operations are idempotent; same ID with any differing content yields ID_COLLISION. Two revisions sharing an operationId or revisionId inconsistently are collisions. All parent links must stay within record: CROSS_RECORD_PARENT; any cycle: CYCLE. Check collisions before cross-record links before cycles. Missing ancestors are retained, listed once sorted; a record with missing ancestry has heads:[] until complete. Complete heads are revisions not parents of another revision in that record; every live or tombstone head remains visible. conflicts lists sorted record IDs having >1 head. uniqueOperations counts deduplicated operations. Sort object record keys and all head arrays; never use timestamps for winner selection. Explicit resolution is a new revision naming all reviewed heads with chosen payload/null, recorded actor and pending review.",
+      "Transfer validates offsets after shape: any offset>byteLength yields INVALID_OFFSET. Duplicate attachment IDs yield INVALID_INPUT. Sort attachments by ascending priority then attachmentId. Repeatedly emit contiguous half-open chunks of min(chunkLimit,remaining attachment bytes,remaining budget), completing higher-priority item first. plannedBytes sums lengths <=budget. Only first min(acknowledgedChunks,scheduled.length) chunks are receiver-acknowledged; update offsets for those chunks only. acknowledgedBytes counts newly acknowledged bytes. Zero budget emits [] and preserves offsets; sending/planning alone never increments durable offsets. Already complete attachments produce no chunks.",
+      "Gate precedence: unsaved=>UNSAVED; paused=>PAUSED; any errors=>VALIDATION; heads length !=1 or heads[0]!=revisionId=>CONFLICT; approvedRevisionId!=revisionId=>UNAPPROVED; otherwise eligible-for-queue,reason:null. For other reasons eligible:false,state:blocked. Review approval binds exact committed revision, never an unsaved draft. Editing creates a new pending revision; imported approvals are historical until renewed locally.",
+      "Benefits arithmetic is (manualMinutes-prototypeMinutes) and that result*packetCount/60; negative savings are allowed. Numbers are not rounded. Both timing inputs are fictional, measuredPrototypeMinutes is always null in this action. UI separately records actual elapsed session time and never calls it an SME baseline.",
+      "Import validates the complete schema before any writes. Parse errors yield INVALID_IMPORT_JSON and structure/classification/type errors INVALID_IMPORT_SCHEMA. Do not discard competing local heads or grant approval. ID collisions encountered during merge fail atomically using ID_COLLISION. Successful data.records preserves input order and content, excluding any expected answer-key properties. UI writes sources/revisions/queue/audit in one committed transaction; failed writes display SAVE_FAILED and retain draft. Storage errors are integration states, not successful computation envelopes.",
+      "Local peer routes are explicit simulations. Queue approved versions only; queued, transferred, acknowledged and filed remain distinct. Idempotent route operation and receipt IDs yield one receipt on replay. Persist receiver acknowledgement before showing acknowledged, retaining historical approval IDs. Pause/stop prevents further transfer, never deletes queue. Export labels synthetic, not validated against the real format, and preserves sources, revisions, review/route IDs, offsets, receipts and audit. No real transport, encryption, authenticated identity, disposal, deployment or external submission is authorized."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "extract",
+      "kind": "algorithm",
+      "description": "Transform synthetic form text and bounded image regions with citations",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "EVAL36-1",
+        "EVAL36-4",
+        "DELIVERABLE36-3",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-7",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1",
+        "SCOPE36-27"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "extract-cases"
+      ]
+    },
+    {
+      "id": "validate",
+      "kind": "algorithm",
+      "description": "Detect invalid values before review/routing",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "EVAL36-2",
+        "EVAL36-4",
+        "DELIVERABLE36-3",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-7",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1",
+        "SCOPE36-27"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "validate-cases"
+      ]
+    },
+    {
+      "id": "tasks",
+      "kind": "workflow",
+      "description": "Consolidate full week, explicit owner decision and draft updates",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "EVAL36-1",
+        "EVAL36-4",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-8",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "tasks-cases"
+      ]
+    },
+    {
+      "id": "filing",
+      "kind": "algorithm",
+      "description": "Derive fictional review dates and recommendation manifest",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "EVAL36-4",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-8",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "filing-cases"
+      ]
+    },
+    {
+      "id": "reconcile",
+      "kind": "stateful",
+      "description": "Causal, replay-safe branch retention and explicit multi-parent resolution",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "OFF-01",
+        "OFF-02",
+        "OFF-03",
+        "EVAL36-4",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "reconcile-cases"
+      ]
+    },
+    {
+      "id": "transfer",
+      "kind": "algorithm",
+      "description": "Priority chunk planning with acknowledgement-only offsets",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-6",
+        "OFF-04",
+        "EVAL36-4",
+        "DELIVERABLE36-3",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-7",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1",
+        "SCOPE36-27"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "transfer-cases"
+      ]
+    },
+    {
+      "id": "gate",
+      "kind": "workflow",
+      "description": "Bind review to exact committed revision before queueing",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-2",
+        "UC36-6",
+        "OFF-05",
+        "EVAL36-2",
+        "EVAL36-4",
+        "DELIVERABLE36-3",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-7",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1",
+        "SCOPE36-27"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "gate-cases"
+      ]
+    },
+    {
+      "id": "benefits",
+      "kind": "algorithm",
+      "description": "Fictional arithmetic, denominators and no observed benefit claim",
+      "criterionIds": [
+        "UC36-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "benefits-cases"
+      ]
+    },
+    {
+      "id": "import",
+      "kind": "workflow",
+      "description": "Validate complete backup before atomic integration",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-3",
+        "UC36-6",
+        "EVAL36-4",
+        "DESC36-1",
+        "DESC36-3",
+        "DESC36-4",
+        "DESC36-14",
+        "DESC36-15",
+        "SUMMARY36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "import-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json",
+      "domain.mjs",
+      "image-recognition.mjs",
+      "sync.mjs",
+      "peer.mjs",
+      "exports.mjs",
+      "public/storage.js",
+      "data/synthetic-data.json",
+      "data/README.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

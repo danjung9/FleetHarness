@@ -1,0 +1,72 @@
+build info Core evaluation failed. Using the shared repair attempt before completing the application.
+build text I’ll compare the core report’s mismatch paths with the frozen protocol, repair the shared runtime, and rerun the application tests without changing the contracts.
+build tool bash
+{
+  "command": "/bin/zsh -lc 'cat .quality-evidence/core-report.json'"
+}
+build tool bash completed
+"{\n  \"schemaVersion\": 1,\n  \"status\": \"failed\",\n  \"runtime\": {\n    \"profile\": \"service\",\n    \"filesHash\": \"ea313f1959345c58d3963d9dfcc7c13bce56501129eb7f00d195c395d9dcd041\",\n    \"runtime\": \"v24.22.2\",\n    \"environmentNames\": []\n  },\n  \"evaluations\": [\n    {\n      \"id\": \"extract-cases\",\n      \"capabilityId\": \"extract\",\n      \"evaluator\": 
+build tool bash
+{
+  "command": "/bin/zsh -lc 'cat solution-contract.json'"
+}
+build tool bash completed
+"{\n  \"schemaVersion\": 1,\n  \"objective\": \"Offline on a device-local service, transform the preserved UC36 synthetic image/forms/task corpus into cited reviewed outputs, enforce authority and durable causal synchronization, and plan acknowledged bounded transfers without any real government integration.\",\n  \"invocation\": {\n    \"input\": \"One JSON object, action required 
+build tool bash
+{
+  "command": "/bin/zsh -lc \"node -e \\\"const r=require('./.quality-evidence/core-report.json');for(const e of r.evaluations)console.log(JSON.stringify({id:e.id,status:e.status,actual:e.actual,threshold:e.threshold,failures:e.cases.filter(c=>\"'!c.passed).map(c=>({id:c.id,detail:c.detail,output:c.output}))}));\"'"
+}
+build tool bash completed
+"{\"id\":\"extract-cases\",\"status\":\"passed\",\"actual\":1,\"threshold\":1,\"failures\":[]}\n{\"id\":\"validate-cases\",\"status\":\"passed\",\"actual\":1,\"threshold\":1,\"failures\":[]}\n{\"id\":\"tasks-cases\",\"status\":\"failed\",\"actual\":0.5,\"threshold\":1,\"failures\":[{\"id\":\"full-week\",\"detail\":\"Output differs from the frozen JSON answer. First mismatch at $.dat
+build tool bash
+{
+  "command": "/bin/zsh -lc \"rg -n 'issues.sort|whole weekly|const sort' domain.mjs core.test.mjs; cat .fleet/skills/ponytail/SKILL.md .fleet/skills/fleet-evidence/SKILL.md .fleet/skills/impeccable/reference/audit.md .fleet/skills/impeccable/reference/critique.md\""
+}
+build tool bash completed
+"core.test.mjs:8:test('whole weekly consolidation protocol',async()=>{const r=fixture.records.find(r=>r.recordId==='REC-TASKS');const sort=rows=>rows.map(r=>({...r,issues:[...r.issues].sort()}));const output=await compute({action:'tasks',artifacts:r.source.artifacts,decision:r.expected.reviewDecision});assert.deepEqual(output,ok({proposedActions:sort(r.expected.proposedActions),veri
+build text The report shows one failing case, at `$.data.proposedActions[3].issues[0]`. The runtime returns `["MISSING_DUE", "MISSING_OWNER"]`, which follows the frozen protocol’s instruction to sort issues lexicographically. The supplied fixture lists them in the opposite order.
+
+This appears to be an expectation conflict. I’ll preserve the protocol-compliant runtime behavior, add a regression test with new
+build tool fleet_component_progress
+{
+  "componentId": "core",
+  "status": "building",
+  "detail": "Investigating host mismatch $.data.proposedActions[3].issues[0] against frozen lexicographic issue ordering."
+}
+build tool fleet_component_progress completed
+[{"type":"inputText","text":"Shared extraction and validation: building. The live diagram has been updated."}]
+build tool bash
+{
+  "command": "/bin/zsh -lc \"cat > task-ordering.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compute } from './compute.mjs';\n\ntest('novel unresolved requests retain the public lexicographic issue order in the whole response', async () => {\n  const input = {\n    action: 'tasks',\n    artifacts: [{\n      sourceId: 'SYN-NOVEL-ORDER',
+build tool bash completed
+"✔ source extraction complete objects match preserved fixture (1.617708ms)\n✔ novel boundary envelopes (0.244417ms)\n✔ causality, duplicate replay, missing history and tombstone conflict (0.36875ms)\n✔ recognition actual pixels, blank and novel candidate (0.171584ms)\n✔ transfer retains unacknowledged bytes (0.130958ms)\n✔ whole weekly consolidation protocol (0.733541ms)\n✔ preserve
+build tool bash
+{
+  "command": "/bin/zsh -lc \"node -e \\\"const r=require('./.quality-evidence/core-report.json');const cases=r.evaluations.flatMap(e=>e.cases);console.log(JSON.stringify({passed:cases.filter(c=>c.passed).length,total:cases.length,evaluations:r.evaluations.map(e=>({id:e.id,actual:e.actual,threshold:e.threshold,status:e.status}))}));\\\"\""
+}
+build tool bash completed
+"{\"passed\":26,\"total\":27,\"evaluations\":[{\"id\":\"extract-cases\",\"actual\":1,\"threshold\":1,\"status\":\"passed\"},{\"id\":\"validate-cases\",\"actual\":1,\"threshold\":1,\"status\":\"passed\"},{\"id\":\"tasks-cases\",\"actual\":0.5,\"threshold\":1,\"status\":\"failed\"},{\"id\":\"filing-cases\",\"actual\":1,\"threshold\":1,\"status\":\"passed\"},{\"id\":\"reconcile-cases\"
+build tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('verification.md')\ns=p.read_text()\ns+='''\n## Shared core repair attempt - frozen ordering conflict\n\nThe host report \"'`.quality-evidence/core-report.json` is now available and reports **failed**, runtime v24.22.2, source files hash `ea313f1959345c58d3963d9dfcc7c13bce56501129eb7f00d195c395d9dcd041`. Eight c
+build tool bash completed
+"completed"
+build tool fleet_component_progress
+{
+  "componentId": "core",
+  "status": "generated",
+  "detail": "Implementation preserves frozen lexicographic ordering. 17 local tests pass. Host task mismatch conflicts with public ordering rule; documented planning/evaluation defect in verification.md. Host core gate remains failed; no runtime workaround or frozen artifact edit."
+}
+build tool fleet_component_progress completed
+[{"type":"inputText","text":"Shared extraction and validation: generated. The live diagram has been updated."}]
+build text The sole failure conflicts with the frozen protocol: it requires lexicographically sorted issues, and the runtime correctly returns `MISSING_DUE` before `MISSING_OWNER`.
+
+I preserved runtime behavior and all frozen artifacts, added a complete-response regression test, and reran tests: **17/17 pass**.
+
+The host gate remains failed. The expectation conflict needs resolution in a new planning run; de
+verify info Post-build test changes (core repair). Human review required. Since previous stage: added: task-ordering.test.mjs. Since build: added: task-ordering.test.mjs.
+build info Independent core evaluation: failed. Evidence: .quality-evidence/core-report.json
+build error Error: The required computational capabilities failed independent evaluation. Application completion and delivery remain blocked. Inspect .quality-evidence/core-report.json.
+    at Object.work (file://~/fhten/app/dist-electron/electron/pi-backend.js:935:47)
+    at async file://~/fhten/app/dist-electron/electron/agent-runner.js:156:9
+    at async runAgentStage (file:///Users/m

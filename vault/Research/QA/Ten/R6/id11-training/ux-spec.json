@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "PB4T coordinators and departmental training leads reviewing fictional weekly drills; no operational authority is implied.",
+  "primaryTask": "Load or edit PB4T proposals, inspect shared conflicts, optimize once, inspect counterproposals, coverage and personnel heatmap, then deliberately acknowledge the synthetic draft.",
+  "successOutcome": "Five baseline drills allocated with no collisions; Engineering moves to Tuesday 09:00 and Weapons Tuesday 11:00, 480 person-minutes; every due fictional occurrence satisfied and acknowledgment remains local.",
+  "screens": [
+    {
+      "name": "Weekly planning board",
+      "purpose": "Policy/provenance header; scenario loader and secondary PB4T JSON editor; primary Optimize schedule; seven-day board with allocations and per-row edit controls.",
+      "primaryAction": "Optimize schedule"
+    },
+    {
+      "name": "Evidence and review",
+      "purpose": "Linked agent proposals/rejections/counterproposals, initial and final collisions, daily heatmap with numeric cells, prior-duty totals, all occurrence deadlines/statuses, and review acknowledgment/export.",
+      "primaryAction": "Acknowledge synthetic draft"
+    }
+  ],
+  "states": {
+    "empty": "Explain no draft and offer Load synthetic baseline; never treat empty JSON as a valid empty roster.",
+    "loading": "Disable duplicate invocation and acknowledgment; show Calculating synthetic schedule and Cancel. Requests run in a worker thread; cancel aborts fetch and terminates worker through disconnect; preserve previous result.",
+    "error": "Keep malformed editor and last saved valid draft. Inline specific error code; invalid/infeasible/budget-exhausted/stale states visibly block review and offer correction or recompute.",
+    "success": "Show Feasible synthetic draft, zero remaining collisions, every drill, explicit unapproved policy and first-feasible limitation. Acknowledgment requires evidence checkbox and current saved computed content."
+  },
+  "persistence": "LocalStorage stores input draft, last computed response and acknowledged revision. Autosave unsaved editor separately; edits immediately invalidate acknowledgment. Reload preserves state. Load/reset while dirty requires Save draft or Discard draft; #discard-draft is deliberate discard. Explicit load baseline restores exact input fixture. No server persistence or operational publication.",
+  "recovery": "Edit start or crew inline; Apply edit saves dirty board but derived values stale. Check board reveals collisions and disables review. Optimize recomputes and commits a valid result, clears acknowledgment. Invalid input never overwrites last valid result. Export includes warning, policy, unresolved outputs and current review status; disable export of stale derived results with explanation.",
+  "keyboard": "Use labeled native buttons, selects, textareas, number inputs and checkbox with logical tab order, visible focus and live status/error announcements. No drag-only editing; rows editable by keyboard. Desktop board has seven day columns; narrow viewport becomes day sections with wrapping evidence and heatmap accessible horizontal scroll, numeric values plus text legend; no color-only meaning. Restrained system typography, consistent primary accent, readable dense evidence, touch targets and reduced motion."
+}

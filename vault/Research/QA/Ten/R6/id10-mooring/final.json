@@ -1,0 +1,10 @@
+{
+ "title": null,
+ "status": "failed",
+ "error": "Could not start through the UI: TimeoutError: locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: /^Home/ })\n    - locator resolved to <button class=\"\" aria-label=\"Home \u2014 challenge portfolio\">\u2026</button>\n  - attempting click action\n    2 \u00d7 waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <dialog open=\"\" class=\"dialog \" aria-labelledby=\"_r_27_\">\u2026</dialog> intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 \u00d7 waiting for element to be visib",
+ "stages": [],
+ "report": null,
+ "benchMinutes": null,
+ "challengeId": null,
+ "workspace": null
+}

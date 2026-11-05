@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Approved SFTRM rules, fatigue policy and training history are unavailable; withhold real SFTRM compliance and operational readiness. Demonstrate complete fictional agent negotiation, collisions, alternatives and recurrence.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Approved SFTRM rules, fatigue policy and training history are unavailable; withhold real SFTRM compliance and operational readiness. Demonstrate complete fictional agent negotiation, collisions, alternatives and recurrence.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. FICTIONAL-PB4T-1, prepared PB4T JSON, half-open UTC intervals, first-feasible candidate order, no hard relaxation.",
+        "journeyIds": [
+          "weekly-negotiation",
+          "recurrence-coverage"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "The baseline has two initially colliding pairs and no person/resource overlaps after allocation; edited overlap blocks review.",
+      "journeyIds": [
+        "weekly-negotiation",
+        "edit-recovery"
+      ],
+      "capabilityIds": [
+        "allocation"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "All selected roles qualified and distinct; complete operational, resource and crew windows respected; prior-duty rest 59 fails and 60 passes; daily 240 passes/241 fails and rolling 300 passes/299 cap fails.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": [
+        "fatigue"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Exhaustive impossible requests return infeasible; budget-one baseline returns budget_exhausted; malformed PB4T returns invalid-input.",
+      "journeyIds": [
+        "weekly-negotiation",
+        "budget-recovery",
+        "input-recovery"
+      ],
+      "capabilityIds": [
+        "allocation"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "implemented",
+      "expectedOutcome": "All explicit fictional due occurrences accounted for; history occurrence 0 satisfied, due occurrence 1 placed or unmet, future occurrence 2 pending-future.",
+      "journeyIds": [
+        "recurrence-coverage"
+      ],
+      "capabilityIds": [
+        "recurrence"
+      ]
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "deferred",
+      "expectedOutcome": "Only the PB4T operator can accept a proposed schedule; no operator acceptance is recorded by software tests. Demonstrate a deliberate local synthetic draft acknowledgment with evidence review, stale/invalid blocking and no operational approval.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Only the PB4T operator can accept a proposed schedule; no operator acceptance is recorded by software tests. Demonstrate a deliberate local synthetic draft acknowledgment with evidence review, stale/invalid blocking and no operational approval."
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Interactive weekly board supports one-click first-feasible optimization, computed departmental counterproposals, editable recovery and exact daily personnel loading heatmap: P1 120/P2 60/P3 120/P4 90/P5 90/P6 0 weekly.",
+      "journeyIds": [
+        "weekly-negotiation",
+        "edit-recovery"
+      ],
+      "capabilityIds": [
+        "negotiation",
+        "loading"
+      ]
+    },
+    {
+      "criterionId": "DESC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Real crew availability and ship operations are unavailable under the synthetic-only boundary; withhold real calendar coordination. Demonstrate all named drill families and computed allocations with fictional personnel and operations.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Real crew availability and ship operations are unavailable under the synthetic-only boundary; withhold real calendar coordination. Demonstrate all named drill families and computed allocations with fictional personnel and operations.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. FICTIONAL-PB4T-1, prepared PB4T JSON, half-open UTC intervals, first-feasible candidate order, no hard relaxation.",
+        "journeyIds": [
+          "weekly-negotiation",
+          "recurrence-coverage"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "Damage Control drills"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "Combat Systems exercises"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "engineering casualty controls"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "flight quarters"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC11-2",
+      "disposition": "implemented",
+      "expectedOutcome": "DC-1/ENG-1 and CS-1/WPN-1 double booking detected then resolved at 1980 and 2100.",
+      "journeyIds": [
+        "weekly-negotiation",
+        "edit-recovery"
+      ],
+      "capabilityIds": [
+        "negotiation"
+      ]
+    },
+    {
+      "criterionId": "DESC11-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Engineering, Weapons, Combat Systems, Damage Control and Flight Operations agents submit owned proposals, receive blocking constraints, counterpropose and converge on the complete fictional weekly calendar.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": [
+        "negotiation"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "All departmental proposals checked against shared personnel, exclusive resources, operational windows and explicit fictional fatigue inputs.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": [
+        "allocation",
+        "fatigue"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements section presents the synthetic constraint policy and all source obligations without asserting operational compliance.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Five named deterministic departmental agents negotiate qualified Fire Party Leader, EOOW and TAO allocations against shared windows and fictional fatigue rules.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": [
+        "negotiation",
+        "fatigue"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Approved SFTRM mandates and completion history are unavailable; withhold actual compliance certification. Demonstrate collision resolution, alternatives and every fictional due occurrence including impossible obligations.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Approved SFTRM mandates and completion history are unavailable; withhold actual compliance certification. Demonstrate collision resolution, alternatives and every fictional due occurrence including impossible obligations.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. FICTIONAL-PB4T-1, prepared PB4T JSON, half-open UTC intervals, first-feasible candidate order, no hard relaxation.",
+        "journeyIds": [
+          "weekly-negotiation",
+          "recurrence-coverage"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE11-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables section identifies the working weekly board, one-click optimization and personnel heatmaps.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Source attribution visibly identifies https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11 and the synthetic boundary.",
+      "journeyIds": [
+        "weekly-negotiation"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "weekly-negotiation",
+      "title": "Negotiate, inspect and acknowledge the fictional week",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#provenance",
+          "text": "Synthetic, not validated against the real format. No SFTRM compliance or operational approval."
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic draft \u2014 5 drills; 0 remaining collisions."
+        },
+        {
+          "action": "expectText",
+          "selector": "#initial-collisions",
+          "text": "2 colliding pairs: DC-1 / ENG-1 (P1, R1); CS-1 / WPN-1 (P3, R2)."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-DC-1",
+          "text": "Damage Control drills | Mon 09:00\u201310:00 UTC | P1 | R1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls | Tue 09:00\u201310:00 UTC | P1, P2 | R1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-CS-1",
+          "text": "Combat Systems exercises | Mon 11:00\u201312:00 UTC | P3 | R2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-WPN-1",
+          "text": "Weapons exercise | Tue 11:00\u201312:00 UTC | P3 | R2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-FLT-1",
+          "text": "flight quarters | Wed 09:00\u201310:30 UTC | P4, P5 | R3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-ENG-1",
+          "text": "Engineering Agent: rejected 540 (P1 and R1 blocked by DC-1); accepted 1980."
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-WPN-1",
+          "text": "Weapons Agent: rejected 660 (P3 and R2 blocked by CS-1); accepted 2100."
+        },
+        {
+          "action": "expectText",
+          "selector": "#loads-summary",
+          "text": "Weekly drill minutes: P1 120; P2 60; P3 120; P4 90; P5 90; P6 0. Total 480 person-minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "Synthetic SFTRM-mandated training periodicities: 5 satisfied; 0 unmet; 0 pending-future. Not validated against real SFTRM."
+        },
+        {
+          "action": "expectText",
+          "selector": "#collision-summary",
+          "text": "personnel collisions: 2 initial pairs; 0 remaining."
+        },
+        {
+          "action": "expectText",
+          "selector": "#alternative-summary",
+          "text": "alternate schedule allocations: ENG-1 540 \u2192 1980; WPN-1 660 \u2192 2100."
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-DC-1-0",
+          "text": "O-DC-1-0 | deadline 10080 | satisfied-by-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-ENG-1-0",
+          "text": "O-ENG-1-0 | deadline 10080 | satisfied-by-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-CS-1-0",
+          "text": "O-CS-1-0 | deadline 10080 | satisfied-by-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-WPN-1-0",
+          "text": "O-WPN-1-0 | deadline 10080 | satisfied-by-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-FLT-1-0",
+          "text": "O-FLT-1-0 | deadline 10080 | satisfied-by-schedule"
+        },
+        {
+          "action": "check",
+          "selector": "#review-evidence"
+        },
+        {
+          "action": "click",
+          "selector": "#acknowledge"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Synthetic draft acknowledged locally. Operational approval: none."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Synthetic draft acknowledged locally. Operational approval: none."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "pb4t-draft.json",
+          "text": "Synthetic, not validated against the real format. No SFTRM compliance or operational approval."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "1980"
+        },
+        {
+          "action": "expectText",
+          "selector": "#requirements-heading",
+          "text": "Requirements"
+        },
+        {
+          "action": "expectText",
+          "selector": "#deliverables-heading",
+          "text": "Expected deliverables"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11"
+        }
+      ]
+    },
+    {
+      "id": "recurrence-coverage",
+      "title": "Review history, due and future obligations including an impossible due drill",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "recurrence-horizon"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-CS-1-0",
+          "text": "O-CS-1-0 | deadline 2880 | satisfied-by-history"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-CS-1-1",
+          "text": "O-CS-1-1 | deadline 7200 | satisfied-by-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-CS-1-2",
+          "text": "O-CS-1-2 | deadline 11520 | pending-future"
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "recurrence-impossible-due"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible synthetic draft \u2014 unresolved mandatory obligations; review blocked."
+        },
+        {
+          "action": "expectText",
+          "selector": "#occurrence-O-CS-1-1",
+          "text": "O-CS-1-1 | deadline 7200 | unmet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "Synthetic SFTRM-mandated training periodicities: 1 satisfied; 1 unmet; 1 pending-future. Not validated against real SFTRM."
+        }
+      ]
+    },
+    {
+      "id": "edit-recovery",
+      "title": "Detect an edited collision and recompute safely",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#edit-start-ENG-1",
+          "value": "540"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-edit-ENG-1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unsaved changes \u2014 recompute or discard before review."
+        },
+        {
+          "action": "click",
+          "selector": "#check-board"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-check",
+          "text": "Invalid board: DC-1 / ENG-1 share P1 and R1. Review blocked."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls | Tue 09:00\u201310:00 UTC | P1, P2 | R1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#loads-summary",
+          "text": "Weekly drill minutes: P1 120; P2 60; P3 120; P4 90; P5 90; P6 0. Total 480 person-minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unacknowledged synthetic draft. Operational approval: none."
+        }
+      ]
+    },
+    {
+      "id": "input-recovery",
+      "title": "Reject incomplete PB4T input and restore sample",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-baseline"
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{}"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "INVALID_SCHEMA: Complete PB4T metadata, policy and arrays are required."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#input-json",
+          "value": "{}"
+        },
+        {
+          "action": "click",
+          "selector": "#discard-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#load-baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic draft \u2014 5 drills; 0 remaining collisions."
+        }
+      ]
+    },
+    {
+      "id": "budget-recovery",
+      "title": "Keep unknown feasibility distinct and recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "bounded-search"
+        },
+        {
+          "action": "click",
+          "selector": "#load-scenario"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Search budget exhausted \u2014 feasibility unknown; review blocked."
+        },
+        {
+          "action": "click",
+          "selector": "#load-baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic draft \u2014 5 drills; 0 remaining collisions."
+        }
+      ]
+    }
+  ]
+}

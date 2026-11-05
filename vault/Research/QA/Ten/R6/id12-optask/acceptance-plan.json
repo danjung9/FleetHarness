@@ -1,0 +1,556 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Under the authorized synthetic-only boundary, the complete SYN-OPTASK/1 mock USMTF-style workflow extracts frequency plans, crypto change-over windows and flight quarters event times with exact source evidence and plots them on a consolidated visual timeline. Nominal input yields 4 events, 3 selected: FP-01 at 06:00–10:00, CW-01 at 08:00–08:15 and FQ-01 at 08:00–09:00 UTC. All three categories share a 00:00–24:00 UTC axis. Dense, overlapping, overnight, invalid and recovery inputs are evaluated. Synthetic; not validated against the real USMTF format. Actual-format and operational accuracy remain unverified evidence limits, not deferred core functionality.",
+      "journeyIds": [
+        "synthetic-primary",
+        "dense-ship",
+        "overnight"
+      ],
+      "capabilityIds": [
+        "extract-evidence",
+        "time-selection"
+      ]
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every emitted field, category and message identity has exact UTF-16 evidence including Unicode/CRLF; nominal frequency slice [232,237) equals 312.5.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "extract-evidence"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Missing zone, impossible date, unsupported/malformed sets, empty draft and duplicates quarantine affected text, preserve original input and never infer timestamps; valid unrelated events survive.",
+      "journeyIds": [
+        "recover-source",
+        "recover-unsaved"
+      ],
+      "capabilityIds": [
+        "extract-evidence"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Equivalent explicit offsets give identical UTC instants; overnight clipping is 0–30 and 1425–1440 minutes with full source endpoints retained and boundary-only events excluded.",
+      "journeyIds": [
+        "overnight"
+      ],
+      "capabilityIds": [
+        "time-selection"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Independent prebuild synthetic tuples, negatives and non-events achieve exact response score 1 and event precision/recall 1; no SME ground truth or real-format accuracy claimed.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "extract-evidence"
+      ]
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "implemented",
+      "expectedOutcome": "After initial cache activation, browser network disconnection still allows a newly edited raw message to be parsed through the identical core and reviewed JSON exported. An explicit offline-route journey plus actual browser disconnection check is required.",
+      "journeyIds": [
+        "offline-primary"
+      ],
+      "capabilityIds": [
+        "review-export"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Mock USMTF-style text transforms into a synchronized 00:00–24:00 UTC schedule for selected fictional ship with readable overlapping lanes, exact source review, saved draft and consistent reviewed JSON.",
+      "journeyIds": [
+        "synthetic-primary",
+        "overnight"
+      ],
+      "capabilityIds": [
+        "time-selection",
+        "review-export"
+      ]
+    },
+    {
+      "criterionId": "DESC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Dense synthetic commander-style messages retain headers, identity and domain sets through extraction and reviewed local export. Contextual dissemination is represented as preserved message input; no operational order is sent.",
+      "journeyIds": [
+        "dense-ship"
+      ],
+      "capabilityIds": [
+        "extract-evidence"
+      ]
+    },
+    {
+      "criterionId": "DESC12-2",
+      "disposition": "implemented",
+      "expectedOutcome": "320-line SYN-DENSE extracts exactly 4 events and 3 for AURORA; selecting LANTERN yields only FQ-02 15:00–15:45 UTC without deleting other ship evidence.",
+      "journeyIds": [
+        "dense-ship"
+      ],
+      "capabilityIds": [
+        "extract-evidence",
+        "time-selection"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Complete synthetic raw text → traceable three-category events → ship/day timeline → deliberate reviewed draft export, with errors corrected by reparse.",
+      "journeyIds": [
+        "synthetic-primary",
+        "recover-source"
+      ],
+      "capabilityIds": [
+        "extract-evidence",
+        "time-selection",
+        "review-export"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements heading retained as context and traced to the full synthetic extraction workflow; no additional operational obligation invented.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "extract-evidence"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables heading retained as context and traced to the working synthetic 24-hour schedule and reviewed export.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-export"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Visible source attribution links exactly to the supplied Challenge 12 URL; synthetic provenance remains visible on UI and download.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-export"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "synthetic-primary",
+      "title": "Extract, inspect exact evidence, save, review and export all three categories",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "SYN-NOMINAL"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-credit",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/12"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-output",
+          "text": "FP-01 · TRAINING-NET-AM · 312.5 MHz · 06:00–10:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-output",
+          "text": "CW-01 · FICTIONAL-LABEL-ALPHA-TO-BRAVO · 08:00–08:15 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-output",
+          "text": "FQ-01 · TRAINING-LAUNCH · 08:00–09:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#axis-label",
+          "text": "2026-11-05 · FS AURORA · 00:00–24:00 UTC"
+        },
+        {
+          "action": "click",
+          "selector": "#source-FP-01-frequency"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-highlight",
+          "text": "312.5"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-location",
+          "text": "Line 6 · UTF-16 [232,237)"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed draft · synthetic only"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-schedule.json",
+          "text": "\"reviewStatus\": \"reviewed-draft\""
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "Synthetic; not validated against the real USMTF format."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "\"frequency\": 312.5"
+        }
+      ]
+    },
+    {
+      "id": "recover-source",
+      "title": "Reject missing timezone without guessing then correct and reparse",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#ship",
+          "value": "FS AURORA"
+        },
+        {
+          "action": "fill",
+          "selector": "#day",
+          "value": "2026-11-05"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC OPTASK — NOT REAL USMTF\nMSGID/SYN-MISSING-ZONE//\nEXERCISE/GLASS HARBOR FICTION//\nTIMEZONE/EXPLICIT-ENDPOINT-OFFSETS//\nSUBJ/Fictional watch schedule//\nFLIGHTQ/FQ-BAD/FS AURORA/NO-ZONE/2026-11-05T08:00/2026-11-05T09:00//\nENDMSG//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "0 extracted · 0 selected · 1 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-message",
+          "text": "FQ-BAD: explicit timezone required on both endpoints."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Resolve source issues before review"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC OPTASK — NOT REAL USMTF\nMSGID/SYN-NOMINAL//\nEXERCISE/GLASS HARBOR FICTION//\nTIMEZONE/EXPLICIT-ENDPOINT-OFFSETS//\nSUBJ/Fictional watch schedule//\nFREQPLAN/FP-01/FS AURORA/TRAINING-NET-AM/2026-11-05T06:00Z/2026-11-05T10:00Z/312.5/MHz//\nCRYPTO/CW-01/FS AURORA/FICTIONAL-LABEL-ALPHA-TO-BRAVO/2026-11-05T08:00Z/2026-11-05T08:15Z//\nFLIGHTQ/FQ-01/FS AURORA/TRAINING-LAUNCH/2026-11-05T08:00Z/2026-11-05T09:00Z//\nFLIGHTQ/FQ-02/FS LANTERN/TRAINING-RECOVERY/2026-11-05T15:00Z/2026-11-05T15:45Z//\nENDMSG//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-output",
+          "text": "FP-01 · TRAINING-NET-AM · 312.5 MHz · 06:00–10:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-output",
+          "text": "CW-01 · FICTIONAL-LABEL-ALPHA-TO-BRAVO · 08:00–08:15 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-output",
+          "text": "FQ-01 · TRAINING-LAUNCH · 08:00–09:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#axis-label",
+          "text": "2026-11-05 · FS AURORA · 00:00–24:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unreviewed draft"
+        }
+      ]
+    },
+    {
+      "id": "dense-ship",
+      "title": "Extract hundreds of lines and switch ship without losing source",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "SYN-DENSE"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "select",
+          "selector": "#ship",
+          "value": "FS LANTERN"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 1 selected · 0 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-output",
+          "text": "FQ-02 · TRAINING-RECOVERY · 15:00–15:45 UTC"
+        }
+      ]
+    },
+    {
+      "id": "overnight",
+      "title": "Clip two overnight intervals on the common UTC day",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "SYN-OVERNIGHT"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "5 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-FP-NIGHT",
+          "text": "00:00–00:30 UTC · full 2026-11-04T23:30Z–2026-11-05T00:30Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-CW-NIGHT",
+          "text": "23:45–24:00 UTC · full 2026-11-05T23:45Z–2026-11-06T00:15Z"
+        }
+      ]
+    },
+    {
+      "id": "offline-primary",
+      "title": "Use cached computation for a new message and reviewed export",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#ship",
+          "value": "FS AURORA"
+        },
+        {
+          "action": "fill",
+          "selector": "#day",
+          "value": "2026-11-05"
+        },
+        {
+          "action": "click",
+          "selector": "#prepare-offline"
+        },
+        {
+          "action": "expectText",
+          "selector": "#offline-status",
+          "text": "Ready for offline parsing"
+        },
+        {
+          "action": "click",
+          "selector": "#offline-mode"
+        },
+        {
+          "action": "expectText",
+          "selector": "#offline-status",
+          "text": "Offline route active"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC OPTASK — NOT REAL USMTF\nMSGID/SYN-NOMINAL//\nEXERCISE/GLASS HARBOR FICTION//\nTIMEZONE/EXPLICIT-ENDPOINT-OFFSETS//\nSUBJ/Fictional watch schedule//\nFREQPLAN/FP-01/FS AURORA/OFFLINE-NET/2026-11-05T06:00Z/2026-11-05T10:00Z/312.5/MHz//\nCRYPTO/CW-01/FS AURORA/FICTIONAL-LABEL-ALPHA-TO-BRAVO/2026-11-05T08:00Z/2026-11-05T08:15Z//\nFLIGHTQ/FQ-01/FS AURORA/TRAINING-LAUNCH/2026-11-05T08:00Z/2026-11-05T09:00Z//\nFLIGHTQ/FQ-02/FS LANTERN/TRAINING-RECOVERY/2026-11-05T15:00Z/2026-11-05T15:45Z//\nENDMSG//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-output",
+          "text": "FP-01 · OFFLINE-NET · 312.5 MHz · 06:00–10:00 UTC"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "OFFLINE-NET"
+        }
+      ]
+    },
+    {
+      "id": "recover-unsaved",
+      "title": "Keep saved source and require save or discard before reviewing a changed draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "SYN-NOMINAL"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-message",
+          "text": "Enter a synthetic OPTASK message."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-draft"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC OPTASK — NOT REAL USMTF\nMSGID/SYN-NOMINAL//\nEXERCISE/GLASS HARBOR FICTION//\nTIMEZONE/EXPLICIT-ENDPOINT-OFFSETS//\nSUBJ/Fictional watch schedule//\nFREQPLAN/FP-01/FS AURORA/TRAINING-NET-AM/2026-11-05T06:00Z/2026-11-05T10:00Z/312.5/MHz//\nCRYPTO/CW-01/FS AURORA/FICTIONAL-LABEL-ALPHA-TO-BRAVO/2026-11-05T08:00Z/2026-11-05T08:15Z//\nFLIGHTQ/FQ-01/FS AURORA/TRAINING-LAUNCH/2026-11-05T08:00Z/2026-11-05T09:00Z//\nFLIGHTQ/FQ-02/FS LANTERN/TRAINING-RECOVERY/2026-11-05T15:00Z/2026-11-05T15:45Z//\nENDMSG//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#counts",
+          "text": "4 extracted · 3 selected · 0 issues"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally"
+        }
+      ]
+    }
+  ]
+}

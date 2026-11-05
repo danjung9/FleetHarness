@@ -1,0 +1,106 @@
+{
+  "title": "Synthetic OPTASK extraction and daily watch schedule",
+  "description": "Local synthetic-only review tool; invented SYN-OPTASK/1 grammar, not validated against real USMTF. No operational dissemination or remote integration.",
+  "components": [
+    {
+      "id": "draft",
+      "label": "Message draft and samples",
+      "description": "Preserved raw text, fictional ship/day selection, embedded prepared examples and local draft saving.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local HTTP service",
+      "description": "Foundation health and raw JSON invocation; no external systems.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "compute.mjs"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Shared extraction and schedule core",
+      "description": "Strict domain sets, UTF-16 evidence, quarantine, UTC normalization, clipping and reviewed export envelope.",
+      "kind": "logic",
+      "files": [
+        "public/domain.mjs",
+        "lib/messages.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Timeline, evidence and review",
+      "description": "Synchronized 24-hour category lanes, readable schedule, source highlighting and explicit draft review.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "offline",
+      "label": "Offline local execution",
+      "description": "Service worker caches assets and intercepts offline POST /api/invoke using the identical domain core; local storage preserves drafts.",
+      "kind": "integration",
+      "files": [
+        "public/sw.js",
+        "public/domain.mjs",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Reviewed synthetic schedule",
+      "description": "Browser JSON download with unchanged original text, exact evidence, issue codes and explicit synthetic provenance; no operational transmission.",
+      "kind": "data",
+      "files": [
+        "public/domain.mjs",
+        "public/app.js"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "draft",
+      "to": "api",
+      "label": "POST raw text, ship, day and review state"
+    },
+    {
+      "from": "api",
+      "to": "core",
+      "label": "Invoke shared deterministic calculation"
+    },
+    {
+      "from": "core",
+      "to": "review",
+      "label": "Events, intervals, field evidence and issues"
+    },
+    {
+      "from": "review",
+      "to": "export",
+      "label": "Deliberately review current parsed revision and download"
+    },
+    {
+      "from": "draft",
+      "to": "offline",
+      "label": "Cache readiness and saved raw draft"
+    },
+    {
+      "from": "offline",
+      "to": "core",
+      "label": "Offline POST execution with same module"
+    },
+    {
+      "from": "review",
+      "to": "draft",
+      "label": "Correct source and reparse; invalidate old review"
+    }
+  ]
+}

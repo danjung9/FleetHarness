@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "offline",
+  "reason": "Device-local Node service on the demonstration tablet remains reachable on loopback when external connectivity is absent. Reuse its HTTP/UI adapter and offline primitive; adapt smaller-priority-first 128-byte chunking, immutable fixture revisions, approval and durable IndexedDB integration. No extra framework, model service or replication dependency. PouchDB/CouchDB was evaluated in research; no authorized CouchDB receiver exists. This topology requires a running local service and does not certify government-device support."
+}

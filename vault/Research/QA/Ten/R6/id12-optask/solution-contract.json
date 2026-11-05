@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "objective": "Deterministically extract all three synthetic OPTASK event categories with exact original evidence; normalize and select a ship-specific 24-hour UTC schedule; produce a consistent explicitly reviewed synthetic export using identical online/offline core logic.",
+  "invocation": {
+    "input": "JSON object with required grammarVersion:string SYN-OPTASK/1, rawText:string, selectedShip:nonempty string, selectedDay:Gregorian YYYY-MM-DD string, displayTimezone:string UTC; optional action:string extract, reviewed:boolean false. No extra keys or null fields.",
+    "output": "Exactly {status:string,error:string|null,result:object|null}. INVALID_INPUT returns status error. Valid input returns status ok or needs_review, error null, and Result defined in rules. Every event/issue/evidence/export object has precisely the listed fields; arrays preserve specified order.",
+    "rules": [
+      "Only action extract is supported; omitted action defaults to extract. Other actions or extra top-level fields are INVALID_INPUT. Optional reviewed defaults false. Required input fields have no defaults and null is invalid. Return protocol errors as JSON, never successful invented outputs.",
+      "Validate input as an object, then allowed keys/action, grammarVersion, rawText type, selectedShip, selectedDay, displayTimezone, reviewed, in that order. The first violation returns {status:\"error\",error:\"INVALID_INPUT\",result:null}. rawText may be empty; selectedShip is a nonempty string matched exactly. selectedDay is a valid Gregorian YYYY-MM-DD in years 0001..9999. displayTimezone must be UTC; grammarVersion must be SYN-OPTASK/1.",
+      "For valid invocation return {status:\"ok\"|\"needs_review\",error:null,result:Result}. needs_review means one or more extraction issues; otherwise ok. Result always contains extractedEventCount, selectedEventCount, categoryCounts, events, issues, exportContent and no other keys. Status describes synthetic extraction only.",
+      "Grammar: first line SYNTHETIC OPTASK — NOT REAL USMTF; MSGID/<id>// opens a block; ENDMSG// closes it; repeat MSGID blocks allowed. EXERCISE/<text>//, TIMEZONE/EXPLICIT-ENDPOINT-OFFSETS//, SUBJ/<text>// and REMARK/<text>// are non-events. Blank lines are ignored. LF and CRLF supported. Never normalize rawText. IDs and set names are case sensitive; IDs are nonempty. A domain set must be inside a MSGID/ENDMSG block.",
+      "FREQPLAN/<recordId>/<ship>/<label>/<start>/<end>/<frequency>/<unit>//; CRYPTO/<recordId>/<ship>/<label>/<start>/<end>//; FLIGHTQ/<recordId>/<ship>/<label>/<start>/<end>//. Each set occupies one line, no slash or newline in fields. All fields required, exact arity; no field trimming. frequency matches digits with optional decimal fraction, must be finite and >0; unit is MHz or kHz.",
+      "Timestamps exactly YYYY-MM-DDTHH:mmZ or YYYY-MM-DDTHH:mm±HH:mm; years 0001..9999, Gregorian calendar, hours 00..23, minutes 00..59, offset 00:00..14:00, with 14:00 maximum. No seconds, implicit zone/date/rollover, 24:00 or DST inference. Normalize each endpoint independently to minute-precision UTC YYYY-MM-DDTHH:mmZ. Require end strictly after start.",
+      "Events and selected export events are in original source order, never chronological reorder. categoryCounts includes all accepted events, with exactly frequency plan, crypto change-over window, flight quarters integer keys, including zeros. Event keys: category,id,ship,label,startRaw,endRaw,frequency,unit,source,fields,messageIdSource,categorySource,startUtc,endUtc,durationMinutes,selected,selectionReason,displaySegment. frequency/unit null outside FREQPLAN.",
+      "Every evidence value is {start:integer,end:integer,text:string,line:integer}. start/end are zero-based end-exclusive UTF-16 offsets into rawText, line is one plus preceding LF count. source spans the entire set excluding CR/LF, categorySource spans its set name, messageIdSource spans enclosing MSGID value. fields has recordId,ship,label,start,end evidence and frequency,unit only for FREQPLAN. No inferred value is source evidence.",
+      "Selected UTC day is [00:00,next 00:00). Match ship exactly then intersect [start,end). selected=true iff intersection nonempty and ship matches. displaySegment={startMinute,endMinute} for selected events (0..1440), null otherwise. selectionReason is exactly intersects selected UTC day and matches ship, other ship, or outside selected UTC day; other ship takes precedence. durationMinutes describes full interval, never clipped duration.",
+      "Quarantine all blocks with duplicate message IDs and all occurrences of duplicate record IDs within a block. One duplicate issue per duplicated identity at its first occurrence (record source is first complete set; message source is first MSGID complete set). Message duplicates suppress all other issues in those blocks. Record duplicates suppress record-level issues for colliding records. Independent valid records survive.",
+      "Issue shape exactly {code,message,source,resolution}; source is complete offending line evidence or null for empty input. resolution always Correct source and reparse; acknowledgement does not validate an order. Issues ordered by source.start (null first), ties in validation precedence. Each bad record produces only its first applicable issue.",
+      "Issue precedence after duplicate quarantine: MALFORMED_SET (missing //), UNSUPPORTED_SET (unknown set), MISSING_FIELD (missing/empty field), EXTRA_FIELD (excess fields), MISSING_TIMEZONE (either endpoint has no explicit Z/offset), INVALID_DATE (invalid timestamp or calendar), NONPOSITIVE_INTERVAL, INVALID_FREQUENCY, INVALID_UNIT. Unsupported sets do not become remarks. Unknown text is UNSUPPORTED_SET using text before first slash as set name.",
+      "Literal issue messages: EMPTY_INPUT: Enter a synthetic OPTASK message.; MALFORMED_SET: Line is missing the // set terminator.; UNSUPPORTED_SET: Unsupported set {set}; review potentially relevant source.; MISSING_FIELD: {id}: {field} is required.; EXTRA_FIELD: {id}: extra fields are unsupported.; MISSING_TIMEZONE: {id}: explicit timezone required on both endpoints.; INVALID_DATE: {id}: impossible calendar date.; NONPOSITIVE_INTERVAL: {id}: end must be after start; no inferred rollover.; INVALID_FREQUENCY: {id}: frequency must be a positive finite decimal.; INVALID_UNIT: {id}: frequency unit must be MHz or kHz.",
+      "Literal duplicate messages: DUPLICATE_RECORD_ID: {id}: duplicate record ID; both occurrences quarantined.; DUPLICATE_MESSAGE_ID: {id}: duplicate message ID; both message blocks quarantined. Field names for MISSING_FIELD in order: record ID, ship, label, start, end, frequency, frequency unit. Use id ? when record ID is missing. Whitespace-only rawText produces EMPTY_INPUT with null source.",
+      "Header errors use INVALID_STRUCTURE: Message structure is invalid. at first offending line: missing initial synthetic banner (first nonblank line), missing/empty MSGID, nested MSGID before ENDMSG, orphan ENDMSG or event outside block; missing ENDMSG uses the opening MSGID source. Quarantine affected block; do not invent identity. Malformed delimiters precede structure for that line. Duplicate and structure scanning precedes individual event validation. Recognized non-event sets require exactly one nonempty field (TIMEZONE exactly its declared value); otherwise INVALID_STRUCTURE.",
+      "exportContent keys exactly provenance,messageId,selectedShip,selectedDay,timezone,reviewStatus,unresolvedIssueCodes,events,originalText. provenance is Synthetic; not validated against the real USMTF format. messageId is the first MSGID value, null if none, including duplicate identities as untrusted source labels. timezone UTC. originalText equals rawText exactly. events includes only selected events. unresolvedIssueCodes includes issue codes in issue order including repetitions.",
+      "reviewStatus is reviewed-draft iff reviewed=true and issues empty, otherwise unreviewed. Reviewed is a human UI declaration, never operational approval. Export with unresolved issues is blocked by UI; core still returns an unreviewed diagnostic exportContent. Changing draft, ship or day invalidates UI review; saved review belongs to exact saved input revision. Never execute instruction-like text; no model, network lookup, clock-dependent defaults or operational transmission."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "extract-evidence",
+      "kind": "algorithm",
+      "description": "Domain-specific extraction, quarantine and exact source evidence on all fields.",
+      "criterionIds": [
+        "UC12-1",
+        "MSG-01",
+        "MSG-02",
+        "MSG-04",
+        "DESC12-1",
+        "DESC12-2",
+        "SUMMARY12-1",
+        "SCOPE12-3"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "extract-evidence-cases"
+      ]
+    },
+    {
+      "id": "time-selection",
+      "kind": "algorithm",
+      "description": "Strict calendar/offset normalization, half-open day clipping and exact ship filtering.",
+      "criterionIds": [
+        "UC12-1",
+        "MSG-03",
+        "DELIVERABLE12-1",
+        "DESC12-2",
+        "SUMMARY12-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "time-selection-cases"
+      ]
+    },
+    {
+      "id": "review-export",
+      "kind": "workflow",
+      "description": "Consistent synthetic reviewed-draft export and error protocol; browser proves persistence and offline execution.",
+      "criterionIds": [
+        "MSG-05",
+        "DELIVERABLE12-1",
+        "SUMMARY12-1",
+        "SCOPE12-5",
+        "SCOPE12-7"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "review-export-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/messages.js",
+      "example-input.json",
+      "public/domain.mjs",
+      "public/sw.js"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

@@ -1,0 +1,3143 @@
+{
+  "time": "2026-11-05T09:10:29.641Z",
+  "command": "node \"--no-global-search-paths\" \"--test\" \"--test-reporter=data:text/javascript;base64,CmltcG9ydCB7IHRhcCB9IGZyb20gJ25vZGU6dGVzdC9yZXBvcnRlcnMnOwpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiogKGV2ZW50cykgewogIGNvbnN0IHN1bW1hcmllcyA9IFtdOwogIGFzeW5jIGZ1bmN0aW9uKiBvYnNlcnZlKCkgewogICAgZm9yIGF3YWl0IChjb25zdCBldmVudCBvZiBldmVudHMpIHsKICAgICAgaWYgKGV2ZW50LnR5cGUgPT09ICd0ZXN0OnN1bW1hcnknICYmIGV2ZW50LmRhdGEuZmlsZSkgc3VtbWFyaWVzLnB1c2goZXZlbnQuZGF0YSk7CiAgICAgIHlpZWxkIGV2ZW50OwogICAgfQogIH0KICBmb3IgYXdhaXQgKGNvbnN0IHRleHQgb2YgdGFwKG9ic2VydmUoKSkpIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ291dHB1dCcsIHRleHQgfSkgKyAnXG4nOwogIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ3JlZ2lzdGVyZWQnLCBzdW1tYXJpZXMgfSkgKyAnXG4nOwp9Cg==\" \"./calendar.test.mjs\" \"./domain.test.mjs\" \"./repair.test.mjs\" \"./transport.test.mjs\" \"./verifier.test.mjs\"",
+  "portableCommand": "node --test './calendar.test.mjs' './domain.test.mjs' './repair.test.mjs' './transport.test.mjs' './verifier.test.mjs'",
+  "provenance": {
+    "runner": "/Users/mukul/fhten/app/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+    "args": [
+      "--input-type=commonjs",
+      "-e",
+      "process.stdout.write(\"appyard-verification-ready-9dddbd87-c11f-4abb-948f-158eaf413b4b\\n\");const child=require('node:child_process').spawn(process.execPath,[\"--no-global-search-paths\",\"--test\",\"--test-reporter=data:text/javascript;base64,CmltcG9ydCB7IHRhcCB9IGZyb20gJ25vZGU6dGVzdC9yZXBvcnRlcnMnOwpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiogKGV2ZW50cykgewogIGNvbnN0IHN1bW1hcmllcyA9IFtdOwogIGFzeW5jIGZ1bmN0aW9uKiBvYnNlcnZlKCkgewogICAgZm9yIGF3YWl0IChjb25zdCBldmVudCBvZiBldmVudHMpIHsKICAgICAgaWYgKGV2ZW50LnR5cGUgPT09ICd0ZXN0OnN1bW1hcnknICYmIGV2ZW50LmRhdGEuZmlsZSkgc3VtbWFyaWVzLnB1c2goZXZlbnQuZGF0YSk7CiAgICAgIHlpZWxkIGV2ZW50OwogICAgfQogIH0KICBmb3IgYXdhaXQgKGNvbnN0IHRleHQgb2YgdGFwKG9ic2VydmUoKSkpIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ291dHB1dCcsIHRleHQgfSkgKyAnXG4nOwogIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ3JlZ2lzdGVyZWQnLCBzdW1tYXJpZXMgfSkgKyAnXG4nOwp9Cg==\",\"./calendar.test.mjs\",\"./domain.test.mjs\",\"./repair.test.mjs\",\"./transport.test.mjs\",\"./verifier.test.mjs\"],{stdio:'inherit'});child.once('error',e=>{console.error('Could not start Node tests: '+e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});"
+    ],
+    "cwd": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/package",
+    "environment": {
+      "APPYARD_RUN_PROCESS": "[redacted]",
+      "PATH": "/Users/mukul/fhten/app/node_modules/electron/dist/Electron.app/Contents/MacOS:/usr/local/bin:/usr/bin:/bin",
+      "HOME": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/home",
+      "TMPDIR": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/tmp",
+      "TEMP": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/tmp",
+      "TMP": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/tmp",
+      "ELECTRON_RUN_AS_NODE": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "LANG": "C.UTF-8",
+      "HOST": "[redacted]",
+      "PORT": "[redacted]",
+      "USERPROFILE": "/Users/mukul/fhten/tmp/appyard-solution-zHBSeA/home",
+      "CODEX_HOME": "/Users/mukul/fhten/tmp/appyard-verification-be7H8A",
+      "ELECTRON_NO_ASAR": "1"
+    }
+  },
+  "exitCode": 0,
+  "total": 40,
+  "passed": 40,
+  "failed": 0,
+  "skipped": 0,
+  "registeredTests": [
+    {
+      "file": "calendar.test.mjs",
+      "tests": 2
+    },
+    {
+      "file": "domain.test.mjs",
+      "tests": 27
+    },
+    {
+      "file": "repair.test.mjs",
+      "tests": 6
+    },
+    {
+      "file": "transport.test.mjs",
+      "tests": 1
+    },
+    {
+      "file": "verifier.test.mjs",
+      "tests": 4
+    }
+  ],
+  "output": "TAP version 13\n# Subtest: Wednesday-start headings align with assignments and daily personnel load\nok 1 - Wednesday-start headings align with assignments and daily personnel load\n  ---\n  duration_ms: 2.8495\n  type: 'test'\n  ...\n# Subtest: calendar labels follow partial, negative and year-crossing horizons in UTC\nok 2 - calendar labels follow partial, negative and year-crossing horizons in UTC\n  ---\n  duration_ms: 0.088375\n  type: 'test'\n  ...\n# Subtest: baseline complete allocations and independent constraints\nok 3 - baseline complete allocations and independent constraints\n  ---\n  duration_ms: 3.346208\n  type: 'test'\n  ...\n# Subtest: Weekly departmental negotiation\nok 4 - Weekly departmental negotiation\n  ---\n  duration_ms: 0.387625\n  type: 'test'\n  ...\n# Subtest: Unavailable preferred crew with qualified recovery\nok 5 - Unavailable preferred crew with qualified recovery\n  ---\n  duration_ms: 0.141667\n  type: 'test'\n  ...\n# Subtest: No qualified TAO\nok 6 - No qualified TAO\n  ---\n  duration_ms: 0.09625\n  type: 'test'\n  ...\n# Subtest: Cross-midnight minimum rest pair\nok 7 - Cross-midnight minimum rest pair\n  ---\n  duration_ms: 0.150458\n  type: 'test'\n  ...\n# Subtest: Daily duty exact-cap\nok 8 - Daily duty exact-cap\n  ---\n  duration_ms: 0.081167\n  type: 'test'\n  ...\n# Subtest: Daily duty over-cap\nok 9 - Daily duty over-cap\n  ---\n  duration_ms: 0.084209\n  type: 'test'\n  ...\n# Subtest: Rolling duty exact-rolling-cap\nok 10 - Rolling duty exact-rolling-cap\n  ---\n  duration_ms: 0.119916\n  type: 'test'\n  ...\n# Subtest: Rolling duty over-rolling-cap\nok 11 - Rolling duty over-rolling-cap\n  ---\n  duration_ms: 0.113166\n  type: 'test'\n  ...\n# Subtest: Mandatory occurrence impossible in finite space\nok 12 - Mandatory occurrence impossible in finite space\n  ---\n  duration_ms: 0.86\n  type: 'test'\n  ...\n# Subtest: Tiny budget on known feasible week\nok 13 - Tiny budget on known feasible week\n  ---\n  duration_ms: 0.154292\n  type: 'test'\n  ...\n# Subtest: Recurrence carry-in history and impossible due window\nok 14 - Recurrence carry-in history and impossible due window\n  ---\n  duration_ms: 0.141333\n  type: 'test'\n  ...\n# Subtest: Due recurrence with no operational window\nok 15 - Due recurrence with no operational window\n  ---\n  duration_ms: 0.089542\n  type: 'test'\n  ...\n# Subtest: Editable board collision and correction\nok 16 - Editable board collision and correction\n  ---\n  duration_ms: 0.1395\n  type: 'test'\n  ...\n# Subtest: Half-open blackout boundary\nok 17 - Half-open blackout boundary\n  ---\n  duration_ms: 0.057917\n  type: 'test'\n  ...\n# Subtest: Empty input\nok 18 - Empty input\n  ---\n  duration_ms: 0.037584\n  type: 'test'\n  ...\n# Subtest: Unknown resource\nok 19 - Unknown resource\n  ---\n  duration_ms: 0.068833\n  type: 'test'\n  ...\n# Subtest: Missing fatigue value\nok 20 - Missing fatigue value\n  ---\n  duration_ms: 0.023208\n  type: 'test'\n  ...\n# Subtest: Impossible duration\nok 21 - Impossible duration\n  ---\n  duration_ms: 0.056166\n  type: 'test'\n  ...\n# Subtest: Reversed interval\nok 22 - Reversed interval\n  ---\n  duration_ms: 0.04225\n  type: 'test'\n  ...\n# Subtest: Broken recurrence link\nok 23 - Broken recurrence link\n  ---\n  duration_ms: 0.055542\n  type: 'test'\n  ...\n# Subtest: Wrong field type\nok 24 - Wrong field type\n  ---\n  duration_ms: 0.029208\n  type: 'test'\n  ...\n# Subtest: Duplicate identity\nok 25 - Duplicate identity\n  ---\n  duration_ms: 0.037\n  type: 'test'\n  ...\n# Subtest: validation precedence and full invalid envelopes\nok 26 - validation precedence and full invalid envelopes\n  ---\n  duration_ms: 0.227167\n  type: 'test'\n  ...\n# Subtest: novel empty staffing, exact search budget and rest boundary\nok 27 - novel empty staffing, exact search budget and rest boundary\n  ---\n  duration_ms: 0.788375\n  type: 'test'\n  ...\n# Subtest: history and pending coverage exact protocol\nok 28 - history and pending coverage exact protocol\n  ---\n  duration_ms: 0.205709\n  type: 'test'\n  ...\n# Subtest: novel single occurrence returns complete literal object\nok 29 - novel single occurrence returns complete literal object\n  ---\n  duration_ms: 0.166\n  type: 'test'\n  ...\n# Subtest: department receives shared rejection and counterproposes; changed operations escalate\nok 30 - department receives shared rejection and counterproposes; changed operations escalate\n  ---\n  duration_ms: 2.131333\n  type: 'test'\n  ...\n# Subtest: department proposal ownership and feedback are executable\nok 31 - department proposal ownership and feedback are executable\n  ---\n  duration_ms: 0.849\n  type: 'test'\n  ...\n# Subtest: guided new week links a new drill automatically and deconflicts without JSON\nok 32 - guided new week links a new drill automatically and deconflicts without JSON\n  ---\n  duration_ms: 0.638333\n  type: 'test'\n  ...\n# Subtest: guided rule changes regenerate every due occurrence with owner links\nok 33 - guided rule changes regenerate every due occurrence with owner links\n  ---\n  duration_ms: 0.486792\n  type: 'test'\n  ...\n# Subtest: graduated heatmap distinguishes zero, low, medium, high including cap boundary\nok 34 - graduated heatmap distinguishes zero, low, medium, high including cap boundary\n  ---\n  duration_ms: 0.0885\n  type: 'test'\n  ...\n# Subtest: guided availability change drives alternate allocation and recovery\nok 35 - guided availability change drives alternate allocation and recovery\n  ---\n  duration_ms: 0.376167\n  type: 'test'\n  ...\n# Subtest: real HTTP JSON protocol, worker invocation and malformed envelope\nok 36 - real HTTP JSON protocol, worker invocation and malformed envelope\n  ---\n  duration_ms: 32.84275\n  type: 'test'\n  ...\n# Subtest: adversarial board: missing mandatory allocation blocks review even without overlaps\nok 37 - adversarial board: missing mandatory allocation blocks review even without overlaps\n  ---\n  duration_ms: 2.380042\n  type: 'test'\n  ...\n# Subtest: adversarial immutable prior duty: overlapping history rejects whole roster\nok 38 - adversarial immutable prior duty: overlapping history rejects whole roster\n  ---\n  duration_ms: 0.331791\n  type: 'test'\n  ...\n# Subtest: adversarial history cannot credit a completion at the excluded window end\nok 39 - adversarial history cannot credit a completion at the excluded window end\n  ---\n  duration_ms: 1.177958\n  type: 'test'\n  ...\n# Subtest: real worker returns complete same response as direct entrypoint for novel unavailable resource\nok 40 - real worker returns complete same response as direct entrypoint for novel unavailable resource\n  ---\n  duration_ms: 14.515292\n  type: 'test'\n  ...\n1..40\n# tests 40\n# suites 0\n# pass 40\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 101.140666\n\nClean package: passed.\nCapabilities: 5/5 passed.\nBrowser journeys: 10/10 passed.\nVisual review: passed; initial captures and rechecks required at desktop and narrow sizes.\nRequirements: 12 demonstrated, 0 failed, 4 unverified.\nPost-build test changes (verify). Human review required. Since previous stage: added: verifier.test.mjs. Since build: added: verifier.test.mjs.\nPost-build test changes (verify). Human review required. Since previous stage: added: repair.test.mjs. Since build: added: repair.test.mjs; added: verifier.test.mjs.\nPost-build test changes (verify). Human review required. Since previous stage: added: calendar.test.mjs. Since build: added: calendar.test.mjs; added: repair.test.mjs; added: verifier.test.mjs.\nIndependent judge: NOT. Human review is required.\nJudgment 1: NOT\nUC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities: domain.mjs accepts only fictional fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. verification.md explicitly leaves approved SFTRM rules and compliance unverified. Synthetic recurrence tests do not establish the defining mandate. Fix: Obtain domain-owner-reviewed, releasable rule specifications and independently expected examples; implement the required recurrence semantics and test complete deadline coverage. Retain the operational-approval boundary.\nUC11-1 / SCOPE11-5 / DESC11-3 — Collaborative departmental agents: domain.mjs implements one centralized depth-first search. Agent proposalRule strings are validated but never executed; agentId is attached to decision records. public/app.js derives departmental statements after scheduling rather than implementing departmental proposal and counterproposal behavior. Fix: Implement executable department-owned proposal policies and a shared negotiation coordinator. Add changed-input tests demonstrating departmental counterproposals, constraint feedback and convergence or unresolved escalation.\nDESC11-1 / DELIVERABLE11-1 — Usable weekly planning beyond prepared examples: public/index.html and public/app.js provide scenario presets and a raw JSON textarea. Adding drills, changing availability, defining operational windows or editing recurrence requires manually maintaining nested JSON, references and minute offsets. Board controls only edit existing allocation starts and crew IDs. Fix: Provide validated forms for requests, rosters, availability, operations and training rules, with calendar/time controls and automatic relationship maintenance. Test a non-coding user journey creating and deconflicting a new synthetic week without JSON editing.\nDELIVERABLE11-1 / SCOPE11-8 — Personnel loading heatmaps: public/app.js assigns the same loaded class to every positive-minute cell; public/styles.css defines one fixed background color. Consequently 60 and 240 minutes have identical intensity despite public/index.html claiming darker cells indicate more assigned minutes. Fix: Map load values or duty-cap utilization to graduated colors with an accessible legend. Add assertions covering zero, low and high loads and verify distinct visual intensities.\nSCH-05 — Operator acceptance of the proposed schedule: verification.md explicitly records actual PB4T operator acceptance as unverified. public/app.js stores only a browser-local acknowledgment boolean; the acceptance-plan.json journey verifies that acknowledgment, not an operator review outcome. Fix: Conduct and document an authorized operator trial using synthetic inputs, including allocations, loading, unresolved outcomes and recovery. Record the operator's actual acceptance or rejection separately from software acknowledgment, without implying deployment authorization.\nJudgment 2: NOT\nUC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities are satisfied: domain.mjs accepts only invented fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. data/README.md and verification.md explicitly state that owner-reviewed SFTRM rules and independent domain validation are unavailable. Passing synthetic recurrence tests does not establish the defining mandate. Fix: Obtain a releasable, owner-reviewed rule specification and independently reviewed synthetic examples; implement its recurrence and completion-credit semantics and test every required deadline, missed occurrence and boundary. Retain the compliance warning until independently validated.\nSCH-05 — Have an operator accept the proposed schedule: public/index.html explicitly separates local acknowledgment from owner acceptance. verification.md confirms that no authorized PB4T operator trial occurred; automated acknowledgment and reload tests establish software state only. Fix: Conduct a supervised operator trial using fictional data, covering allocations, loading, unresolved obligations and edit recovery; record the operator's actual acceptance or rejection for the tested revision without implying deployment authorization.\nDELIVERABLE11-1 — Accurate interactive weekly schedule board and personnel loading heatmaps: public/app.js allows any week-start date through guidedUpdate('week'), but render() always labels day zero Mon and heatmap columns Mon–Sun. Selecting a non-Monday date therefore produces incorrect day headings, even though individual allocation descriptions calculate the actual weekday. repair.test.mjs tests only a Monday replacement. Fix: Derive board and heatmap headings from weekStart and the horizon, or validate and enforce Monday starts. Add a browser test using a non-Monday date and assert consistent dates and weekdays across allocations, board columns and heatmap cells.\nJudgment 3: NOT\nUC11-1 / SCOPE11-6 / SCH-04 — Ensure all SFTRM-mandated training periodicities are satisfied: domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified. Fix: Obtain a releasable, owner-reviewed specification of applicable periodicity and completion-credit semantics. Implement those semantics and add independently reviewed synthetic cases with exact expected deadlines, history credit and unmet obligations. Retain compliance warnings until domain validation is complete; do not revise frozen test expectations to bypass this requirement.\nSCH-05 — Have an operator accept the proposed schedule: public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision. Fix: Conduct a supervised trial using fictional data on the delivered revision. Have an authorized operator review allocations, loading, coverage, unresolved outcomes and edit recovery, then record their actual acceptance or rejection with revision identification, separately from deployment authorization.\nJudge repair budget exhausted. Remaining gaps are unresolved.",
+  "durationMs": 8776,
+  "sourceHash": "f053103357ad82fa98e26ad121cb2b51b6ce0fa7fb26358b2d3866e2b75a3e64",
+  "quality": {
+    "schemaVersion": 3,
+    "contractHash": "f98ec4160ae77b26c0e95906f65721bfcbaf9133935dcc2a5ca237473a1d5fd0",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC11-1",
+        "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+        "status": "unverified",
+        "detail": "real-data: Approved SFTRM rules, fatigue policy and training history are unavailable; withhold real SFTRM compliance and operational readiness. Demonstrate complete fictional agent negotiation, collisions, alternatives and recurrence.\nIndependent judgment: domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+        "capabilityIds": []
+      },
+      {
+        "criterionId": "SCH-01",
+        "requirement": "No personnel or shared-resource double booking.",
+        "status": "passed",
+        "capabilityIds": [
+          "allocation"
+        ],
+        "detail": "The baseline has two initially colliding pairs and no person/resource overlaps after allocation; edited overlap blocks review. - demonstrated by browser journeys weekly-negotiation, edit-recovery at both viewport sizes; host evaluations for allocation."
+      },
+      {
+        "criterionId": "SCH-02",
+        "requirement": "Honor availability, qualifications, rest and duty budgets.",
+        "status": "passed",
+        "capabilityIds": [
+          "fatigue"
+        ],
+        "detail": "All selected roles qualified and distinct; complete operational, resource and crew windows respected; prior-duty rest 59 fails and 60 passes; daily 240 passes/241 fails and rolling 300 passes/299 cap fails. - demonstrated by browser journeys weekly-negotiation at both viewport sizes; host evaluations for fatigue."
+      },
+      {
+        "criterionId": "SCH-03",
+        "requirement": "Distinguish infeasible input from exhausted search.",
+        "status": "passed",
+        "capabilityIds": [
+          "allocation"
+        ],
+        "detail": "Exhaustive impossible requests return infeasible; budget-one baseline returns budget_exhausted; malformed PB4T returns invalid-input. - demonstrated by browser journeys weekly-negotiation, budget-recovery, input-recovery at both viewport sizes; host evaluations for allocation."
+      },
+      {
+        "criterionId": "SCH-04",
+        "requirement": "Preserve mandatory training periodicities.",
+        "status": "unverified",
+        "capabilityIds": [
+          "recurrence"
+        ],
+        "detail": "All explicit fictional due occurrences accounted for; history occurrence 0 satisfied, due occurrence 1 placed or unmet, future occurrence 2 pending-future. - demonstrated by browser journeys recurrence-coverage at both viewport sizes; host evaluations for recurrence.\nIndependent judgment: domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified."
+      },
+      {
+        "criterionId": "SCH-05",
+        "requirement": "Have an operator accept the proposed schedule.",
+        "status": "unverified",
+        "detail": "human-authority: Only the PB4T operator can accept a proposed schedule; no operator acceptance is recorded by software tests. Demonstrate a deliberate local synthetic draft acknowledgment with evidence review, stale/invalid blocking and no operational approval.\nIndependent judgment: public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision.",
+        "capabilityIds": []
+      },
+      {
+        "criterionId": "DELIVERABLE11-1",
+        "requirement": "An interactive weekly schedule board showing automated conflict resolution across departments with one-click schedule optimization and personnel loading heatmaps.",
+        "status": "passed",
+        "capabilityIds": [
+          "negotiation",
+          "loading"
+        ],
+        "detail": "Interactive weekly board supports one-click first-feasible optimization, computed departmental counterproposals, editable recovery and exact daily personnel loading heatmap: P1 120/P2 60/P3 120/P4 90/P5 90/P6 0 weekly. - demonstrated by browser journeys weekly-negotiation, edit-recovery at both viewport sizes; host evaluations for negotiation, loading."
+      },
+      {
+        "criterionId": "DESC11-1",
+        "requirement": "Weekly PB4T meetings struggle to coordinate competing departmental training requirements (Damage Control drills, Combat Systems exercises, engineering casualty controls, flight quarters) against real crew availability and ship operations.",
+        "status": "unverified",
+        "detail": "real-data: Real crew availability and ship operations are unavailable under the synthetic-only boundary; withhold real calendar coordination. Demonstrate all named drill families and computed allocations with fictional personnel and operations.",
+        "capabilityIds": []
+      },
+      {
+        "criterionId": "DESC11-2",
+        "requirement": "Key personnel are frequently double-booked across simultaneous evolutions.",
+        "status": "passed",
+        "capabilityIds": [
+          "negotiation"
+        ],
+        "detail": "DC-1/ENG-1 and CS-1/WPN-1 double booking detected then resolved at 1980 and 2100. - demonstrated by browser journeys weekly-negotiation, edit-recovery at both viewport sizes; host evaluations for negotiation."
+      },
+      {
+        "criterionId": "DESC11-3",
+        "requirement": "This use case asks teams to build a constraint-satisfaction multi-agent scheduling system that automatically negotiates and deconflicts the shipboard weekly drill calendar.",
+        "status": "passed",
+        "capabilityIds": [
+          "negotiation"
+        ],
+        "detail": "Engineering, Weapons, Combat Systems, Damage Control and Flight Operations agents submit owned proposals, receive blocking constraints, counterpropose and converge on the complete fictional weekly calendar. - demonstrated by browser journeys weekly-negotiation at both viewport sizes; host evaluations for negotiation."
+      },
+      {
+        "criterionId": "SUMMARY11-1",
+        "requirement": "Coordinate departmental training proposals against shared personnel, resources, operational windows and fatigue rules.",
+        "status": "passed",
+        "capabilityIds": [
+          "allocation",
+          "fatigue"
+        ],
+        "detail": "All departmental proposals checked against shared personnel, exclusive resources, operational windows and explicit fictional fatigue inputs. - demonstrated by browser journeys weekly-negotiation at both viewport sizes; host evaluations for allocation, fatigue."
+      },
+      {
+        "criterionId": "SCOPE11-4",
+        "requirement": "Requirements",
+        "status": "passed",
+        "capabilityIds": [],
+        "detail": "Requirements section presents the synthetic constraint policy and all source obligations without asserting operational compliance. - demonstrated by browser journeys weekly-negotiation at both viewport sizes."
+      },
+      {
+        "criterionId": "SCOPE11-5",
+        "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies.",
+        "status": "passed",
+        "capabilityIds": [
+          "negotiation",
+          "fatigue"
+        ],
+        "detail": "Five named deterministic departmental agents negotiate qualified Fire Party Leader, EOOW and TAO allocations against shared windows and fictional fatigue rules. - demonstrated by browser journeys weekly-negotiation at both viewport sizes; host evaluations for negotiation, fatigue."
+      },
+      {
+        "criterionId": "SCOPE11-6",
+        "requirement": "The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+        "status": "unverified",
+        "detail": "real-data: Approved SFTRM mandates and completion history are unavailable; withhold actual compliance certification. Demonstrate collision resolution, alternatives and every fictional due occurrence including impossible obligations.\nIndependent judgment: domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+        "capabilityIds": []
+      },
+      {
+        "criterionId": "SCOPE11-7",
+        "requirement": "Expected deliverables",
+        "status": "passed",
+        "capabilityIds": [],
+        "detail": "Expected deliverables section identifies the working weekly board, one-click optimization and personnel heatmaps. - demonstrated by browser journeys weekly-negotiation at both viewport sizes."
+      },
+      {
+        "criterionId": "SCOPE11-9",
+        "requirement": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11",
+        "status": "passed",
+        "capabilityIds": [],
+        "detail": "Source attribution visibly identifies https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11 and the synthetic boundary. - demonstrated by browser journeys weekly-negotiation at both viewport sizes."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "weekly-negotiation",
+        "title": "Negotiate, inspect and acknowledge the fictional week",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 31 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/weekly-negotiation-desktop.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/weekly-negotiation-desktop.zip"
+      },
+      {
+        "id": "weekly-negotiation",
+        "title": "Negotiate, inspect and acknowledge the fictional week",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 31 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/weekly-negotiation-narrow.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/weekly-negotiation-narrow.zip"
+      },
+      {
+        "id": "recurrence-coverage",
+        "title": "Review history, due and future obligations including an impossible due drill",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 12 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/recurrence-coverage-desktop.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/recurrence-coverage-desktop.zip"
+      },
+      {
+        "id": "recurrence-coverage",
+        "title": "Review history, due and future obligations including an impossible due drill",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 12 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/recurrence-coverage-narrow.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/recurrence-coverage-narrow.zip"
+      },
+      {
+        "id": "edit-recovery",
+        "title": "Detect an edited collision and recompute safely",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/edit-recovery-desktop.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/edit-recovery-desktop.zip"
+      },
+      {
+        "id": "edit-recovery",
+        "title": "Detect an edited collision and recompute safely",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/edit-recovery-narrow.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/edit-recovery-narrow.zip"
+      },
+      {
+        "id": "input-recovery",
+        "title": "Reject incomplete PB4T input and restore sample",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 9 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/input-recovery-desktop.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/input-recovery-desktop.zip"
+      },
+      {
+        "id": "input-recovery",
+        "title": "Reject incomplete PB4T input and restore sample",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 9 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/input-recovery-narrow.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/input-recovery-narrow.zip"
+      },
+      {
+        "id": "budget-recovery",
+        "title": "Keep unknown feasibility distinct and recover",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 7 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/budget-recovery-desktop.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/budget-recovery-desktop.zip"
+      },
+      {
+        "id": "budget-recovery",
+        "title": "Keep unknown feasibility distinct and recover",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 7 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/budget-recovery-narrow.png",
+        "trace": ".quality-evidence/38be52f5f633-bd6245ed-faf9-44d0-9fb8-e9816c3ca215/budget-recovery-narrow.zip"
+      }
+    ],
+    "errors": [],
+    "visualReview": {
+      "schemaVersion": 1,
+      "runId": "9dc7c6a8-3feb-4b60-9ad9-b8caa3db4cd1",
+      "contractHash": "f98ec4160ae77b26c0e95906f65721bfcbaf9133935dcc2a5ca237473a1d5fd0",
+      "status": "passed",
+      "activeSessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+      "sessions": [
+        {
+          "id": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "startedAt": "2026-11-05T08:52:00.302Z",
+          "status": "passed",
+          "errors": [],
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6"
+        },
+        {
+          "id": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "startedAt": "2026-11-05T08:58:35.169Z",
+          "status": "passed",
+          "errors": [],
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6"
+        },
+        {
+          "id": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "startedAt": "2026-11-05T09:01:36.715Z",
+          "status": "passed",
+          "errors": [],
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620"
+        },
+        {
+          "id": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "startedAt": "2026-11-05T09:08:12.812Z",
+          "status": "passed",
+          "errors": [],
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6"
+        }
+      ],
+      "captures": [
+        {
+          "id": "489211cd-2ed0-4186-8c18-c56c5e2f6f3f",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/3bc2ba0988ad-31ac3d1a-3c95-49a1-a2a0-73b79764a443.png",
+          "screenshotHash": "3bc2ba0988ad64ace1ccd2eeeb0ad102780b8c962844cdb7277ed9445796042d",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:18.784Z",
+          "sequence": 1
+        },
+        {
+          "id": "2c35374a-d2cd-4c0a-b2ad-409351965449",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/db6a638c6e29-260f6430-57ea-4aa8-892e-bb8203f85da6.png",
+          "screenshotHash": "db6a638c6e292ca427d02d1d332ef8926946e6200cfc9d8755f23144cb5941cf",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:21.941Z",
+          "sequence": 2
+        },
+        {
+          "id": "e18bcaaa-34ba-4f65-a131-6c9d9a1264d1",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2d217ae3e3d5-50571b18-25f0-44c4-ad72-582b2aa38bad.png",
+          "screenshotHash": "2d217ae3e3d575d21b87133ea7b5cb5da7a652fd802c21811ac187a8facd48fa",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:25.971Z",
+          "sequence": 3
+        },
+        {
+          "id": "cbd6f25b-a188-4bb1-b0db-4ac23e26225f",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/5b26a9bcc3dd-b2f7c46a-3517-4d12-aabb-0b57ab9d3c2f.png",
+          "screenshotHash": "5b26a9bcc3dd4ba95810dd2f8fad3b36c1a3dda72fd1e81989b3eeb63605f6ed",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:28.946Z",
+          "sequence": 4
+        },
+        {
+          "id": "6a6354b6-5850-4c78-b18d-7638239914ca",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/26b4c629a4de-5b6c3c7e-a395-4a84-b6d4-cf04aec9bf14.png",
+          "screenshotHash": "26b4c629a4de12bab05903b3190a2acc6d6a61ddb2b2f62822fa9081f233f543",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:31.802Z",
+          "sequence": 5
+        },
+        {
+          "id": "be0c8f8c-7278-4f90-ac98-f95eb1c1d0d0",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/bbcda309baa6-bc42619e-0285-4c22-a131-65b61d73a654.png",
+          "screenshotHash": "bbcda309baa69d13f070fe91701be93796d4c65119edc46fbf9b40e48f5c5aa2",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:34.194Z",
+          "sequence": 6
+        },
+        {
+          "id": "fb099126-bcaf-4316-bf43-aa14d1b748b3",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/3f40ac240f25-d75a7efa-259e-49d8-9208-42e67a402504.png",
+          "screenshotHash": "3f40ac240f25c21f9ab86395492f668535e3768839405e753c118cedaaf24a9c",
+          "filesHash": "6fc1dccf182f76f3ad12ca26b1bf7f2718ce4ae16a6f5075c2d7ed597ad55a90",
+          "capturedAt": "2026-11-05T08:54:39.060Z",
+          "sequence": 8
+        },
+        {
+          "id": "64fdac09-ef3f-4bba-a6cb-c9d86ceb7de8",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/d05245bc93a1-fab2e5da-6421-40e5-b441-2843a339cbf0.png",
+          "screenshotHash": "d05245bc93a1f80cb98e78183ea5d5673c8eca531a3c9e42433b0546d663edc0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:54:59.407Z",
+          "sequence": 10
+        },
+        {
+          "id": "c2374c4d-2dd5-4af9-8e11-d1965625e578",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/db6a638c6e29-7d5139a9-020a-4301-91d0-c7bd8b4e4b65.png",
+          "screenshotHash": "db6a638c6e292ca427d02d1d332ef8926946e6200cfc9d8755f23144cb5941cf",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.214Z",
+          "sequence": 11
+        },
+        {
+          "id": "4995ba15-6bc9-4ce4-af4d-2f6e288db1e1",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/a90c8fa85240-f557a9a2-644a-4d37-94ce-949d17e1c5b2.png",
+          "screenshotHash": "a90c8fa85240bee2160ae8348d0a81539046a61bb964a50df62637688636bb38",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.354Z",
+          "sequence": 12
+        },
+        {
+          "id": "af411931-1257-456d-a2be-2ca5b3188fde",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/5b26a9bcc3dd-33735afa-a8c5-4527-b784-ff6580ba7d88.png",
+          "screenshotHash": "5b26a9bcc3dd4ba95810dd2f8fad3b36c1a3dda72fd1e81989b3eeb63605f6ed",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.447Z",
+          "sequence": 13
+        },
+        {
+          "id": "b98c3e69-3692-4d5a-a0a5-67203b3a1a5f",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/b23d22d41f5c-19a2def3-71af-42a8-9daa-23e4df6aab7c.png",
+          "screenshotHash": "b23d22d41f5c16b1c4f636074a9b8e66ceee8c9416b4db3871cac09b207e78d8",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.551Z",
+          "sequence": 14
+        },
+        {
+          "id": "40513182-d6ae-4184-93d1-c37d9bd089cb",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/66b6e34fb5df-52ff578e-2a04-4ba9-a291-c1c4f3affbfa.png",
+          "screenshotHash": "66b6e34fb5dfc6a2a047d55dd9a1214f328c9ebca3921a712ed99b05e601d028",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.691Z",
+          "sequence": 15
+        },
+        {
+          "id": "2524d6e5-bac2-4b10-8e87-327bbbf1ca96",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/569ad18e7de2-56826621-ce53-4e93-97e3-93d885ced76c.png",
+          "screenshotHash": "569ad18e7de2963b029154d302b436d4b80e5f74610950c67e05126f19b0a92f",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:04.793Z",
+          "sequence": 16
+        },
+        {
+          "id": "ef920b5b-3f64-464d-90bb-9620f19ce726",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/105718485a71-f1853d97-9307-4bc5-aa7a-20f62f8682fc.png",
+          "screenshotHash": "105718485a71aa920ccdd8ef502ce8ad2c49529f4e1b4e0686ae011d8c9005ae",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:07.762Z",
+          "sequence": 17
+        },
+        {
+          "id": "3abe2f9b-6669-4a3f-865d-064ad0a4a656",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2bcd06e175af-54bb0bca-e5b7-4196-8e6b-c80ec9c27ac2.png",
+          "screenshotHash": "2bcd06e175afca3490e9464b853f1a43ded0dc75b28be30226b91aa6e81172c9",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:07.880Z",
+          "sequence": 18
+        },
+        {
+          "id": "ba702009-2f39-457d-b267-dbf3bac42a75",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/c158931bd629-a9771043-2488-4881-9f5f-f53ae81ae809.png",
+          "screenshotHash": "c158931bd6293751ff2ea61e9d3714160b1c1b32b186eaf7a04e6b2dccef58d8",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:20.959Z",
+          "sequence": 19
+        },
+        {
+          "id": "cf0518ea-925a-46e7-8bd1-38ac2e7f55d8",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/22d480b3a3ba-a4dcef08-0228-4c11-aa71-7b0cf1a6c41c.png",
+          "screenshotHash": "22d480b3a3bacb2efcec47473d9079baa490b93c143c09bf3db4d1fe8496f138",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:21.078Z",
+          "sequence": 20
+        },
+        {
+          "id": "01b5337c-1f27-4179-8f74-6fdceb1996b5",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/22d480b3a3ba-a9fa9893-78b2-4021-80d1-0dbf0d82b0c7.png",
+          "screenshotHash": "22d480b3a3bacb2efcec47473d9079baa490b93c143c09bf3db4d1fe8496f138",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:21.165Z",
+          "sequence": 21
+        },
+        {
+          "id": "f025b65e-a801-403a-aecc-46a8b5aa0d5d",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/22d480b3a3ba-3183d30b-d3e2-4059-b338-a3b7fae5829a.png",
+          "screenshotHash": "22d480b3a3bacb2efcec47473d9079baa490b93c143c09bf3db4d1fe8496f138",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:29.836Z",
+          "sequence": 22
+        },
+        {
+          "id": "c9ea918e-1180-41fb-9499-48f27dde9570",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/b397f1b53a73-a7a65579-d139-4d80-b35d-9a4e00bd6eb9.png",
+          "screenshotHash": "b397f1b53a73130b91e33aeeaef3048adf749071495729f84a29d4c675b94367",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:29.960Z",
+          "sequence": 23
+        },
+        {
+          "id": "47220dc2-94f7-4f96-868b-03e7514b1f8c",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/7371e1568790-389e83eb-9a70-4520-badc-0efc981cb976.png",
+          "screenshotHash": "7371e1568790e359eb70e2b885d5b136334f58498fd8a33fda7a28e9477b8e22",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:30.066Z",
+          "sequence": 24
+        },
+        {
+          "id": "04d17190-a3cf-48e7-bcb5-6a7681e5c899",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/1cee70c9c094-2b238643-d48b-43e9-957d-6822de3ace91.png",
+          "screenshotHash": "1cee70c9c0949bed4b603f1d434253f9046ba6e7020121c103256f3db0344dca",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:30.175Z",
+          "sequence": 25
+        },
+        {
+          "id": "ef418906-b694-401b-b6b5-d077971cb174",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/feb15fd1a186-84502bfb-69fa-49d6-81e5-3ad0ff9253c4.png",
+          "screenshotHash": "feb15fd1a186745bd236a3ff198246091ff43ba63a28e1f3a34b889b63da228e",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:30.301Z",
+          "sequence": 26
+        },
+        {
+          "id": "0ed06bcf-c70c-4f37-b3f6-81a3c1cd9b14",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/875eed927b4c-3dbf7f5a-82d5-4484-bfbf-c75a6b4a800b.png",
+          "screenshotHash": "875eed927b4c89dd23c1ad57289341120dd55841b065bf730a94df907d2fb8e5",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:30.408Z",
+          "sequence": 27
+        },
+        {
+          "id": "f2f05372-7c94-4f48-968f-2ff0424a710b",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2e6f0c9a8699-0d2de7ad-ec53-44e4-a9c2-910d1b6209e0.png",
+          "screenshotHash": "2e6f0c9a869999bf1e7ee18e37b84fa25cf17f1a954d875c3c62cf7472a975d4",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:55:30.525Z",
+          "sequence": 28
+        },
+        {
+          "id": "57627022-36ba-47a7-a67e-534a90be3b06",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/82b50f1a0a7f-d927b176-dd0a-4af2-8186-8734c6773077.png",
+          "screenshotHash": "82b50f1a0a7f25cc2f927fdd13bdab8d6a9d88d88172633f64c7c69b1c76db9b",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:22.460Z",
+          "sequence": 29
+        },
+        {
+          "id": "94d4b866-7547-44a2-9200-cac84c6917b4",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/e5976aa9700a-b1f9e185-4627-4006-8c19-a7bb4fbb54ef.png",
+          "screenshotHash": "e5976aa9700a2e34643a7e90d7f027130410539deed5146b8c07c2f7e54a19a4",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:22.593Z",
+          "sequence": 30
+        },
+        {
+          "id": "24e46ac1-43b7-4ab0-9fb2-9e012d5b3329",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/3056643697f6-b8f01cbd-189d-41a2-9507-102d219eb0da.png",
+          "screenshotHash": "3056643697f64346b3b5f2969c7837e6c0c4a1de89c8473ae39684e1b28159a4",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:22.689Z",
+          "sequence": 31
+        },
+        {
+          "id": "07afc247-fc34-4d4a-93b6-102af5eea8e3",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/ba68e81b6097-9a6bd46d-15d6-4002-8e71-c0aa80d1e29c.png",
+          "screenshotHash": "ba68e81b60970ffa454843976b0f7e3db060fcc741cd059ab2fca34fbe043d28",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:22.900Z",
+          "sequence": 32
+        },
+        {
+          "id": "ed3c52dc-dd24-4c88-99c4-d84ae3797f15",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/17adc6833b00-5e7dd93a-3ce1-4263-923d-a79bb2ba4a9e.png",
+          "screenshotHash": "17adc6833b000392a443d256df289da47e66629026d470ba63999989c0aeb593",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:28.577Z",
+          "sequence": 34
+        },
+        {
+          "id": "b2b7324c-509c-4add-8906-ac6d7021362f",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/65ff0845a87d-d394be11-e7df-475c-9c6d-f19b443f51a6.png",
+          "screenshotHash": "65ff0845a87d4b633e83cfe31c268552ec2e9fd4308046d7831ff66fb536e0a4",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:31.858Z",
+          "sequence": 35
+        },
+        {
+          "id": "30a9f5cc-f32e-49f6-bfb0-8e22a45f7de2",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2c4fa4779d8a-a73cc57b-c7b5-4bc6-aaa9-a502446198de.png",
+          "screenshotHash": "2c4fa4779d8aee959789866e92deedb6c226294f5f7fc582ce20db518f915d6d",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:32.006Z",
+          "sequence": 36
+        },
+        {
+          "id": "aeda6e12-6837-42b9-9cb4-65ecc0866383",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/d05245bc93a1-2383fead-2114-4b3e-a5f9-fbf48018f891.png",
+          "screenshotHash": "d05245bc93a1f80cb98e78183ea5d5673c8eca531a3c9e42433b0546d663edc0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:53.548Z",
+          "sequence": 38
+        },
+        {
+          "id": "e79997f5-ffe0-44dc-b657-bd22fc377d78",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/db6a638c6e29-e38880de-c057-476e-8c79-3b725c40ecbb.png",
+          "screenshotHash": "db6a638c6e292ca427d02d1d332ef8926946e6200cfc9d8755f23144cb5941cf",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:57.833Z",
+          "sequence": 39
+        },
+        {
+          "id": "532bc74b-479d-4c33-bef2-ff979ec2994d",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/a90c8fa85240-d476a855-f36d-4eb4-8165-339beb4afc44.png",
+          "screenshotHash": "a90c8fa85240bee2160ae8348d0a81539046a61bb964a50df62637688636bb38",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:57.982Z",
+          "sequence": 40
+        },
+        {
+          "id": "3c691666-250c-43dd-9d86-dcb5ae010a3e",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2210d9eeec7b-2e061e04-ab2f-4be6-80c1-8578596a5573.png",
+          "screenshotHash": "2210d9eeec7b972b25c523b8672d81259e922185ce933b13634919892ab4336b",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:58.086Z",
+          "sequence": 41
+        },
+        {
+          "id": "85379ccc-29e3-4358-ab77-0130c02ae3ac",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/a97d1968f8fd-c8003a19-4b19-4044-a7f8-67fb8cb07542.png",
+          "screenshotHash": "a97d1968f8fd4347ac47995bd02ef1ad046d1a813f58c4e62d66d8693601a9d1",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:56:58.245Z",
+          "sequence": 42
+        },
+        {
+          "id": "16cfaa03-ea5c-4aa0-9df8-08a16700e820",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/416da57f303e-3f1af1b3-1f30-4e85-9c7a-c2af3dda6e59.png",
+          "screenshotHash": "416da57f303e67140257d5d74b7da616549f0d791e6d69b35ad660e879ef7914",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:02.375Z",
+          "sequence": 44
+        },
+        {
+          "id": "8331ebab-dfa3-4304-a638-93a8f220faaa",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/0038d91d8acf-6b80ebed-69e5-43dc-97f0-b2e823fc92a7.png",
+          "screenshotHash": "0038d91d8acf569a24728e64d9884e2c24772d493a0ef52b3528411e5b7e4303",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:07.601Z",
+          "sequence": 46
+        },
+        {
+          "id": "c921c172-487f-4553-9b60-fe565c000566",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/1040a07cbad4-461106c1-0df1-4b2d-94b4-bd5f49b61f0a.png",
+          "screenshotHash": "1040a07cbad454e53662578e60679410556a48ed76ca0afc71ab4801e6b1340a",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:07.860Z",
+          "sequence": 47
+        },
+        {
+          "id": "b996d369-96fc-4433-9d57-d2aaf4060937",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/4e656957d3e8-994b1a75-5e40-4c6f-a302-5795bed363aa.png",
+          "screenshotHash": "4e656957d3e8fe2ff70749f293a042704c30f482525042c07c26351398946751",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:08.027Z",
+          "sequence": 48
+        },
+        {
+          "id": "5d3d79e6-b887-4b6c-9433-8451fbd4021b",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2b81ff76ad27-183be512-5a3f-4085-b3a6-2841bc6985fc.png",
+          "screenshotHash": "2b81ff76ad274ad714df7ff06fda748f78f2a4346cf8ab61b7907957b2a02000",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:08.310Z",
+          "sequence": 49
+        },
+        {
+          "id": "95a86bfa-29aa-4065-a76a-f8c226e38367",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/2b81ff76ad27-20637505-6ef6-419d-b9b6-cd43793b26cd.png",
+          "screenshotHash": "2b81ff76ad274ad714df7ff06fda748f78f2a4346cf8ab61b7907957b2a02000",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:08.507Z",
+          "sequence": 50
+        },
+        {
+          "id": "492c714b-7c90-489a-94df-38d1dea50d0e",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/50dc60ec0f88-5c4b1d6a-55bd-4465-a1c3-e5dd58ff0ee6.png",
+          "screenshotHash": "50dc60ec0f886604b7ff9e1b94dc517602f2befa6194a7cfa0056cc831051c86",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:08.750Z",
+          "sequence": 51
+        },
+        {
+          "id": "87ce8dc8-7da4-4333-a641-d036050738f2",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/aceabdfbc4be-8f2e2006-5df0-4040-a37e-480de8228a26.png",
+          "screenshotHash": "aceabdfbc4be3db1ce24d828b17e0823e1b4219437d92336eb1f7d0021eb20ef",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:09.011Z",
+          "sequence": 52
+        },
+        {
+          "id": "13183ca6-8802-4e33-87d4-3ea1b587e278",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/aceabdfbc4be-b78d268d-ef26-488a-b46f-4e8d3cd687e7.png",
+          "screenshotHash": "aceabdfbc4be3db1ce24d828b17e0823e1b4219437d92336eb1f7d0021eb20ef",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:57:09.141Z",
+          "sequence": 53
+        },
+        {
+          "id": "885d1d7b-3cda-4da1-8c0d-7cae87a3cd7f",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/593971074c67-ea4cbe53-7f9c-44af-8292-c60cdf872282.png",
+          "screenshotHash": "593971074c6753b7fee0c257fd473a7a705fb9a56a63c5334c2b108d045084b3",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:17.613Z",
+          "sequence": 54
+        },
+        {
+          "id": "9ad8dd68-3bd6-42fd-9958-b2f1514d2ab0",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/d32a0f499362-4f279258-64ff-4149-b9d4-4c2df22165a4.png",
+          "screenshotHash": "d32a0f4993629494e6598989d0a8f89ad7b15991ff7a372eff536fecf8f07e36",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:17.765Z",
+          "sequence": 55
+        },
+        {
+          "id": "5126f805-7833-4acd-9073-8b585ee2d0e5",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/5092edd5303c-75a7f630-fa14-41c9-8a14-aa109a6ee57f.png",
+          "screenshotHash": "5092edd5303c1532926ad779d5157a22cea004d44093d030fcc3d8eeb7afc1b0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:17.914Z",
+          "sequence": 56
+        },
+        {
+          "id": "bfe26eaa-55cb-4aa7-8e40-d7572fed9603",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/5092edd5303c-ac1883f8-3c92-49de-8f86-231f6fc47bb5.png",
+          "screenshotHash": "5092edd5303c1532926ad779d5157a22cea004d44093d030fcc3d8eeb7afc1b0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:18.057Z",
+          "sequence": 57
+        },
+        {
+          "id": "1f852636-9476-4444-a0d4-df67ad098369",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/5305f44e-d7a1-4cab-b129-88c2052f38f1/be0fde06ad19-87bec7b7-cc63-4536-9bb7-d0f575d42702.png",
+          "screenshotHash": "be0fde06ad19d3ea90048874bc7ff590a0d411629ac4bfa98eb01219207a1996",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:22.686Z",
+          "sequence": 59
+        },
+        {
+          "id": "5e6d0716-6a79-4821-b7c1-0be0e06b0e4f",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/d05245bc93a1-d7ea32a5-7331-4c40-9d66-6a8a4ca12c2d.png",
+          "screenshotHash": "d05245bc93a1f80cb98e78183ea5d5673c8eca531a3c9e42433b0546d663edc0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:55.566Z",
+          "sequence": 61
+        },
+        {
+          "id": "f512fc47-163a-4341-9498-d17281ca1562",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/db6a638c6e29-5b01f3db-ef03-49b8-857d-bf28e93dd191.png",
+          "screenshotHash": "db6a638c6e292ca427d02d1d332ef8926946e6200cfc9d8755f23144cb5941cf",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:59.180Z",
+          "sequence": 62
+        },
+        {
+          "id": "c28ddb24-6ef4-4bd2-bb8e-5ba0d179e63b",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/a90c8fa85240-993c54d2-608d-454e-9326-526eca793703.png",
+          "screenshotHash": "a90c8fa85240bee2160ae8348d0a81539046a61bb964a50df62637688636bb38",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:58:59.319Z",
+          "sequence": 63
+        },
+        {
+          "id": "27b23a51-bcf1-4db0-8e20-ff330de84f51",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/5b26a9bcc3dd-14ea204a-e226-4717-a3ba-ccd6b1c0e2a1.png",
+          "screenshotHash": "5b26a9bcc3dd4ba95810dd2f8fad3b36c1a3dda72fd1e81989b3eeb63605f6ed",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:02.156Z",
+          "sequence": 64
+        },
+        {
+          "id": "638bc834-dc7d-4ddb-9008-f2d11c57e1c8",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/1319020c951a-e54485a6-3b03-47cf-8c84-d2c53422a2af.png",
+          "screenshotHash": "1319020c951a04b5eaaf24337d42501cfa0763de4e7e1de05010cb332df2f068",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:10.997Z",
+          "sequence": 66
+        },
+        {
+          "id": "e906c2d3-b885-4072-bb7f-7818adfc61a7",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/94c8b93428b0-dee8bece-71ae-490e-b561-a462ad0007c9.png",
+          "screenshotHash": "94c8b93428b00eb627a8442b5a07ed13cdabf26eaa83ebb0c56a4277872d1601",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.263Z",
+          "sequence": 68
+        },
+        {
+          "id": "5724b14c-86f8-4920-936f-fb2751ee292d",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/59c165462c05-6d57ded5-d582-4e44-9545-148cb73c1191.png",
+          "screenshotHash": "59c165462c055551690d57efb74c65f40f938f5437d6f3112177b4de21fba861",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.401Z",
+          "sequence": 69
+        },
+        {
+          "id": "27a74905-d02a-44d3-91ba-b92274f7b6d9",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/f4bde431f79f-53d5dc07-b572-4a84-bc77-c6a358d6f62b.png",
+          "screenshotHash": "f4bde431f79f64a233588570e867c18f98285d17c62d8fdc2adb47d5acd93f58",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.542Z",
+          "sequence": 70
+        },
+        {
+          "id": "3d1fcfea-add1-438f-b601-18c65101298f",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/d32a0f499362-d45ed961-08aa-4cc2-a93b-a098b5084051.png",
+          "screenshotHash": "d32a0f4993629494e6598989d0a8f89ad7b15991ff7a372eff536fecf8f07e36",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.673Z",
+          "sequence": 71
+        },
+        {
+          "id": "060ad0cb-11dd-4038-9635-d7cfc4573f7b",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/3b9b4fac5483-88e7a43e-55bb-498f-8ffc-ba419d339d09.png",
+          "screenshotHash": "3b9b4fac5483081a02fe2d357d977ed5dc10f56cdd4307ad7dc103821d86e7f4",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.815Z",
+          "sequence": 72
+        },
+        {
+          "id": "6c249a9b-c424-46cc-a98e-f68d7d77d99f",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/d1fb30685f7e-872c48fc-2ea2-4f33-9a6d-50cdde4ae9bf.png",
+          "screenshotHash": "d1fb30685f7e328ccd4724f409cd1f24ecb17f8644621a8771a8e04b2fe21241",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:21.960Z",
+          "sequence": 73
+        },
+        {
+          "id": "4ce15c05-d9c6-484b-9edc-9d397ca9ca1f",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/ffcccdda0260-fb208886-231c-401e-af45-f9f1fa495d5a.png",
+          "screenshotHash": "ffcccdda0260a03c26a91a4d89a96274f5812f4a2deb56b9ff4de55700b87da9",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:22.106Z",
+          "sequence": 74
+        },
+        {
+          "id": "36c3e6a9-29fc-4ae4-8da0-e14c82414f62",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/6470fdddfc39-9092aaa5-ea9b-4f00-93c5-f9fa63735c25.png",
+          "screenshotHash": "6470fdddfc39c7258069e8f9553208a302fec8a5bc4e0c40219667516758bafa",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:36.516Z",
+          "sequence": 76
+        },
+        {
+          "id": "3256458c-8a34-4722-ae75-2b524ee1c95e",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/6c9e6f835662-af7ad318-74cd-4027-a124-781a3625930c.png",
+          "screenshotHash": "6c9e6f83566253fb89998819afc82ede65e82d8972bbbcc936774b1772b49ad5",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:47.499Z",
+          "sequence": 78
+        },
+        {
+          "id": "626ef447-952e-45d9-ad64-826060f7b346",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/b77460956927-b04e5d90-59e0-4c04-92da-365746756f02.png",
+          "screenshotHash": "b77460956927288856dce3d6d89c641ab8c06aef5f5854f774d3eb8ce1526671",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:56.314Z",
+          "sequence": 79
+        },
+        {
+          "id": "f9b8a78c-0f3c-400d-b6e7-8c7055d16380",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/6d32c9a9f3fa-db14b745-edf3-4358-9c5d-62c4ba9fad49.png",
+          "screenshotHash": "6d32c9a9f3fa2f9bf4602b7a8111975cf21c37c979704ac1b8752de9c4c02a5f",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:56.462Z",
+          "sequence": 80
+        },
+        {
+          "id": "f5ee697d-430b-4361-a771-d72abfec0245",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/297c5fab2913-0ed7fda1-cf05-4f2b-9843-90e8b425c03d.png",
+          "screenshotHash": "297c5fab2913f39e29f649fcfa39148d10c99a02c59480672cee560c808522e8",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:56.593Z",
+          "sequence": 81
+        },
+        {
+          "id": "289d086d-b71b-43c0-b750-878d8d72e685",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/bc652800de97-197a441e-6b0f-42ec-8e4e-ce533eb7b467.png",
+          "screenshotHash": "bc652800de970da13354866159e45a850e93a33b7000e30d70f980c03ca7e898",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:56.737Z",
+          "sequence": 82
+        },
+        {
+          "id": "4cbd2457-e08a-4fdf-b84c-2c4c7c8dcddd",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/cbdf77d9-65a7-45a7-a54e-bfc063ad19a8/2a3b96afd141-7e222c9b-e855-420d-810d-d573d8b42404.png",
+          "screenshotHash": "2a3b96afd1410747b5d9a2e14d5e406d78a82807c1d738ab7fe452bfe440134b",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T08:59:56.893Z",
+          "sequence": 83
+        },
+        {
+          "id": "baf47760-26d2-46b4-9d6b-f1b56e1df17a",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/d05245bc93a1-56f4f5e4-c5a5-44b5-a54c-b277fa0e8fa0.png",
+          "screenshotHash": "d05245bc93a1f80cb98e78183ea5d5673c8eca531a3c9e42433b0546d663edc0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T09:01:57.719Z",
+          "sequence": 84
+        },
+        {
+          "id": "01747553-ed8b-4b55-a83f-fcc8eb3eb65b",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/d05245bc93a1-318a8a7a-b6f0-4274-a1a3-aa4477a2d258.png",
+          "screenshotHash": "d05245bc93a1f80cb98e78183ea5d5673c8eca531a3c9e42433b0546d663edc0",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T09:02:01.239Z",
+          "sequence": 85
+        },
+        {
+          "id": "1b91b052-82b5-4777-92a1-377f4c272dc5",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/465a7a9911b3-6927bd15-e2fe-4132-bc5c-d4c7d42b64a8.png",
+          "screenshotHash": "465a7a9911b39c5ec50e643523ffff52305e3586bef261d564e3e8053c6c203f",
+          "filesHash": "c2820a53bd4f3a7ef89d6840ef665feb77185d3ce233858853c470944a06b5a6",
+          "capturedAt": "2026-11-05T09:02:06.953Z",
+          "sequence": 86
+        },
+        {
+          "id": "5fb0aec3-b193-4fe4-930d-726a4cc67880",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/b0696ca5dcfa-bfe2af2f-256f-4c17-830a-c44586600e9d.png",
+          "screenshotHash": "b0696ca5dcfa18113e8bdd23f2519e924a869b7f8f22b6c1f01fd44b50b17100",
+          "filesHash": "8837eb00dcbbac92f8334c454106616f07e9e42aaeda3b8ab16053c795f3da24",
+          "capturedAt": "2026-11-05T09:03:30.501Z",
+          "sequence": 89
+        },
+        {
+          "id": "47fdb662-e707-41a3-81ad-adfc415263fa",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/f8c818f9bbda-8c223f52-6130-4b88-9234-d6c5945a2135.png",
+          "screenshotHash": "f8c818f9bbda8e518a5bb0e96154ff56995e768142a2fd43775cb7c621a6d11b",
+          "filesHash": "8837eb00dcbbac92f8334c454106616f07e9e42aaeda3b8ab16053c795f3da24",
+          "capturedAt": "2026-11-05T09:03:30.765Z",
+          "sequence": 90
+        },
+        {
+          "id": "c8087b20-448c-468a-a7e2-c36a2ff623ba",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/ac6994c8bc77-1cf0f868-1312-46a6-a0d0-f59e1b0f8966.png",
+          "screenshotHash": "ac6994c8bc77ebed46ba4f6f9609dfbd885c8aa8c9f5f5fea8cef0d43113e563",
+          "filesHash": "8837eb00dcbbac92f8334c454106616f07e9e42aaeda3b8ab16053c795f3da24",
+          "capturedAt": "2026-11-05T09:03:31.014Z",
+          "sequence": 91
+        },
+        {
+          "id": "517155dd-3baf-4c93-b330-91b69a42965f",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/019c711e2175-7ca26c4a-cfc6-4220-842d-18e85bc5106c.png",
+          "screenshotHash": "019c711e2175e17238927ca2ed242602d84a9b4f4e1d8e1b62b258ce92185b12",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:41.617Z",
+          "sequence": 92
+        },
+        {
+          "id": "75b6e34a-e84d-40fa-be02-3143c0ca0c47",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/1f4a1aca6fd8-dc5cbb87-d888-45aa-91fa-6bb2b1014fb6.png",
+          "screenshotHash": "1f4a1aca6fd8e486fce08db8b08d78deec0fbdec1b55f8ce4c812c5e3217d02d",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.196Z",
+          "sequence": 93
+        },
+        {
+          "id": "fb1ffc9a-2fd1-4792-83f9-2a45166267e9",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/06b5136b69e4-a3b0884f-12fb-4b06-aa26-326572784d84.png",
+          "screenshotHash": "06b5136b69e43aab9e925115e77aeb79146ba778aef5a9c1edc6ff4933e43057",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.358Z",
+          "sequence": 94
+        },
+        {
+          "id": "020818c4-0c0a-4a24-9cb5-81b8a5db1d7b",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/91341f58f2f6-ec4e38f1-e71c-4c9a-82a0-dae2faa8f18e.png",
+          "screenshotHash": "91341f58f2f6ff4d698d4038ded50492a85a81aec4c48b1d04b9efd7fed49259",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.515Z",
+          "sequence": 95
+        },
+        {
+          "id": "077d96be-e015-4f2f-8180-35c99a7db29f",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/d85ff9485055-65da3438-d792-4a88-bca2-f66f2c7a7750.png",
+          "screenshotHash": "d85ff9485055d1a7aefc9bfb6d960c70d810d57878f0f0d18809713441cbded6",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.671Z",
+          "sequence": 96
+        },
+        {
+          "id": "7de12c22-ab30-4dc3-8850-0abb4ca989b3",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/049c2d71722d-1cd1b127-f3e9-433b-8635-259bc70a48cc.png",
+          "screenshotHash": "049c2d71722d81afaa92156869951d051533c0c7bc498ec48d4517244cab87bc",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.836Z",
+          "sequence": 97
+        },
+        {
+          "id": "c6ab76cb-15c2-45ad-be38-3033b9d66c47",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/581c26d2951a-d915b6b1-278a-4968-b635-09bbff5baecb.png",
+          "screenshotHash": "581c26d2951a4408f056e71acffef994ff8ef951fe91de8b940dd8f27860112e",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:49.990Z",
+          "sequence": 98
+        },
+        {
+          "id": "e172d9f9-f642-40c9-9ddb-3f2c91524918",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/8020d73f4f8f-d700ef65-8431-4d3b-b5d4-4c6cc3b4d51c.png",
+          "screenshotHash": "8020d73f4f8f1a7bbf0cd42145f58f9425623cfcaad20bf49e8d90b1e8801a16",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:50.144Z",
+          "sequence": 99
+        },
+        {
+          "id": "ef7a8cb1-387d-4ee9-a6b0-87d7c76fb29e",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/3d7a10a6ac62-c829abd8-3eff-4501-82a6-ba74f7c11b56.png",
+          "screenshotHash": "3d7a10a6ac62b8f1f2f2aadfc02f0c8f8fb38ecfee50a88ca9d8ca5909a53310",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:50.330Z",
+          "sequence": 100
+        },
+        {
+          "id": "858a6a85-1359-4872-9819-f0867d260747",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/317f4aedc8b7-6b7bd0a6-52d1-4cf3-a7f9-61bc9c104f44.png",
+          "screenshotHash": "317f4aedc8b7885b2d5a853c160b0e8e909f3f1f3b99e71ed3c4588c9b685d4e",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:50.484Z",
+          "sequence": 101
+        },
+        {
+          "id": "f591fda2-d943-4547-8952-ac2d46efd3da",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/b2971786fb0d-702a20af-0144-4f45-94d8-6b52a45bd91a.png",
+          "screenshotHash": "b2971786fb0d8ffbc4b34dbe8643b4e9c0bb171d9bf79bcab095d9a974503113",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:04:54.254Z",
+          "sequence": 102
+        },
+        {
+          "id": "13852b9d-666f-437f-9d0f-51286df30990",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/db4580d1ee1f-506f9009-fd17-48d8-af2d-68e7c169a517.png",
+          "screenshotHash": "db4580d1ee1fccfb8ab4ade516adb627607b80ec39f5b3bc6ee297db71c947e9",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:05:06.295Z",
+          "sequence": 103
+        },
+        {
+          "id": "1f4e3fea-af94-4a2f-b7f1-23e6acf265ac",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/c05a26996e6f-9ed6fceb-6bd4-465c-b18d-8c66767738ae.png",
+          "screenshotHash": "c05a26996e6f63619a1ca367bd921e2e3bf1ec19a328677564cf5e961b0381b0",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:05:06.463Z",
+          "sequence": 104
+        },
+        {
+          "id": "d0790499-38d0-4d91-9e28-f5f94120e406",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/7088a51f642d-6d62f835-ce38-469e-a121-cc5600732069.png",
+          "screenshotHash": "7088a51f642d0945caf8a3b0cb0dc047f5d00e1f49fd6210173b2ad022b39f75",
+          "filesHash": "8d568493536e282f8b22c421e1e5d83855643b46e79af94a0f347185d57cd5e6",
+          "capturedAt": "2026-11-05T09:05:06.699Z",
+          "sequence": 105
+        },
+        {
+          "id": "ea613db3-b0cc-4cb0-87ca-56eced133a57",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/019c711e2175-5aec9224-5df4-4dbb-9e9c-395cd0b5ac81.png",
+          "screenshotHash": "019c711e2175e17238927ca2ed242602d84a9b4f4e1d8e1b62b258ce92185b12",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:15.293Z",
+          "sequence": 106
+        },
+        {
+          "id": "931f7a84-a772-4656-afad-88ac09135242",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/1f4a1aca6fd8-1b003c73-1c00-47dd-81f0-935f7d7b50a6.png",
+          "screenshotHash": "1f4a1aca6fd8e486fce08db8b08d78deec0fbdec1b55f8ce4c812c5e3217d02d",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:23.749Z",
+          "sequence": 107
+        },
+        {
+          "id": "6bdc718e-9225-421f-ace1-46017f6f6160",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/4305c98acdd5-b9b00582-9e2f-4f44-8ffd-714ed97c1f2c.png",
+          "screenshotHash": "4305c98acdd522e79c59a586bdb16cd89ea2e3ed51ff95ab73e41de7ac7d90ca",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:23.971Z",
+          "sequence": 108
+        },
+        {
+          "id": "9e3a1985-7be4-48ae-b9d8-b01985d0bb01",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/d959e4c3bc2d-a321e025-61ef-4cea-ab2b-6951f3167c2c.png",
+          "screenshotHash": "d959e4c3bc2d63f8b3421388751c446754717347b01b8b426d94199468370526",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:24.256Z",
+          "sequence": 109
+        },
+        {
+          "id": "2acec156-a3e7-4b32-b706-024c0e0135de",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/da5bc9c288c8-e816aa50-139c-466e-93a4-6594eabb3518.png",
+          "screenshotHash": "da5bc9c288c82afe6ed0be309b97a88dc64db7f95d266334323ff58fab13f26d",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:24.491Z",
+          "sequence": 110
+        },
+        {
+          "id": "1230ffd6-4dab-4c26-bd41-03639704bce4",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/bbb45d526302-3036beee-cf2d-4d08-bc4b-6c8afc7ef3fb.png",
+          "screenshotHash": "bbb45d526302cb7c5cf325aa3851ff89c0eb83590a8926323ffe2539622a97ef",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:24.753Z",
+          "sequence": 111
+        },
+        {
+          "id": "012f115b-b331-47a3-83d7-dcd1186f6f2f",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/d0440fd35b69-78a8cdea-fddd-493f-aade-5b329b4379f0.png",
+          "screenshotHash": "d0440fd35b699b058f84e2c75c96f75142929be37ae6e56c2eeb930a057d703e",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:24.939Z",
+          "sequence": 112
+        },
+        {
+          "id": "7133e4ca-d715-4298-b215-726f56367ffe",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/a69a29f0dc1f-27c266af-c63e-4ffd-8aeb-4b96ed15fc4d.png",
+          "screenshotHash": "a69a29f0dc1f3ca18bd739333d1fb686891ae238fcd85ce7f38bfad76fa8bd92",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:29.398Z",
+          "sequence": 113
+        },
+        {
+          "id": "01459c10-4631-4e8d-bffc-49ba4cf07bc4",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/18239909bfc0-06121aba-8988-464d-9990-62edcc604299.png",
+          "screenshotHash": "18239909bfc02ec265e1016d32dffc99c607d09c1a33af59f0c69674085e6d2d",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:29.657Z",
+          "sequence": 114
+        },
+        {
+          "id": "e75452ba-7aa8-4e52-94d0-6b39b62e53d9",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/19d1272e50e7-ae3c69e7-7ae3-4d66-a8bf-59ecff733f52.png",
+          "screenshotHash": "19d1272e50e761e45b8ddcfa9b1f4fdc47478b15a0067794b8341a352b6a2dc6",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:29.861Z",
+          "sequence": 115
+        },
+        {
+          "id": "18d5d578-2c75-4117-ba82-d00b3b08252d",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/4986eca9426f-e7f79c39-a02b-4aa5-a1d2-08fe61afc285.png",
+          "screenshotHash": "4986eca9426f3df42f75fcbc15d388e29a418f11fc9e6fda1f06f17de2676e5f",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:30.080Z",
+          "sequence": 116
+        },
+        {
+          "id": "b4ffd7d4-8c25-421f-a0ec-964b41635977",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/3d7a10a6ac62-436e5155-aa2c-4854-86c8-505963a4c451.png",
+          "screenshotHash": "3d7a10a6ac62b8f1f2f2aadfc02f0c8f8fb38ecfee50a88ca9d8ca5909a53310",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:30.299Z",
+          "sequence": 117
+        },
+        {
+          "id": "a67ad809-ae52-469a-9090-dddf01e719b9",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/935a2166f8c2-3f16eb2e-4bff-40f5-ac61-46de782398a6.png",
+          "screenshotHash": "935a2166f8c2c53b4aae975517fac1479772059207f2110bdfde1e8f01dcf809",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:30.518Z",
+          "sequence": 118
+        },
+        {
+          "id": "2a0e8012-b962-429d-ae0d-507ee5bf8565",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/8a8771d2844a-24b42d1b-7821-4d0f-b9b9-aa8e84d1d298.png",
+          "screenshotHash": "8a8771d2844ab998dc0479a574290fd8d97d83dc10c0e795707311f21dca4c8f",
+          "filesHash": "2fa2fc2e6d70e5c4bddafc8fe8c262e97701a3bd13ab959a87239ce70899bc11",
+          "capturedAt": "2026-11-05T09:05:41.179Z",
+          "sequence": 121
+        },
+        {
+          "id": "0eb027cc-8aca-4afb-9765-36a858057954",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/019c711e2175-96e56581-06a2-4cf3-8e22-47cd5c9e6c6c.png",
+          "screenshotHash": "019c711e2175e17238927ca2ed242602d84a9b4f4e1d8e1b62b258ce92185b12",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:06:10.734Z",
+          "sequence": 122
+        },
+        {
+          "id": "b7cf2ca7-9ca2-4d1c-9cf6-17251f9d8d1e",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/1f4a1aca6fd8-692ec1b5-c076-457c-abc8-f8c024c27039.png",
+          "screenshotHash": "1f4a1aca6fd8e486fce08db8b08d78deec0fbdec1b55f8ce4c812c5e3217d02d",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:06:11.047Z",
+          "sequence": 123
+        },
+        {
+          "id": "9b31c073-c03c-439d-ac1a-efbec06d4973",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/ecad7a339e3b-8c6184c3-b9bb-430f-8055-8c37b875966f.png",
+          "screenshotHash": "ecad7a339e3b3736fb63dc4ba529270b876c1a9cb1935c3be17cc68dddb4357e",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:06:11.281Z",
+          "sequence": 124
+        },
+        {
+          "id": "60bf4ab9-5855-4118-8105-091585803c3a",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/ecad7a339e3b-f19d0c7a-23ed-4a62-9322-5a0106c98bf1.png",
+          "screenshotHash": "ecad7a339e3b3736fb63dc4ba529270b876c1a9cb1935c3be17cc68dddb4357e",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:06:11.488Z",
+          "sequence": 125
+        },
+        {
+          "id": "4de423b1-353c-4821-bbf1-01f24b960dc5",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/47d71d72-a3a1-4089-9b19-e55e819b229c/5266b5a9bf7c-dc6a3e1d-2dba-45df-94a0-120a857f391f.png",
+          "screenshotHash": "5266b5a9bf7cb4ab0b58d076958043512fd0c01b38a3821ede5183b0467a66f6",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:06:11.773Z",
+          "sequence": 126
+        },
+        {
+          "id": "36e0818b-dc1a-4a33-b5ed-69327c121ba4",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/019c711e2175-a96ab008-5f17-4dfd-864e-e4a90069b74e.png",
+          "screenshotHash": "019c711e2175e17238927ca2ed242602d84a9b4f4e1d8e1b62b258ce92185b12",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:08:23.962Z",
+          "sequence": 129
+        },
+        {
+          "id": "4162a0ee-e5c6-4379-95a4-63e83352630b",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/e9f54b7a98df-b748e66c-3a09-49c8-a998-2d36c12f588f.png",
+          "screenshotHash": "e9f54b7a98df36ff28bf2ec4c8fada04e254c7a06d51bbeb94a2845d226888fa",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:08:27.374Z",
+          "sequence": 130
+        },
+        {
+          "id": "57b1b135-f615-4221-8b12-9d022581908a",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/639b7908a24c-441988f2-2437-4a9f-a013-8923bff347ac.png",
+          "screenshotHash": "639b7908a24ca3b99ce0a46e23293035bcc4832d33e4375a1a74f877cd67b632",
+          "filesHash": "4dbe1176f684939402ef719c09e16c3e5c6a80c100539167d0466717b6911620",
+          "capturedAt": "2026-11-05T09:08:34.635Z",
+          "sequence": 131
+        },
+        {
+          "id": "07db6b36-591e-4b41-98ef-701b536dee88",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/019c711e2175-c95a2722-7723-4b17-b27c-1c37110afd0a.png",
+          "screenshotHash": "019c711e2175e17238927ca2ed242602d84a9b4f4e1d8e1b62b258ce92185b12",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:03.301Z",
+          "sequence": 134
+        },
+        {
+          "id": "c618bf46-38fc-4609-95df-201515b31f78",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/1f4a1aca6fd8-e812e345-cb9b-43e8-965f-8768efdd0d27.png",
+          "screenshotHash": "1f4a1aca6fd8e486fce08db8b08d78deec0fbdec1b55f8ce4c812c5e3217d02d",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:03.546Z",
+          "sequence": 135
+        },
+        {
+          "id": "f340f466-3993-478b-9d0c-a79001d19ba1",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/06788db4b8bd-3a029487-10df-4507-9e31-00ad8af90e1b.png",
+          "screenshotHash": "06788db4b8bd103a19e3619b13e9a5a42bf9f95ddd441b2beadff7c8d3b2e3aa",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:03.741Z",
+          "sequence": 136
+        },
+        {
+          "id": "922a81d0-ff0c-4d5f-b557-8a020ff456ef",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/ad5ebc320ffd-66e5b371-7aaa-46de-a326-4a0c862e4801.png",
+          "screenshotHash": "ad5ebc320ffd6229b2948fa341756d9baa0ac7b93d471ff59c34ebe5c934f5c1",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:03.949Z",
+          "sequence": 137
+        },
+        {
+          "id": "babc7e80-1aa2-4908-a5fb-51c1621b8f16",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/8ca5d94c4fd3-a8751956-2234-41c6-807c-2ef20d50a9b2.png",
+          "screenshotHash": "8ca5d94c4fd39f47ace607e807d19de1c43e9b43a23af35017eecdd99400918c",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:04.135Z",
+          "sequence": 138
+        },
+        {
+          "id": "6195854b-2872-45ec-b695-71b96df6efda",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/f002006ef94b-16435253-c2e6-40e5-b8e7-25d63bbe6c8a.png",
+          "screenshotHash": "f002006ef94b33fe4471c71b37b400d6fa5082d8347a3d6cdd663fa055ae47e4",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:11.216Z",
+          "sequence": 139
+        },
+        {
+          "id": "c9147e38-aa3d-42e9-8c83-295cee8f5e6c",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/178731a4d9fd-ddc5a483-3ab6-4b33-9ca5-e637d7c3f6a8.png",
+          "screenshotHash": "178731a4d9fdd8d03c63a26fa32bc22bd51fd0957b48dc1bcceb13ace4b4813d",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:19.330Z",
+          "sequence": 140
+        },
+        {
+          "id": "ff60a92c-81b4-4cae-8fcc-60eb8d9cac0c",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/dea0960986db-57a189da-b19f-4f61-acc7-23322e28ada1.png",
+          "screenshotHash": "dea0960986db8c2248881151a8b897f61fe18f6c9b88b0b2a6976902d7dad1f7",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:35.269Z",
+          "sequence": 141
+        },
+        {
+          "id": "390aeac8-fbe8-40e4-91f0-d0ddf8c857cb",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "desktop",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/99cff58da8c3-77672c9e-ac6f-4cad-a598-741e4062cb66.png",
+          "screenshotHash": "99cff58da8c3c812a33e0f1d4c8ad059455525ed5cb2ec872b8a6f4c35506083",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:35.436Z",
+          "sequence": 142
+        },
+        {
+          "id": "676b6748-e34a-4668-9a32-55eebe23b08b",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "viewport": "narrow",
+          "screenshot": ".browser-observations/c676ea68-810a-429b-87d6-6f303a620988/4c55b5517e08-37bd7083-407d-4994-83b9-6d356e7bb0e2.png",
+          "screenshotHash": "4c55b5517e082fe4107c994ff27d96333daa4c16b495371b8db68d5a7ab2bd45",
+          "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+          "capturedAt": "2026-11-05T09:09:41.310Z",
+          "sequence": 144
+        }
+      ],
+      "reviews": [
+        {
+          "id": "4c47d706-1976-4698-971d-b45e1ffddce9",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "be0c8f8c-7278-4f90-ac98-f95eb1c1d0d0",
+          "viewport": "desktop",
+          "round": "initial",
+          "expected": "Desktop seven-day weekly board with readable allocation cards, native start and crew editing, feasible status. Collision summary must match frozen literal ordering.",
+          "observed": "Seven columns and labeled editable cards fit viewport; dates, staff, resources readable. Feasible status shown. Page observations show initial collision summary lists CS/WPN before DC/ENG, contrary to frozen UI expectation.",
+          "findings": [
+            {
+              "id": "aff24c19-deb7-41dd-81b2-b940d0c69a29",
+              "description": "Initial collision summary ordering is CS/WPN then DC/ENG; frozen UI expects DC/ENG then CS/WPN."
+            }
+          ],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:54:38.950Z",
+          "sequence": 7
+        },
+        {
+          "id": "2d78e252-8cb3-418b-874f-7a25cbf978ad",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "fb099126-bcaf-4316-bf43-aa14d1b748b3",
+          "viewport": "narrow",
+          "round": "initial",
+          "expected": "Narrow layout stacks day sections with full-width keyboard-editable fields, wrapping status and no page overflow.",
+          "observed": "At 390px days stack; allocation text, labeled inputs and apply buttons fit. Status wraps, JSON editor remains contained. Collision ordering has same textual mismatch.",
+          "findings": [
+            {
+              "id": "a47ef26a-92d1-4832-8b7f-2d8ee3aeb1e8",
+              "description": "Initial collision summary ordering must follow request priority for the frozen UI literal."
+            }
+          ],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:54:42.985Z",
+          "sequence": 9
+        },
+        {
+          "id": "84e10cf9-c4ab-4f8e-996d-349d8bd8efa2",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "07afc247-fc34-4d4a-93b6-102af5eea8e3",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Desktop board and negotiation evidence preserve frozen literal summaries and show shared collisions resolved with actual alternate times.",
+          "observed": "Seven day board above negotiation remains aligned. Negotiation has readable lines, exact DC/ENG before CS/WPN collision summary, Engineering 1980 and Weapons 2100 alternates. No clipping or console errors.",
+          "findings": [],
+          "resolutions": [
+            {
+              "findingId": "aff24c19-deb7-41dd-81b2-b940d0c69a29",
+              "change": "public/app.js sorts collision summaries by input request position for display while preserving core lexicographic protocol order."
+            }
+          ],
+          "reviewedAt": "2026-11-05T08:56:28.365Z",
+          "sequence": 33
+        },
+        {
+          "id": "81769bc4-3e8a-4aaa-ac0e-7ee7e49e81c0",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "30a9f5cc-f32e-49f6-bfb0-8e22a45f7de2",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Narrow day sections and negotiation text wrap without clipping; collision summary follows frozen DC/ENG then CS/WPN order.",
+          "observed": "At 390px day sections stack; negotiation summary and agent sentences wrap inside margins. Correct DC/ENG and CS/WPN ordering and alternate allocations are visible. No new visual defects.",
+          "findings": [],
+          "resolutions": [
+            {
+              "findingId": "a47ef26a-92d1-4832-8b7f-2d8ee3aeb1e8",
+              "change": "public/app.js displays collision groups in input request order, fixing the literal summary at narrow width."
+            }
+          ],
+          "reviewedAt": "2026-11-05T08:56:36.951Z",
+          "sequence": 37
+        },
+        {
+          "id": "4d2274f3-885b-490c-b7bd-d94811e3f12d",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "85379ccc-29e3-4358-ab77-0130c02ae3ac",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Desktop weekly board has seven columns, five baseline drills with staff/resource/time text, native edit controls, feasible status and no collisions.",
+          "observed": "Seven labeled day columns are visible with five allocation cards across Mon–Wed. Start and crew controls fit. Status shows five drills and zero remaining collisions; no console errors.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:57:02.165Z",
+          "sequence": 43
+        },
+        {
+          "id": "10226827-1216-4932-a26f-6018843bef82",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "16cfaa03-ea5c-4aa0-9df8-08a16700e820",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Narrow board stacks day sections, status wraps, labels and editable fields fit screen with visible recovery controls.",
+          "observed": "390px view stacks Monday allocation under wrapped feasible status; start/crew inputs and Apply edit fit fully within page margins. Recovery buttons remain usable.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:57:07.217Z",
+          "sequence": 45
+        },
+        {
+          "id": "f7cec581-8728-4737-8125-4a85694f3167",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "bfe26eaa-55cb-4aa7-8e40-d7572fed9603",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Fresh narrow recheck shows stacked usable baseline board after invalid input and budget recovery, unchanged evaluated runtime.",
+          "observed": "Monday cards and Tuesday section stack within margins, times and role order fields are readable, full-width Apply edit buttons fit. No console errors or new findings.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:58:22.413Z",
+          "sequence": 58
+        },
+        {
+          "id": "0ab678af-2b62-4fe0-aeb3-4ba74528b0da",
+          "sessionId": "377c0887-7a45-426c-98a6-e669fdf76552",
+          "stage": "build",
+          "captureId": "1f852636-9476-4444-a0d4-df67ad098369",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Fresh desktop recheck retains seven-day board and exact collision/alternate allocation evidence after recovery.",
+          "observed": "Board remains seven columns. Negotiation shows DC/ENG then CS/WPN, zero remaining collisions and Engineering 1980/Weapons 2100 alternates; text and controls fit without clipping. No new findings.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:58:27.521Z",
+          "sequence": 60
+        },
+        {
+          "id": "a8780c0f-b5dc-4348-a41b-617b216dcbc7",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "captureId": "27b23a51-bcf1-4db0-8e20-ff330de84f51",
+          "viewport": "desktop",
+          "round": "initial",
+          "expected": "Desktop shows synthetic policy, labeled input/recovery and primary optimization with clear computed status.",
+          "observed": "1280px image shows readable heading and warning, aligned loader controls, labeled JSON editor, save/discard and feasible five-drill status without clipping.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:59:10.803Z",
+          "sequence": 65
+        },
+        {
+          "id": "7d72b711-e29d-4637-8b90-f01df2c56bbf",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "captureId": "638bc834-dc7d-4ddb-9008-f2d11c57e1c8",
+          "viewport": "narrow",
+          "round": "initial",
+          "expected": "Narrow page wraps controls and policy with readable native input and visible provenance.",
+          "observed": "390px image shows wrapped heading, warning and policy, full-width selector and JSON editor inside page margins; no clipped controls.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:59:17.395Z",
+          "sequence": 67
+        },
+        {
+          "id": "f10f5bee-dff5-4745-9297-aa96ee6f6f03",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "captureId": "4ce15c05-d9c6-484b-9edc-9d397ca9ca1f",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Fresh narrow recheck retains clear local review boundary and keyboard-native acknowledgment/export controls after recovery.",
+          "observed": "390px image shows checked evidence box, acknowledgment and export buttons fitting the page, explicit local acknowledgment/no operational approval and readable requirements text.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:59:36.355Z",
+          "sequence": 75
+        },
+        {
+          "id": "c0b931be-d3a1-47aa-bf7f-be647680caec",
+          "sessionId": "f179d8eb-a908-423a-9865-c0043df38f65",
+          "stage": "verify",
+          "captureId": "36c3e6a9-29fc-4ae4-8da0-e14c82414f62",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Desktop review shows deliberate acknowledgment and export with clear operational boundary and source sections.",
+          "observed": "Fresh 1280px image shows checked evidence, two distinct buttons, local acknowledgment status, no approval notice and readable requirements/deliverables/source; no clipping.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T08:59:47.028Z",
+          "sequence": 77
+        },
+        {
+          "id": "f2d3001b-6b99-4db9-b230-5f5ed0ccaa1f",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "01747553-ed8b-4b55-a83f-fcc8eb3eb65b",
+          "viewport": "desktop",
+          "round": "initial",
+          "expected": "Labeled keyboard-accessible planning controls; JSON secondary; usable weekly planning without programming.",
+          "observed": "Desktop has readable warning, aligned controls and dominant raw JSON editor; no guided planning forms.",
+          "findings": [
+            {
+              "id": "bd6e1f40-5944-4d0c-8670-ca1d0f07581e",
+              "description": "Weekly authoring requires nested JSON; provide guided validated controls for roster, operations, requests and rules."
+            }
+          ],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:02:13.421Z",
+          "sequence": 87
+        },
+        {
+          "id": "4e66fbcc-134c-4af8-b3fa-f5bb3613d6bf",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "1b91b052-82b5-4777-92a1-377f4c272dc5",
+          "viewport": "narrow",
+          "round": "initial",
+          "expected": "Labeled keyboard-accessible planning controls; JSON secondary; usable weekly planning without programming.",
+          "observed": "Narrow warning and controls wrap within viewport; raw JSON remains the only way to author a week.",
+          "findings": [
+            {
+              "id": "3bd8f0f4-e92d-436a-9daf-bac99ee83826",
+              "description": "Weekly authoring requires nested JSON; provide guided validated controls for roster, operations, requests and rules."
+            }
+          ],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:02:13.487Z",
+          "sequence": 88
+        },
+        {
+          "id": "c59c7fe3-bfea-4b65-a347-bf7f5c48e332",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "7133e4ca-d715-4298-b215-726f56367ffe",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Guided planning with labeled native fields, UTC calendar controls, relationship management, preserved invalid values, and responsive desktop/narrow layout.",
+          "observed": "Desktop image shows qualification, required people and preferred crew selects in a readable role group, Apply planning changes and a specific reversed-interval error. No clipped controls.",
+          "findings": [],
+          "resolutions": [
+            {
+              "findingId": "bd6e1f40-5944-4d0c-8670-ca1d0f07581e",
+              "change": "public/index.html adds Plan without JSON; public/app.js creates validated roster, resource, operations, rule and request forms, calendar intervals and automatic owner/rule links; styles.css stacks form controls at narrow width."
+            }
+          ],
+          "reviewedAt": "2026-11-05T09:05:40.864Z",
+          "sequence": 119
+        },
+        {
+          "id": "dd55974b-db0a-4009-abe9-df1e86fc4b0b",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "012f115b-b331-47a3-83d7-dcd1186f6f2f",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Guided planning with labeled native fields, UTC calendar controls, relationship management, preserved invalid values, and responsive desktop/narrow layout.",
+          "observed": "390px image shows drill family, department and priority followed by two calendar interval rows stacked inside the viewport. Invalid end value remains visible for correction; no horizontal page clipping.",
+          "findings": [],
+          "resolutions": [
+            {
+              "findingId": "3bd8f0f4-e92d-436a-9daf-bac99ee83826",
+              "change": "public/index.html adds Plan without JSON; public/app.js creates validated roster, resource, operations, rule and request forms, calendar intervals and automatic owner/rule links; styles.css stacks form controls at narrow width."
+            }
+          ],
+          "reviewedAt": "2026-11-05T09:05:40.942Z",
+          "sequence": 120
+        },
+        {
+          "id": "f64b53ee-616f-450c-a5e5-e73d7bc2934a",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "60bf4ab9-5855-4118-8105-091585803c3a",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Final runtime retains visible synthetic warning, policy, guided authoring controls before secondary JSON and responsive native fields.",
+          "observed": "1280px image shows warning, policy, Plan without JSON, UTC week date, area/record selectors and labeled drill fields with ample width and no clipping.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:06:19.533Z",
+          "sequence": 127
+        },
+        {
+          "id": "3a9b1a4b-240b-4949-8cec-d2896ebe0b35",
+          "sessionId": "9a8e6151-173a-4c0d-816e-1d685d29313d",
+          "stage": "verify",
+          "captureId": "4de423b1-353c-4821-bbf1-01f24b960dc5",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Final runtime retains visible synthetic warning, policy, guided authoring controls before secondary JSON and responsive native fields.",
+          "observed": "390px image shows wrapped warning, baseline controls and policy; Plan without JSON instructions and week calendar fit within viewport. Form interval and role stacking inspected in earlier recheck.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:06:19.626Z",
+          "sequence": 128
+        },
+        {
+          "id": "6269afb3-9425-4c1b-aa1d-c57b2ac319fa",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "captureId": "4162a0ee-e5c6-4379-95a4-63e83352630b",
+          "viewport": "desktop",
+          "round": "initial",
+          "expected": "Frozen UX: clear synthetic provenance, native labeled planning controls and readable responsive layout; empty state directs loading baseline.",
+          "observed": "Desktop image shows readable synthetic warning, grouped native planning controls and draft editor within viewport.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:08:41.461Z",
+          "sequence": 132
+        },
+        {
+          "id": "256a616c-a7c6-4ed1-95c0-c568c17e2daa",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "captureId": "57b1b135-f615-4221-8b12-9d022581908a",
+          "viewport": "narrow",
+          "round": "initial",
+          "expected": "Frozen UX: clear synthetic provenance, native labeled planning controls and readable responsive layout; empty state directs loading baseline.",
+          "observed": "390px image shows wrapped warning, stacked scenario controls and UTC week control with no page overflow.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:08:41.589Z",
+          "sequence": 133
+        },
+        {
+          "id": "2a8626b2-9648-43fd-8c88-ad60e8d9efc9",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "captureId": "390aeac8-fbe8-40e4-91f0-d0ddf8c857cb",
+          "viewport": "desktop",
+          "round": "recheck",
+          "expected": "Seven desktop columns use actual UTC week dates; allocations agree with day headings; native edit controls readable.",
+          "observed": "Desktop board shows Wed 2026-11-11 through Tue 2026-11-17. DC is Wednesday, Engineering Thursday, Flight Friday. Columns and native controls fit the viewport.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:09:41.121Z",
+          "sequence": 143
+        },
+        {
+          "id": "b9a44741-53ea-4137-821d-a28dfdae895f",
+          "sessionId": "e0e2de14-63ef-490b-86b6-7939140d91f0",
+          "stage": "verify",
+          "captureId": "676b6748-e34a-4668-9a32-55eebe23b08b",
+          "viewport": "narrow",
+          "round": "recheck",
+          "expected": "Narrow layout stacks dated day sections with readable allocations and controls; feasible status stays explicit.",
+          "observed": "390px image shows stacked native buttons, feasible five-drill status, and Wednesday 2026-11-11 day section with matching Wednesday allocation. No horizontal page overflow.",
+          "findings": [],
+          "resolutions": [],
+          "reviewedAt": "2026-11-05T09:09:45.434Z",
+          "sequence": 145
+        }
+      ],
+      "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6"
+    },
+    "expectedJourneys": 10,
+    "capabilities": [
+      {
+        "id": "allocation",
+        "required": true,
+        "criterionIds": [
+          "SCH-01",
+          "SCH-03",
+          "SUMMARY11-1"
+        ],
+        "evaluationIds": [
+          "allocation-cases",
+          "status-cases"
+        ],
+        "status": "passed",
+        "detail": "Host evaluation passed: allocation-cases, status-cases."
+      },
+      {
+        "id": "fatigue",
+        "required": true,
+        "criterionIds": [
+          "SCH-02",
+          "SUMMARY11-1",
+          "SCOPE11-5"
+        ],
+        "evaluationIds": [
+          "fatigue-cases"
+        ],
+        "status": "passed",
+        "detail": "Host evaluation passed: fatigue-cases."
+      },
+      {
+        "id": "recurrence",
+        "required": true,
+        "criterionIds": [
+          "SCH-04"
+        ],
+        "evaluationIds": [
+          "recurrence-cases"
+        ],
+        "status": "passed",
+        "detail": "Host evaluation passed: recurrence-cases."
+      },
+      {
+        "id": "loading",
+        "required": true,
+        "criterionIds": [
+          "DELIVERABLE11-1"
+        ],
+        "evaluationIds": [
+          "loading-cases"
+        ],
+        "status": "passed",
+        "detail": "Host evaluation passed: loading-cases."
+      },
+      {
+        "id": "negotiation",
+        "required": true,
+        "criterionIds": [
+          "DELIVERABLE11-1",
+          "DESC11-2",
+          "DESC11-3",
+          "SCOPE11-5"
+        ],
+        "evaluationIds": [
+          "collision-cases"
+        ],
+        "status": "passed",
+        "detail": "Host evaluation passed: collision-cases."
+      }
+    ],
+    "solutionEvaluation": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "runtime": {
+        "profile": "service",
+        "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+        "runtime": "v24.22.2",
+        "environmentNames": []
+      },
+      "evaluations": [
+        {
+          "id": "allocation-cases",
+          "capabilityId": "allocation",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "week",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 22,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "assignments": [
+                  {
+                    "requestId": "DC-1",
+                    "startMinute": 540,
+                    "endMinute": 600,
+                    "personIds": [
+                      "P1"
+                    ],
+                    "resourceIds": [
+                      "R1"
+                    ]
+                  },
+                  {
+                    "requestId": "ENG-1",
+                    "startMinute": 1980,
+                    "endMinute": 2040,
+                    "personIds": [
+                      "P1",
+                      "P2"
+                    ],
+                    "resourceIds": [
+                      "R1"
+                    ]
+                  },
+                  {
+                    "requestId": "CS-1",
+                    "startMinute": 660,
+                    "endMinute": 720,
+                    "personIds": [
+                      "P3"
+                    ],
+                    "resourceIds": [
+                      "R2"
+                    ]
+                  },
+                  {
+                    "requestId": "WPN-1",
+                    "startMinute": 2100,
+                    "endMinute": 2160,
+                    "personIds": [
+                      "P3"
+                    ],
+                    "resourceIds": [
+                      "R2"
+                    ]
+                  },
+                  {
+                    "requestId": "FLT-1",
+                    "startMinute": 3420,
+                    "endMinute": 3510,
+                    "personIds": [
+                      "P4",
+                      "P5"
+                    ],
+                    "resourceIds": [
+                      "R3"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "qualified-substitute",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 18,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "assignments": [
+                  {
+                    "requestId": "CS-1",
+                    "startMinute": 660,
+                    "endMinute": 720,
+                    "personIds": [
+                      "P6"
+                    ],
+                    "resourceIds": [
+                      "R2"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "status-cases",
+          "capabilityId": "allocation",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "no-qualified-crew",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 20,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "error": null
+              }
+            },
+            {
+              "id": "exhaustively-impossible",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 26,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "error": null
+              }
+            },
+            {
+              "id": "bounded-search",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 23,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "budget_exhausted",
+                "error": null
+              }
+            },
+            {
+              "id": "invalid-14",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 20,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_SCHEMA"
+              }
+            },
+            {
+              "id": "invalid-15",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 19,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_REFERENCE"
+              }
+            },
+            {
+              "id": "invalid-16",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 15,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_SCHEMA"
+              }
+            },
+            {
+              "id": "invalid-17",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 17,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_SCHEMA"
+              }
+            },
+            {
+              "id": "invalid-18",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 16,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_INTERVAL"
+              }
+            },
+            {
+              "id": "invalid-19",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 16,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_LINK"
+              }
+            },
+            {
+              "id": "invalid-20",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 24,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "INVALID_SCHEMA"
+              }
+            },
+            {
+              "id": "invalid-21",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 22,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "invalid-input",
+                "error": "DUPLICATE_ID"
+              }
+            }
+          ]
+        },
+        {
+          "id": "fatigue-cases",
+          "capabilityId": "fatigue",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "rest-exact-60",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 21,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "assignments": [
+                  {
+                    "requestId": "ENG-1",
+                    "startMinute": 1501,
+                    "endMinute": 1561,
+                    "personIds": [
+                      "P1",
+                      "P2"
+                    ],
+                    "resourceIds": [
+                      "R1"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "exact-cap",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 17,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "error": null
+              }
+            },
+            {
+              "id": "over-cap",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 21,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "error": null
+              }
+            },
+            {
+              "id": "exact-rolling-cap",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 19,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "error": null
+              }
+            },
+            {
+              "id": "over-rolling-cap",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 16,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "error": null
+              }
+            },
+            {
+              "id": "touching-blackout",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 16,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "error": null
+              }
+            },
+            {
+              "id": "rest-only-59",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 18,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "error": null
+              }
+            }
+          ]
+        },
+        {
+          "id": "recurrence-cases",
+          "capabilityId": "recurrence",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "carry-in",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 22,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "coverage": [
+                  {
+                    "occurrenceId": "O-CS-1-0",
+                    "status": "satisfied-by-history",
+                    "requestId": null,
+                    "deadlineMinute": 2880
+                  },
+                  {
+                    "occurrenceId": "O-CS-1-1",
+                    "status": "satisfied-by-schedule",
+                    "requestId": "CS-B",
+                    "deadlineMinute": 7200
+                  },
+                  {
+                    "occurrenceId": "O-CS-1-2",
+                    "status": "pending-future",
+                    "requestId": "CS-C",
+                    "deadlineMinute": 11520
+                  }
+                ]
+              }
+            },
+            {
+              "id": "due-impossible",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 22,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "infeasible",
+                "coverage": [
+                  {
+                    "occurrenceId": "O-CS-1-0",
+                    "status": "satisfied-by-history",
+                    "requestId": null,
+                    "deadlineMinute": 2880
+                  },
+                  {
+                    "occurrenceId": "O-CS-1-1",
+                    "status": "unmet",
+                    "requestId": "CS-B",
+                    "deadlineMinute": 7200
+                  },
+                  {
+                    "occurrenceId": "O-CS-1-2",
+                    "status": "pending-future",
+                    "requestId": "CS-C",
+                    "deadlineMinute": 11520
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "loading-cases",
+          "capabilityId": "loading",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "weekly-load",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 23,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "loads": [
+                  {
+                    "personId": "P1",
+                    "drillMinutes": 120,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 120,
+                    "drillMinutesByDay": [
+                      60,
+                      60,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P2",
+                    "drillMinutes": 60,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 60,
+                    "drillMinutesByDay": [
+                      0,
+                      60,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P3",
+                    "drillMinutes": 120,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 120,
+                    "drillMinutesByDay": [
+                      60,
+                      60,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P4",
+                    "drillMinutes": 90,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 90,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      90,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P5",
+                    "drillMinutes": 90,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 90,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      90,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P6",
+                    "drillMinutes": 0,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 0,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cross-midnight-load",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 22,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "loads": [
+                  {
+                    "personId": "P1",
+                    "drillMinutes": 60,
+                    "priorDutyMinutes": 61,
+                    "totalDutyMinutes": 121,
+                    "drillMinutesByDay": [
+                      0,
+                      60,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P2",
+                    "drillMinutes": 60,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 60,
+                    "drillMinutesByDay": [
+                      0,
+                      60,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P3",
+                    "drillMinutes": 0,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 0,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P4",
+                    "drillMinutes": 0,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 0,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P5",
+                    "drillMinutes": 0,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 0,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "personId": "P6",
+                    "drillMinutes": 0,
+                    "priorDutyMinutes": 0,
+                    "totalDutyMinutes": 0,
+                    "drillMinutesByDay": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "collision-cases",
+          "capabilityId": "negotiation",
+          "evaluator": "exact",
+          "dataset": {
+            "name": "pb4t-planner-reference",
+            "version": "1",
+            "provenance": "synthetic",
+            "description": "Prepared intake inputs preserved exactly; expected facts hand-keyed using data/README interval arithmetic before application implementation. Extra perturbations derived directly from public protocol, no solver used."
+          },
+          "metric": "case_pass_rate",
+          "threshold": 1,
+          "actual": 1,
+          "trials": 1,
+          "baseline": 0,
+          "status": "passed",
+          "cases": [
+            {
+              "id": "initial-pairs",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 23,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "initialConflicts": [
+                  {
+                    "requests": [
+                      "CS-1",
+                      "WPN-1"
+                    ],
+                    "personIds": [
+                      "P3"
+                    ],
+                    "resourceIds": [
+                      "R2"
+                    ],
+                    "overlapMinutes": [
+                      660,
+                      720
+                    ]
+                  },
+                  {
+                    "requests": [
+                      "DC-1",
+                      "ENG-1"
+                    ],
+                    "personIds": [
+                      "P1"
+                    ],
+                    "resourceIds": [
+                      "R1"
+                    ],
+                    "overlapMinutes": [
+                      540,
+                      600
+                    ]
+                  }
+                ],
+                "remainingConflicts": 0
+              }
+            },
+            {
+              "id": "corrected-pairs",
+              "trial": 1,
+              "passed": true,
+              "score": 1,
+              "durationMs": 27,
+              "detail": "Output matches the frozen JSON answer.",
+              "output": {
+                "status": "feasible",
+                "initialConflicts": [],
+                "remainingConflicts": 0
+              }
+            }
+          ]
+        }
+      ],
+      "capabilities": [
+        {
+          "id": "allocation",
+          "required": true,
+          "status": "passed"
+        },
+        {
+          "id": "fatigue",
+          "required": true,
+          "status": "passed"
+        },
+        {
+          "id": "recurrence",
+          "required": true,
+          "status": "passed"
+        },
+        {
+          "id": "loading",
+          "required": true,
+          "status": "passed"
+        },
+        {
+          "id": "negotiation",
+          "required": true,
+          "status": "passed"
+        }
+      ],
+      "errors": [],
+      "durationMs": 524
+    },
+    "package": {
+      "status": "passed",
+      "cleanCopy": true,
+      "profile": "service",
+      "filesHash": "f3de9a2a372ab2dbe0f50d8bf67ff5b0eea48ae4c4c606d2c6582cb204ec61b6",
+      "detail": "Host evaluation, browser journeys and developer tests use separate fresh packages with matching declared files, dependencies and runtime configuration."
+    }
+  },
+  "testBaseline": {
+    "hashes": {
+      "domain.test.mjs": "f50b21595e397881e5800d7cd482ff75a8390fd4b188de4d5962fd1c0882e69b",
+      "transport.test.mjs": "6b9ca310c4327ad0a3d80a4d8b62f26ea3154588ec88ec123e6460cd5c151460"
+    },
+    "changes": [
+      "Post-build test changes (verify). Human review required. Since previous stage: added: verifier.test.mjs. Since build: added: verifier.test.mjs.",
+      "Post-build test changes (verify). Human review required. Since previous stage: added: repair.test.mjs. Since build: added: repair.test.mjs; added: verifier.test.mjs.",
+      "Post-build test changes (verify). Human review required. Since previous stage: added: calendar.test.mjs. Since build: added: calendar.test.mjs; added: repair.test.mjs; added: verifier.test.mjs."
+    ],
+    "policy": "Original build tests are restored and rerun unchanged. Add coverage in new test files. Expectation changes require an explicit contract revision in a new run; repairs cannot authorize one."
+  },
+  "independentJudge": {
+    "stage": "verify",
+    "verdict": "NOT",
+    "gaps": [
+      {
+        "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure all SFTRM-mandated training periodicities are satisfied",
+        "evidence": "domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+        "fix": "Obtain a releasable, owner-reviewed specification of applicable periodicity and completion-credit semantics. Implement those semantics and add independently reviewed synthetic cases with exact expected deadlines, history credit and unmet obligations. Retain compliance warnings until domain validation is complete; do not revise frozen test expectations to bypass this requirement."
+      },
+      {
+        "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+        "evidence": "public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision.",
+        "fix": "Conduct a supervised trial using fictional data on the delivered revision. Have an authorized operator review allocations, loading, coverage, unresolved outcomes and edit recovery, then record their actual acceptance or rejection with revision identification, separately from deployment authorization."
+      }
+    ],
+    "attempts": [
+      {
+        "verdict": "NOT",
+        "gaps": [
+          {
+            "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities",
+            "evidence": "domain.mjs accepts only fictional fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. verification.md explicitly leaves approved SFTRM rules and compliance unverified. Synthetic recurrence tests do not establish the defining mandate.",
+            "fix": "Obtain domain-owner-reviewed, releasable rule specifications and independently expected examples; implement the required recurrence semantics and test complete deadline coverage. Retain the operational-approval boundary."
+          },
+          {
+            "requirement": "UC11-1 / SCOPE11-5 / DESC11-3 — Collaborative departmental agents",
+            "evidence": "domain.mjs implements one centralized depth-first search. Agent proposalRule strings are validated but never executed; agentId is attached to decision records. public/app.js derives departmental statements after scheduling rather than implementing departmental proposal and counterproposal behavior.",
+            "fix": "Implement executable department-owned proposal policies and a shared negotiation coordinator. Add changed-input tests demonstrating departmental counterproposals, constraint feedback and convergence or unresolved escalation."
+          },
+          {
+            "requirement": "DESC11-1 / DELIVERABLE11-1 — Usable weekly planning beyond prepared examples",
+            "evidence": "public/index.html and public/app.js provide scenario presets and a raw JSON textarea. Adding drills, changing availability, defining operational windows or editing recurrence requires manually maintaining nested JSON, references and minute offsets. Board controls only edit existing allocation starts and crew IDs.",
+            "fix": "Provide validated forms for requests, rosters, availability, operations and training rules, with calendar/time controls and automatic relationship maintenance. Test a non-coding user journey creating and deconflicting a new synthetic week without JSON editing."
+          },
+          {
+            "requirement": "DELIVERABLE11-1 / SCOPE11-8 — Personnel loading heatmaps",
+            "evidence": "public/app.js assigns the same loaded class to every positive-minute cell; public/styles.css defines one fixed background color. Consequently 60 and 240 minutes have identical intensity despite public/index.html claiming darker cells indicate more assigned minutes.",
+            "fix": "Map load values or duty-cap utilization to graduated colors with an accessible legend. Add assertions covering zero, low and high loads and verify distinct visual intensities."
+          },
+          {
+            "requirement": "SCH-05 — Operator acceptance of the proposed schedule",
+            "evidence": "verification.md explicitly records actual PB4T operator acceptance as unverified. public/app.js stores only a browser-local acknowledgment boolean; the acceptance-plan.json journey verifies that acknowledgment, not an operator review outcome.",
+            "fix": "Conduct and document an authorized operator trial using synthetic inputs, including allocations, loading, unresolved outcomes and recovery. Record the operator's actual acceptance or rejection separately from software acknowledgment, without implying deployment authorization."
+          }
+        ],
+        "durationMs": 46462,
+        "tokens": {
+          "inputTokens": 449360,
+          "cachedInputTokens": 358283,
+          "uncachedInputTokens": 91077,
+          "outputTokens": 1355,
+          "reasoningOutputTokens": 119,
+          "totalTokens": 450715,
+          "uncachedPlusOutputTokens": 92432
+        },
+        "sourceHash": "dca686307619eed53e487e4ffaa8545fd294683d7da79685468afcc730b68e9a"
+      },
+      {
+        "verdict": "NOT",
+        "gaps": [
+          {
+            "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure SFTRM-mandated training periodicities are satisfied",
+            "evidence": "domain.mjs accepts only invented fixed-window rules with requiredCount=1 and windowMinutes=periodMinutes. data/README.md and verification.md explicitly state that owner-reviewed SFTRM rules and independent domain validation are unavailable. Passing synthetic recurrence tests does not establish the defining mandate.",
+            "fix": "Obtain a releasable, owner-reviewed rule specification and independently reviewed synthetic examples; implement its recurrence and completion-credit semantics and test every required deadline, missed occurrence and boundary. Retain the compliance warning until independently validated."
+          },
+          {
+            "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+            "evidence": "public/index.html explicitly separates local acknowledgment from owner acceptance. verification.md confirms that no authorized PB4T operator trial occurred; automated acknowledgment and reload tests establish software state only.",
+            "fix": "Conduct a supervised operator trial using fictional data, covering allocations, loading, unresolved obligations and edit recovery; record the operator's actual acceptance or rejection for the tested revision without implying deployment authorization."
+          },
+          {
+            "requirement": "DELIVERABLE11-1 — Accurate interactive weekly schedule board and personnel loading heatmaps",
+            "evidence": "public/app.js allows any week-start date through guidedUpdate('week'), but render() always labels day zero Mon and heatmap columns Mon–Sun. Selecting a non-Monday date therefore produces incorrect day headings, even though individual allocation descriptions calculate the actual weekday. repair.test.mjs tests only a Monday replacement.",
+            "fix": "Derive board and heatmap headings from weekStart and the horizon, or validate and enforce Monday starts. Add a browser test using a non-Monday date and assert consistent dates and weekdays across allocations, board columns and heatmap cells."
+          }
+        ],
+        "durationMs": 32099,
+        "tokens": {
+          "inputTokens": 477299,
+          "cachedInputTokens": 388700,
+          "uncachedInputTokens": 88599,
+          "outputTokens": 1192,
+          "reasoningOutputTokens": 84,
+          "totalTokens": 478491,
+          "uncachedPlusOutputTokens": 89791
+        },
+        "sourceHash": "d6881531bb9ea933dc40e8c0ba9bdd210910c33c30e9862b00eab3bac97fc05c"
+      },
+      {
+        "verdict": "NOT",
+        "gaps": [
+          {
+            "requirement": "UC11-1 / SCOPE11-6 / SCH-04 — Ensure all SFTRM-mandated training periodicities are satisfied",
+            "evidence": "domain.mjs validates only invented fixed-window rules with windowMinutes=periodMinutes and requiredCount=1. data/README.md explicitly states these are not SFTRM rules. domain.test.mjs and test-report.json establish synthetic recurrence behavior, not correspondence to mandated periodicities; verification.md confirms that correspondence remains unverified.",
+            "fix": "Obtain a releasable, owner-reviewed specification of applicable periodicity and completion-credit semantics. Implement those semantics and add independently reviewed synthetic cases with exact expected deadlines, history credit and unmet obligations. Retain compliance warnings until domain validation is complete; do not revise frozen test expectations to bypass this requirement."
+          },
+          {
+            "requirement": "SCH-05 — Have an operator accept the proposed schedule",
+            "evidence": "public/app.js records only a browser-local acknowledgment; public/index.html explicitly distinguishes it from owner acceptance. verification.md confirms no authorized PB4T operator trial or acceptance record exists. Automated browser assertions cannot establish that human decision.",
+            "fix": "Conduct a supervised trial using fictional data on the delivered revision. Have an authorized operator review allocations, loading, coverage, unresolved outcomes and edit recovery, then record their actual acceptance or rejection with revision identification, separately from deployment authorization."
+          }
+        ],
+        "durationMs": 34825,
+        "tokens": {
+          "inputTokens": 401048,
+          "cachedInputTokens": 315928,
+          "uncachedInputTokens": 85120,
+          "outputTokens": 1075,
+          "reasoningOutputTokens": 100,
+          "totalTokens": 402123,
+          "uncachedPlusOutputTokens": 86195
+        },
+        "sourceHash": "9670656303d5e0911965cf47f47262bdb8a110ae68e195a589499be7011a9581"
+      }
+    ],
+    "repairs": 2,
+    "repairLimitReached": true,
+    "durationMs": 113386,
+    "evaluatorRetries": 0
+  },
+  "stageMetrics": [
+    {
+      "stage": "intake",
+      "startedAt": "2026-11-05T08:40:52.072Z",
+      "finishedAt": "2026-11-05T08:45:47.656Z",
+      "durationMs": 295581,
+      "agentAttempts": 2,
+      "inferenceDurationMs": 295463,
+      "usage": {
+        "inputTokens": 349545,
+        "cachedInputTokens": 274861,
+        "uncachedInputTokens": 74684,
+        "outputTokens": 13251,
+        "reasoningOutputTokens": 505,
+        "totalTokens": 362796,
+        "uncachedPlusOutputTokens": 87935
+      }
+    },
+    {
+      "stage": "research",
+      "startedAt": "2026-11-05T08:45:47.676Z",
+      "finishedAt": "2026-11-05T08:48:22.226Z",
+      "durationMs": 154548,
+      "agentAttempts": 1,
+      "inferenceDurationMs": 154507,
+      "usage": {
+        "inputTokens": 536844,
+        "cachedInputTokens": 475921,
+        "uncachedInputTokens": 60923,
+        "outputTokens": 6452,
+        "reasoningOutputTokens": 145,
+        "totalTokens": 543296,
+        "uncachedPlusOutputTokens": 67375
+      }
+    },
+    {
+      "stage": "plan",
+      "startedAt": "2026-11-05T08:48:22.242Z",
+      "finishedAt": "2026-11-05T08:52:00.245Z",
+      "durationMs": 218000,
+      "agentAttempts": 1,
+      "inferenceDurationMs": 217799,
+      "usage": {
+        "inputTokens": 519389,
+        "cachedInputTokens": 441570,
+        "uncachedInputTokens": 77819,
+        "outputTokens": 13306,
+        "reasoningOutputTokens": 1081,
+        "totalTokens": 532695,
+        "uncachedPlusOutputTokens": 91125
+      }
+    },
+    {
+      "stage": "build",
+      "startedAt": "2026-11-05T08:52:00.269Z",
+      "finishedAt": "2026-11-05T08:58:35.023Z",
+      "durationMs": 394750,
+      "agentAttempts": 1,
+      "inferenceDurationMs": 394591,
+      "usage": {
+        "inputTokens": 4130598,
+        "cachedInputTokens": 3972641,
+        "uncachedInputTokens": 157957,
+        "outputTokens": 23281,
+        "reasoningOutputTokens": 935,
+        "totalTokens": 4153879,
+        "uncachedPlusOutputTokens": 181238
+      }
+    },
+    {
+      "stage": "verify",
+      "startedAt": "2026-11-05T08:58:35.080Z",
+      "finishedAt": "2026-11-05T09:11:05.178Z",
+      "durationMs": 750148,
+      "agentAttempts": 6,
+      "inferenceDurationMs": 720638,
+      "usage": {
+        "inputTokens": 6525867,
+        "cachedInputTokens": 5915812,
+        "uncachedInputTokens": 610055,
+        "outputTokens": 33682,
+        "reasoningOutputTokens": 3886,
+        "totalTokens": 6559549,
+        "uncachedPlusOutputTokens": 643737
+      }
+    }
+  ]
+}

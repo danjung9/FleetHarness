@@ -191,3 +191,18 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 03:53 Automatic QA at 5f4eb39 on dev/reviewed: failures: unit tests, smoke-electron. Fixture provider only. `Research/QA/Auto/5f4eb39.md`
 - 03:56 qa-runner: Amended the triage once, preserved historical scope, recorded one grouped main/Engineering handoff, and stopped.
 - 04:01 qa-runner: Completed one read-only triage. Preserved R5 unchanged; prepared one handoff for main/Engineering and existing packaging owners.
+- 04:05 Real build, round 6, id36-paperless: failed in 24.6 minutes, tests None, journeys 0/0. The app did not pass its checks; review the failed checks in the activity log before trying again.
+- 04:10 Real build, round 6, id12-optask: failed in 29.5 minutes, tests 26/26, journeys 12/12. The app did not pass its checks; review the failed checks in the activity log before trying again.
+- 04:10 Real build, round 6, id20-contact-brief: failed in 0.2 minutes, tests None, journeys 0/0. The build service is not connected; connect it in Model settings and try again.
+- 04:11 Real build, round 6, id35-cyber-defender: failed in 0 minutes, tests None, journeys . start through UI failed: TimeoutError: locator.click: Timeout 20000ms exceeded.
+Call log:
+  - waiting for getByRole('but
+- 04:11 Real build, round 6, id11-training: failed in 30.4 minutes, tests 40/40, journeys 10/10. The app did not pass its checks; review the failed checks in the activity log before trying again.
+- 04:11 Real build, round 6, id10-mooring: failed in 0 minutes, tests None, journeys . start through UI failed: TimeoutError: locator.click: Timeout 20000ms exceeded.
+Call log:
+  - waiting for getByRole('but
+- 04:11 Real build, round 6, id32-readiness: failed in 0.5 minutes, tests None, journeys 0/0. The build service is not connected; connect it in Model settings and try again.
+- 04:12 Real build, round 6, id37-fielding: failed in 0 minutes, tests None, journeys . start through UI failed: TimeoutError: locator.click: Timeout 20000ms exceeded.
+Call log:
+  - waiting for getByRole('but
+- 04:12 Real build, round 6, id16-mordecai: failed in 0.5 minutes, tests None, journeys 0/0. The build service is not connected; connect it in Model settings and try again.

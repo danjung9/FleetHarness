@@ -1,0 +1,102 @@
+{
+  "title": "Paperless Underway — synthetic local workflow",
+  "description": "Device-local service remains available with external links disconnected. IndexedDB commits drafts, revisions and queue; reconnect is a labeled local peer simulation. No government endpoints.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Forms and weekly tasking",
+      "description": "Embedded synthetic training images, requisition, correspondence and week corpus; region rasterization and editable review.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Shared extraction and validation",
+      "description": "Backend optical template matching for bounded synthetic image regions, text grammar, task consolidation, source citations, validation and fictional filing.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "domain.mjs",
+        "image-recognition.mjs"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Durable local work",
+      "description": "IndexedDB atomic draft/revision/review/audit/queue transactions and export/import.",
+      "kind": "data",
+      "files": [
+        "public/storage.js",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "sync",
+      "label": "Causal merge and transfer",
+      "description": "Immutable revisions, all-head review, approval gates, priority chunks and acknowledged offsets.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "lib/offline.js",
+        "sync.mjs"
+      ]
+    },
+    {
+      "id": "peer",
+      "label": "Local peer simulator",
+      "description": "Explicit simulated receiver with idempotent receipts, pause and interruption; no real external transport.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "peer.mjs"
+      ]
+    },
+    {
+      "id": "outputs",
+      "label": "Reviewed outputs and transition",
+      "description": "Completed forms, verified list, draft updates, filing manifest, audit and one-page path to fleet, plus pending human worksheets.",
+      "kind": "interface",
+      "files": [
+        "public/app.js",
+        "public/index.html",
+        "exports.mjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "core",
+      "label": "POST source text and raster regions via local /api/invoke"
+    },
+    {
+      "from": "core",
+      "to": "store",
+      "label": "Derived fields/tasks with citations; commit before saved"
+    },
+    {
+      "from": "store",
+      "to": "sync",
+      "label": "Immutable operations and exact revision approvals"
+    },
+    {
+      "from": "sync",
+      "to": "peer",
+      "label": "Approved local dispatch, bounded chunks"
+    },
+    {
+      "from": "peer",
+      "to": "store",
+      "label": "Durable simulated acknowledgements"
+    },
+    {
+      "from": "store",
+      "to": "outputs",
+      "label": "Reviewed records, sources, decisions and receipts"
+    }
+  ]
+}

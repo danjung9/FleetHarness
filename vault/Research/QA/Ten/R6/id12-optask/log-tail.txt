@@ -1,0 +1,109 @@
+verify tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"65d4ae54-29eb-43a3-b281-c9166e39503b\",\"sessionId\":\"313bf313-cb55-4528-92f4-ccd1e6c68007\",\"stage\":\"verify\",\"captureId\":\"ed0d9ff5-4c94-420b-8145-112a8e6a71c4\",\"viewport\":\"desktop\",\"round\":\"recheck\",\"expected\":\"Reviewed saved draft exposes deliberate download and readable review controls.\",\"obse
+verify tool fleet_browser
+{
+  "action": "screenshot",
+  "viewport": "narrow"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"screenshot\",\"url\":\"http://127.0.0.1:49628/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f908bdc0-87b8-4652-a8dd-f0f0fa97e4ef/af654460ddec-f2851eda-cb6a-42a0-ba03-1896e6660172.png\",\"captureId\":\"06baf66c-c7dc-494c-9961-af416053cf7a\",\"pageText\":\"SYNTHETIC TR
+verify tool fleet_visual_review
+{
+  "captureId": "06baf66c-c7dc-494c-9961-af416053cf7a",
+  "expected": "Narrow schedule presents readable category names, times and source controls in stacked cards.",
+  "observed": "390px image shows crypto and flight quarters cards, wrapped full UTC endpoints and intact field buttons; no page clipping or text overlap.",
+  "findings": [],
+  "resolutions": []
+}
+verify tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"60c27a33-c113-4b1a-a039-4e726b525edd\",\"sessionId\":\"313bf313-cb55-4528-92f4-ccd1e6c68007\",\"stage\":\"verify\",\"captureId\":\"06baf66c-c7dc-494c-9961-af416053cf7a\",\"viewport\":\"narrow\",\"round\":\"recheck\",\"expected\":\"Narrow schedule presents readable category names, times and source controls in stacked c
+verify tool edit
+{
+  "path": "~/fhten/ud-r6/workspaces/bd58ec8c-a6b2-46f5-99d7-af5d3fab7020/71cf4e97-cc6f-4779-a440-ecdb972b8545/README.md, ~/fhten/ud-r6/workspaces/bd58ec8c-a6b2-46f5-99d7-af5d3fab7020/71cf4e97-cc6f-4779-a440-ecdb972b8545/verification.md"
+}
+verify tool edit completed
+[{"path":"~/fhten/ud-r6/workspaces/bd58ec8c-a6b2-46f5-99d7-af5d3fab7020/71cf4e97-cc6f-4779-a440-ecdb972b8545/README.md","kind":{"type":"update","move_path":null},"diff":"@@ -4,2 +4,6 @@\n \n+The current repair does not resolve the independent evaluator's format finding. The frozen invocation requires `grammarVersion: SYN-OPTASK/1` and the invented banner/sets; it explicit
+verify tool fleet_component_progress
+{
+  "componentId": "draft",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Message draft and samples: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "api",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local HTTP service: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "core",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Shared extraction and schedule core: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Timeline, evidence and review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "offline",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Offline local execution: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "export",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; synthetic prototype retained and tests pass. USMTF format requirement remains unmet; generated is not acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Reviewed synthetic schedule: generated. The live diagram has been updated."}]
+verify text The USMTF finding remains unresolved. The frozen protocol requires the invented grammar; a new planning run must define the documented subset and independent review expectations.
+
+Added boundary coverage: 26 tests pass in a clean runtime. Desktop and narrow visual reviews completed without findings.
+
+Updated README.md and verification.md. UC12-1 and DELIVERABLE12-1 remain unmet; delivery approval 
+verify info Post-build test changes (verify). Human review required. Since previous stage: added: format-boundary.test.mjs. Since build: added: format-boundary.test.mjs; added: verifier.test.mjs.
+verify info TAP version 13
+# Subtest: SYN-NOMINAL
+ok 1 - SYN-NOMINAL
+  ---
+  duration_ms: 1.670708
+  type: 'test'
+  ...
+# Subtest: SYN-OTHER-SHIP
+ok 2 - SYN-OTHER-SHIP
+  ---
+  duration_ms: 0.25175
+  type: 'test'
+  ...
+# Subtest: SYN-OVERNIGHT
+ok 3 - SYN-OVERNIGHT
+  ---
+  duration_ms: 0.323333
+  type: 'test'
+  ...
+# Subtest: SYN-ZULU
+ok 4 - SYN-ZULU
+  ---
+  duration_ms: 0.13175
+  type: 'test'
+  ...
+# Subtest: 
+verify info Starting fresh independent judge 3 with read-only evidence tools.
+verify info Independent judge: NOT; 1 gaps; 34919 ms; tokens 528860.
+verify error Error: Independent judgment did not pass. Inspect judge evidence; delivery remains blocked.
+    at FleetBackend.execute (file://~/fhten/app/dist-electron/electron/pi-backend.js:1258:23)

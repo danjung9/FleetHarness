@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "mode": "synthetic",
+  "sources": [],
+  "generated": {
+    "data": "data/synthetic-data.json",
+    "documentation": "data/README.md"
+  }
+}

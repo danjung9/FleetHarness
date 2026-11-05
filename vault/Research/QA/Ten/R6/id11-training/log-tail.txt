@@ -1,0 +1,90 @@
+verify tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"b9a44741-53ea-4137-821d-a28dfdae895f\",\"sessionId\":\"e0e2de14-63ef-490b-86b6-7939140d91f0\",\"stage\":\"verify\",\"captureId\":\"676b6748-e34a-4668-9a32-55eebe23b08b\",\"viewport\":\"narrow\",\"round\":\"recheck\",\"expected\":\"Narrow layout stacks dated day sections with readable allocations and controls; feasible
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'tail -26 verification.md; tail -20 README.md; git status --short 2>/dev/null; shasum -a 256 public/app.js calendar.test.mjs calendar.browser.cjs'"
+}
+verify tool bash completed
+"## Criterion evidence map\n\n| Canonical ID | Current evidence / limit |\n| --- | --- |\n| UC11-1 | Unverified real mandate; repaired synthetic departmental feedback, constraints and recurrence covered by domain/repair tests and browser. |\n| SCH-01 | Local tests pass explicit constraints, staffing, intervals, prior duty and budget boundaries. |\n| SCH-02 | Local tests pass baselin
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'cat .fleet/packet.json .fleet/foundation-guide.md foundation-plan.json foundation-lock.json inputs/manifest.json data/README.md'"
+}
+verify tool bash completed
+"{\n  \"schemaVersion\": 1,\n  \"challenge\": {\n    \"id\": \"11\",\n    \"title\": \"PB4T (Planning Board for Training) Autonomous Deconfliction Agent\",\n    \"category\": \"The Autonomous Shipboard Enterprise\",\n    \"summary\": \"Coordinate departmental training proposals against shared personnel, resources, operational windows and fatigue rules.\",\n    \"description\": \"Wee
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='README.md';s=open(p).read();s=s.replace('choose a week-start date and **Set week start**. All dates and times use UTC.','choose a week-start date and **Set week start**. Any weekday is supported; board and heatmap headings show the actual UTC weekday and date across the supplied horizon. All dates and times use UTC.');s=s.replace('The verifi
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "board",
+  "status": "generated",
+  "detail": "UTC calendar repair implemented; 40 Node checks and two real UI browser regressions pass locally; desktop/narrow visual rechecks recorded."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Weekly board and review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "api",
+  "status": "generated",
+  "detail": "Mapped implementation files present and preserved; existing application tests rerun. Real SFTRM validation and operator acceptance remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local HTTP service: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "agents",
+  "status": "generated",
+  "detail": "Mapped implementation files present and preserved; existing application tests rerun. Real SFTRM validation and operator acceptance remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Departmental negotiation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "constraints",
+  "status": "generated",
+  "detail": "Mapped implementation files present and preserved; existing application tests rerun. Real SFTRM validation and operator acceptance remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Shared scheduling core: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "coverage",
+  "status": "generated",
+  "detail": "Mapped implementation files present and preserved; existing application tests rerun. Real SFTRM validation and operator acceptance remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Recurrence and personnel load: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "fixtures",
+  "status": "generated",
+  "detail": "Mapped implementation files present and preserved; existing application tests rerun. Real SFTRM validation and operator acceptance remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Preserved synthetic fixtures: generated. The live diagram has been updated."}]
+verify text Fixed the non-Monday calendar bug: board and heatmap headings now show the correct UTC weekdays and dates.
+
+- 40 Node tests passed, including a clean runtime copy.
+- Two desktop/narrow browser regressions passed.
+- Visual rechecks completed with no open findings.
+- README and verification.md updated; frozen contracts preserved.
+
+SFTRM compliance and authorized operator acceptance remain unverified
+verify info Post-build test changes (verify). Human review required. Since previous stage: added: calendar.test.mjs. Since build: added: calendar.test.mjs; added: repair.test.mjs; added: verifier.test.mjs.
+verify info TAP version 13
+# Subtest: Wednesday-start headings align with assignments and daily personnel load
+ok 1 - Wednesday-start headings align with assignments and daily personnel load
+  ---
+  duration_ms: 2.8495
+  type: 'test'
+  ...
+# Subtest: calendar labels follow partial, negative and year-crossing horizons in UTC
+ok 2 - calendar labels follow partial, negative and year-crossing horizons in UTC
+  --
+verify info Starting fresh independent judge 3 with read-only evidence tools.
+verify info Independent judge: NOT; 2 gaps; 34825 ms; tokens 402123.
+verify error Error: Independent judgment did not pass. Inspect judge evidence; delivery remains blocked.
+    at FleetBackend.execute (file://~/fhten/app/dist-electron/electron/pi-backend.js:1258:23)

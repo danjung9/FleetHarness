@@ -1,0 +1,99 @@
+{
+  "title": "Synthetic PB4T weekly drill negotiation",
+  "description": "Local PB4T planning board backed by shared deterministic computation. All departmental agents are synthetic software proposal policies; no operational integrations.",
+  "components": [
+    {
+      "id": "board",
+      "label": "Weekly board and review",
+      "description": "Editable weekly allocations, policy warnings, recovery and local acknowledgment.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local HTTP service",
+      "description": "Foundation health and invocation transport; no ship connection.",
+      "kind": "integration",
+      "files": [
+        "server.mjs"
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Departmental negotiation",
+      "description": "Five named deterministic agents own proposals, rejection reasons and counterproposals.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "domain.mjs"
+      ]
+    },
+    {
+      "id": "constraints",
+      "label": "Shared scheduling core",
+      "description": "Bounded candidate search, qualifications, exclusive resources, prior duty, rest and daily/rolling caps.",
+      "kind": "logic",
+      "files": [
+        "domain.mjs",
+        "lib/scheduling.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "coverage",
+      "label": "Recurrence and personnel load",
+      "description": "Expand due windows, account for history and future obligations; calculate exact daily heatmap.",
+      "kind": "logic",
+      "files": [
+        "domain.mjs"
+      ]
+    },
+    {
+      "id": "fixtures",
+      "label": "Preserved synthetic fixtures",
+      "description": "Prepared fictional PB4T inputs embedded in HTML; answer keys never sent to solver.",
+      "kind": "data",
+      "files": [
+        "data/synthetic-data.json",
+        "data/README.md",
+        "public/index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "fixtures",
+      "to": "board",
+      "label": "Embedded input examples only"
+    },
+    {
+      "from": "board",
+      "to": "api",
+      "label": "POST PB4T input / computed results"
+    },
+    {
+      "from": "api",
+      "to": "agents",
+      "label": "Invoke shared compute"
+    },
+    {
+      "from": "agents",
+      "to": "constraints",
+      "label": "Proposals and counterproposals"
+    },
+    {
+      "from": "constraints",
+      "to": "coverage",
+      "label": "Validated allocations and history"
+    },
+    {
+      "from": "coverage",
+      "to": "board",
+      "label": "Coverage, load and unresolved obligations via API"
+    }
+  ]
+}

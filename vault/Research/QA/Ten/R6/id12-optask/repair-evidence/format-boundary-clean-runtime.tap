@@ -1,0 +1,34 @@
+✔ SYN-NOMINAL (7.247125ms)
+✔ SYN-OTHER-SHIP (0.713375ms)
+✔ SYN-OVERNIGHT (0.619708ms)
+✔ SYN-ZULU (0.211375ms)
+✔ SYN-OFFSET (0.161416ms)
+✔ SYN-UNICODE (0.284583ms)
+✔ SYN-DENSE (0.637583ms)
+✔ SYN-EMPTY (0.143667ms)
+✔ SYN-MISSING-ZONE (0.14175ms)
+✔ SYN-BAD-DATE (0.128917ms)
+✔ SYN-INCOMPLETE (0.104958ms)
+✔ SYN-UNKNOWN (0.076459ms)
+✔ SYN-MALFORMED (0.115583ms)
+✔ SYN-REVERSED (0.086416ms)
+✔ SYN-POINT (0.086291ms)
+✔ SYN-DUP-RECORD (0.07925ms)
+✔ SYN-DUP-MESSAGE (0.067708ms)
+✔ SYN-MIXED (0.143875ms)
+✔ HTTP rejects undeclared format versions rather than claiming format support (29.625541ms)
+✔ HTTP runtime returns the complete literal empty-input response (25.119125ms)
+✔ HTTP computation matches actual shared core on new Unicode and leap-day input (10.546708ms)
+✔ bad records use first-error precedence and cannot become reviewed exports (0.639833ms)
+✔ duplicate collisions quarantine both while preserving unrelated records in source order (0.542083ms)
+✔ HTTP rejects malformed JSON and cross-origin invocation before domain computation (12.768125ms)
+✔ invalid envelopes return complete literal protocol (4.256583ms)
+✔ empty reviewed declaration cannot validate source (0.287125ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 172.618791

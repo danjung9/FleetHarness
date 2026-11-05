@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {compute} from './compute.mjs';
+const base={grammarVersion:'SYN-OPTASK/1',rawText:'',selectedShip:'FS TEST',selectedDay:'0004-02-29',displayTimezone:'UTC'};
+test('invalid envelopes return complete literal protocol',async()=>{for(const input of [null,[],{}, {...base,action:'send'},{...base,selectedDay:'1900-02-29'},{...base,reviewed:null},{...base,extra:true}])assert.deepEqual(await compute(input),{status:'error',error:'INVALID_INPUT',result:null});});
+test('empty reviewed declaration cannot validate source',async()=>assert.deepEqual(await compute({...base,reviewed:true}),{status:'needs_review',error:null,result:{extractedEventCount:0,selectedEventCount:0,categoryCounts:{'frequency plan':0,'crypto change-over window':0,'flight quarters':0},events:[],issues:[{code:'EMPTY_INPUT',message:'Enter a synthetic OPTASK message.',source:null,resolution:'Correct source and reparse; acknowledgement does not validate an order.'}],exportContent:{provenance:'Synthetic; not validated against the real USMTF format.',messageId:null,selectedShip:'FS TEST',selectedDay:'0004-02-29',timezone:'UTC',reviewStatus:'unreviewed',unresolvedIssueCodes:['EMPTY_INPUT'],events:[],originalText:''}}}));
