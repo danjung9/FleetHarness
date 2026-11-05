@@ -4,7 +4,7 @@ import type { ClarificationAnswer } from '../shared/conversation.js';
 import type { ExperimentAPI } from '../shared/experiments.js';
 import type { DataStorageAPI } from '../shared/data-storage.js';
 const storageAPI: DataStorageAPI = {
-  storageOverview: () => ipcRenderer.invoke('fleet:storage:storageOverview'),
+  storageOverview: options => ipcRenderer.invoke('fleet:storage:storageOverview', options),
   storageFiles: id => ipcRenderer.invoke('fleet:storage:storageFiles', id),
   storageReadFile: (id, file) => ipcRenderer.invoke('fleet:storage:storageReadFile', id, file),
   storageOpen: (id, file) => ipcRenderer.invoke('fleet:storage:storageOpen', id, file),

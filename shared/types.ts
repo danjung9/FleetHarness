@@ -5,7 +5,7 @@ import type { ReasoningEffort } from './reasoning.js';
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'connectors' | 'storage';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'storage';
 /** Token counts reported by the engine, never estimates. Reasoning is part of output. */
 export interface StageTokenUsage {
   inputTokens: number | null; cachedInputTokens: number | null; uncachedInputTokens: number | null;

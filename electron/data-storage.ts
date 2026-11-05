@@ -1,4 +1,4 @@
-import { constants, promises as fs, type Stats } from 'node:fs';
+import { constants, promises as fs, type Dirent, type Stats } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Store } from './storage.js';
@@ -17,7 +17,7 @@ export interface DataStorageOptions {
   changed(): void;
   candidateProjects?(): StorageCandidateOwner[];
 }
-interface Item extends StorageItem { relative: string }
+interface Item extends StorageItem { relative: string; stamp: string }
 interface TrashRecord extends StorageTrashItem {
   version: 1; original: string; itemRelative: string; itemKind: StorageKind;
   phase: 'prepared' | 'ready' | 'restored' | 'deleting';
@@ -26,13 +26,16 @@ interface CreatedEntry { relative: string; stat: Stats }
 class StorageRootChangedError extends Error {
   constructor() { super('AppYard’s storage folder moved or was replaced. Restart the app after restoring its original location. No further files were changed.'); }
 }
-interface WalkResult { bytes: number; fileCount: number; updatedAt: number; links: number; special: number; incomplete: boolean }
+interface WalkResult { bytes: number; fileCount: number; updatedAt: number; links: number; special: number; incomplete: boolean; revision: string }
+interface Inventory { items: Item[]; records: TrashRecord[]; warnings: Set<string>; key: string }
 const missing = (error: unknown) => (error as NodeJS.ErrnoException).code === 'ENOENT';
 const within = (parent: string, child: string) => child === parent || child.startsWith(parent + path.sep);
 const uuidPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const itemId = (relative: string) => createHash('sha256').update('appyard-storage-v1\0' + relative).digest('hex');
 const textLimit = 1024 * 1024;
 const imageLimit = 8 * 1024 * 1024;
+const measurementFreshness = 2_000;
+const measurementConcurrency = 16;
 
 /** Logical file bytes include dependency folders. Symbolic links are never followed. */
 export class DataStorageService {
@@ -42,6 +45,14 @@ export class DataStorageService {
   private pending: Promise<unknown> = Promise.resolve();
   private initializing?: Promise<void>;
   private recoveryWarnings: string[] = [];
+  private measurements = new Map<string, WalkResult>();
+  private trashMeasurements = new Map<string, number>();
+  private measuredTotals?: { trashBytes: number; otherBytes: number; measuredAt: string; completedAt: number; key: string; warnings: string[] };
+  private measuring?: Promise<void>;
+  private measurementGeneration = 0;
+  private measurementStale = true;
+  private measurementError?: string;
+  private mutating = false;
   constructor(readonly options: DataStorageOptions) {}
 
   init(): Promise<void> {
@@ -194,7 +205,7 @@ export class DataStorageService {
         const blockedReason = active ? 'Wait for this project’s active work to finish before removing files.'
           : current && !!currentProject?.report?.quality?.experiment ? 'This is the selected experiment build. Start a new build before removing this saved delivery evidence.'
           : frozen ? 'This build is part of saved experiment evidence. Forget this project’s history using Manage learning in Data & storage before removing it.' : undefined;
-        items.push({ id: itemId(relative), relative, kind, projectId, projectTitle: project?.title ?? 'Unassigned data',
+        items.push({ id: itemId(relative), relative, stamp: `${stat.dev}:${stat.ino}:${stat.mtimeMs}:${stat.ctimeMs}`, kind, projectId, projectTitle: project?.title ?? 'Unassigned data',
           name: kind === 'sessions' ? 'Agent sessions' : owner?.name ?? (kind === 'candidate' ? `Experiment build ${runId ?? scopedProjectId}` : `Build ${runId}`),
           runId, bytes: 0, fileCount: 0, updatedAt: stat.mtime.toISOString(), current, active, canTrash: !blockedReason, blockedReason });
       } catch (error) { if (error instanceof StorageRootChangedError) throw error; if (!missing(error)) warnings.add(`Could not inspect ${relative}. Its files were preserved.`); }
@@ -225,28 +236,45 @@ export class DataStorageService {
     return items;
   }
   private async walk(relative: string, visitor?: (relative: string, stat: Stats) => void,
-    excluded: ReadonlySet<string> = new Set()): Promise<WalkResult> {
-    const result: WalkResult = { bytes: 0, fileCount: 0, updatedAt: 0, links: 0, special: 0, incomplete: false };
+    excluded: ReadonlySet<string> = new Set(), concurrency = 1, cancelled?: () => boolean): Promise<WalkResult> {
+    const result: WalkResult = { bytes: 0, fileCount: 0, updatedAt: 0, links: 0, special: 0, incomplete: false, revision: '' };
+    const revision = createHash('sha256');
     const pending = [relative];
     while (pending.length) {
-      const current = pending.pop()!;
-      if (excluded.has(current)) continue;
-      try {
-        await this.assertRoot();
-        const target = current ? await this.guard(current) : this.root;
-        const stat = await fs.lstat(target);
+      if (cancelled?.()) { result.incomplete = true; break; }
+      // Read-only inventory can overlap filesystem requests without weakening
+      // the root and symlink checks. Mutations retain sequential traversal.
+      const batch = pending.splice(-concurrency).filter(current => !excluded.has(current));
+      const entries = await Promise.all(batch.map(async current => {
+        try {
+          await this.assertRoot();
+          const target = current ? await this.guard(current) : this.root;
+          const stat = await fs.lstat(target);
+          const children: Dirent[] = stat.isDirectory() ? await fs.readdir(target, { withFileTypes: true }) : [];
+          return { current, stat, children };
+        } catch (error) {
+          if (error instanceof StorageRootChangedError) throw error;
+          return { current, stat: undefined, children: [] };
+        }
+      }));
+      for (const { current, stat, children } of entries) {
+        if (!stat) { result.incomplete = true; revision.update(JSON.stringify([current, 'unavailable'])); continue; }
+        // Include every entry, rather than just the newest timestamp: older
+        // nested edits, same-size writes, renames and deletions change revision.
+        revision.update(JSON.stringify([current, stat.mode, stat.size, stat.mtimeMs, stat.ctimeMs]));
         result.updatedAt = Math.max(result.updatedAt, stat.mtimeMs);
         if (stat.isFile()) {
           result.bytes += stat.size; result.fileCount++;
           visitor?.(current, stat);
         } else if (stat.isDirectory()) {
-          for (const entry of await fs.readdir(target, { withFileTypes: true })) {
-            if (entry.isSymbolicLink()) { result.links++; continue; }
+          for (const entry of children.sort((a, b) => a.name.localeCompare(b.name))) {
+            if (entry.isSymbolicLink()) { result.links++; revision.update(JSON.stringify([current, entry.name, 'link'])); continue; }
             pending.push(current ? `${current}/${entry.name}` : entry.name);
           }
         } else { result.special++; }
-      } catch (error) { if (error instanceof StorageRootChangedError) throw error; result.incomplete = true; }
+      }
     }
+    result.revision = revision.digest('hex');
     return result;
   }
   private walkWarnings(result: WalkResult, warnings: Set<string>) {
@@ -254,41 +282,105 @@ export class DataStorageService {
     if (result.special) warnings.add('Special filesystem entries are excluded from file totals.');
     if (result.incomplete) warnings.add('Some files could not be read or changed during scanning. Storage totals may be incomplete; refresh when active work finishes.');
   }
-  async storageOverview(): Promise<StorageOverview> {
-    await this.init();
-    await this.assertRoot();
+  private async inventory(): Promise<Inventory> {
     const warnings = new Set(this.recoveryWarnings);
     const items = await this.discover(warnings);
-    for (const item of items) {
-      const size = await this.walk(item.relative);
-      item.bytes = size.bytes; item.fileCount = size.fileCount;
-      if (size.updatedAt) item.updatedAt = new Date(size.updatedAt).toISOString();
-      this.walkWarnings(size, warnings);
-    }
     const trash = await this.readTrash();
     trash.warnings.forEach(warning => warnings.add(warning));
-    const trashItems: StorageTrashItem[] = [];
+    const records: TrashRecord[] = [];
     for (const record of trash.records) {
-      if (record.phase === 'deleting') continue;
-      const payload = `storage-trash/${record.id}/payload`;
-      if (!await this.exists(payload)) continue;
-      const size = await this.walk(payload);
-      this.walkWarnings(size, warnings);
-      trashItems.push(this.publicTrash({ ...record, bytes: size.bytes }));
+      if (record.phase !== 'deleting' && await this.exists(`storage-trash/${record.id}/payload`)) records.push(record);
     }
-    const trashSize = await this.walk('storage-trash');
-    const other = await this.walk('', undefined, new Set([...items.map(item => item.relative), 'storage-trash']));
+    const key = JSON.stringify([items.map(item => [item.id, item.stamp]).sort(), records.map(record => [record.id, record.bytes, record.phase]).sort()]);
+    return { items, records, warnings, key };
+  }
+  private async measure(inventory: Inventory, generation: number) {
+    const warnings = new Set<string>();
+    const cancelled = () => generation !== this.measurementGeneration;
+    if (cancelled()) return;
+    for (const item of inventory.items) {
+      const size = await this.walk(item.relative, undefined, undefined, measurementConcurrency, cancelled);
+      this.walkWarnings(size, warnings);
+      if (cancelled()) return;
+      // Publish completed folders while the remaining inventory is measured.
+      this.measurements.set(item.relative, size);
+    }
+    const trashMeasurements = new Map<string, number>();
+    // Count each payload as part of the trash traversal; do not scan it twice.
+    const trashSize = await this.walk('storage-trash', (relative, stat) => {
+      const parts = relative.split('/');
+      if (parts[2] === 'payload') trashMeasurements.set(parts[1], (trashMeasurements.get(parts[1]) ?? 0) + stat.size);
+    }, undefined, measurementConcurrency, cancelled);
+    if (cancelled()) return;
+    const other = await this.walk('', undefined, new Set([...inventory.items.map(item => item.relative), 'storage-trash']), measurementConcurrency, cancelled);
+    if (cancelled()) return;
     this.walkWarnings(trashSize, warnings);
     // Chromium owns normal lock/socket links in app data; these are neither
     // user-managed files nor a reason to flag a healthy build folder.
     this.walkWarnings({ ...other, links: 0, special: 0 }, warnings);
-    const trashBytes = trashSize.bytes;
-    const totalBytes = items.reduce((sum, item) => sum + item.bytes, 0) + trashBytes + other.bytes;
+    this.trashMeasurements = trashMeasurements;
+    const available = new Set(inventory.items.map(item => item.relative));
+    for (const relative of this.measurements.keys()) if (!available.has(relative)) this.measurements.delete(relative);
+    this.measuredTotals = { trashBytes: trashSize.bytes, otherBytes: other.bytes, measuredAt: new Date().toISOString(),
+      completedAt: Date.now(), key: inventory.key, warnings: [...warnings] };
+    this.measurementStale = false;
+    this.measurementError = undefined;
+  }
+  private startMeasurement(inventory: Inventory, generation: number) {
+    if (this.measuring) return this.measuring;
+    const measuring = this.measure(inventory, generation).catch(error => {
+      this.measurementError = error instanceof Error ? error.message : 'Storage could not be measured. Refresh to try again.';
+      this.measurementStale = true;
+      throw error;
+    }).finally(() => { if (this.measuring === measuring) this.measuring = undefined; });
+    this.measuring = measuring;
+    return measuring;
+  }
+  private overview(inventory: Inventory, scanning: boolean): StorageOverview {
+    const warnings = new Set([...inventory.warnings, ...this.measuredTotals?.warnings ?? []]);
+    if (this.measurementError) warnings.add(this.measurementError);
+    const items = inventory.items.map(({ relative, stamp: _stamp, ...item }) => {
+      const size = this.measurements.get(relative);
+      return { ...item, measured: !!size, ...(size ? { bytes: size.bytes, fileCount: size.fileCount,
+        updatedAt: size.updatedAt ? new Date(size.updatedAt).toISOString() : item.updatedAt, revision: size.revision } : {}) };
+    });
+    const trash = inventory.records.map(record => this.publicTrash({ ...record, bytes: this.trashMeasurements.get(record.id) ?? record.bytes }));
+    const trashBytes = this.measuredTotals?.trashBytes ?? trash.reduce((sum, record) => sum + record.bytes, 0);
+    const otherBytes = this.measuredTotals?.otherBytes ?? 0;
+    const totalBytes = items.reduce((sum, item) => sum + item.bytes, 0) + trashBytes + otherBytes;
     const projects = this.options.store.state.projects.map(project => ({ id: project.id, title: project.title, archived: !!project.archivedAt,
       active: this.options.isActive(project.id), bytes: items.filter(item => item.projectId === project.id).reduce((sum, item) => sum + item.bytes, 0),
       buildCount: items.filter(item => item.projectId === project.id && item.kind !== 'sessions').length }));
-    return { items: items.map(({ relative: _relative, ...item }) => item).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)), projects,
-      trash: trashItems.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt)), totalBytes, trashBytes, otherBytes: other.bytes, warnings: [...warnings] };
+    return { items: items.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)), projects,
+      trash: trash.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt)), totalBytes, trashBytes, otherBytes,
+      warnings: [...warnings], scanning, measuredAt: this.measuredTotals?.measuredAt };
+  }
+  async storageOverview(options: { background?: boolean; refresh?: boolean } = {}): Promise<StorageOverview> {
+    await this.init();
+    await this.assertRoot();
+    if (!options.background) {
+      // Explicit complete inventories keep their original semantics. Wait out
+      // any shared background work before taking a fresh inventory.
+      for (;;) {
+        await this.measuring?.catch(() => {});
+        const generation = this.measurementGeneration;
+        const inventory = await this.inventory();
+        // Another request may have started measuring during shallow discovery.
+        // Keep complete and background callers on the same scan queue.
+        if (this.measuring || generation !== this.measurementGeneration) continue;
+        await this.startMeasurement(inventory, generation);
+        if (generation === this.measurementGeneration) return this.overview(inventory, false);
+      }
+    }
+    const inventory = await this.inventory();
+    const stale = options.refresh || this.measurementStale || this.measuredTotals?.key !== inventory.key
+      || Date.now() - (this.measuredTotals?.completedAt ?? 0) >= measurementFreshness;
+    if (stale && !this.measuring && !this.mutating) {
+      // A failed scan is reported in the next snapshot; background callers do
+      // not wait for it or leave an unhandled rejection in the main process.
+      void this.startMeasurement(inventory, this.measurementGeneration).catch(() => {});
+    }
+    return this.overview(inventory, !!this.measuring || this.mutating);
   }
   private async resolveItem(id: string) {
     await this.init();
@@ -324,8 +416,9 @@ export class DataStorageService {
     const item = await this.resolveItem(itemId), files: StorageFile[] = [];
     const result = await this.walk(item.relative, (relative, stat) => {
       const file = relative.slice(item.relative.length + 1);
-      files.push({ path: file, size: stat.size, updatedAt: stat.mtime.toISOString(), category: this.category(file) });
-    });
+      files.push({ path: file, size: stat.size, updatedAt: stat.mtime.toISOString(), category: this.category(file),
+        revision: createHash('sha256').update(JSON.stringify([file, stat.dev, stat.ino, stat.size, stat.mtimeMs, stat.ctimeMs])).digest('hex') });
+    }, undefined, measurementConcurrency);
     if (result.incomplete) throw new Error('Some files changed or could not be read. Refresh the folder and try again.');
     return files.sort((a, b) => a.path.localeCompare(b.path));
   }
@@ -352,7 +445,18 @@ export class DataStorageService {
     } finally { await handle.close(); }
   }
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
-    const pending = this.pending.catch(() => {}).then(operation);
+    const pending = this.pending.catch(() => {}).then(async () => {
+      this.mutating = true;
+      this.measurementGeneration++;
+      try { return await operation(); }
+      finally {
+        // Partial failures can also move or restore bytes. Never let an older
+        // in-flight scan replace the post-mutation inventory.
+        this.measurementGeneration++;
+        this.measurementStale = true;
+        this.mutating = false;
+      }
+    });
     this.pending = pending;
     return pending;
   }

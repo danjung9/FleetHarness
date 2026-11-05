@@ -4,6 +4,8 @@ Mode: **Operate**. This extends AppYard's file inspection and settings workflow.
 
 The global Storage destination remains usable with no active projects. Its first view presents managed file size, a searchable list of current and previous builds, and clear Projects and Trash tabs. The size summary supports cleanup rather than dominating the page. Current and in-use labels distinguish the files the app is using. Project names and update dates provide context for run identities.
 
+The list loads before recursive size calculations finish. Unmeasured sizes and file counts say they are being calculated, while later visits immediately reuse the last inventory. Storage refreshes in the background while visible and when the window regains focus. Refreshes keep filters, pagination, and the selected preview in place; file changes update that preview without blanking its existing contents. The Refresh action also requests a new measurement.
+
 Opening a build replaces the list with a full-width file workspace. Search and type filters sit above a file list and preview. Pagination limits rendered lists to 200 entries while searching the complete inventory. The preview has reveal, export, and move-to-Trash actions. The back action restores the library context and keyboard focus.
 
 Deletion is staged: an explicit confirmation explains recovery and any verification impact; a persistent success notice offers Undo; Trash has restore and separately confirmed permanent deletion. Archive is reversible organization, with copy that makes clear that files remain on disk. Learned data has its own link to existing settings.

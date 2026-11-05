@@ -77,6 +77,7 @@ try {
   assert.equal(await dialog.getByLabel('Input content', { exact: true }).inputValue(), 'TASK: check gauge\n');
   assert.equal(await dialog.getByRole('list', { name: 'Connected data inputs', exact: true }).getByRole('listitem').count(), 2);
   await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   await page.getByRole('heading', { name: 'Connectors', exact: true }).waitFor();
   await page.getByRole('button', { name: 'New challenge', exact: true }).click();
@@ -110,6 +111,7 @@ try {
   assert.deepEqual((await readProject(page, id)).dataInputs, expected);
   await page.getByRole('heading', { name: 'Data & inputs', exact: true }).scrollIntoViewIfNeeded();
   await page.getByLabel('Challenge title', { exact: true }).fill('Synthetic unsaved brief edit');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   await page.getByRole('button', { name: 'Home \u2014 challenge portfolio', exact: true }).click();
   await page.getByRole('button', { name: /^Connected inputs regression/ }).click();

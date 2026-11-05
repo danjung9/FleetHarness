@@ -8,6 +8,10 @@ export interface StorageItem {
   runId?: string;
   bytes: number;
   fileCount: number;
+  /** False until this folder's first background measurement completes. */
+  measured?: boolean;
+  /** Changes when any file's metadata changes, including nested files. */
+  revision?: string;
   updatedAt: string;
   current: boolean;
   active: boolean;
@@ -26,16 +30,19 @@ export interface StorageOverview {
   items: StorageItem[]; projects: StorageProject[]; trash: StorageTrashItem[];
   totalBytes: number; trashBytes: number; otherBytes: number;
   warnings: string[];
+  scanning?: boolean;
+  measuredAt?: string;
 }
 export interface StorageFile {
   path: string; size: number; updatedAt: string;
+  revision?: string;
   category: 'source' | 'data' | 'evidence' | 'logs' | 'dependencies' | 'other';
 }
 export interface StoragePreview {
   kind: 'text' | 'image' | 'binary'; text?: string; url?: string; message?: string;
 }
 export interface DataStorageAPI {
-  storageOverview(): Promise<StorageOverview>;
+  storageOverview(options?: { background?: boolean; refresh?: boolean }): Promise<StorageOverview>;
   storageFiles(itemId: string): Promise<StorageFile[]>;
   storageReadFile(itemId: string, file: string): Promise<StoragePreview>;
   storageOpen(itemId: string, file?: string): Promise<void>;

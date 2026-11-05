@@ -94,7 +94,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
     await api.connectors!.cancel(card.kind).catch(() => {}); setBusy(false); await refresh();
   }
   return <article className="connector-card" aria-label={card.label}>
-    <h2>{card.label}</h2><p>{card.summary}</p>
+    <h3>{card.label}</h3><p>{card.summary}</p>
     {card.kind === 'maven-smart-system' && <p><a href="https://mss.data.mil" target="_blank" rel="noopener noreferrer">Open MSS Ontology site</a> (opens in your browser; no AppYard connection is created).</p>}
     <p className="connector-readonly">AppYard can only read. It cannot send, change or delete anything.</p>
     {!card.available && <p>{sampleOnly ? 'Live connection is not configured. Try sample data to explore this source.' : 'Sign-in is not set up for this source. Ask your administrator to turn it on.'}</p>}
@@ -123,7 +123,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
     </div>}
     {error && <p role="alert" className="form-error">{error}</p>}
     {preview && <section className="connector-preview" aria-label={'Check ' + card.label + ' data'}>
-      <h3>Check it</h3><p>{preview.items.length} {preview.items.length === 1 ? 'item' : 'items'} ready. Email addresses, phone numbers and personal numbers are hidden. Senders are hidden.</p>
+      <h4>Check it</h4><p>{preview.items.length} {preview.items.length === 1 ? 'item' : 'items'} ready. Email addresses, phone numbers and personal numbers are hidden. Senders are hidden.</p>
       <p>{preview.excluded} {preview.excluded === 1 ? 'item with restricted markings was' : 'items with restricted markings were'} left out. This check reduces accidents; it does not decide whether data is safe to share.</p>
       {!!preview.limited && <p>{preview.limited} items were left out to keep the preview small.</p>}
       <p>{preview.sample ? `This goes to ${model} only when you select it in a brief and start a build.` : 'You can save this preview on this computer. Builds for this event use sample data only.'}</p>
@@ -138,7 +138,7 @@ export function Connectors() {
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
   const matches = cards.filter(card => `${card.label} ${card.summary}`.toLowerCase().includes(search));
-  return <div className="page connectors-page"><div className="page-heading"><div><h1>Connectors</h1><p>Choose data to help build your app. Start with samples, with no sign-in or setup.</p></div></div>
+  return <section className="connectors-page" aria-labelledby="connectors-heading"><div className="page-heading"><div><h2 id="connectors-heading">Connectors</h2><p>Choose data to help build your app. Start with samples, with no sign-in or setup.</p></div></div>
     <p>Event builds use sample data; live connections support local preview only.</p>
     <p>All samples are invented Navy training examples. Check each sample, choose Use this, then select it in your brief.</p>
     {error && <p role="alert" className="form-error">{error} {api.connectors && <button className="text-button" onClick={() => void refresh()}>Try again</button>}</p>}
@@ -146,7 +146,7 @@ export function Connectors() {
     {!!cards.length && <p role="status">{matches.length} {matches.length === 1 ? 'connector' : 'connectors'}</p>}
     {!!cards.length && !matches.length && <p>No connectors found. <button className="text-button" type="button" onClick={() => setQuery('')}>Clear search</button></p>}
     <div className="connector-grid">{matches.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
-  </div>;
+  </section>;
 }
 export function ConnectedDataSection({ value, onChange, disabled }: { value: ConnectedDataSelection[]; onChange: (value: ConnectedDataSelection[]) => void; disabled: boolean }) {
   const { cards, error, model } = useSources();
@@ -154,7 +154,7 @@ export function ConnectedDataSection({ value, onChange, disabled }: { value: Con
   const missing = value.filter(choice => !saved.some(source => source.id === choice.id && source.digest === choice.digest));
   return <fieldset className="connected-data-section" disabled={disabled}><legend>Use connected data</legend>
     <p>Selected data goes to {model} when you start a build. Sample data is included in the finished app.</p>
-    {error ? <p role="alert">{error}</p> : !saved.length && <p>Open Connectors in the left menu and choose Try sample data to add a source.</p>}
+    {error ? <p role="alert">{error}</p> : !saved.length && <p>Open Settings, choose Connectors, then choose Try sample data to add a source.</p>}
     {saved.map(source => {
       const selected = value.find(choice => choice.id === source.id && choice.digest === source.digest);
       return <div key={source.id}><label className="connector-check"><input type="checkbox" disabled={!source.sample} checked={!!selected} onChange={event => onChange(event.target.checked ? [...value.filter(choice => choice.id !== source.id), { id: source.id, digest: source.digest, includeInApp: false }] : value.filter(choice => choice.id !== source.id))}/><span>{source.label} ({source.count} {source.sample ? 'sample items' : 'items, preview only for this event'})</span></label>

@@ -44,10 +44,18 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
 const demoBundle = readMailMcpDemoBundle(app.isPackaged ? path.join(process.resourcesPath, 'mailmcp-demo') : process.env.APPYARD_DEMO_BUNDLE);
 const appName = demoBundle ? 'AppYard Demo' : 'AppYard';
-const demoPreview = demoBundle ? new MailMcpDemoPreview(demoBundle) : undefined;
+let demoPreview = demoBundle ? new MailMcpDemoPreview(demoBundle) : undefined;
 // Preserve existing workspaces and credentials when the display name changes.
 app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), demoBundle ? 'fleetharness-mailmcp-demo' : 'fleetharness'));
 app.setName(appName);
+function mailMcpPreview() {
+  if (!demoPreview) {
+    const importedBundle = readMailMcpDemoBundle(path.join(app.getPath('userData'), 'demos', 'mailmcp'));
+    if (!importedBundle) throw new Error('The MailMCP preview runtime is missing. Restore the demo runtime in this AppYard profile’s demos/mailmcp folder.');
+    demoPreview = new MailMcpDemoPreview(importedBundle);
+  }
+  return demoPreview;
+}
 app.commandLine.appendSwitch('disable-quic');
 app.commandLine.appendSwitch('dns-prefetch-disable');
 const ownsInstance = app.requestSingleInstanceLock();
@@ -375,8 +383,8 @@ function registerIPC() {
       try {
         await store.save();
         if (starting.signal.aborted || previewStarts.get(id) !== starting || quitting) return null;
-        const url = await scope.run(() => demoPreview && p.demo?.kind === 'mailmcp'
-          ? demoPreview.url(p.workspace!, starting.signal) : previews.url(p.workspace!));
+        const url = await scope.run(() => p.demo?.kind === 'mailmcp'
+          ? mailMcpPreview().url(p.workspace!, starting.signal) : previews.url(p.workspace!));
         if (request !== previewRequestGeneration || storageMutations.size) { await stopPreview(id); return null; }
         previewBoundary.setPreview(url); return url;
       }

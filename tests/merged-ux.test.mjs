@@ -102,9 +102,10 @@ async function renderer(t, { projects = [project()], view = 'requirements', api:
   const component = name => node(item => item.type?.name === name);
   const input = label => find(node(item => item.type === 'label' && text(item) === label), item => item.type === 'input' || item.type === 'textarea');
   const click = async name => { const target = button(name); assert.ok(target, name); assert.ok(!target.props.disabled, name + ' enabled'); await target.props.onClick(); await flush(); };
+  const openConnectors = async () => { await click('Settings'); await click('Connectors'); };
   const openProject = async id => { await click('Home \u2014 challenge portfolio'); component('Home').props.open(id ?? projects[0].id); await flush(); };
   await flush();
-  return { render, flush, node, button, click, openProject, component, input, data, state, api };
+  return { render, flush, node, button, click, openConnectors, openProject, component, input, data, state, api };
 }
 
 test('an existing brief retains text, attached data, pending paste and connector choices across navigation and failed Save', async t => {
@@ -116,14 +117,14 @@ test('an existing brief retains text, attached data, pending paste and connector
   ui.component('ConnectedDataSection').props.onChange([{ id: sourceId, digest: sourceDigest, includeInApp: false }]);
   await ui.flush();
   assert.match(text(ui.component('RequirementsForm')), /Edits are unsaved until you save/);
-  await ui.click('Connectors'); await ui.openProject();
+  await ui.openConnectors(); await ui.openProject();
   assert.equal(ui.input('Challenge title').props.value, 'Synthetic edited title');
   assert.equal(ui.component('BriefDataInputs').props.value[0].content, 'value\n1');
   assert.equal(ui.component('BriefDataInputs').props.editor.content, 'Synthetic pending input');
   assert.equal(ui.component('ConnectedDataSection').props.value[0].id, sourceId);
   await find(ui.component('RequirementsForm'), n => n.type === 'form').props.onSubmit({ preventDefault() {} }); await ui.flush();
   assert.match(text(ui.render()), /Synthetic save failure/);
-  await ui.click('Connectors'); await ui.openProject();
+  await ui.openConnectors(); await ui.openProject();
   assert.equal(ui.input('Challenge title').props.value, 'Synthetic edited title');
   fail = false;
   await find(ui.component('RequirementsForm'), n => n.type === 'form').props.onSubmit({ preventDefault() {} }); await ui.flush();
@@ -144,7 +145,7 @@ test('the intake draft and selected starter survive closing for Connectors, and 
   ui.component('ConnectedDataSection').props.onChange([{ id: sourceId, digest: sourceDigest, includeInApp: false }]);
   await ui.flush();
   ui.component('Intake').props.close(); await ui.flush();
-  await ui.click('Connectors'); await ui.click('New challenge');
+  await ui.openConnectors(); await ui.click('New challenge');
   assert.equal(ui.button('Scheduling').props['aria-pressed'], true);
   assert.equal(ui.input('Challenge title').props.value, 'Synthetic intake draft');
   assert.equal(ui.component('BriefDataInputs').props.editor.name, 'pending.txt');
@@ -174,7 +175,7 @@ test('a catalog intake selection and its draft return after the connector detour
   assert.equal(ui.component('RequirementsForm').props.initial.challengeId, '12');
   ui.input('Challenge title').props.onChange({ target: { value: 'Synthetic catalog edit' } }); await ui.flush();
   ui.component('Intake').props.close(); await ui.flush();
-  await ui.click('Connectors'); await ui.click('Home \u2014 challenge portfolio');
+  await ui.openConnectors(); await ui.click('Home \u2014 challenge portfolio');
   ui.component('Home').props.create('12'); await ui.flush();
   assert.equal(ui.input('Challenge title').props.value, 'Synthetic catalog edit');
   assert.equal(ui.component('RequirementsForm').props.initial.challengeId, '12');
@@ -209,6 +210,7 @@ test('Home, Settings, Connectors and another project expose Stop for the actual 
   const ui = await renderer(t, { projects: [project('idle'), running], view: 'portfolio', api: { stopRun: async id => stopped.push(id) } });
   for (const destination of [null, 'Settings', 'Connectors', 'Brief']) {
     if (destination === 'Brief') { await ui.click('Home \u2014 challenge portfolio'); ui.component('Home').props.open('idle'); await ui.flush(); }
+    else if (destination === 'Connectors') await ui.openConnectors();
     else if (destination) await ui.click(destination);
     const header = ui.node(n => n.type === 'header' && n.props['aria-label'] === 'Running build');
     assert.match(text(header), /Building: Synthetic challenge running/);
@@ -224,11 +226,12 @@ test('connector restrictions precede Connect, live data saves as a preview and s
   let sample = false;
   const card = { kind: 'custom-api', label: 'Synthetic service', summary: 'Synthetic source', available: true, signedIn: { id: 'synthetic-service' } };
   const saves = [];
-  const ui = await renderer(t, { view: 'connectors', api: { connectors: {
+  const ui = await renderer(t, { view: 'settings', api: { connectors: {
     list: async () => [card], cancel: async () => {}, progress: async () => ({ stage: 'idle' }),
     preview: async (_kind, _options, mode) => { sample = mode === 'sample'; return { id: 'synthetic-preview', digest: 'synthetic-digest', sample, excluded: 0, items: [{ id: 'one', title: 'Synthetic item', kind: 'text', body: 'Invented data' }] }; },
     use: async (id, digest) => { saves.push([id, digest]); card.connection = { id: 'saved', digest, sample, label: card.label, count: 1 }; }
   } } });
+  await ui.click('Connectors');
   const copy = text(ui.component('Connectors'));
   assert.ok(copy.indexOf('Event builds use sample data; live connections support local preview only.') < copy.indexOf('Synthetic service'));
   await ui.click('Check data');
@@ -236,7 +239,7 @@ test('connector restrictions precede Connect, live data saves as a preview and s
   await ui.click('Save preview'); assert.match(text(ui.render()), /Preview saved: 1 items/);
   await ui.openProject();
   assert.equal(find(ui.component('ConnectedDataSection'), n => n.type === 'input' && n.props.type === 'checkbox').props.disabled, true);
-  await ui.click('Connectors'); await ui.click('Try sample data');
+  await ui.openConnectors(); await ui.click('Try sample data');
   assert.ok(ui.button('Use this')); assert.equal(ui.button('Save preview'), undefined);
   await ui.click('Use this'); assert.match(text(ui.render()), /Sample data ready: 1 items/);
   await ui.openProject();

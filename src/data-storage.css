@@ -2,7 +2,8 @@
 .data-storage-page button,.data-storage-page select,.data-storage-page input{min-width:0}
 .storage-page-heading{margin-bottom:25px;align-items:flex-start}
 .storage-page-heading h1{margin-bottom:8px;outline:0}
-.storage-page-heading>.secondary{margin-top:3px}
+.storage-page-heading>.storage-heading-actions{margin-top:3px}
+.storage-refresh-status{font-size:12px;color:var(--muted);white-space:nowrap}
 .storage-summary{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:20px 0 23px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .storage-total{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px}
 .storage-total svg{color:var(--accent)}

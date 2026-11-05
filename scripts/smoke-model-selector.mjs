@@ -114,6 +114,7 @@ try {
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true);
   assert.equal(await selector.isDisabled(), true, 'Changing developer mode does not unlock the build model');
   for (const screen of ['Home \u2014 challenge portfolio', 'Connectors', 'Settings']) {
+    if (screen === 'Connectors') await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: screen, exact: true }).click();
     const header = page.locator('header[aria-label="Running build"]');
     assert.equal(await header.getByRole('button', { name: 'Stop build', exact: true }).isVisible(), true, screen);

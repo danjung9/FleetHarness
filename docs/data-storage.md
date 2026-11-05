@@ -8,6 +8,8 @@ The Builds list includes current and previous build folders, candidate workspace
 
 Storage totals include dependencies, Trash, and AppYard's other local app data. They describe managed local storage, not the Mac's entire disk. Exported copies outside AppYard's storage directory are managed separately in Finder. Application settings and credentials are not exposed as editable files.
 
+Builds appear before size calculations finish, and returning to Storage immediately shows the last inventory. While Storage is visible, it checks for changes every two seconds; sizes update as background scans finish. Returning focus to the window also refreshes the list. Searches, filters, file pages, and previews stay in place as files change. **Refresh** requests a fresh size calculation.
+
 **Export** saves a copy for inspection or backup. It does not grant delivery approval or replace the verified delivery workflow. Export destinations must be outside managed storage and existing files are never silently overwritten.
 
 ## Cleanup and recovery
@@ -26,5 +28,6 @@ The Projects tab offers **Archive** and **Unarchive**. Archiving removes a proje
 
 - `tests/data-storage.test.mjs`: filesystem inventory, containment, busy state, verification invalidation, recoverable deletion, persistence, and restore conflicts.
 - `tests/data-storage-compatibility.test.mjs`: an older Electron host offers an actionable restart message rather than a missing-method crash.
+- `tests/data-storage-refresh.test.mjs`: background scan sharing, cache freshness, nested file changes, mutation invalidation, and filesystem protections.
 - `npm run test:data-storage`: real Electron smoke using temporary synthetic projects, native-dialog stubs, file previews, export, deletion and restoration, archiving, restart persistence, and desktop/minimum-window captures.
 - `npm run check`: repository-wide isolated build and test validation.

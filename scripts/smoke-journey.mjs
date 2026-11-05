@@ -30,10 +30,11 @@ async function assertCompactNavigation(page) {
     assert.equal(await progress.getByRole('button', { name, exact: true }).count(), 1);
   }
   const utilities = page.getByRole('navigation', { name: 'Primary', exact: true });
-  assert.equal(await utilities.getByRole('button').count(), 5, 'The default utility rail includes Connectors and excludes developer-only system design');
-  for (const name of ['Connectors', 'Home — challenge portfolio', 'Preview — generated app', 'Activity — agent work', 'Files — artifacts']) {
+  assert.equal(await utilities.getByRole('button').count(), 4, 'The default utility rail excludes settings sections and developer-only system design');
+  for (const name of ['Home — challenge portfolio', 'Preview — generated app', 'Activity — agent work', 'Files — artifacts']) {
     assert.equal(await utilities.getByRole('button', { name, exact: true }).count(), 1);
   }
+  assert.equal(await utilities.getByRole('button', { name: 'Connectors', exact: true }).count(), 0, 'Connectors is available inside Settings');
   assert.equal(await utilities.getByRole('button', { name: /^System design/ }).count(), 0, 'System design has no utility control outside developer mode');
   assert.equal(await page.locator('.system-design').count(), 0, 'System design stays hidden throughout the non-developer journey');
 }

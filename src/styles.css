@@ -87,6 +87,9 @@ label{font-size:12px;font-weight:600;display:block;margin-bottom:20px}input:not(
 .toast{background:var(--raised);border:1px solid var(--line);color:var(--ink)}
 .dialog{background:var(--paper)}
 .page,.factory-main,.development{scrollbar-gutter:stable}
+.settings-navigation{flex-direction:row;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.settings-navigation button{min-height:40px;padding:10px 18px;font-size:13px}
+.settings-navigation button[aria-current=page]{background:var(--active);color:var(--accent);font-weight:600}
 .developer-mode-setting{display:flex;align-items:center;justify-content:space-between;gap:24px;max-width:1050px;padding:20px 0;margin-bottom:24px;border-top:1px solid var(--line)}
 .developer-mode-setting h2{margin:0 0 6px}
 .developer-mode-setting p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}

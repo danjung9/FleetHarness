@@ -5,6 +5,7 @@ import os from 'node:os';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { newProject, sourceHash } from '../dist-electron/electron/storage.js';
+import { reportHash } from '../dist-electron/electron/delivery.js';
 
 // A separate Electron profile and synthetic files keep this smoke away from real user data.
 const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-data-storage-')));
@@ -64,11 +65,13 @@ async function fixture() {
   await fs.utimes(oldWorkspace, earlier, earlier);
   Object.assign(primary, {
     runId: currentRunId, workspace: currentWorkspace, status: 'approved', approvedAt: new Date().toISOString(),
+    processScope: { runId: currentRunId, marker: randomUUID(), cleanup: 'confirmed' },
     exportedTo: path.join(root, 'previous-export'), resumeStage: 'verify',
     report: { time: new Date().toISOString(), command: 'synthetic-fixture', exitCode: 0, passed: 3, failed: 0, skipped: 0, total: 3,
       output: 'Synthetic fixture checks passed.', durationMs: 20, sourceHash: await sourceHash(currentWorkspace) },
     executable: { status: 'ready', platform: process.platform, arch: process.arch, fileName: 'fixture.zip', savedTo: path.join(root, 'fixture.zip') }
   });
+  primary.verification = { runId: currentRunId, reportHash: reportHash(primary.report) };
   primary.stages.forEach(stage => { stage.status = 'complete'; });
   Object.assign(secondary, { runId: secondRunId, workspace: secondWorkspace, status: 'stopped' });
   await fs.mkdir(stateRoot, { recursive: true });
@@ -136,21 +139,21 @@ async function approvalBlocksStorage(item) {
   const target = await fs.realpath(path.join(currentWorkspace, 'src/app.ts'));
   await app.evaluate((_, target) => {
     const disk = process.getBuiltinModule('fs').promises;
-    const originalRead = disk.readFile;
+    const originalOpen = disk.open;
     let entered, release;
     const reached = new Promise(resolve => { entered = resolve; });
     const blocked = new Promise(resolve => { release = resolve; });
     let intercepted = false;
     globalThis.storageReadGate = {
       reached,
-      release: () => { disk.readFile = originalRead; release(); delete globalThis.storageReadGate; }
+      release: () => { disk.open = originalOpen; release(); delete globalThis.storageReadGate; }
     };
-    disk.readFile = async function(file, ...args) {
+    disk.open = async function(file, ...args) {
       if (file === target && !intercepted) { intercepted = true; entered(); await blocked; }
-      return originalRead.call(this, file, ...args);
+      return originalOpen.call(this, file, ...args);
     };
   }, target);
-  const approval = page.evaluate(id => window.fleetHarness.approve(id, 'Review the synthetic fixture for the storage concurrency regression.'), primary.id);
+  const approval = page.evaluate(id => window.fleetHarness.approve(id, 'Review the synthetic fixture for the storage concurrency regression.', true), primary.id);
   // Observe any early rejection while the main-process gate is being awaited.
   void approval.catch(() => {});
   try {
@@ -158,7 +161,7 @@ async function approvalBlocksStorage(item) {
       let timer;
       try {
         await Promise.race([globalThis.storageReadGate.reached,
-          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Approval did not reach the source-file read gate.')), 10000); })]);
+          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Approval did not reach the source-file open gate.')), 10000); })]);
       } finally { clearTimeout(timer); }
     });
     assert.equal((await overview()).items.find(entry => entry.id === item.id).canTrash, false, 'An in-flight approval is active project work.');
@@ -214,6 +217,104 @@ async function storageDrainsPendingPreview(old) {
   }
 }
 
+async function withVisibleStorage(work) {
+  // The smoke's Electron window stays hidden; simulate a visible document for live refresh.
+  await page.evaluate(() => {
+    globalThis.storageSmokeVisibility = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  try { await work(); }
+  finally {
+    await page.evaluate(() => {
+      const descriptor = globalThis.storageSmokeVisibility;
+      if (descriptor) Object.defineProperty(document, 'visibilityState', descriptor);
+      else delete document.visibilityState;
+      delete globalThis.storageSmokeVisibility;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+  }
+}
+async function storageTracksExternalChanges(old) {
+  const extraRunId = randomUUID();
+  const extraWorkspace = path.join(stateRoot, 'workspaces', primary.id, extraRunId);
+  const extraBuild = { name: `Build ${extraRunId}`, projectTitle: primary.title };
+  const extraFile = 'data/watch-live.json';
+  const previousData = await fs.readFile(path.join(oldWorkspace, dataPath), 'utf8');
+  await withVisibleStorage(async () => {
+    await tab('Builds');
+    await page.getByLabel('Search storage', { exact: true }).fill(primary.title);
+    await page.getByLabel('Filter storage by project', { exact: true }).selectOption(primary.id);
+    await page.getByLabel('Sort storage', { exact: true }).selectOption('size');
+    await writeFiles(extraWorkspace, { 'README.md': 'A build created outside the storage screen.\n' });
+    await row(extraBuild).locator('small').filter({ hasText: /1 files/ }).waitFor({ timeout: 15000 });
+    assert.equal(await page.getByLabel('Search storage', { exact: true }).inputValue(), primary.title, 'Live overview refresh preserves the search.');
+    assert.equal(await page.getByLabel('Filter storage by project', { exact: true }).inputValue(), primary.id, 'Live overview refresh preserves the project filter.');
+    assert.equal(await page.getByLabel('Sort storage', { exact: true }).inputValue(), 'size', 'Live overview refresh preserves sorting.');
+    await fs.rm(extraWorkspace, { recursive: true });
+    await row(extraBuild).waitFor({ state: 'hidden', timeout: 15000 });
+    await page.getByLabel('Search storage', { exact: true }).fill('');
+    await page.getByLabel('Filter storage by project', { exact: true }).selectOption('all');
+
+    await browse(old);
+    await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).click();
+    await page.locator('.storage-file-preview pre').filter({ hasText: 'watches' }).waitFor();
+    const preview = await page.locator('.storage-file-preview pre').elementHandle();
+    await page.getByLabel('Search files', { exact: true }).fill('watch');
+    await page.getByLabel('Filter files by type', { exact: true }).selectOption('data');
+    await writeFiles(oldWorkspace, { [extraFile]: '{"synthetic":true,"live":true}\n' });
+    await page.getByRole('button', { name: `Preview ${extraFile}`, exact: true }).waitFor({ timeout: 15000 });
+    assert.equal(await page.getByLabel('Search files', { exact: true }).inputValue(), 'watch', 'Live file refresh preserves the search.');
+    assert.equal(await page.getByLabel('Filter files by type', { exact: true }).inputValue(), 'data', 'Live file refresh preserves the type filter.');
+    assert.equal(await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).getAttribute('aria-pressed'), 'true', 'Unrelated file changes preserve the selection.');
+    assert.equal(await preview.evaluate(element => element.isConnected), true, 'An unrelated file change does not remove the existing preview.');
+
+    await fs.writeFile(path.join(oldWorkspace, dataPath), '{"synthetic":true,"watches":[{"station":"Live update at the west pier"}]}\n');
+    await page.locator('.storage-file-preview pre').filter({ hasText: 'Live update at the west pier' }).waitFor({ timeout: 15000 });
+    assert.equal(await preview.evaluate(element => element.isConnected), true, 'Updating selected content keeps its preview mounted.');
+    const priorStat = await fs.stat(path.join(oldWorkspace, dataPath));
+    await fs.writeFile(path.join(oldWorkspace, dataPath), '{"synthetic":true,"watches":[{"station":"Live update at the east pier"}]}\n');
+    await fs.utimes(path.join(oldWorkspace, dataPath), priorStat.atime, priorStat.mtime);
+    const nextStat = await fs.stat(path.join(oldWorkspace, dataPath));
+    assert.equal(nextStat.size, priorStat.size, 'The edit preserves the selected file size.');
+    assert.equal(nextStat.mtime.toISOString(), priorStat.mtime.toISOString(), 'The edit preserves the displayed modification time.');
+    await page.locator('.storage-file-preview pre').filter({ hasText: 'Live update at the east pier' }).waitFor({ timeout: 15000 });
+    assert.equal(await preview.evaluate(element => element.isConnected), true, 'A same-size edit with preserved modification time updates the mounted preview.');
+    await preview.dispose();
+    await fs.rm(path.join(oldWorkspace, dataPath));
+    await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).waitFor({ state: 'hidden', timeout: 15000 });
+    await page.getByRole('heading', { name: 'Select a file', exact: true }).waitFor();
+    await fs.writeFile(path.join(oldWorkspace, dataPath), previousData);
+    await fs.rm(path.join(oldWorkspace, extraFile));
+    await page.getByRole('button', { name: `Preview ${extraFile}`, exact: true }).waitFor({ state: 'hidden', timeout: 15000 });
+    await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).waitFor({ timeout: 15000 });
+    assert.equal(await page.getByLabel('Search files', { exact: true }).inputValue(), 'watch');
+    assert.equal(await page.getByLabel('Filter files by type', { exact: true }).inputValue(), 'data');
+
+    await page.getByRole('button', { name: 'Home — challenge portfolio', exact: true }).click();
+    await writeFiles(extraWorkspace, { 'README.md': 'A build created while viewing Home.\n' });
+    await openStorage();
+    await row(extraBuild).getByRole('button', { name: browseLabel(extraBuild), exact: true }).waitFor({ timeout: 15000 });
+    await fs.rm(extraWorkspace, { recursive: true });
+    await row(extraBuild).waitFor({ state: 'hidden', timeout: 15000 });
+  });
+}
+async function storageKeepsFilePage() {
+  await withVisibleStorage(async () => {
+    const extraFile = 'archives/note-205.md';
+    const preview = await page.locator('.storage-file-preview pre').elementHandle();
+    await writeFiles(oldWorkspace, { [extraFile]: 'A note added while browsing the second file page.\n' });
+    await page.getByRole('button', { name: `Preview ${extraFile}`, exact: true }).waitFor({ timeout: 15000 });
+    assert.equal(await page.getByRole('button', { name: 'Preview archives/note-000.md', exact: true }).count(), 0, 'Live file refresh stays on the current page.');
+    assert.equal(await preview.evaluate(element => element.isConnected), true, 'Live pagination changes preserve the selected preview.');
+    await fs.rm(path.join(oldWorkspace, extraFile));
+    await page.getByRole('button', { name: `Preview ${extraFile}`, exact: true }).waitFor({ state: 'hidden', timeout: 15000 });
+    await page.getByRole('button', { name: 'Preview archives/note-204.md', exact: true }).waitFor();
+    assert.equal(await preview.evaluate(element => element.isConnected), true);
+    await preview.dispose();
+  });
+}
+
 try {
   await fixture();
   await launch();
@@ -241,6 +342,7 @@ try {
   await tab('Builds');
   await approvalBlocksStorage(current);
   await storageDrainsPendingPreview(old);
+  await storageTracksExternalChanges(old);
   await page.getByRole('button', { name: 'Refresh storage', exact: true }).click();
 
   // The remaining UI flows deliberately exercise the real preload and main-process handlers.
@@ -394,6 +496,7 @@ try {
   await page.getByRole('button', { name: 'Next file page', exact: true }).click();
   await page.getByRole('button', { name: 'Preview archives/note-204.md', exact: true }).waitFor();
   assert.match(await page.locator('.storage-file-preview pre').textContent(), /Saved synthetic note 0\./, 'Changing pages keeps the selected preview.');
+  await storageKeepsFilePage();
   await page.getByLabel('Search files', { exact: true }).fill('note-004');
   await page.getByRole('button', { name: 'Preview archives/note-004.md', exact: true }).waitFor();
   assert.equal(await page.locator('.storage-file-pagination').count(), 0, 'Filtering returns to the first matching page.');
@@ -402,19 +505,26 @@ try {
   if (await dismissNotice.isVisible()) await dismissNotice.click();
   assert.equal(await page.locator('.storage-item-row').count(), 5);
   assert.deepEqual((await overview()).warnings, []);
-  await capture('storage-desktop.png', 1512, 982);
-  await capture('storage-minimum.png', 1120, 720);
-  await browse(current);
-  await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).click();
-  await page.locator('.storage-file-preview pre').filter({ hasText: 'North pier' }).waitFor();
-  await capture('files-minimum.png', 1120, 720);
-  await capture('files-desktop.png', 1512, 982);
+  await withVisibleStorage(async () => {
+    const settled = page.locator('.storage-refresh-status').filter({ hasText: 'Updates automatically' });
+    await settled.waitFor({ timeout: 15000 });
+    await capture('storage-desktop.png', 1512, 982);
+    await settled.waitFor({ timeout: 15000 });
+    await capture('storage-minimum.png', 1120, 720);
+    await browse(current);
+    await page.getByRole('button', { name: `Preview ${dataPath}`, exact: true }).click();
+    await page.locator('.storage-file-preview pre').filter({ hasText: 'North pier' }).waitFor();
+    await capture('files-minimum.png', 1120, 720);
+    await capture('files-desktop.png', 1512, 982);
+  });
   assert.deepEqual(errors, []);
   const result = { passed: true, isolatedSyntheticProfile: true, realElectronIPC: true,
     inventoryAndFilters: true, paginatedFiles: true, keyboardFileNavigation: true, cancelRestoresFocus: true,
     distinctProjectAccessibleNames: true, normalProfileHasNoWarnings: true, textImageBinaryPreviews: true, dependenciesVisible: true,
     buildAndFileTrashRestore: true, permanentDeletion: true, exportCopiesAndReveal: true,
     approvalBlocksConcurrentStorage: true, storageDrainsPendingPreview: true,
+    externalBuildsAndFilesRefresh: true, selectedPreviewUpdatesInPlace: true, sameSizePreservedTimePreviewRefresh: true,
+    liveRefreshPreservesFiltersAndPage: true, returningToStorageRefreshes: true,
     currentFileInvalidatesVerification: true, archiveHidesAndRestoresProject: true,
     restartPersistence: true, rendererErrors: errors.length, screenshots: output };
   await fs.writeFile(path.join(output, 'result.json'), JSON.stringify(result, null, 2) + '\n');

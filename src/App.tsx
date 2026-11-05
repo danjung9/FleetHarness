@@ -196,11 +196,16 @@ function AgentSessions({ project, onReview }: { project: Project; onReview: () =
     <div className="transcript"><ActivityFeed key={filter + kind} items={items} live={project.status === 'running'} emptyTitle={kind === 'error' ? 'No issues recorded' : staged.length ? 'No matching activity' : 'No activity yet'} emptyDescription={kind === 'error' ? 'Failed actions and interrupted tools will appear here.' : staged.length ? 'Choose another activity type to see more of this run.' : filter === 'all' ? 'Start a build to follow your agents here, from the first plan to the final checks.' : 'Updates will appear here when this stage begins.'}/></div>
   </div>;
 }
-function Settings({ data, action, updated, busy, onBack, onSaved }: { data: Bootstrap; action: Action; updated: (b: Bootstrap) => void; busy: boolean; onBack?: () => void; onSaved: (b: Bootstrap) => void }) {
+type SettingsSection = 'general' | 'connectors';
+function Settings({ data, action, updated, busy, onBack, onSaved, section, onSectionChange }: { data: Bootstrap; action: Action; updated: (b: Bootstrap) => void; busy: boolean; onBack?: () => void; onSaved: (b: Bootstrap) => void; section: SettingsSection; onSectionChange: (section: SettingsSection) => void }) {
   const developerMode = data.state.settings.developerMode === true;
   const { backend, provider, model, rememberKey } = data.state.settings;
   return <div className="page settings-page"><div className="page-heading"><div><h1>Settings</h1></div><div>{onBack && <button className="secondary" onClick={onBack}>Back to challenge <ArrowRight size={14}/></button>}</div></div>
-    <section className="developer-mode-setting" aria-labelledby="developer-mode-label">
+    <nav className="settings-navigation" aria-label="Settings sections">
+      <button type="button" aria-current={section === 'general' ? 'page' : undefined} onClick={() => onSectionChange('general')}>General</button>
+      <button type="button" aria-current={section === 'connectors' ? 'page' : undefined} onClick={() => onSectionChange('connectors')}>Connectors</button>
+    </nav>
+    {section === 'connectors' ? <Connectors/> : <><section className="developer-mode-setting" aria-labelledby="developer-mode-label">
       <div><h2 id="developer-mode-label">Developer mode</h2><p id="developer-mode-description">Show system design in navigation and while building.</p></div>
       <label className="settings-switch"><input type="checkbox" role="switch" aria-labelledby="developer-mode-label" aria-describedby="developer-mode-description" checked={developerMode} disabled={busy} onChange={event => {
         const enabled = event.target.checked;
@@ -212,7 +217,7 @@ function Settings({ data, action, updated, busy, onBack, onSaved }: { data: Boot
     </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Your selected engine reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>The agent writes the app and tests. AppYard executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
       <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this Mac. AppYard independently runs the generated tests locally. Builds use your connected ChatGPT plan or configured API account.</p></div>
       <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Credentials stay in the desktop backend. The interface shows your account, models, and usage status.</p>
-    </aside></div>
+    </aside></div></>}
   </div>;
 }
 export default function App() {
@@ -237,6 +242,7 @@ export default function App() {
   const resumeInFlight = useRef(false);
   const [conversationOpen, setConversationOpen] = useState(false), [conversationFocus, setConversationFocus] = useState(0);
   const conversationTrigger = useRef<HTMLButtonElement>(null);
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('general');
   function openConversation() { setConversationOpen(true); setConversationFocus(value => value + 1); }
   function closeConversation() { setConversationOpen(false); requestAnimationFrame(() => conversationTrigger.current?.focus({ preventScroll: true })); }
   useEffect(() => {
@@ -269,7 +275,10 @@ export default function App() {
   const editingPlan = !!p && getResumeStage(p) === 'plan';
   const configured = data?.models.some(m => (!state?.settings.model || m.id === state.settings.model) && m.provider === state?.settings.provider && m.configured && (m.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
   function navigate(view: View) {
-    if (view === 'settings' && active !== 'settings') settingsReturn.current = active === 'portfolio' ? null : active;
+    if (view === 'settings') {
+      if (active !== 'settings') settingsReturn.current = active === 'portfolio' ? null : active;
+      setSettingsSection('general');
+    }
     if (view === 'artifacts') setRequestedArtifact('');
     setActive(view === 'design' && !developerMode ? 'factory' : view);
   }
@@ -301,7 +310,6 @@ export default function App() {
     setActive(project.codexGoal && (codexGoalActive(project.codexGoal) || project.status === 'draft') ? 'factory' : milestoneViews[getJourneyState(project).current]); setSearch(false);
   }
   const nav: { id: View; label: string; shortLabel: string; icon: typeof Bot }[] = [
-    { id: 'connectors', label: 'Connectors', shortLabel: 'Connectors', icon: Inbox },
     { id: 'portfolio', label: 'Home — challenge portfolio', shortLabel: 'Home', icon: LayoutDashboard },
     { id: 'design', label: 'System design — application architecture', shortLabel: 'Design', icon: GitBranch },
     { id: 'workspace', label: 'Preview — generated app', shortLabel: 'Preview', icon: Code2 },
@@ -310,18 +318,18 @@ export default function App() {
   ];
   const results = useMemo(() => state?.projects.filter(p => !p.archivedAt && (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
   if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
-  const globalView = active === 'settings' || active === 'storage' || active === 'connectors';
+  const globalView = active === 'settings' || active === 'storage';
   const showHome = active === 'portfolio' || (!p && !globalView);
   const journey = p ? getJourneyState(p) : null;
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
-      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio' && item.id !== 'connectors'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running' || codexGoalActive(project.codexGoal) || experimentRunning(project.experiment)) && <i className="live-dot"/>}</IconButton>)}</nav>
+      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running' || codexGoalActive(project.codexGoal) || experimentRunning(project.experiment)) && <i className="live-dot"/>}</IconButton>)}</nav>
       <div className="rail-bottom"><IconButton label="Data & storage" placement="right" className={'settings-link ' + (active === 'storage' ? 'active' : '')} aria-current={active === 'storage' ? 'page' : undefined} onClick={() => navigate('storage')}><HardDrive size={21}/><span>Storage</span></IconButton><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar">
-        {showHome || !p || globalView ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'storage' ? 'Data & storage' : active === 'connectors' ? 'Connectors' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{visibleProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
+        {showHome || !p || globalView ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'storage' ? 'Data & storage' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{visibleProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
         <div className="top-actions">
           {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
           {p && !showHome && !globalView && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
@@ -336,7 +344,6 @@ export default function App() {
         <div className="demo-notice-copy"><strong>Demo · MailMCP</strong><span>Simulated agent activity · live local preview</span></div>
         <div className="demo-notice-actions"><button type="button" className="text-button" aria-pressed={active === 'workspace'} onClick={() => navigate('workspace')}><Code2 size={15}/>View app</button><button type="button" className="text-button" aria-pressed={active === 'agents'} onClick={() => navigate('agents')}><Activity size={15}/>Agent activity</button></div>
       </aside>}
-      {active === 'connectors' && <Connectors/>}
       {showHome && <Home projects={visibleProjects} open={openProject} create={createChallenge}/>}
       {p && !showHome && !globalView && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => { if (!goalActive) setStart(true); }} resume={() => void resumeRun()} stopCodex={() => void action(() => api.stopCodexGoal(p.id), 'Stop requested. Goal files and activity will be kept.')} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
       {p && !showHome && !globalView && <ClarificationNotice project={p} onOpen={openConversation}/>}
@@ -360,7 +367,7 @@ export default function App() {
         delete briefDrafts.current[p.id];
         setActive('factory');
       }}/></div>}
-      {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={updateBootstrap} busy={busy} onSaved={settingsSaved} onBack={p ? () => { setActive(settingsReturn.current ?? milestoneViews[getJourneyState(p).current]); settingsReturn.current = null; } : undefined}/>}
+      {active === 'settings' && <Settings data={{ ...data, state }} action={action} updated={updateBootstrap} busy={busy} onSaved={settingsSaved} section={settingsSection} onSectionChange={setSettingsSection} onBack={p ? () => { setActive(settingsReturn.current ?? milestoneViews[getJourneyState(p).current]); settingsReturn.current = null; } : undefined}/>}
     </main>
     {p && !showHome && !globalView && <ProjectConversation
       key={p.id} project={p} open={conversationOpen} focusRequest={conversationFocus} onClose={closeConversation}

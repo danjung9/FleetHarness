@@ -12,6 +12,23 @@ Build and Activity show the simulated intake, research, planning, implementation
 
 The bundled launcher runs on loopback with the upstream memory-only development cache. It uses the upstream fictional mailbox, rejects live GenAI calls, and needs no system Python or account setup. The source files themselves remain unchanged.
 
+## Add the demo to My builds
+
+An updated regular AppYard installation can open the same demo from **Home → My builds**, alongside existing projects. Quit both **AppYard** and **AppYard Demo** first, then run this explicit import from the repository after `npm run build:electron`:
+
+```sh
+node scripts/import-mailmcp-demo.mjs \
+  --profile "$HOME/Library/Application Support/fleetharness" \
+  --bundle "/Applications/AppYard Demo.app/Contents/Resources/mailmcp-demo" \
+  --source-profile "$HOME/Library/Application Support/fleetharness-mailmcp-demo"
+```
+
+The destination profile must already exist. The importer copies the saved demo project, review notes, conversation, and workspace into the regular profile, and places a complete portable runtime under `demos/mailmcp/`. If the source profile has never been opened, it uses the bundle's initial seed. Existing builds and settings remain intact; a private copy of the previous `state.json` is saved under the destination's `backups/` directory before an atomic state update. The original demo app and profile remain available for recovery.
+
+Reopening regular AppYard shows **MailMCP · GenAI Outlook** in My builds. Its preview, simulated activity disclosure, and captured evidence work as before. A repeated import preserves edits to an already imported build. Conflicting project IDs or existing unowned destination files stop the import instead of overwriting them. Modified source keeps its historical test report but loses stale verification/approval; importing does not claim that edited code was retested.
+
+The main application retains its normal name, profile, model settings, and startup behavior. The portable runtime stays outside the generated workspace, so it is available without the separate demo app and does not alter the verified source inventory. Fictional mailbox edits still reset when the preview process stops.
+
 ## Prepare and package
 
 The preparation inputs live in `output/mailmcp-demo/`:

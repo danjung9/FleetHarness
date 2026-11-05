@@ -56,6 +56,7 @@ async function launch() {
   return { application, page };
 }
 async function openConnectors(page) {
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   await page.getByRole('heading', { name: 'Connectors', exact: true }).waitFor();
 }
@@ -110,7 +111,7 @@ try {
   }
   await page.screenshot({ path: path.join(output, 'connectors.png'), scale: 'css' });
   await page.reload(); await page.locator('.app-shell').waitFor();
-  await page.getByRole('button', { name: 'Connectors', exact: true }).click();
+  await openConnectors(page);
   await page.waitForFunction(() => document.querySelectorAll('.connector-saved').length === 7);
 
   step('sample cards done');
@@ -265,7 +266,7 @@ try {
     for (const hidden of ['Synthetic banner check', 'training.desk@example.invalid', '202-555-0147', '000-12-3456']) assert.equal(text.includes(hidden), false);
   }
   assert.ok(fixture.requests.length > 0); assert.deepEqual(errors, []);
-  await page.getByRole('button', { name: 'Connectors', exact: true }).click();
+  await openConnectors(page);
   for (const name of ['Gmail', 'Outlook', 'Your own data service']) await page.getByRole('article', { name, exact: true }).getByRole('button', { name: 'Disconnect', exact: true }).click();
   // Poll from here: an async predicate given to waitForFunction resolves at once.
   for (const deadline = Date.now() + 30000; ; await new Promise(resolve => setTimeout(resolve, 200))) {

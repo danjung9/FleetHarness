@@ -23,7 +23,11 @@ export async function packageMailMcpDemo() {
     extraResources: [...(pkg.build.extraResources ?? []), { from: demoBundle, to: 'mailmcp-demo' }],
     mac: { ...pkg.build.mac, target: ['dir'] },
   };
-  await build({ projectDir: root, targets: Platform.MAC.createTarget(['dir']), config });
+  // A config object is merged into package.json by electron-builder, including
+  // concatenating resource arrays. An explicit file avoids copying the runtime twice.
+  const configFile = path.join(root, 'output', 'mailmcp-demo', 'electron-builder.json');
+  await fs.writeFile(configFile, JSON.stringify(config, null, 2));
+  await build({ projectDir: root, targets: Platform.MAC.createTarget(['dir']), config: configFile });
   console.log(`Packaged the separate AppYard Demo app under ${path.join(root, 'release', 'mailmcp-demo')}`);
 }
 

@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const repository = fileURLToPath(new URL('..', import.meta.url));
 const bundle = path.resolve(process.env.APPYARD_DEMO_BUNDLE || path.join(repository, 'output/mailmcp-demo/bundle'));
-const evidence = path.resolve(process.env.APPYARD_DEMO_EVIDENCE || path.join(repository, 'output/mailmcp-demo/evidence'));
+const imported = process.env.APPYARD_DEMO_IMPORT === '1';
+const evidence = path.resolve(process.env.APPYARD_DEMO_EVIDENCE || path.join(repository, imported ? 'output/playwright/mailmcp-import' : 'output/mailmcp-demo/evidence'));
 const executablePath = process.env.FLEET_EXECUTABLE;
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-mailmcp-smoke-'));
 const profile = path.join(root, 'profile');
@@ -49,13 +50,21 @@ function observeWindow(window) {
 }
 
 try {
-  await check('The separate demo launches in a fresh isolated profile', async () => {
+  await check(imported ? 'The imported demo launches inside ordinary AppYard' : 'The separate demo launches in a fresh isolated profile', async () => {
     await fs.access(path.join(bundle, 'manifest.json'));
     await fs.access(path.join(bundle, 'seed-project.json'));
+    const env = { ...process.env, FLEET_USER_DATA: profile, PI_CODING_AGENT_DIR: piDirectory };
+    if (imported) {
+      const { importMailMcpDemo } = await import('./import-mailmcp-demo.mjs');
+      const { Store } = await import('../dist-electron/electron/storage.js');
+      const store = new Store(profile); await store.init();
+      await importMailMcpDemo({ profile, bundle, sourceProfile: path.join(root, 'uninstalled-demo') });
+      delete env.APPYARD_DEMO_BUNDLE;
+    } else env.APPYARD_DEMO_BUNDLE = bundle;
     app = await electron.launch({
       ...(executablePath ? { executablePath, args: [] } : { args: ['.'] }),
       cwd: repository,
-      env: { ...process.env, APPYARD_DEMO_BUNDLE: bundle, FLEET_USER_DATA: profile, PI_CODING_AGENT_DIR: piDirectory },
+      env,
       timeout: 60_000,
     });
     app.on('window', observeWindow);
@@ -64,21 +73,29 @@ try {
     page.setDefaultTimeout(15_000);
     await page.locator('.app-shell').waitFor({ timeout: 60_000 });
     bootstrap = await page.evaluate(() => window.fleetHarness.bootstrap());
-    project = bootstrap.state.projects.find(item => item.id === bootstrap.demo?.projectId);
-    assert.ok(project, 'The bootstrap must identify the preloaded demo project.');
+    project = bootstrap.state.projects.find(item => item.id === (imported ? 'mailmcp-demo' : bootstrap.demo?.projectId));
+    assert.ok(project, 'The saved state must include the demo project.');
+    if (imported) {
+      assert.equal(bootstrap.demo, undefined);
+      assert.ok(bootstrap.state.projects.length > 1, 'Existing builds must remain alongside the demo.');
+    }
     assert.equal(bootstrap.storagePath, profile);
     assert.equal(project.demo?.kind, 'mailmcp');
     assert.equal(project.demo?.activity, 'simulated');
     assert.equal(project.demo?.repository, 'https://github.com/shourovsahaaa/mailmcp');
     assert.match(project.demo?.commit ?? '', /^[a-f0-9]{40}$/);
-    assert.ok(project.workspace.startsWith(profile + path.sep));
-    assert.equal(await app.evaluate(({ app: application }) => application.getName()), 'AppYard Demo');
+    assert.ok((await fs.realpath(project.workspace)).startsWith(await fs.realpath(profile) + path.sep));
+    assert.equal(await app.evaluate(({ app: application }) => application.getName()), imported ? 'AppYard' : 'AppYard Demo');
     notes.push(`Repository commit: ${project.demo.commit}`);
     notes.push(executablePath ? `Installed executable: ${executablePath}` : 'Executable: repository Electron development build');
   });
 
-  await check('Startup selects Build and clearly labels the preloaded demonstration', async () => {
-    await page.getByRole('heading', { name: 'Build phases', exact: true }).waitFor();
+  await check(imported ? 'My builds opens MailMCP with its demo provenance intact' : 'Startup selects Build and clearly labels the preloaded demonstration', async () => {
+    if (imported) {
+      await page.getByRole('button', { name: /^My builds/ }).click();
+      await page.getByRole('heading', { name: 'My builds', exact: true }).waitFor();
+      await page.getByRole('button', { name: /MailMCP · GenAI Outlook/ }).click();
+    } else await page.getByRole('heading', { name: 'Build phases', exact: true }).waitFor();
     await page.getByText('Demo · MailMCP', { exact: true }).waitFor();
     await page.getByText('Simulated agent activity · live local preview', { exact: true }).waitFor();
     assert.match(await page.getByRole('complementary', { name: 'MailMCP demo' }).getAttribute('title'), /simulated/);
@@ -235,7 +252,7 @@ try {
   const passed = checks.filter(result => result.status === 'passed').length;
   const failed = checks.filter(result => result.status === 'failed').length;
   const report = {
-    time: new Date().toISOString(), command: 'node scripts/smoke-mailmcp-demo.mjs',
+    time: new Date().toISOString(), command: (imported ? 'APPYARD_DEMO_IMPORT=1 ' : '') + 'node scripts/smoke-mailmcp-demo.mjs',
     exitCode: failed ? 1 : 0, passed, failed, skipped: 0, total: checks.length,
     output: [
       'Real Electron end-to-end validation of the MailMCP demonstration.',

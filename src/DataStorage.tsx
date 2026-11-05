@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Archive, ArchiveRestore, ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Download, File, FileCode2, FolderOpen, HardDrive, Info, LockKeyhole, RefreshCw, Search, Trash2, Undo2, X } from 'lucide-react';
 import type { Project } from '../shared/types';
-import type { StorageFile, StorageItem, StorageOverview, StoragePreview, StorageTrashItem } from '../shared/data-storage';
+import type { StorageFile, StorageItem, StoragePreview, StorageTrashItem } from '../shared/data-storage';
 import { api, isDesktop } from './api';
 import { IconButton } from './IconButton';
+import { useStorageOverview } from './useStorageOverview';
 import './data-storage.css';
 
 type Tab = 'builds' | 'projects' | 'trash';
@@ -72,6 +73,9 @@ function FileBrowser({ item, revision, busy, action, back, requestTrash, onOpenP
   const [preview, setPreview] = useState<StoragePreview | null>(null), [previewError, setPreviewError] = useState(''), [previewLoading, setPreviewLoading] = useState(false), [previewRetry, setPreviewRetry] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null), entries = useRef<HTMLDivElement>(null);
   const fileButtons = useRef(new Map<string, HTMLButtonElement>()), pendingFileFocus = useRef('');
+  const previewPath = useRef('');
+  const file = files.find(entry => entry.path === selected);
+  const contentsVersion = item.revision ?? item.updatedAt;
   const keyboardHintId = useId();
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
@@ -82,13 +86,16 @@ function FileBrowser({ item, revision, busy, action, back, requestTrash, onOpenP
       setFiles(next); setSelected(path => next.some(file => file.path === path) ? path : '');
     }).catch(error => { if (current) setLoadError(errorText(error)); }).finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
-  }, [item.id, item.updatedAt, revision, retry]);
+  }, [item.id, contentsVersion, revision, retry]);
   useEffect(() => {
     let current = true;
-    setPreview(null); setPreviewError(''); setPreviewLoading(!!selected);
-    if (selected) void api.storageReadFile(item.id, selected).then(value => { if (current) setPreview(value); }).catch(error => { if (current) setPreviewError(errorText(error)); }).finally(() => { if (current) setPreviewLoading(false); });
+    if (previewPath.current !== selected) setPreview(null);
+    setPreviewError(''); setPreviewLoading(!!selected);
+    if (selected) void api.storageReadFile(item.id, selected).then(value => {
+      if (current) { previewPath.current = selected; setPreview(value); }
+    }).catch(error => { if (current) setPreviewError(errorText(error)); }).finally(() => { if (current) setPreviewLoading(false); });
     return () => { current = false; };
-  }, [item.id, item.updatedAt, selected, revision, previewRetry]);
+  }, [item.id, selected, file?.revision, file?.updatedAt, file?.size, revision, previewRetry]);
   const matches = useMemo(() => {
     const search = query.toLocaleLowerCase();
     return files.filter(file => file.path.toLocaleLowerCase().includes(search) && (category === 'all' || file.category === category));
@@ -119,15 +126,15 @@ function FileBrowser({ item, revision, busy, action, back, requestTrash, onOpenP
     setFocusedPath(next.path); setSelected(next.path);
     return true;
   }
-  const file = files.find(entry => entry.path === selected);
   return <section className="storage-detail" aria-label="Browse stored files">
     <button type="button" className="text-button storage-back" onClick={back}><ArrowLeft size={15} aria-hidden="true"/>Back to storage</button>
     <div className="storage-detail-heading">
-      <div className="storage-detail-title"><h1 ref={heading} tabIndex={-1}>{item.name}</h1><p>{item.projectTitle}{projectArchived ? ' · Archived project' : !projectAvailable ? ' · Project record unavailable' : ''}</p><div className="storage-detail-meta"><ItemStatus item={item}/><span>{bytes(item.bytes)} · {item.fileCount.toLocaleString()} files</span><button type="button" className="text-button" disabled={projectArchived || !projectAvailable} title={!projectAvailable ? 'The project record is unavailable. You can still manage its saved files.' : projectArchived ? 'Unarchive this project in Projects before opening it.' : undefined} onClick={onOpenProject}>Open project <ArrowRight size={13} aria-hidden="true"/></button></div></div>
+      <div className="storage-detail-title"><h1 ref={heading} tabIndex={-1}>{item.name}</h1><p>{item.projectTitle}{projectArchived ? ' · Archived project' : !projectAvailable ? ' · Project record unavailable' : ''}</p><div className="storage-detail-meta"><ItemStatus item={item}/><span>{item.measured === false ? 'Calculating size…' : `${bytes(item.bytes)} · ${item.fileCount.toLocaleString()} files`}</span><button type="button" className="text-button" disabled={projectArchived || !projectAvailable} title={!projectAvailable ? 'The project record is unavailable. You can still manage its saved files.' : projectArchived ? 'Unarchive this project in Projects before opening it.' : undefined} onClick={onOpenProject}>Open project <ArrowRight size={13} aria-hidden="true"/></button></div></div>
       <div className="storage-heading-actions"><button type="button" className="secondary" aria-label={`Open ${item.name} folder in ${item.projectTitle}`} disabled={busy} onClick={() => void action(() => api.storageOpen(item.id))}><FolderOpen size={15} aria-hidden="true"/>Open folder</button><button type="button" className="secondary" disabled={busy} onClick={() => void onExport()}><Download size={15} aria-hidden="true"/>Export {item.kind === 'build' ? 'build' : 'folder'}</button><IconButton label={`Move ${item.name} from ${item.projectTitle} to Trash`} disabled={busy || !item.canTrash} title={item.blockedReason} onClick={() => requestTrash()}><Trash2 size={16}/></IconButton></div>
     </div>
     {!item.canTrash && <p className="storage-protection"><LockKeyhole size={14} aria-hidden="true"/>{item.blockedReason || 'This folder is in use. Stop the active work before moving it or its files to Trash.'}</p>}
-    {loadError ? <div className="storage-load-error" role="alert"><strong>Files could not be loaded.</strong><p>{loadError}</p><button type="button" className="secondary" onClick={() => setRetry(value => value + 1)}><RefreshCw size={14}/>Retry files</button></div> : <>
+    {loadError && <div className="storage-load-error" role="alert"><strong>Files could not be refreshed.</strong><p>{loadError}</p><button type="button" className="secondary" onClick={() => setRetry(value => value + 1)}><RefreshCw size={14}/>Retry files</button></div>}
+    <>
       <div className="storage-file-toolbar"><label className="storage-search"><Search size={16} aria-hidden="true"/><input aria-label="Search files" placeholder="Find a file by name or path" value={query} onChange={event => setQuery(event.target.value)}/>{query && <button type="button" className="storage-clear" aria-label="Clear file search" onClick={() => setQuery('')}><X size={14}/></button>}</label><select aria-label="Filter files by type" value={category} onChange={event => setCategory(event.target.value as typeof category)}><option value="all">All file types</option>{Object.entries(categories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><span className="storage-result-count" role="status">{loading ? 'Loading files…' : `${matches.length.toLocaleString()} of ${files.length.toLocaleString()} files`}</span></div>
       <div className="storage-file-browser" aria-busy={loading}>
         <div className="storage-file-list" aria-label="Files">
@@ -139,21 +146,21 @@ function FileBrowser({ item, revision, busy, action, back, requestTrash, onOpenP
         </div>
         <section className="storage-file-preview" aria-label="File preview" aria-busy={previewLoading}>
           {file ? <><div className="storage-preview-heading"><h2>{file.path}</h2><p>{bytes(file.size)} · Updated {formatDate(file.updatedAt)}</p><div className="storage-preview-actions"><button type="button" className="text-button" disabled={busy} onClick={() => void action(() => api.storageOpen(item.id, file.path))}><FolderOpen size={14} aria-hidden="true"/>Reveal file</button><button type="button" className="text-button" disabled={busy} onClick={() => void onExport(file.path)}><Download size={14} aria-hidden="true"/>Export file</button><button type="button" className="text-button storage-danger-text" disabled={busy || !item.canTrash} title={item.blockedReason} onClick={() => requestTrash(file)}><Trash2 size={14} aria-hidden="true"/>Move file to Trash</button></div></div>
-            {previewLoading ? <p className="storage-inline-empty" role="status">Loading preview…</p> : previewError ? <div className="storage-inline-empty" role="alert"><p>{previewError}</p><button type="button" className="secondary" onClick={() => setPreviewRetry(value => value + 1)}>Retry preview</button></div> : preview?.kind === 'text' ? <>{preview.message && <p className="storage-preview-message">{preview.message}</p>}<pre tabIndex={0} aria-label={`Contents of ${file.path}`}>{preview.text || 'This file is empty.'}</pre></> : preview?.kind === 'image' && preview.url ? <div className="storage-image-preview"><img src={preview.url} alt={`Preview of ${file.path}`} onError={() => setPreviewError('This image could not be displayed. Reveal the file to inspect it in another app.')}/></div> : <Empty title="No preview available">{preview?.message || 'Export this file or reveal it in its folder to open it with another app.'}</Empty>}
+            {previewLoading && !preview ? <p className="storage-inline-empty" role="status">Loading preview…</p> : previewError ? <div className="storage-inline-empty" role="alert"><p>{previewError}</p><button type="button" className="secondary" onClick={() => setPreviewRetry(value => value + 1)}>Retry preview</button></div> : preview?.kind === 'text' ? <>{preview.message && <p className="storage-preview-message">{preview.message}</p>}<pre tabIndex={0} aria-label={`Contents of ${file.path}`}>{preview.text || 'This file is empty.'}</pre></> : preview?.kind === 'image' && preview.url ? <div className="storage-image-preview"><img src={preview.url} alt={`Preview of ${file.path}`} onError={() => setPreviewError('This image could not be displayed. Reveal the file to inspect it in another app.')}/></div> : <Empty title="No preview available">{preview?.message || 'Export this file or reveal it in its folder to open it with another app.'}</Empty>}
           </> : <Empty title="Select a file"><File size={28} aria-hidden="true"/><span>Browse source, saved data, logs, and build evidence.</span></Empty>}
         </section>
       </div>
-    </>}
+    </>
     <p className="storage-export-note">Storage exports are for inspection and backup. Use Delivery to export a verified build.</p>
   </section>;
 }
 
 export function DataStorage({ projects, onOpenProject, onLearning }: { projects: Project[]; onOpenProject: (id: string) => void; onLearning: () => void }) {
-  const [overview, setOverview] = useState<StorageOverview | null>(null), [loading, setLoading] = useState(isDesktop), [loadError, setLoadError] = useState('');
+  const { overview, loading, loadError, refresh } = useStorageOverview();
   const [actionError, setActionError] = useState(''), [busy, setBusy] = useState(false), [notice, setNotice] = useState<Notice | null>(null);
   const [tab, setTab] = useState<Tab>('builds'), [query, setQuery] = useState(''), [projectFilter, setProjectFilter] = useState('all'), [sort, setSort] = useState('recent');
   const [selected, setSelected] = useState(''), [revision, setRevision] = useState(0), [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-  const sequence = useRef(0), inFlight = useRef(false);
+  const inFlight = useRef(false);
   const tabId = useId();
   const libraryHeading = useRef<HTMLHeadingElement>(null), previousSelection = useRef('');
   useEffect(() => {
@@ -164,18 +171,9 @@ export function DataStorage({ projects, onOpenProject, onLearning }: { projects:
     });
   }, [selected, tabId]);
   const projectVersion = useMemo(() => projects.map(project => `${project.id}:${project.updatedAt}:${project.status}:${project.archivedAt ?? ''}`).join('|'), [projects]);
-  const refresh = useCallback(async () => {
-    if (!isDesktop) return;
-    const request = ++sequence.current;
-    setLoading(true); setLoadError('');
-    try {
-      const next = await api.storageOverview();
-      if (request !== sequence.current) return;
-      setOverview(next); setSelected(id => next.items.some(item => item.id === id) ? id : '');
-    } catch (error) { if (request === sequence.current) setLoadError(errorText(error)); }
-    finally { if (request === sequence.current) setLoading(false); }
-  }, []);
-  useEffect(() => { void refresh(); return () => { sequence.current += 1; }; }, [refresh]);
+  useEffect(() => {
+    if (overview) setSelected(id => overview.items.some(item => item.id === id) ? id : '');
+  }, [overview]);
   const lastProjectVersion = useRef(projectVersion);
   useEffect(() => {
     if (lastProjectVersion.current === projectVersion) return;
@@ -235,13 +233,13 @@ export function DataStorage({ projects, onOpenProject, onLearning }: { projects:
   const filtered = !!query || projectFilter !== 'all';
   const clearFilters = () => { setQuery(''); setProjectFilter('all'); };
   return <div className="page data-storage-page">
-    {!item && <div className="page-heading storage-page-heading"><div><h1 ref={libraryHeading} tabIndex={-1}>Data & storage</h1><p>Find what AppYard has created. Keep what matters, clear what you no longer need.</p></div><button type="button" className="secondary" aria-label="Refresh storage" disabled={loading || busy || !isDesktop} onClick={() => { setRevision(value => value + 1); void refresh(); }}><RefreshCw size={15} aria-hidden="true"/>{loading ? 'Refreshing…' : 'Refresh'}</button></div>}
+    {!item && <div className="page-heading storage-page-heading"><div><h1 ref={libraryHeading} tabIndex={-1}>Data & storage</h1><p>Find what AppYard has created. Keep what matters, clear what you no longer need.</p></div><div className="storage-heading-actions">{isDesktop && <span className="storage-refresh-status" role="status">{overview?.scanning ? 'Updating sizes…' : 'Updates automatically'}</span>}<button type="button" className="secondary" aria-label="Refresh storage" disabled={loading || busy || !isDesktop} onClick={() => { setRevision(value => value + 1); void refresh(true); }}><RefreshCw size={15} aria-hidden="true"/>{loading ? 'Refreshing…' : 'Refresh'}</button></div></div>}
     {notice && <div className="storage-notice" role="status"><CheckCircle2 size={17} aria-hidden="true"/><p>{notice.message}</p>{notice.undoId && <button type="button" className="text-button" disabled={busy} onClick={() => void restore(notice.undoId!)}><Undo2 size={14} aria-hidden="true"/>Undo</button>}<button type="button" className="storage-clear" aria-label="Dismiss notification" onClick={() => setNotice(null)}><X size={15}/></button></div>}
     {actionError && !confirmation && <div className="storage-action-error" role="alert"><p>{actionError}</p><button type="button" className="storage-clear" aria-label="Dismiss error" onClick={() => setActionError('')}><X size={15}/></button></div>}
     {!isDesktop ? <div className="storage-desktop-state"><HardDrive size={32} aria-hidden="true"/><h2>Your files live in the desktop app</h2><p>Open AppYard on your Mac to see disk usage, browse every build, export files, and manage Trash.</p><p className="small-note">This browser preview does not have access to your local build folders.</p></div> : <>
       {loadError && <div className="storage-load-error" role="alert"><strong>Storage could not be refreshed.</strong><p>{loadError}</p><button type="button" className="secondary" disabled={loading} onClick={() => void refresh()}><RefreshCw size={14} aria-hidden="true"/>Retry storage</button></div>}
       {item ? <FileBrowser key={item.id} item={item} revision={revision} busy={busy} action={action} back={() => setSelected('')} requestTrash={file => requestTrash(item, file)} onOpenProject={() => onOpenProject(item.projectId)} onExport={file => exportItem(item.id, file)} projectArchived={overview?.projects.find(project => project.id === item.projectId)?.archived ?? false} projectAvailable={projects.some(project => project.id === item.projectId)}/> : overview ? <>
-        <div className="storage-summary" aria-label="Storage usage"><div className="storage-total"><HardDrive size={20} aria-hidden="true"/><span><strong>{bytes(overview.totalBytes)}</strong> managed locally</span></div><div className="storage-summary-detail"><span><strong>{bytes(overview.items.reduce((total, entry) => total + entry.bytes, 0))}</strong> Build folders</span><span><strong>{bytes(overview.trashBytes)}</strong> Trash</span><span><strong>{bytes(overview.otherBytes)}</strong> App data</span></div></div>
+        <div className="storage-summary" aria-label="Storage usage"><div className="storage-total"><HardDrive size={20} aria-hidden="true"/><span><strong>{overview.scanning && !overview.measuredAt ? 'Calculating…' : bytes(overview.totalBytes)}</strong> managed locally</span></div><div className="storage-summary-detail"><span><strong>{overview.items.some(entry => entry.measured === false) ? 'Calculating…' : bytes(overview.items.reduce((total, entry) => total + entry.bytes, 0))}</strong> Build folders</span><span><strong>{overview.scanning && !overview.measuredAt ? 'Calculating…' : bytes(overview.trashBytes)}</strong> Trash</span><span><strong>{overview.scanning && !overview.measuredAt ? 'Calculating…' : bytes(overview.otherBytes)}</strong> App data</span></div></div>
         {overview.warnings.length > 0 && <details className="storage-warnings"><summary><Info size={14} aria-hidden="true"/>Storage notes ({overview.warnings.length})</summary><ul>{overview.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul></details>}
         <div className="storage-tabs" role="tablist" aria-label="Storage sections">{(['builds', 'projects', 'trash'] as const).map(value => <button key={value} type="button" role="tab" id={`${tabId}-${value}`} aria-controls={`${tabId}-panel`} aria-selected={tab === value} tabIndex={tab === value ? 0 : -1} onClick={() => setTab(value)} onKeyDown={event => {
           const values = ['builds', 'projects', 'trash'] as const;
@@ -251,17 +249,17 @@ export function DataStorage({ projects, onOpenProject, onLearning }: { projects:
         <div className="storage-library-toolbar"><label className="storage-search"><Search size={16} aria-hidden="true"/><input aria-label="Search storage" placeholder={tab === 'projects' ? 'Search projects' : 'Search projects or builds'} value={query} onChange={event => setQuery(event.target.value)}/>{query && <button type="button" className="storage-clear" aria-label="Clear storage search" onClick={() => setQuery('')}><X size={14}/></button>}</label><select aria-label="Filter storage by project" value={projectFilter} onChange={event => setProjectFilter(event.target.value)}><option value="all">All projects</option>{overview.projects.map(project => <option key={project.id} value={project.id}>{project.title}{project.archived ? ' (archived)' : ''}</option>)}</select><select aria-label="Sort storage" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">Most recent</option><option value="size">Largest first</option></select></div>
         <section role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${tab}`} tabIndex={0}>
           <div className="storage-section-caption"><p>{tab === 'builds' ? 'Current builds, previous versions, candidate folders, and agent sessions.' : tab === 'projects' ? 'Archive a project to set it aside. Its files stay available in storage.' : 'Items stay on disk until permanently deleted. Restore returns them to their original location.'}</p><span role="status">{filtered ? `${resultCount} of ${allCount}` : resultCount} {tab === 'projects' ? 'projects' : 'items'}</span></div>
-          {tab === 'builds' && items.length > 0 && <div className="storage-items"><div className="storage-table-head" aria-hidden="true"><span>Build / project</span><span>Status</span><span>Updated</span><span>Size</span><span/></div>{items.map(entry => <div className="storage-item-row" key={entry.id}><button type="button" id={`${tabId}-item-${entry.id}`} className="storage-row-name" aria-label={`Browse ${entry.name} in ${entry.projectTitle}`} onClick={() => setSelected(entry.id)}><FolderOpen size={20} aria-hidden="true"/><span><strong>{entry.name}</strong><small>{entry.projectTitle} · {entry.fileCount.toLocaleString()} files</small></span><ChevronRight size={16} aria-hidden="true"/></button><ItemStatus item={entry}/><time dateTime={entry.updatedAt}>{formatDate(entry.updatedAt)}</time><span className="storage-row-size">{bytes(entry.bytes)}</span><div className="storage-row-actions"><IconButton label={`Open ${entry.name} folder in ${entry.projectTitle}`} disabled={busy} onClick={() => void action(() => api.storageOpen(entry.id))}><FolderOpen size={16}/></IconButton><IconButton label={`Move ${entry.name} from ${entry.projectTitle} to Trash`} disabled={busy || !entry.canTrash} title={entry.blockedReason} onClick={() => requestTrash(entry)}><Trash2 size={16}/></IconButton></div>{!entry.canTrash && <p className="storage-row-protection"><LockKeyhole size={12} aria-hidden="true"/>{entry.blockedReason || 'In use. Stop the active work before moving to Trash.'}</p>}</div>)}</div>}
+          {tab === 'builds' && items.length > 0 && <div className="storage-items"><div className="storage-table-head" aria-hidden="true"><span>Build / project</span><span>Status</span><span>Updated</span><span>Size</span><span/></div>{items.map(entry => <div className="storage-item-row" key={entry.id}><button type="button" id={`${tabId}-item-${entry.id}`} className="storage-row-name" aria-label={`Browse ${entry.name} in ${entry.projectTitle}`} onClick={() => setSelected(entry.id)}><FolderOpen size={20} aria-hidden="true"/><span><strong>{entry.name}</strong><small>{entry.projectTitle} · {entry.measured === false ? 'Counting files…' : `${entry.fileCount.toLocaleString()} files`}</small></span><ChevronRight size={16} aria-hidden="true"/></button><ItemStatus item={entry}/><time dateTime={entry.updatedAt}>{formatDate(entry.updatedAt)}</time><span className="storage-row-size">{entry.measured === false ? 'Calculating…' : bytes(entry.bytes)}</span><div className="storage-row-actions"><IconButton label={`Open ${entry.name} folder in ${entry.projectTitle}`} disabled={busy} onClick={() => void action(() => api.storageOpen(entry.id))}><FolderOpen size={16}/></IconButton><IconButton label={`Move ${entry.name} from ${entry.projectTitle} to Trash`} disabled={busy || !entry.canTrash} title={entry.blockedReason} onClick={() => requestTrash(entry)}><Trash2 size={16}/></IconButton></div>{!entry.canTrash && <p className="storage-row-protection"><LockKeyhole size={12} aria-hidden="true"/>{entry.blockedReason || 'In use. Stop the active work before moving to Trash.'}</p>}</div>)}</div>}
           {tab === 'projects' && storedProjects.length > 0 && <div className="storage-projects">{storedProjects.map(project => {
             const available = projects.some(entry => entry.id === project.id);
-            return <div className="storage-project-row" key={project.id}><div className="storage-project-copy"><h2>{project.title}</h2><p>{project.buildCount} {project.buildCount === 1 ? 'build' : 'builds'} · {bytes(project.bytes)}{!available ? ' · Project record unavailable' : ''}</p></div><span className={'badge ' + (project.active ? 'active' : '')}>{project.active ? 'In use' : project.archived ? 'Archived' : available ? 'Available' : 'Files only'}</span><div className="storage-project-actions"><button type="button" className="secondary" disabled={project.archived || !available} title={!available ? 'The project record is unavailable.' : project.archived ? 'Unarchive this project before opening it.' : undefined} onClick={() => onOpenProject(project.id)}>Open project <ArrowRight size={14} aria-hidden="true"/></button><button type="button" className="secondary" aria-label={`${project.archived ? 'Unarchive' : 'Archive'} ${project.title}`} disabled={busy || project.active || !available} title={!available ? 'The project record is unavailable.' : project.active ? 'Stop the active work before archiving this project.' : undefined} onClick={() => void archive(project.id, !project.archived)}>{project.archived ? <ArchiveRestore size={15} aria-hidden="true"/> : <Archive size={15} aria-hidden="true"/>}{project.archived ? 'Unarchive' : 'Archive'}</button><button type="button" className="text-button" onClick={() => { setTab('builds'); setProjectFilter(project.id); setQuery(''); }}>Browse files</button></div></div>;
+            return <div className="storage-project-row" key={project.id}><div className="storage-project-copy"><h2>{project.title}</h2><p>{project.buildCount} {project.buildCount === 1 ? 'build' : 'builds'} · {overview.items.some(entry => entry.projectId === project.id && entry.measured === false) ? 'Calculating size…' : bytes(project.bytes)}{!available ? ' · Project record unavailable' : ''}</p></div><span className={'badge ' + (project.active ? 'active' : '')}>{project.active ? 'In use' : project.archived ? 'Archived' : available ? 'Available' : 'Files only'}</span><div className="storage-project-actions"><button type="button" className="secondary" disabled={project.archived || !available} title={!available ? 'The project record is unavailable.' : project.archived ? 'Unarchive this project before opening it.' : undefined} onClick={() => onOpenProject(project.id)}>Open project <ArrowRight size={14} aria-hidden="true"/></button><button type="button" className="secondary" aria-label={`${project.archived ? 'Unarchive' : 'Archive'} ${project.title}`} disabled={busy || project.active || !available} title={!available ? 'The project record is unavailable.' : project.active ? 'Stop the active work before archiving this project.' : undefined} onClick={() => void archive(project.id, !project.archived)}>{project.archived ? <ArchiveRestore size={15} aria-hidden="true"/> : <Archive size={15} aria-hidden="true"/>}{project.archived ? 'Unarchive' : 'Archive'}</button><button type="button" className="text-button" onClick={() => { setTab('builds'); setProjectFilter(project.id); setQuery(''); }}>Browse files</button></div></div>;
           })}</div>}
           {tab === 'trash' && trash.length > 0 && <div className="storage-trash">{trash.map(entry => <div className="storage-trash-row" key={entry.id}><Trash2 size={18} aria-hidden="true"/><div className="storage-trash-copy"><strong>{entry.name}</strong><p>{entry.projectTitle} · {kinds[entry.kind]}</p><small>Moved to Trash {formatDate(entry.deletedAt)}</small></div><span className="storage-row-size">{bytes(entry.bytes)}</span><div className="storage-trash-actions"><button type="button" className="secondary" aria-label={`Restore ${entry.name} to ${entry.projectTitle}`} disabled={busy} onClick={() => void restore(entry)}><ArchiveRestore size={15} aria-hidden="true"/>Restore</button><IconButton label={`Delete ${entry.name} from ${entry.projectTitle} permanently`} disabled={busy} onClick={() => { setActionError(''); setConfirmation({ kind: 'delete', item: entry }); }}><Trash2 size={16}/></IconButton></div></div>)}</div>}
           {!resultCount && <Empty title={filtered ? 'Nothing matches these filters' : tab === 'builds' ? 'No build files yet' : tab === 'projects' ? 'No saved projects yet' : 'Trash is empty'} action={filtered ? <button type="button" className="secondary" onClick={clearFilters}>Clear filters</button> : undefined}>{filtered ? 'Try another name or choose a different project.' : tab === 'builds' ? 'Your generated files, previous builds, and agent sessions will appear here after you start building.' : tab === 'projects' ? 'Save a challenge to start organizing your work.' : 'Files and builds you move to Trash will appear here for recovery or permanent deletion.'}</Empty>}
         </section>
         <div className="storage-learning"><div><h2>Project learning</h2><p>Manage saved preferences and learned policies separately from build files.</p></div><button type="button" className="text-button" onClick={onLearning}>Manage learning <ArrowRight size={14} aria-hidden="true"/></button></div>
         <p className="storage-scope-note">Totals cover local files managed by AppYard. Manage exported copies elsewhere in Finder.</p>
-      </> : !loadError && <div className="storage-initial-loading" role="status"><HardDrive size={28} aria-hidden="true"/><p>Measuring your saved builds and files…</p></div>}
+      </> : !loadError && <div className="storage-initial-loading" role="status"><HardDrive size={28} aria-hidden="true"/><p>Loading saved builds…</p></div>}
     </>}
     {confirmation && <ConfirmDialog confirmation={confirmation} busy={busy} error={actionError} close={() => { setConfirmation(null); setActionError(''); }} confirm={() => void confirm()}/>}
   </div>;
