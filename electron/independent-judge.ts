@@ -35,6 +35,8 @@ interface Options {
   recordReport?: (report: JudgedReport) => Promise<void>;
   repairLimit?: number;
   canRepair?: () => boolean;
+  /** Saves the verified application so a judge repair that fails can be undone. */
+  saveBeforeRepair?: () => Promise<{ restore: () => Promise<void>; discard: () => Promise<void>; writerIdle: () => boolean } | undefined>;
   onMetrics?: (metrics: { durationMs: number; usage: StageTokenUsage | null }) => void;
 }
 const responseLimit = 100_000;
@@ -413,18 +415,39 @@ export async function runIndependentJudge(options: Options): Promise<JudgedRepor
     evaluatorRetries = 0;
     result.repairs++;
     options.log('Independent judge requested build repair ' + result.repairs + '/' + repairLimit + '.');
-    await options.repair([
-      'You are the build agent repairing gaps from an independent hard evaluator. Repair the implementation and tests, then update README.md and verification.md.',
-      'Never edit acceptance-plan.json or ux-spec.json. Preserve requirements.md and .fleet. Do not weaken, delete or skip tests. An honest unfixable limit must stay listed.',
-      'Do not fabricate functionality, domain facts, test evidence, integrations or human approval. Use synthetic or public examples only.',
-      JSON.stringify(attempt.gaps, null, 2)
-    ].join('\n\n'));
-    options.signal.throwIfAborted(); await options.checkInputs();
-    report = await options.verify(); options.signal.throwIfAborted();
-    options.log(report.output);
-    if (!reportPassed(report, true)) {
-      result.verdict = 'NOT'; result.gaps = [...attempt.gaps, { requirement: 'Reverification', evidence: 'Host verification failed after judge repair.', fix: 'Restore passing implementation without weakening the frozen acceptance plan.' }];
-      await persist(); throw new Error('Verification did not pass after independent judge repair. Delivery remains blocked.');
+    const saved = await options.saveBeforeRepair?.();
+    let failure = '';
+    try {
+      await options.repair([
+        'You are the build agent repairing gaps from an independent hard evaluator. Repair the implementation and tests, then update README.md and verification.md.',
+        'Never edit acceptance-plan.json or ux-spec.json. Preserve requirements.md and .fleet. Do not weaken, delete or skip tests. An honest unfixable limit must stay listed.',
+        'Do not fabricate functionality, domain facts, test evidence, integrations or human approval. Use synthetic or public examples only. A published method or stated approximation with editable labeled assumptions is not fabrication, and it is better than an empty result.',
+        JSON.stringify(attempt.gaps, null, 2)
+      ].join('\n\n'));
+      options.signal.throwIfAborted(); await options.checkInputs();
+      report = await options.verify(); options.signal.throwIfAborted();
+      options.log(report.output);
+      if (!reportPassed(report, true)) failure = 'Host verification failed after judge repair.';
+    } catch (error) {
+      // Stop and an unconfirmed writer still end the run. Any other failed repair still has the verified copy to return to.
+      if (!saved || options.signal.aborted || !saved.writerIdle()) { await saved?.discard(); throw error; }
+      options.log('The judge repair could not finish: ' + redactValue(error instanceof Error ? error.message : String(error)));
+      failure = 'The repair agent could not finish.';
     }
+    if (!failure) { await saved?.discard(); continue; }
+    if (saved) {
+      await saved.restore(); await saved.discard();
+      options.signal.throwIfAborted(); await options.checkInputs();
+      report = await options.verify(); options.signal.throwIfAborted();
+      options.log(report.output);
+      if (reportPassed(report, true)) {
+        options.log('The judge repair did not hold, so it was undone. The application that passed verification is kept.');
+        result.verdict = 'NOT';
+        result.gaps = [...attempt.gaps, { requirement: 'Judge repair', evidence: failure + ' The repair was undone.', fix: 'The gaps above are still open in this version.' }];
+        return persist();
+      }
+    }
+    result.verdict = 'NOT'; result.gaps = [...attempt.gaps, { requirement: 'Reverification', evidence: 'Host verification failed after judge repair.', fix: 'Restore passing implementation without weakening the frozen acceptance plan.' }];
+    await persist(); throw new Error('Verification did not pass after independent judge repair. Delivery remains blocked.');
   }
 }

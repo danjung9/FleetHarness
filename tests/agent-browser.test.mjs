@@ -409,3 +409,15 @@ test('prepared runtime integrity is checked before a browser observation enters 
   assert.ok(result.details.errors.some(error => /changed during execution/.test(error)));
   assert.equal(registered, 0);
 });
+
+test('the final visual recheck still has screenshots after the observation limit is reached', () => {
+  const session = new AgentBrowserSession({ root: os.tmpdir(), signal: new AbortController().signal, prepare: async () => { throw new Error('unused'); } });
+  session.imageCount = 100; session.imageBytes = 128_000_000;
+  session.allowFinalCheck();
+  assert.equal(session.imageCount, 92);
+  assert.equal(session.imageBytes, 64_000_000);
+  session.imageCount = 3; session.imageBytes = 10;
+  session.allowFinalCheck();
+  assert.equal(session.imageCount, 3);
+  assert.equal(session.imageBytes, 10);
+});

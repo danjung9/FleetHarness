@@ -1,5 +1,6 @@
 import { createAgentSession, createBashToolDefinition, DefaultResourceLoader, ModelRuntime, SettingsManager, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
-import { promises as fs } from 'node:fs';
+import { constants as fsConstants, promises as fs } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
@@ -31,7 +32,7 @@ import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -402,7 +403,7 @@ export class FleetBackend {
     run.visualReview = saved?.visualReview; run.foundationPlan = saved?.foundationPlan;
     const first = p.stages.find(s => s.status !== 'complete');
     if (!first || !['intake', 'research', 'plan', 'build', 'verify', 'review'].includes(first.id)) throw new Error('No incomplete build stage can resume. Start a new run.');
-    if (!Number.isSafeInteger(checkpoint.repairAttempts) || checkpoint.repairAttempts < 0 || checkpoint.repairAttempts > 2) throw new Error('Invalid recovery checkpoint. Start a new run.');
+    if (!Number.isSafeInteger(checkpoint.repairAttempts) || checkpoint.repairAttempts < 0 || checkpoint.repairAttempts > 4) throw new Error('Invalid recovery checkpoint. Start a new run.');
     await assertFleetPacketIntegrity(p.workspace!, checkpoint.packetHash);
     run.packetHash = checkpoint.packetHash;
     run.requirements = await fs.readFile(await safeFile(p.workspace!, 'requirements.md'), 'utf8');
@@ -568,7 +569,7 @@ export class FleetBackend {
     if (stage === 'verify') {
       const checkpoint = p.runCheckpoint!;
       if (checkpoint.verificationAgent) {
-        if (checkpoint.repairAttempts >= 2) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
+        if (checkpoint.repairAttempts >= (run.judgeRepairing ? 4 : 2)) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
         checkpoint.repairAttempts++;
       }
       checkpoint.verificationAgent ??= 'started'; await this.changed(p); this.check(run);
@@ -685,7 +686,11 @@ export class FleetBackend {
             if (visualRequired && requireComponents) {
               if (!visual) missing.push('visual review: no host review session is available');
               else {
-                try { missing.push(...(await visual.problems()).map(problem => 'visual review: ' + problem)); }
+                try {
+                  const problems = await visual.problems();
+                  if (problems.length) browser?.allowFinalCheck();
+                  missing.push(...problems.map(problem => 'visual review: ' + problem));
+                }
                 catch (error) { missing.push('visual review: ' + (error instanceof Error ? error.message : String(error))); }
               }
             }
@@ -875,6 +880,28 @@ export class FleetBackend {
       finally { checkpoint.writerState = confirmed ? 'idle' : 'unconfirmed'; await this.changed(p); }
     });
   }
+  /** A judge repair starts from an application that passed verification, and a failed repair must not cost the person that application. */
+  private async saveBeforeJudgeRepair(p: Project, run: ActiveRun) {
+    const checkpoint = p.runCheckpoint!, workspace = p.workspace!;
+    const copy = { recursive: true, force: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fsConstants.COPYFILE_FICLONE };
+    const saved = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-judge-repair-'));
+    const discard = () => fs.rm(saved, { recursive: true, force: true, maxRetries: 3 });
+    try { await fs.cp(workspace, saved, copy); }
+    catch {
+      await discard();
+      this.log(p, 'verify', 'info', 'Could not save a copy before the judge repair, so a failed repair cannot be undone.');
+      return undefined;
+    }
+    const state = structuredClone({ visualReview: run.visualReview, lastTests: checkpoint.lastTests, testChanges: checkpoint.testChanges });
+    return { discard, writerIdle: () => checkpoint.writerState === 'idle',
+      restore: async () => {
+        for (const entry of await fs.readdir(workspace)) await fs.rm(path.join(workspace, entry), { recursive: true, force: true, maxRetries: 3 });
+        await fs.cp(saved, workspace, copy);
+        run.visualReview = state.visualReview; p.visualReview = state.visualReview ? structuredClone(state.visualReview) : undefined;
+        checkpoint.lastTests = state.lastTests; checkpoint.testChanges = state.testChanges;
+        await this.checkpoint(p, run); await this.changed(p);
+      } };
+  }
   private appendTestChanges(p: Project) {
     p.report!.testBaseline = { hashes: { ...p.runCheckpoint!.buildTests! }, changes: [...p.runCheckpoint!.testChanges ?? []], policy: testBaselinePolicy };
     if (p.runCheckpoint!.testChanges?.length) p.report!.output += '\n' + p.runCheckpoint!.testChanges.join('\n');
@@ -1060,15 +1087,20 @@ export class FleetBackend {
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
       p.report = await runIndependentJudge({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, report: p.report,
         signal: run.controller.signal, limits: this.options.agentLimits,
-        repairLimit: 2 - p.runCheckpoint!.repairAttempts,
-        canRepair: () => p.runCheckpoint!.repairAttempts < 2 && !p.runCheckpoint!.repairStopped,
+        // Test repairs and judge repairs fix different things, so a build that needed its test repairs can still act on the judge's gaps.
+        repairLimit: 2,
+        canRepair: () => p.runCheckpoint!.repairAttempts < 4 && !p.runCheckpoint!.repairStopped,
+        saveBeforeRepair: () => this.saveBeforeJudgeRepair(p, run),
         onMetrics: measured => this.recordInference(p, 'verify', measured),
         engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
           codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession },
         checkInputs: () => this.checkInputs(p, run), log: text => this.log(p, 'verify', 'info', text),
         recordReport: async report => { p.report = report; await this.changed(p); },
-        repair: instruction => this.agent(p, run, 'verify', provider, model, instruction,
-          ['README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true),
+        repair: async instruction => {
+          run.judgeRepairing = true;
+          try { await this.agent(p, run, 'verify', provider, model, instruction, ['README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true); }
+          finally { run.judgeRepairing = false; }
+        },
         verify: async () => {
           p.report = await this.verify(p, run);
           this.appendTestChanges(p);
