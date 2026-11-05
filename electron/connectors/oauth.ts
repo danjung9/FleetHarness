@@ -40,7 +40,7 @@ const MESSAGES = {
   signin: 'Your sign-in has expired. Connect this account again.',
   approval: 'Your organization has to approve AppYard before it can read this account. Ask your administrator to approve the listed read-only permissions.',
   busy: 'The service is receiving too many requests. Wait a minute and try again.',
-  invalid: 'The service returned data AppYard could not read. Try again or ask your administrator for help.',
+  invalid: 'The service returned data AppYard could not read. Try again in a moment.',
   secret: 'AppYard could not access secure account storage. Unlock your system keychain and try again.',
 };
 export class ConnectorError extends Error {}
@@ -135,7 +135,7 @@ function oauthError(data: Json): ConnectorError {
   if (data.error === 'access_denied' || data.error === 'authorization_declined') return new ConnectorError('Sign-in was not approved. Connect again and approve read-only access if you want to continue.');
   if (data.error === 'consent_required' || data.error === 'interaction_required'
     || (Array.isArray(data.error_codes) && data.error_codes.some((code: unknown) => [65001, 90094, 90093].includes(Number(code))))) return problem('approval');
-  if (data.error === 'invalid_client' || data.error === 'unauthorized_client') return new ConnectorError('AppYard is not registered for this account. Ask your administrator to check the client ID and account cloud.');
+  if (data.error === 'invalid_client' || data.error === 'unauthorized_client') return new ConnectorError('AppYard is not registered for this account. Ask your administrator to turn on sign-in for this account.');
   return problem('signin');
 }
 
@@ -170,7 +170,7 @@ async function authorizationCode(provider: OAuthProvider, ui: ConnectUi, signal:
   });
   try {
     await interruptible(new Promise<void>((resolve, reject) => {
-      server.once('error', () => reject(new BrowserUnavailable('AppYard could not open the local sign-in callback. Try again or ask your administrator for help.')));
+      server.once('error', () => reject(new BrowserUnavailable('AppYard could not open the sign-in page. Try connecting again.')));
       server.listen({ port: 0, host: '127.0.0.1', signal }, () => resolve());
     }), signal);
     redirectUri = `http://${provider.redirectHost ?? '127.0.0.1'}:${(server.address() as AddressInfo).port}/oauth/callback`;
@@ -287,7 +287,7 @@ export abstract class OAuthConnector implements ConnectorAdapter {
     try {
       check(combined);
       const provider = await this.chooseProvider(ui, combined);
-      if (!provider.clientId.trim()) throw new ConnectorError('This account cloud is not configured. Ask your administrator to register AppYard in that cloud.');
+      if (!provider.clientId.trim()) throw new ConnectorError('Sign-in is not set up for this account. Ask your administrator to turn it on.');
       let data: Json;
       try {
         const { code, verifier, redirectUri } = await authorizationCode(provider, ui, combined);
@@ -337,7 +337,7 @@ export abstract class OAuthConnector implements ConnectorAdapter {
   protected async api(secrets: SecretStore, url: string, base: string, options: FetchOptions, text = false, headers: Record<string, string> = {}, cap?: number, downloadAllowed?: (url: URL) => boolean): Promise<any> {
     const target = new URL(url), root = new URL(base);
     if (target.origin !== root.origin || (target.pathname !== root.pathname && !target.pathname.startsWith(root.pathname.replace(/\/$/, '') + '/'))
-      || target.username || target.password || target.hash) throw new ConnectorError('The service returned an unexpected page address. Reconnect or ask your administrator for help.');
+      || target.username || target.password || target.hash) throw new ConnectorError('The service returned an unexpected page address. Connect this account again.');
     let credentials = await this.load(secrets);
     if (credentials.expiresAt <= Date.now() + 60_000) credentials = await this.refresh(secrets, credentials, options.signal);
     const send = () => this.retryRequest(target.href, { redirect: downloadAllowed ? 'manual' : 'error', headers: { ...headers, Authorization: `Bearer ${credentials.accessToken}` } }, options.signal, cap);
