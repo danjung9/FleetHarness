@@ -13,7 +13,7 @@ export function reviewFeedback(value: string): string {
   return value.trim();
 }
 
-export async function recordReview(store: Store, project: Project, decision: ReviewRecord['decision'], feedback: string, acceptJudgeGaps = false): Promise<ReviewRecord> {
+export async function recordReview(store: Pick<Store, 'save' | 'saveProject'>, project: Project, decision: ReviewRecord['decision'], feedback: string, acceptJudgeGaps = false): Promise<ReviewRecord> {
   const note = redactSecrets(reviewFeedback(feedback));
   if (!project.runId || !project.workspace) throw new Error('Build an app before recording a review.');
   if (project.processScope?.runId !== project.runId || project.processScope.cleanup !== 'confirmed') throw new Error('Process cleanup must be confirmed for this run before approval or delivery.');

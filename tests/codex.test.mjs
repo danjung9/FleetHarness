@@ -1,7 +1,8 @@
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
-import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -482,8 +483,11 @@ test('factory admission rejects stale model catalogs without an active ChatGPT p
     createCodexSession: () => { throw new Error('No session should start without plan permission'); } });
   for (const account of [{ status: 'disconnected', planUsageEnabled: true }, { status: 'connecting', planUsageEnabled: true }, { status: 'connected', planUsageEnabled: false }]) {
     codex.account = account;
-    await assert.rejects(backend.start(store.state.projects[0].id), /build service is not connected/);
-    assert.equal(backend.active.size, 0); assert.equal(store.state.projects[0].status, 'failed');
+    const before = structuredClone(store.state.projects[0]);
+    await assert.rejects(backend.start(store.state.projects[0].id), error => {
+      assert.match(String(error.cause ?? error), /sign in with ChatGPT/i); return true;
+    });
+    assert.equal(backend.active.size, 0); assert.deepEqual(store.state.projects[0], before);
   }
 });
 
@@ -513,6 +517,11 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
     preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
+      // Reviewer lifecycle is covered separately; these assertions track the
+      // ordinary phase skills while the reviewer still submits through its host ledger.
+      if (options.tools.some(tool => tool.name === 'fleet_submit_planning_review')) {
+        return createFixturePlanningReviewSession(options.tools);
+      }
       const rpc = new FakeRpc();
       const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
       sessions.push(session);
@@ -526,6 +535,11 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
         if (guide) {
           await fs.access(path.join(options.cwd, runtimeProfile === 'browser' ? 'index.html' : 'evaluate.cjs'));
           await assert.rejects(fs.access(path.join(options.cwd, 'README.md')), /ENOENT/);
+          if (runtimeProfile === 'browser') {
+            const checkpoint = JSON.parse(await fs.readFile(path.join(options.cwd, '.quality-evidence/workflow-report.json'), 'utf8'));
+            assert.equal(checkpoint.status, 'passed');
+            assert.equal(checkpoint.journeys.length, 2, 'Codex completes the primary workflow at both widths before its guide');
+          }
         }
         const files = guide ? { 'README.md': runtimeProfile === 'browser' ? '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' : '# Fixture guide\nWith Node installed, pipe a JSON message into `node evaluate.cjs`. The input `"TASK: inspect pump"` returns `"inspect pump"`; an empty JSON string returns null. Run `node --test app.test.cjs` for developer tests.' }
           : phase === 'synthetic-data' ? syntheticDataFiles
@@ -560,7 +574,7 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, runtimeProfile === 'browser' ? 4 : 0);
   assert.equal(project.runtimeProfile, runtimeProfile);
-  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', ...Array(runtimeProfile === 'browser' ? 3 : 2).fill('build'), 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
   assert.equal(project.report.independentJudge.verdict, 'SATISFACTORY');
   for (const session of sessions) {
     assert.equal(session.skills.includes('ponytail'), ['research', 'plan', 'build', 'verify'].includes(session.phase), `${session.phase} Ponytail access`);

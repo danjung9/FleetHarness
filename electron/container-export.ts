@@ -1,15 +1,16 @@
+import { deliveryRuntime } from './delivery-runtime.js';
 import path from 'node:path';
 import { parseSolutionContract } from '../harness/solution-contract.js';
 import type { ArtifactManifest } from './storage.js';
 
 /** Generate deployment instructions from the verified contract, without running or fetching anything. */
-export function containerExport(manifest: ArtifactManifest, verifiedRuntime?: string) {
+export function containerExport(manifest: ArtifactManifest, verifiedRuntime?: string, comparison = false) {
   const read = (name: string) => manifest.find(file => file.path.split(path.sep).join('/') === name)?.contents.toString('utf8');
   const contract = read('solution-contract.json');
   if (!contract) return undefined;
   const packet = read('.fleet/packet.json');
   if (!packet) throw new Error('The verified solution is missing its acceptance inventory.');
-  const { runtime } = parseSolutionContract(JSON.parse(contract), JSON.parse(packet).acceptance);
+  const runtime = deliveryRuntime(parseSolutionContract(JSON.parse(contract), JSON.parse(packet).acceptance).runtime, manifest, comparison);
   // A browser with a server uses the service profile; browser alone is static.
   if (runtime.profile !== 'service') return undefined;
   const command = runtime.command!, port = runtime.port ?? 8080;

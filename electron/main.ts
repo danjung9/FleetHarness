@@ -4,13 +4,14 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { promises as disk } from 'original-fs';
 import { fileURLToPath } from 'node:url';
-import { Store, newProject, validateInput, listArtifacts, safeFile } from './storage.js';
+import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash } from './storage.js';
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { applicationTestFiles, portableTestCommand } from './verification.js';
+import { applicationTestRerunCommand, reportPassed } from './verification.js';
 import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
-import type { NewProject, Settings } from '../shared/types.js';
+import type { NewProject, Project, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
 import { ConnectorService, registerConnectorIPC } from './connectors/index.js';
@@ -18,7 +19,7 @@ import { ConnectorStore } from './connectors/store.js';
 import { connectorConfiguration, connectorEncryption, fixtureSource } from './connectors/config.js';
 import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 import { atomicHostWrite } from '../shared/host-files.js';
-import { verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
+import { assertReviewState, verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
 import { ProjectLead, briefHash, projectBrief, canRequestChange } from './conversation.js';
 import { ClarificationBroker } from './clarifications.js';
 import { RunProcessSweep } from './process-sweep.js';
@@ -27,12 +28,22 @@ import { randomUUID } from 'node:crypto';
 import { recordReview, reviewFeedback } from './review.js';
 import { readVisualCapture } from './visual-review.js';
 import { GenAiMil, GENAI_MIL_PROVIDER, genAiMilUnlockUrl } from './genai-mil.js';
+import { createPreviewProxy } from './preview-proxy.js';
+import { PreviewBoundary } from './preview-boundary.js';
+import { ExperimentService } from './experiment-service.js';
+import { experimentMethodNames } from '../shared/experiments.js';
+import { DataStorageService } from './data-storage.js';
+import { storageMethodNames } from '../shared/data-storage.js';
+import { readPlanningContinuation } from './planning-continuation.js';
+import { briefFingerprint } from './run-checkpoint.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
 // Preserve existing workspaces and credentials when the display name changes.
 app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
 app.setName('AppYard');
+app.commandLine.appendSwitch('disable-quic');
+app.commandLine.appendSwitch('dns-prefetch-disable');
 const ownsInstance = app.requestSingleInstanceLock();
 if (!ownsInstance) app.quit();
 let window: BrowserWindow | null = null;
@@ -51,13 +62,29 @@ const previewStarts = new Map<string, AbortController>();
 const previews = new ApplicationPreviews(process.execPath, {
   clearStorage: origin => window!.webContents.session.clearStorageData({ origin })
 });
+let experiments: ExperimentService;
+let dataStorage: DataStorageService;
+const storageMutations = new Map<string, Promise<void>>();
+const approvals = new Map<string, Promise<void>>();
+let previewRequestGeneration = 0;
+const previewRequests = new Set<Promise<void>>();
+async function trackPreview<T>(work: () => Promise<T>): Promise<T> {
+  let finish!: () => void;
+  const done = new Promise<void>(resolve => { finish = resolve; }); previewRequests.add(done);
+  try { return await work(); }
+  finally { previewRequests.delete(done); finish(); }
+}
+let desktopProxy: Awaited<ReturnType<typeof createPreviewProxy>> | undefined;
+const experimentReservations = new Map<string, string>();
+const previewBoundary = new PreviewBoundary({ fileRoot: path.join(dirname, '../../dist'), developmentURL: !app.isPackaged ? process.env.VITE_DEV_SERVER_URL : undefined });
+async function closeLegacyPreviews() { await Promise.all([...previewing].map(id => stopPreview(id))); await previews.close(); }
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Map<string, Promise<void>>();
-const approvals = new Set<string>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
 const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenges;
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
 const notify = () => {
+  experiments?.refreshProjectSummaries();
   if (emitTimer) return;
   emitTimer = setTimeout(() => { emitTimer = undefined; if (window && !window.isDestroyed()) window.webContents.send('fleet:state', redactValue(store.state)); }, 100);
 };
@@ -78,26 +105,44 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 }
 const bootstrap = () => ({
   state: redactValue(store.state), models: backend.models(), storagePath: store.root,
-  capabilities: { projectConversation: true },
+  capabilities: { projectConversation: true, experiments: true, planningContinuation: true },
   chatgpt: codex.account,
   genAiMil: genAiMil.view(),
   credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider === GENAI_MIL_PROVIDER ? (genAiMil.view().connected ? 'GenAI.mil connected' : 'Connect GenAI.mil in Model settings') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
+  if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this project.');
+  if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before changing this project.');
   if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
   if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this build.');
   if (deliveries.has(id)) throw new Error('Wait for the app download to finish before changing this build.');
-  if (backend.active.has(id) || startingRuns.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
+  if (backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || experiments?.isActive(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
   const p = store.project(id);
   if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed. Use Stop before changing this build.');
   return p;
+}
+function requireRunCapacity() {
+  const projects = new Set([...backend.active.keys(), ...startingRuns.keys(), ...experimentReservations.keys()]);
+  if (projects.size >= 3) throw new Error('Three builds or comparisons are already active. Stop one before starting another.');
+}
+async function stopRun(id: string) {
+  const experiment = experiments?.activeExperiment(id);
+  if (experiment) await experiments.stopExperiment(experiment); else await backend.stop(id);
 }
 async function updateProject(id: string, input: NewProject, fromConversation = false) {
   await stopPreview(id);
   const p = requireIdle(id, fromConversation);
   const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
   const normalized = validateInput(input, catalog);
+  const previousBriefHash = briefFingerprint(p), previousRunId = p.runId;
+  const sourceChallenge = normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined;
+  const updated = { ...p, ...normalized, sourceChallenge };
+  // Only host-validated, unfrozen planning work can survive a brief edit.
+  const planning = !p.approvedAt && !p.report
+    ? await readPlanningContinuation(store.root, updated).catch(() => undefined) : undefined;
+  requireIdle(id, fromConversation);
+  if (p.runId !== previousRunId || briefFingerprint(p) !== previousBriefHash) throw new Error('The build changed while saving the brief. Try again.');
   const previous = structuredClone({ ...projectBrief(p), sourceChallenge: p.sourceChallenge, status: p.status, runtimeProfile: p.runtimeProfile,
     runCheckpoint: p.runCheckpoint, verification: p.verification, approval: p.approval, report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error, visualReview: p.visualReview, resumeStage: p.resumeStage,
     systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt });
@@ -107,6 +152,11 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
   p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
   p.runCheckpoint = undefined; p.verification = undefined; p.approval = undefined;
   p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
+  if (planning) {
+    p.status = 'stopped'; p.resumeStage = 'plan';
+    p.error = 'Brief updated. Continue planning from the saved work; completed intake and research are preserved.';
+    p.stages.forEach(stage => { stage.status = ['intake', 'research'].includes(stage.id) ? 'complete' : stage.id === 'plan' ? 'failed' : 'queued'; });
+  }
   p.updatedAt = new Date().toISOString();
   try { await store.save(); }
   catch (error) { Object.assign(p, previous); notify(); throw error; }
@@ -115,10 +165,30 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
 async function startRun(id: string, fromConversation = false, resuming = false, feedback?: string) {
   if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
   await stopPreview(id);
-  requireIdle(id, fromConversation);
+  if (resuming) return resumeRun(id, fromConversation);
+  if (requireIdle(id, fromConversation).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
+  requireRunCapacity();
+  if (feedback === undefined && experiments.learning.getSettings().mode !== 'off') { await experiments.startOrdinary(id); return; }
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
-  try { if (resuming) await backend.resume(id); else if (feedback !== undefined) await backend.requestChanges(id, feedback); else await backend.start(id); }
+  try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
+  finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
+}
+async function resumeRun(id: string, fromConversation = false) {
+  if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
+  await stopPreview(id);
+  if (requireIdle(id, fromConversation).archivedAt) throw new Error('Restore this archived project in Data & storage before resuming a build.');
+  requireRunCapacity();
+  let resolve!: () => void;
+  const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+  try {
+    const project = store.project(id);
+    const planning = project.resumeStage === 'plan' || project.status === 'draft'
+      ? await readPlanningContinuation(store.root, project).catch(() => undefined) : undefined;
+    if (planning && (planning.briefHash !== briefFingerprint(project)
+      || project.error?.startsWith('Brief updated. Continue planning from the saved work;'))) await backend.continuePlanning(id);
+    else await backend.resume(id);
+  }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
@@ -139,11 +209,19 @@ async function stopPreview(id: string) {
   } catch (error) { p.processScope!.cleanup = 'unconfirmed'; throw error; }
   finally { await store.save(); }
 }
+async function assertVerified(id: string, reservedProject?: Project) {
+  const p = reservedProject ?? requireIdle(id);
+  assertReviewState(p);
+  await experiments.assertSelectedVerified(p);
+  return p;
+}
 function registerIPC() {
   registerConnectorIPC(handle, connectors);
   handle('fleet:conversation:send', (id: string, text: string) => {
     if (quitting) throw new Error('AppYard is closing. Reopen it to continue the conversation.');
     if (conversationActions.has(id)) throw new Error('Wait for the project action to finish before sending a message.');
+    if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before sending a message.');
+    if (approvals.has(id)) throw new Error('Wait for approval to finish before sending a message.');
     return lead.send(id, text);
   });
   handle('fleet:conversation:cancel', (id: string) => lead.cancel(id));
@@ -156,12 +234,14 @@ function registerIPC() {
     return lead.dismiss(id, actionId);
   });
   handle('fleet:conversation:apply', async (id: string, actionId: string) => {
+    if (approvals.has(id)) throw new Error('Wait for approval to finish before applying a proposal.');
+    if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before applying a proposal.');
     if (conversationActions.has(id) || deliveries.has(id) || startingRuns.has(id)) throw new Error('Wait for the current project operation to finish.');
     const p = store.project(id), action = p.conversation?.actions.find(item => item.id === actionId);
     if (!action || action.status !== 'proposed') throw new Error('This proposal is no longer available.');
     if (action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal belongs to an older brief or build. Ask the project lead for an updated proposal.');
-    if (action.type === 'start' && backend.active.has(id)) throw new Error('This build is already running.');
-    if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build is no longer running.');
+    if (action.type === 'start' && (backend.active.has(id) || experiments.isActive(id))) throw new Error('This build is already running.');
+    if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id)) throw new Error('That build is no longer running.');
     if (quitting) throw new Error('AppYard is closing. Reopen it to apply this proposal.');
     let resolve!: () => void;
     const done = new Promise<void>(r => { resolve = r; }); conversationActions.set(id, done);
@@ -171,8 +251,8 @@ function registerIPC() {
       if (quitting) throw new Error('AppYard is closing. This proposal was not applied.');
       if (p.conversation?.actions.find(item => item.id === actionId) !== action || action.status !== 'proposed'
         || action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal changed while the reply was finishing. Ask for an updated proposal.');
-      if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build finished before the stop action was applied.');
-      if (action.type === 'stop') { await backend.stop(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
+      if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id)) throw new Error('That build finished before the stop action was applied.');
+      if (action.type === 'stop') { await stopRun(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
       else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
       else if (action.type === 'request_changes') {
         if (!canRequestChange(p)) throw new Error('Finish a build and open its review or approved delivery before requesting changes.');
@@ -182,13 +262,17 @@ function registerIPC() {
       }
       else if (action.type === 'revise' && action.brief) {
         const revised = validateInput({ ...projectBrief(p), ...action.brief }, p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog());
-        if (backend.active.has(id)) await backend.stop(id);
-        await updateProject(id, revised, true); action.status = 'applied';
+        if (backend.active.has(id) || experiments.isActive(id)) await stopRun(id);
+        const saved = await updateProject(id, revised, true); action.status = 'applied';
         record('Brief updated. Previous test results and approval were reset.');
-        await startRun(id, true); record('Started a fresh build with the revised brief. Previous run files are preserved.');
+        if (saved.resumeStage === 'plan') {
+          await resumeRun(id, true); record('Continued planning with the revised brief. Completed intake, research and prepared data are preserved.');
+        } else {
+          await startRun(id, true); record('Started a fresh build with the revised brief. Previous run files are preserved.');
+        }
       } else throw new Error('Invalid project action.');
     } catch (error) {
-      if (action.status === 'applied') record('The brief was updated, but the fresh build could not start: ' + (error instanceof Error ? error.message : String(error)));
+      if (action.status === 'applied') record('The brief was updated, but work could not continue: ' + (error instanceof Error ? error.message : String(error)));
       throw error;
     } finally { try { await store.save(); } finally { conversationActions.delete(id); resolve(); notify(); } }
   });
@@ -212,7 +296,7 @@ function registerIPC() {
   handle('fleet:stop', async (id: string) => {
     const delivery = deliveries.get(id); delivery?.controller.abort();
     await stopPreview(id);
-    await Promise.all([backend.stop(id), delivery?.done]);
+    await Promise.all([stopRun(id), delivery?.done]);
   });
   handle('fleet:request-changes', (id: string, feedback: string) => {
     reviewFeedback(feedback); return startRun(id, false, false, feedback);
@@ -232,25 +316,36 @@ function registerIPC() {
   });
   // Reload can arrive while the last request is still starting. Cancel that start and take turns,
   // so one request's cleanup can never stop the next request's preview.
-  const previewRequests = new Map<string, Promise<unknown>>();
+  const previewQueue = new Map<string, Promise<unknown>>();
   handle('fleet:preview', (id: string) => {
-    const earlier = previewRequests.get(id);
+    const earlier = previewQueue.get(id);
     if (earlier) {
       previewStarts.get(id)?.abort();
       const workspace = store.project(id).workspace;
       if (workspace) previews.cancel?.(workspace);
     }
-    const current = (earlier ?? Promise.resolve()).catch(() => {}).then(() => openPreview(id));
-    previewRequests.set(id, current);
-    const forget = () => { if (previewRequests.get(id) === current) previewRequests.delete(id); };
+    const current = (earlier ?? Promise.resolve()).catch(() => {}).then(() => trackPreview(() => openPreview(id)));
+    previewQueue.set(id, current);
+    const forget = () => { if (previewQueue.get(id) === current) previewQueue.delete(id); };
     current.then(forget, forget);
     return current;
   });
   const openPreview = async (id: string) => {
     try {
+      if (storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
+      const request = ++previewRequestGeneration;
+      previewBoundary.setPreview(null);
       await stopPreview(id);
       const p = requireIdle(id);
       if (!p.workspace) return null;
+      if (p.qualityVersion === 4) {
+        await closeLegacyPreviews();
+        const url = await experiments.previewSelected(p);
+        if (request !== previewRequestGeneration || storageMutations.size) return null;
+        previewBoundary.setPreview(url); return url;
+      }
+      await experiments.closeCandidatePreview();
+      if (request !== previewRequestGeneration || storageMutations.size) return null;
       if (!p.runId || !p.processScope) throw new Error('Start a new build before opening a runtime preview.');
       const scope = new RunProcessSweep({ marker: p.processScope.marker });
       const starting = new AbortController(); previewStarts.set(id, starting);
@@ -258,7 +353,9 @@ function registerIPC() {
       try {
         await store.save();
         if (starting.signal.aborted || previewStarts.get(id) !== starting || quitting) return null;
-        return await scope.run(() => previews.url(p.workspace!));
+        const url = await scope.run(() => previews.url(p.workspace!));
+        if (request !== previewRequestGeneration || storageMutations.size) { await stopPreview(id); return null; }
+        previewBoundary.setPreview(url); return url;
       }
       catch (error) { await stopPreview(id); throw error; }
       finally { if (previewStarts.get(id) === starting) previewStarts.delete(id); }
@@ -273,9 +370,10 @@ function registerIPC() {
     reviewFeedback(feedback);
     await stopPreview(id);
     const p = requireIdle(id);
-    approvals.add(id);
-    try { await recordReview(store, p, 'approved', feedback, acceptJudgeGaps); }
-    finally { approvals.delete(id); notify(); }
+    let finish!: () => void;
+    const done = new Promise<void>(resolve => { finish = resolve; }); approvals.set(id, done);
+    try { await assertVerified(id, p); await recordReview(store, p, 'approved', feedback, acceptJudgeGaps); notify(); }
+    finally { approvals.delete(id); finish(); }
   });
   handle('fleet:export', async (id: string) => {
     await stopPreview(id);
@@ -286,11 +384,13 @@ function registerIPC() {
     let destination: string | undefined, committed = false;
     try {
       await verifiedManifest(p, true);
+      await experiments.assertSelectedVerified(p);
       controller.signal.throwIfAborted();
       const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
       if (result.canceled) return null;
       controller.signal.throwIfAborted();
       destination = await exportVerifiedBundle({ workspace: p.workspace!, parent: result.filePaths[0], title: p.title,
+        reference: await experiments.exportReference(p),
         verifiedRuntime: p.report!.quality?.solutionEvaluation?.runtime.runtime,
         verifiedHash: p.report!.sourceHash, evidence: deliveryEvidence(p), deliveryMarkdown: [
           '# ' + p.title, '', 'Follow README.md for the declared runtime, dependency installation, required environment settings and startup command.', '',
@@ -335,6 +435,7 @@ function registerIPC() {
     deliveries.set(id, { controller, done });
     let temporary: string | undefined, packaging = false;
     try {
+      await experiments.assertSelectedVerified(p);
       await assertExecutableSource(p);
       const fileName = executableFileName(p);
       const result = await dialog.showSaveDialog(window!, {
@@ -376,7 +477,44 @@ function registerIPC() {
       finally { deliveries.delete(id); finish(); }
     }
   });
-  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  for (const method of storageMethodNames) handle('fleet:storage:' + method, async (...args: unknown[]) => {
+    if (quitting) throw new Error('AppYard is closing.');
+    if (method === 'storageOpen') {
+      const target = await dataStorage.resolveTarget(args[0] as string, args[1] as string | undefined);
+      if (target.directory) { const error = await shell.openPath(target.path); if (error) throw new Error(error); }
+      else shell.showItemInFolder(target.path);
+      return;
+    }
+    if (method === 'storageExport') {
+      const [id, file] = args as [string, string | undefined];
+      const target = await dataStorage.resolveTarget(id, file);
+      const result = target.directory
+        ? await dialog.showOpenDialog(window!, { title: 'Export a copy', buttonLabel: 'Export here', properties: ['openDirectory', 'createDirectory'] })
+        : await dialog.showSaveDialog(window!, { title: 'Export a file copy', defaultPath: target.name, buttonLabel: 'Export copy' });
+      if (result.canceled) return null;
+      const destination = 'filePaths' in result ? result.filePaths[0] : result.filePath;
+      if (!destination) return null;
+      return dataStorage.exportTo(id, destination, file);
+    }
+    return Reflect.apply(dataStorage[method], dataStorage, args);
+  });
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  for (const method of experimentMethodNames) handle('fleet:experiment:' + method, async (...args: unknown[]) => {
+    if (quitting) throw new Error('AppYard is closing.');
+    if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
+    if (method === 'previewCandidate' && storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
+    const request = method === 'previewCandidate' || method === 'closeCandidatePreview' ? ++previewRequestGeneration : previewRequestGeneration;
+    if (method === 'previewCandidate') { await closeLegacyPreviews(); previewBoundary.setPreview(null); }
+    if (method === 'closeCandidatePreview') previewBoundary.setPreview(null);
+    const result = method === 'previewCandidate'
+      ? await trackPreview(() => Reflect.apply(experiments[method], experiments, args))
+      : await Reflect.apply(experiments[method], experiments, args);
+    if (method === 'previewCandidate') {
+      if (request !== previewRequestGeneration || storageMutations.size) return null;
+      previewBoundary.setPreview(result as string | null);
+    }
+    return result;
+  });
   handle('fleet:genai-mil:save', async (address: unknown, key?: unknown) => { requireNoRuns(); await genAiMil.save(address, key); return bootstrap(); });
   handle('fleet:genai-mil:connect', async () => { requireNoRuns(); await genAiMil.connect(); return bootstrap(); });
   handle('fleet:genai-mil:clear', async () => { requireNoRuns(); await genAiMil.clear(); return bootstrap(); });
@@ -435,7 +573,7 @@ function registerIPC() {
     await store.save(); notify(); return bootstrap();
   });
 }
-function createWindow() {
+async function createWindow() {
   window = new BrowserWindow({
     width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'AppYard',
     icon: iconPath,
@@ -446,10 +584,18 @@ function createWindow() {
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   window.webContents.session.setPermissionCheckHandler(() => false);
-  const devURL = !app.isPackaged && process.env.VITE_DEV_SERVER_URL;
-  if (devURL) void window.loadURL(devURL);
-  else void window.loadFile(path.join(dirname, '../../dist/index.html'));
+  window.webContents.setWebRTCIPHandlingPolicy('disable_non_proxied_udp');
+  previewBoundary.install(window.webContents);
   window.on('closed', () => { window = null; });
+  const current = window;
+  // WebRTC TCP transports bypass webRequest. The fixed proxy rejects CONNECT,
+  // and removing Chromium's implicit loopback bypass keeps TURN confined too.
+  desktopProxy ??= await createPreviewProxy(origin => previewBoundary.allows(origin, true));
+  await current.webContents.session.setProxy({ mode: 'fixed_servers', proxyRules: desktopProxy.url, proxyBypassRules: '<-loopback>' });
+  if (current.isDestroyed()) return;
+  const devURL = !app.isPackaged && process.env.VITE_DEV_SERVER_URL;
+  if (devURL) await current.loadURL(devURL);
+  else await current.loadFile(path.join(dirname, '../../dist/index.html'));
 }
 if (ownsInstance) app.whenReady().then(async () => {
   try {
@@ -481,7 +627,45 @@ if (ownsInstance) app.whenReady().then(async () => {
     await backend.init(); await codex.refresh();
     genAiMil = new GenAiMil(store.root, safeStorage, backend.runtime, { log: line => console.info(line) });
     await genAiMil.load();
+    experiments = new ExperimentService({ store, executable: process.execPath, resourcesRoot: app.getAppPath(), runtime: backend.runtime, codex, cipher: safeStorage,
+      embeddingOrigin: !app.isPackaged && process.env.VITE_DEV_SERVER_URL ? new URL(process.env.VITE_DEV_SERVER_URL).origin : 'file:',
+      notify, assertIdle: id => { requireIdle(id); }, acquire: async (projectId, experimentId) => {
+        if (quitting) throw new Error('AppYard is closing.');
+        // These synchronous checks and reservation form one admission transaction.
+        if (store.project(projectId).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
+        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
+        requireRunCapacity(); experimentReservations.set(projectId, experimentId);
+        return () => { if (experimentReservations.get(projectId) === experimentId) experimentReservations.delete(projectId); };
+      } });
+    await experiments.init();
     lead = new ProjectLead(store, backend.runtime, notify, { codex });
+    dataStorage = new DataStorageService({
+      store, changed: notify,
+      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id)
+        || deliveries.has(id) || storageMutations.has(id) || approvals.has(id) || conversationActions.has(id) || lead.active.has(id) || experiments.isActive(id),
+      beforeMutation: async id => {
+        if (quitting) throw new Error('AppYard is closing.');
+        if (store.state.projects.some(project => project.id === id)) { await stopPreview(id); requireIdle(id); }
+        let finish!: () => void;
+        const done = new Promise<void>(resolve => { finish = resolve; });
+        storageMutations.set(id, done);
+        previewRequestGeneration++;
+        try {
+          await lead.cancel(id);
+          await Promise.allSettled([...previewRequests]);
+          await closeLegacyPreviews(); previewBoundary.setPreview(null); await experiments.closeCandidatePreview();
+        }
+        catch (error) { storageMutations.delete(id); finish(); throw error; }
+        return () => { storageMutations.delete(id); finish(); };
+      },
+      candidateProjects: () => experiments.learning.listExperiments().flatMap(experiment => [
+        { projectId: experiment.projectId, workspace: experiment.sharedWorkspace, scopedProjectId: `shared-${experiment.id}`, experimentId: experiment.id, name: 'Shared planning', protected: true },
+        ...(experiment.sourceProject?.workspace ? [{ projectId: experiment.projectId, workspace: experiment.sourceProject.workspace, experimentId: experiment.id, protected: true }] : []),
+        ...experiments.learning.listCandidates(experiment.id).map(candidate => ({ projectId: experiment.projectId, workspace: candidate.workspace,
+          scopedProjectId: candidate.id, experimentId: experiment.id, name: candidate.baseline ? 'Baseline candidate' : 'Alternative candidate', protected: true })),
+      ]),
+    });
+    await dataStorage.init();
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
       const { provider, key } = JSON.parse(safeStorage.decryptString(encrypted));
@@ -493,16 +677,16 @@ if (ownsInstance) app.whenReady().then(async () => {
       { label: 'AppYard', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'quit' }] },
       { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' }
     ]));
-    createWindow();
-    app.on('activate', () => { if (!window) createWindow(); });
+    await createWindow();
+    app.on('activate', () => { if (!window) void createWindow().catch(error => { dialog.showErrorBox('AppYard could not open', String(error)); }); });
   } catch (error) { dialog.showErrorBox('AppYard could not start', String(error)); app.quit(); }
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && (backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || previewing.size || connectors?.busy)) {
+  if (!quitting && (experiments || connectors?.busy || previewing.size || backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([connectors?.shutdown(), backend.stopAll(), lead.stopAll(), ...[...previewing].map(id => stopPreview(id)), ...startingRuns.values(), ...conversationActions.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });

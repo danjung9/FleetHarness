@@ -1,7 +1,8 @@
 import { qualityFixtureHtml } from './quality-fixture.mjs';
-import { solutionFixture, solutionFixtureEvaluator } from './solution-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator } from './solution-fixture.mjs';
 import { syntheticDataFiles } from './data-fixture.mjs';
 import { fixtureVisualReviewInput } from './visual-review-fixture.mjs';
+import { fixturePlanningReviewPaths, fixturePlanningReviewInput } from './planning-review-fixture.mjs';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -14,6 +15,34 @@ export const fixtureSystemDesign = {
   ],
   connections: [{ from: 'review-ui', to: 'parser', label: 'Synthetic message text' }, { from: 'review-ui', to: 'local-history', label: 'Save parse history locally' }, { from: 'parser', to: 'review-ui', label: 'Structured task for review' }]
 };
+
+function planningReviewCalls(messages, contentText, tools) {
+  const calls = messages.flatMap(message => message.tool_calls ?? []);
+  if (calls.some(call => call.function?.name === 'fleet_submit_planning_review')) return [];
+  const documents = {}, pending = [];
+  const reader = tools.find(tool => tool.function?.name === 'fleet_read_planning_artifact');
+  for (const path of fixturePlanningReviewPaths(reader?.function?.parameters)) {
+    let offset = 0, body = '';
+    for (;;) {
+      const read = calls.find(call => {
+        if (call.function?.name !== 'fleet_read_planning_artifact') return false;
+        const args = JSON.parse(call.function.arguments);
+        return args.path === path && args.offset === offset;
+      });
+      const result = read && messages.find(message => message.role === 'tool' && message.tool_call_id === read.id);
+      if (!result) {
+        pending.push({ name: 'fleet_read_planning_artifact', arguments: JSON.stringify({ path, offset }) });
+        break;
+      }
+      const page = JSON.parse(contentText(result));
+      body += page.text;
+      if (page.nextOffset === null) { documents[path] = body; break; }
+      if (!Number.isSafeInteger(page.nextOffset) || page.nextOffset <= offset) throw new Error('Fixture planning snapshot pagination did not advance.');
+      offset = page.nextOffset;
+    }
+  }
+  return pending.length ? pending : [{ name: 'fleet_submit_planning_review', arguments: JSON.stringify(fixturePlanningReviewInput(documents)) }];
+}
 
 // An explicit local test fixture, never registered by production code.
 export async function startFixtureProvider() {
@@ -72,9 +101,16 @@ export async function startFixtureProvider() {
     }
     if (!startingTurn && !extraCalls.length && (guide || verification)) {
       const visualCalls = turnMessages.flatMap(message => message.tool_calls ?? []).filter(call => ['fleet_browser', 'fleet_visual_review'].includes(call.function?.name));
-      if (visualCalls.length < 8) {
+      const firstCapture = visualCalls.find(call => call.function?.name === 'fleet_browser');
+      const firstResult = firstCapture && turnMessages.find(message => message.role === 'tool' && message.tool_call_id === firstCapture.id);
+      const journeys = firstResult ? JSON.parse(contentText(firstResult)).journeys ?? [] : [];
+      const observations = ['desktop', 'narrow'].flatMap(viewport => [
+        { action: viewport === 'desktop' ? 'open' : 'screenshot', viewport },
+        ...(journeys.length ? journeys.map(journey => ({ action: 'journey', journeyId: journey.id, viewport })) : [{ action: 'screenshot', viewport }]),
+      ]);
+      if (visualCalls.length < observations.length * 2) {
         const step = visualCalls.length;
-        if (step % 2 === 0) extraCalls = [{ name: 'fleet_browser', arguments: JSON.stringify({ action: step === 0 ? 'open' : 'screenshot', viewport: step < 4 ? 'desktop' : 'narrow' }) }];
+        if (step % 2 === 0) extraCalls = [{ name: 'fleet_browser', arguments: JSON.stringify(observations[step / 2]) }];
         else {
           const captureCall = visualCalls.at(-1);
           const result = turnMessages.find(message => message.role === 'tool' && message.tool_call_id === captureCall.id);
@@ -82,7 +118,9 @@ export async function startFixtureProvider() {
         }
       }
     }
-    const calls = [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
+    const reviewingPlan = body.tools?.some(tool => tool.function?.name === 'fleet_submit_planning_review');
+    const calls = reviewingPlan ? planningReviewCalls(turnMessages, contentText, body.tools)
+      : [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
     const judgment = body.tools?.some(tool => tool.function?.name === 'judge_read');
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
     const base = { id: 'chatcmpl-' + randomUUID(), object: 'chat.completion.chunk', created: Math.floor(Date.now()/1000), model:'fixture-model' };

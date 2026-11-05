@@ -384,3 +384,12 @@ for (const status of ['failed', 'stopped']) for (const cleanupFails of [false, t
   assert.match(saved.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Could not save.*report/);
   assert.deepEqual(saved.report.stageMetrics, project.report.stageMetrics);
 });
+test('private activity masks synchronous and asynchronous session setup errors', async () => {
+  for (const create of [() => { throw new Error('SEALED-private-setup'); }, async () => { throw new Error('SEALED-private-setup'); }]) {
+    await assert.rejects(run(session(), { create, privateActivity: true, recoveryHint: 'Resume planning with saved files.' }), error => {
+      assert.match(error.message, /could not initialize its model session.*Resume planning/);
+      assert.doesNotMatch(error.message, /SEALED/);
+      return true;
+    });
+  }
+});

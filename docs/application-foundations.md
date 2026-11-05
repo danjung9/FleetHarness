@@ -88,6 +88,8 @@ The host materializes the foundation only after planning succeeds. Agents must n
 
 After materialization, edit the application source freely. Keep `foundation-plan.json` and `foundation-lock.json` unchanged: they identify the starting point, not the final application contents. The lock's copied file count and bytes measure reuse; they do not measure token reductions or certify application quality. Re-running materialization over edited files fails instead of resetting those files.
 
+The generic input/result client does not constrain the output to one page. New UI builds follow a planned [screen structure](ui-structure.md), using separate HTML pages, service routes or client-side views as appropriate. Replace the sample form with those layouts, declare all added pages/assets in `runtime.files`, and explicitly add service routes while preserving the file allowlist. Build navigation and screen containers before feature controls. Static browser packages use relative links so they also work beneath the preview mount.
+
 ## Extend the actual backend
 
 Both templates serve `public/index.html`, `public/app.js`, and `public/styles.css`, with request validation and error handling already connected. The browser sends raw input JSON to `POST /api/invoke`. The service calls `compute.mjs` or `compute.py` and returns its JSON result. The host service evaluator invokes that same endpoint. Application tests should import the same computation module rather than maintaining a second implementation.

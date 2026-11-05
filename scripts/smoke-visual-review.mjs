@@ -20,8 +20,8 @@ const time = '2026-11-05T16:20:00Z';
 const hash = value => createHash('sha256').update(value).digest('hex');
 const originalHash = hash('synthetic-original-source'), fixedHash = hash('synthetic-fixed-source');
 const buildSession = 'build-session', verifySession = 'verify-session';
-const ledger = { schemaVersion: 1, runId: 'visual-review-ui-fixture', contractHash: hash('synthetic-contract'), status: 'passed', filesHash: fixedHash, activeSessionId: verifySession,
-  sessions: [buildSession, verifySession].map((id, index) => ({ id, stage: index ? 'verify' : 'build', startedAt: time, status: 'passed', filesHash: fixedHash, errors: [] })), captures: [], reviews: [] };
+const ledger = { schemaVersion: 2, runId: 'visual-review-ui-fixture', contractHash: hash('synthetic-contract'), status: 'passed', filesHash: fixedHash, activeSessionId: verifySession,
+  sessions: [buildSession, verifySession].map((id, index) => ({ id, stage: index ? 'verify' : 'build', startedAt: time, status: 'passed', filesHash: fixedHash, errors: [], requiredJourneyIds: ['review-message'] })), captures: [], reviews: [] };
 const imageSources = {};
 let browser, desktop;
 try {
@@ -39,7 +39,9 @@ try {
     const initial = round === 'initial', build = session.stage === 'build';
     const bytes = imageSources[viewport + (initial && build ? '-initial' : '-fixed')];
     const id = `${session.stage}-${viewport}-${round}`;
-    const capture = { id, sessionId: session.id, stage: session.stage, viewport, screenshot: `.browser-observations/${randomUUID()}/${hash(bytes).slice(0, 12)}-${randomUUID()}.png`, screenshotHash: hash(bytes), filesHash: initial && build ? originalHash : fixedHash, capturedAt: time, sequence: ++sequence };
+    const capture = { id, sessionId: session.id, stage: session.stage, viewport, screenshot: `.browser-observations/${randomUUID()}/${hash(bytes).slice(0, 12)}-${randomUUID()}.png`, screenshotHash: hash(bytes), filesHash: initial && build ? originalHash : fixedHash, capturedAt: time, sequence: ++sequence,
+      journey: { id: 'review-message', status: initial && build && viewport === 'narrow' ? 'failed' : 'passed', completedSteps: 3, totalSteps: 3, detail: 'Synthetic workflow evidence for the review viewer.' },
+      errors: initial && build && viewport === 'narrow' ? ['Review actions overflow the narrow screen.'] : [] };
     ledger.captures.push(capture);
     const findingId = 'narrow-actions';
     ledger.reviews.push({ id: 'review-' + id, sessionId: session.id, stage: session.stage, captureId: id, viewport, round,

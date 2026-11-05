@@ -39,6 +39,7 @@ interface Options {
   humanNotes?: string[];
   /** Saves the verified application so a judge repair that fails can be undone. */
   saveBeforeRepair?: () => Promise<{ restore: () => Promise<void>; discard: () => Promise<void>; writerIdle: () => boolean } | undefined>;
+  createUsageRecorder?: () => NonNullable<Parameters<typeof runAgentStage>[0]['onUsage']>;
   onMetrics?: (metrics: { durationMs: number; usage: StageTokenUsage | null }) => void;
 }
 const responseLimit = 100_000;
@@ -207,7 +208,7 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
   };
 }
 
-type ReadOnlyOptions = Pick<Options, 'workspace' | 'engine' | 'signal' | 'limits' | 'onMetrics'>;
+type ReadOnlyOptions = Pick<Options, 'workspace' | 'engine' | 'signal' | 'limits' | 'onMetrics' | 'createUsageRecorder'>;
 export interface AnswerDispute { id: string; input: unknown; frozenAnswer: unknown; appOutput: unknown; mismatch: string }
 export interface AnswerCorrection { evaluationId: string; caseId: string; expected: unknown; rule: string; why: string }
 
@@ -215,6 +216,7 @@ async function readOnlyEvaluation(options: ReadOnlyOptions, files: Map<string, s
   const tool = readTool(files);
   let finalText = '', tokens: Tokens | null = null;
     await runAgentStage({ label, signal: options.signal, limits: options.limits,
+      onUsage: options.createUsageRecorder?.(),
       onMetrics: measured => {
         tokens = measured.usage?.totalTokens == null ? null : measured.usage;
         options.onMetrics?.(measured);

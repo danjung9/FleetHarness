@@ -13,6 +13,11 @@ export function assertFixturePhaseRequests(project, requests) {
       sessions.add('judge');
       continue;
     }
+    if (tools.includes('fleet_submit_planning_review')) {
+      assert.deepEqual(tools, ['fleet_read_planning_artifact', 'fleet_submit_planning_review']);
+      sessions.add('planning-review');
+      continue;
+    }
     if (prompt.includes('Use planning audit mode.')) {
       assert.deepEqual(tools, ['judge_read'], 'The planning audit has only immutable evidence reading');
       sessions.add('planning-audit');
@@ -32,6 +37,7 @@ export function assertFixturePhaseRequests(project, requests) {
     assert.equal(tools.includes('fleet_solve_schedule'), false, 'Message builds must not expose scheduling tools');
   }
   assert.deepEqual([...observed], ['intake', 'research', 'plan', 'build', 'verify']);
-  assert.deepEqual([...sessions], ['intake', 'synthetic-data', 'research', 'plan', 'planning-audit', 'build', 'verify', 'judge']);
+  assert.equal(sessions.has('planning-review') && sessions.has('planning-audit'), false, 'A normal run must not dispatch both plan reviewers');
+  assert.deepEqual([...sessions], ['intake', 'synthetic-data', 'research', 'plan', sessions.has('planning-review') ? 'planning-review' : 'planning-audit', 'build', 'verify', 'judge']);
   return { phases: [...observed], sessions: [...sessions] };
 }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { createHash } from 'node:crypto';
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { exportVerifiedBundle } from '../dist-electron/electron/source-export.js';
 
@@ -147,4 +148,38 @@ test('workspace receipt edits cannot replace authoritative evidence', async t =>
   const destination = await exportVerifiedBundle(input);
   assert.equal(await fs.readFile(path.join(destination, 'test-report.json'), 'utf8'), input.evidence.report);
   assert.equal(await fs.readFile(path.join(destination, 'review.json'), 'utf8'), input.evidence.review);
+});
+
+test('experiment export separates the verified source from the public reproducibility bundle', async t => {
+  const input = await fixture(t);
+  await fs.writeFile(path.join(input.workspace, 'memory-context.md'), 'Private installation learning');
+  input.verifiedHash = await sourceHash(input.workspace);
+  input.reference = { runtime: { profile: 'browser', entrypoint: 'index.html', files: ['index.html'], requiredEnv: [], evaluator: { runtime: 'node', entrypoint: 'app.mjs', args: [] } },
+    operations: [{ id: 'lookup', origin: 'https://api.example.com', path: '/lookup', method: 'POST', responseType: 'json', auth: { type: 'bearer', credentialId: 'private-vault-reference', envName: 'LOOKUP_TOKEN' } }],
+    experiment: { experimentId: 'experiment-id', candidateId: 'candidate-id', behaviorHash: 'a'.repeat(64), evaluationSetHash: 'b'.repeat(64), executionHash: 'c'.repeat(64) } };
+  const destination = await exportVerifiedBundle(input);
+  await assert.rejects(fs.access(path.join(destination, 'memory-context.md')), { code: 'ENOENT' });
+  const body = await fs.readFile(path.join(destination, 'reproducibility/manifest.json'), 'utf8'), manifest = JSON.parse(body);
+  assert.equal(manifest.verifiedSourceHash, input.verifiedHash);
+  assert.equal(body.includes('private-vault-reference'), false); assert.equal(body.includes('Private installation learning'), false);
+  assert.equal(manifest.operations[0].auth.envName, 'LOOKUP_TOKEN');
+  const bundle = createHash('sha256');
+  for (const file of manifest.files) {
+    const bytes = await fs.readFile(path.join(destination, file.path));
+    assert.equal(file.sha256, createHash('sha256').update(bytes).digest('hex'));
+    bundle.update(file.path + '\0').update(bytes).update('\0');
+  }
+  assert.equal(bundle.digest('hex'), manifest.bundleHash);
+  assert.equal(await sourceHash(input.workspace), input.verifiedHash, 'Export never modifies the reviewed candidate.');
+});
+
+test('experiment exports reject evaluation keys and references to omitted private context', async t => {
+  const input = await fixture(t);
+  input.reference = { runtime: { profile: 'cli', files: ['memory-context.md'], requiredEnv: [] }, operations: [],
+    experiment: { experimentId: 'experiment-id', candidateId: 'candidate-id', behaviorHash: 'a'.repeat(64), evaluationSetHash: 'b'.repeat(64), executionHash: 'c'.repeat(64) } };
+  await assert.rejects(exportVerifiedBundle(input), /private learning/); await onlyExisting(input.parent);
+  input.reference.runtime.files = ['index.html'];
+  await fs.writeFile(path.join(input.workspace, 'evaluation-plan.json'), '{"private":"expected"}');
+  input.verifiedHash = await sourceHash(input.workspace);
+  await assert.rejects(exportVerifiedBundle(input), /answer keys/); await onlyExisting(input.parent);
 });

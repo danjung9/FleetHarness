@@ -61,7 +61,7 @@ async function renderer(t, { projects = [project()], view = 'requirements', api:
           export const useState = initial => globalThis.${key}.useState(initial);
           export const useRef = initial => globalThis.${key}.useRef(initial);
           export const useEffect = (work, deps) => globalThis.${key}.useEffect(work, deps);
-          export const useMemo = work => work(); export const useId = () => 'synthetic-id';`) };
+          export const useCallback = callback => callback; export const useMemo = work => work(); export const useId = () => 'synthetic-id';`) };
         if (specifier === './api') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`export const isDesktop = true; export const api = globalThis.${key}.api;`) };
         if (specifier.startsWith('.')) return next(/\.[a-z]+$/i.test(specifier) ? specifier : specifier + '.js', context);
       }
@@ -189,7 +189,7 @@ for (const planUsageEnabled of [true, false]) test(`API key tab requires disconn
   await ui.click('API key');
   assert.match(text(ui.component('ModelSettings')), /ChatGPT is still connected; choose Switch to API key/);
   assert.equal(ui.button('Save model settings').props.disabled, true);
-  await ui.component('ModelSettings').rendered.props.onSubmit({ preventDefault() {} });
+  await find(ui.component('ModelSettings'), node => node.type === 'form').props.onSubmit({ preventDefault() {} });
   assert.deepEqual(calls, []);
   await ui.click('Switch to API key');
   assert.deepEqual(calls, ['disconnect']);
@@ -198,7 +198,7 @@ for (const planUsageEnabled of [true, false]) test(`API key tab requires disconn
   ui.node(n => n.type === 'input' && n.props.type === 'password').props.onChange({ target: { value: 'synthetic-input-only' } });
   await ui.click('Sign in with API key');
   assert.equal(ui.button('Save model settings').props.disabled, false);
-  await ui.component('ModelSettings').rendered.props.onSubmit({ preventDefault() {} }); await ui.flush();
+  await find(ui.component('ModelSettings'), node => node.type === 'form').props.onSubmit({ preventDefault() {} }); await ui.flush();
   assert.deepEqual(calls, ['disconnect', 'save']);
 });
 

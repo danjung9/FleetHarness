@@ -179,7 +179,7 @@ for (const schemaVersion of [2, 3]) for (const profile of ['node-service', 'pyth
       package: { status: 'passed', cleanCopy: true, profile: runtimeProfile, filesHash },
       solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime: { profile: runtimeProfile, filesHash },
         capabilities: [{ id: 'compute', required: true, status: 'passed' }],
-        evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', actual: 1, threshold: 1, trials: 1, cases: [{ passed: true }, { passed: true }] }] } };
+        evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', evaluator: 'exact', actual: 1, threshold: 1, trials: 1, cases: [{ id: 'ordinary', trial: 1, score: 1, passed: true }, { id: 'boundary', trial: 1, score: 1, passed: true }] }] } };
     if (schemaVersion === 3 && runtimeProfile !== 'cli') {
       const sessionId = 'synthetic-verifier', time = '2026-11-05T12:00:00.000Z';
       const captures = [], reviews = [];
@@ -488,7 +488,8 @@ for (const evaluationError of [false, true]) test(`fake-engine production workfl
     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
     const { RunProcessSweep } = await import('./dist-electron/electron/process-sweep.js');
     const { qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
-    const { solutionFixture } = await import('./scripts/solution-fixture.mjs');
+    const { structuredSolutionFixture: solutionFixture } = await import('./scripts/solution-fixture.mjs');
+    const { createFixturePlanningReviewSession } = await import('./scripts/planning-review-fixture.mjs');
     const { syntheticDataFiles } = await import('./scripts/data-fixture.mjs');
     const store = new Store(process.env.JUDGE_TEST_ROOT); await store.init();
     store.state.projects[0] = newProject(qualityFixtureProject);
@@ -500,6 +501,7 @@ for (const evaluationError of [false, true]) test(`fake-engine production workfl
       preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
       processSweep: () => new RunProcessSweep({ scan: async () => [] }),
       createSession: async config => {
+        if (config.customTools.some(tool => tool.name === 'fleet_submit_planning_review')) return { session: createFixturePlanningReviewSession(config.customTools) };
         assert.deepEqual(config.tools, ['judge_read']); const listeners = new Set();
         return { session: { subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }, abort() {}, dispose() {},
           async prompt() { judgments++; if (evaluationError) throw new Error('Synthetic evaluator unavailable'); for (const fn of listeners) fn({ type: 'message_end', message: {
@@ -516,7 +518,12 @@ for (const evaluationError of [false, true]) test(`fake-engine production workfl
           await fs.writeFile(path.join(p.workspace, name), body);
         }
       }
+      if (stage === 'intake') await fs.writeFile(path.join(p.workspace, 'scope.md'), 'Synthetic task parser scope');
+      if (stage === 'research') await fs.writeFile(path.join(p.workspace, 'research.md'), 'Synthetic local research');
       if (stage === 'plan') {
+        const definition = { title: 'Parser', description: 'Synthetic parser', components: [{ id: 'parser', label: 'Parser', description: 'Parse a task', kind: 'logic', files: ['core.cjs'] }], connections: [] };
+        p.systemDesign = { definition, progress: { parser: { status: 'generated', detail: 'Synthetic fixture', updatedAt: 'fixture' } }, updatedAt: 'fixture' };
+        await fs.writeFile(path.join(p.workspace, 'system-design.json'), JSON.stringify(definition));
         for (const [name, body] of Object.entries(solutionFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
         await fs.writeFile(path.join(p.workspace, 'plan.md'), 'Synthetic implementation plan');
         await fs.writeFile(path.join(p.workspace, 'test-matrix.md'), 'Synthetic acceptance mapping');
@@ -531,7 +538,7 @@ for (const evaluationError of [false, true]) test(`fake-engine production workfl
       }
     };
     await backend.start(project.id); await backend.active.get(project.id)?.done;
-    assert.equal(project.status, 'review', project.error);
+    assert.equal(project.status, 'review', JSON.stringify({ error: project.error, logs: project.logs }));
     assert.equal(project.error, undefined);
     assert.equal(project.logs.filter(log => log.kind === 'error').length, 0);
     assert.equal(project.stages.find(s => s.id === 'verify').status, 'complete');

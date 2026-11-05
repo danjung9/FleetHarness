@@ -6,19 +6,18 @@ import { inspectAgentHelper, listAgentHelpers } from '../harness/agent-helpers.j
 import { executeHelperProcess } from './helper-execution.js';
 import { summarizeTap } from './verification.js';
 import { redactValue } from './secrets.js';
+import { ApplicationTestEvidence } from './application-test-evidence.js';
 
 export const helperToolNames = ['fleet_helpers', 'fleet_run_helper'];
 const result = (value: unknown, isError = false) => { const safe = redactValue(value); return { content: [{ type: 'text' as const, text: JSON.stringify(safe) }], details: safe, isError }; };
 const catalogSchema = Type.Object({ action: Type.Union([Type.Literal('list'), Type.Literal('inspect')]), name: Type.Optional(Type.String()) });
 const runSchema = Type.Object({ name: Type.String(), action: Type.Union([Type.Literal('test'), Type.Literal('run')]), input: Type.Optional(Type.Unknown()) });
 
-function selfTests(output: string, files: string[], workspace: string) {
-  const counts = summarizeTap(output);
-  // Node treats an empty test file as a passing subtest. Require an explicitly
-  // named test in addition to its totals. This is self-testing, not a proof of quality.
-  const implicitNames = new Set(files.flatMap(file => [file, path.relative(workspace, file), './' + path.relative(workspace, file)]));
-  const explicit = [...output.matchAll(/^# Subtest: (.+)$/gm)].some(match => !implicitNames.has(match[1]));
-  return { ...counts, explicit };
+// JSON.parse accepts overflowing exponents as Infinity, which JSON.stringify
+// would silently publish as null. Apply the same guard at both boundaries.
+function finiteJsonNumber(_key: string, value: unknown): unknown {
+  if (typeof value === 'number' && !Number.isFinite(value)) throw new Error('Helper JSON numbers must be finite.');
+  return value;
 }
 
 /** A host-owned ledger for one build. Generated code cannot mark itself tested. */
@@ -60,22 +59,26 @@ export class AgentHelperRuntime {
           const testing = args.action === 'test';
           if (testing) this.tested.delete(args.name);
           else if (this.tested.get(args.name) !== helper.hash) throw new Error('This helper revision has not passed its self-tests. Call fleet_run_helper with action test first.');
-          const input = JSON.stringify(args.input ?? null);
+          const input = JSON.stringify(args.input ?? null, finiteJsonNumber);
           if (input === undefined || Buffer.byteLength(input) > 64 * 1024) throw new Error('Helper input must be JSON of at most 64 KiB. Pass large datasets by workspace-relative path.');
           const testFiles = await Promise.all(helper.manifest.tests.map(file => fs.realpath(path.join(helper.directory, file))));
           // Retest even unchanged packages: workspace modules or fixtures they
           // read may have changed since the previous phase.
           this.tested.delete(args.name);
-          const testExecution = await this.execute({ workspace: this.workspace, executable: this.executable,
+          const recorded = await this.execute({ workspace: this.workspace, executable: this.executable,
             command: [this.executable, '--no-global-search-paths', '--test', '--test-reporter=tap', ...testFiles], signal: combined });
-          const tests = selfTests(testExecution.stdout, testFiles, await fs.realpath(this.workspace));
+          const evidence = new ApplicationTestEvidence();
+          evidence.stdout(Buffer.from(recorded.stdout));
+          const { output: testOutput, valid, ...counts } = evidence.finish(testFiles.length, 'Helper verification');
+          const tests = { ...counts, explicit: counts.total > 0, valid };
+          const testExecution = { ...recorded, stdout: testOutput };
           const testsPassed = testExecution.exitCode === 0 && !testExecution.timedOut && !testExecution.outputLimited
-            && tests.explicit && tests.total > 0 && tests.passed === tests.total && tests.failed === 0 && tests.skipped === 0;
+            && tests.valid && tests.explicit && tests.total > 0 && tests.passed === tests.total && tests.failed === 0 && tests.skipped === 0;
           combined.throwIfAborted();
           if ((await inspectAgentHelper(this.workspace, args.name)).hash !== helper.hash) throw new Error('Helper files changed during execution. Inspect and test the new revision.');
           if (!testsPassed) return result({ name: args.name, action: args.action, hash: helper.hash, passed: false,
             scope: 'Project helper self-tests only; not application acceptance.', ...testExecution, tests,
-            error: 'Helper self-tests failed or contained no explicit passing tests. Repair the helper before running it.' }, true);
+            error: 'Helper self-tests require completed node:test cases in every declared file, with no failures, skips or todos. Repair the helper before running it.' }, true);
           this.tested.set(args.name, helper.hash);
           const execution = testing ? testExecution : await this.execute({ workspace: this.workspace, executable: this.executable,
             command: [this.executable, '--no-global-search-paths', path.join(helper.directory, helper.manifest.entrypoint)],
@@ -89,13 +92,13 @@ export class AgentHelperRuntime {
           let passed = execution.exitCode === 0 && !execution.timedOut && !execution.outputLimited;
           let output: unknown;
           if (!testing && passed) {
-            try { output = JSON.parse(execution.stdout); }
+            try { output = JSON.parse(execution.stdout, finiteJsonNumber); }
             catch { passed = false; }
           }
           return result({ name: args.name, action: args.action, hash: helper.hash, passed,
             scope: 'Project helper self-tests and execution only; not independent application acceptance.',
             ...execution, tests, ...(output !== undefined ? { output } : {}),
-            ...(!testing && execution.exitCode === 0 && !passed ? { error: 'Helper must emit exactly one JSON value on stdout. Send diagnostics to stderr.' } : {}) }, !passed);
+            ...(!testing && execution.exitCode === 0 && !passed ? { error: 'Helper must emit exactly one JSON value with finite numbers on stdout. Send diagnostics to stderr.' } : {}) }, !passed);
         } finally { this.running = false; }
       }
     }];

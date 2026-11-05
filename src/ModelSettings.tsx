@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'luci
 import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
 import { GenAiMilTab } from './GenAiMilTab';
 import './model-settings.css';
+import { LearningSettingsPanel } from './ExperimentReview';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
 const tabs = [{ id: 'chatgpt', name: 'ChatGPT' }, { id: 'api-key', name: 'API key' }, { id: 'genai-mil', name: 'GenAI.mil' }, { id: 'other', name: 'Other model providers' }] as const;
@@ -41,7 +42,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     timer = setTimeout(() => void poll().catch(() => {}), 1500);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [api, connecting]);
-  return <form className="model-settings-form" onSubmit={e => {
+  return <><form className="model-settings-form" onSubmit={e => {
     e.preventDefault(); if (tab === 'genai-mil' || disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !accountReady)) return; void action(async () => {
       const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined);
       updated(saved); setKey(''); onSaved?.(saved);
@@ -95,5 +96,5 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     </>}
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
     </div>
-  </form>;
+  </form><LearningSettingsPanel data={data} api={api} busy={busy} desktop={desktop} action={action}/></>;
 }

@@ -46,7 +46,7 @@ for (const mixed of [false, true]) test(`combined prerequisite: comment-only tes
   if (mixed) await fs.writeFile(path.join(root, 'real.test.cjs'), 'require("node:test")("actual case", () => {});');
   const report = await verifyPlain(root, process.execPath, () => {});
   assert.equal(reportPassed(report), false, report.output);
-  assert.equal(report.passed, 0);
+  assert.equal(report.passed, mixed ? 1 : 0);
   assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
 });
 
@@ -393,12 +393,31 @@ test('toolkit checks, browser observations and empty files cannot replace applic
   const root = await workspace(t, 'require("node:test")("toolkit only", () => {});', '.fleet/toolkit/reference.test.cjs');
   await fs.mkdir(path.join(root, '.browser-observations', 'session'), { recursive: true });
   await fs.writeFile(path.join(root, '.browser-observations', 'session', 'snapshot.test.mjs'), 'throw new Error("This is not an application test");');
-  await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
   await assert.rejects(verifyPlain(root, process.execPath, () => {}), /did not produce/);
+  await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
+  const report = await verifyPlain(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), false);
+  assert.equal(report.passed, 0);
+  assert.equal(report.exitCode, 1);
+  assert.match(report.output, /completed node:test cases in every test file/);
 });
 
 test('test filenames containing spaces are passed as single paths', async t => {
   const root = await workspace(t, 'require("node:test")("real assertion", () => require("node:assert/strict").deepEqual([1, 2].slice(1), [2]));', 'special name.test.cjs');
   const report = await verifyPlain(root, process.execPath, () => {});
   assert.equal(reportPassed(report), true); assert.equal(report.passed, 1);
+});
+
+test('production verification records workspace-relative registered paths through a directory alias', async t => {
+  const root = await workspace(t, 'require("node:test")("real case through alias", () => {});');
+  await fs.mkdir(path.join(root, 'workspace'));
+  await fs.rename(path.join(root, 'app.test.cjs'), path.join(root, 'workspace/app.test.cjs'));
+  const alias = root + '-alias';
+  await fs.symlink(root, alias, 'dir');
+  t.after(() => fs.rm(alias, { force: true }));
+  let launches = 0;
+  const report = await verifyWorkspace(path.join(alias, 'workspace'), process.execPath, () => { launches++; });
+  assert.equal(reportPassed(report), true, report.output);
+  assert.equal(launches, 1);
+  assert.deepEqual(report.registeredTests, [{ file: 'app.test.cjs', tests: 1 }]);
 });

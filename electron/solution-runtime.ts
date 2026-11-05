@@ -4,13 +4,15 @@ import { VerificationShutdownError } from './verification.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { artifactManifest } from './storage.js';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { isUtf8 } from 'node:buffer';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { createHash } from 'node:crypto';
+import { createRuntimeFilesHasher } from './runtime-files-hash.js';
 import { createServer } from 'node:http';
 import { PreviewServers } from './preview.js';
 import type { JsonValue, RuntimeCommand, RuntimeManifest, SolutionEvaluationReport } from '../shared/solution.js';
+import { assertRuntimeSourceFiles, runtimeDataDirectory } from '../shared/runtime-artifacts.js';
 
 export interface SolutionRuntimeLimits {
   totalTimeoutMs: number;
@@ -23,10 +25,16 @@ export interface SolutionRuntimeLimits {
 export interface SolutionRuntime {
   root: string;
   url?: string;
+  /** Host-owned static preview mount; application routes are relative to this prefix. */
+  routeBase?: string;
   provenance: SolutionEvaluationReport['runtime'];
   /** For host-run tests only; never serialize this environment into evidence. */
   testEnvironment: NodeJS.ProcessEnv;
   invoke(input: JsonValue): Promise<JsonValue>;
+  /** Service-only HTTP observation. Receives input only; expectations remain in the host. */
+  invokeHttp?(input: JsonValue): Promise<{ status: number; output: JsonValue }>;
+  /** Service-only process restart. Keeps the package, durable data, dependencies and origin. */
+  restart?(): Promise<void>;
   assertIntegrity(): Promise<void>;
   redactOutput(value: JsonValue): JsonValue;
   redactMessage(message: string): string;
@@ -62,9 +70,12 @@ async function executable(name: string) {
 function kill(child: ChildProcess) {
   try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch { /* already stopped */ }
 }
-function json(text: string): JsonValue {
+function json(bytes: Uint8Array): JsonValue {
+  // Decode only complete, valid output: replacement decoding can turn broken
+  // engine bytes into a different JSON answer that passes the frozen checks.
+  if (!isUtf8(bytes)) throw new Error('Engine JSON must contain valid UTF-8.');
   let parsed: JsonValue;
-  try { parsed = JSON.parse(text); } catch { throw new Error('The engine must return exactly one JSON value on stdout.'); }
+  try { parsed = JSON.parse(Buffer.from(bytes).toString('utf8')); } catch { throw new Error('The engine must return exactly one JSON value on stdout.'); }
   const pending = [{ value: parsed, depth: 0 }];
   let count = 0;
   while (pending.length) {
@@ -143,6 +154,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   signal?: AbortSignal, options: Partial<SolutionRuntimeLimits> & { preferredPort?: number } = {}): Promise<SolutionRuntime> {
   const { preferredPort, ...requestedLimits } = options;
   const limits = { ...defaults, ...requestedLimits };
+  assertRuntimeSourceFiles(manifest.files);
   for (const [key, value] of Object.entries(limits)) if (!Number.isSafeInteger(value) || value <= 0) throw new Error('Invalid solution runtime limit: ' + key);
   signal?.throwIfAborted();
   if (manifest.profile === 'browser' && (manifest.requiredEnv.length || manifest.evaluator?.runtime !== 'node')) {
@@ -153,14 +165,13 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   if (manifest.requiredEnv.some(name => !/^[A-Z_][A-Z0-9_]*$/.test(name) || reservedEnv.test(name))) throw new Error('Runtime environment contains a reserved or invalid name.');
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-solution-'));
   const root = path.join(directory, 'package');
-  const children = new Set<ChildProcess>();
-  const closedChildren = new Map<ChildProcess, Promise<void>>();
+  const children = new Map<ChildProcess, Promise<void>>();
   const inherited = runProcessEnvironment({});
   const ownScope = inherited.APPYARD_RUN_PROCESS ? undefined : new RunProcessSweep();
   const controller = new AbortController();
   const previews = new PreviewServers();
   let failure: Error | undefined, closed = false;
-  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children) kill(child); previews.close(); };
+  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children.keys()) kill(child); previews.close(); };
   const abort = () => stop(new Error('Solution execution stopped.'));
   signal?.addEventListener('abort', abort, { once: true });
   const deadline = setTimeout(() => stop(new Error('Solution runtime exceeded its total execution limit.')), limits.totalTimeoutMs);
@@ -169,11 +180,11 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   const close = () => closing ??= (async () => {
     closed = true; clearTimeout(deadline); signal?.removeEventListener('abort', abort);
     controller.abort(new Error('Solution runtime closed.'));
-    for (const child of children) kill(child);
+    for (const child of children.keys()) kill(child);
     previews.close();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([Promise.all([...closedChildren.values()]), new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Runtime workers did not close.')), 5000); })]);
+      await Promise.race([Promise.all([...children.values()]), new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Runtime workers did not close.')), 5000); })]);
       await ownScope?.stop();
     } catch (error) { throw new VerificationShutdownError(error); }
     finally { clearTimeout(timer); }
@@ -196,16 +207,16 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     check();
     const baseEnv = { ...env, ...extraEnv };
     const child = spawn(command, args, { cwd: root, env: runProcessEnvironment(ownScope ? ownScope.environment(baseEnv) : baseEnv), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
-    children.add(child);
-    closedChildren.set(child, new Promise<void>(resolve => child.once('close', () => { children.delete(child); closedChildren.delete(child); resolve(); })));
+    const exited = new Promise<void>(resolve => child.once('close', () => { children.delete(child); resolve(); }));
+    children.set(child, exited);
     const stdout: Buffer[] = [], stderr: Buffer[] = []; let bytes = 0;
     let rejectExecution!: (error: Error) => void;
     let settled = false;
-    const finished = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    const finished = new Promise<{ stdout: Buffer; stderr: string }>((resolve, reject) => {
       rejectExecution = reject;
       child.once('error', error => reject(error));
       child.once('close', code => {
-        const out = Buffer.concat(stdout).toString('utf8'), err = Buffer.concat(stderr).toString('utf8');
+        const out = Buffer.concat(stdout), err = Buffer.concat(stderr).toString('utf8');
         if (code === 0) resolve({ stdout: out, stderr: err });
         else reject(new Error('Runtime process exited with ' + code + (err ? ': ' + redact(err).slice(0, 1500) : '.')));
       });
@@ -225,7 +236,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     child.stdin?.end(input);
     const result = finished.finally(() => { settled = true; clearTimeout(timer); controller.signal.removeEventListener('abort', aborted); kill(child); });
     void result.catch(() => {});
-    return { child, result };
+    return { child, result, exited };
   };
   try {
     await Promise.all([fs.mkdir(root), fs.mkdir(env.HOME!), fs.mkdir(env.TMPDIR!)]);
@@ -235,7 +246,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
       if (parent === path.dirname(parent)) break;
     }
-    const base = await fs.realpath(sourceRoot), hash = createHash('sha256');
+    const base = await fs.realpath(sourceRoot), hash = createRuntimeFilesHasher();
     const validated = await artifactManifest(base);
     let size = 0;
     if (!manifest.files.length || manifest.files.length > 256 || new Set(manifest.files).size !== manifest.files.length) throw new Error('Runtime files must be a nonempty unique allowlist of at most 256 files.');
@@ -246,17 +257,21 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       if (size > limits.maxPackageBytes) throw new Error('Runtime package exceeded the size limit.');
       const bytes = validated.find(item => item.path === file)?.contents;
       if (!bytes) throw new Error('Runtime file is absent from the validated manifest: ' + file);
-      hash.update(file + '\0').update(bytes).update('\0');
+      hash.add(file, bytes);
       const target = path.join(root, file);
       await fs.mkdir(path.dirname(target), { recursive: true });
       await atomicHostWrite(root, file, bytes);
     }
-    const filesHash = hash.digest('hex');
+    const filesHash = hash.digest();
     const assertIntegrity = async () => {
       check();
-      const current = createHash('sha256');
-      for (const file of [...manifest.files].sort()) current.update(file + '\0').update(await fs.readFile(await ordinaryFile(root, file))).update('\0');
-      if (current.digest('hex') !== filesHash) throw new Error('Declared runtime files changed during execution. Keep mutable state outside the deployment file allowlist.');
+      if (manifest.profile === 'service') {
+        const data = await fs.lstat(path.join(root, runtimeDataDirectory));
+        if (!data.isDirectory() || data.isSymbolicLink()) throw new Error('Service state must stay in its ordinary runtime data directory.');
+      }
+      const current = createRuntimeFilesHasher();
+      for (const file of [...manifest.files].sort()) current.add(file, await fs.readFile(await ordinaryFile(root, file)));
+      if (current.digest() !== filesHash) throw new Error('Declared runtime files changed during execution. Keep mutable state outside the deployment file allowlist.');
     };
     for (const file of [manifest.entrypoint, manifest.command?.entrypoint, manifest.evaluator?.entrypoint, manifest.dependencies?.manifest, manifest.dependencies?.lockfile].filter((file): file is string => !!file)) {
       if (!manifest.files.includes(file)) throw new Error('Runtime entrypoint or dependency is absent from its file allowlist: ' + file);
@@ -284,59 +299,103 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       env.PATH = path.dirname(python) + path.delimiter + env.PATH;
     }
     const commandFor = (command: RuntimeCommand): [string, string[]] => {
-      if (command.runtime === 'node') return [nodeExecutable, ['--no-global-search-paths', command.entrypoint, ...command.args]];
+      // Use a literal path: option-like names must not become Node flags, and
+      // even after `--`, a bare `-` would execute stdin instead of the file.
+      if (command.runtime === 'node') return [nodeExecutable, ['--no-global-search-paths', './' + command.entrypoint, ...command.args]];
       // Ignore ambient user paths/site packages, while retaining this package's modules.
       const bootstrap = 'import os,runpy,sys;sys.path.insert(0,os.getcwd());p=sys.argv[1];sys.argv=sys.argv[1:];runpy.run_path(p,run_name="__main__")';
       return [python!, ['-I', '-B', ...(manifest.dependencies?.manager === 'pip' ? [] : ['-S']), '-c', bootstrap, command.entrypoint, ...command.args]];
     };
     const selected = manifest.profile === 'browser' ? manifest.evaluator : manifest.command;
     const actualRuntime = selected?.runtime === 'python' ? python! : nodeExecutable;
-    const version = (await (await launch(actualRuntime, ['--version'], limits.startupTimeoutMs)).result).stdout.trim();
+    const version = (await (await launch(actualRuntime, ['--version'], limits.startupTimeoutMs)).result).stdout.toString('utf8').trim();
     let url: string | undefined, serviceFailure: Error | undefined;
-    const request = async (address: string, init?: RequestInit) => {
+    let runningService: Awaited<ReturnType<typeof launch>> | undefined, serviceGeneration = 0, restarting: Promise<void> | undefined;
+    const request = async (address: string, init?: RequestInit, observeStatus = false) => {
       check();
       const requestSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(limits.invocationTimeoutMs), ...(init?.signal ? [init.signal] : [])]);
       const response = await fetch(address, { ...init, redirect: 'error', signal: requestSignal });
-      if (!response.ok) { await response.body?.cancel(); throw new Error('Runtime HTTP request failed with status ' + response.status); }
+      if (!response.ok && !observeStatus) { await response.body?.cancel(); throw new Error('Runtime HTTP request failed with status ' + response.status); }
       const reader = response.body?.getReader();
       let bytes = 0; const chunks: Uint8Array[] = [];
       if (reader) try { for (;;) { const chunk = await reader.read(); if (chunk.done) break; bytes += chunk.value.length; if (bytes > limits.maxOutputBytes) throw new Error('Runtime response exceeded its output limit.'); chunks.push(chunk.value); } }
       finally { await reader.cancel().catch(() => {}); }
-      return Buffer.concat(chunks).toString('utf8');
+      return { status: response.status, bytes: Buffer.concat(chunks) };
+    };
+    const startService = async () => {
+      check(); serviceFailure = undefined;
+      const generation = ++serviceGeneration;
+      const [program, args] = commandFor(selected!);
+      const running = runningService = await launch(program, args, limits.totalTimeoutMs);
+      void running.result.then(() => {
+        if (generation === serviceGeneration) serviceFailure = new Error('The runtime service exited unexpectedly.');
+      }, error => { if (generation === serviceGeneration) serviceFailure = error; });
+      const until = Date.now() + limits.startupTimeoutMs;
+      for (;;) {
+        check(); if (serviceFailure) throw serviceFailure;
+        const remaining = until - Date.now();
+        if (remaining > 0) try {
+          await request(new URL(manifest.healthPath!, url!).href, { signal: AbortSignal.timeout(Math.min(1000, remaining)) });
+          check(); if (serviceFailure) throw serviceFailure;
+          if (Date.now() < until) break;
+        } catch { /* Retry failed health checks only within this startup budget. */ }
+        if (Date.now() >= until) throw new Error('Runtime service did not become healthy before the startup deadline.');
+        await new Promise(resolve => setTimeout(resolve, Math.min(50, Math.max(1, until - Date.now()))));
+      }
     };
     if (manifest.profile === 'service') {
       if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
       for (const value of [manifest.healthPath, manifest.invokePath]) if (!value.startsWith('/') || value.startsWith('//') || /[\\?#]/.test(value)) throw new Error('Service paths must be local absolute URL paths.');
       const assignedPort = await port(preferredPort); url = 'http://127.0.0.1:' + assignedPort + '/';
       env.HOST = '127.0.0.1'; env.PORT = String(assignedPort);
-      const [program, args] = commandFor(selected);
-      const running = await launch(program, args, limits.totalTimeoutMs, undefined, { HOST: '127.0.0.1', PORT: String(assignedPort) });
-      void running.result.then(() => { serviceFailure = new Error('The runtime service exited unexpectedly.'); }, error => { serviceFailure = error; });
-      const until = Date.now() + limits.startupTimeoutMs;
-      for (;;) {
-        check(); if (serviceFailure) throw serviceFailure;
-        try { await request(new URL(manifest.healthPath, url).href, { signal: AbortSignal.timeout(Math.min(1000, limits.startupTimeoutMs)) }); break; }
-        catch (error) { if (Date.now() >= until) throw new Error('Runtime service did not become healthy before the startup deadline.'); }
-        await new Promise(resolve => setTimeout(resolve, Math.min(50, Math.max(1, until - Date.now()))));
-      }
+      await fs.mkdir(path.join(root, runtimeDataDirectory), { mode: 0o700 });
+      await startService();
     } else if (manifest.profile === 'browser') {
       if (manifest.entrypoint !== 'index.html') throw new Error('Browser runtime requires index.html.');
       url = await previews.url(root, manifest.files);
     }
     await assertIntegrity();
-    return { root, url, testEnvironment: { ...env }, provenance: { profile: manifest.profile, filesHash, runtime: version || selected?.runtime || 'node', environmentNames: [...manifest.requiredEnv] },
+    const restart = () => {
+      if (restarting) return restarting;
+      restarting = (async () => {
+        try {
+          await assertIntegrity();
+          // Invalidate the old process callback before terminating it. Its expected
+          // close must not mark the replacement process as failed.
+          ++serviceGeneration;
+          if (runningService) { kill(runningService.child); await runningService.exited; }
+          await assertIntegrity();
+          await startService();
+          await assertIntegrity();
+        } catch (error) { await close(); throw error; }
+      })().finally(() => { restarting = undefined; });
+      return restarting;
+    };
+    const encodeInput = async (input: JsonValue) => {
+      check(); if (serviceFailure) throw serviceFailure;
+      if (restarting) throw new Error('The runtime service is restarting.');
+      await assertIntegrity();
+      const encoded = JSON.stringify(input);
+      if (Buffer.byteLength(encoded) > limits.maxOutputBytes) throw new Error('Runtime input exceeded the size limit.');
+      return encoded;
+    };
+    const invokeService = async (input: JsonValue, observeStatus = false) => {
+      const encoded = await encodeInput(input);
+      const response = await request(new URL(manifest.invokePath!, url!).href,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: encoded }, observeStatus);
+      const output = json(response.bytes);
+      await assertIntegrity();
+      return { status: response.status, output };
+    };
+    return { root, url, routeBase: manifest.profile === 'browser' ? new URL(url!).pathname.slice(0, -'/index.html'.length) : '',
+      testEnvironment: { ...env }, provenance: { profile: manifest.profile, filesHash, runtime: version || selected?.runtime || 'node', environmentNames: [...manifest.requiredEnv] },
+      ...(manifest.profile === 'service' ? { invokeHttp: (input: JsonValue) => invokeService(input, true), restart } : {}),
       async invoke(input) {
-        check(); if (serviceFailure) throw serviceFailure;
-        await assertIntegrity();
-        const encoded = JSON.stringify(input);
-        if (Buffer.byteLength(encoded) > limits.maxOutputBytes) throw new Error('Runtime input exceeded the size limit.');
-        let output: JsonValue;
-        if (manifest.profile === 'service') output = json(await request(new URL(manifest.invokePath!, url!).href, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: encoded }));
-        else {
-          if (!selected) throw new Error('This browser package has no callable evaluation entrypoint.');
-          const [program, args] = commandFor(selected);
-          output = json((await (await launch(program, args, limits.invocationTimeoutMs, encoded + '\n')).result).stdout);
-        }
+        if (manifest.profile === 'service') return (await invokeService(input)).output;
+        const encoded = await encodeInput(input);
+        if (!selected) throw new Error('This browser package has no callable evaluation entrypoint.');
+        const [program, args] = commandFor(selected);
+        const output = json((await (await launch(program, args, limits.invocationTimeoutMs, encoded + '\n')).result).stdout);
         await assertIntegrity(); return output;
       }, assertIntegrity, redactOutput, redactMessage: redact, close };
   } catch (error) { await close(); throw error; }

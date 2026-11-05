@@ -23,10 +23,14 @@ export function unique<T extends {id: string}>(items: T[], label: string): T[] {
   if (new Set(items.map(x => x.id)).size !== items.length) throw new Error(`${label} contains duplicate IDs.`);
   return items;
 }
+/** Shared by tool schemas and parsing so the advertised timestamp syntax cannot drift. */
+export const timestampPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})$/;
+export const timestampDescription = 'Use a valid ISO 8601 timestamp with an explicit timezone, such as 2026-11-04T12:00:00Z or 2026-11-04T07:00-05:00. Whole seconds are optional; fractional seconds, date-only values and local times without a timezone are unsupported. The year must be at least 1900 and the timezone offset cannot exceed 14:00.';
+
 /** Strict ISO timestamp with an explicit timezone, rejecting JS Date rollover. */
 export function timestamp(value: unknown): string | null {
   if (typeof value !== 'string') return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  const match = timestampPattern.exec(value);
   if (!match) return null;
   const [, y, m, d, h, n, s = '0', zone] = match;
   const year = +y, month = +m, day = +d;
@@ -34,6 +38,11 @@ export function timestamp(value: unknown): string | null {
   if (zone !== 'Z' && (+zone.slice(1,3) > 14 || +zone.slice(4) > 59 || (+zone.slice(1,3) === 14 && +zone.slice(4) !== 0))) return null;
   const ms = Date.parse(value);
   return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+export function requireTimestamp(value: unknown, label: string): string {
+  const normalized = timestamp(value);
+  if (!normalized) throw new Error(`Invalid timestamp ${label}: ${timestampDescription}`);
+  return normalized;
 }
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;

@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
 import { deferRunCleanup, runProcessEnvironment } from './process-sweep.js';
+import { applicationTestReporter } from './application-test-evidence.js';
 
 export interface HelperProcessOptions {
   workspace: string;
@@ -70,7 +71,7 @@ function runtimeArguments(command: string[]) {
   }
   if (entry === args.length) throw new Error('Helper command requires a script entrypoint.');
   if (tests && args.slice(entry).some(arg => arg.startsWith('-'))) throw new Error('Helper test files cannot contain runtime switches.');
-  return [...(tests ? ['--experimental-test-isolation=none'] : []), ...args];
+  return tests ? [...args.filter(arg => arg !== '--test-reporter=tap').slice(0, entry - (args.includes('--test-reporter=tap') ? 1 : 0)), applicationTestReporter, ...args.slice(entry)] : args;
 }
 
 /** Runs a project helper directly with the owning run marker and bounded output. */

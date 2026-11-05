@@ -192,7 +192,8 @@ test('the Codex password control calls key login and clears input on success or 
   };
   const hooks = registerHooks({
     resolve(specifier, context, next) {
-      if (context.parentURL === url && specifier === './GenAiMilTab') return next('./GenAiMilTab.js', context);
+      if (context.parentURL?.startsWith(prefix) && specifier === './api') return { shortCircuit: true, url: 'data:text/javascript,export const api = {}; export const isDesktop = true;' };
+      if (context.parentURL?.startsWith(prefix) && /^\.{1,2}\//.test(specifier) && !path.extname(specifier)) return next(specifier + '.js', context);
       if (context.parentURL === url && specifier === 'react') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`
         export const useState = value => globalThis.${hookName}(value);
         export const useEffect = () => {}; export const useRef = value => ({ current: value });`) };
