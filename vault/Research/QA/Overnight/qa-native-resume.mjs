@@ -95,7 +95,7 @@ const result = { schemaVersion: 1, suite: 'native-stop-restart-resume', startedA
   revisionPolicy: 'Supplied clean HEAD and stable compiled bytes, with no fixed commit. Build provenance remains a separate prerequisite.',
   rows: [], pageErrors: [], proxyErrors: [], requests: [], result: 'ERROR' };
 let app, page, root, fixture, proxy, electron, executablePath, watchdog, projectId, firstSnapshot, stoppedSnapshot;
-let runMayBeActive = false, stopping = false;
+let runMayBeActive = false, stopping = false, launchUnconfirmed = false;
 const ownedProcesses = [];
 const git = args => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const sourceIdentity = () => ({ commit: git(['rev-parse', 'HEAD']), branch: git(['branch', '--show-current']), tree: git(['rev-parse', 'HEAD^{tree}']), trackedStatus: git(['status', '--porcelain', '--untracked-files=no']) });
@@ -136,7 +136,13 @@ async function bounded(promise, ms, message) {
 }
 async function poll(check, message, ms = 10000) {
   const end = Date.now() + ms;
-  do { if (result.proxyErrors.length) throw new Error('Owned proxy rejected an unsupported request; see metadata.'); if (await check()) return; await new Promise(resolve => setTimeout(resolve, 50)); } while (Date.now() < end);
+  do {
+    if (!stopping) {
+      assert.equal(result.requests.some(request => request.afterResume && earlierPhases.includes(request.phase)), false, 'Resume requested an already completed phase.');
+      if (result.proxyErrors.length) throw new Error('Owned proxy rejected an unsupported request; see metadata.');
+    }
+    if (await check()) return; await new Promise(resolve => setTimeout(resolve, 50));
+  } while (Date.now() < end);
   throw new Error(message);
 }
 async function row(id, fn) {
@@ -221,11 +227,13 @@ async function startProxy(upstreamBase) {
 }
 
 async function launch() {
+  launchUnconfirmed = true;
   app = await electron.launch({ executablePath, args: [repo], cwd: repo, timeout: 45000, env: {
     PATH: process.env.PATH || '/usr/bin:/bin', LANG: 'en_US.UTF-8', TMPDIR: os.tmpdir(),
     FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: path.join(root, 'pi')
   } });
   const child = app.process(); ownedProcesses.push(child);
+  launchUnconfirmed = false;
   result.launches ??= []; result.launches.push({ pid: child.pid, launchedAt: new Date().toISOString() });
   page = await app.firstWindow({ timeout: 45000 }); page.setDefaultTimeout(7000);
   page.on('pageerror', error => result.pageErrors.push(String(error.message).slice(0, 800)));
@@ -247,16 +255,23 @@ async function project() {
       stages: p.stages.map(stage => ({ id: stage.id, status: stage.status })),
       writerState: p.runCheckpoint?.writerState, processCleanup: p.processScope?.cleanup, processRunId: p.processScope?.runId } : null;
   }, projectId);
-  need(value && Array.isArray(value.stages), 'Saved project was not available through production bootstrap.'); return value;
+  need(value && Array.isArray(value.stages), 'Saved project was not available through production bootstrap.');
+  result.lastObservedProject = value; return value;
+}
+async function ownedWorkspace(p) {
+  need(typeof p.workspace === 'string' && inside(path.join(root, 'state', 'workspaces'), p.workspace), 'Workspace is outside the owned profile.');
+  const actual = await fs.realpath(p.workspace); need(actual === p.workspace, 'Workspace path contains a symlink or alias.'); return actual;
 }
 async function checkpoint(p) {
+  await ownedWorkspace(p);
   need(/^[a-zA-Z0-9_-]{1,100}$/.test(p.runId), 'Unsupported run ID.');
   const stateRoot = path.join(root, 'state');
-  return checkpointIdentity(JSON.parse((await regularFile(stateRoot, 'run-checkpoints/' + p.runId + '.json', 8 * 1024 * 1024)).toString('utf8')));
+  const identity = checkpointIdentity(JSON.parse((await regularFile(stateRoot, 'run-checkpoints/' + p.runId + '.json', 8 * 1024 * 1024)).toString('utf8')));
+  need(identity.projectId === p.id && identity.runId === p.runId && identity.workspace === p.workspace, 'Private checkpoint does not identify the owned project run.');
+  return identity;
 }
 async function artifacts(p) {
-  need(typeof p.workspace === 'string' && inside(path.join(root, 'state', 'workspaces'), p.workspace), 'Workspace is outside the owned profile.');
-  const actual = await fs.realpath(p.workspace); need(actual === p.workspace, 'Workspace path contains a symlink or alias.');
+  const actual = await ownedWorkspace(p);
   return Promise.all(phaseArtifacts.map(async name => ({ path: name, sha256: hash(await regularFile(actual, name)) })));
 }
 async function snapshot() { const p = await project(); return { project: p, checkpoint: await checkpoint(p), artifacts: await artifacts(p) }; }
@@ -326,15 +341,18 @@ try {
     return { snapshot: firstSnapshot, heldRequestIndex: proxy.state.firstHeld.index, acknowledgedBeforeForwarding: true, createdAndConfiguredThroughUI: true };
   });
   await row('NATIVE-STOP-ABORTS-HELD-REQUEST', async () => {
+    need(!proxy.state.firstHeld.abortedBy, 'The held implementation request ended before native Stop; cancellation precondition unavailable.');
+    const stopRequestedAt = new Date().toISOString();
     await stopNative();
     await poll(async () => Boolean(proxy.state.firstHeld.abortedBy), 'Native Stop did not close the held provider response.');
     assert.equal(proxy.state.firstHeld.abortedBy, 'client-response-close'); assert.equal(proxy.state.firstHeld.forwarded, false);
+    assert.ok(Date.parse(proxy.state.firstHeld.closedAt) >= Date.parse(stopRequestedAt), 'Held response must close after the Stop action begins.');
     assert.equal(proxy.state.implementationCount, 1, 'No second implementation request may precede Resume.');
     stoppedSnapshot = await snapshot();
     assert.deepEqual(runIdentity(stoppedSnapshot.project), runIdentity(firstSnapshot.project));
     assert.deepEqual(completedState(stoppedSnapshot.project), completedState(firstSnapshot.project));
     assert.deepEqual(stoppedSnapshot.artifacts, firstSnapshot.artifacts); assert.deepEqual(stoppedSnapshot.checkpoint, firstSnapshot.checkpoint);
-    return { snapshot: stoppedSnapshot, heldRequestAbortedByNativeStop: true, forwarded: false };
+    return { snapshot: stoppedSnapshot, stopRequestedAt, responseClosedAt: proxy.state.firstHeld.closedAt, heldRequestAbortedByNativeStop: true, forwarded: false };
   });
   await row('FULL-RESTART-PRESERVES-SAVED-WORK', async () => {
     await closeApp(); await launch();
@@ -366,22 +384,26 @@ try {
     return { snapshot: advanced, resumeRequestOffset: proxy.state.resumeOffset, secondImplementationRequestForwarded: true, implementationComplete: true, verificationRequestHeld: true, fullVerification: false, earlierPhasesRerun: false };
   });
   await row('FINAL-NATIVE-STOP-AND-ERROR-CHECK', async () => {
+    need(!proxy.state.verificationHeld.abortedBy, 'The held verification request ended before final Stop.');
+    const stopRequestedAt = new Date().toISOString();
     const p = await stopNative();
     await poll(async () => Boolean(proxy.state.verificationHeld.abortedBy), 'Final Stop did not abort the held verification request.');
     assert.equal(proxy.state.verificationHeld.abortedBy, 'client-response-close');
+    assert.ok(Date.parse(proxy.state.verificationHeld.closedAt) >= Date.parse(stopRequestedAt));
     assert.deepEqual(runIdentity(p), runIdentity(firstSnapshot.project));
     assert.deepEqual(result.requests.slice(proxy.state.resumeOffset).filter(request => earlierPhases.includes(request.phase)), []);
     assert.deepEqual(result.pageErrors, []); assert.deepEqual(result.proxyErrors, []);
-    return { stoppedAtVerification: true, writerIdle: true, runProcessCleanupConfirmed: true, noUnhandledRendererErrors: true, noFullVerificationClaim: true };
+    return { stopRequestedAt, responseClosedAt: proxy.state.verificationHeld.closedAt, stoppedAtVerification: true, writerIdle: true, runProcessCleanupConfirmed: true, noUnhandledRendererErrors: true, noFullVerificationClaim: true };
   });
 } catch (error) { if (!error.recordedRowFailure) result.error = String(error.message).slice(0, 1600); }
 finally {
   const cleanupProblems = [];
+  stopping = true;
   if (app && runMayBeActive && projectId) {
     try { await bounded(stopNative(), 25000, 'Cleanup Stop timed out.'); }
     catch { cleanupProblems.push('Could not confirm native Stop during cleanup.'); }
   }
-  stopping = true; proxy?.abortAll();
+  proxy?.abortAll();
   try { await closeApp(); } catch (error) {
     cleanupProblems.push(String(error.message));
     for (const child of ownedProcesses) if (child.exitCode === null && child.signalCode === null) { try { child.kill('SIGKILL'); } catch {} }
@@ -389,6 +411,7 @@ finally {
   try { await proxy?.close(); } catch (error) { cleanupProblems.push(String(error.message)); }
   try { if (fixture) { fixture.server.closeAllConnections(); await bounded(fixture.close(), 5000, 'Owned fixture did not close.'); } } catch (error) { cleanupProblems.push(String(error.message)); }
   if (runMayBeActive) cleanupProblems.push('Run shutdown was not confirmed before app exit.');
+  if (launchUnconfirmed) cleanupProblems.push('Electron launch failed before its owned process handle was available.');
   try {
     if (result.sourceBefore && result.buildBefore && result.fixtureBefore) {
       result.sourceAfter = sourceIdentity(); result.buildAfter = await buildIdentity(); result.fixtureAfter = await fixtureIdentity();
