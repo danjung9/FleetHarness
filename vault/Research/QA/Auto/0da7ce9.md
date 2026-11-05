@@ -6,6 +6,8 @@ updated: 2026-11-04
 summary: "Automatic QA at 0da7ce9 on dev/reviewed: failures: unit tests, smoke-electron, smoke-norfolk. Fixture provider only."
 ---
 
+[E] NOT VALID: this run tested `1d9eeee`, not the commit named here, because the QA clone failed to fetch. Found 2026-11-05.
+
 # Automatic QA at 0da7ce9
 
 [E, automatic run, 17:26 to 17:33 EST] Team tests and GUI smoke scripts outside the agent sandbox, in a throwaway clone with a scratch HOME. Local fixture provider only, so this says nothing about a live model or a real build.

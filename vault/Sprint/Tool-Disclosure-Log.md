@@ -100,6 +100,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Runner scheduler audit probes revision 2 | Local diagnostic | Reproduce conflict-retry ownership loss and verify a reviewable scheduler patch with synthetic queue state | Project-local Python tooling | 2026-11-04 |
 | Apple adv_cmds ps source, main read 2026-11-04 | Public source reference | Read option parsing and environment rendering to diagnose the native process-sweep argument vector; no source compiled or executed | Apple Open Source Distributions on GitHub | 2026-11-04 |
 | Round 3 cleanup receipts, first three completed builds | Evidence dataset | Read final status and verification summaries for ID 12, ID 36 and ID 11 alongside the running sweep source; distinguish cleanup confirmation failure from proven surviving work | Team benchmark runner, reported f662d81 plus scratch patches | 2026-11-04 |
+| Detached Pi Stop fixture, pinned 16a6940 revision | QA tool | Prepared unchanged independent Stop regression at the corrected integrated source; syntax and pure validation only here | Team-created fixture | 2026-11-05 |
+| Automatic QA reports and runner source, rechecked 2026-11-05 | Evidence dataset | Compared reported revision, retained checkout, reflog, smoke stack and ignored preparation return codes | Team runtime owner | 2026-11-05 |
 
 ## Data and sources
 

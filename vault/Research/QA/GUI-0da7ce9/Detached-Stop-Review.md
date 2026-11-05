@@ -8,6 +8,8 @@ summary: "Three R3 builds fail cleanup; source review identifies a likely macOS 
 
 # Detached Pi Stop regression at 0da7ce9
 
+[E, November 5 follow-up] The flag defect below is now corrected in source at f5fec32 and included in 16a6940. Native closure is still pending. Use [[Research/QA/GUI-16a6940/Detached-Stop-Review]] for the current pinned handoff and [[Research/QA/Auto/Review-16a6940]] for the report-attribution blocker. Historical receipts and this fixture remain unchanged.
+
 [E] **The defect remains open pending a native rerun.** The earlier d0f4c69 receipt proves that the detached child continued working after Stop. The new integrated source addresses that mechanism, but source and injected-discovery tests do not establish native macOS shutdown. Main owns execution; this preparation launched no app, provider, worker or process scanner.
 
 ## Live R3 blocker
