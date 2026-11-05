@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "1fce3a1c756c46961158ce1f1a4e5036dac92127052998d28e82c2aa4a8bcc76",
+  "electron/pi-backend.ts": "5cdf242e15935a8e6b6515ebbfcc40ed50ef650f16441822e73bbd98e10fd8da",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -34,7 +34,7 @@ const errorInventory = {
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
   "electron/solution-runtime.ts": "adff71659e0a5bc4e897aac805cdef71088321682ba564fd5edaefd19c6989cc",
   "electron/visual-review.ts": "4f3f4aade42b2032aa0bf27774110cf9c2393c04b8a85f927c1b2367ee64eac9",
-  "electron/agent-runner.ts": "cd2dda17f8cef33368a53bf9aa2f7430d76c12318760dc846089db0bfd476025",
+  "electron/agent-runner.ts": "7439fbd910893a7c35a175b0e38aaced918ab99f76d1c3b822cc87821b0ded70",
   "harness/integration.ts": "dcf498a183b90defa591068b54ee13485230a5359ded4d030cd0cd023b00cf34",
   "harness/planner.ts": "d4277229e364ca18355db9c8bc6054e494c972a9e7d69f48e45ddd63e816aa31",
   "harness/tool-registry.ts": "4d4a49881e35b191d59801482244e17d08d543d0d48aafa904d00f59ebaa9169",

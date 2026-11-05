@@ -1563,10 +1563,10 @@ for (const failure of ['Provider error: 503 service unavailable', 'Connection lo
   });
 }
 
-test('transient retries stop after two stage executions and preserve completed stages', { timeout: 10000 }, async t => {
+test('transient retries stop after three stage executions and preserve completed stages', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Provider error: 503'); return false; } });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.filter(s => s.stage === 'build').length, 2);
+  assert.equal(h.sessions.filter(s => s.stage === 'build').length, 3);
   assert.ok(h.project.stages.slice(0, 3).every(s => s.status === 'complete'));
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'research.md'), 'utf8'), 'Local fixture research');
 });
