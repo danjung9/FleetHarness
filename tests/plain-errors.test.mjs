@@ -65,7 +65,7 @@ const errorInventory = {
   "electron/review.ts": "d87816eb820111fdc7fe8c81d44381b67d35e232ac82a34e58fdaf71ea7fcc92",
   "electron/agent-helpers.ts": "c1366645d3f2ffb0f4013f120752cc9ba5d01b02f9b4b1549181af252ba81a7e",
   "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4",
-  "electron/agent-browser.ts": "ba188913dc69c9338c7cdf9dbd81df9768dcac83ecae8b6f0b2fdb200d322f02",
+  "electron/agent-browser.ts": "36f95c63326b07174ed657d3e2ab72b996469586426dbf3a922209cf99417c66",
   "electron/run-checkpoint.ts": "9b33234a062aff1763bcd5b674311b07639b1d3941fa8b3d1365a2eb6a03139f",
   "electron/executable.ts": "01b2ac13f34acf7c23675a48c8a877322658b8794e642ce9981cf1096b52f785",
   "electron/service-package.ts": "2fd75c5a6ec4a34b3c74bcd378d10c563a0b3ead8d29a48b6d08a01a07d2f1f3",
