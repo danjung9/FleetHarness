@@ -904,7 +904,7 @@ for (const abort of [() => Promise.resolve(), () => Promise.reject(new Error('Sy
   });
 }
 
-test('review regression: repeated persisted resume cannot add fixing agents after the repair budget', { timeout: 10000 }, async t => {
+test('each Resume after the automatic repairs adds exactly one repair and no more', { timeout: 10000 }, async t => {
   let repairs = 0;
   const h = await harness(t, { verify: (p, run) => syntheticReport(p, run, true),
     scenario: async ({ cwd, stage }) => {
@@ -914,15 +914,30 @@ test('review regression: repeated persisted resume cannot add fixing agents afte
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   const count = h.sessions.length;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 1; i <= 3; i++) {
     const restored = new Store(h.root); await restored.init();
     const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
     resumed.runtime = h.backend.runtime; resumed.verify = (p, run) => syntheticReport(p, run, true); resumed.evaluateCore = async () => true;
     await resumed.resume(h.project.id); await resumed.active.get(h.project.id)?.done;
     assert.equal(restored.project(h.project.id).status, 'failed');
-    assert.equal(h.sessions.length, count, 'Resume cannot launch another defect-fixing verification agent');
+    assert.equal(h.sessions.length, count + i, 'Each person-initiated Resume pays for one fixing agent');
     assert.equal(restored.project(h.project.id).runCheckpoint.repairAttempts, 2);
   }
+});
+
+test('a core repair leaves the finished app its two repairs', { timeout: 10000 }, async t => {
+  let core = 0, verifications = 0;
+  const h = await harness(t, { verify: (p, run) => syntheticReport(p, run, ++verifications < 3),
+    scenario: async ({ cwd, stage }) => {
+      if (stage === 'repair') await fs.writeFile(path.join(cwd, 'repair-progress.txt'), String(verifications));
+      return false;
+    } });
+  h.backend.evaluateCore = async () => ++core > 1;
+  await h.run(); await h.assertSettled('review');
+  assert.equal(h.project.runCheckpoint.coreRepairAttempts, 1);
+  assert.equal(h.project.runCheckpoint.repairAttempts, 2);
+  assert.equal(h.sessions.filter(s => s.stage === 'repair').length, 2);
+  assert.equal(reportPassed(h.project.report, true), true);
 });
 
 test('completed verification agent resumes host checks without another fixing pass', { timeout: 10000 }, async t => {
@@ -1042,7 +1057,8 @@ test('transient repair retries consume remaining budget before starting another 
   await h.run(); await h.assertSettled('failed');
   assert.equal(repairs, 2); assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('failed');
-  assert.equal(repairs, 2); assert.equal(h.sessions.filter(s => s.stage === 'verify').length, 1);
+  assert.equal(repairs, 3, 'Resume pays for one more attempt, and the retry cannot go past it');
+  assert.equal(h.sessions.filter(s => s.stage === 'verify').length, 1);
 });
 
 test('an unchanged repair remains stopped across explicit resumes', { timeout: 10000 }, async t => {
@@ -1843,7 +1859,7 @@ for (const recover of [true, false]) {
     assert.equal(h.project.runCheckpoint.repairAttempts, 2);
     if (!recover) {
       await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('failed');
-      assert.equal(repairs, 2, 'Resume cannot reset the repair budget');
+      assert.equal(repairs, 3, 'Resume pays for exactly one more repair');
     }
   });
 }

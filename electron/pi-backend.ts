@@ -733,9 +733,11 @@ export class FleetBackend {
               let passed = await hostWork(() => this.evaluateCore(p, run));
               check();
               if (!passed) {
-                if (p.runCheckpoint!.repairAttempts >= 2 || p.runCheckpoint!.repairStopped) throw new Error('The shared repair budget is exhausted.');
-                p.runCheckpoint!.repairAttempts++; await this.changed(p);
-                this.log(p, stage, 'info', 'Core evaluation failed. Using the shared repair attempt before completing the application.');
+                // Core repairs have their own count, so a build that needed one still has its repairs for the finished app.
+                const coreRepairs = p.runCheckpoint!.coreRepairAttempts ?? 0;
+                if (coreRepairs >= 2 || p.runCheckpoint!.repairStopped) throw new Error('The shared repair budget is exhausted.');
+                p.runCheckpoint!.coreRepairAttempts = coreRepairs + 1; await this.changed(p);
+                this.log(p, stage, 'info', 'Core evaluation failed. Using a repair attempt before completing the application.');
                 await complete('The independent core evaluation failed. Read .quality-evidence/core-report.json and the public invocation protocol in solution-contract.json. Use mismatch paths to check response shapes, literal statuses/errors and array ordering as well as computational logic. Repair the actual runtime implementation without changing solution-contract.json, acceptance-plan.json, ux-spec.json or host expectations. Do not substitute canned responses or copied test-only code. This consumes the shared repair attempt.', files, false);
                 await this.recordTestChanges(p, 'core repair');
                 passed = await hostWork(() => this.evaluateCore(p, run));
@@ -1137,6 +1139,11 @@ export class FleetBackend {
       this.appendTestChanges(p);
       this.log(p, 'verify', 'info', p.report.output);
       if (!reportPassed(p.report, true) && p.runCheckpoint!.repairStopped) throw new Error('Verification did not pass. Repair made no source changes; start a new run before another fixing agent.');
+      // A person pressed Resume on a build that had used its automatic repairs. Without this the button could only repeat the same failure.
+      if (run.resumedStage === 'verify' && !reportPassed(p.report, true) && p.runCheckpoint!.repairAttempts >= 2) {
+        p.runCheckpoint!.repairAttempts = 1; await this.changed(p);
+        this.log(p, 'verify', 'info', 'The automatic repairs were already used, so this Resume pays for one more.');
+      }
       while (!reportPassed(p.report, true) && p.runCheckpoint!.repairAttempts < 2) {
         this.check(run);
         await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(redactValue(p.report), null, 2));

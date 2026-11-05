@@ -46,6 +46,7 @@ export interface RunCheckpoint {
   writerState?: 'active' | 'idle' | 'unconfirmed';
   verificationAgent?: 'started' | 'complete';
   repairStopped?: boolean;
+  coreRepairAttempts?: number;
   buildTests?: Record<string, string>;
   buildTestContents?: Record<string, string>;
   lastTests?: Record<string, string>;
