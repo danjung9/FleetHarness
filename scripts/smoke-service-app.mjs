@@ -27,7 +27,8 @@ try {
     electronVersion: (await fs.readFile(path.join(runtimeDirectory, 'version'), 'utf8')).trim() }, process.execPath);
   const unpacked = path.join(root, 'unpacked'); await extract(archive, { dir: unpacked });
   const { binary } = packagedPaths(unpacked, staged.name);
-  const args = ['--host-resolver-rules=MAP * ~NOTFOUND'];
+  // Everything is blocked except the app's own loopback address.
+  const args = ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'];
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
   async function launch() {
     generated = await electron.launch({ executablePath: binary, args, env, timeout: 45_000 });
@@ -91,6 +92,7 @@ try {
   pids = JSON.parse(await fs.readFile(path.join(userData, 'service/pids.json'), 'utf8'));
   await quit();
   await new Promise(resolve => occupied.close(resolve)); occupied = undefined;
+  await fs.rm(path.join(userData, 'service/fail-start'));
   page = await launch();
   assert.equal(new URL(page.url()).origin, movedOrigin, 'Do not silently revert the saved origin.');
   assert.match(await generated.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getTitle()), /local address changed/);

@@ -107,7 +107,7 @@ host.start().then(ready=>process.send(ready),async()=>{process.exitCode=1;await 
   assert.equal((await fetch(ready.origin + '/ready')).status, 200);
   assert.match(await (await fetch(ready.origin + '/')).text(), /Synthetic service notebook/);
   const pids = JSON.parse(await fs.readFile(path.join(ready.directory, 'pids.json'), 'utf8'));
-  assert.equal(pids.cwd, ready.directory); assert.equal(pids.data, ready.directory);
+  assert.equal(await fs.realpath(pids.cwd), await fs.realpath(ready.directory)); assert.equal(await fs.realpath(pids.data), await fs.realpath(ready.directory));
   assert.equal(JSON.parse(await fs.readFile(path.join(ready.directory, 'bound-address.json'), 'utf8')).address, '127.0.0.1');
   const heartbeatFile = path.join(ready.directory, 'heartbeat.txt');
   let before = '';
