@@ -74,3 +74,16 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 [E] Updated all five requested scripts to match Other providers or Other model providers exactly. Corrected the Resume button and fixed desktop case isolation for the new intentionally retained intake drafts using visible Remove controls. Input oracles, Stop workers and timing are unchanged. All five syntax/pure validations pass; no product/native execution occurred here. Original receipts remain unchanged. Current source had advanced to bbb92ac while compiled files retained the 0666861 receipt identity; main must supply the selected matching build.
 
 [R] Rerun baseline with the corrected fixture. Repair native preview reload, then rerun delivery through its remaining seven rows. Full acceptance remains pending. Tool ledger, friction, prior work and Team/Now updated.
+
+
+## 4a57562 receipt review and actual delivered-app check
+
+[P] Main requested independent review of six passing landed receipts and the next native check, preferring a complete real journey without live model calls. Main selected its actual Morning training brief build and owns the preceding review/download journey.
+
+[E] All six PASS verdicts hold within scope at 4a57562. Native browser preview reload and the persisted special-filename baseline reproduce correctly; the latter resumes verification but stops before completion. Delivery exercises real source export and eight independent literal inputs. Eleven retained Markdown files were later normalized, so the present export is not the exact approved bundle; application and report/review bytes remain exact. Review-4a57562 and Overnight retain every remaining F01-F25 gap. Judge-NOT acceptance and the later Node-service packager remain unmeasured.
+
+[E] Wrote qa-real-delivered-app.mjs with an independent frozen synthetic source oracle and explicit adapter to the actual generated morning brief. It checks the downloaded browser app, bound export/archive identity, source-scoped review, two full restarts and offered changed-source import. Only the owner-supplied dedicated generated-app profile is preserved and restored; no authentication file or build profile is read or copied. The actual archive is used unchanged. Main's earlier journey has concrete false-green paths documented in Real-Journey-Checks.
+
+[E] Syntax and pure negative controls pass. Independent source review corrected profile isolation assumptions, shutdown acquisition timing and source-identity checks before handoff. No native app/browser, product suite, install or live model was run here. Adapter is compatible with observed index d61f3628; source/oracle expectations remain separate from the generated tests. Tool ledger, friction, prior work and current status updated.
+
+[R] Main runs the companion after the preceding journey has fully exited, with its downloaded app userData path in journey.json or --profile. The command and hashes are in Research/QA/Acceptance/Real-Journey-Checks. Await an actual receipt; no new runtime PASS or human acceptance is claimed.
