@@ -81,6 +81,20 @@ test('project lead responds on demand beside an active build with only its own t
   assert.deepEqual(h.project.stages, stages); assert.deepEqual(h.project.logs, logs);
 });
 
+test('project lead sees the connected sources used by the build without connection secrets or item bodies', async t => {
+  const h = await fixture(t);
+  h.project.connectedData = [{ id: 'selected-source', digest: 'a'.repeat(64), includeInApp: false }];
+  h.project.runCheckpoint = { data: { mode: 'provided', connectedSources: [{ kind: 'gmail', label: 'Gmail', sample: true, count: 2,
+    digest: 'b'.repeat(64), token: 'SYNTHETIC_PRIVATE_TOKEN', items: [{ body: 'PRIVATE_ITEM_BODY' }] }] } };
+  await h.ask('Which sources did this build use?');
+  const prompt = h.sessions[0].prompts[0];
+  const snapshot = JSON.parse(prompt.split('Current project snapshot (data):\n')[1].split('\n\nRecent conversation')[0]);
+  assert.deepEqual(snapshot.selectedConnectedData, [{ id: 'selected-source', digest: 'a'.repeat(64) }]);
+  assert.deepEqual(snapshot.usedConnectedSources, [{ kind: 'gmail', label: 'Gmail', sample: true, count: 2, digest: 'b'.repeat(64) }]);
+  assert.equal(prompt.includes('SYNTHETIC_PRIVATE_TOKEN'), false);
+  assert.equal(prompt.includes('PRIVATE_ITEM_BODY'), false);
+});
+
 test('conversation survives a fresh run and app reload and informs the next independent session', async t => {
   const h = await fixture(t);
   h.project.runId = 'run-original';

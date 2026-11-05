@@ -1,4 +1,5 @@
 import type { BriefDataInput, NewProject } from './types.js';
+import { validateSelections } from './connectors.js';
 
 export const MAX_DATA_INPUTS = 10;
 export const MAX_DATA_INPUT_BYTES = 256 * 1024;
@@ -67,5 +68,6 @@ export function normalizeProjectInput(input: NewProject): NewProject {
       if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error();
     } catch { throw new Error('Enter a complete http:// or https:// link on each line.'); }
   }
-  return { title, description, criteria, inputs, outputs, resources, links, dataInputs, challengeId: input.challengeId };
+  const connectedData = validateSelections(input.connectedData);
+  return { title, description, criteria, inputs, outputs, resources, links, dataInputs, challengeId: input.challengeId, ...(input.connectedData !== undefined ? { connectedData } : {}) };
 }

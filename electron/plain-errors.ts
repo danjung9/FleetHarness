@@ -1,5 +1,6 @@
 import { redactSecrets } from './secrets.js';
 import { PreflightError } from './preflight.js';
+import { GenAiMilRequestError } from './genai-mil.js';
 
 // External services can add arbitrary diagnostics. Unknown text is kept in the
 // activity log and never copied into the user-facing instruction.
@@ -29,6 +30,9 @@ const messages = {
   preview: 'The app preview could not open; restart AppYard and try again.',
   catalog: 'The challenge list could not be read; use a saved challenge or try again later.',
   input: 'The challenge information is incomplete or invalid; check your title, description, requirements and links before trying again.',
+  'connected-data': 'The selected source data could not be used; choose sample data in Connectors, check the selection in your brief and start a new build.',
+  'provider-settings': 'The provider connection could not be updated; check the address, key and secure storage in Model settings and try again.',
+  'provider-changing': 'The provider connection is still changing; wait for it to finish before trying again.',
   plan: 'The build produced an incomplete or invalid plan; try again and ask the app maintainer for help if this continues.',
   tool: 'A build tool could not complete its task; check the activity log and try again.',
   settings: 'The build settings could not be used; restart AppYard and ask the app maintainer for help if this continues.',
@@ -36,6 +40,10 @@ const messages = {
 } as const;
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
+  ['provider-changing', /Wait for the GenAI\.mil connection change to finish/i],
+  ['connection', /Connect GenAI\.mil|GenAI\.mil did not return a model list|Save your GenAI\.mil key before connecting|Unsupported GenAI\.mil request/i],
+  ['provider-settings', /Enter (?:an HTTPS service address|a service address without a key|a (?:valid )?GenAI\.mil key|your key again when changing the service address)|Secure credential storage is unavailable|The GenAI\.mil connection could not be (?:saved|cleared)/i],
+  ['connected-data', /Connected data is (?:missing|unavailable)|(?:selected|saved) data (?:is not valid|has changed|is no longer available)|connected data changed|(?:saved )?source is (?:not available|not valid|unreadable)|saved sign-in cannot be opened|sign-in could not be saved securely|Real account data is not enabled for this event/i],
   ['vision', /Visual review requires an image-capable model/i],
   ['capacity', /already preparing to resume|Clarification questions are already resuming|Another (?:visual review operation|browser action) is running/i],
   ['stopped', /Browser (?:operation|session|preparation|launch|connection|context) stopped|Browser (?:runtime|session) closed|build stopped before its clarification/i],
@@ -140,6 +148,7 @@ function detail(error: unknown, seen = new Set<unknown>()): string {
 }
 
 export function plainError(error: unknown): { code: string; message: string; detail: string } {
+  if (error instanceof GenAiMilRequestError) return { code: 'connection', message: redactSecrets(error.message), detail: redactSecrets(detail(error)) };
   if (error instanceof PreflightError) return { code: error.code, message: error.message, detail: redactSecrets(detail(error)) };
   const raw = error instanceof Error ? error.message : printable(error);
   const code = rules.find(([, pattern]) => pattern.test(raw))?.[0] ?? 'unknown';

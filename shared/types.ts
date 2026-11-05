@@ -1,7 +1,7 @@
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'connectors';
 /** Token counts reported by the engine, never estimates. Reasoning is part of output. */
 export interface StageTokenUsage {
   inputTokens: number | null; cachedInputTokens: number | null; uncachedInputTokens: number | null;
@@ -27,7 +27,7 @@ export interface TestReport {
   testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
 export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
-export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
+export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[]; connectedData?: import('./connectors.js').ConnectedDataSelection[] }
 export interface RunCheckpoint {
   data?: import('../electron/brief-data.js').BriefDataSnapshot;
   foundation?: import('../harness/foundations.js').FoundationSnapshot;
@@ -37,6 +37,7 @@ export interface RunCheckpoint {
   requirementsHash: string;
   packetHash: string;
   context: string;
+  connectedContextHash?: string;
   qualityHash?: string;
   planHash?: string;
   repairAttempts: number;
@@ -92,10 +93,13 @@ export interface ChatGPTAccount {
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean } }
+export interface GenAiMilIssue { message: string; nextStep: string; unlockUrl?: string; replacementModel?: string; retryAt?: number }
+export interface GenAiMilConnection { address: string; hasKey: boolean; connected: boolean; models: string[]; issue?: GenAiMilIssue }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean }; genAiMil?: GenAiMilConnection }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
+  connectors?: import('./connectors.js').ConnectorsAPI;
   sendMessage(id: string, text: string): Promise<void>;
   cancelMessage(id: string): Promise<void>;
   answerClarification(id: string, questionId: string, answer: string | import('./conversation.js').ClarificationAnswer): Promise<void>;
@@ -120,6 +124,10 @@ export interface FleetAPI {
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
+  saveGenAiMil?(address: string, key?: string): Promise<Bootstrap>;
+  connectGenAiMil?(): Promise<Bootstrap>;
+  clearGenAiMil?(): Promise<Bootstrap>;
+  openGenAiMilUnlock?(): Promise<void>;
   connectChatGPT(accountId?: string): Promise<Bootstrap>;
   selectChatGPTAccount(accountId: string): Promise<Bootstrap>;
   reopenChatGPTLogin(): Promise<Bootstrap>;

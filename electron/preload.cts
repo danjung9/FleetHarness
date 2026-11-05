@@ -2,6 +2,16 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
+  connectors: {
+    list: () => ipcRenderer.invoke('fleet:connectors:list'),
+    connect: (kind: string, address?: string) => ipcRenderer.invoke('fleet:connectors:connect', kind, address),
+    progress: (kind: string) => ipcRenderer.invoke('fleet:connectors:progress', kind),
+    answer: (kind: string, requestId: string, value: string) => ipcRenderer.invoke('fleet:connectors:answer', kind, requestId, value),
+    preview: (kind: string, filters: unknown, mode?: string) => ipcRenderer.invoke('fleet:connectors:preview', kind, filters, mode),
+    use: (id: string, digest: string) => ipcRenderer.invoke('fleet:connectors:use', id, digest),
+    cancel: (kind: string) => ipcRenderer.invoke('fleet:connectors:cancel', kind),
+    disconnect: (id: string) => ipcRenderer.invoke('fleet:connectors:disconnect', id)
+  },
   sendMessage: (id: string, text: string) => ipcRenderer.invoke('fleet:conversation:send', id, text),
   cancelMessage: (id: string) => ipcRenderer.invoke('fleet:conversation:cancel', id),
   answerClarification: (id: string, questionId: string, answer: string | ClarificationAnswer) => ipcRenderer.invoke('fleet:conversation:answer', id, questionId, answer),
@@ -25,6 +35,10 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
   setDeveloperMode: (enabled: boolean) => ipcRenderer.invoke('fleet:developer-mode', enabled),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),
+  saveGenAiMil: (address: string, key?: string) => ipcRenderer.invoke('fleet:genai-mil:save', address, key),
+  connectGenAiMil: () => ipcRenderer.invoke('fleet:genai-mil:connect'),
+  clearGenAiMil: () => ipcRenderer.invoke('fleet:genai-mil:clear'),
+  openGenAiMilUnlock: () => ipcRenderer.invoke('fleet:genai-mil:unlock'),
   connectChatGPT: (accountId?: string) => ipcRenderer.invoke('fleet:chatgpt:connect', accountId),
   selectChatGPTAccount: (accountId: string) => ipcRenderer.invoke('fleet:chatgpt:select', accountId),
   reopenChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:reopen'),

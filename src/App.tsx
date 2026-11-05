@@ -1,4 +1,5 @@
 import { Home } from './Home';
+import { Connectors, ConnectedDataSection } from './Connectors';
 import { Mark } from './Mark';
 import brandLogo from './assets/brand/logo-on-dark.svg';
 import { JourneyHeader, milestoneViews } from './JourneyHeader';
@@ -57,6 +58,7 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
   const [title, setTitle] = useState(initial.title), [description, setDescription] = useState(initial.description), [criteria, setCriteria] = useState(initial.criteria.join('\n'));
   const [inputs, setInputs] = useState(initial.inputs ?? ''), [outputs, setOutputs] = useState(initial.outputs ?? '');
   const [resources, setResources] = useState(initial.resources ?? ''), [links, setLinks] = useState((initial.links ?? []).join('\n'));
+  const [connectedData, setConnectedData] = useState(initial.connectedData ?? []);
   const [dataInputs, setDataInputs] = useState<BriefDataInput[]>(initial.dataInputs ?? []);
   const [dataInputEditor, setDataInputEditor] = useState(initial.dataInputEditor ?? emptyDataInputEditor);
   const [readingInputs, setReadingInputs] = useState(false);
@@ -65,13 +67,13 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
   const [contextOpen, setContextOpen] = useState(false);
   const draftChange = useRef(onDraftChange); draftChange.current = onDraftChange;
   useEffect(() => {
-    draftChange.current?.({ title, description, inputs, outputs, criteria: criteria.split('\n'), resources, links: links.split('\n'), dataInputs, dataInputEditor, challengeId: initial.challengeId });
-  }, [title, description, inputs, outputs, criteria, resources, links, dataInputs, dataInputEditor, initial.challengeId]);
+    draftChange.current?.({ title, description, inputs, outputs, criteria: criteria.split('\n'), resources, links: links.split('\n'), dataInputs, dataInputEditor, connectedData, challengeId: initial.challengeId });
+  }, [title, description, inputs, outputs, criteria, resources, links, dataInputs, dataInputEditor, connectedData, initial.challengeId]);
   async function save(e: FormEvent) {
     e.preventDefault(); setError('');
     if (busy || readingInputsRef.current) return;
     let input: NewProject;
-    try { input = normalizeProjectInput({ title, description, inputs, outputs, criteria: criteria.split('\n'), resources, links: links.split('\n'), dataInputs: includePastedInput(dataInputs, dataInputEditor), challengeId: initial.challengeId }); }
+    try { input = normalizeProjectInput({ title, description, inputs, outputs, criteria: criteria.split('\n'), resources, links: links.split('\n'), dataInputs: includePastedInput(dataInputs, dataInputEditor), connectedData, challengeId: initial.challengeId }); }
     catch (error) { setContextOpen(true); setError(error instanceof Error ? error.message : String(error)); return; }
     await submit(input);
   }
@@ -83,7 +85,8 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
       <label>Inputs (optional)<textarea maxLength={16000} rows={2} value={inputs} disabled={busy} onChange={e => setInputs(e.target.value)} placeholder="e.g. Images"/></label>
       <label>Outputs (optional)<textarea maxLength={16000} rows={2} value={outputs} disabled={busy} onChange={e => setOutputs(e.target.value)} placeholder="e.g. Classification of images"/></label>
     </div>
-    <BriefDataInputs value={dataInputs} onChange={setDataInputs} editor={dataInputEditor} onEditorChange={setDataInputEditor} disabled={busy} onReadingChange={reading => { readingInputsRef.current = reading; setReadingInputs(reading); onReadingChange?.(reading); }}/>
+    <BriefDataInputs value={dataInputs} onChange={setDataInputs} editor={dataInputEditor} onEditorChange={setDataInputEditor} disabled={busy} connectedCount={connectedData.length} onReadingChange={reading => { readingInputsRef.current = reading; setReadingInputs(reading); onReadingChange?.(reading); }}/>
+    <ConnectedDataSection value={connectedData} onChange={setConnectedData} disabled={busy}/>
     <label>Evaluation criteria (optional)<span className="field-hint">One measurable outcome per line. You can refine this during planning.</span><textarea rows={2} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="Every extracted item links to an exact source excerpt."/></label>
     <details className="brief-context" open={contextOpen} onToggle={e => setContextOpen(e.currentTarget.open)}><summary>Add resources & links <span>{resources.trim() || links.trim() ? 'Context included' : 'Optional'}</span></summary>
     <label>Resources (optional)<span className="field-hint">Describe available datasets, documents, tools, or reference material.</span><textarea maxLength={16000} rows={3} value={resources} onChange={e => setResources(e.target.value)} placeholder="Synthetic sample messages, a blank report template, or an existing API."/></label>
@@ -258,6 +261,7 @@ export default function App() {
     setActive(project ? milestoneViews[getJourneyState(project).current] : 'requirements'); setSearch(false);
   }
   const nav: { id: View; label: string; shortLabel: string; icon: typeof Bot }[] = [
+    { id: 'connectors', label: 'Connectors', shortLabel: 'Connectors', icon: Inbox },
     { id: 'portfolio', label: 'Home — challenge portfolio', shortLabel: 'Home', icon: LayoutDashboard },
     { id: 'design', label: 'System design — application architecture', shortLabel: 'Design', icon: GitBranch },
     { id: 'workspace', label: 'Preview — generated app', shortLabel: 'Preview', icon: Code2 },
@@ -266,17 +270,17 @@ export default function App() {
   ];
   const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
   if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || 'Opening your local workspace…'}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}</div>;
-  const showHome = active === 'portfolio' || (!p && active !== 'settings');
+  const showHome = active === 'portfolio' || (!p && active !== 'settings' && active !== 'connectors');
   const journey = p ? getJourneyState(p) : null;
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
     <aside className="rail"><div className="window-drag"/><div className="brand" aria-label="AppYard" title="AppYard"><div className="mark"><Mark/></div></div>
-      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running') && <i className="live-dot"/>}</IconButton>)}</nav>
+      <nav aria-label="Primary">{nav.filter(item => item.id !== 'design' || developerMode).map(item => <IconButton key={item.id} disabled={!p && item.id !== 'portfolio' && item.id !== 'connectors'} label={item.label} placement="right" className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}><item.icon size={21}/><span>{item.shortLabel}</span>{item.id === 'agents' && state.projects.some(project => project.status === 'running') && <i className="live-dot"/>}</IconButton>)}</nav>
       <div className="rail-bottom"><IconButton label="Settings" title={configured ? 'Model connected' : 'Connect a model in settings'} placement="right" className={'settings-link ' + (active === 'settings' ? 'active' : '')} aria-current={active === 'settings' ? 'page' : undefined} onClick={() => navigate('settings')}><Settings2 size={21}/><span>Settings</span><i className={'health-dot ' + (configured ? 'connected' : '')} aria-hidden="true"/></IconButton></div>
     </aside>
     <main className="workspace">
       <header className="topbar">
-        {showHome || !p ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
+        {showHome || !p || active === 'connectors' ? <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard" /><span>/ {showHome ? 'Home' : active === 'connectors' ? 'Connectors' : 'Settings'}</span></div> : <div className="workspace-picker"><select aria-label="Current challenge" value={p.id} onChange={e => openProject(e.target.value)}>{state.projects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div>}
         <div className="top-actions">
           {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
           {p && !showHome && active !== 'settings' && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
@@ -286,8 +290,9 @@ export default function App() {
         </div>
       </header>
       {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
-      {p && !showHome && active !== 'settings' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
-      {p && !showHome && active !== 'settings' && <ClarificationNotice project={p} onOpen={openConversation}/>}
+      {active === 'connectors' && <Connectors/>}
+      {p && !showHome && active !== 'settings' && active !== 'connectors' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
+      {p && !showHome && active !== 'settings' && active !== 'connectors' && <ClarificationNotice project={p} onOpen={openConversation}/>}
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
       {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
       {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}

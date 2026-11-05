@@ -485,6 +485,7 @@ test('factory admission rejects stale model catalogs without an active ChatGPT p
   }
 });
 
+// Allow native verification and browser journeys the same functional deadline as the other pipeline tests.
 for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes ${runtimeProfile} phase skills and runs independent verification without a Pi session`, { timeout: 90000 }, async t => {
   const root = await temp(t), store = new Store(root); await store.init();
   store.state.projects[0] = newProject(runtimeProfile === 'cli' ? cliFixtureProject : qualityFixtureProject);

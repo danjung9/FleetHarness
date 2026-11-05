@@ -38,7 +38,7 @@ export function redactValue<T>(value: T): T {
     if (item && typeof item === 'object') return Object.fromEntries(Object.entries(item).map(([key, entry]) =>
       // Filenames in hash/content maps are data, not credential field names.
       // Configured credential values are still redacted within every value/key.
-      [redact(key), !/[./\\]/.test(key) && sensitiveName.test(key) && typeof entry === 'string' ? replacement : visit(entry)]));
+      [redact(key), key !== 'credentialStatus' && !/[./\\]/.test(key) && sensitiveName.test(key) && typeof entry === 'string' ? replacement : visit(entry)]));
     return item;
   };
   return visit(value) as T;

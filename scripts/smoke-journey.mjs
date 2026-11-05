@@ -71,7 +71,7 @@ try {
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   assert.equal(await page.getByRole('switch', { name: 'Developer mode', exact: true }).isChecked(), false, 'Developer mode is off by default');
-  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();

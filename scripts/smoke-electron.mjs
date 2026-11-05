@@ -28,7 +28,7 @@ try {
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1512,982));
   await page.getByRole('button',{name:'Settings',exact:true}).click();
-  await page.getByRole('radio',{name:'Pi Model providers'}).check();
+  await page.getByRole('tab',{name:'Other providers',exact:true}).click();
   await page.getByLabel('Provider',{exact:true}).selectOption('fleet-fixture');
   await page.getByRole('button',{name:'Save model settings'}).click();
   await page.getByText('Model settings saved.',{exact:true}).waitFor();

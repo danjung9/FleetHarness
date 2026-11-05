@@ -13,6 +13,10 @@ import { assertExecutableSource, executableFileName, stageExecutable, runPackage
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
+import { ConnectorService, registerConnectorIPC } from './connectors/index.js';
+import { ConnectorStore } from './connectors/store.js';
+import { connectorConfiguration, connectorEncryption, fixtureSource } from './connectors/config.js';
+import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
 import { ProjectLead, briefHash, projectBrief } from './conversation.js';
@@ -22,6 +26,7 @@ import type { ClarificationAnswer } from '../shared/conversation.js';
 import { randomUUID } from 'node:crypto';
 import { recordReview, reviewFeedback } from './review.js';
 import { readVisualCapture } from './visual-review.js';
+import { GenAiMil, GENAI_MIL_PROVIDER, genAiMilUnlockUrl } from './genai-mil.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -37,6 +42,8 @@ app.on('second-instance', () => {
   window.show(); window.focus();
 });
 let store: Store, backend: FleetBackend, codex: CodexAccount;
+let genAiMil: GenAiMil;
+let connectors: ConnectorService;
 let lead: ProjectLead, clarifications: ClarificationBroker;
 const conversationActions = new Map<string, Promise<void>>();
 const previewing = new Set<string>();
@@ -71,7 +78,8 @@ const bootstrap = () => ({
   state: redactValue(store.state), models: backend.models(), storagePath: store.root,
   capabilities: { projectConversation: true },
   chatgpt: codex.account,
-  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
+  genAiMil: genAiMil.view(),
+  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider === GENAI_MIL_PROVIDER ? (genAiMil.view().connected ? 'GenAI.mil connected' : 'Connect GenAI.mil in Model settings') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
@@ -92,6 +100,7 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
     runCheckpoint: p.runCheckpoint, verification: p.verification, approval: p.approval, report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error, visualReview: p.visualReview, resumeStage: p.resumeStage,
     systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt });
   Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
+  p.connectedData = normalized.connectedData;
   p.status = 'draft'; p.resumeStage = undefined; p.runtimeProfile = undefined; p.report = undefined; p.visualReview = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
   p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
   p.runCheckpoint = undefined; p.verification = undefined; p.approval = undefined;
@@ -129,6 +138,7 @@ async function stopPreview(id: string) {
   finally { await store.save(); }
 }
 function registerIPC() {
+  registerConnectorIPC(handle, connectors);
   handle('fleet:conversation:send', (id: string, text: string) => {
     if (quitting) throw new Error('AppYard is closing. Reopen it to continue the conversation.');
     if (conversationActions.has(id)) throw new Error('Wait for the project action to finish before sending a message.');
@@ -338,6 +348,14 @@ function registerIPC() {
     }
   });
   const requireNoRuns = () => { if (backend.active.size || startingRuns.size || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  handle('fleet:genai-mil:save', async (address: unknown, key?: unknown) => { requireNoRuns(); await genAiMil.save(address, key); return bootstrap(); });
+  handle('fleet:genai-mil:connect', async () => { requireNoRuns(); await genAiMil.connect(); return bootstrap(); });
+  handle('fleet:genai-mil:clear', async () => { requireNoRuns(); await genAiMil.clear(); return bootstrap(); });
+  handle('fleet:genai-mil:unlock', async () => {
+    const url = genAiMilUnlockUrl(genAiMil.view().issue?.unlockUrl);
+    if (!url) throw new Error('No valid GenAI.mil unlock link is available.');
+    await shell.openExternal(url);
+  });
   const chatGPTAccountId = (value: unknown) => {
     if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Choose a valid saved ChatGPT account.');
     return value;
@@ -363,6 +381,12 @@ function registerIPC() {
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
+    if (settings.provider === GENAI_MIL_PROVIDER) {
+      if (key) throw new Error('Save the key in the GenAI.mil tab.');
+      genAiMil.assertModel(settings.backend ?? 'pi', settings.model);
+      store.state.settings = { backend: 'pi', provider: GENAI_MIL_PROVIDER, model: settings.model, rememberKey: true, developerMode: store.state.settings.developerMode === true };
+      await store.save(); notify(); return bootstrap();
+    }
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('Use the Codex API-key sign-in control before saving model settings.');
       if (codex.account.status !== 'connected' || (codex.account.authType !== 'apiKey' && !codex.account.planUsageEnabled) || !codex.models.some(m => (!settings.model || m.id === settings.model) && m.configured) || settings.provider !== 'chatgpt') throw new Error('Connect ChatGPT or an API key and select a Codex model first.');
@@ -403,10 +427,31 @@ if (ownsInstance) app.whenReady().then(async () => {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));
     await store.init();
+    const connectorConfig = connectorConfiguration(app.isPackaged, process.env);
+    const encryption = connectorEncryption(app.isPackaged, process.env, safeStorage);
+    // The fixture key stays in the host encryptor, never in build child environments.
+    delete process.env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY;
+    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), encryption), [], 120_000, {
+      allowConnections: true,
+      openBrowser: async address => {
+        const url = new URL(address);
+        if (url.protocol !== 'https:' && !(connectorConfig.fixture && url.origin === connectorConfig.fixture.accounts)) throw new Error('Sign-in address is not allowed.');
+        await shell.openExternal(url.href);
+      },
+      isSynthetic: async (kind, secrets) => {
+        if (!connectorConfig.fixture) return false;
+        const address = kind === 'custom-api' ? JSON.parse(await secrets.get(DATA_SERVICE_SECRET_NAMES.connection) ?? '{}').url : undefined;
+        return fixtureSource(connectorConfig, kind, address);
+      }
+    });
+    await connectors.registerInstalledAdapters(connectorConfig);
+    await connectors.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
     clarifications = new ClarificationBroker(store, notify);
-    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications });
+    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
     await backend.init(); await codex.refresh();
+    genAiMil = new GenAiMil(store.root, safeStorage, backend.runtime, { log: line => console.info(line) });
+    await genAiMil.load();
     lead = new ProjectLead(store, backend.runtime, notify, { codex });
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
@@ -425,14 +470,15 @@ if (ownsInstance) app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && (backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || previewing.size)) {
+  if (!quitting && (backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || previewing.size || connectors?.busy)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([backend.stopAll(), lead.stopAll(), ...[...previewing].map(id => stopPreview(id)), ...startingRuns.values(), ...conversationActions.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([connectors?.shutdown(), backend.stopAll(), lead.stopAll(), ...[...previewing].map(id => stopPreview(id)), ...startingRuns.values(), ...conversationActions.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });
   }
+  else if (!quitting) void connectors?.shutdown();
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('will-quit', () => { void previews.close().catch(() => {}); codex?.dispose(); });

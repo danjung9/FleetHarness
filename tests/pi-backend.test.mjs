@@ -11,6 +11,8 @@ import { reportPassed, verifyWorkspace } from '../dist-electron/electron/verific
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
 import { plainError } from '../dist-electron/electron/plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
+import { ConnectorStore } from '../dist-electron/electron/connectors/store.js';
+import { ConnectorService } from '../dist-electron/electron/connectors/index.js';
 
 const resourcesRoot = path.resolve('.');
 // Full functional workflows launch real Node tests and Chromium. Keep their
@@ -93,6 +95,7 @@ async function harness(t, options = {}) {
     // detached-worker shutdown require the separate permitted-host receipt.
     processSweep: options.processSweep ?? (() => new RunProcessSweep({ scan: async () => [] })),
     clarifications: broker,
+    connectorStore: options.connectorStore,
     preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
     agentLimits: options.agentLimits ?? { idleMs: 10_000, timeoutMs: 25_000 },
     shutdownTimeoutMs: options.shutdownTimeoutMs ?? 150,
@@ -422,6 +425,7 @@ test('combined prerequisite: transient build recovery and both repairs share reg
   assert.equal(builds, 2); assert.equal(repairs, 2); assert.equal(launches, 3);
   assert.equal(h.project.runCheckpoint.repairAttempts, 2);
   assert.equal(h.project.runCheckpoint.testChanges.length, 2);
+  assert.equal(Object.hasOwn(h.project.runCheckpoint, 'connectedContextHash'), false);
   assert.deepEqual(h.project.runCheckpoint.lastTests, h.project.runCheckpoint.buildTests);
   assert.match(h.project.report.output, /restored to build snapshot/);
   assert.deepEqual(h.project.report.registeredTests, [{ file: 'app.test.cjs', tests: 2 }]);
@@ -1555,6 +1559,32 @@ test('connected file and pasted inputs reach agents unchanged and skip the synth
   assert.match(requirements, /messages\.csv/);
   assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /inputs\/manifest\.json/);
   await assert.rejects(fs.access(path.join(h.project.workspace, 'data/synthetic-data.json')), /ENOENT/);
+});
+
+test('selected connector snapshots use the provided-data flow and skip record generation', { timeout: workflowTimeout }, async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-connected-inputs-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const connectorStore = new ConnectorStore(root, { isEncryptionAvailable: () => false,
+    encryptString() { assert.fail('Sample data does not need encryption'); }, decryptString() { assert.fail('Sample data does not need decryption'); } });
+  const service = new ConnectorService(connectorStore); await service.init(); t.after(() => service.shutdown());
+  const preview = await service.preview('gmail', {}); await service.use(preview.id, preview.digest);
+  // This proves orchestration and file handoff only. Native browser execution
+  // and process discovery remain the responsibility of smoke-connectors.mjs.
+  const h = await harness(t, { connectorStore, verify: syntheticReport });
+  h.project.connectedData = [{ id: preview.id, digest: preview.digest, includeInApp: false }];
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  assert.equal(h.project.runCheckpoint.data.mode, 'provided');
+  assert.equal(h.project.runCheckpoint.data.connectedSources[0].digest, preview.digest);
+  const manifest = JSON.parse(await fs.readFile(path.join(h.project.workspace, 'inputs/manifest.json'), 'utf8'));
+  assert.equal(manifest.mode, 'provided'); assert.equal(manifest.sources.length, 1); assert.equal(manifest.generated, undefined);
+  assert.equal(manifest.sources[0].connectedSource.label, 'Gmail');
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(h.project.workspace, manifest.sources[0].path), 'utf8')).items, preview.items);
+  for (const session of h.sessions) {
+    assert.match(session.prompts[0], /inputs\/manifest\.json/);
+    assert.match(session.prompts[0], /do not invent replacement records/);
+  }
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'data/synthetic-data.json')), { code: 'ENOENT' });
 });
 
 test('the no-data specialist finishes within intake before downstream agents receive its dataset', { timeout: workflowTimeout }, async t => {

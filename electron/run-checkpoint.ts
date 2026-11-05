@@ -38,7 +38,7 @@ export function briefFingerprint(project: Project) {
   return createHash('sha256').update(JSON.stringify({ title: project.title, description: project.description,
     criteria: project.criteria, inputs: project.inputs ?? '', outputs: project.outputs ?? '', resources: project.resources ?? '',
     links: project.links ?? [], dataInputs: project.dataInputs ?? [], challengeId: project.challengeId ?? null,
-    sourceChallenge: project.sourceChallenge ?? null })).digest('hex');
+    sourceChallenge: project.sourceChallenge ?? null, ...(project.connectedData?.length ? { connectedData: project.connectedData } : {}) })).digest('hex');
 }
 
 async function checkpointPath(root: string, project: Project, create = false) {

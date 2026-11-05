@@ -192,6 +192,7 @@ test('the Codex password control calls key login and clears input on success or 
   };
   const hooks = registerHooks({
     resolve(specifier, context, next) {
+      if (context.parentURL === url && specifier === './GenAiMilTab') return next('./GenAiMilTab.js', context);
       if (context.parentURL === url && specifier === 'react') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`
         export const useState = value => globalThis.${hookName}(value);
         export const useEffect = () => {}; export const useRef = value => ({ current: value });`) };
@@ -219,6 +220,8 @@ test('the Codex password control calls key login and clears input on success or 
       action(task) { pending = task().catch(error => { failure = error.message; }); return pending; } };
     const render = () => { cursor = 0; return ModelSettings(props); };
     let tree = render();
+    const apiTab = find(tree, node => node.props?.role === 'tab' && node.props.children === 'API key');
+    assert.ok(apiTab); apiTab.props.onClick(); tree = render();
     const password = find(tree, node => node.type === 'input' && node.props.type === 'password');
     assert.ok(password); assert.equal(password.props.autoComplete, 'off'); assert.equal(password.props.disabled, false);
     const button = () => find(render(), node => node.type === 'button' && node.props.children === 'Sign in with API key');

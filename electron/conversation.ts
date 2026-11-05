@@ -13,7 +13,7 @@ import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 
 export function projectBrief(p: Project): NewProject {
-  return { title: p.title, description: p.description, criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId };
+  return { title: p.title, description: p.description, criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, connectedData: p.connectedData, challengeId: p.challengeId };
 }
 export const briefHash = (p: Project) => createHash('sha256').update(JSON.stringify(projectBrief(p))).digest('hex');
 const readableArtifacts = new Set(['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'verification.md', 'solution-contract.json', 'system-design.json', 'foundation-plan.json']);
@@ -132,6 +132,8 @@ export class ProjectLead {
         title: p.title, description: p.description.slice(0, 6000), criteria: p.criteria.slice(0, 20).map(c => c.slice(0, 300)), inputs: p.inputs?.slice(0, 2000), outputs: p.outputs?.slice(0, 2000), resources: p.resources?.slice(0, 2000), links: p.links?.slice(0, 10).map(link => link.slice(0, 200)),
         briefNote: 'Long fields and criteria are excerpts. Use fleet_read_brief to retrieve full details before proposing revisions.',
         dataInputs: p.dataInputs?.map(input => ({ name: input.name, kind: input.kind })),
+        selectedConnectedData: p.connectedData?.map(({ id, digest }) => ({ id, digest })),
+        usedConnectedSources: p.runCheckpoint?.data?.connectedSources?.map(({ kind, label, sample, count, digest }) => ({ kind, label, sample, count, digest })),
         status: p.status, runId: p.runId, stages: p.stages, error: p.error,
         report: p.report ? { passed: p.report.passed, failed: p.report.failed, exitCode: p.report.exitCode, quality: p.report.quality?.status,
           requirementsMet: p.report.quality?.requirementsMet,

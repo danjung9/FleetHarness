@@ -146,7 +146,7 @@ try {
   await assertDesignHidden(page);
   await setDeveloperMode(page, true);
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true, 'Developer mode saves without a configured model');
-  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();

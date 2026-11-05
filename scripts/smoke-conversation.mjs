@@ -89,7 +89,7 @@ try {
   await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; window.webContents.setBackgroundThrottling(false); window.hide(); window.setContentSize(1512, 982); });
   await page.locator('.app-shell').waitFor({ timeout: 45000 });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();

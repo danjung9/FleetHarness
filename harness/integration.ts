@@ -56,10 +56,11 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   const files = new Map<string,string | Buffer>();
   const executable = new Map<string, number>();
   const json = (data:unknown) => JSON.stringify(data,null,2)+'\n';
-  const hasInputs = !!input.dataInputs?.length;
+  const hasInputs = !!(input.dataInputs?.length || input.connectedData?.length);
   files.set('packet.json',json({...packet, dataPolicy: hasInputs ? 'user-provided-or-synthetic' : packet.dataPolicy,
     userScope:{title:input.title,description:input.description,criteria:input.criteria,inputs:input.inputs ?? '',outputs:input.outputs ?? '',resources:input.resources ?? '',links:input.links ?? [],
       dataInputs:(input.dataInputs ?? []).map(({name,kind,content}) => ({name,kind,bytes:Buffer.byteLength(content,'utf8')})),
+      ...(input.connectedData?.length ? { connectedData: input.connectedData.map(({id,digest}) => ({id,digest})) } : {}),
       inputManifest:'inputs/manifest.json'}}));
   files.set('fixtures.json',json({classification:'synthetic',scope:'toolkit-reference-inputs',fixtures}));
   files.set('tool-schemas.json',json(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters}))));

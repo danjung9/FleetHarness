@@ -13,6 +13,8 @@ import { atomicHostWrite } from '../../dist-electron/shared/host-files.js';
 import * as executable from '../../dist-electron/electron/executable.js';
 import { exportVerifiedBundle } from '../../dist-electron/electron/source-export.js';
 import { readVisualCapture } from '../../dist-electron/electron/visual-review.js';
+import { registerConnectorIPC } from '../../dist-electron/electron/connectors/index.js';
+import { GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilUnlockUrl } from '../../dist-electron/electron/genai-mil.js';
 
 // Exercise the actual IPC handlers. Only Electron's window/IPC transport and
 // unrelated startup services are replaced. Filesystem and delivery gates are real.
@@ -27,17 +29,19 @@ export async function mainHarness(store, backend = { active: new Map() }, source
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
-    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, fs, disk: fs, path, fileURLToPath, process,
+    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },
     dialog: {}, safeStorage: {}, Menu: {}, BrowserWindow: class {},
     setTimeout, clearTimeout, AbortController, structuredClone, console,
     hostStore: store, hostBackend: backend,
+    hostCodex: { account: { status: 'disconnected' } }, hostLead: { active: new Map() }, hostConnectors: undefined,
+    hostGenAiMil: { view: () => ({ address: GENAI_MIL_ADDRESS, hasKey: false, connected: false, models: [] }) },
     hostWindow: { webContents, isDestroyed: () => false },
     ...overrides,
   };
-  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; window = hostWindow; registerIPC();', scope);
+  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
   return {
     handlers, events,
     invoke: (channel, ...args) => handlers.get(channel)({ sender: webContents, senderFrame: webContents.mainFrame }, ...args),

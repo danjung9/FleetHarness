@@ -25,13 +25,15 @@ import { runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './pre
 import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
+import { GENAI_MIL_PROVIDER, type GenAiMil } from './genai-mil.js';
+import type { ConnectorStore } from './connectors/store.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
 type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
-const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null]));
+export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
 // Retry transport/provider interruptions, never artifact, integrity or safety failures.
 function transientFailure(error: unknown) {
@@ -43,7 +45,7 @@ function transientFailure(error: unknown) {
 import { redactSecrets, redactValue, secretTextBuffer } from './secrets.js';
 import { redactedSessionManager } from './session-logs.js';
 import { protectRuntimeCredentials } from './pi-credentials.js';
-import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt, freezeSyntheticData, syntheticDataFiles, syntheticDataInstruction, validateSyntheticData, type BriefDataSnapshot } from './brief-data.js';
+import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt, connectedDataRequirements, freezeSyntheticData, syntheticDataFiles, syntheticDataInstruction, validateSyntheticData, type BriefDataSnapshot } from './brief-data.js';
 import { ClarificationBroker, createClarificationTools, clarificationPrompt } from './clarifications.js';
 import { copyReviewSource, recordReview, reviewFeedback, reviewIterationPrompt } from './review.js';
 import { AgentHelperRuntime } from './agent-helpers.js';
@@ -53,10 +55,12 @@ import type { VisualReviewReport } from '../shared/visual-review.js';
 import { briefFingerprint, readRunCheckpoint, writeRunCheckpoint, type RunCheckpoint } from './run-checkpoint.js';
 
 interface BackendOptions {
+  connectorStore?: ConnectorStore;
   clarifications?: ClarificationBroker;
   // Trusted host/test probes only; renderer settings cannot disable readiness checks.
   preflight?: Pick<PreflightOptions, 'browser' | 'freeBytes'>;
   codex?: CodexAccount;
+  genAiMil?: () => GenAiMil;
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
@@ -72,7 +76,7 @@ export class FleetBackend {
   async init() { this.runtime = protectRuntimeCredentials(await ModelRuntime.create({ allowModelNetwork: true })); }
   models(): AgentModel[] {
     return [...(this.options.codex?.models ?? []), ...this.runtime.getModels().map(m => ({ backend: 'pi' as const, id: m.id, provider: m.provider, name: m.name,
-      configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
+      configured: m.provider === GENAI_MIL_PROVIDER ? !!this.options.genAiMil?.().view().connected : this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
   }
   private async changed(p: Project) {
     if (p.report) p.report.stageMetrics = p.stages.filter(s => s.metrics).map(s => ({ stage: s.id, ...structuredClone(s.metrics!) }));
@@ -220,6 +224,10 @@ export class FleetBackend {
     const settings = { ...this.store.state.settings };
     const { backend = 'pi' } = settings;
     let { provider, model: modelId } = settings;
+    if (provider === GENAI_MIL_PROVIDER) {
+      if (!this.options.genAiMil) throw new Error('Connect GenAI.mil in Model settings before building.');
+      this.options.genAiMil().assertModel(backend, modelId);
+    }
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
     const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve, review: revision?.review, preparingResume: resuming };
@@ -293,7 +301,7 @@ export class FleetBackend {
       }
       p.dataInputs = normalizeDataInputs(p.dataInputs);
       run.briefHash = briefFingerprint(p);
-      run.data = await prepareBriefData(p.workspace, p.dataInputs);
+      run.data = await prepareBriefData(p.workspace, p.dataInputs, { connectedData: p.connectedData, store: this.options.connectorStore, signal: run.controller.signal });
       this.check(run);
       await atomicHostWrite(p.workspace, 'requirements.md', [
         '# ' + p.title, '', p.description, '',
@@ -304,21 +312,26 @@ export class FleetBackend {
           : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
         ...(p.resources ? ['## Resources', '', p.resources, ''] : []),
         ...(p.links?.length ? ['## Reference links', '', ...p.links.map(link => '- ' + link), ''] : []),
-        '## Data and inputs', '', p.dataInputs.length
-          ? 'User-provided inputs are copied into inputs/. Read inputs/manifest.json for names, formats and paths. Preserve the supplied contents and provenance.'
+        '## Data and inputs', '', run.data.mode === 'provided'
+          ? run.data.connectedSources?.length
+            ? 'User-provided inputs are listed in inputs/manifest.json. Read it for names, formats and paths. Preserve the supplied contents and provenance.'
+            : 'User-provided inputs are copied into inputs/. Read inputs/manifest.json for names, formats and paths. Preserve the supplied contents and provenance.'
           : 'No input data supplied. A dedicated synthetic data agent will create use-case-specific fixtures during intake in data/synthetic-data.json and data/README.md.', '',
         ...p.dataInputs.map(input => '- ' + input.name + ' (' + input.kind + ', ' + Buffer.byteLength(input.content, 'utf8') + ' bytes)'), '',
         'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.',
+        ...connectedDataRequirements(run.data),
         ...(run.review ? ['', reviewIterationPrompt(run.review)] : [])
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
-        criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
+        criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, connectedData: p.connectedData, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
       run.context = packet.context; run.phases = packet.phases; run.globalTools = packet.globalTools; p.globalTools = [...packet.globalTools]; p.phasePlan = structuredClone(packet.phases); run.packetHash = packet.packetHash;
       run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
         packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', data: run.data,
+        ...(run.data.connectedContextHash ? { connectedContextHash: run.data.connectedContextHash } : {}),
         ...(run.review ? { review: run.review, reviewSourceHash: run.reviewSourceHash } : {}) };
+      if (run.data.connectedSources?.length) this.log(p, 'intake', 'info', 'This build uses supplied data from ' + run.data.connectedSources.map(source => source.label).join(', ') + '.');
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ' + (route?.label ?? 'ChatGPT subscription') : 'Pi SDK') + ' · ' + p.model);
       if (run.review) {
@@ -689,6 +702,8 @@ export class FleetBackend {
       await this.saveClarifications(p, run);
       this.log(p, stage, 'info', 'Clarification answers received. Resuming the phase before planning contracts are frozen.');
     }
+    } catch (error) {
+      throw provider === GENAI_MIL_PROVIDER ? this.options.genAiMil?.().buildError(error) ?? error : error;
     } finally {
       textLog.flush();
       // Retain edits even when a fixing session is interrupted. Never inspect
@@ -754,6 +769,7 @@ export class FleetBackend {
     return passed;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
+    if (p.connectedData?.length && (!run.data?.connectedContextHash || !run.data.connectedSources?.length)) throw new Error('Connected data is missing. Start a new build.');
     if (p.runCheckpoint && briefHash(p) !== p.runCheckpoint.briefHash) throw new Error('The brief changed during the run. Start a new run with the changed brief.');
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);
@@ -839,7 +855,10 @@ export class FleetBackend {
         this.log(p, 'intake', 'info', 'Synthetic data validated and prepared: data/synthetic-data.json and data/README.md. Research, planning and implementation will use these fixtures.');
       } else if (run.data!.mode === 'provided') {
         p.stages.find(stage => stage.id === 'intake')!.detail = 'Using the data attached to this brief.';
-        this.log(p, 'intake', 'info', `${p.dataInputs!.length} supplied input${p.dataInputs!.length === 1 ? '' : 's'} prepared in inputs/. The workflow will use the attached data.`);
+        const count = p.dataInputs!.length + (run.data!.connectedSources?.length ?? 0);
+        this.log(p, 'intake', 'info', run.data!.connectedSources?.length
+          ? `${count} supplied input${count === 1 ? '' : 's'} listed in inputs/manifest.json. The workflow will use the supplied data.`
+          : `${count} supplied input${count === 1 ? '' : 's'} prepared in inputs/. The workflow will use the attached data.`);
       }
       await this.stage(p, 'intake', 'complete');
       }
