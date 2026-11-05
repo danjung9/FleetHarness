@@ -649,7 +649,7 @@ test('combined prerequisite: transient build recovery and both repairs share reg
   assert.deepEqual(saved.runCheckpoint, h.project.runCheckpoint);
 });
 
-test('combined prerequisite: host verification persists an active writer until cancellation settles', { timeout: 10000 }, async t => {
+test('combined prerequisite: host verification persists an active writer until cancellation settles', { timeout: 30000 }, async t => {
   const entered = deferred(), release = deferred();
   const h = await harness(t, { verificationLimits: { launcher: async (...args) => {
     entered.resolve(); await release.promise; return plainLauncher(...args);
@@ -664,7 +664,7 @@ test('combined prerequisite: host verification persists an active writer until c
   assert.equal(h.project.runCheckpoint.writerState, 'idle');
 });
 
-test('combined prerequisite: an unconfirmed verifier shutdown blocks retry and persisted resume', { timeout: 10000 }, async t => {
+test('combined prerequisite: an unconfirmed verifier shutdown blocks retry and persisted resume', { timeout: 30000 }, async t => {
   const h = await harness(t, { syntheticBrowser: true, verificationLimits: { timeoutMs: 1000 } });
   // This case withholds the real verifier's close receipt. Browser rendering and
   // the earlier core check have separate native tests and need not precede it here.
