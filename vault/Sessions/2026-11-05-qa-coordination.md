@@ -26,3 +26,15 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 [R] Proceed to the queued combined-app acceptance in merge-dan. Preserve acceptance-script ownership and the sole runtime owner. Stop additional investigation of this closed bounded fixture. No broader shutdown or combined-app acceptance claim follows from the narrow PASS.
 
 [E, initial combined-app handoff] Located branch merge-dan in fh-org/astra-merge at a6d42c6dbeaefadefdc8c2c1ba390c54eb780b33. Six files are unmerged and other integration edits are present. This is the merge owner's active workspace, not a frozen acceptance target. No files or index entries were changed. Main was informed; queued acceptance should bind to the owner's completed integrated revision and matching runtime build.
+
+## Combined acceptance preparation
+
+[P] Latest assignment is acceptance of the combined app, with full host/network access by Mukul's choice. Missing product containment is not a defect. Main runs native checks; this thread prepares scripts and independently reviews receipts.
+
+[E] Wrote [[Research/QA/Acceptance/Overnight]] with 23 person-facing function areas, exact test paths, injected-versus-native evidence and gaps. Reused two existing source-review seats. Reviewed integration progressed to 8053707 with another merge unfinished. Added native input/auth-control and browser-recovery scripts under Research/QA/Overnight, and an unpinned current-UI detached Stop fixture retaining all seven assertions and both worker programs. Source, repository index and product runtime were untouched.
+
+[E] All three scripts passed syntax and pure-control validation. A separate source review caught and corrected OAuth probe pooling, weak reopen comparison, error classification and an overly broad persistence description. Renderer reload retention is explicitly distinct from restarting the application. No GUI, server, repository tests or model call was executed here. The vault document guard passes.
+
+[E] Main received the ready note and three script paths through the bridge. Tool disclosures were added. No combined native receipt has arrived yet.
+
+[R] Next: review main's clean landed revision, compilation identity and actual receipts; fix checker artifacts separately from real defects; update Overnight with results. Complete actual sign-in/build, interruption/resume, changed-input review and fresh-delivery journeys before accepting the combined app.

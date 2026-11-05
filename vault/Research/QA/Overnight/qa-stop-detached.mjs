@@ -1,4 +1,4 @@
-// Synthetic detached Pi Stop check. Main must review before execution.
+// Synthetic detached Pi Stop check. Main owns native execution.
 // No real provider, login, installer, source edit, global process kill, or HOME override.
 // Usage: node /absolute/path/qa-stop-detached.mjs /absolute/path/landed-checkout /absolute/output/directory
 import { promises as fs, constants as fsConstants, writeFileSync } from 'node:fs';
@@ -83,7 +83,7 @@ function detachmentEvidence(parent, shell, child, platform) {
   assert.notEqual(child.session, shell.session, 'Detached child must have a separate session.');
   return { sessionProof: 'distinct session identifiers', source: platform === 'darwin' ? 'macOS ps sess' : 'ps sid', rawSessionIdentifiersUnavailable: false };
 }
-if (!process.argv[2] || !process.argv[3]) throw new Error('Supply the pinned repository and an output directory.');
+if (!process.argv[2] || !process.argv[3]) throw new Error('Supply the landed repository and an output directory.');
 const repo = await fs.realpath(path.resolve(process.argv[2]));
 const outputBase = await fs.realpath(path.resolve(process.argv[3]));
 if (!['darwin', 'linux'].includes(process.platform)) throw new Error('This POSIX shell test does not cover Windows.');

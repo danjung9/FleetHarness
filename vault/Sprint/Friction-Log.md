@@ -47,3 +47,9 @@ Type is one of: policy, data, authority, infrastructure, acquisition, technical.
 - [E, 2026-11-04 17:18 EST] The runner started stale dev-3 verifier reapply task c3057e9 after its report handed that integration to dev-1. Recovery/verifier revision e6b5000 is already under review. Main notified to reconcile the duplicate assignment before it creates another integration cycle.
 
 - [E, 2026-11-04 17:32 EST] Live R3 has three cleanup-confirmation failures while the driver continues starting later challenges. Escalated pause and native cleanup verification to main and QA. Two runtime-target requests timed out despite bridge read markers; no pause acknowledgment yet.
+
+- [E, 2026-11-05 resumed review] Main identified the automatic QA checkout as stale. Old results cannot certify the new integration. Submission wording retains obsolete revision, containment and shutdown claims; concrete reconciliation is recorded in Research/Backend-Audit/Submission-Claims-Review.
+
+- [E, 2026-11-05 combined acceptance] Integration moved from a6d42c6 to 8053707 while source mapping was in progress. Old login selectors and two smoke success labels overstate coverage. Acceptance records current source assertions separately from runtime proof and requires actual clean HEAD/build identity. Native execution remains with main; no sandbox workaround was attempted.
+
+- [E, 2026-11-05 01:25 EST] Pinned integration 8053707 refreshes passing judge evidence after a late application mutation. An injected production-function probe reproduces SATISFACTORY with changed source and zero reverifications. Main received the probe and exact source review before release; actual native late-writer behavior and final approval were not executed.

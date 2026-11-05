@@ -8,9 +8,17 @@ summary: "Current sprint status, blockers and next actions."
 
 # Now
 
-Last updated 2026-11-04, during coordinated execution against the ten-challenge factory goal. Dated entries below preserve history; current direction is in Research/Agentic/Flow-Goals.
+Last updated 2026-11-05, after resumed integration coordination. Dated entries below preserve history; current direction is in Research/Agentic/Flow-Goals.
 
 ## Latest session
+
+- [E, November 5 combined acceptance preparation] [[Research/QA/Acceptance/Overnight]] maps 23 function areas to exact checks and gaps. Three scripts are ready under Research/QA/Overnight: native input/auth controls, browser recovery and unpinned detached Pi Stop. Syntax and pure controls pass; main owns execution on a clean landed combined build. Full host/network access follows Mukul's decision and is not a defect. No combined acceptance result is claimed.
+
+- [E, current independent checks at 01:25 Nov 5] [[Research/QA/GUI-16a6940/Detached-Stop-Review]] closes the bounded detached Pi Stop reproduction with native receipt 6b784ff0 and seven passing checks. New integration 8053707 has a separate evidence-binding gap: an injected production-function probe retains a satisfactory verdict after a late application mutation without reverification. Main received [[Research/Backend-Audit/Merge-Evidence-Review]]; broader combined-app acceptance remains pending.
+
+- [E, resumed owner reply at 01:01 Nov 5] Work now proceeds through the backend audit and combined integration in fh-org/astra-merge. The old organization pool was deliberately paused and restarts after landing. Main reports mvp 16a6940, current committed integration 8053707, and further 29ac921 merge work. Last reported full native run had 588/596 unit and 84/84 harness passes; focused follow-ups do not establish a full rerun. Existing automatic QA is stale and must not certify this candidate.
+
+- [E, current scope and review] Main reports Mukul chose full-access build agents and removed product execution containment. Earlier containment requirements describe historical decisions; cleanup, approval and truthful evidence still apply. A read-only merge review and [[Research/Backend-Audit/Submission-Claims-Review]] check those behaviors and stale submission wording. Existing QA owns fresh native receipt and Stop review. See [[Sessions/2026-11-05-resumed-coordination]].
 
 - [E, November 5 native Stop closure] Receipt 6b784ff0 passes the unchanged detached Pi Stop case at clean 16a6940. Independent checks confirm absent owned PIDs, stable heartbeats, unchanged script, artifact/control hashes and verdict before cleanup. [[Research/QA/GUI-16a6940/Detached-Stop-Review]] closes this bounded reproduction. Main repaired QA checkout validation and invalidated old reports. Next assignment is combined-app acceptance in merge-dan.
 
@@ -94,7 +102,7 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 - [E, execution review about 16:09] Ten independently satisfactory builds are not yet established. [[Research/QA/Ten/Scoreboard]] is the current measured record; passing development tests alone does not satisfy the mission.
 - [E, exact source and pushed record at 16:56] Process-cleanup change `c6ce52d` landed. Native Stop proof remains pending. The original environment-wrapper patch mismatch is corrected in the current helper against fc97f36, with process markers retained; native prepared-source containment still needs confirmation before a new-head experiment. The separated verifier `c3057e9` awaits review, recovery `e93a877` passes 49 independent checks but needs prerequisite integration, and preflight still needs wiring. Round 1 used `d0f4c69` plus disclosed scratch changes.
-- [E, source and reviewer evidence] Generated-test containment and registered-test counting require one integrated implementation. The extra unsandboxed test execution in the returned hardening change remains a real blocker. See [[Research/QA/Org-Audit-2026-11-04]].
+- [E, historical finding superseded in scope] The earlier duplicate generated-test execution finding and containment requirement predate the reported full-access product decision. The final integration still needs authoritative test evidence, bounded recovery and confirmed cleanup; use current backend audit receipts rather than treating old containment policy as the release gate.
 - [E, historical access checks] Portal team membership was absent at 10:38 AM and has not been rechecked here. Earlier hook approval notes predate successful live builds and are not a current instruction to suspend already-authorized execution. Portal/team confirmation remains a person-owned submission item.
 
 ## Needs a decision
