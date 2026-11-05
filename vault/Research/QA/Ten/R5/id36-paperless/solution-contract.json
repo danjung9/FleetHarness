@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "objective": "Transform both supplied synthetic source tracks into validated forms, cited actions/status drafts and classified records; keep review in human authority while reconciling immutable operations and planning acknowledged transfers without data loss.",
+  "invocation": {
+    "input": "Object with required action discriminator: reconcile, plan, extract, validate, classify, workflow, benchmark or tasks. Action fields and nested types/defaults are fully defined in rules. No mutation or model inference; API and offline browser call the same exported compute(input) from compute.mjs.",
+    "output": "Exactly {status:\"ok\", ...action-specific fields from rules} or {status:\"error\",error:code}. Error vocabulary: INVALID_ACTION, INVALID_INPUT, INVALID_JSON (HTTP adapter only), ID_COLLISION, MISSING_PARENT, CROSS_RECORD_PARENT, CYCLE, VALIDATION_REQUIRED, CONFLICT_REVIEW_REQUIRED, APPROVAL_REQUIRED, QUEUE_REQUIRED, OFFLINE, SOURCE_MISSING. No omitted documented output keys; null is explicit where specified. status on reconciliation record and task is separate from envelope status. No diagnostic note keys.",
+    "rules": [
+      "All requests are JSON objects with action. No ambient state, clock, model or network is used by computation. Unknown object keys are ignored. Required fields cannot be omitted or null. Optional fields default only when absent, not when null. Strings are preserved unless a rule explicitly trims them. Nonblank means trim().length>0. Numbers must be finite. Results contain exactly the documented keys. All error results are {status:\"error\",error:CODE}; no partial success data. Valid domain findings are success results with issues/errors, not protocol errors.",
+      "Validate action first: missing, nonstring or unknown action returns INVALID_ACTION. Then validate the action payload shape, types and bounds: INVALID_INPUT. Then action-specific semantic errors in the precedence below. No exceptions or implementation-specific error prose escape the response. HTTP POST /api/invoke returns the result as JSON with HTTP 200 for valid JSON including error results; malformed JSON returns HTTP 400 and {status:\"error\",error:\"INVALID_JSON\"}. GET /health returns HTTP 200. All comparisons and ordering are code-unit lexical unless otherwise stated.",
+      "reconcile: local and remote are required arrays (0..5000) of immutable revisions {id,recordId,parents,actor,value}; ids/recordId/actor nonblank strings <=200 chars, parents unique strings <=200, <=100 per revision, value string <=50000 or null tombstone. Normalize parents by lexical sorting; identity is all five normalized fields. Union exact duplicate revisions. After shape checks, conflicting same-id content returns ID_COLLISION; then absent parents MISSING_PARENT; then cross-record ancestry CROSS_RECORD_PARENT; then directed cycles CYCLE. Preserve inputs on all errors. Return {status:\"ok\",operations,records,conflicts}; operations sorted by id; each record {recordId,heads,status,value}, records sorted by recordId, heads array of head revision ids sorted. A head has no child in its record. status conflict if >1 heads, deleted if sole head value null, otherwise resolved. value sole-head value or null for conflict. conflicts counts records in conflict. Empty graph returns empty arrays and zero. Never choose a timestamp winner. A resolution must add a fresh revision with every current reviewed head as parent; it does not mutate history.",
+      "plan: items array <=2000 of {id,sizeBytes,acknowledgedOffset,priority,createdAt}; id nonblank <=200 unique, sizeBytes positive safe integer, acknowledgedOffset integer 0..sizeBytes, priority integer 0..5 (LOWER first), createdAt valid ISO timestamp with numeric timezone or Z. budgetBytes required nonnegative safe integer; optional acknowledge boolean defaults false; optional stopped boolean defaults false. Invalid offset, duplicate id or invalid timestamp => INVALID_INPUT. Order priority ascending, then createdAt by instant, then id lexical. Allocate min(remaining budget,size-offset) in that order, skip complete items. A stopped request plans no chunks. Return {status:\"ok\",chunks:[{id,offset,bytes}],usedBytes,remainingBudgetBytes,offsets:[{id,acknowledgedOffset}],pendingIds}. offsets sorted by id. Only acknowledge:true AND stopped:false advances planned offsets, representing a simulated receiver ack; otherwise no offsets change. pendingIds contains items with acknowledgedOffset < sizeBytes AFTER optional ack, in priority order. No send is implied by a plan. Zero budget retains all work. Adapter to pack must invert priority (5-priority); never expose pack notes/output in this protocol.",
+      "extract: category is training-log, supply-requisition or routine-correspondence; source {id,text} nonblank strings; captureDate required valid ISO calendar date YYYY-MM-DD (used only as supply documentDate). Unsupported category or malformed date => INVALID_INPUT. Text is exact source bytes. Supply/correspondence grammar: first provenance line, then one Label: value per line; blank lines ignored; value trimmed at ends. Training input is SVG text as supplied: read ordered <text> labels Date, Topic, Participants, Duration minutes, Reviewer and the next text element as glyphs; never execute SVG scripts or HTML. XML entities amp/lt/gt/quot/apos decoded once. Constrained SVG transcription is not OCR. Missing labels give empty strings (lists empty, numeric null). Duplicate labels => INVALID_INPUT. Additional text is inert.",
+      "extract returns {status:\"ok\",fields,citations,issues}. Training fields exactly {date,topic,participants,durationMinutes,reviewer}; participants split semicolon, trim, drop empties; integer digit-only duration becomes number, other glyphs null. Supply fields exactly {documentId,documentDate,itemId,quantity,unit,priority,destination}; labels Document,Item,Quantity,Unit,Priority,Destination respectively; quantity digit-only -> number else null; date from captureDate. Correspondence fields exactly {senderRole,recipientRole,subject,date,reference,enclosureIds,route}; labels From,To,Subject,Date,Reference,Enclosure,Route; enclosure list semicolon split, route split \" > \", trim/drop empty. citations array {field,sourceId,locator} in field order as listed; only existing fields cited, locator \"line:N\" for 1-based full source line, training R1..R5 respectively. documentDate has no citation. issues only for training nonempty nondigit duration: [{field:\"durationMinutes\",message:\"Duration is ambiguous.\",candidates:[\"60\",\"6O\"]}] when glyphs exactly 6O; otherwise same issue with candidates:[]; other inputs issues:[]. Never infer a corrected value.",
+      "validate: category as extract; fields object, availableArtifactIds and availableRecordIds string arrays required; optional ambiguous boolean defaults false. Field names/types follow extract output, numeric fields permit null; missing fields treated empty/null (do not type-reject absent). Present invalid field types => INVALID_INPUT. Return {status:\"ok\",valid:boolean,errors:[strings]}. Check in this order: training date,topic,participants,duration,reviewer,ambiguity; supply documentId,documentDate,itemId,quantity,unit,priority,destination; correspondence senderRole,recipientRole,subject,date,reference,enclosures,route. Date uses actual Gregorian calendar, no normalization of impossible dates. Training date/supply documentDate/correspondence date error \"Enter a valid calendar date.\"; training topic \"Topic is required.\", empty participant list \"At least one participant is required.\", duration integer 1..480 \"Duration must be an integer from 1 to 480.\", reviewer \"Reviewer is required.\", ambiguous true \"Duration is ambiguous.\". Supply missing documentId \"Document identifier is required.\", itemId \"Item identifier is required.\", quantity null \"Quantity is required.\", otherwise integer 1..9999 failure \"Quantity must be an integer from 1 to 9999.\", unit not EA/BOX \"Unit must be EA or BOX.\", priority not critical/routine \"Priority must be critical or routine.\", destination blank \"Destination is required.\". No silent normalization.",
+      "Correspondence empty senderRole \"Sender is required.\", recipientRole \"Recipient is required.\", subject \"Subject is required.\"; reference blank or not in availableRecordIds \"Reference is missing.\"; empty enclosureIds \"Enclosure is required.\", each unavailable enclosure sorted lexical gives \"Enclosure ID is missing.\" with ID replaced by artifact id. Route must equal [ADMIN-DRAFTER,ADMIN-REVIEWER,ADMIN-APPROVER] else \"Route must be ADMIN-DRAFTER > ADMIN-REVIEWER > ADMIN-APPROVER.\". valid is errors.length===0. Nonempty strings in these rules use trim for validation but preserve field contents. IDs/enum values are case-sensitive.",
+      "classify: category nonblank string, date string (ISO calendar or empty), optional taskStatus string defaults \"\", optional ambiguous boolean defaults false. Return {status:\"ok\",ruleId,reviewDate,disposition}. Known categories map training-log SYN-R1 +365 calendar days; supply-requisition SYN-R2 +730; routine-correspondence SYN-R3 +180; tasking SYN-R4 +90 only if taskStatus completed/cancelled and ambiguous false; date is training/document/completion/cancellation date as applicable. Valid matched date => disposition \"review-for-disposal\" and ISO reviewDate. Missing/invalid date or unresolved task => disposition \"hold\", reviewDate null and matching ruleId. Unknown category => ruleId null, reviewDate null, disposition \"hold\". Never delete records.",
+      "workflow: command approve,queue,route,edit or stop; state {revisionId,approvedRevision,valid,conflicted,routeState}, revisionId nonblank, approvedRevision string or null, valid/conflicted booleans, routeState one of draft,approved,queued-offline,routed-local-simulation,stopped; actor nonblank, timestamp valid ISO zoned string; optional newRevisionId string required for edit; optional online boolean defaults false. Invalid shape/enums => INVALID_INPUT. For approve/queue/route: invalid state.valid => VALIDATION_REQUIRED, then conflicted => CONFLICT_REVIEW_REQUIRED. Approve sets approvedRevision=revisionId and routeState=approved. Queue/route require approvedRevision===revisionId else APPROVAL_REQUIRED; queue sets queued-offline; route requires routeState queued-offline or routed-local-simulation else QUEUE_REQUIRED; route online false => OFFLINE. Route online true sets routed-local-simulation. Edit requires newRevisionId nonblank and different else INVALID_INPUT, sets revisionId=newRevisionId, approvedRevision=null,routeState=draft; preserves valid/conflicted (caller must validate changed fields). Stop sets routeState=stopped, preserves approval. Return {status:\"ok\",state,event:{revisionId,action,actor,timestamp}}; action is approved,queued-offline,routed-local-simulation,edited,stopped respectively. Repeated route of already routed state returns {status:\"ok\",state,event:null}; no duplicate audit. Compute is pure; UI owns unique event IDs and exactly-once commit. No real authority or receiver transport is inferred.",
+      "benchmark: manualMinutes,assistedMinutes finite nonnegative numbers; packetVolume nonnegative safe integer; caughtErrors and plantedErrors nonnegative safe integers, caughtErrors<=plantedErrors. Return {status:\"ok\",estimatedMinutesSaved:(manualMinutes-assistedMinutes)*packetVolume,estimatedHoursSaved:estimatedMinutesSaved/60,errorDetectionRate:plantedErrors===0?null:caughtErrors/plantedErrors,provenance:\"Synthetic estimate; no measured Fleet SME baseline.\"}. Negative estimated savings is permitted; no operational benefit claim.",
+      "tasks: sources required array <=100 of {id,text}, unique nonblank ids and nonblank text; no source network retrieval. Each full source line numbered from 1. Read literal Task: id | Action: text | Owner: text | Due: ISO-offset | Status: open/completed/cancelled slots, trimmed. ? or blank owner/due is missing. Recognize Amends: sourceId, Updates: taskId, Forward-of: sourceId, Attachment: sourceId as whole-line metadata. Only Task lines create actions; hostile instructions, Information and other lines inert. Invalid Task slot grammar/status or invalid nonmissing due => INVALID_INPUT. Sources sorted by Date header instant then id (text attachments without Date sort first); retain original line citations. Unknown Amends/Forward-of/Attachment reference => SOURCE_MISSING before any task processing. Each source may have at most one Date header; if present it must be a valid ISO zoned timestamp, otherwise INVALID_INPUT. A text attachment without Date is allowed. Completed/cancelled initial Task without Updates has closedDate null; no inferred closure date.",
+      "Group Task lines by taskId. Each source occurrence retains citation id:line, or id:metadataLine-taskLine if immediately preceding line is relevant Amends/Updates/Forward-of. Citation order is processing order, removing exact duplicates. Exact repeated tasks add citations only. Amends allows replacement of owner/due/action of occurrences from named source and its amendment lineage. Forward-of adds duplicate citation but does not replace unrelated tasks. Updates matching task changes status and sets closedDate to source Date calendar date for completed/cancelled; it does not erase unmarked owner/due contradictions. Contradictions without amendment preserve candidate arrays in first-occurrence order and require review; do not use latest timestamps as authority. Missing owner or due also requires review. Attachment text is processed once from supplied sources. Completion/cancellation counts as verified evidence for draft eligibility, never as human submission approval.",
+      "tasks returns {status:\"ok\",tasks,statusDraft}. Each task has exactly {id,action,owner,due,ownerCandidates,dueCandidates,status,verified,closedDate,citations,errors}. Tasks sorted by id. Candidate arrays deduplicate known nonempty values in first-occurrence order; owner/due is sole candidate or \"\" when missing/conflicting. status needs-review and verified false on contradictions/missing fields, otherwise latest explicitly updated status or original status and verified true. closedDate null unless a completed/cancelled update with Date. errors in order: missing owner \"Task owner is required.\", missing due \"Task due date is required.\", then if either multiple candidates \"Conflicting owner and due date without explicit amendment\" (one string). statusDraft exactly \"SYNTHETIC DRAFT — verified actions only.\" then verified completed tasks sorted id rendered \" Completed: ACTION (OWNER; due DUE).\", then cancelled rendered \" Cancelled: ACTION (OWNER; due DUE).\", then open rendered \" Open: ACTION (OWNER; due DUE).\"; if unresolved count>0 append \" N actions require review and are excluded from status claims.\" where N uses \"One\" for 1, \"Two\" for 2, decimal otherwise and for 1 the final sentence is exactly \" One action requires review and is excluded from status claims.\". Empty tasks returns just prefix. No extra spaces/newlines."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "reconciliation",
+      "kind": "stateful",
+      "description": "Immutable revision union with retained edit/delete heads, replay idempotence and order-independent convergence.",
+      "criterionIds": [
+        "UC36-1",
+        "OFF-01",
+        "OFF-02",
+        "OFF-03",
+        "EVAL36-4"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "reconciliation-cases"
+      ]
+    },
+    {
+      "id": "transfers",
+      "kind": "algorithm",
+      "description": "Priority-lower-first bounded byte plans with explicit acknowledged offsets, zero budget and stop/resume.",
+      "criterionIds": [
+        "OFF-04",
+        "UC36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "transfers-cases"
+      ]
+    },
+    {
+      "id": "extraction",
+      "kind": "algorithm",
+      "description": "Derive source fields and citations from synthetic layouts/SVG regions; expose uncertainty without answer lookup.",
+      "criterionIds": [
+        "EVAL36-1",
+        "DESC36-7"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "extraction-cases"
+      ]
+    },
+    {
+      "id": "validation",
+      "kind": "algorithm",
+      "description": "Validate exact synthetic fields and dependencies, retaining drafts and blocking invalid submission.",
+      "criterionIds": [
+        "EVAL36-2",
+        "DESC36-7"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "validation-cases"
+      ]
+    },
+    {
+      "id": "tasking",
+      "kind": "algorithm",
+      "description": "Parse week of email/document task lines, amendments, forwards and ambiguity; generate cited action list and verified draft.",
+      "criterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "tasking-cases"
+      ]
+    },
+    {
+      "id": "records",
+      "kind": "algorithm",
+      "description": "Apply source-linked synthetic calendar-day schedule with hold/abstention.",
+      "criterionIds": [
+        "DESC36-8"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "records-cases"
+      ]
+    },
+    {
+      "id": "review",
+      "kind": "workflow",
+      "description": "Exact-revision approval, durable outbox transitions and idempotent simulated routing.",
+      "criterionIds": [
+        "UC36-2",
+        "UC36-3",
+        "OFF-05"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "review-cases"
+      ]
+    },
+    {
+      "id": "estimates",
+      "kind": "algorithm",
+      "description": "Transparent synthetic savings/error-denominator arithmetic, distinct from observed time.",
+      "criterionIds": [
+        "UC36-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "estimates-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json",
+      "domain.mjs",
+      "public/storage.js",
+      "public/sw.js",
+      "data/synthetic-data.json",
+      "data/README.md",
+      "path-to-fleet.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

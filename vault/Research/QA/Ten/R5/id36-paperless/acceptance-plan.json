@@ -1,0 +1,1607 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "IndexedDB commits precede Saved; offline reload retains three queued forms, citations and audit. Shared core works without local API. Replay/reversal preserves conflicts until explicit merge; no cloud sync.",
+      "journeyIds": [
+        "forms-offline",
+        "conflict-review",
+        "transfer-resume",
+        "history-recovery"
+      ],
+      "capabilityIds": [
+        "reconciliation",
+        "transfers"
+      ]
+    },
+    {
+      "criterionId": "UC36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Approve only exact reviewed revision; missing/stale approval blocks routing with Approval is required for this revision. Every form/status review is deliberate; edits require save/discard before switching or approval.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records",
+        "stale-review"
+      ],
+      "capabilityIds": [
+        "review"
+      ]
+    },
+    {
+      "criterionId": "UC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Audit retains actor role, timestamp, exact revision and ordered conflict-resolved, approved, queued-offline, routed-local-simulation actions; repeated route creates no duplicate event.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "review"
+      ]
+    },
+    {
+      "criterionId": "UC36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Runs on government devices and existing low-code platforms where possible Synthetic stand-in: Government devices and existing low-code platforms where possible: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-system: Government-managed tablet/browser configuration and an owner-selected existing low-code platform are unavailable. Withheld action: Government-device compatibility certification and platform installation. Demonstrate the complete synthetic forms/tasking workflow on a local browser/tablet-sized interface; produce an exportable packet and a one-page transition checklist with platform/pilot steps explicitly awaiting owner action.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC36-4",
+            "name": "Government devices and existing low-code platforms where possible"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "UC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Only exact supplied synthetic sources are embedded; UI and every export say synthetic, not validated against the real format; no personal data, credentials or external requests.",
+      "journeyIds": [
+        "review-reports",
+        "forms-offline"
+      ],
+      "capabilityIds": [
+        "estimates"
+      ]
+    },
+    {
+      "criterionId": "UC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Both offline tracks, source-linked corrections, review/audit and simulated reconnect work; downloadable one-page path names NAVSUP Business Systems Center, NAVIFOR and Navy Reserve Force as proposed owners with unapproved 30/60/90/180-day actions. This is a prototype, not operational Fleet readiness.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records",
+        "conflict-review",
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "OFF-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Repeated immutable revision and route replay produces identical canonical graph/state with one routed packet and no duplicate delivery/event.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconciliation"
+      ]
+    },
+    {
+      "criterionId": "OFF-02",
+      "disposition": "implemented",
+      "expectedOutcome": "OP-A quantity 14, OP-B quantity 16 and OP-DEL deleted are visible together; choosing quantity 14 creates OP-MERGE with all three parents and deleted false.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconciliation"
+      ]
+    },
+    {
+      "criterionId": "OFF-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Normal/reverse/repeated delivery gives same sorted operations and heads; OP-MERGE alone heads explicitly resolved graph. Missing ancestry fails without consuming queue.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconciliation"
+      ]
+    },
+    {
+      "criterionId": "OFF-04",
+      "disposition": "implemented",
+      "expectedOutcome": "1024-byte acknowledged budget sends 174 requisition bytes then 850 photo bytes at offset 2048; photo offset 2898. Lost ack and stop retain offset; 1198 more acknowledged bytes finish at 4096.",
+      "journeyIds": [
+        "transfer-resume"
+      ],
+      "capabilityIds": [
+        "transfers"
+      ]
+    },
+    {
+      "criterionId": "OFF-05",
+      "disposition": "implemented",
+      "expectedOutcome": "Reload offline retains saved fields/revisions, citations, audit and outbox. Failed write displays Save failed: storage unavailable. and retains prior durable quantity 12 plus editable draft 15. Stale approval blocks route.",
+      "journeyIds": [
+        "forms-offline",
+        "storage-recovery",
+        "stale-review"
+      ],
+      "capabilityIds": [
+        "review"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "All source-derived fields equal three supplied form keys after explicit 6O correction to 60; capture-context date is not extracted. Seven messages plus attachment produce four deduplicated tasks, two verified and two unresolved, exact cited draft from ANSWER-TASKS. Source-to-answer denominator excludes contextual/ambiguous fields from automatic accuracy.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records"
+      ],
+      "capabilityIds": [
+        "extraction",
+        "tasking"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Catch seven planted field errors across six cases before approval: quantity, duration ambiguity, impossible date, unit, enclosure, missing task owner and due. No silent correction; preserve draft and recover. 7/7 is declared synthetic expected detection, not measured operational error reduction.",
+      "journeyIds": [
+        "validation-recovery",
+        "tasking-records"
+      ],
+      "capabilityIds": [
+        "validation"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Time per packet against a manual baseline [baseline to be set with Fleet SME] Synthetic stand-in: Time per packet against a manual baseline: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: A measured, comparable manual packet baseline from Fleet SME trials is not supplied. Withheld action: Claiming measured operational time savings. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-3",
+            "name": "Time per packet against a manual baseline"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "EVAL36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Save/reload without service or external connectivity works; graph union is idempotent/order-independent; conflict is explicitly resolved by reviewer, approved and locally routed on simulated reconnect; no arbitrary winner.",
+      "journeyIds": [
+        "forms-offline",
+        "conflict-review",
+        "history-recovery"
+      ],
+      "capabilityIds": [
+        "reconciliation"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-5",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Ease of use judged by a Sailor panel Synthetic stand-in: Ease of use judged by a Sailor panel: Awaiting human assessment; all scores unassigned.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: An actual Sailor panel must provide its own usability judgment. Withheld action: Claiming Sailor-panel endorsement. Demonstrate the complete synthetic workflow and generate an unscored review worksheet with the exact panel/rubric categories and literal status “Awaiting human assessment”. No invented panel or judge rating.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-5",
+            "name": "Ease of use judged by a Sailor panel"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "EVAL36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%. Synthetic stand-in: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%: Awaiting human assessment; all scores unassigned.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Official judges alone assign the official rubric scores. Withheld action: Assigning or implying official scores. Demonstrate the complete synthetic workflow and generate an unscored review worksheet with the exact panel/rubric categories and literal status “Awaiting human assessment”. No invented panel or judge rating.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Sailor hours returned to maintenance, training and watchstanding Synthetic stand-in: Sailor hours returned to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Representative unit workload and observed before/after completion times are absent. Withheld action: Claiming Sailor hours actually returned. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DELIVERABLE36-1",
+            "name": "Sailor hours returned to maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: Fewer errors and less rework Synthetic stand-in: Fewer errors and less rework: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Observed unit error and rework rates for comparable packets are absent. Withheld action: Claiming measured operational error or rework reduction. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DELIVERABLE36-2",
+            "name": "Fewer errors and less rework"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Training duration 60, requisition quantity 12 and complete correspondence/enclosure are reviewed and queued offline; downloadable completed forms preserve synthetic provenance and local routing state. Real recipient delivery is not asserted.",
+      "journeyIds": [
+        "forms-offline"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Challenge statement: Replace paper, re-keying and manual routing with workflows that run offline and sync when connectivity returns.",
+      "journeyIds": [
+        "forms-offline",
+        "conflict-review"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: High-value outcome to the fleet: Sailor hours move from paperwork and re-keying back to maintenance, training and watchstanding. Synthetic stand-in: Sailor hours move from paperwork and re-keying back to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Observed unit workload and before/after task times are absent. Withheld action: Claiming actual redistribution of Sailor work hours. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-2",
+            "name": "Sailor hours move from paperwork and re-keying back to maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Operational problem: Sailors hand-transcribe paper forms, re-key requisition documents, route correspondence by hand, consolidate tasking from email, and keep records programs that need a full-time manager no one has.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Expeditionary and underway units lose connectivity and cannot route even basic forms.",
+      "journeyIds": [
+        "forms-offline"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: This family drew the strongest fleet demand of any in the submissions, and every hour spent here is an hour not spent on maintenance or training. Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: Scenario: Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Transform the rendered handwritten-style SVG, DD 1348-1A-style source and correspondence package through constrained extraction, source-linked correction, synthetic validation and reviewed offline queue. Reload and simulated reconnect retain forms and route only approved current revisions.",
+      "journeyIds": [
+        "forms-offline",
+        "validation-recovery"
+      ],
+      "capabilityIds": [
+        "extraction",
+        "validation"
+      ]
+    },
+    {
+      "criterionId": "DESC36-8",
+      "disposition": "implemented",
+      "expectedOutcome": "Transform all seven RFC822-like messages and attachment into verified action list and draft status updates, preserving amendments, duplicate citations and contradictory candidates; file forms/tasks against SYN-R1..R4 with correct review dates and holds. No automatic disposal.",
+      "journeyIds": [
+        "tasking-records",
+        "reset-recovery"
+      ],
+      "capabilityIds": [
+        "tasking",
+        "records"
+      ]
+    },
+    {
+      "criterionId": "DESC36-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: Transition hypothesis: Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-10",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: - Owner: NAVSUP Business Systems Center (submitters there build automation and low-code apps), NAVIFOR, Navy Reserve Force Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-11",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: - Destination: Existing low-code / automation platform; pilot with one ship or expeditionary unit Synthetic stand-in: Existing low-code / automation platform; pilot with one ship or expeditionary unit: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-system: No owner-selected low-code platform or authorized ship/expeditionary pilot environment is provided. Withheld action: Installing on an operational platform or running a unit pilot. Demonstrate the complete synthetic forms/tasking workflow on a local browser/tablet-sized interface; produce an exportable packet and a one-page transition checklist with platform/pilot steps explicitly awaiting owner action.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-11",
+            "name": "Existing low-code / automation platform; pilot with one ship or expeditionary unit"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-12",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: - Next steps: 30d: owner selects the forms and workflows to pilot; 60d: build on the owner's platform; 90d: unit pilot; 180d: fleet release decision Synthetic stand-in: 30d: owner selects the forms and workflows to pilot; 60d: build on the owner's platform; 90d: unit pilot; 180d: fleet release decision: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Platform owners and unit/release authorities must select the pilot and authorize pilot and fleet release decisions. Withheld action: Executing the 30/60/90/180-day transition or representing it as approved. Demonstrate the complete synthetic forms/tasking workflow on a local browser/tablet-sized interface; produce an exportable packet and a one-page transition checklist with platform/pilot steps explicitly awaiting owner action.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-12",
+            "name": "30d: owner selects the forms and workflows to pilot; 60d: build on the owner's platform; 90d: unit pilot; 180d: fleet release decision"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-13",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: Category: The Autonomous Shipboard Enterprise (Status: Retained, refocused on Sailor productivity) Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-14",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Category description: Focuses on the paper, re-keying, manual routing, tasking and records work that consumes deckplate and staff hours.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-15",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Projects will turn these into offline-first workflows with human review that sync when connectivity returns.",
+      "journeyIds": [
+        "forms-offline",
+        "conflict-review"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-16",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: The goal is to return Sailor hours to maintenance, training and readiness within EMCON and offline limits. Synthetic stand-in: return Sailor hours to maintenance, training and readiness within EMCON and offline limits: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: No observed maintenance/training/readiness hours or approved operational EMCON environment is supplied. Withheld action: Claiming actual returned hours or operational EMCON readiness. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-16",
+            "name": "return Sailor hours to maintenance, training and readiness within EMCON and offline limits"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SUMMARY36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: Capture and validate forms and tasking offline; synchronize, review and route them after reconnecting.",
+      "journeyIds": [
+        "forms-offline",
+        "tasking-records",
+        "conflict-review"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE36-17",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: Requirements Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE36-24",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact supplied source context in exported source-requirements.txt and the review worksheet: Expected deliverables Context/headings and proposed ownership remain source statements; no historical demand verification, owner acceptance or operational benefit is claimed.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE36-25",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: - Sailor hours returned to maintenance, training and watchstanding Synthetic stand-in: Sailor hours returned to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Representative workload and measured manual/application timings are absent. Withheld action: Claiming actual Sailor hours returned. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE36-25",
+            "name": "Sailor hours returned to maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE36-26",
+      "disposition": "deferred",
+      "expectedOutcome": "Unverified original obligation: - Fewer errors and less rework Synthetic stand-in: Fewer errors and less rework: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Comparable observed operational error and rework rates are absent. Withheld action: Claiming actual error or rework reduction. Demonstrate extraction, validation, review, routing and records filing; produce a synthetic benchmark report with independently fixed input counts, caught errors, timing assumptions and calculated savings explicitly labeled estimates, not observed fleet benefit.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional inputs, grammar, data and rules; no real-format validation. Exact supplied forms/SVG/email/schedule fixtures demonstrate both tracks; local routing and receiver acknowledgements are simulated. No official formats, measured benefit, platform compatibility, human endorsement or operational readiness are inferred.",
+        "journeyIds": [
+          "forms-offline",
+          "tasking-records",
+          "review-reports"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE36-26",
+            "name": "Fewer errors and less rework"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE36-27",
+      "disposition": "implemented",
+      "expectedOutcome": "Both complete synthetic workflows yield three reviewed offline forms, four tasks/two verified, exact status draft, source-linked records decisions, persistent audit/outbox and explicit simulated reconnect. Preserve source context: - Forms completed and routed without connectivity",
+      "journeyIds": [
+        "forms-offline"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE36-28",
+      "disposition": "implemented",
+      "expectedOutcome": "Exported source requirements retain the source URL, source-linked canonical inventory and original narrative as supplied snapshot; no claim of live verification.",
+      "journeyIds": [
+        "review-reports"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "forms-offline",
+      "title": "Capture, correct, review and queue all three forms offline; reload and file",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "expectText",
+          "selector": "#workspace-status",
+          "text": "Empty local workspace. Import synthetic sources to begin."
+        },
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-forms"
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-uncertainty",
+          "text": "Duration is ambiguous."
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved TRAIN-01"
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "TRAIN-01: queued-offline"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "REQ-01"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#quantity",
+          "value": "12"
+        },
+        {
+          "action": "expectText",
+          "selector": "#capture-context",
+          "text": "Document date from capture context: 2026-10-26"
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "REQ-01: queued-offline"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "CORR-01"
+        },
+        {
+          "action": "expectText",
+          "selector": "#enclosures",
+          "text": "ART-ENC present"
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "CORR-01: queued-offline"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#queued-count",
+          "text": "3 forms queued offline"
+        },
+        {
+          "action": "click",
+          "selector": "#file-records"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-filing",
+          "text": "TRAIN-01 SYN-R1 2027-10-26; REQ-01 SYN-R2 2028-10-25; CORR-01 SYN-R3 2027-04-25"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "fileName": "synthetic-packet.json",
+          "text": "\"durationMinutes\": 60"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "fileName": "synthetic-packet.json",
+          "text": "\"quantity\": 12"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "fileName": "synthetic-packet.json",
+          "text": "Training completion summary"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "fileName": "synthetic-packet.json",
+          "text": "synthetic, not validated against the real format"
+        }
+      ]
+    },
+    {
+      "id": "tasking-records",
+      "title": "Derive verified action list, draft status updates and filed records from the source week",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-tasks"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-counts",
+          "text": "7 messages; 4 unique tasks; 2 verified; 2 need review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-task",
+          "text": "Count pump seal kits | SUPPLY-ROLE | 2026-10-30T16:00:00-04:00 | completed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-task-conflict",
+          "text": "TRAINING-ROLE or ADMIN-ROLE; 2026-10-29T12:00:00-04:00 or 2026-10-30T12:00:00-04:00"
+        },
+        {
+          "action": "expectText",
+          "selector": "#unknown-task-errors",
+          "text": "Task owner is required. Task due date is required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#status-draft",
+          "text": "SYNTHETIC DRAFT — verified actions only. Completed: Count pump seal kits (SUPPLY-ROLE; due 2026-10-30T16:00:00-04:00). Cancelled: Prepare pump safety brief (TRAINING-ROLE; due 2026-11-01T10:00:00-05:00). Two actions require review and are excluded from status claims."
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-citations",
+          "text": "MSG-26:8; MSG-28:8-9; MSG-29:8-9; MSG-30:8-9"
+        },
+        {
+          "action": "check",
+          "selector": "#review-verified"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-status"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status-review",
+          "text": "Approved current verified status draft; 2 unresolved actions excluded"
+        },
+        {
+          "action": "click",
+          "selector": "#file-records"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-filing",
+          "text": "TASK-SUPPLY SYN-R4 2027-01-28; TASK-BRIEF SYN-R4 2027-01-29; TASK-TRAIN hold; TASK-UNKNOWN hold"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-actions",
+          "fileName": "synthetic-actions.json",
+          "text": "Count pump seal kits"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-actions",
+          "fileName": "synthetic-actions.json",
+          "text": "synthetic, not validated against the real format"
+        }
+      ]
+    },
+    {
+      "id": "conflict-review",
+      "title": "Review all edit/delete branches and deliberately resolve before simulated routing",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-conflicts"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-heads",
+          "text": "OP-A, OP-B, OP-DEL"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-values",
+          "text": "OP-A: quantity 14; OP-B: quantity 16; OP-DEL: deleted"
+        },
+        {
+          "action": "select",
+          "selector": "#resolution-choice",
+          "value": "OP-A"
+        },
+        {
+          "action": "check",
+          "selector": "#review-all-heads"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflict"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-result",
+          "text": "OP-MERGE: quantity 14; deleted false; parents OP-A, OP-B, OP-DEL"
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "REQ-01: queued-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#go-online"
+        },
+        {
+          "action": "click",
+          "selector": "#sync-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "REQ-01: routed-local-simulation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-audit",
+          "text": "OP-MERGE: conflict-resolved; approved; queued-offline; routed-local-simulation"
+        },
+        {
+          "action": "click",
+          "selector": "#sync-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#routed-count",
+          "text": "1 routed packet; no duplicate delivery"
+        }
+      ]
+    },
+    {
+      "id": "transfer-resume",
+      "title": "Plan priority transfers, stop on lost acknowledgement and resume from acknowledged bytes",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-transfers"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "1024"
+        },
+        {
+          "action": "check",
+          "selector": "#acknowledge"
+        },
+        {
+          "action": "click",
+          "selector": "#transfer-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-chunks",
+          "text": "ART-REQ: 0 + 174; ART-PHOTO: 2048 + 850"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-offsets",
+          "text": "ART-REQ 174/174; ART-PHOTO 2898/4096"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "512"
+        },
+        {
+          "action": "click",
+          "selector": "#lose-next-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#transfer-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-offsets",
+          "text": "ART-REQ 174/174; ART-PHOTO 2898/4096"
+        },
+        {
+          "action": "click",
+          "selector": "#stop-sync"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-status",
+          "text": "Stopped; pending work retained"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-offsets",
+          "text": "ART-REQ 174/174; ART-PHOTO 2898/4096"
+        },
+        {
+          "action": "click",
+          "selector": "#resume-sync"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "4096"
+        },
+        {
+          "action": "click",
+          "selector": "#transfer-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-chunks",
+          "text": "ART-PHOTO: 2898 + 1198"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-offsets",
+          "text": "ART-REQ 174/174; ART-PHOTO 4096/4096"
+        }
+      ]
+    },
+    {
+      "id": "review-reports",
+      "title": "Produce estimated benchmark, unscored worksheet and unapproved path to fleet",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#generate-review-report"
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-summary",
+          "text": "Synthetic estimate: (24 - 9) × 8 = 120 minutes = 2 hours; 7/7 planted errors across 6 independent cases; no measured Fleet SME baseline."
+        },
+        {
+          "action": "expectText",
+          "selector": "#panel-status",
+          "text": "Awaiting human assessment"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-UC36-4",
+          "text": "Government devices and existing low-code platforms where possible: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-EVAL36-3",
+          "text": "Time per packet against a manual baseline: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-EVAL36-5",
+          "text": "Ease of use judged by a Sailor panel: Awaiting human assessment; all scores unassigned."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-EVAL36-6",
+          "text": "Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%: Awaiting human assessment; all scores unassigned."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DELIVERABLE36-1",
+          "text": "Sailor hours returned to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DELIVERABLE36-2",
+          "text": "Fewer errors and less rework: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DESC36-2",
+          "text": "Sailor hours move from paperwork and re-keying back to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DESC36-11",
+          "text": "Existing low-code / automation platform; pilot with one ship or expeditionary unit: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DESC36-12",
+          "text": "30d: owner selects the forms and workflows to pilot; 60d: build on the owner's platform; 90d: unit pilot; 180d: fleet release decision: Awaiting owner action; no government-device certification, platform installation, unit pilot or fleet release performed."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-DESC36-16",
+          "text": "return Sailor hours to maintenance, training and readiness within EMCON and offline limits: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-SCOPE36-25",
+          "text": "Sailor hours returned to maintenance, training and watchstanding: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-SCOPE36-26",
+          "text": "Fewer errors and less rework: Synthetic estimate: 2 hours; 7/7 planted errors across 6 independent cases; operational benefit unmeasured."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "synthetic-review.txt",
+          "text": "synthetic, not validated against the real format"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-fleet",
+          "fileName": "path-to-fleet.md",
+          "text": "30d: owner selects the forms and workflows to pilot; 60d: build on the owner's platform; 90d: unit pilot; 180d: fleet release decision"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "https://cdao.hackathon.maximus.com/event/norfolk/use-cases/36"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "This family drew the strongest fleet demand of any in the submissions, and every hour spent here is an hour not spent on maintenance or training."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "Scenario:"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "Transition hypothesis:"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "- Owner: NAVSUP Business Systems Center (submitters there build automation and low-code apps), NAVIFOR, Navy Reserve Force"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "Category: The Autonomous Shipboard Enterprise (Status: Retained, refocused on Sailor productivity)"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "Requirements"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-source",
+          "fileName": "source-requirements.txt",
+          "text": "Expected deliverables"
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Reject missing quantity, invalid unit and date; correct without losing other fields",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-forms"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "REQ-01"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": ""
+        },
+        {
+          "action": "select",
+          "selector": "#unit",
+          "value": "EACH"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-errors",
+          "text": "Quantity is required. Unit must be EA or BOX."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#item-id",
+          "value": "SYN-ITEM-PUMP-SEAL"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "12"
+        },
+        {
+          "action": "select",
+          "selector": "#unit",
+          "value": "EA"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved REQ-01"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "TRAIN-01"
+        },
+        {
+          "action": "fill",
+          "selector": "#form-date",
+          "value": "2026-02-30"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-errors",
+          "text": "Enter a valid calendar date."
+        },
+        {
+          "action": "fill",
+          "selector": "#form-date",
+          "value": "2026-10-26"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved TRAIN-01"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "CORR-01"
+        },
+        {
+          "action": "click",
+          "selector": "#remove-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#field-errors",
+          "text": "Enclosure ART-ENC is missing."
+        },
+        {
+          "action": "click",
+          "selector": "#restore-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved CORR-01"
+        }
+      ]
+    },
+    {
+      "id": "storage-recovery",
+      "title": "Failed durable write preserves draft and prior saved revision until retry",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-forms"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "REQ-01"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "15"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-storage-failure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Save failed: storage unavailable."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#quantity",
+          "value": "15"
+        },
+        {
+          "action": "expectText",
+          "selector": "#durable-quantity",
+          "text": "Last saved quantity: 12"
+        },
+        {
+          "action": "click",
+          "selector": "#restore-storage"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved REQ-01"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#quantity",
+          "value": "15"
+        },
+        {
+          "action": "expectText",
+          "selector": "#durable-quantity",
+          "text": "Last saved quantity: 15"
+        }
+      ]
+    },
+    {
+      "id": "stale-review",
+      "title": "Reject routing after an edit and preserve dirty content across review boundary",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-forms"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "REQ-01"
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "15"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "CORR-01"
+        },
+        {
+          "action": "expectText",
+          "selector": "#dirty-warning",
+          "text": "Unsaved changes. Save or discard before changing records."
+        },
+        {
+          "action": "click",
+          "selector": "#keep-editing"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#quantity",
+          "value": "15"
+        },
+        {
+          "action": "click",
+          "selector": "#save-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-error",
+          "text": "Approval is required for this revision."
+        },
+        {
+          "action": "check",
+          "selector": "#review-current"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-form"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-form"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "REQ-01: queued-offline"
+        }
+      ]
+    },
+    {
+      "id": "history-recovery",
+      "title": "Missing ancestry preserves queue and requires history before reconciliation",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-missing-history"
+        },
+        {
+          "action": "click",
+          "selector": "#sync-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-error",
+          "text": "Missing history. Pending local work retained; request parent OP-BASE."
+        },
+        {
+          "action": "expectText",
+          "selector": "#pending-operations",
+          "text": "OP-A retained"
+        },
+        {
+          "action": "click",
+          "selector": "#supply-missing-history"
+        },
+        {
+          "action": "click",
+          "selector": "#sync-now"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-result",
+          "text": "OP-A: quantity 14; history complete; approval required"
+        }
+      ]
+    },
+    {
+      "id": "reset-recovery",
+      "title": "Cancel reset safely and hold unknown records category for review",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#import-synthetic"
+        },
+        {
+          "action": "click",
+          "selector": "#go-offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract-forms"
+        },
+        {
+          "action": "select",
+          "selector": "#record",
+          "value": "REQ-01"
+        },
+        {
+          "action": "click",
+          "selector": "#request-reset"
+        },
+        {
+          "action": "expectText",
+          "selector": "#reset-warning",
+          "text": "Export before reset. Delete this local workspace?"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-reset"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#quantity",
+          "value": "12"
+        },
+        {
+          "action": "select",
+          "selector": "#filing-category",
+          "value": "equipment-photo"
+        },
+        {
+          "action": "click",
+          "selector": "#classify-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#classification-result",
+          "text": "No matching synthetic schedule rule. Hold for records reviewer; no retention date or automatic disposal."
+        },
+        {
+          "action": "select",
+          "selector": "#filing-category",
+          "value": "supply-requisition"
+        },
+        {
+          "action": "click",
+          "selector": "#classify-record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#classification-result",
+          "text": "SYN-R2; review for disposal 2028-10-25; no automatic disposal"
+        }
+      ]
+    }
+  ]
+}

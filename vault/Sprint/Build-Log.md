@@ -166,3 +166,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 02:55 Automatic QA at f2e5422 on dev/reviewed: all passed. Fixture provider only. `Research/QA/Auto/f2e5422.md`
 - 02:58 dev-3: Audited 94 error literals and notices; corrected ten phrases. All nine required failure cases and synthetic-secret checks pass. Connector suite: 188/188; both type checks pass.
 - 03:13 Real build, round 5, id12-optask: failed in 17 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo
+- 03:18 Real build, round 5, id36-paperless: failed in 22.6 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo

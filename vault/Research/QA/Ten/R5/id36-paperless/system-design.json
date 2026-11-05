@@ -1,0 +1,128 @@
+{
+  "title": "Paperless Underway — synthetic offline workspace",
+  "description": "Two-track capture, human review, durable local routing and explicitly simulated reconciliation; no external synchronization endpoint.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Forms and source inspection",
+      "description": "Embedded exact synthetic source assets, handwriting regions and editable form capture with uncertainty and citations.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "tasks",
+      "label": "Tasking and records",
+      "description": "Parse constrained source messages/documents, reconcile amendments, produce verified status drafts and classify using supplied synthetic schedule.",
+      "kind": "logic",
+      "files": [
+        "domain.mjs",
+        "compute.mjs"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Shared validation and revision core",
+      "description": "Single browser-compatible computation shared by loopback API, offline browser and tests; immutable graph, exact-revision review and transfer planning.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "domain.mjs",
+        "lib/offline.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Durable device workspace",
+      "description": "IndexedDB atomic snapshots of drafts, sources, revision graph, audit and outbox; cached shell and shared modules for offline reload.",
+      "kind": "data",
+      "files": [
+        "public/storage.js",
+        "public/sw.js"
+      ]
+    },
+    {
+      "id": "sync",
+      "label": "Simulated second replica and receiver",
+      "description": "Explicit simulation only: human-selected conflict resolution, priority byte chunks, deduplicated acknowledgements, stop/resume; never cloud delivery.",
+      "kind": "integration",
+      "files": [
+        "public/app.js",
+        "domain.mjs"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "Local foundation HTTP service",
+      "description": "Node loopback /health and /api/invoke; serves shared core to browser without duplicate algorithms.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "compute.mjs",
+        "package.json"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Review, audit and export",
+      "description": "Exact-revision approval, completed forms, action list, status drafts, filing decisions, benchmark and unscored transition worksheet.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "path-to-fleet.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "core",
+      "label": "source text, regions and corrections"
+    },
+    {
+      "from": "core",
+      "to": "tasks",
+      "label": "validated forms and constrained source documents"
+    },
+    {
+      "from": "core",
+      "to": "store",
+      "label": "atomic state and pending work"
+    },
+    {
+      "from": "store",
+      "to": "capture",
+      "label": "restore saved workspace and unsaved draft"
+    },
+    {
+      "from": "store",
+      "to": "sync",
+      "label": "pending revisions and acknowledged offsets"
+    },
+    {
+      "from": "sync",
+      "to": "core",
+      "label": "replica operations and receiver acknowledgements"
+    },
+    {
+      "from": "service",
+      "to": "core",
+      "label": "same public invocation"
+    },
+    {
+      "from": "tasks",
+      "to": "review",
+      "label": "cited actions, draft status and filing dates"
+    },
+    {
+      "from": "core",
+      "to": "review",
+      "label": "review gates, conflicts and audit"
+    }
+  ]
+}

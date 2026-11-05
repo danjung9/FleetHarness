@@ -1,0 +1,133 @@
+{
+ "title": "Paperless Underway",
+ "status": "failed",
+ "error": "AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer for help before starting another build.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T07:56:12.580Z",
+    "finishedAt": "2026-11-05T08:00:39.743Z",
+    "durationMs": 267163,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 267081,
+    "usage": {
+     "inputTokens": 422587,
+     "cachedInputTokens": 336138,
+     "uncachedInputTokens": 86449,
+     "outputTokens": 14847,
+     "reasoningOutputTokens": 272,
+     "totalTokens": 437434,
+     "uncachedPlusOutputTokens": 101296
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:00:39.758Z",
+    "finishedAt": "2026-11-05T08:02:29.312Z",
+    "durationMs": 109554,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 109499,
+    "usage": {
+     "inputTokens": 541137,
+     "cachedInputTokens": 466707,
+     "uncachedInputTokens": 74430,
+     "outputTokens": 6075,
+     "reasoningOutputTokens": 112,
+     "totalTokens": 547212,
+     "uncachedPlusOutputTokens": 80505
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:02:29.342Z",
+    "finishedAt": "2026-11-05T08:08:54.051Z",
+    "durationMs": 384711,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 384495,
+    "usage": {
+     "inputTokens": 1000916,
+     "cachedInputTokens": 906748,
+     "uncachedInputTokens": 94168,
+     "outputTokens": 22342,
+     "reasoningOutputTokens": 1503,
+     "totalTokens": 1023258,
+     "uncachedPlusOutputTokens": 116510
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:08:54.071Z",
+    "finishedAt": "2026-11-05T08:16:37.683Z",
+    "durationMs": 463614,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 463466,
+    "usage": {
+     "inputTokens": 5120860,
+     "cachedInputTokens": 4937366,
+     "uncachedInputTokens": 183494,
+     "outputTokens": 33634,
+     "reasoningOutputTokens": 3106,
+     "totalTokens": 5154494,
+     "uncachedPlusOutputTokens": 217128
+    }
+   }
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T08:16:37.742Z",
+    "finishedAt": "2026-11-05T08:18:41.011Z",
+    "durationMs": 123270,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 122895,
+    "usage": {
+     "inputTokens": 2021666,
+     "cachedInputTokens": 1890777,
+     "uncachedInputTokens": 130889,
+     "outputTokens": 6446,
+     "reasoningOutputTokens": 441,
+     "totalTokens": 2028112,
+     "uncachedPlusOutputTokens": 137335
+    }
+   }
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 22.6,
+ "challengeId": "36",
+ "workspace": "~/fhten/ud-r5/workspaces/7b7017f5-65d6-4214-ace3-7390f26f31f8/89e9657e-6595-41f7-afa1-ed92226c8624"
+}

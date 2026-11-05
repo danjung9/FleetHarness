@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Underway/expeditionary Sailors capturing synthetic forms, command staff consolidating tasking, and reviewers/records clerks on desktop or narrow tablet browsers. No operational records or real identities.",
+  "primaryTask": "Inspect embedded source forms and a week of email/document tasking, correct uncertain extraction, validate, explicitly review the exact revision, save/queue offline and reconcile with a simulated second replica on reconnect.",
+  "successOutcome": "Three completed forms remain queued after offline reload; verified action list has four tasks, two verified; exact verified-only status draft and source-linked filing dates are available. Conflicting edits/deletion are shown and resolved deliberately, approvals bind current revisions, and byte progress advances only after simulated acknowledgement. All exports identify synthetic, not validated against the real format.",
+  "screens": [
+    {
+      "name": "Forms and sources",
+      "purpose": "Inspect full source and highlighted region/line next to labeled extracted fields; source links and capture-context assumptions stay adjacent. A compact record selector changes form only after save/discard.",
+      "primaryAction": "Save form, then Review current revision and Queue offline"
+    },
+    {
+      "name": "Tasking and records",
+      "purpose": "Read seven numbered messages and attachment, compare competing owner/due values, verify action list and inspect schedule citations. Missing facts remain held. Full source text is inert and readable.",
+      "primaryAction": "Extract tasking; review verified status draft; file records"
+    },
+    {
+      "name": "Sync and conflicts",
+      "purpose": "Monitor saved/pending/failed/conflicted/routed counts, last successful simulated sync, retry and acknowledged bytes. Show each edit and deletion candidate before resolving; second replica and receiver are explicitly simulated.",
+      "primaryAction": "Review all heads and resolve; synchronize now; stop or resume sync"
+    },
+    {
+      "name": "Review and path to fleet",
+      "purpose": "Export completed forms/actions/filing/audit and a synthetic benchmark/unscored review worksheet. Show primary deferrals before estimates, proposed owners, source context and transition checklist.",
+      "primaryAction": "Generate review report and export packet"
+    }
+  ],
+  "states": {
+    "empty": "Empty local workspace. Import synthetic sources to begin. Zero tasks, conflicts, routes and bytes; no automatic sample loading or approval.",
+    "loading": "Show Restoring local workspace while opening IndexedDB and service-worker cache. Disable duplicate saves/extraction/reconnect while their transaction is pending; preserve readable previous results. Service unavailable falls back to the same imported computation core; offline does not block capture.",
+    "error": "Show exact field-specific errors adjacent to controls and in a linked error summary; focus first invalid control. Storage failure shows Save failed: storage unavailable. and keeps dirty draft plus prior durable state. Missing ancestry preserves queue and requests parent. Conflicts show competing values/tombstone; never choose by clocks.",
+    "success": "Show Saved only after IndexedDB transaction complete. Distinguish Unsaved, Saved, Approved current revision, queued-offline and routed-local-simulation. Reconnect alone grants no approval. Byte counts identify acknowledged progress; local routed state never implies external delivery."
+  },
+  "persistence": "IndexedDB transaction atomically stores source assets, canonical operations, current fields, exact-revision decisions, audit and outbox with acknowledged offsets. Dirty draft autosave is separate and labeled unsaved until committed. Preserve selected record and unfinished content across ordinary interactions/reload where storage permits. Service worker caches shell, CSS, scripts and shared modules; self-contained public/index.html embeds exact necessary source fixtures, never fetches local data files. Initial load requires local installation/cache preparation; no background external requests. Plain IndexedDB is not encryption; eviction/device loss remain operational limitations.",
+  "recovery": "Reject invalid dates/units/missing dependencies without clearing fields. Review changes require deliberate save or discard; cancelled switch/reset preserves work and offers export. Source-backed task conflicts require user selection of competing owners/dates and save before approval. Simulated diagnostics are secondary and clearly labeled: missing history, lost ack, storage failure. Stop sync preserves all work. Retry only from acknowledged offsets. Unmatched category stays hold and escalates to records reviewer; repeated failures show evidence and retry guidance.",
+  "keyboard": "Use native labeled input/select/button/checkbox controls, logical Tab order and persistent visible focus. Enter submits current form, not approval; review checkbox and approve require deliberate action. Error summary links focus fields, status uses polite live region. Dialog reset/switch supports Escape cancellation and returns focus. System sans, restrained high-contrast semantic colors and text status labels; no color-only meaning. At 390px stack source/editor and replace dense rows with labeled cards; no horizontal page overflow, touch targets at least 44px. At desktop use source/editor split and side navigation. Keep diagnostics/raw JSON secondary behind disclosure."
+}

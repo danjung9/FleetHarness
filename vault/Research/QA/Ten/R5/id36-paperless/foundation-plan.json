@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "offline",
+  "reason": "Extend the dependency-free Node 22.19+ loopback service and offline immutable-graph/byte-planning pack. Reuse the same browser-compatible compute module through the API and offline browser import. Add native IndexedDB transactions and service-worker shell caching; no replicated database or authenticated transport is needed for the explicitly simulated second replica. PouchDB/CouchDB was evaluated in research; production adoption requires owner endpoint/identity decisions and graph adaptation. No runtime incompatibility justifies a custom scaffold."
+}

@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Ten-challenge benchmark, round 5 at f2e5422: 1 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 5 at f2e5422: 2 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 5
@@ -17,7 +17,9 @@ summary: "Ten-challenge benchmark, round 5 at f2e5422: 1 of 10 finished, 0 passe
 | Challenge | Status | Min | Tests | Journeys | Criteria met / deferred / failed | Repair | Open errors | Tokens, uncached plus output | Bar | Judge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [[Research/QA/Ten/R5/id12-optask/final\|id12-optask]] | failed at build | 17 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 434865 | FAIL | pending |
+| [[Research/QA/Ten/R5/id36-paperless/final\|id36-paperless]] | failed at verify | 22.6 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 652774 | FAIL | pending |
 
 ## What failed
 
 - [E] `id12-optask`: status failed, stage build. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer for help before starting another build. Open: {"pageErrors": null, "external": null, "blank": false}. Details: `Research/QA/Ten/R5/id12-optask/log-tail.txt`
+- [E] `id36-paperless`: status failed, stage verify. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer for help before starting another build. Open: {"pageErrors": null, "external": null, "blank": false}. Details: `Research/QA/Ten/R5/id36-paperless/log-tail.txt`

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "selection": {
+    "schemaVersion": 1,
+    "templateId": "node-service",
+    "version": "1.0.0",
+    "computePack": "offline",
+    "reason": "Extend the dependency-free Node 22.19+ loopback service and offline immutable-graph/byte-planning pack. Reuse the same browser-compatible compute module through the API and offline browser import. Add native IndexedDB transactions and service-worker shell caching; no replicated database or authenticated transport is needed for the explicitly simulated second replica. PouchDB/CouchDB was evaluated in research; production adoption requires owner endpoint/identity decisions and graph adaptation. No runtime incompatibility justifies a custom scaffold."
+  },
+  "templateHash": "225b31f93cb38b2e264412baac33a347abacf0ba44dfd137e03dcf6701685c2d",
+  "files": {
+    "compute.mjs": "f3aa3e633e6e070ec9d62e057fd7c03a45a3afc869e159ee07cdf13c5998744a",
+    "example-input.json": "fea19e31cdd9131e237136bd891bf43e82feeda4f82cbe13b910d7208e0dafa5",
+    "FOUNDATION.md": "54478d77b77e1c561e867c2f9058c8e87e7afb5bf13696545f1fbd5d5e88480b",
+    "lib/offline.js": "a993ac55e386c64d7be1b7883873e8976ffb9bb71c5e3afea1d3cc77b814a756",
+    "lib/validation.js": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f",
+    "package.json": "92ed1ff0bbc999477871bb4faf6327c6d8261ab9a57eec87ef874782223cd455",
+    "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+    "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+    "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+    "server.mjs": "b4ee7c4947312a15dca5e3e81eb34226fbd79238b1fc575632e342e7310e6864"
+  },
+  "copiedFiles": 10,
+  "copiedBytes": 27421,
+  "scope": "Original starter bytes before agent edits; not application verification or measured token savings."
+}
