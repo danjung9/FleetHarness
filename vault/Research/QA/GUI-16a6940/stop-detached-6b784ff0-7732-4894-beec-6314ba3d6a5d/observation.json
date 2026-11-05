@@ -1,0 +1,695 @@
+{
+  "case": "STOP-DETACHED-01",
+  "mode": "local-scripted-provider",
+  "expectedCommit": "16a694080508ebae19384f05fda8279b5a5feb96",
+  "startedAt": "2026-11-05T06:04:42.977Z",
+  "platform": "darwin",
+  "node": "v26.0.0",
+  "output": "/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/GUI-16a6940/stop-detached-6b784ff0-7732-4894-beec-6314ba3d6a5d",
+  "result": "PASS",
+  "limits": {
+    "workerWatchdogMs": 60000,
+    "stopStatusMs": 10000,
+    "settlingMs": 2000,
+    "observationMs": 8000
+  },
+  "scope": "One actual Pi bash shell and active Node parent with one unreferenced detached Node child. No resistant, Codex, Quit, packaging or general containment claim.",
+  "commit": "16a694080508ebae19384f05fda8279b5a5feb96",
+  "trackedChanges": "",
+  "sourceTree": "1ca33b56fb6ca9f799fa40dc4166c9a1dc6342f6",
+  "provenance": {
+    "scriptSha256": "53f5cd33f3f92150054920527a1cf076517b4237612377050bf18cfeeb22f765",
+    "lockSha256": "d034782b028b0b578ac24b1ed475ee1a7a78f373d7aa9cd4fdca34e9d1d07aa9",
+    "electronBinarySha256": "efdafc16245c1c30e12f4ac561ab724c89c919ff62713efb2a12d4a819f902f9",
+    "dist": [
+      {
+        "path": "app-icon-192.png",
+        "sha256": "de396b3aae805d90cb7ab8c266de4c6d3d61fcf85953a23634571c22fe1722ea"
+      },
+      {
+        "path": "app-icon-512.png",
+        "sha256": "c33a8322eeea69e6188f3a473d065a2e39a600836f3777e5f9eb8975c06e7296"
+      },
+      {
+        "path": "apple-touch-icon.png",
+        "sha256": "0633a6c6039eb35bdf193c7c2c2a8285996d6c73f5db1a1a17b5bf211a781177"
+      },
+      {
+        "path": "assets/dm-sans-latin-400-normal-BwCSEQnW.woff",
+        "sha256": "38702875fe179437d200e7ba6f7fab4d497ffe48117ef332029b2081751186ad"
+      },
+      {
+        "path": "assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+        "sha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006"
+      },
+      {
+        "path": "assets/dm-sans-latin-500-normal-B9HHJjqV.woff2",
+        "sha256": "19bf1984956517c35c2bd35b6cdedac12a21d6fcd3596c614ecdfb88b648909d"
+      },
+      {
+        "path": "assets/dm-sans-latin-500-normal-Dr3UlScf.woff",
+        "sha256": "7deb957e430b780ee3272d801af4f9f2211b1330ec40a312a8f25309eacb4034"
+      },
+      {
+        "path": "assets/dm-sans-latin-600-normal-Aqo67rzb.woff2",
+        "sha256": "6bb2b2645ba5eeaecf56322c543fa3a75b87b927977b9c03b1dabc4205089120"
+      },
+      {
+        "path": "assets/dm-sans-latin-600-normal-BmdmIIQ2.woff",
+        "sha256": "e7351257e49400eff05aca30a2007289194a900860d30c30770d8b8732897564"
+      },
+      {
+        "path": "assets/dm-sans-latin-700-normal-CUSSCpQX.woff",
+        "sha256": "af422a448ac00679a8dbb13532db3616829c5a35b58d3eeea5903ce17ad2e36a"
+      },
+      {
+        "path": "assets/dm-sans-latin-700-normal-DvUfVpUG.woff2",
+        "sha256": "35c5efa0e5daa52ee5c6500f5be354bf751fb65c4e49e1d6806c6eb5883e8fe9"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-400-normal-BjWJ59Pq.woff",
+        "sha256": "3d63423c3204f61bb196d1ae3729b7f2871d87abd4403d198f4810923888c016"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-400-normal-BtiwyxMk.woff2",
+        "sha256": "962730c6ff7595f9499b0d963a3bccb2139d793f0fb31fbd87aed1881c020e0a"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-500-normal-BJfUCQsA.woff2",
+        "sha256": "e0a1d21584ba00798a3dbe90ef5f8a162741d454f52ab66630f9dc41da372b3d"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-500-normal-DR84L5F-.woff",
+        "sha256": "e1f67472aa96c6f60969c696ba8a9d36ed8ea26c2ff5c3e27ee29c664911575d"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-600-normal-4vooXBpG.woff2",
+        "sha256": "6406eb05e2eb50779cb95ee8745c98ad23cce7e67d752822782453da7f6b4491"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-600-normal-DRtaDpgU.woff",
+        "sha256": "f70e6bb2170e2ab7bfc23a021af0663dce4df0b502173c9c5135015d7fed457a"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-700-normal-BLI3TTWz.woff",
+        "sha256": "56084e69490970432de58b4a2406ee4daa1f58d90f9600ae3fda0e895a6355e7"
+      },
+      {
+        "path": "assets/dm-sans-latin-ext-700-normal-CJIcxD6K.woff2",
+        "sha256": "f6640907b94df0d227f26e2fcb6db2497d6c44c4b68f731ea1e06f5b45e2e91b"
+      },
+      {
+        "path": "assets/dm-serif-display-DEPTIRtf.ttf",
+        "sha256": "c03775f8cc3db88cfea259b231abe13f94e6a3d3cb01c09477a2e42a1f5919e1"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-400-normal-BSMlKf0J.woff2",
+        "sha256": "7635422bd10ddbbcb0e0caa1154b928298f5c8319b8c00b30978d4395f4783ce"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-400-normal-CEL4l2ZJ.woff",
+        "sha256": "42da81a28bbcddda6768a25a4b3105ee291e69d5fa6c74747bc51bbc6718c538"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-500-normal-Ael50iVv.woff",
+        "sha256": "55a3af5e5ba0f565b4e66149cfe077ba88ac42cc3f68650a901d58eadbf9cd9b"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-500-normal-Bq9vWWag.woff2",
+        "sha256": "1d89462e86cb8e87e7e9d6f6635605bd7c3081baca6caaecee84916bf7b60edc"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-600-normal-CTOM6hUh.woff2",
+        "sha256": "2b05a8695c7f9f4abd7178b279646a3b005a8ce57546bef6fd145f25d131e0aa"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-600-normal-fLZuRloM.woff",
+        "sha256": "877b7b3177c22f6911f36888fb09f003d63c665e2185d3dbadea83130ecbb316"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-400-normal-DMdlQ8Kv.woff",
+        "sha256": "0e4a2393e8ed3185ae300e4a202b6d9149d47d8a0e5bb8f1d1db33e76b86ecd1"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-400-normal-xuaO2J-f.woff2",
+        "sha256": "f8c22ec1804bd6966b70f43ac7c327025645b4c09597117fca2a5a6c750106fe"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-500-normal-BIfNGwUT.woff",
+        "sha256": "eadb2c427859b185761380143d1f42187fd7cbd94704b543e4c76c6368fbab52"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-500-normal-BqneJy0T.woff2",
+        "sha256": "3febe5c7f22e4b07b4552738673c3dbe8bced2dc5f48b866edf7ccd9552d109a"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-600-normal-9HEixskS.woff",
+        "sha256": "d17413b646f918a8b52316b1bc909068b90687a638fbf7fecc5653b870c7714a"
+      },
+      {
+        "path": "assets/ibm-plex-mono-cyrillic-ext-600-normal-V-xxqcpd.woff2",
+        "sha256": "83109cdd4f8665b475dfc11d61bd44da328bf7e6eab3d3953d39c49b1b9f6015"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-400-normal-CvHOgSBP.woff",
+        "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+        "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-500-normal-CB9ihrfo.woff",
+        "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2",
+        "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-600-normal-BgSNZQsw.woff2",
+        "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-600-normal-DWFSQ4vo.woff",
+        "sha256": "cb96282f22c6f19112856fd6e0b34e2baefaf4ca6551e851d58c5ab0aabcd2be"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-400-normal-BmRBH3aV.woff2",
+        "sha256": "6bc0f226a5b7884a8170e3f62c63d7675609d4631bdc5931b5cdab81821f00eb"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-400-normal-D3D2R8hC.woff",
+        "sha256": "f8ddaa0ab9d3c052c9fe035751c8214b7e0d59e6e7b69b045f8659c2fe4dced2"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-500-normal-CAhNIIs5.woff2",
+        "sha256": "6bb06407c97584b0867a959e05e8874693bfeb8c317de190811c51598f2d99ea"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-500-normal-CZ70TYgx.woff",
+        "sha256": "ff5da89c3ee20d38359943b61a7aae9200d2a0f61cf95ca10a7cccef81da2ff5"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-600-normal-D38SheWl.woff2",
+        "sha256": "32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b"
+      },
+      {
+        "path": "assets/ibm-plex-mono-latin-ext-600-normal-DmB0ttJJ.woff",
+        "sha256": "46249f4bc59bb78b3893d3a4ad39226d2f3fb66dfa21ccc21bda044a4a3c78c9"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-400-normal-BulugwFq.woff2",
+        "sha256": "62632b6375305e70ddcafdd895218e6ae41a184fcd280a69c739460604ca00a9"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-400-normal-DDuiU_S-.woff",
+        "sha256": "bced561d991e3f81c150c08e71f7fa849fcbff523560f6059245f2edce19b600"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-500-normal-C8zxqsMH.woff",
+        "sha256": "755f62b418df17518aa0ea16b4232e546ce949a4ab7acc577071fa9be9e3dc88"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-500-normal-DZ4AoWbu.woff2",
+        "sha256": "781633d95de88040fb77141d1e65d928c87c0144691fbc74da5a64d137a7e910"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-600-normal-D2EvbN8M.woff2",
+        "sha256": "51b74d53e106ba8a26dd33464b231a562069be2a234b923c115beb622e6f6bc6"
+      },
+      {
+        "path": "assets/ibm-plex-mono-vietnamese-600-normal-iLQfcSjf.woff",
+        "sha256": "e4c71658a1eebc5d2b50d801aa4450c94956da1342c2df261442d674ecb96f0e"
+      },
+      {
+        "path": "assets/index-CCw2CTKw.css",
+        "sha256": "4fe3ef9f11bb4e86caea9b486b26403f4f40af634dd6d9257786232fd1c36038"
+      },
+      {
+        "path": "assets/index-Dky1IGVj.js",
+        "sha256": "7aa6c299b8b8b241e77916f854986d33f3719b970444068456ea92cd5fad6267"
+      },
+      {
+        "path": "favicon-16.png",
+        "sha256": "9f81f5d29c7f3f55bffe4268a0f9f290bbbf1fd6a0f81d47e6a0dbe9dab0affd"
+      },
+      {
+        "path": "favicon-32.png",
+        "sha256": "c69dec9dbfa989542b94a24453c535750502de72a4b1c4e78215cc9e2875451c"
+      },
+      {
+        "path": "favicon-48.png",
+        "sha256": "a0a8bfebbf7b204d699fb1b57c76dccfdb4306de72a2cf7c25233e5335676645"
+      },
+      {
+        "path": "favicon.ico",
+        "sha256": "8cf4c5b9b68a780cb7fb7eccc26a88d953121956c2b8dbe0a8dd1bc213e2d29b"
+      },
+      {
+        "path": "favicon.svg",
+        "sha256": "44626057b8b1d2796f3153add45102ae8dfb19ebfd585924f22cb43f0936f5ab"
+      },
+      {
+        "path": "index.html",
+        "sha256": "a634c1a5a4ec69fe8a74ce16dbb6409e32f61aef6fc08a3bfdc7c02084f385c2"
+      },
+      {
+        "path": "site.webmanifest",
+        "sha256": "f668365563c309ab24492f4b0c1f9ade9b0fcdf50a5333fd7820122e9bb8a829"
+      }
+    ],
+    "distElectron": [
+      {
+        "path": "electron/agent-runner.js",
+        "sha256": "14c231eb23bd09a1ed286a9307b5998787095dbd838e792599ed364cb7ea57f9"
+      },
+      {
+        "path": "electron/browser-verification.js",
+        "sha256": "6c5708f5846faa8a933f0bbb3a36c34a480ed2ffb01904e7dcea783f01522650"
+      },
+      {
+        "path": "electron/codex-account.js",
+        "sha256": "9df69b36f34b52b754a0c1ddc3a826961c2a33ca484d8e124b651355ef86ce13"
+      },
+      {
+        "path": "electron/codex-rpc.js",
+        "sha256": "aab2846e27d2e3186d367e42fdc7701bc90fc75c41d4a80a5aed4c3ca4eb1212"
+      },
+      {
+        "path": "electron/codex-session.js",
+        "sha256": "1bf4bbf4a4687a0d738d6e512968d4dd40b77fdbbc38a002f9e1f2a916d80ccb"
+      },
+      {
+        "path": "electron/delivery.js",
+        "sha256": "55893f3f93ba2578b062160b9c216f12c6a0ebed8a4ee56ccedc9a440e9f29e4"
+      },
+      {
+        "path": "electron/executable.js",
+        "sha256": "0e81337115e37459dcebc54d576797f4eeb276ad01dacd0fb8b955b700a8c118"
+      },
+      {
+        "path": "electron/independent-judge.js",
+        "sha256": "b4af54a24442a6da56fe6f957d4a110a8fbe5af71aa9d6b8b06b2ef2b4be72e3"
+      },
+      {
+        "path": "electron/main.js",
+        "sha256": "dd63e3801ff9ef82ce5c65bb217b44d07e0c5d35541816962de4b35a9ec53620"
+      },
+      {
+        "path": "electron/package-worker.js",
+        "sha256": "f26c9f446d83ac5b7c0868dfaf1a5bb36c7a5f2dcda5cf375022c9b365198254"
+      },
+      {
+        "path": "electron/pi-backend.js",
+        "sha256": "394400e8fc80d64465ae5a7025c13492509b33eb4e15f4e2984e81b556f8e754"
+      },
+      {
+        "path": "electron/preload.cjs",
+        "sha256": "4f9120c3780d00d09e46694ace86ccd4a2860b7bc967879b0a9aa694e646ca4a"
+      },
+      {
+        "path": "electron/preview.js",
+        "sha256": "64d7c1594ca11d208ec796bef6a35eb2bb191d08b0290ba1ed9f5b05f2fc3429"
+      },
+      {
+        "path": "electron/process-sweep.js",
+        "sha256": "d92d906c19da18374481bcd80c8ad5f785159999fa4032adf517245578423834"
+      },
+      {
+        "path": "electron/quality.js",
+        "sha256": "0d45d4e101e5384102cca52255ff278d2cef5b5a2da5a7128f945825f7798e0b"
+      },
+      {
+        "path": "electron/source-export.js",
+        "sha256": "16010d57cf50658db711268ecb956caa9fecb8b37d494d84176153ae8b214eab"
+      },
+      {
+        "path": "electron/storage.js",
+        "sha256": "52200de35a09a9f2c0986a1acf5718f27654e0ef65900b41ceefbf9fc3026354"
+      },
+      {
+        "path": "electron/system-design.js",
+        "sha256": "2f5de8c4b684fe6ef980dc4891c848c45268d09e385290d93a789687787c19c0"
+      },
+      {
+        "path": "electron/test-baseline.js",
+        "sha256": "fab2c8efcec7f23cd32d7e433407fde0257bd57461c57dcabedb351321d30862"
+      },
+      {
+        "path": "electron/verification.js",
+        "sha256": "43868320f2ea7b6a09f70da9b3a158996c45f7255fe36c58e9701ce584f52a4d"
+      },
+      {
+        "path": "harness/catalog.js",
+        "sha256": "8ea2807c3d5996eee89af315ad831dbd5f10264bf50800da679ba9d2e76f8254"
+      },
+      {
+        "path": "harness/cli.js",
+        "sha256": "0e2d2914511b6d875baad69155f7ef1f8b2c2264a356c04cc5fa10cd62206b39"
+      },
+      {
+        "path": "harness/evaluate.js",
+        "sha256": "b01632a3986223af56e1d0dfc5fa493632dc34b85d91c95a8a5eff20d5119ee8"
+      },
+      {
+        "path": "harness/fixtures.js",
+        "sha256": "dc20d828669772d77258842da3649190980561d88a0f58ca523f5a07239140d6"
+      },
+      {
+        "path": "harness/integration.js",
+        "sha256": "4e321a093651ceab066c3de7b7d921bc36b2f72830830ec1801ac3b7322a139a"
+      },
+      {
+        "path": "harness/norfolk-snapshot.js",
+        "sha256": "6e382700eba1b024dadd9b945ef978dc3e57d6dc6187d43089406e9197b36274"
+      },
+      {
+        "path": "harness/norfolk.js",
+        "sha256": "02622b19767a01b14e136f106b38cdc234c251e21ef71353bda2910514368afb"
+      },
+      {
+        "path": "harness/phases.js",
+        "sha256": "974c68b7bac53d125d68bd2ae50801e16d034f66655d0a2b4976e30c809f61e0"
+      },
+      {
+        "path": "harness/pi-tools.js",
+        "sha256": "79e91792f06b6cfc281da51a8a72047d48c401ce4f0e2901c544c169f3fffa78"
+      },
+      {
+        "path": "harness/planner.js",
+        "sha256": "f81e26d93dac20e26f4f9f67d0e58570f6e6b43336b9e3c91cfdd9f07858d2f0"
+      },
+      {
+        "path": "harness/quality-contract.js",
+        "sha256": "739366f37d87dce38da2615ed71bf18e6d903868ebf0805f74f747f9a4f47eb1"
+      },
+      {
+        "path": "harness/recipes.js",
+        "sha256": "32edbffbfce3bbeb2beb4194a543120276543cd790c458d6c3aee2647956b1bd"
+      },
+      {
+        "path": "harness/tool-registry.js",
+        "sha256": "9eae1c20a9099a48ff7686ca3fc942a61b3f8e01c919e2f1b3f3339bc305036f"
+      },
+      {
+        "path": "harness/tools/evidence.js",
+        "sha256": "1444be76f46c0dc5d74934e2898441e1a533bb284953aaa53bc11912633d9617"
+      },
+      {
+        "path": "harness/tools/messages.js",
+        "sha256": "1f00e4691f3c20f5b15149a258b288268494003dcd18271e4751ef8179e76aad"
+      },
+      {
+        "path": "harness/tools/offline.js",
+        "sha256": "a993ac55e386c64d7be1b7883873e8976ffb9bb71c5e3afea1d3cc77b814a756"
+      },
+      {
+        "path": "harness/tools/readiness.js",
+        "sha256": "b1178292545082d2f2521987563386153465211e958ab8541a9e6e17f4ef80c8"
+      },
+      {
+        "path": "harness/tools/scheduling.js",
+        "sha256": "df1516b6be05527c8b4f1a6cbf70df81569e3f57fa69f525ce2144d16bc13ecf"
+      },
+      {
+        "path": "harness/tools/validation.js",
+        "sha256": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f"
+      },
+      {
+        "path": "harness/types.js",
+        "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+      },
+      {
+        "path": "shared/activity.js",
+        "sha256": "206b63d37b213082a79d82d4440a2ece054344675715cf53d9bf15101e2c924b"
+      },
+      {
+        "path": "shared/host-files.js",
+        "sha256": "b7c404d3aa69b644b20427561d164fb19d3a43b575071c6a420d0c116cf13d47"
+      },
+      {
+        "path": "shared/journey.js",
+        "sha256": "c7e8e5c03ae753c94f962204dcff0347e2a2d9bb55f9da47f5fbf73cb6914517"
+      },
+      {
+        "path": "shared/project-input.js",
+        "sha256": "93f29e30217371ae3075276b3c1505704d25ab45f0b20bed8562bc420846cd56"
+      },
+      {
+        "path": "shared/quality.js",
+        "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+      },
+      {
+        "path": "shared/source-hash.js",
+        "sha256": "a3ee53304574c019e177df7d218c4380be5cf95114720c58d18cb090319b8834"
+      },
+      {
+        "path": "shared/system-design.js",
+        "sha256": "2d8fec95cd0f090a01d5a9dead68009e456c02bc93d9323b9a66d0b25257f289"
+      },
+      {
+        "path": "shared/types.js",
+        "sha256": "75399c43b51875cbfd131dc8644ea5e4a26aef1908b9d6dec8d0fb6647ae0113"
+      },
+      {
+        "path": "shared/verification.js",
+        "sha256": "241962c19fc3a57629c3440de4383436efac0be3495a60d77538b7278dc99303"
+      }
+    ],
+    "installedPackages": {
+      "electron": {
+        "version": "45.2.2",
+        "packageJsonSha256": "f138cdee128cd0123bc5f5901751a8b64b097f3c7ec01cddf7d23fc193b8c117"
+      },
+      "playwright": {
+        "version": "1.64.1",
+        "packageJsonSha256": "313d23ce667d93962d3a1ab4be80908cefe840e4d9e48f1cd5863b91f65e8e39"
+      },
+      "@earendil-works/pi-coding-agent": {
+        "version": "1.5.0",
+        "packageJsonSha256": "990aac3caff17b717294fa792b4e3f60b991d274d9f4ab6977d6aa42aa43c95e"
+      }
+    },
+    "limitation": "Artifact hashes identify the executed bytes. Their derivation from pinned source relies on the separate build receipt; this script does not rebuild or attest every dependency file.",
+    "sdkStopSources": {
+      "dist/core/tools/bash.js": "f32e87a42f66276b2eafaaf0848babf52523d37ab0fd448439586376747f03c4",
+      "dist/utils/shell.js": "57dd12450505faaf713b7cfeddff43ce8bd6238b3cfb755f87bdc83ee6134fc2"
+    },
+    "workers": {
+      "parent": "545e9e52c6a3a20cc1bd5cc2b1251c532892996395af61d73f56c9a4ae84b788",
+      "child": "55542fe28668e0d865f4e8abfb54db4b74941ab6d2ae746ef5158cd9b1565fe8"
+    }
+  },
+  "bashSchemaAccepted": true,
+  "commandSha256": "4dfc4d5fdded41b8dbe1a449582e552925e96471c6dce980646cb12e6580cb65",
+  "workers": {
+    "parent": {
+      "nonce": "6b784ff0-7732-4894-beec-6314ba3d6a5d",
+      "role": "parent",
+      "pid": 42056,
+      "parentPid": 42055,
+      "shellPid": 42055,
+      "childPid": 42064,
+      "detached": true,
+      "unrefCalled": true,
+      "deadline": 1793858751772
+    },
+    "child": {
+      "nonce": "6b784ff0-7732-4894-beec-6314ba3d6a5d",
+      "role": "child",
+      "pid": 42064,
+      "parentPid": 42056,
+      "shellPid": 42055,
+      "deadline": 1793858751772
+    },
+    "shell": {
+      "nonce": "6b784ff0-7732-4894-beec-6314ba3d6a5d",
+      "role": "shell",
+      "pid": 42055
+    }
+  },
+  "beforeStop": {
+    "at": 1793858692576,
+    "parentExists": true,
+    "childExists": true,
+    "shellExists": true,
+    "parentProcess": {
+      "pid": 42056,
+      "present": true,
+      "ppid": 42055,
+      "pgid": 42055,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "S",
+      "comm": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "commandSha256": "6d23da21f2164b6f592c384bb2b4fe58992020b460f57366e29a33f58714f887",
+      "owned": true
+    },
+    "childProcess": {
+      "pid": 42064,
+      "present": true,
+      "ppid": 42056,
+      "pgid": 42064,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "Ss",
+      "comm": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "commandSha256": "88901e618a7278422a8c90337de26fdc20dfee0af68807aca995ba6dfbab3918",
+      "owned": true
+    },
+    "shellProcess": {
+      "pid": 42055,
+      "present": true,
+      "ppid": 41766,
+      "pgid": 42055,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "Ss",
+      "comm": "/bin/bash",
+      "commandSha256": "77d7f063f0a75d7e433bc3a4f0ae22763552e4d8484c69689bb7db745e38faeb",
+      "owned": true
+    },
+    "parentHeartbeat": {
+      "count": 8,
+      "lastTick": 1793858692551
+    },
+    "childHeartbeat": {
+      "count": 7,
+      "lastTick": 1793858692500
+    },
+    "requests": 1,
+    "status": "running"
+  },
+  "detachmentEvidence": {
+    "sessionProof": "distinct session leaders",
+    "source": "macOS ps stat s flags plus distinct owned PIDs and PGIDs",
+    "rawSessionIdentifiersUnavailable": true
+  },
+  "identities": {
+    "parent": {
+      "pid": 42056,
+      "present": true,
+      "ppid": 42055,
+      "pgid": 42055,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "S",
+      "comm": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "commandSha256": "6d23da21f2164b6f592c384bb2b4fe58992020b460f57366e29a33f58714f887",
+      "owned": true
+    },
+    "child": {
+      "pid": 42064,
+      "present": true,
+      "ppid": 42056,
+      "pgid": 42064,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "Ss",
+      "comm": "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+      "commandSha256": "88901e618a7278422a8c90337de26fdc20dfee0af68807aca995ba6dfbab3918",
+      "owned": true
+    },
+    "shell": {
+      "pid": 42055,
+      "present": true,
+      "ppid": 41766,
+      "pgid": 42055,
+      "session": "0",
+      "started": "Thu Nov 5 01:04:51 2026",
+      "stat": "Ss",
+      "comm": "/bin/bash",
+      "commandSha256": "77d7f063f0a75d7e433bc3a4f0ae22763552e4d8484c69689bb7db745e38faeb",
+      "owned": true
+    }
+  },
+  "detachmentProven": true,
+  "stopClickedAt": 1793858692636,
+  "stopClickCompletedAt": 1793858692658,
+  "clickActionDurationMs": 22,
+  "msToStopped": 643,
+  "observationStart": {
+    "at": 1793858694659,
+    "parentExists": false,
+    "childExists": false,
+    "shellExists": false,
+    "parentProcess": {
+      "pid": 42056,
+      "present": false
+    },
+    "childProcess": {
+      "pid": 42064,
+      "present": false
+    },
+    "shellProcess": {
+      "pid": 42055,
+      "present": false
+    },
+    "parentHeartbeat": {
+      "count": 9,
+      "lastTick": 1793858692652
+    },
+    "childHeartbeat": {
+      "count": 11,
+      "lastTick": 1793858692904
+    },
+    "requests": 1,
+    "status": "stopped"
+  },
+  "observationEnd": {
+    "at": 1793858702662,
+    "parentExists": false,
+    "childExists": false,
+    "shellExists": false,
+    "parentProcess": {
+      "pid": 42056,
+      "present": false
+    },
+    "childProcess": {
+      "pid": 42064,
+      "present": false
+    },
+    "shellProcess": {
+      "pid": 42055,
+      "present": false
+    },
+    "parentHeartbeat": {
+      "count": 9,
+      "lastTick": 1793858692652
+    },
+    "childHeartbeat": {
+      "count": 11,
+      "lastTick": 1793858692904
+    },
+    "requests": 1,
+    "status": "stopped"
+  },
+  "checks": {
+    "stoppedWithinDeadline": true,
+    "allThreePidsAbsentAtObservationStart": true,
+    "allThreePidsAbsentAtObservationEnd": true,
+    "parentHeartbeatStable": true,
+    "childHeartbeatStable": true,
+    "noNewProviderRequests": true,
+    "remainsStopped": true
+  },
+  "detachedHeartbeatAdvanced": false,
+  "detachedIdentityStillPresent": false,
+  "stopVerdict": "PASS",
+  "verdictRecordedBeforeCleanup": true,
+  "verdictRecordedAt": 1793858702668,
+  "requests": [
+    {
+      "at": 1793858691772,
+      "tools": [
+        "read",
+        "write",
+        "edit",
+        "bash",
+        "fleet_get_challenge"
+      ],
+      "afterStop": false
+    }
+  ]
+}
