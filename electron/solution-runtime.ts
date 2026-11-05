@@ -86,7 +86,7 @@ async function port(preferred?: number) {
   return address.port;
 }
 
-function registryLock(packageJson: unknown, packageLock: unknown) {
+export function registryLock(packageJson: unknown, packageLock: unknown) {
   const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
   const message = 'Clean npm installs require a v2/v3 registry lockfile without workspaces or external local links. Every external package must pin an exact version, an HTTP(S) .tgz/.tar.gz archive and valid integrity; git and unpinned packages are unsupported.';
   const reject = () => { throw new Error(message); };

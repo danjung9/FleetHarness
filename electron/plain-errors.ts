@@ -5,6 +5,12 @@ import { GenAiMilRequestError } from './genai-mil.js';
 // External services can add arbitrary diagnostics. Unknown text is kept in the
 // activity log and never copied into the user-facing instruction.
 const messages = {
+  'download-source': 'This app needs a source export; export the runnable source package and follow its README to run it.',
+  'download-dependencies': 'This app needs dependencies that are unavailable offline; export the source package and follow its README.',
+  download: 'The app download could not finish; try downloading it again.',
+  'app-start': 'The app could not start; close it and open it again.',
+  'app-stop': 'The app could not stop; restart this computer before opening it again.',
+  'app-settings': 'The app needs settings before it can start; ask the person who supplied it for help.',
   unknown: 'The build could not finish; open the activity log and ask the app maintainer for help.',
   connection: 'The build service could not accept the request; reconnect it in Model settings and try again.',
   busy: 'The build service is busy; wait a few minutes and try again.',
@@ -42,6 +48,15 @@ const messages = {
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
   ['judge-acceptance', /^Read and accept the independent check gaps before approving this prototype\.$/],
+  ['download-source', /This app uses Python or a command-line engine/i],
+  ['download-dependencies', /This app needs dependencies that are unavailable offline/i],
+  ['app-stop', /The app could not stop/i],
+  ['app-start', /The app could not start|The app has no free local address/i],
+  ['app-settings', /The app needs settings before it can start/i],
+  ['download', /Packaging stopped|Packaging exceeded|Could not package the app|Executable downloads support|processor is not supported for executable downloads|No local Electron runtime|packager did not produce|Invalid Electron runtime version|Could not roll back the download/i],
+  ['files', /Save the download outside|Choose an archive file/i],
+  ['output', /standalone app needs an index.html/i],
+  ['changed', /Delivery blocked: authentication files/i],
   ['provider-changing', /Wait for the GenAI\.mil connection change to finish/i],
   ['connection', /Connect GenAI\.mil|GenAI\.mil did not return a model list|Save your GenAI\.mil key before connecting|Unsupported GenAI\.mil request/i],
   ['provider-settings', /Enter (?:an HTTPS service address|a service address without a key|a (?:valid )?GenAI\.mil key|your key again when changing the service address)|Secure credential storage is unavailable|The GenAI\.mil connection could not be (?:saved|cleared)/i],
