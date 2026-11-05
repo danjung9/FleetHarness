@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Expeditionary tablet operators capturing forms, command staff consolidating a week of tasking, and role-labeled synthetic reviewers. No real identities or operational data.",
+  "primaryTask": "Capture and correct a handwritten training log, supply requisition and correspondence package offline; verify the source-linked action list; approve saved revisions, queue them, then reconnect deliberately and file the locally received packet.",
+  "successOutcome": "Three complete corrected documents, four verified actions and draft status updates, 16 cited filing entries, one durable receipt and a filed packet in INBOX-DEMO. Original sources, conflicting revisions and audit remain inspectable. Persistent synthetic-format disclosure; no real remote delivery.",
+  "screens": [
+    {
+      "name": "Packet workspace",
+      "purpose": "Primary source/form comparison, embedded handwriting image with zoom, field corrections, explicit image confirmation, save status and three-document validation. Show task next action.",
+      "primaryAction": "Save forms"
+    },
+    {
+      "name": "Tasking and records",
+      "purpose": "Read ten raw synthetic messages and status note, distinguish forward/FYI/amendment, show competing ownership/date evidence; accept choices and inspect filing citations.",
+      "primaryAction": "Verify actions"
+    },
+    {
+      "name": "Review and exchange",
+      "purpose": "Compare edit/edit and edit/delete heads, show selected values before merge; approve exact saved revisions, queue offline, respect EMCON/cancel, inspect receiver bytes and inbox.",
+      "primaryAction": "Approve current revisions"
+    },
+    {
+      "name": "Evidence and transition",
+      "purpose": "Prepare fictional measurements and reviewer assessment, full packet export, unverified integration/impact checklist and one-page path to fleet. Technical import/invocation controls stay secondary.",
+      "primaryAction": "Prepare synthetic evidence"
+    }
+  ],
+  "states": {
+    "empty": "Explain the two tracks, local-service outage boundary and synthetic invented formats; offer Load synthetic packet or New supply requisition. No sample is silently approved.",
+    "loading": "Show Restoring local workspace, Validating or Saving near the active control; prevent duplicate requests/commits and keep entered values. Display Saved only on IndexedDB transaction completion. External disconnection never triggers automatic transfer.",
+    "error": "Field-specific messages and summaries identify invalid quantity, uncertain image or missing enclosure. Review gates explain required correction. Service unavailable says Local service unavailable; draft retained; reconnect local service and retry. Storage failure retains unsaved values and offers export/retry. No raw diagnostic stack as primary UI.",
+    "success": "Show Saved on this device, 4 verified actions, queued without receipt, then separately transferred, received and filed. Replayed exchange retains one receipt. Show actual acknowledged offsets; pending and staged histories stay visible."
+  },
+  "persistence": "IndexedDB under stable origin holds originals, media, drafts, committed revisions, review decisions, approval revision set, queue, receiver buffers, acknowledgement offsets, receipts, filing and audit in transactions. Local service must be running for app shell/API even while external links are off. Same-origin reload and restart must retain saved work; no claim of power-loss immunity or certified encryption. Unsaved versus committed content is always visible; deliberate save or discard before approval of different content.",
+  "recovery": "Retain current draft on invalid import, save failure, service outage, missing history, zero budget or cancel. Retry only after correction; missing parents are staged. Conflict panel shows every competing value and tombstone and requires explicit chosen values plus confirmation of every head. New edits invalidate approval; reapprove saved current revisions. EMCON hold and cancel persist; no background exchange. Unknown filing category remains held, never deletes. Destructive reset requires native confirmation and export opportunity.",
+  "keyboard": "Native labeled inputs, selects and buttons; image has useful description and zoom control. Logical Tab order follows source, corrections, Save, review, queue and exchange. Visible focus; Enter submits only intended form; status/error live regions and focus error summary. Desktop source/results side by side; narrow viewport stacks in task order with full-width usable controls and scrollable source text, no whole-page horizontal overflow. Use restrained single-accent system typography, textual states and accessible contrast; tables reflow to cards."
+}

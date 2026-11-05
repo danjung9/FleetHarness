@@ -1,0 +1,17 @@
+{
+ "note": "Digests of the exact build output, kept unchanged at ~/fhten/frozen. Markdown in this vault copy has dashes normalized by the sync, so its digests can differ.",
+ "files": {
+  "acceptance-plan.json": "47d7bc2c3c11848d8af5e14ec3f14e532454f07674d85c8a4fb0c437c5202c58",
+  "data/README.md": "e3b0036d4dffe9f998b097a33cdf067dd08975ec5bbebe67493d16dabfccfb57",
+  "data/synthetic-data.json": "5007df8ab1a6ad565e6c1967993c5ddc0c123fb74daa677e5fdb8eccf2924480",
+  "evaluation-plan.json": "ab4fcd6ab7c2a1015ed48833935149c77f28e46d345931adc7843328a0bee3be",
+  "foundation-plan.json": "582ebe0337be6db33cad849f3851d5380b7d57bc005ab82aeb02f83bdee8cecf",
+  "inputs/manifest.json": "fcfe1130245c287cf29d0dc10ac8031ecbb516f0f23b2c0d6ea4e08438e2adc2",
+  "requirements.md": "d6662787890a3c09ede56faa4d647d7d162c467bea02105cceba812c19b92c00",
+  "research.md": "2fc87419ede930d86e1594e7680add648886228e3fa67703b685c80413b33181",
+  "scope.md": "4a6f7f680aea7b3b18a0ecaaf04392fe8280d9851f8e0f1af29b96804eab7861",
+  "solution-contract.json": "fcb082b2f2a7dbedb6d22404213e1778474fc69c11d8f1cbd2833fd876d24202",
+  "system-design.json": "23eab544ffcc0e3c5b062a3b8db2bb6ecb527300ab3d88a290ec4668018bbad1",
+  "ux-spec.json": "82f5878b4257e926aa5bf8d5c908e829455f436414eda33d05a74409bba8e1f6"
+ }
+}

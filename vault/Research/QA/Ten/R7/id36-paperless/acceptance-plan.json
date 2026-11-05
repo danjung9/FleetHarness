@@ -1,0 +1,1828 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Offline upstream capture and durable queue survive reload; permitted reconnect receives one packet and retained revisions converge independent of input order.",
+      "journeyIds": [
+        "packet-offline",
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "routing",
+        "reconcile"
+      ]
+    },
+    {
+      "criterionId": "UC36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Unvalidated, unreviewed, conflicted, unsaved or changed revisions cannot route; explicit review of saved current revisions is required. New quantity 3 invalidates prior approval and is delivered only after reapproval.",
+      "journeyIds": [
+        "validation-recovery",
+        "authority-recovery"
+      ],
+      "capabilityIds": [
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "UC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Every committed capture, correction, review, queue, hold, exchange, acknowledgement, receipt and filing action has a monotonic sequence, actor role, actual UTC timestamp, source/revision set and operation identity; replay never duplicates receipt or filing.",
+      "journeyIds": [
+        "packet-offline"
+      ],
+      "capabilityIds": [
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "UC36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Government devices: untested. Existing low-code platforms: untested.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-system: Government-managed tablet/browser configuration and the owner-selected low-code platform are unavailable; withhold device certification and platform deployment. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC36-4",
+            "name": "government devices"
+          },
+          {
+            "sourceCriterionId": "UC36-4",
+            "name": "existing low-code platforms"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "UC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "UI and exports say synthetic, not validated against the real format. Only supplied fictional role/source data is bundled; no operational personal data, authentication or model inference claim.",
+      "journeyIds": [
+        "synthetic-evidence-a",
+        "import-recovery"
+      ],
+      "capabilityIds": [
+        "metrics"
+      ]
+    },
+    {
+      "criterionId": "UC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim. One-page path-to-fleet identifies owners, device/identity/encryption/transport validation, milestones and approval gates; exact source citation retained.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week",
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": [
+        "routing",
+        "filing"
+      ]
+    },
+    {
+      "criterionId": "OFF-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Replaying identical operations preserves 11 revisions after merges and one routing receipt; identity/content collision is rejected without state loss.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconcile"
+      ]
+    },
+    {
+      "criterionId": "OFF-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Both 45/47 training edits and quantity-3/deleted supply heads are shown. Explicit merge chooses 45 and 2, parents every reviewed head and retains SU-2B tombstone.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconcile"
+      ]
+    },
+    {
+      "criterionId": "OFF-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Forward, reverse and shuffled delivery with replays produce the same two initial conflicts, then the same four canonical records after explicit merges; missing ancestry remains pending until received.",
+      "journeyIds": [
+        "conflict-review"
+      ],
+      "capabilityIds": [
+        "reconcile"
+      ]
+    },
+    {
+      "criterionId": "OFF-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Budget 300 allocates critical 100 then scan 200 from offset 400; send without acknowledgement leaves 400. Receiver commit advances to 600; restart/resume advances to 900 then 1000 and exact 1100 receiver bytes match both supplied hashes.",
+      "journeyIds": [
+        "bounded-transfer"
+      ],
+      "capabilityIds": [
+        "transfer"
+      ]
+    },
+    {
+      "criterionId": "OFF-05",
+      "disposition": "implemented",
+      "expectedOutcome": "Saved corrected documents, source image, approvals and queue survive same-origin browser reload and local-service restart. Failed writes do not claim saved; routing requires current saved review.",
+      "journeyIds": [
+        "packet-offline",
+        "storage-recovery"
+      ],
+      "capabilityIds": [
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Three completed documents, all four action fields/status drafts and source spans, ignored MAIL-006, duplicate MAIL-003 and 16 filing entries equal supplied independent fixture expectations; new constrained messages also evaluate exactly. Manual handwriting confirmation is not OCR accuracy.",
+      "journeyIds": [
+        "tasking-week",
+        "packet-offline"
+      ],
+      "capabilityIds": [
+        "tasking",
+        "forms"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "The three seeded issues are caught; blank item also blocks save; corrections 45, quantity 2 and ENC-001 remove issues and preserve original evidence.",
+      "journeyIds": [
+        "validation-recovery"
+      ],
+      "capabilityIds": [
+        "forms"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Time per packet: synthetic manual 720 seconds; synthetic demo 300 seconds; difference 420 seconds (7 minutes). Manual baseline: unavailable; Fleet SME baseline pending.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: No observed Fleet SME manual packet timings exist; withhold measured operational time savings and manual-baseline comparison. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-3",
+            "name": "Time per packet"
+          },
+          {
+            "sourceCriterionId": "EVAL36-3",
+            "name": "manual baseline"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "EVAL36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "bounded-transfer",
+        "authority-recovery"
+      ],
+      "capabilityIds": [
+        "reconcile",
+        "transfer",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-5",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Ease of use: fictional assessment saved; Sailor panel judgment pending.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: A Sailor panel must supply its own usability judgment; withhold a panel score or endorsement. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-5",
+            "name": "Ease of use"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "EVAL36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Warfighting: 30%; official score pending. Speed to Fleet: 20%; official score pending. Scalability: 20%; official score pending. Barrier Removal: 15%; official score pending. Judges' Discretion: 15%; official score pending.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Official event judges alone award official rubric scores; withhold official scoring. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Warfighting"
+          },
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Speed to Fleet"
+          },
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Scalability"
+          },
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Barrier Removal"
+          },
+          {
+            "sourceCriterionId": "EVAL36-6",
+            "name": "Judges' Discretion"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Sailor hours returned to maintenance, training and watchstanding: actual unverified; fictional example 0.7 hours across 6 packets.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Operational before/after workload observations and verified reassignment of Sailor hours are absent; withhold a claim of hours actually returned. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DELIVERABLE36-1",
+            "name": "Sailor hours returned to maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Fewer errors and less rework: synthetic 3 of 3 issues caught (100%); 2 fewer rework packets; actual reduction unverified.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Observed operational error and rework rates are absent; withhold a claim of actual fleet error reduction. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-a"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DELIVERABLE36-2",
+            "name": "Fewer errors and less rework"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DELIVERABLE36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline"
+      ],
+      "capabilityIds": [
+        "forms",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "forms",
+        "tasking",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Maintenance, training and watchstanding: intended uses of fictional 0.7 hours; actual impact unverified.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual fleet paperwork time and reassigned maintenance, training and watchstanding hours are unavailable; withhold realized productivity claims. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-2",
+            "name": "maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "forms",
+        "tasking",
+        "filing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline"
+      ],
+      "capabilityIds": [
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Show captured source context as a claim from the supplied packet, never as a measured application benefit; show fictional 0.7-hour comparison and real impact unverified.",
+      "journeyIds": [
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "forms",
+        "tasking"
+      ]
+    },
+    {
+      "criterionId": "DESC36-7",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "new-user-input"
+      ],
+      "capabilityIds": [
+        "forms",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-8",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "tasking",
+        "filing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Prepare a transition checklist without claiming owner selection, platform adoption, pilot or fleet release.",
+      "journeyIds": [
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-10",
+      "disposition": "implemented",
+      "expectedOutcome": "Proposed owners are NAVSUP Business Systems Center, NAVIFOR and Navy Reserve Force; owner acceptance remains unrecorded.",
+      "journeyIds": [
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-11",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Existing low-code / automation platform: pending; no deployment. Pilot with one ship or expeditionary unit: pending; no unit pilot.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-system: The owner-selected low-code platform and a pilot ship or expeditionary unit are unavailable; withhold actual platform integration and unit pilot. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-11",
+            "name": "Existing low-code / automation platform"
+          },
+          {
+            "sourceCriterionId": "DESC36-11",
+            "name": "pilot with one ship or expeditionary unit"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-12",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: 30d: owner selects the forms and workflows to pilot — pending. 60d: build on the owner's platform — pending. 90d: unit pilot — pending. 180d: fleet release decision — pending.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: The named fleet owners must select pilot forms and authorize a unit pilot and fleet release; withhold those decisions and any deployment. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-12",
+            "name": "owner selects the forms and workflows to pilot"
+          },
+          {
+            "sourceCriterionId": "DESC36-12",
+            "name": "build on the owner's platform"
+          },
+          {
+            "sourceCriterionId": "DESC36-12",
+            "name": "unit pilot"
+          },
+          {
+            "sourceCriterionId": "DESC36-12",
+            "name": "fleet release decision"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC36-13",
+      "disposition": "implemented",
+      "expectedOutcome": "Identify Paperless Underway in The Autonomous Shipboard Enterprise, retained/refocused on Sailor productivity; complete both synthetic tracks.",
+      "journeyIds": [
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DESC36-14",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "forms",
+        "tasking",
+        "filing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-15",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "authority-recovery"
+      ],
+      "capabilityIds": [
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "DESC36-16",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Maintenance, training and readiness: fictional time comparison only; real EMCON impact unverified.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Fleet time-use observations under actual EMCON are unavailable; withhold verified readiness or hours-returned claims. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC36-16",
+            "name": "maintenance, training and readiness"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SUMMARY36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "tasking-week"
+      ],
+      "capabilityIds": [
+        "forms",
+        "tasking",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "SCOPE36-17",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "validation-recovery"
+      ],
+      "capabilityIds": [
+        "forms",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "SCOPE36-24",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline",
+        "synthetic-evidence-a"
+      ],
+      "capabilityIds": [
+        "forms",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "SCOPE36-25",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Sailor hours returned to maintenance, training and watchstanding: actual unverified; fictional example 0.7 hours across 6 packets.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Operational workload and reassignment observations are absent; withhold actual Sailor-hours-returned claims. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE36-25",
+            "name": "Sailor hours returned to maintenance, training and watchstanding"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE36-26",
+      "disposition": "deferred",
+      "expectedOutcome": "Original obligation remains unverified. Synthetic coverage: Fewer errors and less rework: synthetic 3 of 3 issues caught (100%); 2 fewer rework packets; actual reduction unverified.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Operational error and rework observations are absent; withhold claims of actual fleet reduction. The demonstrated stand-in is the complete synthetic packet workflow described below.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional forms, pen-stroke facsimile, tasking, filing rules, timings and reviewer roles; synthetic, not validated against the real format. Local service stays available during external-link outage; no remote endpoint, actual owner decision or impact measurement.",
+        "journeyIds": [
+          "synthetic-evidence-b"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE36-26",
+            "name": "Fewer errors and less rework"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE36-27",
+      "disposition": "implemented",
+      "expectedOutcome": "In the labeled synthetic demonstration, three corrected documents persist across reload, four source-linked actions and drafts are verified, and an approved packet queues offline then arrives once in a local synthetic inbox and files 16 cited records. No remote delivery or real-format validation claim.",
+      "journeyIds": [
+        "packet-offline"
+      ],
+      "capabilityIds": [
+        "forms",
+        "routing"
+      ]
+    },
+    {
+      "criterionId": "SCOPE36-28",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain clickable source citation https://cdao.hackathon.maximus.com/event/norfolk/use-cases/36 and captured 2026-11-04 provenance; live contents unverified.",
+      "journeyIds": [
+        "synthetic-evidence-b"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "packet-offline",
+      "title": "Correct and route all three forms after offline reload",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-errors",
+          "text": "No validation issues."
+        },
+        {
+          "action": "expectText",
+          "selector": "#completed-training",
+          "text": "SYNTHETIC TRAINING LOG TRAIN-001\nUNIT-DEMO-36 | TRAINING-DEMO | 2026-11-02\nDAMAGE CONTROL DRILL | 45 minutes\nDuration confirmed by REVIEWER-DEMO; invented layout."
+        },
+        {
+          "action": "expectText",
+          "selector": "#completed-supply",
+          "text": "SYNTHETIC SUPPLY REQUISITION SUPPLY-001\nUnit: UNIT-DEMO-36\nRole: LOGISTICS-DEMO\nDate: 2026-11-02\nItem: DEMO-FILTER\nQuantity: 2\nUnit of issue: EA\nPurpose: Drill kit replenishment\n"
+        },
+        {
+          "action": "expectText",
+          "selector": "#completed-correspondence",
+          "text": "SYNTHETIC ROUTINE CORRESPONDENCE CORR-001\nFrom: UNIT-DEMO-36 / ADMIN-DEMO\nTo: RECEIVING-DEMO\nDate: 2026-11-03\nSubject: Drill kit readiness\nEnclosure: ENC-001\nThe drill kit requires two DEMO-FILTER units. Review the attached checklist before routing.\n\nSYNTHETIC ENCLOSURE ENC-001\nKit: DEMO-KIT-01\nChecklist: two DEMO-FILTER units; training log TRAIN-001 completed.\n"
+        },
+        {
+          "action": "click",
+          "selector": "#derive-actions"
+        },
+        {
+          "action": "select",
+          "selector": "#owner-A-003",
+          "value": "ADMIN-DEMO"
+        },
+        {
+          "action": "select",
+          "selector": "#due-A-004",
+          "value": "2026-11-06T17:00:00Z"
+        },
+        {
+          "action": "check",
+          "selector": "#accept-decisions"
+        },
+        {
+          "action": "click",
+          "selector": "#verify-actions"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-state",
+          "text": "Queued offline; no recipient receipt."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-state",
+          "text": "Queued offline; no recipient receipt."
+        },
+        {
+          "action": "expectText",
+          "selector": "#duration-saved",
+          "text": "45 minutes; image confirmed"
+        },
+        {
+          "action": "click",
+          "selector": "#connect"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "click",
+          "selector": "#file-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#inbox-summary",
+          "text": "1 packet received; PACKET-001 filed in INBOX-DEMO."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "text": "SYNTHETIC — not validated against the real format\nPaperless Underway | PACKET-001 | local synthetic inbox only\n\nSYNTHETIC TRAINING LOG TRAIN-001\nUNIT-DEMO-36 | TRAINING-DEMO | 2026-11-02\nDAMAGE CONTROL DRILL | 45 minutes\nDuration confirmed by REVIEWER-DEMO; invented layout.\n\nSYNTHETIC SUPPLY REQUISITION SUPPLY-001\nUnit: UNIT-DEMO-36\nRole: LOGISTICS-DEMO\nDate: 2026-11-02\nItem: DEMO-FILTER\nQuantity: 2\nUnit of issue: EA\nPurpose: Drill kit replenishment\n\n\nSYNTHETIC ROUTINE CORRESPONDENCE CORR-001\nFrom: UNIT-DEMO-36 / ADMIN-DEMO\nTo: RECEIVING-DEMO\nDate: 2026-11-03\nSubject: Drill kit readiness\nEnclosure: ENC-001\nThe drill kit requires two DEMO-FILTER units. Review the attached checklist before routing.\n\nSYNTHETIC ENCLOSURE ENC-001\nKit: DEMO-KIT-01\nChecklist: two DEMO-FILTER units; training log TRAIN-001 completed.\n\n\nSYNTHETIC DRAFT A-001: Confirm two filters; owner LOGISTICS-DEMO; due 2026-11-10T16:00:00Z; status in_progress. Sources: MAIL-001, MAIL-003, MAIL-004, DOC-001.\nSYNTHETIC DRAFT A-002: Verify TRAIN-001; owner TRAINING-DEMO; due 2026-11-06T12:00:00Z; status complete. Sources: MAIL-002, MAIL-009, DOC-001.\nSYNTHETIC DRAFT A-003: Prepare ENC-001 checklist; owner ADMIN-DEMO; due 2026-11-06T15:00:00Z; status open. Sources: MAIL-005, MAIL-010.\nSYNTHETIC DRAFT A-004: Finalize CORR-001; owner ADMIN-DEMO; due 2026-11-06T17:00:00Z; status open. Sources: MAIL-007, MAIL-008, MAIL-010.\n\nFILING MANIFEST | SCH-DEMO-1 | no disposal authorized\nTRAIN-001 | TRAINING | DEMO/Training/2026 | SCH-DEMO-1 | disposalAuthorized=false\nSUPPLY-001 | SUPPLY | DEMO/Supply/2026 | SCH-DEMO-1 | disposalAuthorized=false\nCORR-001 | CORRESPONDENCE | DEMO/Correspondence/2026 | SCH-DEMO-1 | disposalAuthorized=false\nENC-001 | CORRESPONDENCE | DEMO/Correspondence/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-001 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-002 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-003 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-004 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-005 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-006 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-007 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-008 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-009 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nMAIL-010 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nDOC-001 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\nTASK-WEEK-001 | TASKING | DEMO/Tasking/2026 | SCH-DEMO-1 | disposalAuthorized=false\n\nRoute: ROUTE-001 | Receipt: RECEIPT-001 | Recipient: INBOX-DEMO | State: filed | Inbox packets: 1\nRemote delivery: false\n",
+          "fileName": "synthetic-packet.txt"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "expectText",
+          "selector": "#inbox-summary",
+          "text": "1 packet received; PACKET-001 filed in INBOX-DEMO."
+        }
+      ]
+    },
+    {
+      "id": "tasking-week",
+      "title": "Consolidate a week of tasking and cite filing rules",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "click",
+          "selector": "#derive-actions"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-questions",
+          "text": "A-003: Choose ADMIN-DEMO or TRAINING-DEMO. A-004: Choose 14:00Z or 17:00Z on 2026-11-06."
+        },
+        {
+          "action": "expectText",
+          "selector": "#ignored-summary",
+          "text": "No action: MAIL-006. Duplicate forward: MAIL-003."
+        },
+        {
+          "action": "select",
+          "selector": "#owner-A-003",
+          "value": "ADMIN-DEMO"
+        },
+        {
+          "action": "select",
+          "selector": "#due-A-004",
+          "value": "2026-11-06T17:00:00Z"
+        },
+        {
+          "action": "check",
+          "selector": "#accept-decisions"
+        },
+        {
+          "action": "click",
+          "selector": "#verify-actions"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-summary",
+          "text": "4 verified actions; 0 unresolved questions."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-A-001",
+          "text": "SYNTHETIC DRAFT A-001: Confirm two filters; owner LOGISTICS-DEMO; due 2026-11-10T16:00:00Z; status in_progress. Sources: MAIL-001, MAIL-003, MAIL-004, DOC-001."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-A-002",
+          "text": "SYNTHETIC DRAFT A-002: Verify TRAIN-001; owner TRAINING-DEMO; due 2026-11-06T12:00:00Z; status complete. Sources: MAIL-002, MAIL-009, DOC-001."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-A-003",
+          "text": "SYNTHETIC DRAFT A-003: Prepare ENC-001 checklist; owner ADMIN-DEMO; due 2026-11-06T15:00:00Z; status open. Sources: MAIL-005, MAIL-010."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-A-004",
+          "text": "SYNTHETIC DRAFT A-004: Finalize CORR-001; owner ADMIN-DEMO; due 2026-11-06T17:00:00Z; status open. Sources: MAIL-007, MAIL-008, MAIL-010."
+        },
+        {
+          "action": "click",
+          "selector": "#preview-filing"
+        },
+        {
+          "action": "expectText",
+          "selector": "#filing-summary",
+          "text": "16 records classified; 0 held; no disposal authorized."
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-destination",
+          "text": "SUPPLY-001 → DEMO/Supply/2026; source SCH-DEMO-1."
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-sources-A-004",
+          "text": "MAIL-007, MAIL-008, MAIL-010"
+        },
+        {
+          "action": "click",
+          "selector": "#inspect-source-MAIL-008"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-quote",
+          "text": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T17:00:00Z. Peer instruction; does not amend MAIL-007."
+        }
+      ]
+    },
+    {
+      "id": "conflict-review",
+      "title": "Review edit/edit and edit/delete before merging",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#load-conflicts"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-count",
+          "text": "2 conflicts; 9 unique operations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-competing",
+          "text": "TR-3A: 45 minutes; Image confirmed. TR-3B: 47 minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-competing",
+          "text": "SU-2A: quantity 3. SU-2B: deleted."
+        },
+        {
+          "action": "fill",
+          "selector": "#merge-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#merge-note",
+          "value": "Image confirmed"
+        },
+        {
+          "action": "check",
+          "selector": "#review-training-heads"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-training"
+        },
+        {
+          "action": "fill",
+          "selector": "#merge-quantity",
+          "value": "2"
+        },
+        {
+          "action": "check",
+          "selector": "#keep-supply"
+        },
+        {
+          "action": "check",
+          "selector": "#review-supply-heads"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-supply"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-count",
+          "text": "0 conflicts; 11 unique operations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#retained-tombstone",
+          "text": "SU-2B retained as deleted history."
+        },
+        {
+          "action": "click",
+          "selector": "#replay-operations"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-count",
+          "text": "0 conflicts; 11 unique operations."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#merge-result",
+          "text": "TRAIN-001: TR-4, 45 minutes. SUPPLY-001: SU-3, quantity 2."
+        }
+      ]
+    },
+    {
+      "id": "bounded-transfer",
+      "title": "Copy real synthetic bytes with interruption and durable acknowledgement",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#open-transfer"
+        },
+        {
+          "action": "fill",
+          "selector": "#budget",
+          "value": "300"
+        },
+        {
+          "action": "click",
+          "selector": "#plan-transfer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-plan",
+          "text": "ATT-CRITICAL: 0–100 (100 bytes); ATT-SCAN: 400–600 (200 bytes)."
+        },
+        {
+          "action": "click",
+          "selector": "#send-without-ack"
+        },
+        {
+          "action": "expectText",
+          "selector": "#scan-offset",
+          "text": "400 acknowledged bytes"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#scan-offset",
+          "text": "400 acknowledged bytes"
+        },
+        {
+          "action": "click",
+          "selector": "#acknowledge-transfer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#scan-offset",
+          "text": "600 acknowledged bytes"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-transfer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-error",
+          "text": "TRANSFER_CANCELLED: Exchange stopped; acknowledged progress retained."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "click",
+          "selector": "#resume-transfer"
+        },
+        {
+          "action": "click",
+          "selector": "#transfer-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#scan-offset",
+          "text": "900 acknowledged bytes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#remaining-bytes",
+          "text": "100 bytes pending"
+        },
+        {
+          "action": "click",
+          "selector": "#transfer-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#scan-offset",
+          "text": "1000 acknowledged bytes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#receiver-critical-hash",
+          "text": "d7f16b579c04dfbf05a9688190279d2f3ba008417884c9f4568a626a56c2a2e7"
+        },
+        {
+          "action": "expectText",
+          "selector": "#receiver-scan-hash",
+          "text": "5d4b1b13f0daa86380d0ac6912a60a307cc9719115ecadb10a06d2d3603bd35c"
+        },
+        {
+          "action": "expectText",
+          "selector": "#receiver-byte-count",
+          "text": "1100 bytes received; both digests verified."
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Block unreviewed forms and recover without losing work",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-errors",
+          "text": "UNCERTAIN_TRANSCRIPTION: Confirm duration from the image: final digit is overwritten. QUANTITY_POSITIVE_INTEGER: Quantity must be a positive whole number. ENCLOSURE_MISSING: Attach referenced enclosure ENC-001."
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-error",
+          "text": "VALIDATION_REQUIRED: Correct packet issues before routing."
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "fill",
+          "selector": "#item",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "expectText",
+          "selector": "#item-error",
+          "text": "ITEM_REQUIRED: Enter an item."
+        },
+        {
+          "action": "fill",
+          "selector": "#item",
+          "value": "DEMO-FILTER"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "expectText",
+          "selector": "#form-errors",
+          "text": "No validation issues."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#completed-supply",
+          "text": "SYNTHETIC SUPPLY REQUISITION SUPPLY-001\nUnit: UNIT-DEMO-36\nRole: LOGISTICS-DEMO\nDate: 2026-11-02\nItem: DEMO-FILTER\nQuantity: 2\nUnit of issue: EA\nPurpose: Drill kit replenishment\n"
+        }
+      ]
+    },
+    {
+      "id": "storage-recovery",
+      "title": "Retain an unsaved draft on a labeled storage failure",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#operator-note",
+          "value": "Keep this draft"
+        },
+        {
+          "action": "check",
+          "selector": "#simulate-storage-failure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-note"
+        },
+        {
+          "action": "expectText",
+          "selector": "#storage-error",
+          "text": "STORAGE_WRITE_FAILED: Draft not saved; export or retry."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#operator-note",
+          "value": "Keep this draft"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-draft",
+          "text": "Keep this draft",
+          "fileName": "synthetic-draft.json"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-storage-failure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-note"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved on this device."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#operator-note",
+          "value": "Keep this draft"
+        }
+      ]
+    },
+    {
+      "id": "new-user-input",
+      "title": "Enter a new requisition outside sample presets",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#new-supply"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-formId",
+          "value": "REQ-USER"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-unitId",
+          "value": "UNIT-DEMO-Y"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-roleId",
+          "value": "SUPPLY-DEMO"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-date",
+          "value": "2026-11-04"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-item",
+          "value": "DEMO-WASHER"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-quantity",
+          "value": "5"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-unitOfIssue",
+          "value": "EA"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-purpose",
+          "value": "Exercise stock"
+        },
+        {
+          "action": "click",
+          "selector": "#save-new-supply"
+        },
+        {
+          "action": "expectText",
+          "selector": "#new-completed-document",
+          "text": "SYNTHETIC SUPPLY REQUISITION REQ-USER\nUnit: UNIT-DEMO-Y\nRole: SUPPLY-DEMO\nDate: 2026-11-04\nItem: DEMO-WASHER\nQuantity: 5\nUnit of issue: EA\nPurpose: Exercise stock\n"
+        },
+        {
+          "action": "fill",
+          "selector": "#new-quantity",
+          "value": "8"
+        },
+        {
+          "action": "click",
+          "selector": "#save-new-supply"
+        },
+        {
+          "action": "expectText",
+          "selector": "#new-completed-document",
+          "text": "SYNTHETIC SUPPLY REQUISITION REQ-USER\nUnit: UNIT-DEMO-Y\nRole: SUPPLY-DEMO\nDate: 2026-11-04\nItem: DEMO-WASHER\nQuantity: 8\nUnit of issue: EA\nPurpose: Exercise stock\n"
+        }
+      ]
+    },
+    {
+      "id": "import-recovery",
+      "title": "Reject malformed import and preserve the current draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#operator-note",
+          "value": "Keep pending review"
+        },
+        {
+          "action": "fill",
+          "selector": "#import-text",
+          "value": "{\"records\":["
+        },
+        {
+          "action": "click",
+          "selector": "#import-data"
+        },
+        {
+          "action": "expectText",
+          "selector": "#import-error",
+          "text": "IMPORT_JSON_INVALID: Import is not valid JSON."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#operator-note",
+          "value": "Keep pending review"
+        },
+        {
+          "action": "click",
+          "selector": "#restore-sample-import"
+        },
+        {
+          "action": "click",
+          "selector": "#import-data"
+        },
+        {
+          "action": "expectText",
+          "selector": "#import-status",
+          "text": "Synthetic sources imported; existing draft preserved; 0 duplicate records."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#operator-note",
+          "value": "Keep pending review"
+        },
+        {
+          "action": "click",
+          "selector": "#save-note"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#operator-note",
+          "value": "Keep pending review"
+        }
+      ]
+    },
+    {
+      "id": "authority-recovery",
+      "title": "Respect EMCON hold, then invalidate approval after an edit",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "click",
+          "selector": "#derive-actions"
+        },
+        {
+          "action": "select",
+          "selector": "#owner-A-003",
+          "value": "ADMIN-DEMO"
+        },
+        {
+          "action": "select",
+          "selector": "#due-A-004",
+          "value": "2026-11-06T17:00:00Z"
+        },
+        {
+          "action": "check",
+          "selector": "#accept-decisions"
+        },
+        {
+          "action": "click",
+          "selector": "#verify-actions"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "click",
+          "selector": "#connect"
+        },
+        {
+          "action": "check",
+          "selector": "#emcon-hold"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-error",
+          "text": "EMCON_HOLD: Exchange paused by operator."
+        },
+        {
+          "action": "expectText",
+          "selector": "#receipt-count",
+          "text": "0 receipts"
+        },
+        {
+          "action": "click",
+          "selector": "#emcon-hold"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "3"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-error",
+          "text": "APPROVAL_STALE: Packet changed; review again."
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "click",
+          "selector": "#file-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#receipt-count",
+          "text": "1 receipt"
+        },
+        {
+          "action": "expectText",
+          "selector": "#inbox-supply-quantity",
+          "text": "3 EA DEMO-FILTER"
+        }
+      ]
+    },
+    {
+      "id": "synthetic-evidence-a",
+      "title": "Complete packet and prepare fictional measurement and review evidence",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "click",
+          "selector": "#derive-actions"
+        },
+        {
+          "action": "select",
+          "selector": "#owner-A-003",
+          "value": "ADMIN-DEMO"
+        },
+        {
+          "action": "select",
+          "selector": "#due-A-004",
+          "value": "2026-11-06T17:00:00Z"
+        },
+        {
+          "action": "check",
+          "selector": "#accept-decisions"
+        },
+        {
+          "action": "click",
+          "selector": "#verify-actions"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "click",
+          "selector": "#connect"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "click",
+          "selector": "#file-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#prepare-evidence"
+        },
+        {
+          "action": "expectText",
+          "selector": "#fictional-assessment",
+          "text": "Three forms corrected; four actions verified; no operational usability judgment."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-UC36-4-0",
+          "text": "Government devices: untested."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-UC36-4-1",
+          "text": "Existing low-code platforms: untested."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-3-0",
+          "text": "Time per packet: synthetic manual 720 seconds; synthetic demo 300 seconds; difference 420 seconds (7 minutes)."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-3-1",
+          "text": "Manual baseline: unavailable; Fleet SME baseline pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-5-0",
+          "text": "Ease of use: fictional assessment saved; Sailor panel judgment pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-6-0",
+          "text": "Warfighting: 30%; official score pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-6-1",
+          "text": "Speed to Fleet: 20%; official score pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-6-2",
+          "text": "Scalability: 20%; official score pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-6-3",
+          "text": "Barrier Removal: 15%; official score pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-EVAL36-6-4",
+          "text": "Judges' Discretion: 15%; official score pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DELIVERABLE36-1-0",
+          "text": "Sailor hours returned to maintenance, training and watchstanding: actual unverified; fictional example 0.7 hours across 6 packets."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DELIVERABLE36-2-0",
+          "text": "Fewer errors and less rework: synthetic 3 of 3 issues caught (100%); 2 fewer rework packets; actual reduction unverified."
+        }
+      ]
+    },
+    {
+      "id": "synthetic-evidence-b",
+      "title": "Complete packet and prepare owner transition checklist",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "45"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-image"
+        },
+        {
+          "action": "fill",
+          "selector": "#quantity",
+          "value": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#attach-enclosure"
+        },
+        {
+          "action": "click",
+          "selector": "#save-forms"
+        },
+        {
+          "action": "click",
+          "selector": "#derive-actions"
+        },
+        {
+          "action": "select",
+          "selector": "#owner-A-003",
+          "value": "ADMIN-DEMO"
+        },
+        {
+          "action": "select",
+          "selector": "#due-A-004",
+          "value": "2026-11-06T17:00:00Z"
+        },
+        {
+          "action": "check",
+          "selector": "#accept-decisions"
+        },
+        {
+          "action": "click",
+          "selector": "#verify-actions"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-route"
+        },
+        {
+          "action": "check",
+          "selector": "#emcon-hold"
+        },
+        {
+          "action": "click",
+          "selector": "#connect"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-error",
+          "text": "EMCON_HOLD: Exchange paused by operator."
+        },
+        {
+          "action": "click",
+          "selector": "#emcon-hold"
+        },
+        {
+          "action": "click",
+          "selector": "#exchange"
+        },
+        {
+          "action": "click",
+          "selector": "#file-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#prepare-evidence"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-2-0",
+          "text": "Maintenance, training and watchstanding: intended uses of fictional 0.7 hours; actual impact unverified."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-11-0",
+          "text": "Existing low-code / automation platform: pending; no deployment."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-11-1",
+          "text": "Pilot with one ship or expeditionary unit: pending; no unit pilot."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-12-0",
+          "text": "30d: owner selects the forms and workflows to pilot — pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-12-1",
+          "text": "60d: build on the owner's platform — pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-12-2",
+          "text": "90d: unit pilot — pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-12-3",
+          "text": "180d: fleet release decision — pending."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-DESC36-16-0",
+          "text": "Maintenance, training and readiness: fictional time comparison only; real EMCON impact unverified."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-SCOPE36-25-0",
+          "text": "Sailor hours returned to maintenance, training and watchstanding: actual unverified; fictional example 0.7 hours across 6 packets."
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-SCOPE36-26-0",
+          "text": "Fewer errors and less rework: synthetic 3 of 3 issues caught (100%); 2 fewer rework packets; actual reduction unverified."
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-owners",
+          "text": "Proposed owners: NAVSUP Business Systems Center; NAVIFOR; Navy Reserve Force. No owner acceptance recorded."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-context",
+          "text": "The Autonomous Shipboard Enterprise — retained, refocused on Sailor productivity. Fleet demand statement is source context, not measured impact."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-citation",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/36 | captured 2026-11-04; live contents unverified."
+        }
+      ]
+    }
+  ]
+}

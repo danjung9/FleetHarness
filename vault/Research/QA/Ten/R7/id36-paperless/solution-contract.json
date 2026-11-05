@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "objective": "Complete both Paperless Underway tracks on invented synthetic formats: reviewed documents, source-linked verified actions and status drafts, cited filing, durable local queue and human-resolved sync with acknowledged bounded transfers. No operational routing or impact claim.",
+  "invocation": {
+    "input": "One JSON object with action exactly forms, tasking, filing, reconcile, transfer, routing or metrics. No action defaults. Unknown extra object keys are ignored. No type coercion; null invalid except noted. All required strings nonblank; IDs are case-sensitive strings. forms: {action,type:training_log|supply_requisition|correspondence,fields:object,confirmed?:boolean=false,enclosures?:array of {id:string,text:string}=[],rawLetter?:string=\"\"}. fields requires formId,unitId,roleId,date strings; date a real YYYY-MM-DD; training adds activity:string,durationMinutes:number; supply adds item:string,quantity:number,unitOfIssue:string,purpose:string; correspondence adds addressee:string,subject:string,enclosureIds:string[]. tasking: {action,sources:[{id:string,text:string}],decisions?:[{actionId:string,owningRole?:string,dueAt?:string}]=[],accepted?:boolean=false}; sources are raw constrained emails or status notes, not fixture expected objects. filing: {action,scheduleId:string,scheduleText:string,records:[{id:string,category:string}]}. reconcile: {action,operations:[{operationId:string,recordId:string,revisionId:string,parentRevisionIds:string[],replicaId:string,timestamp:string,payload:JSON object,deleted:boolean}]}; timestamps are ISO UTC but not authority. transfer: {action,budgetBytes:nonnegative integer,attachments:[{attachmentId:string,criticality:nonnegative integer,totalBytes:nonnegative integer,acknowledgedOffset:integer}]}. routing: {action,currentRevisionSet:string[],approvedRevisionSet?:string[]=[],issueCount:nonnegative integer,conflictCount:nonnegative integer,connected:boolean,emconHold:boolean,cancelled?:boolean=false,operationId:string,receiptOperationIds?:string[]=[],file?:boolean=false}; duplicate revision IDs invalid. metrics: {action,completedPackets:nonnegative integer,manualSecondsPerPacket:nonnegative finite number,demoSecondsPerPacket:nonnegative finite number,seededValidationErrors:nonnegative integer,caughtValidationErrors:nonnegative integer,syntheticManualReworkPackets:nonnegative integer,syntheticDemoReworkPackets:nonnegative integer}.",
+    "output": "Return exactly {status:string,error:string|null,data:object|null}. General invalid envelope: {status:\"error\",error:<code>,data:null}. Successful forms data {issues:[{code,field,message}],completedDocument:string|null}; status valid if no issues, otherwise invalid; error null even with issues. tasking data {actions:[{actionId,owningRole:string|null,dueAt:string|null,timezone:\"UTC\",actionText,status,sourceIds:string[],sourceSpans:[{sourceId,span:{start,end,quote}}],unresolvedQuestions:string[],draftStatusUpdate:string|null}],ignoredNoActionIds:string[],duplicateForwardIds:string[]}; status verified only when accepted and no questions, else review_required; error null. filing data {filingManifest:[{recordId,scheduleId,category,destination:string|null,ruleCitation:{start,end,quote}|null,disposalAuthorized:false}],heldIds:string[]}; status filed or held; error null. reconcile data {records:[{recordId,headRevisionIds:string[],variants:[{revisionId,deleted:boolean,payload:object|null}]}],conflictCount:integer,uniqueOperationCount:integer,pendingRevisionIds:string[],retainedRevisionIds:string[]}; status ok or pending; error null. transfer data {allocations:[{attachmentId,startOffset,bytes,nextOffset}],remainingBytes:integer}; status planned; error null. routing data {receiptCount:integer}; status blocked,queued_offline,received or filed; error a blocking code or null. metrics data {secondsSavedPerPacket,minutesSavedPerPacket,totalSecondsSaved,hoursSaved,caughtErrorRatePercent:number|null,reworkPacketDifference}; status calculated; error null. Strings named in this protocol are literal; no extra response fields.",
+    "rules": [
+      "Validation precedence: malformed JSON returns error INVALID_JSON; nonobject/null/array request returns INVALID_INPUT; absent/unknown action returns ACTION_INVALID; absent fields, wrong types, duplicate IDs in sources/records/attachments/decisions or duplicate revision IDs in a revision set, invalid date/timestamp, nonfinite numbers return INPUT_INVALID. Validate all structure before semantic checks. Empty arrays are allowed. No mutation on errors. Each successful invocation is pure; browser commits returned results with associated source state in IndexedDB.",
+      "Forms: fields has exactly the required keys for its type (extra keys ignored); missing/wrong-type fields yield INPUT_INVALID, but empty required field strings are domain issues. Check common fields formId,unitId,roleId,date in that order: blank => FIELD_REQUIRED, field name, message \"Enter <field>.\"; invalid nonblank date => DATE_INVALID, date, \"Enter a valid date.\" Then training activity blank => ACTIVITY_REQUIRED/activity/\"Enter an activity.\"; nonpositive or noninteger duration => DURATION_POSITIVE_INTEGER/durationMinutes/\"Duration must be a positive whole number.\"; confirmed false => UNCERTAIN_TRANSCRIPTION/durationMinutes/\"Confirm duration from the image: final digit is overwritten.\". Preserve draft and image; no OCR inference.",
+      "Supply issues, in order: blank item => ITEM_REQUIRED/item/\"Enter an item.\"; quantity not positive integer => QUANTITY_POSITIVE_INTEGER/quantity/\"Quantity must be a positive whole number.\"; blank unitOfIssue or purpose => FIELD_REQUIRED with matching field and \"Enter <field>.\". Correspondence: blank addressee,subject => FIELD_REQUIRED similarly; for each required enclosure absent from enclosures, emit ENCLOSURE_MISSING/enclosureIds/\"Attach referenced enclosure <id>.\" in enclosureIds order. completedDocument is null whenever issues exist.",
+      "Valid training document is \"SYNTHETIC TRAINING LOG <formId>\\n<unitId> | <roleId> | <date>\\n<activity> | <durationMinutes> minutes\\nDuration confirmed by REVIEWER-DEMO; invented layout.\" with actual LF and no terminal LF. Valid supply uses \"SYNTHETIC SUPPLY REQUISITION <formId>\\nUnit: <unitId>\\nRole: <roleId>\\nDate: <date>\\nItem: <item>\\nQuantity: <quantity>\\nUnit of issue: <unitOfIssue>\\nPurpose: <purpose>\\n\". Valid correspondence requires nonblank rawLetter else INPUT_INVALID; append one LF to rawLetter (unchanged), then each enclosure text in enclosureIds order unchanged. All exports additionally disclose synthetic, not validated against the real format outside the completedDocument field.",
+      "Tasking grammar: LF or CRLF source text; retain original offsets (Unicode code points). Email has From,To,Date,Subject,Message-ID headers then blank line and body. Plain status note may begin SYNTHETIC STATUS NOTE. Parse body lines \"Action <ID>: <ROLE> <task>. Due: <ISO UTC>.\"; ROLE is one nonspace token, or two roles separated by \" or \". Capitalize first task letter; strip terminal period. Ambiguous owner stays null with question \"Choose <role1> or <role2>.\". An unrecognized nonempty source returns UNSUPPORTED_FORMAT, never invented extraction. ISO UTC is YYYY-MM-DDTHH:mm:ssZ and must be real.",
+      "\"Forward of <sourceId>; no new task.\" marks duplicateForwardIds; retain its matching Action line as evidence for existing action but never create a second action. \"FYI only:\" with \"No action required.\" marks ignoredNoActionIds. \"Amends <sourceId> action <ID> only. Due: <date>. All other instructions unchanged.\" changes only that due date, retaining evidence. Two distinct peer due dates without an explicit amendment set dueAt null, unresolved question \"Choose <time1>Z or <time2>Z on <YYYY-MM-DD>.\" with times ascending. Never pick a timestamp winner. Unrecognized action references return TASK_REFERENCE_INVALID.",
+      "Status sources: \"Status <ID>: complete.\" or \"<ID> complete:\" => complete; \"<ID> in progress:\" => in_progress; otherwise open. Contradictory statuses => status open and question \"Resolve status for <ID>.\". \"Reviewer decision:\" lines are retained as evidence for each named action but do not apply without accepted=true and a decisions entry. Explicit decisions must select an existing candidate role/date; invalid selections => DECISION_INVALID. Decisions fill null owner/date; accepted=false never applies them. Questions disappear only on valid accepted choices. Other questions stay. accepted=true marks verified only if every action has no unresolved questions.",
+      "Tasking sourceIds/sourceSpans retain source input order; each matching action/amendment/status/reviewer line contributes one full-line span excluding newline, duplicate identical spans per action removed. A forwarded Action span excludes its Forward line. Actions sorted actionId ascending; ignoredNoActionIds and duplicateForwardIds preserve source input order. unresolvedQuestions order owner,date,status. draftStatusUpdate null unless whole result verified; otherwise \"SYNTHETIC DRAFT <ID>: <actionText>; owner <owningRole>; due <dueAt>; status <status>. Sources: <sourceIds joined comma-space>.\". Empty sources yields verified if accepted else review_required and empty arrays.",
+      "Filing: scheduleText contains lines \"<CATEGORY>: <description> -> <destination>; <retention text>\"; exact complete line excluding LF is ruleCitation with original character offsets. UNKNOWN line never authorizes filing. Match category exactly; output manifest in records input order; unmatched category has destination and citation null and recordId in heldIds input order; status held if any unknown else filed. disposalAuthorized always false. No inferred disposal dates or deletions.",
+      "Reconcile structural validation then semantic precedence: OPERATION_COLLISION for same operationId differing content or revisionId assigned different operations (compare JSON objects independent of key order); CROSS_RECORD_PARENT if known parent belongs to another record; REVISION_CYCLE if graph cycle. Identical repeated operation content is idempotent. Missing-parent revisions and every descendant are pending; retain them, exclude them from active heads until all ancestry arrives. Return pending status if any pending; never discard the original queue.",
+      "Reconcile records sorted recordId lexically; include only records with an active revision. Active heads are active revisions with no active children. headRevisionIds and variants sort revisionId lexically; pendingRevisionIds and retainedRevisionIds sort lexically, unique. uniqueOperationCount counts unique operations including pending. conflictCount counts records with more than one active head. Sequential payloads shallow-overlay parent effective payload; a deleted revision effective payload is null; a child of deletion starts from {}. For multiple parents overlay effective nondeleted parent payloads in lexical parent revisionId order then overlay own payload; UI must require explicit reviewed all-head merge and chosen differing values, never auto-create such revisions. deleted variants payload null regardless input payload. Never use timestamps to select a head.",
+      "Transfer: after structure checks, budgetBytes or totalBytes negative/noninteger or criticality negative/noninteger => INPUT_INVALID; offset negative, noninteger or above totalBytes => OFFSET_INVALID. Allocate positive chunks in ascending criticality then attachmentId lexical order from acknowledgedOffset; bytes=min(remaining size,remaining budget). Omit zero chunks. nextOffset=startOffset+bytes. remainingBytes=sum(totalBytes-acknowledgedOffset)-sum(planned bytes). Zero budget or complete inputs allocate []; planning never advances acknowledged offsets. Content bytes, receiver durability and digests are separate UI integration obligations.",
+      "Routing checks in order: issueCount>0 => blocked VALIDATION_REQUIRED; conflictCount>0 => blocked CONFLICTS_UNRESOLVED; approvedRevisionSet empty => blocked REVIEW_REQUIRED; unequal sorted revision sets => blocked APPROVAL_STALE; cancelled => blocked TRANSFER_CANCELLED; emconHold => blocked EMCON_HOLD; not connected => queued_offline/error null; else received, or filed if file=true. receiptCount starts as number of unique receiptOperationIds; add operationId once only when status received/filed. Blocked and queued preserve receiptCount. Revision ordering has no authority; approval must bind exact set. UI controls approve current saved state; any edit invalidates approval, retains history and requires new review.",
+      "Metrics: counts and times nonnegative, caughtValidationErrors<=seededValidationErrors and completedPackets>=both rework counts else INPUT_INVALID. secondsSavedPerPacket=manualSecondsPerPacket-demoSecondsPerPacket (may be negative); minutesSavedPerPacket=/60; totalSecondsSaved=completedPackets*secondsSavedPerPacket; hoursSaved=/3600; caughtErrorRatePercent=100*caught/seeded or null when seeded=0; reworkPacketDifference=manualRework-demoRework. No rounding in protocol; UI may format. These are fictional inputs, never measured fleet benefit.",
+      "Error strings are INVALID_JSON,INVALID_INPUT,ACTION_INVALID,INPUT_INVALID,UNSUPPORTED_FORMAT,TASK_REFERENCE_INVALID,DECISION_INVALID,OPERATION_COLLISION,CROSS_RECORD_PARENT,REVISION_CYCLE,OFFSET_INVALID,VALIDATION_REQUIRED,CONFLICTS_UNRESOLVED,REVIEW_REQUIRED,APPROVAL_STALE,TRANSFER_CANCELLED,EMCON_HOLD. Errors outside routing use status error,data null. Domain form issues use only the specified issue codes. All arrays have the ordering rules above; no network or model calls are part of computation. No model environment or model-assisted explanation is required."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "forms",
+      "kind": "workflow",
+      "description": "Validate all three invented form types and produce complete corrected documents after manual image confirmation.",
+      "criterionIds": [
+        "DESC36-7",
+        "EVAL36-2"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "forms-reference"
+      ]
+    },
+    {
+      "id": "tasking",
+      "kind": "algorithm",
+      "description": "Extract constrained email actions, amendments, duplicate forwards, status notes and explicitly accepted owner/date decisions with exact source spans and drafts.",
+      "criterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "tasking-reference"
+      ]
+    },
+    {
+      "id": "filing",
+      "kind": "algorithm",
+      "description": "Classify sources using a supplied invented schedule; cite each rule and prohibit disposal.",
+      "criterionIds": [
+        "DESC36-8",
+        "UC36-6"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "filing-reference"
+      ]
+    },
+    {
+      "id": "reconcile",
+      "kind": "stateful",
+      "description": "Deduplicate immutable operations, retain concurrent edit/delete heads, stage missing parents, converge and support explicit all-head merges.",
+      "criterionIds": [
+        "OFF-01",
+        "OFF-02",
+        "OFF-03",
+        "EVAL36-4"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "reconcile-reference"
+      ]
+    },
+    {
+      "id": "transfer",
+      "kind": "algorithm",
+      "description": "Allocate a bounded raw-byte budget from acknowledged offsets in criticality then ID order; actual receiver acknowledgement is separately integrated.",
+      "criterionIds": [
+        "OFF-04"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "transfer-reference"
+      ]
+    },
+    {
+      "id": "routing",
+      "kind": "workflow",
+      "description": "Gate local synthetic routing on current revision approval, validation, conflicts, connectivity and EMCON; deduplicate receiver receipts.",
+      "criterionIds": [
+        "UC36-1",
+        "UC36-2",
+        "UC36-3",
+        "OFF-05",
+        "DELIVERABLE36-3"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "routing-reference"
+      ]
+    },
+    {
+      "id": "metrics",
+      "kind": "algorithm",
+      "description": "Compute fictional time and error arithmetic without operational-impact claims.",
+      "criterionIds": [
+        "UC36-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "metrics-reference"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json",
+      "public/storage.js",
+      "public/receiver.js",
+      "data/synthetic-data.json",
+      "data/README.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

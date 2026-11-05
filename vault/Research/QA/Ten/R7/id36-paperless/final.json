@@ -1,0 +1,101 @@
+{
+ "title": "Paperless Underway",
+ "status": "failed",
+ "error": "The build stopped because it took too long; check the saved work and try again.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:40:31.780Z",
+    "finishedAt": "2026-11-05T09:46:38.372Z",
+    "durationMs": 366593,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 366506,
+    "usage": {
+     "inputTokens": 527578,
+     "cachedInputTokens": 430799,
+     "uncachedInputTokens": 96779,
+     "outputTokens": 19740,
+     "reasoningOutputTokens": 451,
+     "totalTokens": 547318,
+     "uncachedPlusOutputTokens": 116519
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:46:38.385Z",
+    "finishedAt": "2026-11-05T09:48:56.590Z",
+    "durationMs": 138206,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 138165,
+    "usage": {
+     "inputTokens": 583228,
+     "cachedInputTokens": 515253,
+     "uncachedInputTokens": 67975,
+     "outputTokens": 6334,
+     "reasoningOutputTokens": 131,
+     "totalTokens": 589562,
+     "uncachedPlusOutputTokens": 74309
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T09:48:56.608Z",
+    "finishedAt": "2026-11-05T10:04:18.727Z",
+    "durationMs": 922122,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 921002,
+    "usage": {
+     "inputTokens": 693337,
+     "cachedInputTokens": 544070,
+     "uncachedInputTokens": 149267,
+     "outputTokens": 16948,
+     "reasoningOutputTokens": 1795,
+     "totalTokens": 710285,
+     "uncachedPlusOutputTokens": 166215
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "queued"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "queued"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 23.9,
+ "challengeId": "36",
+ "workspace": "~/fhten/ud-r7/workspaces/c59ac6e1-2a62-4054-9d32-1d99aa944999/4946d603-79ca-4a00-8418-844d36bbd37b"
+}

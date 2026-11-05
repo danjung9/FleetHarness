@@ -1,0 +1,1984 @@
+{
+  "classification": "synthetic",
+  "useCase": "Paperless Underway UC36: offline capture, human correction and routing of three fictional forms; five-day tasking consolidation, status drafting and filing; two-replica conflict/replay and byte-budget recovery examples.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "description": "Stable unique fixture identifier."
+    },
+    {
+      "name": "recordType",
+      "type": "string",
+      "description": "Discriminator described in README; determines nested input/expected schema."
+    },
+    {
+      "name": "unitId",
+      "type": "string",
+      "description": "Fictional unit label UNIT-DEMO-36; not a real unit."
+    },
+    {
+      "name": "sourceCriterionIds",
+      "type": "array",
+      "description": "Canonical source/recipe criterion IDs this fixture supports; strings."
+    },
+    {
+      "name": "provenance",
+      "type": "string",
+      "description": "Visible synthetic and format-fidelity disclosure."
+    },
+    {
+      "name": "input",
+      "type": "object",
+      "description": "Original source content or scenario-ready inputs, by recordType; no executable instructions."
+    },
+    {
+      "name": "expected",
+      "type": "object",
+      "description": "Independent fixed answer key, by recordType; not application-generated."
+    },
+    {
+      "name": "annotations",
+      "type": "object",
+      "description": "Evidence spans, image coordinates, uncertainty or format assumptions; may be empty."
+    }
+  ],
+  "records": [
+    {
+      "id": "TRAIN-001",
+      "recordType": "training_log",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-7",
+        "EVAL36-1",
+        "EVAL36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "image/svg+xml",
+        "imageDataUri": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MDAiIGhlaWdodD0iMzcwIiB2aWV3Qm94PSIwIDAgOTAwIDM3MCI+PHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSIzNzAiIGZpbGw9IiNmZmZkZjQiLz48ZyBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzMzMyI+PHRleHQgeD0iMjAiIHk9IjI1Ij5TWU5USEVUSUMgVFJBSU5JTkcgTE9HIOKAlCBpbnZlbnRlZCBsYXlvdXQsIG5vdCBOQVZQRVJTPC90ZXh0Pjx0ZXh0IHg9IjIwIiB5PSI2NSI+VW5pdDogVU5JVC1ERU1PLTM2IC8gUm9sZTogVFJBSU5JTkctREVNTyAvIEZvcm06IFRSQUlOLTAwMTwvdGV4dD48dGV4dCB4PSIyMCIgeT0iMTEwIj5EYXRlPC90ZXh0Pjx0ZXh0IHg9IjIwIiB5PSIxNzUiPkFjdGl2aXR5PC90ZXh0Pjx0ZXh0IHg9IjIwIiB5PSIyNDAiPkR1cmF0aW9uIChtaW51dGVzKTwvdGV4dD48dGV4dCB4PSIyMCIgeT0iMzM1Ij5GaWN0aW9uYWwgcGVuLXN0cm9rZSBmYWNzaW1pbGU7IGNvbmZpcm0gb3ZlcndyaXR0ZW4gZmluYWwgZGlnaXQgd2l0aCByZXZpZXdlci48L3RleHQ+PC9nPjxwYXRoIGQ9Ik0yMjAsOTIgTDIzMiw5MCBNMjMyLDkwIEwyMzYsOTYgTTIzNiw5NiBMMjIwLDExMCBNMjIwLDExMCBMMjM2LDExMCBNMjQ0LDkwIEwyNTYsOTAgTTI1Niw5MCBMMjU4LDEwOCBNMjU4LDEwOCBMMjQ0LDExMCBNMjQ0LDExMCBMMjQyLDkyIE0yNDIsOTIgTDI0NCw5MCBNMjY0LDkyIEwyNzYsOTAgTTI3Niw5MCBMMjgwLDk2IE0yODAsOTYgTDI2NCwxMTAgTTI2NCwxMTAgTDI4MCwxMTAgTTMwMCw5MCBMMjg4LDk0IE0yODgsOTQgTDI4NiwxMDYgTTI4NiwxMDYgTDI5MiwxMTAgTTI5MiwxMTAgTDMwMiwxMDYgTTMwMiwxMDYgTDI5OCwxMDAgTTI5OCwxMDAgTDI4NiwxMDIgTTMxMCwxMDAgTDMyMiwxMDAgTTMzMiw5NCBMMzM4LDkwIE0zMzgsOTAgTDMzOCwxMTAgTTM1NCw5NCBMMzYwLDkwIE0zNjAsOTAgTDM2MCwxMTAgTTM3NiwxMDAgTDM4OCwxMDAgTTM5OCw5MCBMNDEwLDkwIE00MTAsOTAgTDQxMiwxMDggTTQxMiwxMDggTDM5OCwxMTAgTTM5OCwxMTAgTDM5Niw5MiBNMzk2LDkyIEwzOTgsOTAgTTQxOCw5MiBMNDMwLDkwIE00MzAsOTAgTDQzNCw5NiBNNDM0LDk2IEw0MTgsMTEwIE00MTgsMTEwIEw0MzQsMTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiMyMDNlNzAiIHN0cm9rZS13aWR0aD0iMi4xIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjIwLjAsMTU1LjAgTDIyMC4wLDE3MS4wIE0yMjAuMCwxNTUuMCBMMjI4LjAsMTU1LjAgTTIyOC4wLDE1NS4wIEwyMzIuOCwxNjEuNCBNMjMyLjgsMTYxLjQgTDIzMS4yLDE2Ny44IE0yMzEuMiwxNjcuOCBMMjIwLjAsMTcxLjAgTTIzNy42LDE3MS4wIEwyNDQuMCwxNTUuMCBNMjQ0LjAsMTU1LjAgTDI1MC40LDE3MS4wIE0yNDAuNzk5OTk5OTk5OTk5OTgsMTY0LjYgTDI0Ny4yLDE2NC42IE0yNTUuMiwxNzEuMCBMMjU1LjIsMTU1LjAgTTI1NS4yLDE1NS4wIEwyNjEuNTk5OTk5OTk5OTk5OTcsMTYzLjAgTTI2MS41OTk5OTk5OTk5OTk5NywxNjMuMCBMMjY4LjAsMTU1LjAgTTI2OC4wLDE1NS4wIEwyNjguMCwxNzEuMCBNMjcyLjgsMTcxLjAgTDI3OS4yLDE1NS4wIE0yNzkuMiwxNTUuMCBMMjg1LjYsMTcxLjAgTTI3Ni4wLDE2NC42IEwyODIuNDAwMDAwMDAwMDAwMDMsMTY0LjYgTTMwMy4yLDE1Ni42IEwyOTMuNTk5OTk5OTk5OTk5OTcsMTU1LjAgTTI5My41OTk5OTk5OTk5OTk5NywxNTUuMCBMMjkwLjQsMTYzLjAgTTI5MC40LDE2My4wIEwyOTMuNTk5OTk5OTk5OTk5OTcsMTcxLjAgTTI5My41OTk5OTk5OTk5OTk5NywxNzEuMCBMMzAzLjIsMTY5LjQgTTMwMy4yLDE2OS40IEwzMDMuMiwxNjMuMCBNMzAzLjIsMTYzLjAgTDI5Ni43OTk5OTk5OTk5OTk5NSwxNjMuMCBNMzIwLjgsMTU1LjAgTDMwOC4wLDE1NS4wIE0zMDguMCwxNTUuMCBMMzA4LjAsMTcxLjAgTTMwOC4wLDE2My4wIEwzMTcuNiwxNjMuMCBNMzA4LjAsMTcxLjAgTDMyMC44LDE3MS4wIE0zNTYuMCwxNTYuNiBMMzQ2LjQsMTU1LjAgTTM0Ni40LDE1NS4wIEwzNDMuMiwxNjEuNCBNMzQzLjIsMTYxLjQgTDM0NC44LDE2OS40IE0zNDQuOCwxNjkuNCBMMzU2LjAsMTcxLjAgTTM2NC4wLDE1NS4wIEwzNzIuMCwxNTUuMCBNMzcyLjAsMTU1LjAgTDM3My42LDE2Ny44IE0zNzMuNiwxNjcuOCBMMzY0LjAsMTcxLjAgTTM2NC4wLDE3MS4wIEwzNjAuOCwxNTkuOCBNMzYwLjgsMTU5LjggTDM2NC4wLDE1NS4wIE0zNzguNCwxNzEuMCBMMzc4LjQsMTU1LjAgTTM3OC40LDE1NS4wIEwzOTEuMiwxNzEuMCBNMzkxLjIsMTcxLjAgTDM5MS4yLDE1NS4wIE0zOTYuMCwxNTUuMCBMNDA4LjgsMTU1LjAgTTQwMi40LDE1NS4wIEw0MDIuNCwxNzEuMCBNNDEzLjYsMTcxLjAgTDQxMy42LDE1NS4wIE00MTMuNiwxNTUuMCBMNDI0LjgsMTU1LjAgTTQyNC44LDE1NS4wIEw0MjYuNDAwMDAwMDAwMDAwMDMsMTYxLjQgTTQyNi40MDAwMDAwMDAwMDAwMywxNjEuNCBMNDEzLjYsMTYzLjAgTTQxOC40MDAwMDAwMDAwMDAwMywxNjMuMCBMNDI2LjQwMDAwMDAwMDAwMDAzLDE3MS4wIE00MzQuNDAwMDAwMDAwMDAwMDMsMTU1LjAgTDQ0Mi40MDAwMDAwMDAwMDAwMywxNTUuMCBNNDQyLjQwMDAwMDAwMDAwMDAzLDE1NS4wIEw0NDQuMDAwMDAwMDAwMDAwMDYsMTY3LjggTTQ0NC4wMDAwMDAwMDAwMDAwNiwxNjcuOCBMNDM0LjQwMDAwMDAwMDAwMDAzLDE3MS4wIE00MzQuNDAwMDAwMDAwMDAwMDMsMTcxLjAgTDQzMS4yMDAwMDAwMDAwMDAwNSwxNTkuOCBNNDMxLjIwMDAwMDAwMDAwMDA1LDE1OS44IEw0MzQuNDAwMDAwMDAwMDAwMDMsMTU1LjAgTTQ0OC44LDE1NS4wIEw0NDguOCwxNzEuMCBNNDQ4LjgsMTcxLjAgTDQ2MS42LDE3MS4wIE00ODQuMCwxNTUuMCBMNDg0LjAsMTcxLjAgTTQ4NC4wLDE1NS4wIEw0OTIuMCwxNTUuMCBNNDkyLjAsMTU1LjAgTDQ5Ni44LDE2MS40IE00OTYuOCwxNjEuNCBMNDk1LjIsMTY3LjggTTQ5NS4yLDE2Ny44IEw0ODQuMCwxNzEuMCBNNTAxLjYsMTcxLjAgTDUwMS42LDE1NS4wIE01MDEuNiwxNTUuMCBMNTEyLjgwMDAwMDAwMDAwMDEsMTU1LjAgTTUxMi44MDAwMDAwMDAwMDAxLDE1NS4wIEw1MTQuNCwxNjEuNCBNNTE0LjQsMTYxLjQgTDUwMS42LDE2My4wIE01MDYuNDAwMDAwMDAwMDAwMDMsMTYzLjAgTDUxNC40LDE3MS4wIE01MTkuMiwxNTUuMCBMNTMyLjAsMTU1LjAgTTUyNS42LDE1NS4wIEw1MjUuNiwxNzEuMCBNNTE5LjIsMTcxLjAgTDUzMi4wLDE3MS4wIE01MzYuOCwxNTUuMCBMNTM2LjgsMTcxLjAgTTUzNi44LDE3MS4wIEw1NDkuNTk5OTk5OTk5OTk5OSwxNzEuMCBNNTU0LjQwMDAwMDAwMDAwMDEsMTU1LjAgTDU1NC40MDAwMDAwMDAwMDAxLDE3MS4wIE01NTQuNDAwMDAwMDAwMDAwMSwxNzEuMCBMNTY3LjIsMTcxLjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzIwM2U3MCIgc3Ryb2tlLXdpZHRoPSIyLjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00MzgsMjE1IEw0MjAsMjMzIE00MjAsMjMzIEw0NDQsMjMzIE00MzgsMjE1IEw0MzgsMjQ1IE00NzcsMjE1IEw0NTMsMjE1IE00NTMsMjE1IEw0NTMsMjMwIE00NTMsMjMwIEw0NzEsMjI3IE00NzEsMjI3IEw0NzcsMjM5IE00NzcsMjM5IEw0NjgsMjQ1IE00NjgsMjQ1IEw0NTMsMjQyIiBmaWxsPSJub25lIiBzdHJva2U9IiMyMDNlNzAiIHN0cm9rZS13aWR0aD0iMi4xIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNDU4LDIxOCBMNDc1LDIxNiBMNDU3LDI0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjAzZTcwIiBvcGFjaXR5PSIwLjM1IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=",
+        "widthPx": 900,
+        "heightPx": 370,
+        "transcriptionMechanism": "Manual transcription from embedded pen-stroke image; no OCR is supplied.",
+        "draftFields": {
+          "formId": "TRAIN-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "TRAINING-DEMO",
+          "date": "2026-11-02",
+          "activity": "DAMAGE CONTROL DRILL",
+          "durationMinutes": 47
+        },
+        "confirmedFields": []
+      },
+      "expected": {
+        "groundTruthFields": {
+          "formId": "TRAIN-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "TRAINING-DEMO",
+          "date": "2026-11-02",
+          "activity": "DAMAGE CONTROL DRILL",
+          "durationMinutes": 45
+        },
+        "initialIssues": [
+          {
+            "code": "UNCERTAIN_TRANSCRIPTION",
+            "field": "durationMinutes",
+            "message": "Confirm duration from the image: final digit is overwritten."
+          }
+        ],
+        "correctedFields": {
+          "formId": "TRAIN-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "TRAINING-DEMO",
+          "date": "2026-11-02",
+          "activity": "DAMAGE CONTROL DRILL",
+          "durationMinutes": 45
+        },
+        "reviewRequired": true,
+        "completedDocument": "SYNTHETIC TRAINING LOG TRAIN-001\nUNIT-DEMO-36 | TRAINING-DEMO | 2026-11-02\nDAMAGE CONTROL DRILL | 45 minutes\nDuration confirmed by REVIEWER-DEMO; invented layout."
+      },
+      "annotations": {
+        "fieldEvidence": [
+          {
+            "field": "durationMinutes",
+            "sourceId": "TRAIN-001",
+            "bboxPx": [
+              414,
+              208,
+              75,
+              45
+            ],
+            "confidence": 0.55,
+            "uncertainty": "45 or 47; reviewer answer key is 45"
+          },
+          {
+            "field": "activity",
+            "sourceId": "TRAIN-001",
+            "bboxPx": [
+              215,
+              150,
+              675,
+              30
+            ],
+            "confidence": 0.98
+          }
+        ],
+        "dateBboxPx": [
+          215,
+          85,
+          450,
+          35
+        ],
+        "confidenceMeaning": "Fictional annotation, not a measured OCR probability",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "SUPPLY-001",
+      "recordType": "supply_requisition",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-7",
+        "EVAL36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "text/plain",
+        "rawDocument": "SYNTHETIC SUPPLY REQUISITION SUPPLY-001\nUnit: UNIT-DEMO-36\nRole: LOGISTICS-DEMO\nDate: 2026-11-02\nItem: DEMO-FILTER\nQuantity: -2\nUnit of issue: EA\nPurpose: Drill kit replenishment\n",
+        "draftFields": {
+          "formId": "SUPPLY-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "LOGISTICS-DEMO",
+          "date": "2026-11-02",
+          "item": "DEMO-FILTER",
+          "quantity": -2,
+          "unitOfIssue": "EA",
+          "purpose": "Drill kit replenishment"
+        }
+      },
+      "expected": {
+        "initialIssues": [
+          {
+            "code": "QUANTITY_POSITIVE_INTEGER",
+            "field": "quantity",
+            "message": "Quantity must be a positive whole number."
+          }
+        ],
+        "correctedFields": {
+          "formId": "SUPPLY-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "LOGISTICS-DEMO",
+          "date": "2026-11-02",
+          "item": "DEMO-FILTER",
+          "quantity": 2,
+          "unitOfIssue": "EA",
+          "purpose": "Drill kit replenishment"
+        },
+        "completedDocument": "SYNTHETIC SUPPLY REQUISITION SUPPLY-001\nUnit: UNIT-DEMO-36\nRole: LOGISTICS-DEMO\nDate: 2026-11-02\nItem: DEMO-FILTER\nQuantity: 2\nUnit of issue: EA\nPurpose: Drill kit replenishment\n",
+        "reviewRequired": true
+      },
+      "annotations": {
+        "evidence": [
+          {
+            "field": "quantity",
+            "sourceId": "SUPPLY-001",
+            "confidence": 1.0,
+            "span": {
+              "start": 115,
+              "end": 127,
+              "quote": "Quantity: -2"
+            }
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "CORR-001",
+      "recordType": "correspondence",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-7",
+        "EVAL36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "text/plain",
+        "rawLetter": "SYNTHETIC ROUTINE CORRESPONDENCE CORR-001\nFrom: UNIT-DEMO-36 / ADMIN-DEMO\nTo: RECEIVING-DEMO\nDate: 2026-11-03\nSubject: Drill kit readiness\nEnclosure: ENC-001\nThe drill kit requires two DEMO-FILTER units. Review the attached checklist before routing.\n",
+        "availableEnclosures": [],
+        "draftFields": {
+          "formId": "CORR-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "ADMIN-DEMO",
+          "date": "2026-11-03",
+          "addressee": "RECEIVING-DEMO",
+          "subject": "Drill kit readiness",
+          "enclosureIds": [
+            "ENC-001"
+          ]
+        },
+        "recoveryEnclosure": {
+          "id": "ENC-001",
+          "mediaType": "text/plain",
+          "rawDocument": "SYNTHETIC ENCLOSURE ENC-001\nKit: DEMO-KIT-01\nChecklist: two DEMO-FILTER units; training log TRAIN-001 completed.\n"
+        }
+      },
+      "expected": {
+        "initialIssues": [
+          {
+            "code": "ENCLOSURE_MISSING",
+            "field": "enclosureIds",
+            "message": "Attach referenced enclosure ENC-001."
+          }
+        ],
+        "correctedFields": {
+          "formId": "CORR-001",
+          "unitId": "UNIT-DEMO-36",
+          "roleId": "ADMIN-DEMO",
+          "date": "2026-11-03",
+          "addressee": "RECEIVING-DEMO",
+          "subject": "Drill kit readiness",
+          "enclosureIds": [
+            "ENC-001"
+          ]
+        },
+        "completedDocument": "SYNTHETIC ROUTINE CORRESPONDENCE CORR-001\nFrom: UNIT-DEMO-36 / ADMIN-DEMO\nTo: RECEIVING-DEMO\nDate: 2026-11-03\nSubject: Drill kit readiness\nEnclosure: ENC-001\nThe drill kit requires two DEMO-FILTER units. Review the attached checklist before routing.\n\nSYNTHETIC ENCLOSURE ENC-001\nKit: DEMO-KIT-01\nChecklist: two DEMO-FILTER units; training log TRAIN-001 completed.\n",
+        "reviewRequired": true
+      },
+      "annotations": {
+        "evidence": [
+          {
+            "sourceId": "CORR-001",
+            "field": "enclosureIds",
+            "span": {
+              "start": 139,
+              "end": 157,
+              "quote": "Enclosure: ENC-001"
+            },
+            "confidence": 1.0
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-001",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: logistics-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-02T09:00:00Z\nSubject: Filter inventory\nMessage-ID: <MAIL-001@unit-demo.invalid>\n\nAction A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-001",
+        "body": "Action A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 167,
+          "end": 243,
+          "quote": "Action A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-002",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: training-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-02T10:00:00Z\nSubject: Drill log\nMessage-ID: <MAIL-002@unit-demo.invalid>\n\nAction A-002: TRAINING-DEMO verify TRAIN-001. Due: 2026-11-06T12:00:00Z.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-002",
+        "body": "Action A-002: TRAINING-DEMO verify TRAIN-001. Due: 2026-11-06T12:00:00Z.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 159,
+          "end": 231,
+          "quote": "Action A-002: TRAINING-DEMO verify TRAIN-001. Due: 2026-11-06T12:00:00Z."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-003",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: admin-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-03T08:00:00Z\nSubject: Fwd: Filter inventory\nMessage-ID: <MAIL-003@unit-demo.invalid>\n\nForward of MAIL-001; no new task.\nAction A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-003",
+        "body": "Forward of MAIL-001; no new task.\nAction A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z.",
+        "isNoAction": false,
+        "duplicateOf": "MAIL-001"
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 168,
+          "end": 278,
+          "quote": "Forward of MAIL-001; no new task.\nAction A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-004",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: logistics-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-03T13:00:00Z\nSubject: Amend Filter inventory\nMessage-ID: <MAIL-004@unit-demo.invalid>\n\nAmends MAIL-001 action A-001 only. Due: 2026-11-10T16:00:00Z. All other instructions unchanged.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-004",
+        "body": "Amends MAIL-001 action A-001 only. Due: 2026-11-10T16:00:00Z. All other instructions unchanged.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 173,
+          "end": 268,
+          "quote": "Amends MAIL-001 action A-001 only. Due: 2026-11-10T16:00:00Z. All other instructions unchanged."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-005",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: admin-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-04T09:00:00Z\nSubject: Checklist owner needed\nMessage-ID: <MAIL-005@unit-demo.invalid>\n\nAction A-003: ADMIN-DEMO or TRAINING-DEMO prepare ENC-001 checklist. Due: 2026-11-06T15:00:00Z. Reviewer must choose owner.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-005",
+        "body": "Action A-003: ADMIN-DEMO or TRAINING-DEMO prepare ENC-001 checklist. Due: 2026-11-06T15:00:00Z. Reviewer must choose owner.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 169,
+          "end": 292,
+          "quote": "Action A-003: ADMIN-DEMO or TRAINING-DEMO prepare ENC-001 checklist. Due: 2026-11-06T15:00:00Z. Reviewer must choose owner."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-006",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: staff-demo@unit-demo.invalid\nTo: admin-demo@unit-demo.invalid\nDate: 2026-11-04T14:00:00Z\nSubject: FYI drill weather\nMessage-ID: <MAIL-006@unit-demo.invalid>\n\nFYI only: fictional clear weather during the drill. No action required.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-006",
+        "body": "FYI only: fictional clear weather during the drill. No action required.",
+        "isNoAction": true,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 164,
+          "end": 235,
+          "quote": "FYI only: fictional clear weather during the drill. No action required."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-007",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: admin-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-05T09:00:00Z\nSubject: Readiness memo\nMessage-ID: <MAIL-007@unit-demo.invalid>\n\nAction A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T14:00:00Z.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-007",
+        "body": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T14:00:00Z.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 161,
+          "end": 231,
+          "quote": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T14:00:00Z."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-008",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: training-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-05T09:00:00Z\nSubject: Conflicting readiness memo instruction\nMessage-ID: <MAIL-008@unit-demo.invalid>\n\nAction A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T17:00:00Z. Peer instruction; does not amend MAIL-007.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-008",
+        "body": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T17:00:00Z. Peer instruction; does not amend MAIL-007.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 188,
+          "end": 301,
+          "quote": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T17:00:00Z. Peer instruction; does not amend MAIL-007."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-009",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: training-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-06T10:00:00Z\nSubject: Drill verification complete\nMessage-ID: <MAIL-009@unit-demo.invalid>\n\nStatus A-002: complete. TRAIN-001 checked against image; duration confirmed as 45 minutes. See DOC-001.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-009",
+        "body": "Status A-002: complete. TRAIN-001 checked against image; duration confirmed as 45 minutes. See DOC-001.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 177,
+          "end": 280,
+          "quote": "Status A-002: complete. TRAIN-001 checked against image; duration confirmed as 45 minutes. See DOC-001."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "MAIL-010",
+      "recordType": "tasking_email",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "message/rfc822",
+        "rawMessage": "From: reviewer-demo@unit-demo.invalid\nTo: staff-demo@unit-demo.invalid\nDate: 2026-11-06T11:00:00Z\nSubject: Resolve checklist and memo\nMessage-ID: <MAIL-010@unit-demo.invalid>\n\nReviewer decision: A-003 owner ADMIN-DEMO; A-004 due 2026-11-06T17:00:00Z. Retain MAIL-007 and MAIL-008 as conflict evidence. These decisions require explicit reviewer acceptance.\n"
+      },
+      "expected": {
+        "messageId": "MAIL-010",
+        "body": "Reviewer decision: A-003 owner ADMIN-DEMO; A-004 due 2026-11-06T17:00:00Z. Retain MAIL-007 and MAIL-008 as conflict evidence. These decisions require explicit reviewer acceptance.",
+        "isNoAction": false,
+        "duplicateOf": ""
+      },
+      "annotations": {
+        "bodySpan": {
+          "start": 176,
+          "end": 355,
+          "quote": "Reviewer decision: A-003 owner ADMIN-DEMO; A-004 due 2026-11-06T17:00:00Z. Retain MAIL-007 and MAIL-008 as conflict evidence. These decisions require explicit reviewer acceptance."
+        },
+        "timezone": "UTC",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "DOC-001",
+      "recordType": "status_document",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "text/plain",
+        "rawDocument": "SYNTHETIC STATUS NOTE DOC-001\n2026-11-06T10:00:00Z\nA-002 complete: TRAINING-DEMO reviewed TRAIN-001 and confirmed 45 minutes.\nA-001 in progress: two DEMO-FILTER units counted; confirmation still awaiting LOGISTICS-DEMO review.\n"
+      },
+      "expected": {
+        "statuses": {
+          "A-001": "in_progress",
+          "A-002": "complete"
+        }
+      },
+      "annotations": {
+        "evidence": [
+          {
+            "start": 51,
+            "end": 125,
+            "quote": "A-002 complete: TRAINING-DEMO reviewed TRAIN-001 and confirmed 45 minutes."
+          },
+          {
+            "start": 126,
+            "end": 226,
+            "quote": "A-001 in progress: two DEMO-FILTER units counted; confirmation still awaiting LOGISTICS-DEMO review."
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "TASK-WEEK-001",
+      "recordType": "verified_action_list",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8",
+        "EVAL36-1",
+        "UC36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "messageIds": [
+          "MAIL-001",
+          "MAIL-002",
+          "MAIL-003",
+          "MAIL-004",
+          "MAIL-005",
+          "MAIL-006",
+          "MAIL-007",
+          "MAIL-008",
+          "MAIL-009",
+          "MAIL-010"
+        ],
+        "documentIds": [
+          "DOC-001"
+        ],
+        "reviewerRole": "REVIEWER-DEMO"
+      },
+      "expected": {
+        "actions": [
+          {
+            "actionId": "A-001",
+            "sourceIds": [
+              "MAIL-001",
+              "MAIL-003",
+              "MAIL-004",
+              "DOC-001"
+            ],
+            "sourceSpans": [
+              {
+                "sourceId": "MAIL-001",
+                "span": {
+                  "start": 167,
+                  "end": 243,
+                  "quote": "Action A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z."
+                }
+              },
+              {
+                "sourceId": "MAIL-003",
+                "span": {
+                  "start": 202,
+                  "end": 278,
+                  "quote": "Action A-001: LOGISTICS-DEMO confirm two filters. Due: 2026-11-09T16:00:00Z."
+                }
+              },
+              {
+                "sourceId": "MAIL-004",
+                "span": {
+                  "start": 173,
+                  "end": 268,
+                  "quote": "Amends MAIL-001 action A-001 only. Due: 2026-11-10T16:00:00Z. All other instructions unchanged."
+                }
+              },
+              {
+                "sourceId": "DOC-001",
+                "span": {
+                  "start": 126,
+                  "end": 226,
+                  "quote": "A-001 in progress: two DEMO-FILTER units counted; confirmation still awaiting LOGISTICS-DEMO review."
+                }
+              }
+            ],
+            "owningRole": "LOGISTICS-DEMO",
+            "dueAt": "2026-11-10T16:00:00Z",
+            "timezone": "UTC",
+            "actionText": "Confirm two filters",
+            "status": "in_progress",
+            "reviewerDecision": "Accepted by REVIEWER-DEMO for fixture answer key; application must request acceptance.",
+            "draftStatusUpdate": "SYNTHETIC DRAFT A-001: Confirm two filters; owner LOGISTICS-DEMO; due 2026-11-10T16:00:00Z; status in_progress. Sources: MAIL-001, MAIL-003, MAIL-004, DOC-001.",
+            "unresolvedQuestions": []
+          },
+          {
+            "actionId": "A-002",
+            "sourceIds": [
+              "MAIL-002",
+              "MAIL-009",
+              "DOC-001"
+            ],
+            "sourceSpans": [
+              {
+                "sourceId": "MAIL-002",
+                "span": {
+                  "start": 159,
+                  "end": 231,
+                  "quote": "Action A-002: TRAINING-DEMO verify TRAIN-001. Due: 2026-11-06T12:00:00Z."
+                }
+              },
+              {
+                "sourceId": "MAIL-009",
+                "span": {
+                  "start": 177,
+                  "end": 280,
+                  "quote": "Status A-002: complete. TRAIN-001 checked against image; duration confirmed as 45 minutes. See DOC-001."
+                }
+              },
+              {
+                "sourceId": "DOC-001",
+                "span": {
+                  "start": 51,
+                  "end": 125,
+                  "quote": "A-002 complete: TRAINING-DEMO reviewed TRAIN-001 and confirmed 45 minutes."
+                }
+              }
+            ],
+            "owningRole": "TRAINING-DEMO",
+            "dueAt": "2026-11-06T12:00:00Z",
+            "timezone": "UTC",
+            "actionText": "Verify TRAIN-001",
+            "status": "complete",
+            "reviewerDecision": "Accepted by REVIEWER-DEMO for fixture answer key; application must request acceptance.",
+            "draftStatusUpdate": "SYNTHETIC DRAFT A-002: Verify TRAIN-001; owner TRAINING-DEMO; due 2026-11-06T12:00:00Z; status complete. Sources: MAIL-002, MAIL-009, DOC-001.",
+            "unresolvedQuestions": []
+          },
+          {
+            "actionId": "A-003",
+            "sourceIds": [
+              "MAIL-005",
+              "MAIL-010"
+            ],
+            "sourceSpans": [
+              {
+                "sourceId": "MAIL-005",
+                "span": {
+                  "start": 169,
+                  "end": 292,
+                  "quote": "Action A-003: ADMIN-DEMO or TRAINING-DEMO prepare ENC-001 checklist. Due: 2026-11-06T15:00:00Z. Reviewer must choose owner."
+                }
+              },
+              {
+                "sourceId": "MAIL-010",
+                "span": {
+                  "start": 176,
+                  "end": 355,
+                  "quote": "Reviewer decision: A-003 owner ADMIN-DEMO; A-004 due 2026-11-06T17:00:00Z. Retain MAIL-007 and MAIL-008 as conflict evidence. These decisions require explicit reviewer acceptance."
+                }
+              }
+            ],
+            "owningRole": "ADMIN-DEMO",
+            "dueAt": "2026-11-06T15:00:00Z",
+            "timezone": "UTC",
+            "actionText": "Prepare ENC-001 checklist",
+            "status": "open",
+            "reviewerDecision": "Accepted by REVIEWER-DEMO for fixture answer key; application must request acceptance.",
+            "draftStatusUpdate": "SYNTHETIC DRAFT A-003: Prepare ENC-001 checklist; owner ADMIN-DEMO; due 2026-11-06T15:00:00Z; status open. Sources: MAIL-005, MAIL-010.",
+            "unresolvedQuestions": []
+          },
+          {
+            "actionId": "A-004",
+            "sourceIds": [
+              "MAIL-007",
+              "MAIL-008",
+              "MAIL-010"
+            ],
+            "sourceSpans": [
+              {
+                "sourceId": "MAIL-007",
+                "span": {
+                  "start": 161,
+                  "end": 231,
+                  "quote": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T14:00:00Z."
+                }
+              },
+              {
+                "sourceId": "MAIL-008",
+                "span": {
+                  "start": 188,
+                  "end": 301,
+                  "quote": "Action A-004: ADMIN-DEMO finalize CORR-001. Due: 2026-11-06T17:00:00Z. Peer instruction; does not amend MAIL-007."
+                }
+              },
+              {
+                "sourceId": "MAIL-010",
+                "span": {
+                  "start": 176,
+                  "end": 355,
+                  "quote": "Reviewer decision: A-003 owner ADMIN-DEMO; A-004 due 2026-11-06T17:00:00Z. Retain MAIL-007 and MAIL-008 as conflict evidence. These decisions require explicit reviewer acceptance."
+                }
+              }
+            ],
+            "owningRole": "ADMIN-DEMO",
+            "dueAt": "2026-11-06T17:00:00Z",
+            "timezone": "UTC",
+            "actionText": "Finalize CORR-001",
+            "status": "open",
+            "reviewerDecision": "Accepted by REVIEWER-DEMO for fixture answer key; application must request acceptance.",
+            "draftStatusUpdate": "SYNTHETIC DRAFT A-004: Finalize CORR-001; owner ADMIN-DEMO; due 2026-11-06T17:00:00Z; status open. Sources: MAIL-007, MAIL-008, MAIL-010.",
+            "unresolvedQuestions": []
+          }
+        ],
+        "actionCount": 4,
+        "beforeReviewerDecisions": [
+          {
+            "actionId": "A-003",
+            "code": "OWNER_AMBIGUOUS",
+            "question": "Choose ADMIN-DEMO or TRAINING-DEMO."
+          },
+          {
+            "actionId": "A-004",
+            "code": "DUE_DATE_CONFLICT",
+            "question": "Choose 14:00Z or 17:00Z on 2026-11-06."
+          }
+        ],
+        "ignoredNoActionIds": [
+          "MAIL-006"
+        ],
+        "duplicateForwardIds": [
+          "MAIL-003"
+        ]
+      },
+      "annotations": {
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "SCH-DEMO-1",
+      "recordType": "records_schedule",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "DESC36-8"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "mediaType": "text/plain",
+        "rawDocument": "SYNTHETIC SCHEDULE SCH-DEMO-1 — invented, no authority for disposal\nTRAINING: training logs -> DEMO/Training/2026; retain 12 months after fictional exercise end; review only, never auto-delete.\nSUPPLY: requisitions -> DEMO/Supply/2026; retain 6 months after fictional fulfillment; review only, never auto-delete.\nCORRESPONDENCE: letters and enclosures -> DEMO/Correspondence/2026; retain 12 months after fictional closure; review only, never auto-delete.\nTASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete.\nUNKNOWN: hold for reviewer classification.\n"
+      },
+      "expected": {
+        "filingManifest": [
+          {
+            "recordId": "TRAIN-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TRAINING",
+            "destination": "DEMO/Training/2026",
+            "ruleCitation": {
+              "start": 68,
+              "end": 193,
+              "quote": "TRAINING: training logs -> DEMO/Training/2026; retain 12 months after fictional exercise end; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "SUPPLY-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "SUPPLY",
+            "destination": "DEMO/Supply/2026",
+            "ruleCitation": {
+              "start": 194,
+              "end": 312,
+              "quote": "SUPPLY: requisitions -> DEMO/Supply/2026; retain 6 months after fictional fulfillment; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "CORR-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "CORRESPONDENCE",
+            "destination": "DEMO/Correspondence/2026",
+            "ruleCitation": {
+              "start": 313,
+              "end": 454,
+              "quote": "CORRESPONDENCE: letters and enclosures -> DEMO/Correspondence/2026; retain 12 months after fictional closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "ENC-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "CORRESPONDENCE",
+            "destination": "DEMO/Correspondence/2026",
+            "ruleCitation": {
+              "start": 313,
+              "end": 454,
+              "quote": "CORRESPONDENCE: letters and enclosures -> DEMO/Correspondence/2026; retain 12 months after fictional closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-002",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-003",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-004",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-005",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-006",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-007",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-008",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-009",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "MAIL-010",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "DOC-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          },
+          {
+            "recordId": "TASK-WEEK-001",
+            "scheduleId": "SCH-DEMO-1",
+            "category": "TASKING",
+            "destination": "DEMO/Tasking/2026",
+            "ruleCitation": {
+              "start": 455,
+              "end": 610,
+              "quote": "TASKING: source emails, status notes and verified lists -> DEMO/Tasking/2026; retain 3 months after fictional task closure; review only, never auto-delete."
+            },
+            "disposalAuthorized": false
+          }
+        ],
+        "unknownCategoryBehavior": "FILING_CATEGORY_UNKNOWN: preserve record; hold filing until reviewer chooses an invented category."
+      },
+      "annotations": {
+        "retentionExpressionsAre": "fictional relative review periods; no real retention or destruction authority",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "SYNC-001",
+      "recordType": "reconciliation",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "OFF-01",
+        "OFF-02",
+        "OFF-03",
+        "UC36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "operations": [
+          {
+            "operationId": "OP-001",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-1",
+            "parentRevisionIds": [],
+            "replicaId": "TABLET-DEMO-A",
+            "payload": {
+              "durationMinutes": 45
+            },
+            "timestamp": "2026-11-06T12:00:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-002",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-2",
+            "parentRevisionIds": [
+              "TR-1"
+            ],
+            "replicaId": "TABLET-DEMO-A",
+            "payload": {
+              "durationMinutes": 45,
+              "activity": "DAMAGE CONTROL DRILL"
+            },
+            "timestamp": "2026-11-06T12:01:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-003",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-3A",
+            "parentRevisionIds": [
+              "TR-2"
+            ],
+            "replicaId": "TABLET-DEMO-A",
+            "payload": {
+              "durationMinutes": 45,
+              "activity": "DAMAGE CONTROL DRILL",
+              "note": "Image confirmed"
+            },
+            "timestamp": "2026-11-06T12:02:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-004",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-3B",
+            "parentRevisionIds": [
+              "TR-2"
+            ],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {
+              "durationMinutes": 47,
+              "activity": "DAMAGE CONTROL DRILL"
+            },
+            "timestamp": "2026-11-06T12:03:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-005",
+            "recordId": "SUPPLY-001",
+            "revisionId": "SU-1",
+            "parentRevisionIds": [],
+            "replicaId": "TABLET-DEMO-A",
+            "payload": {
+              "item": "DEMO-FILTER",
+              "quantity": 2,
+              "unitOfIssue": "EA"
+            },
+            "timestamp": "2026-11-06T12:04:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-006",
+            "recordId": "SUPPLY-001",
+            "revisionId": "SU-2A",
+            "parentRevisionIds": [
+              "SU-1"
+            ],
+            "replicaId": "TABLET-DEMO-A",
+            "payload": {
+              "item": "DEMO-FILTER",
+              "quantity": 3,
+              "unitOfIssue": "EA"
+            },
+            "timestamp": "2026-11-06T12:05:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-007",
+            "recordId": "SUPPLY-001",
+            "revisionId": "SU-2B",
+            "parentRevisionIds": [
+              "SU-1"
+            ],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {},
+            "timestamp": "2026-11-06T12:06:00Z",
+            "deleted": true
+          },
+          {
+            "operationId": "OP-008",
+            "recordId": "CORR-001",
+            "revisionId": "CO-1",
+            "parentRevisionIds": [],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {
+              "formId": "CORR-001",
+              "unitId": "UNIT-DEMO-36",
+              "roleId": "ADMIN-DEMO",
+              "date": "2026-11-03",
+              "addressee": "RECEIVING-DEMO",
+              "subject": "Drill kit readiness",
+              "enclosureIds": [
+                "ENC-001"
+              ]
+            },
+            "timestamp": "2026-11-06T12:07:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-009",
+            "recordId": "TASK-WEEK-001",
+            "revisionId": "TW-1",
+            "parentRevisionIds": [],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {
+              "actionIds": [
+                "A-001",
+                "A-002",
+                "A-003",
+                "A-004"
+              ]
+            },
+            "timestamp": "2026-11-06T12:08:00Z",
+            "deleted": false
+          }
+        ],
+        "replayOperationIds": [
+          "OP-003",
+          "OP-005"
+        ],
+        "shuffledOrder": [
+          "OP-009",
+          "OP-004",
+          "OP-002",
+          "OP-007",
+          "OP-001",
+          "OP-006",
+          "OP-008",
+          "OP-005",
+          "OP-003"
+        ],
+        "reviewerMerges": [
+          {
+            "operationId": "OP-010",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-4",
+            "parentRevisionIds": [
+              "TR-3A",
+              "TR-3B"
+            ],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {
+              "durationMinutes": 45,
+              "activity": "DAMAGE CONTROL DRILL",
+              "note": "Image confirmed"
+            },
+            "timestamp": "2026-11-06T12:10:00Z",
+            "deleted": false
+          },
+          {
+            "operationId": "OP-011",
+            "recordId": "SUPPLY-001",
+            "revisionId": "SU-3",
+            "parentRevisionIds": [
+              "SU-2A",
+              "SU-2B"
+            ],
+            "replicaId": "DESK-DEMO-B",
+            "payload": {
+              "item": "DEMO-FILTER",
+              "quantity": 2,
+              "unitOfIssue": "EA"
+            },
+            "timestamp": "2026-11-06T12:11:00Z",
+            "deleted": false
+          }
+        ]
+      },
+      "expected": {
+        "beforeMergeHeads": {
+          "TRAIN-001": [
+            "TR-3A",
+            "TR-3B"
+          ],
+          "SUPPLY-001": [
+            "SU-2A",
+            "SU-2B"
+          ],
+          "CORR-001": [
+            "CO-1"
+          ],
+          "TASK-WEEK-001": [
+            "TW-1"
+          ]
+        },
+        "conflictCount": 2,
+        "uniqueOperationCountBeforeMerge": 9,
+        "canonicalRecordsAfterMerge": [
+          {
+            "recordId": "CORR-001",
+            "headRevisionIds": [
+              "CO-1"
+            ],
+            "deleted": false,
+            "payload": {
+              "formId": "CORR-001",
+              "unitId": "UNIT-DEMO-36",
+              "roleId": "ADMIN-DEMO",
+              "date": "2026-11-03",
+              "addressee": "RECEIVING-DEMO",
+              "subject": "Drill kit readiness",
+              "enclosureIds": [
+                "ENC-001"
+              ]
+            }
+          },
+          {
+            "recordId": "SUPPLY-001",
+            "headRevisionIds": [
+              "SU-3"
+            ],
+            "deleted": false,
+            "payload": {
+              "item": "DEMO-FILTER",
+              "quantity": 2,
+              "unitOfIssue": "EA"
+            }
+          },
+          {
+            "recordId": "TASK-WEEK-001",
+            "headRevisionIds": [
+              "TW-1"
+            ],
+            "deleted": false,
+            "payload": {
+              "actionIds": [
+                "A-001",
+                "A-002",
+                "A-003",
+                "A-004"
+              ]
+            }
+          },
+          {
+            "recordId": "TRAIN-001",
+            "headRevisionIds": [
+              "TR-4"
+            ],
+            "deleted": false,
+            "payload": {
+              "durationMinutes": 45,
+              "activity": "DAMAGE CONTROL DRILL",
+              "note": "Image confirmed"
+            }
+          }
+        ],
+        "retainedRevisionIds": [
+          "TR-1",
+          "TR-2",
+          "TR-3A",
+          "TR-3B",
+          "SU-1",
+          "SU-2A",
+          "SU-2B",
+          "CO-1",
+          "TW-1",
+          "TR-4",
+          "SU-3"
+        ],
+        "mergeDecisions": [
+          {
+            "recordId": "TRAIN-001",
+            "reviewer": "REVIEWER-DEMO",
+            "reason": "Image answer key confirms 45 minutes; retain Image confirmed note."
+          },
+          {
+            "recordId": "SUPPLY-001",
+            "reviewer": "REVIEWER-DEMO",
+            "reason": "Reject deletion and unapproved quantity increase; corrected source quantity is 2."
+          }
+        ],
+        "approvalAfterNewHead": "invalidated"
+      },
+      "annotations": {
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "TRANSFER-001",
+      "recordType": "transfer",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "OFF-04"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "attachments": [
+          {
+            "attachmentId": "ATT-CRITICAL",
+            "recordId": "CORR-001",
+            "revisionId": "CO-1",
+            "criticality": 0,
+            "totalBytes": 100,
+            "acknowledgedOffset": 0,
+            "contentBase64": "Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQw=="
+          },
+          {
+            "attachmentId": "ATT-SCAN",
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-4",
+            "criticality": 1,
+            "totalBytes": 1000,
+            "acknowledgedOffset": 400,
+            "contentBase64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+QABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+PkAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+Q=="
+          }
+        ],
+        "budgetBytes": 300,
+        "ordering": "ascending criticality then attachmentId; raw byte budget excludes transport overhead",
+        "events": [
+          "plan",
+          "acknowledge critical 100",
+          "acknowledge scan 200",
+          "interrupt",
+          "resume with budget 300"
+        ]
+      },
+      "expected": {
+        "firstAllocations": [
+          {
+            "attachmentId": "ATT-CRITICAL",
+            "startOffset": 0,
+            "bytes": 100,
+            "nextOffset": 100
+          },
+          {
+            "attachmentId": "ATT-SCAN",
+            "startOffset": 400,
+            "bytes": 200,
+            "nextOffset": 600
+          }
+        ],
+        "resumeAllocations": [
+          {
+            "attachmentId": "ATT-SCAN",
+            "startOffset": 600,
+            "bytes": 300,
+            "nextOffset": 900
+          }
+        ],
+        "remainingScanBytesAfterResume": 100,
+        "contentSha256": {
+          "ATT-CRITICAL": "d7f16b579c04dfbf05a9688190279d2f3ba008417884c9f4568a626a56c2a2e7",
+          "ATT-SCAN": "5d4b1b13f0daa86380d0ac6912a60a307cc9719115ecadb10a06d2d3603bd35c"
+        },
+        "standaloneScanAt400Budget300NextOffset": 700
+      },
+      "annotations": {
+        "scanIs": "deterministic binary stand-in for transfer tests, NOT the training image; real training image is embedded separately",
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "PACKET-001",
+      "recordType": "routing_packet",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "UC36-1",
+        "UC36-2",
+        "UC36-3",
+        "OFF-05",
+        "DELIVERABLE36-3"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "packetId": "PACKET-001",
+        "recordRevisionPairs": [
+          {
+            "recordId": "TRAIN-001",
+            "revisionId": "TR-4"
+          },
+          {
+            "recordId": "SUPPLY-001",
+            "revisionId": "SU-3"
+          },
+          {
+            "recordId": "CORR-001",
+            "revisionId": "CO-1"
+          },
+          {
+            "recordId": "TASK-WEEK-001",
+            "revisionId": "TW-1"
+          }
+        ],
+        "reviewerRole": "REVIEWER-DEMO",
+        "recipientId": "INBOX-DEMO",
+        "routeOperationId": "ROUTE-001",
+        "receiptId": "RECEIPT-001"
+      },
+      "expected": {
+        "auditSequence": [
+          {
+            "sequence": 1,
+            "at": "2026-11-06T13:00:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "captured",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 2,
+            "at": "2026-11-06T13:01:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "validated",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 3,
+            "at": "2026-11-06T13:02:00Z",
+            "actorRole": "REVIEWER-DEMO",
+            "event": "corrected",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 4,
+            "at": "2026-11-06T13:03:00Z",
+            "actorRole": "REVIEWER-DEMO",
+            "event": "conflicts_resolved",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 5,
+            "at": "2026-11-06T13:04:00Z",
+            "actorRole": "REVIEWER-DEMO",
+            "event": "approved",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 6,
+            "at": "2026-11-06T13:05:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "queued_offline",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 7,
+            "at": "2026-11-06T13:06:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "emcon_hold",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 8,
+            "at": "2026-11-06T13:07:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "exchange_permitted",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 9,
+            "at": "2026-11-06T13:08:00Z",
+            "actorRole": "OPERATOR-DEMO",
+            "event": "transferred",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 10,
+            "at": "2026-11-06T13:09:00Z",
+            "actorRole": "RECEIVING-DEMO",
+            "event": "received",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          },
+          {
+            "sequence": 11,
+            "at": "2026-11-06T13:10:00Z",
+            "actorRole": "RECEIVING-DEMO",
+            "event": "filed",
+            "packetId": "PACKET-001",
+            "revisionSet": [
+              "TR-4",
+              "SU-3",
+              "CO-1",
+              "TW-1"
+            ]
+          }
+        ],
+        "receipt": {
+          "receiptId": "RECEIPT-001",
+          "routeOperationId": "ROUTE-001",
+          "recipientId": "INBOX-DEMO",
+          "packetId": "PACKET-001",
+          "receivedAt": "2026-11-06T13:09:00Z"
+        },
+        "inboxCountAfterReplay": 1,
+        "offlineState": "queued_offline",
+        "finalState": "filed",
+        "filingManifestRecordId": "SCH-DEMO-1",
+        "remoteDeliveryClaim": false
+      },
+      "annotations": {
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "METRICS-001",
+      "recordType": "synthetic_measurement",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "EVAL36-2",
+        "EVAL36-3",
+        "DELIVERABLE36-1",
+        "DELIVERABLE36-2"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "attemptedPackets": 6,
+        "completedPackets": 6,
+        "manualSecondsPerPacket": 720,
+        "demoSecondsPerPacket": 300,
+        "seededValidationErrors": 3,
+        "caughtValidationErrors": 3,
+        "syntheticManualReworkPackets": 2,
+        "syntheticDemoReworkPackets": 0,
+        "intendedUses": [
+          "maintenance",
+          "training",
+          "watchstanding"
+        ],
+        "timingProvenance": "All durations, including demo durations, are fixed fictional examples, not observed runs."
+      },
+      "expected": {
+        "secondsSavedPerPacket": 420,
+        "minutesSavedPerPacket": 7,
+        "totalSecondsSaved": 2520,
+        "hoursSaved": 0.7,
+        "caughtErrorRatePercent": 100,
+        "reworkPacketDifference": 2,
+        "realManualBaseline": "unavailable; Fleet SME baseline pending",
+        "actualHoursReturned": "unverified",
+        "actualErrorReduction": "unverified"
+      },
+      "annotations": {
+        "schemaVersion": 1
+      }
+    },
+    {
+      "id": "REVIEW-001",
+      "recordType": "synthetic_review",
+      "unitId": "UNIT-DEMO-36",
+      "sourceCriterionIds": [
+        "UC36-4",
+        "EVAL36-5",
+        "EVAL36-6",
+        "DESC36-11",
+        "DESC36-12"
+      ],
+      "provenance": "synthetic; invented stand-in; not validated against the real format",
+      "input": {
+        "reviewerRole": "REVIEWER-DEMO",
+        "fictionalAssessment": "Three forms corrected; four actions verified; no operational usability judgment.",
+        "rubricWeightsPercent": {
+          "Warfighting": 30,
+          "Speed to Fleet": 20,
+          "Scalability": 20,
+          "Barrier Removal": 15,
+          "Judges' Discretion": 15
+        },
+        "milestonesDays": [
+          30,
+          60,
+          90,
+          180
+        ]
+      },
+      "expected": {
+        "sailorPanelJudgment": "pending",
+        "officialRubricScores": "pending; no scores assigned",
+        "governmentDevices": "untested",
+        "existingLowCodePlatforms": "untested",
+        "unitPilot": "pending",
+        "fleetReleaseDecision": "pending",
+        "milestones": [
+          {
+            "day": 30,
+            "action": "owner selects the forms and workflows to pilot",
+            "status": "pending"
+          },
+          {
+            "day": 60,
+            "action": "build on the owner's platform",
+            "status": "pending"
+          },
+          {
+            "day": 90,
+            "action": "unit pilot",
+            "status": "pending"
+          },
+          {
+            "day": 180,
+            "action": "fleet release decision",
+            "status": "pending"
+          }
+        ]
+      },
+      "annotations": {
+        "schemaVersion": 1
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Complete both tracks",
+      "kind": "typical",
+      "input": {
+        "recordIds": [
+          "TRAIN-001",
+          "SUPPLY-001",
+          "CORR-001",
+          "TASK-WEEK-001",
+          "SCH-DEMO-1",
+          "PACKET-001"
+        ],
+        "corrections": {
+          "durationMinutes": 45,
+          "quantity": 2,
+          "attach": "ENC-001"
+        },
+        "reviewerDecisionsSourceId": "MAIL-010"
+      },
+      "expectedBehavior": "After explicit reviewer confirmation, produce the three exact completedDocument strings, four actions and four draftStatusUpdate strings, and all 16 filingManifest entries from the referenced expected objects. Validate no remaining issues; queue offline. Exchange only after hold is lifted; one receipt and one filed packet. Never claim remote delivery."
+    },
+    {
+      "name": "Replay and arbitrary delivery order",
+      "kind": "edge",
+      "input": {
+        "recordId": "SYNC-001",
+        "includeReplays": true,
+        "order": "shuffledOrder"
+      },
+      "expectedBehavior": "Nine unique operations, two conflicts before merge, identical head sets for forward/reverse/shuffled order. Retain dangling-parent operations pending parent arrival; do not discard them. Explicit merges yield exactly canonicalRecordsAfterMerge and retain all 11 revisions."
+    },
+    {
+      "name": "Interrupted bounded transfer",
+      "kind": "edge",
+      "input": {
+        "recordId": "TRANSFER-001"
+      },
+      "expectedBehavior": "First budget 300 sends critical bytes 0..99 and scan bytes 400..599; resume from acknowledged 600 sends scan 600..899; 100 scan bytes remain. Preserve actual acknowledged bytes across restart and check final SHA-256 on completion."
+    },
+    {
+      "name": "Exact boundary and zero budget",
+      "kind": "edge",
+      "input": {
+        "attachmentId": "ATT-SCAN",
+        "totalBytes": 1000,
+        "acknowledgedOffset": 900,
+        "budgets": [
+          0,
+          100
+        ]
+      },
+      "expectedBehavior": "Budget 0 allocates 0 bytes and keeps offset 900. Budget 100 allocates exactly 100 bytes, next offset 1000, complete; no bytes exceed budget."
+    },
+    {
+      "name": "Blank required field",
+      "kind": "invalid",
+      "input": {
+        "recordId": "SUPPLY-001",
+        "patch": {
+          "item": ""
+        }
+      },
+      "expectedBehavior": "ITEM_REQUIRED: Enter an item. Preserve original source, entered values, pending queue and audit history; block affected submission. Set item to DEMO-FILTER; quantity 2 and other fields retained; validation passes."
+    },
+    {
+      "name": "Invalid quantity",
+      "kind": "invalid",
+      "input": {
+        "recordId": "SUPPLY-001",
+        "patch": {
+          "quantity": -2
+        }
+      },
+      "expectedBehavior": "QUANTITY_POSITIVE_INTEGER: Quantity must be a positive whole number. Preserve original source, entered values, pending queue and audit history; block affected submission. Set quantity to 2; completed document equals SUPPLY-001 expected completedDocument."
+    },
+    {
+      "name": "Missing enclosure",
+      "kind": "invalid",
+      "input": {
+        "recordId": "CORR-001",
+        "availableEnclosures": []
+      },
+      "expectedBehavior": "ENCLOSURE_MISSING: Attach referenced enclosure ENC-001. Preserve original source, entered values, pending queue and audit history; block affected submission. Attach exact recoveryEnclosure; correspondence validates and letter plus enclosure export matches expected."
+    },
+    {
+      "name": "Ambiguous handwriting",
+      "kind": "invalid",
+      "input": {
+        "recordId": "TRAIN-001",
+        "durationMinutes": 47,
+        "confirmed": false
+      },
+      "expectedBehavior": "UNCERTAIN_TRANSCRIPTION: Confirm duration from the image: final digit is overwritten. Preserve original source, entered values, pending queue and audit history; block affected submission. Reviewer confirms 45; retain draft and image evidence; completed training log matches expected."
+    },
+    {
+      "name": "Conflicting task dates",
+      "kind": "invalid",
+      "input": {
+        "actionId": "A-004",
+        "sourceIds": [
+          "MAIL-007",
+          "MAIL-008"
+        ]
+      },
+      "expectedBehavior": "DUE_DATE_CONFLICT: Choose 14:00Z or 17:00Z on 2026-11-06. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve both instructions; explicitly accept MAIL-010 decision; due becomes 2026-11-06T17:00:00Z, action verifies."
+    },
+    {
+      "name": "Ambiguous task owner",
+      "kind": "invalid",
+      "input": {
+        "actionId": "A-003",
+        "sourceIds": [
+          "MAIL-005"
+        ]
+      },
+      "expectedBehavior": "OWNER_AMBIGUOUS: Choose ADMIN-DEMO or TRAINING-DEMO. Preserve original source, entered values, pending queue and audit history; block affected submission. Explicitly accept MAIL-010 decision assigning ADMIN-DEMO; preserve all source evidence; action verifies."
+    },
+    {
+      "name": "Malformed import",
+      "kind": "invalid",
+      "input": {
+        "rawImport": "{\"records\":["
+      },
+      "expectedBehavior": "IMPORT_JSON_INVALID: Import is not valid JSON. Preserve original source, entered values, pending queue and audit history; block affected submission. Keep existing packet and unsaved draft byte-for-byte; import the valid synthetic artifact, then resume review with no duplicate IDs."
+    },
+    {
+      "name": "Unknown filing category",
+      "kind": "invalid",
+      "input": {
+        "recordId": "SUPPLY-001",
+        "category": "UNLISTED"
+      },
+      "expectedBehavior": "FILING_CATEGORY_UNKNOWN: Choose an invented schedule category. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve record in holding state; reviewer selects SUPPLY; file to DEMO/Supply/2026 citing SCH-DEMO-1."
+    },
+    {
+      "name": "Pending review route attempt",
+      "kind": "invalid",
+      "input": {
+        "packetId": "PACKET-001",
+        "approvedRevisionSet": [],
+        "action": "route"
+      },
+      "expectedBehavior": "REVIEW_REQUIRED: Approve the current packet revision before routing. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve packet with no inbox entry; reviewer approves exact current revision set, queue and exchange once."
+    },
+    {
+      "name": "Stale approval",
+      "kind": "invalid",
+      "input": {
+        "packetId": "PACKET-001",
+        "approvedRevisionSet": [
+          "TR-2",
+          "SU-1",
+          "CO-1",
+          "TW-1"
+        ],
+        "currentRevisionSet": [
+          "TR-4",
+          "SU-3",
+          "CO-1",
+          "TW-1"
+        ]
+      },
+      "expectedBehavior": "APPROVAL_STALE: Packet changed; review again. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve both approval history and edits; reapprove current revision set; route exactly once."
+    },
+    {
+      "name": "Storage failure",
+      "kind": "invalid",
+      "input": {
+        "packetId": "PACKET-001",
+        "fault": "quota_exceeded",
+        "unsavedNote": "Keep this draft"
+      },
+      "expectedBehavior": "STORAGE_WRITE_FAILED: Draft not saved; export or retry. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve unsavedNote in memory; do not acknowledge saved. Export retains note; free capacity and retry, then reload confirms note persisted."
+    },
+    {
+      "name": "Invalid transfer offset",
+      "kind": "invalid",
+      "input": {
+        "attachmentId": "ATT-SCAN",
+        "totalBytes": 1000,
+        "acknowledgedOffset": 1001
+      },
+      "expectedBehavior": "OFFSET_INVALID: Offset must be a whole number from 0 to total bytes. Preserve original source, entered values, pending queue and audit history; block affected submission. Allocate nothing and preserve stored offset 400; correct import to offset 400; standalone budget 300 reaches 700."
+    },
+    {
+      "name": "Negative transfer offset",
+      "kind": "invalid",
+      "input": {
+        "attachmentId": "ATT-SCAN",
+        "totalBytes": 1000,
+        "acknowledgedOffset": -1
+      },
+      "expectedBehavior": "OFFSET_INVALID: Offset must be a whole number from 0 to total bytes. Preserve original source, entered values, pending queue and audit history; block affected submission. Preserve stored transfer and packet; correct to 400, retry with 300, next offset 700."
+    },
+    {
+      "name": "EMCON hold on reconnect",
+      "kind": "invalid",
+      "input": {
+        "packetId": "PACKET-001",
+        "connected": true,
+        "emconHold": true
+      },
+      "expectedBehavior": "EMCON_HOLD: Exchange paused by operator. Preserve original source, entered values, pending queue and audit history; block affected submission. Keep durable queued packet unchanged and send zero bytes; explicitly lift hold, confirm current approval and exchange once."
+    },
+    {
+      "name": "Cancel exchange",
+      "kind": "invalid",
+      "input": {
+        "packetId": "PACKET-001",
+        "acknowledgedScanOffset": 600,
+        "action": "cancel"
+      },
+      "expectedBehavior": "TRANSFER_CANCELLED: Exchange stopped; acknowledged progress retained. Preserve original source, entered values, pending queue and audit history; block affected submission. Keep draft, queue and offset 600; explicit resume with budget 300 reaches 900; no background transfer while cancelled."
+    },
+    {
+      "name": "Offline restart",
+      "kind": "edge",
+      "input": {
+        "packetId": "PACKET-001",
+        "state": "queued_offline",
+        "action": "restart"
+      },
+      "expectedBehavior": "Reload restores corrected documents, image, four verified actions, approval bound to current revisions and queued_offline state. No receipt exists before exchange. Permitted reconnect creates RECEIPT-001 exactly once."
+    },
+    {
+      "name": "Duplicate receipt",
+      "kind": "edge",
+      "input": {
+        "packetId": "PACKET-001",
+        "receiptIds": [
+          "RECEIPT-001",
+          "RECEIPT-001"
+        ]
+      },
+      "expectedBehavior": "Inbox count remains 1; preserve original receipt receivedAt and filing entry; optional duplicate-attempt audit event must not duplicate routing side effects."
+    },
+    {
+      "name": "Complete transfer already acknowledged",
+      "kind": "edge",
+      "input": {
+        "attachmentId": "ATT-SCAN",
+        "totalBytes": 1000,
+        "acknowledgedOffset": 1000,
+        "budgetBytes": 300
+      },
+      "expectedBehavior": "Allocate zero bytes, keep offset 1000 and complete state; do not restart upload."
+    },
+    {
+      "name": "Fictional time and errors",
+      "kind": "typical",
+      "input": {
+        "recordId": "METRICS-001"
+      },
+      "expectedBehavior": "720 - 300 = 420 seconds = 7 minutes per packet; 6 * 420 / 3600 = 0.7 hours. Three seeded validation issues caught out of three = 100%; fictional rework 2 - 0 = 2 packets. Display synthetic provenance, real baseline unavailable and actual impact unverified."
+    }
+  ],
+  "limitations": [
+    "All records, role identifiers, pen strokes, addresses, quantities, timings and rules are fictional. No operational sources were contacted.",
+    "Invented stand-ins, not DD 1348-1A/NAVPERS replicas or SECNAV M-5216.5 validated formats. No official blank forms or retention schedules supplied.",
+    "Training image is an original SVG pen-stroke facsimile, not an actual scanned handwritten document. Manual review, not OCR, is the declared transcription mechanism.",
+    "Fixture answer keys establish synthetic expectations only; application persistence, reconciliation, encryption, transport, government devices and low-code compatibility require separate implementation and verification.",
+    "All demo times are invented, not observed application measurements or an SME baseline. No real hours returned, error reductions, panel judgment or official score are asserted.",
+    "Synthetic local receiving inbox only; no cloud/government endpoint, real submission, disposal, pilot, deployment or owner approval.",
+    "UTC dates and deterministic ordering are fixture conventions, not authoritative routing or records policy. Role-only .invalid addresses contain no personal information.",
+    "The host must validate and freeze these artifacts before downstream use. Owner confirmation of actual forms, rules, routing, schedules, timing baseline and pilot authority remains outstanding."
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "title": "Paperless Underway — synthetic offline packet workflow",
+  "description": "Local Node service with durable tablet workspace and a simulated receiving replica. No government or cloud endpoint; external-link outages and EMCON holds preserve local capture.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Forms and source review",
+      "description": "Handwritten image confirmation, supply and correspondence corrections, original source citations; synthetic formats visibly labeled.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "tasks",
+      "label": "Tasking and filing workbench",
+      "description": "Parse constrained email/document sources, retain conflicting instructions, require explicit reviewer decisions; generate four action drafts and cited filing manifest.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Shared packet and reconciliation core",
+      "description": "One implementation for API, UI calls and tests: validation, causal revisions, approval binding, routing gates and bounded byte planning.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "lib/offline.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Durable local workspace",
+      "description": "IndexedDB transactions hold drafts, source media, revisions, approvals, outbox, receiver bytes, receipts and audit. Saves acknowledged only after commit.",
+      "kind": "data",
+      "files": [
+        "public/storage.js",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local application service",
+      "description": "Foundation HTTP service hosts app and invokes shared core on /api/invoke. Local service remains present while upstream connectivity is off.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "compute.mjs"
+      ]
+    },
+    {
+      "id": "receiver",
+      "label": "Simulated receiving inbox",
+      "description": "Local synthetic replica performs actual byte copies and durable acknowledgements; idempotent receipts and filing. No remote delivery claim.",
+      "kind": "integration",
+      "files": [
+        "public/receiver.js",
+        "public/storage.js",
+        "compute.mjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "store",
+      "label": "Commit drafts, original media and revisions"
+    },
+    {
+      "from": "capture",
+      "to": "api",
+      "label": "Validate and review current packet"
+    },
+    {
+      "from": "api",
+      "to": "core",
+      "label": "Raw public JSON invocation"
+    },
+    {
+      "from": "tasks",
+      "to": "core",
+      "label": "Normalize sources and validate decisions"
+    },
+    {
+      "from": "core",
+      "to": "store",
+      "label": "Validated next state, audit and byte allocations"
+    },
+    {
+      "from": "store",
+      "to": "receiver",
+      "label": "Operator-permitted queued bytes only"
+    },
+    {
+      "from": "receiver",
+      "to": "store",
+      "label": "Committed offsets, receipt and filed packet"
+    },
+    {
+      "from": "tasks",
+      "to": "capture",
+      "label": "Cited verified actions and draft status updates"
+    }
+  ]
+}

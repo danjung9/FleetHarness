@@ -1,0 +1,934 @@
+{
+  "schemaVersion": 1,
+  "evaluations": [
+    {
+      "id": "forms-reference",
+      "capabilityId": "forms",
+      "description": "Render full new requisitions and block zero quantity; completed strings independently transcribed.",
+      "dataset": {
+        "name": "uc36-forms-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-form",
+          "input": {
+            "action": "forms",
+            "type": "supply_requisition",
+            "fields": {
+              "formId": "REQ-NEW",
+              "unitId": "UNIT-DEMO-X",
+              "roleId": "SUPPLY-DEMO",
+              "date": "2026-11-05",
+              "item": "DEMO-GASKET",
+              "quantity": 7,
+              "unitOfIssue": "EA",
+              "purpose": "Training stock"
+            }
+          },
+          "expected": {
+            "status": "valid",
+            "error": null,
+            "data": {
+              "issues": [],
+              "completedDocument": "SYNTHETIC SUPPLY REQUISITION REQ-NEW\nUnit: UNIT-DEMO-X\nRole: SUPPLY-DEMO\nDate: 2026-11-05\nItem: DEMO-GASKET\nQuantity: 7\nUnit of issue: EA\nPurpose: Training stock\n"
+            }
+          }
+        },
+        {
+          "id": "changed-quantity",
+          "input": {
+            "action": "forms",
+            "type": "supply_requisition",
+            "fields": {
+              "formId": "REQ-NEW",
+              "unitId": "UNIT-DEMO-X",
+              "roleId": "SUPPLY-DEMO",
+              "date": "2026-11-05",
+              "item": "DEMO-GASKET",
+              "quantity": 9,
+              "unitOfIssue": "EA",
+              "purpose": "Training stock"
+            }
+          },
+          "expected": {
+            "status": "valid",
+            "error": null,
+            "data": {
+              "issues": [],
+              "completedDocument": "SYNTHETIC SUPPLY REQUISITION REQ-NEW\nUnit: UNIT-DEMO-X\nRole: SUPPLY-DEMO\nDate: 2026-11-05\nItem: DEMO-GASKET\nQuantity: 9\nUnit of issue: EA\nPurpose: Training stock\n"
+            }
+          }
+        },
+        {
+          "id": "zero-quantity",
+          "input": {
+            "action": "forms",
+            "type": "supply_requisition",
+            "fields": {
+              "formId": "REQ-NEW",
+              "unitId": "UNIT-DEMO-X",
+              "roleId": "SUPPLY-DEMO",
+              "date": "2026-11-05",
+              "item": "DEMO-GASKET",
+              "quantity": 0,
+              "unitOfIssue": "EA",
+              "purpose": "Training stock"
+            }
+          },
+          "expected": {
+            "status": "invalid",
+            "error": null,
+            "data": {
+              "issues": [
+                {
+                  "code": "QUANTITY_POSITIVE_INTEGER",
+                  "field": "quantity",
+                  "message": "Quantity must be a positive whole number."
+                }
+              ],
+              "completedDocument": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tasking-reference",
+      "capabilityId": "tasking",
+      "description": "Raw constrained emails and explicit amendment: independent full actions, exact spans and status drafts.",
+      "dataset": {
+        "name": "uc36-tasking-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-message",
+          "input": {
+            "action": "tasking",
+            "sources": [
+              {
+                "id": "MAIL-X",
+                "text": "From: supply-demo@unit.invalid\nTo: staff-demo@unit.invalid\nDate: 2026-11-05T09:00:00Z\nSubject: Gasket check\nMessage-ID: <MAIL-X@unit.invalid>\n\nAction X-9: SUPPLY-DEMO inspect gasket. Due: 2026-11-12T10:00:00Z.\n"
+              }
+            ],
+            "accepted": true
+          },
+          "expected": {
+            "status": "verified",
+            "error": null,
+            "data": {
+              "actions": [
+                {
+                  "actionId": "X-9",
+                  "owningRole": "SUPPLY-DEMO",
+                  "dueAt": "2026-11-12T10:00:00Z",
+                  "timezone": "UTC",
+                  "actionText": "Inspect gasket",
+                  "status": "open",
+                  "sourceIds": [
+                    "MAIL-X"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "sourceId": "MAIL-X",
+                      "span": {
+                        "start": 143,
+                        "end": 209,
+                        "quote": "Action X-9: SUPPLY-DEMO inspect gasket. Due: 2026-11-12T10:00:00Z."
+                      }
+                    }
+                  ],
+                  "unresolvedQuestions": [],
+                  "draftStatusUpdate": "SYNTHETIC DRAFT X-9: Inspect gasket; owner SUPPLY-DEMO; due 2026-11-12T10:00:00Z; status open. Sources: MAIL-X."
+                }
+              ],
+              "ignoredNoActionIds": [],
+              "duplicateForwardIds": []
+            }
+          }
+        },
+        {
+          "id": "changed-due",
+          "input": {
+            "action": "tasking",
+            "sources": [
+              {
+                "id": "MAIL-X",
+                "text": "From: supply-demo@unit.invalid\nTo: staff-demo@unit.invalid\nDate: 2026-11-05T09:00:00Z\nSubject: Gasket check\nMessage-ID: <MAIL-X@unit.invalid>\n\nAction X-9: SUPPLY-DEMO inspect gasket. Due: 2026-11-12T10:00:00Z.\n"
+              },
+              {
+                "id": "MAIL-Y",
+                "text": "From: supply-demo@unit.invalid\nTo: staff-demo@unit.invalid\nDate: 2026-11-05T12:00:00Z\nSubject: Amendment\nMessage-ID: <MAIL-Y@unit.invalid>\n\nAmends MAIL-X action X-9 only. Due: 2026-11-13T11:00:00Z. All other instructions unchanged.\n"
+              }
+            ],
+            "accepted": true
+          },
+          "expected": {
+            "status": "verified",
+            "error": null,
+            "data": {
+              "actions": [
+                {
+                  "actionId": "X-9",
+                  "owningRole": "SUPPLY-DEMO",
+                  "dueAt": "2026-11-13T11:00:00Z",
+                  "timezone": "UTC",
+                  "actionText": "Inspect gasket",
+                  "status": "open",
+                  "sourceIds": [
+                    "MAIL-X",
+                    "MAIL-Y"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "sourceId": "MAIL-X",
+                      "span": {
+                        "start": 143,
+                        "end": 209,
+                        "quote": "Action X-9: SUPPLY-DEMO inspect gasket. Due: 2026-11-12T10:00:00Z."
+                      }
+                    },
+                    {
+                      "sourceId": "MAIL-Y",
+                      "span": {
+                        "start": 140,
+                        "end": 231,
+                        "quote": "Amends MAIL-X action X-9 only. Due: 2026-11-13T11:00:00Z. All other instructions unchanged."
+                      }
+                    }
+                  ],
+                  "unresolvedQuestions": [],
+                  "draftStatusUpdate": "SYNTHETIC DRAFT X-9: Inspect gasket; owner SUPPLY-DEMO; due 2026-11-13T11:00:00Z; status open. Sources: MAIL-X, MAIL-Y."
+                }
+              ],
+              "ignoredNoActionIds": [],
+              "duplicateForwardIds": []
+            }
+          }
+        },
+        {
+          "id": "unsupported",
+          "input": {
+            "action": "tasking",
+            "sources": [
+              {
+                "id": "BAD",
+                "text": "do whatever you want"
+              }
+            ]
+          },
+          "expected": {
+            "status": "error",
+            "error": "UNSUPPORTED_FORMAT",
+            "data": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "filing-reference",
+      "capabilityId": "filing",
+      "description": "Independent rule spans and exact destinations; unknown categories held with no disposal.",
+      "dataset": {
+        "name": "uc36-filing-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-schedule",
+          "input": {
+            "action": "filing",
+            "scheduleId": "SCH-X",
+            "scheduleText": "SYNTHETIC SCHEDULE X\nSUPPLY: requisitions -> DEMO/NewSupply; review only, never auto-delete.\nTRAINING: logs -> DEMO/NewTraining; review only, never auto-delete.\n",
+            "records": [
+              {
+                "id": "R-NEW",
+                "category": "SUPPLY"
+              }
+            ]
+          },
+          "expected": {
+            "status": "filed",
+            "error": null,
+            "data": {
+              "filingManifest": [
+                {
+                  "recordId": "R-NEW",
+                  "scheduleId": "SCH-X",
+                  "category": "SUPPLY",
+                  "destination": "DEMO/NewSupply",
+                  "ruleCitation": {
+                    "start": 21,
+                    "end": 92,
+                    "quote": "SUPPLY: requisitions -> DEMO/NewSupply; review only, never auto-delete."
+                  },
+                  "disposalAuthorized": false
+                }
+              ],
+              "heldIds": []
+            }
+          }
+        },
+        {
+          "id": "changed-category",
+          "input": {
+            "action": "filing",
+            "scheduleId": "SCH-X",
+            "scheduleText": "SYNTHETIC SCHEDULE X\nSUPPLY: requisitions -> DEMO/NewSupply; review only, never auto-delete.\nTRAINING: logs -> DEMO/NewTraining; review only, never auto-delete.\n",
+            "records": [
+              {
+                "id": "R-NEW",
+                "category": "TRAINING"
+              }
+            ]
+          },
+          "expected": {
+            "status": "filed",
+            "error": null,
+            "data": {
+              "filingManifest": [
+                {
+                  "recordId": "R-NEW",
+                  "scheduleId": "SCH-X",
+                  "category": "TRAINING",
+                  "destination": "DEMO/NewTraining",
+                  "ruleCitation": {
+                    "start": 93,
+                    "end": 160,
+                    "quote": "TRAINING: logs -> DEMO/NewTraining; review only, never auto-delete."
+                  },
+                  "disposalAuthorized": false
+                }
+              ],
+              "heldIds": []
+            }
+          }
+        },
+        {
+          "id": "unknown-category",
+          "input": {
+            "action": "filing",
+            "scheduleId": "SCH-X",
+            "scheduleText": "SYNTHETIC SCHEDULE X\nSUPPLY: requisitions -> DEMO/NewSupply; review only, never auto-delete.\nTRAINING: logs -> DEMO/NewTraining; review only, never auto-delete.\n",
+            "records": [
+              {
+                "id": "R-NEW",
+                "category": "UNLISTED"
+              }
+            ]
+          },
+          "expected": {
+            "status": "held",
+            "error": null,
+            "data": {
+              "filingManifest": [
+                {
+                  "recordId": "R-NEW",
+                  "scheduleId": "SCH-X",
+                  "category": "UNLISTED",
+                  "destination": null,
+                  "ruleCitation": null,
+                  "disposalAuthorized": false
+                }
+              ],
+              "heldIds": [
+                "R-NEW"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reconcile-reference",
+      "capabilityId": "reconcile",
+      "description": "Manually traced graph heads with inherited fields, tombstone, replay and staged parent absence.",
+      "dataset": {
+        "name": "uc36-reconcile-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-chain-replay",
+          "input": {
+            "action": "reconcile",
+            "operations": [
+              {
+                "operationId": "O-X2",
+                "recordId": "R-X",
+                "revisionId": "R2",
+                "parentRevisionIds": [
+                  "R1"
+                ],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 9
+                },
+                "deleted": false
+              },
+              {
+                "operationId": "O-X1",
+                "recordId": "R-X",
+                "revisionId": "R1",
+                "parentRevisionIds": [],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 7,
+                  "item": "GASKET"
+                },
+                "deleted": false
+              },
+              {
+                "operationId": "O-X1",
+                "recordId": "R-X",
+                "revisionId": "R1",
+                "parentRevisionIds": [],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 7,
+                  "item": "GASKET"
+                },
+                "deleted": false
+              }
+            ]
+          },
+          "expected": {
+            "status": "ok",
+            "error": null,
+            "data": {
+              "records": [
+                {
+                  "recordId": "R-X",
+                  "headRevisionIds": [
+                    "R2"
+                  ],
+                  "variants": [
+                    {
+                      "revisionId": "R2",
+                      "deleted": false,
+                      "payload": {
+                        "quantity": 9,
+                        "item": "GASKET"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "conflictCount": 0,
+              "uniqueOperationCount": 2,
+              "pendingRevisionIds": [],
+              "retainedRevisionIds": [
+                "R1",
+                "R2"
+              ]
+            }
+          }
+        },
+        {
+          "id": "changed-delete-branch",
+          "input": {
+            "action": "reconcile",
+            "operations": [
+              {
+                "operationId": "O-X3",
+                "recordId": "R-X",
+                "revisionId": "R3",
+                "parentRevisionIds": [
+                  "R1"
+                ],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {},
+                "deleted": true
+              },
+              {
+                "operationId": "O-X2",
+                "recordId": "R-X",
+                "revisionId": "R2",
+                "parentRevisionIds": [
+                  "R1"
+                ],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 9
+                },
+                "deleted": false
+              },
+              {
+                "operationId": "O-X1",
+                "recordId": "R-X",
+                "revisionId": "R1",
+                "parentRevisionIds": [],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 7,
+                  "item": "GASKET"
+                },
+                "deleted": false
+              }
+            ]
+          },
+          "expected": {
+            "status": "ok",
+            "error": null,
+            "data": {
+              "records": [
+                {
+                  "recordId": "R-X",
+                  "headRevisionIds": [
+                    "R2",
+                    "R3"
+                  ],
+                  "variants": [
+                    {
+                      "revisionId": "R2",
+                      "deleted": false,
+                      "payload": {
+                        "quantity": 9,
+                        "item": "GASKET"
+                      }
+                    },
+                    {
+                      "revisionId": "R3",
+                      "deleted": true,
+                      "payload": null
+                    }
+                  ]
+                }
+              ],
+              "conflictCount": 1,
+              "uniqueOperationCount": 3,
+              "pendingRevisionIds": [],
+              "retainedRevisionIds": [
+                "R1",
+                "R2",
+                "R3"
+              ]
+            }
+          }
+        },
+        {
+          "id": "missing-history",
+          "input": {
+            "action": "reconcile",
+            "operations": [
+              {
+                "operationId": "O-X2",
+                "recordId": "R-X",
+                "revisionId": "R2",
+                "parentRevisionIds": [
+                  "R1"
+                ],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 9
+                },
+                "deleted": false
+              }
+            ]
+          },
+          "expected": {
+            "status": "pending",
+            "error": null,
+            "data": {
+              "records": [],
+              "conflictCount": 0,
+              "uniqueOperationCount": 1,
+              "pendingRevisionIds": [
+                "R2"
+              ],
+              "retainedRevisionIds": [
+                "R2"
+              ]
+            }
+          }
+        },
+        {
+          "id": "identity-collision",
+          "input": {
+            "action": "reconcile",
+            "operations": [
+              {
+                "operationId": "O-X1",
+                "recordId": "R-X",
+                "revisionId": "R1",
+                "parentRevisionIds": [],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 7,
+                  "item": "GASKET"
+                },
+                "deleted": false
+              },
+              {
+                "operationId": "O-X1",
+                "recordId": "R-X",
+                "revisionId": "R1",
+                "parentRevisionIds": [],
+                "replicaId": "TABLET-X",
+                "timestamp": "2026-11-05T10:00:00Z",
+                "payload": {
+                  "quantity": 8
+                },
+                "deleted": false
+              }
+            ]
+          },
+          "expected": {
+            "status": "error",
+            "error": "OPERATION_COLLISION",
+            "data": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "transfer-reference",
+      "capabilityId": "transfer",
+      "description": "Raw-byte arithmetic: 18 pending bytes, budget 8 leaves 10; zero budget retains all.",
+      "dataset": {
+        "name": "uc36-transfer-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-budget",
+          "input": {
+            "action": "transfer",
+            "budgetBytes": 8,
+            "attachments": [
+              {
+                "attachmentId": "X-B",
+                "criticality": 1,
+                "totalBytes": 19,
+                "acknowledgedOffset": 4
+              },
+              {
+                "attachmentId": "X-A",
+                "criticality": 0,
+                "totalBytes": 3,
+                "acknowledgedOffset": 0
+              }
+            ]
+          },
+          "expected": {
+            "status": "planned",
+            "error": null,
+            "data": {
+              "allocations": [
+                {
+                  "attachmentId": "X-A",
+                  "startOffset": 0,
+                  "bytes": 3,
+                  "nextOffset": 3
+                },
+                {
+                  "attachmentId": "X-B",
+                  "startOffset": 4,
+                  "bytes": 5,
+                  "nextOffset": 9
+                }
+              ],
+              "remainingBytes": 10
+            }
+          }
+        },
+        {
+          "id": "changed-zero-budget",
+          "input": {
+            "action": "transfer",
+            "budgetBytes": 0,
+            "attachments": [
+              {
+                "attachmentId": "X-B",
+                "criticality": 1,
+                "totalBytes": 19,
+                "acknowledgedOffset": 4
+              },
+              {
+                "attachmentId": "X-A",
+                "criticality": 0,
+                "totalBytes": 3,
+                "acknowledgedOffset": 0
+              }
+            ]
+          },
+          "expected": {
+            "status": "planned",
+            "error": null,
+            "data": {
+              "allocations": [],
+              "remainingBytes": 18
+            }
+          }
+        },
+        {
+          "id": "invalid-offset",
+          "input": {
+            "action": "transfer",
+            "budgetBytes": 8,
+            "attachments": [
+              {
+                "attachmentId": "X-B",
+                "criticality": 1,
+                "totalBytes": 19,
+                "acknowledgedOffset": 20
+              }
+            ]
+          },
+          "expected": {
+            "status": "error",
+            "error": "OFFSET_INVALID",
+            "data": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "routing-reference",
+      "capabilityId": "routing",
+      "description": "Independent gating truth table including hold, stale approval and receipt replay.",
+      "dataset": {
+        "name": "uc36-routing-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-approved-packet",
+          "input": {
+            "action": "routing",
+            "currentRevisionSet": [
+              "NEW-2"
+            ],
+            "approvedRevisionSet": [
+              "NEW-2"
+            ],
+            "issueCount": 0,
+            "conflictCount": 0,
+            "connected": true,
+            "emconHold": false,
+            "operationId": "ROUTE-X",
+            "receiptOperationIds": [],
+            "file": true
+          },
+          "expected": {
+            "status": "filed",
+            "error": null,
+            "data": {
+              "receiptCount": 1
+            }
+          }
+        },
+        {
+          "id": "changed-hold",
+          "input": {
+            "action": "routing",
+            "currentRevisionSet": [
+              "NEW-2"
+            ],
+            "approvedRevisionSet": [
+              "NEW-2"
+            ],
+            "issueCount": 0,
+            "conflictCount": 0,
+            "connected": true,
+            "emconHold": true,
+            "operationId": "ROUTE-X",
+            "receiptOperationIds": [],
+            "file": true
+          },
+          "expected": {
+            "status": "blocked",
+            "error": "EMCON_HOLD",
+            "data": {
+              "receiptCount": 0
+            }
+          }
+        },
+        {
+          "id": "stale-approval",
+          "input": {
+            "action": "routing",
+            "currentRevisionSet": [
+              "NEW-2"
+            ],
+            "approvedRevisionSet": [
+              "NEW-1"
+            ],
+            "issueCount": 0,
+            "conflictCount": 0,
+            "connected": true,
+            "emconHold": false,
+            "operationId": "ROUTE-X",
+            "receiptOperationIds": [],
+            "file": true
+          },
+          "expected": {
+            "status": "blocked",
+            "error": "APPROVAL_STALE",
+            "data": {
+              "receiptCount": 0
+            }
+          }
+        },
+        {
+          "id": "receipt-replay",
+          "input": {
+            "action": "routing",
+            "currentRevisionSet": [
+              "NEW-2"
+            ],
+            "approvedRevisionSet": [
+              "NEW-2"
+            ],
+            "issueCount": 0,
+            "conflictCount": 0,
+            "connected": true,
+            "emconHold": false,
+            "operationId": "ROUTE-X",
+            "receiptOperationIds": [
+              "ROUTE-X"
+            ],
+            "file": true
+          },
+          "expected": {
+            "status": "filed",
+            "error": null,
+            "data": {
+              "receiptCount": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "metrics-reference",
+      "capabilityId": "metrics",
+      "description": "Manual arithmetic; fictional benefit is separate from deferred operational measurements.",
+      "dataset": {
+        "name": "uc36-metrics-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Derived manually from public rules before implementation; includes off-fixture values, changed constraint and invalid case. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "new-timings",
+          "input": {
+            "action": "metrics",
+            "completedPackets": 4,
+            "manualSecondsPerPacket": 600,
+            "demoSecondsPerPacket": 240,
+            "seededValidationErrors": 5,
+            "caughtValidationErrors": 4,
+            "syntheticManualReworkPackets": 2,
+            "syntheticDemoReworkPackets": 1
+          },
+          "expected": {
+            "status": "calculated",
+            "error": null,
+            "data": {
+              "secondsSavedPerPacket": 360,
+              "minutesSavedPerPacket": 6,
+              "totalSecondsSaved": 1440,
+              "hoursSaved": 0.4,
+              "caughtErrorRatePercent": 80,
+              "reworkPacketDifference": 1
+            }
+          }
+        },
+        {
+          "id": "changed-demo-duration",
+          "input": {
+            "action": "metrics",
+            "completedPackets": 4,
+            "manualSecondsPerPacket": 600,
+            "demoSecondsPerPacket": 420,
+            "seededValidationErrors": 5,
+            "caughtValidationErrors": 4,
+            "syntheticManualReworkPackets": 2,
+            "syntheticDemoReworkPackets": 1
+          },
+          "expected": {
+            "status": "calculated",
+            "error": null,
+            "data": {
+              "secondsSavedPerPacket": 180,
+              "minutesSavedPerPacket": 3,
+              "totalSecondsSaved": 720,
+              "hoursSaved": 0.2,
+              "caughtErrorRatePercent": 80,
+              "reworkPacketDifference": 1
+            }
+          }
+        },
+        {
+          "id": "impossible-caught-count",
+          "input": {
+            "action": "metrics",
+            "completedPackets": 4,
+            "manualSecondsPerPacket": 600,
+            "demoSecondsPerPacket": 240,
+            "seededValidationErrors": 5,
+            "caughtValidationErrors": 6,
+            "syntheticManualReworkPackets": 2,
+            "syntheticDemoReworkPackets": 1
+          },
+          "expected": {
+            "status": "error",
+            "error": "INPUT_INVALID",
+            "data": null
+          }
+        }
+      ]
+    }
+  ]
+}

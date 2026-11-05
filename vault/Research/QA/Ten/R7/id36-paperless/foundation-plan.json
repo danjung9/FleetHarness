@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "offline",
+  "reason": "Adopt the recommended dependency-free Node 22.19+ local service and offline primitives. Extend compute.mjs once for API/UI/tests, adapting fixture revision IDs and ascending criticality. IndexedDB and a simulated local receiver supply persistence and byte acknowledgements absent from the pack. External-link disconnection leaves the local service available; no remote endpoint is claimed. PouchDB/CouchDB adds an unavailable endpoint and does not remove explicit review obligations."
+}
