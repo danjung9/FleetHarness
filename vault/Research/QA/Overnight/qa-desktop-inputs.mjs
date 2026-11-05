@@ -136,7 +136,15 @@ async function freshIntake() {
   const dialog = page.getByRole('dialog', { name: 'New challenge', exact: true }); await dialog.waitFor();
   await dialog.getByRole('button', { name: 'Custom problem', exact: true }).click();
   const section = dialog.getByRole('region', { name: 'Data & inputs', exact: true }); await section.waitFor();
-  assert.equal(await section.getByRole('listitem').count(), 0, 'A fresh unsaved brief must have no previous case inputs.');
+  // Newer UI retains unsaved drafts after closing. Reset only this owned case's
+  // inputs through visible controls; closing a dialog need not discard a draft.
+  const previousInputs = await section.getByRole('listitem').count();
+  const remove = section.getByRole('button', { name: /^Remove / });
+  if (previousInputs > 10 || await remove.count() !== previousInputs) throw new Error('Case setup could not identify the owned draft input controls.');
+  for (let i = 0; i < previousInputs; i++) await remove.first().click();
+  await poll(async () => await section.getByRole('listitem').count() === 0, 'Case setup did not remove previous inputs.');
+  assert.equal(await section.getByRole('listitem').count(), 0, 'Each input case must start empty after explicit UI reset.');
+  result.caseSetups ??= []; result.caseSetups.push({ at: new Date().toISOString(), removedInputCount: previousInputs, resetThroughUI: true });
   return { dialog, section, chooser: section.getByLabel('Attach data files', { exact: true }) };
 }
 async function attach(section, chooser, files) {
