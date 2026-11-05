@@ -19,12 +19,21 @@ export async function recordReview(store: Store, project: Project, decision: Rev
   if (decision === 'approved') await verifiedManifest(project);
   const record: ReviewRecord = { id: randomUUID(), runId: project.runId, decision, feedback: note, createdAt: new Date().toISOString(), sourceHash: project.report?.sourceHash };
   const next = structuredClone(project);
+  // Keep live chat proposals and messages attached while the review is saved.
+  next.conversation = project.conversation;
   const reviewPath = path.join(project.workspace, 'review.json');
   let previousArtifact: Buffer | undefined;
   try { previousArtifact = await fs.readFile(await safeFile(project.workspace, 'review.json')); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   next.reviewHistory = [...(next.reviewHistory ?? []), record];
-  next.feedback = note; next.updatedAt = record.createdAt;
+  next.updatedAt = record.createdAt;
+  // A later request belongs in history without replacing the approved receipt.
+  // Startup commits the new iteration separately, after its workspace is ready.
+  if (decision === 'changes_requested' && project.approvedAt) {
+    await store.saveProject(next);
+    return record;
+  }
+  next.feedback = note;
   if (decision === 'approved') {
     next.approvedAt = record.createdAt; next.status = 'approved';
     next.stages.find(stage => stage.id === 'review')!.status = 'complete';

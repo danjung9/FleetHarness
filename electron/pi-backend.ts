@@ -192,8 +192,9 @@ export class FleetBackend {
   async requestChanges(id: string, feedback: string) {
     reviewFeedback(feedback);
     const p = this.store.project(id);
-    if (this.active.has(id) || !['review', 'failed'].includes(p.status) || !p.runId || !p.workspace || !p.report || p.approvedAt) {
-      throw new Error('Request changes from a completed, unapproved build with test evidence.');
+    const approved = !!p.approvedAt && ['approved', 'delivered'].includes(p.status);
+    if (this.active.has(id) || (!approved && (!['review', 'failed'].includes(p.status) || p.approvedAt)) || !p.runId || !p.workspace || !p.report) {
+      throw new Error('Finish a build and open its review or approved delivery before requesting changes.');
     }
     const review = await recordReview(this.store, p, 'changes_requested', feedback);
     this.notify();
@@ -217,7 +218,9 @@ export class FleetBackend {
   private async begin(id: string, resuming: boolean, revision?: { review: ReviewRecord; workspace: string }) {
     if (this.active.has(id)) throw new Error(resuming && this.active.get(id)?.preparingResume ? 'This challenge is already preparing to resume.' : 'This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
-    const p = this.store.project(id);
+    const currentProject = this.store.project(id);
+    // Prepare revisions privately so a failed start never publishes a revoked approval.
+    let p = revision ? structuredClone(currentProject) : currentProject;
     if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed; writer shutdown was not confirmed. Use Stop to reconcile the previous run before starting new work.');
     if (resuming && (p.approvedAt || !['failed', 'stopped'].includes(p.status))) throw new Error('Only a failed or stopped build can resume.');
     if (resuming && (!p.workspace || !p.runId || p.runCheckpoint?.version !== 1)) throw new Error('This build has no trusted recovery checkpoint. Its files are preserved; start a new build to continue.');
@@ -230,7 +233,8 @@ export class FleetBackend {
     }
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve, review: revision?.review, preparingResume: resuming };
+    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve,
+      review: revision ? p.reviewHistory?.find(item => item.id === revision.review.id) : undefined, preparingResume: resuming };
     let admitted = !resuming;
     this.active.set(id, run);
     try {
@@ -339,7 +343,14 @@ export class FleetBackend {
         this.log(p, 'review', 'info', 'Changes requested for run ' + run.review.runId + '. Starting another iteration with the saved reviewer comments and previous source.');
       }
       await this.checkpoint(p, run, 'intake');
-      await this.changed(p);
+      if (revision) {
+        this.check(run);
+        p.conversation = currentProject.conversation;
+        p.updatedAt = new Date().toISOString();
+        await this.store.saveProject(p);
+        p = currentProject;
+        this.notify();
+      } else await this.changed(p);
       this.check(run);
       void run.processes.run(() => this.execute(p, run, provider, modelId));
     } catch (error) {
@@ -355,7 +366,12 @@ export class FleetBackend {
       p.status = run.controller.signal.aborted ? 'stopped' : 'failed';
       recordProjectError(p, error, detail => this.log(p, 'intake', 'error', detail));
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
-      await this.finish(p, run, refusalSaveTimeoutMs); throw new Error(plainError(error).message, { cause: error });
+      await this.finish(p, run, refusalSaveTimeoutMs);
+      if (revision && p !== currentProject && p.processScope?.runId === p.runId && p.processScope?.cleanup !== 'confirmed' && p.runId !== currentProject.runId) {
+        // Retain an unresolved new process scope so Stop can reconcile it.
+        await this.store.saveProject(p);
+      }
+      throw new Error(plainError(error).message, { cause: error });
     }
   }
   private async planningHash(p: Project) {

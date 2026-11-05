@@ -53,6 +53,34 @@ const tool = (config, name) => {
   assert.ok(found, `Missing ${name}`); return found;
 };
 
+for (const status of ['approved', 'delivered']) test(`project lead proposes changes to ${status} apps for confirmation`, async t => {
+  const feedback = 'Keep the entered message visible when validation fails.';
+  const h = await fixture(t, { scenario: async ({ config }) => {
+    const propose = tool(config, 'fleet_propose_action');
+    await assert.rejects(propose.execute('short', { type: 'request_changes', reason: 'Correct validation.', feedback: 'short' }), /10 to 10,000/);
+    const result = await propose.execute('change', { type: 'request_changes', reason: 'Correct validation.', feedback });
+    assert.match(textOf(result), /NOT been applied/);
+  } });
+  h.project.status = status; h.project.approvedAt = '2026-11-05T06:00:00Z'; h.project.runId = 'approved-run';
+  const old = structuredClone(h.project);
+  await h.ask(feedback);
+  const action = h.project.conversation.actions[0];
+  assert.equal(action.type, 'request_changes'); assert.equal(action.feedback, feedback); assert.equal(action.status, 'proposed');
+  assert.equal(action.runId, old.runId); assert.equal(action.baseBriefHash, briefHash(old));
+  assert.equal(h.project.approvedAt, old.approvedAt); assert.equal(h.project.status, old.status);
+  assert.equal(h.project.runId, old.runId); assert.equal(h.project.description, old.description);
+  assert.equal(JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects[0].conversation.actions[0].feedback, feedback);
+});
+
+for (const status of ['draft', 'running', 'review']) test(`project lead refuses post-approval changes for ${status} apps`, async t => {
+  const h = await fixture(t, { scenario: async ({ config }) => {
+    await assert.rejects(tool(config, 'fleet_propose_action').execute('change', { type: 'request_changes', reason: 'Correct validation.', feedback: 'Keep entered messages visible.' }), /Review and approve/);
+  } });
+  h.project.status = status;
+  await h.ask('Keep entered messages visible.');
+  assert.deepEqual(h.project.conversation.actions, []);
+});
+
 test('project lead responds on demand beside an active build with only its own tools and session', async t => {
   const entered = deferred(), finish = deferred();
   const h = await fixture(t, { scenario: async ({ session }) => {

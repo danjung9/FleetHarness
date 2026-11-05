@@ -10,7 +10,7 @@ import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
 type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onApproved: () => void; onChangesRequested: () => void };
-type DeliveryProps = { project: Project; busy: boolean; action: Action; onReview: () => void };
+type DeliveryProps = { project: Project; busy: boolean; action: Action; onReview: () => void; onChangesRequested: () => void };
 type ReviewDraft = { feedback: string; reviewed: boolean };
 const reviewDrafts = new Map<string, ReviewDraft>();
 const draftKey = (project: Project) => `appyard-review:${project.id}:${project.runId || 'unstarted'}`;
@@ -146,11 +146,22 @@ export function DeliveryWorkspace(props: DeliveryProps) {
   return <DeliveryContent key={draftKey(props.project)} {...props}/>;
 }
 
-function DeliveryContent({ project, busy, action, onReview }: DeliveryProps) {
+function DeliveryContent({ project, busy, action, onReview, onChangesRequested }: DeliveryProps) {
   const [notice, setNotice] = useState<{ text: string; failed: boolean } | null>(null);
+  const [feedback, setFeedback] = useState(() => pendingChangeRequest(project)?.feedback ?? '');
+  const [requesting, setRequesting] = useState(false);
+  const changeId = useId();
   const packaging = project.executable?.status === 'packaging';
   const approved = !!project.approvedAt;
   const savedApp = project.executable?.status === 'ready' && !!project.executable.savedTo;
+
+  async function requestChange() {
+    if (busy || requesting || packaging || !approved || !['approved', 'delivered'].includes(project.status) || feedback.trim().length < 10) return;
+    setRequesting(true);
+    const success = await action(() => api.requestChanges(project.id, feedback), 'Changes requested. A new iteration has started.');
+    if (success) onChangesRequested();
+    else setRequesting(false);
+  }
 
   async function deliver(work: () => Promise<unknown>, kind: 'download' | 'export') {
     setNotice(null);
@@ -175,6 +186,13 @@ function DeliveryContent({ project, busy, action, onReview }: DeliveryProps) {
         <div><h2 id="delivery-source-heading">Source and evidence</h2><p>Export the app source, test results, and your review for inspection or further development.</p></div>
         <button className="secondary" disabled={!isDesktop || busy || packaging || project.status === 'running'} onClick={() => void deliver(() => api.exportProject(project.id), 'export')}><Download size={16}/>Export source & evidence</button>
         {project.exportedTo && <p className="delivery-saved-path" role="status">Source and evidence saved to <span>{project.exportedTo}</span></p>}
+      </section>
+      <section className="delivery-app">
+        <h2>Request a change</h2>
+        <label htmlFor={changeId}>What should change?</label>
+        <textarea id={changeId} rows={3} maxLength={10000} value={feedback} disabled={busy || requesting} onChange={event => setFeedback(event.target.value)}/>
+        <p className="review-notes-hint">Use at least 10 characters. The next iteration needs new checks and approval. Your previously delivered files are kept.</p>
+        <button className="secondary" disabled={!isDesktop || busy || requesting || packaging || !['approved', 'delivered'].includes(project.status) || feedback.trim().length < 10} onClick={() => void requestChange()}><RotateCcw size={16}/>{requesting ? 'Requesting…' : 'Request a change'}</button>
       </section>
       {notice && <p className={'delivery-notice' + (notice.failed ? ' failed' : '')} role={notice.failed ? 'alert' : 'status'}>{notice.text}</p>}
     </>}

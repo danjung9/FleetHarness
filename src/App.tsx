@@ -299,7 +299,7 @@ export default function App() {
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')}/>}
       {p && active === 'agents' && <AgentSessions key={p.id} project={p} onReview={() => navigate('evidence')}/>}
       {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onApproved={() => navigate('delivery')} onChangesRequested={() => navigate('factory')}/>}
-      {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')}/>}
+      {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact}/>}
       {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{p.runId ? 'Saving changes resets test results and approval. A new build starts fresh.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running'} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
         const saved = await action(() => api.updateProject(p.id, input), 'Brief saved.');
