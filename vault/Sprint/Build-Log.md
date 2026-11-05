@@ -171,3 +171,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 03:37 Judge, R5-id11-training: NOT. The automatic bar failed. `final.json:3,73-79,95-113` records failed build, queued verification/review/delivery and a null final report. The retained core report records 
 - 03:37 Astra planning-audit started: Project: AppYard, repo FleetHarness. An Electron app that takes a challenge brief and runs an agent pipeline to a delive
 - 03:37 Real build, round 5, id20-contact-brief: failed in 18.9 minutes, tests None, journeys 0/0. AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer fo
+- 03:38 Team branch: mvp now 5f4eb39
+- 03:38 qa-runner: Completed one R5 triage. Both FAILs retain the frozen-plan rejection and later shutdown warning. Pi fixture passes remain scoped.
