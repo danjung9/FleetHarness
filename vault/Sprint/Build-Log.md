@@ -186,3 +186,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 03:33 [E] Offline proof on a real generated app from an earlier round: packaged by the real path with runtime downloads blocked, opened with its network blocked, 25 controls, first button works, no outside requests. Wi-Fi itself stayed on, because turning it off would stop the running builds.
 - 03:35 [E] Container proof on a real generated service app from round 5: image builds, the app stops at startup because that build used the older template, which refuses any host but loopback. The template is fixed in `5f4eb39`. To be retested on a new build.
 - 03:39 [E] Round 6 started at `5f4eb39`, with a separate real build using connector sample data.
+- 03:46 Astra planning-audit finished, exit 0. Report: `Research/Backend-Audit/planning-audit.md`
