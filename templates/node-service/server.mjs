@@ -138,7 +138,7 @@ export function createApplication({ compute = applicationCompute, publicDirector
 }
 
 export async function start({ host = process.env.HOST || '127.0.0.1', port = Number(process.env.PORT || 3000), ...options } = {}) {
-  if (host !== '127.0.0.1') throw new Error('HOST must be 127.0.0.1.');
+  if (!['127.0.0.1', '0.0.0.0'].includes(host)) throw new Error('HOST must be 127.0.0.1 or 0.0.0.0.');
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('PORT must be a valid TCP port.');
   const server = createApplication(options);
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });

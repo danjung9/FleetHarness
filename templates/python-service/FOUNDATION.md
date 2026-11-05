@@ -10,7 +10,7 @@ Requires Python 3.10 or newer. No installation or third-party packages are neede
 HOST=127.0.0.1 PORT=3000 python3 -B server.py
 ```
 
-Open `http://127.0.0.1:3000/`. The host assigns `HOST` and `PORT` during clean evaluation. Bind only to that loopback host and respect the assigned port. `SIGINT` and `SIGTERM` stop accepting requests and close the server. Unfinished computation threads are daemon threads and do not prevent process exit.
+Open `http://127.0.0.1:3000/`. The host assigns `HOST` and `PORT` during clean evaluation. Respect both values: verification uses loopback and container delivery uses `HOST=0.0.0.0` with a port published on host loopback. `SIGINT` and `SIGTERM` stop accepting requests and close the server. Unfinished computation threads are daemon threads and do not prevent process exit.
 
 ## Extension contract
 

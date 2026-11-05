@@ -215,8 +215,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def create_server(host="127.0.0.1", port=3000, computation=compute):
-    if host != "127.0.0.1":
-        raise ValueError("HOST must be 127.0.0.1.")
+    if host not in ("127.0.0.1", "0.0.0.0"):
+        raise ValueError("HOST must be 127.0.0.1 or 0.0.0.0.")
     if not isinstance(port, int) or not 0 <= port <= 65535:
         raise ValueError("PORT must be a valid TCP port.")
     return ApplicationServer((host, port), computation)

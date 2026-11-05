@@ -75,7 +75,7 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 `;
 }
 
-export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string }
+export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string; runtimeDirectory?: string }
 
 export async function stageExecutable(project: Project, root: string) {
   const manifest = await assertExecutableSource(project);
@@ -125,14 +125,14 @@ export async function runPackageWorker(job: PackageJob, executable: string, sign
       else child.kill('SIGKILL');
     };
     const abort = () => stop('Packaging stopped. Download the app again to retry.');
-    const timer = setTimeout(() => stop('Packaging exceeded 10 minutes. Check your connection and download the app again.'), timeoutMs);
+    const timer = setTimeout(() => stop('Packaging exceeded 10 minutes. Download the app again to retry.'), timeoutMs);
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
     child.once('error', error => { failure = error; });
     child.once('close', code => {
       clearTimeout(timer); signal?.removeEventListener('abort', abort);
       if (failure) reject(failure);
-      else if (code !== 0) reject(new Error('Could not package the app. Check your connection and retry.\n' + output));
+      else if (code !== 0) reject(new Error(output.trim() || 'Could not package the app. Download the app again to retry.'));
       else resolve();
     });
   });

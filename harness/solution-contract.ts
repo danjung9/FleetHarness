@@ -74,6 +74,7 @@ function version(value: unknown, name: string) {
 /** Portable file names only; filesystem containment and symlinks are checked again at execution. */
 function file(value: unknown, name: string): string {
   const path = text(value, name, 240);
+  if (['dockerfile', 'compose.yaml'].includes(path.toLowerCase())) throw new Error(`${name} cannot use host-owned container export files.`);
   const parts = path.split('/');
   if (!/^[A-Za-z0-9_.\/-]+$/.test(path) || /(?:^|\/)inputs\/manifest\.json$/i.test(path) || parts.some(part => !part || part === '.' || part === '..' || hostDirectories.has(part.toLowerCase())) ||
       parts.some(part => hostFiles.has(part.toLowerCase()) || part.toLowerCase().startsWith('.env'))) {
@@ -102,7 +103,7 @@ function endpoint(value: unknown, name: string): string {
 
 function runtime(value: unknown): RuntimeManifest {
   const name = 'runtime';
-  const entry = object(value, name, ['profile', 'files', 'requiredEnv', 'entrypoint', 'command', 'evaluator', 'dependencies', 'healthPath', 'invokePath']);
+  const entry = object(value, name, ['profile', 'files', 'requiredEnv', 'entrypoint', 'command', 'evaluator', 'dependencies', 'healthPath', 'invokePath', 'port']);
   if (entry.profile !== 'browser' && entry.profile !== 'cli' && entry.profile !== 'service') throw new Error('runtime.profile must be browser, cli or service.');
   const files = unique(array(entry.files, 'runtime.files', 1, solutionLimits.files).map((item, i) => file(item, `runtime.files[${i}]`)), 'runtime.files');
   if (new Set(files.map(path => path.toLowerCase())).size !== files.length) throw new Error('runtime.files cannot contain case-insensitive path collisions.');
@@ -113,6 +114,10 @@ function runtime(value: unknown): RuntimeManifest {
     return env;
   }), 'runtime.requiredEnv');
   const result: RuntimeManifest = { profile: entry.profile, files, requiredEnv };
+  if (Object.hasOwn(entry, 'port')) {
+    if (entry.profile !== 'service') throw new Error('Only service runtimes have a delivery port.');
+    result.port = number(entry.port, 'runtime.port', 1, 65535, true);
+  }
   if (entry.profile === 'browser') {
     if (entry.entrypoint !== 'index.html' || !names.has('index.html')) throw new Error('A browser runtime requires entrypoint index.html in runtime.files.');
     if (Object.hasOwn(entry, 'command') || Object.hasOwn(entry, 'healthPath') || Object.hasOwn(entry, 'invokePath')) throw new Error('A browser runtime uses evaluator, not command or service paths.');
@@ -298,7 +303,7 @@ New builds must include invocation, the public wire protocol that stays visible 
 Runtime profiles:
 - browser: entrypoint is index.html; evaluator is a node command over a shared browser-compatible JavaScript/WASM core. requiredEnv must be empty: a static browser has no runtime environment or model credential channel. Use service or cli for Python or runtime model/API settings. The UI and evaluator MUST call the same computational module. A duplicate test-only implementation or hardcoded fixture results is not acceptable. Put index.html, the shared module and evaluator entrypoint in files. Browser and core checks independently verify the planned outputs; they do not prove structural code identity or untested UI behavior.
 - cli: command replaces evaluator; omit browser entrypoint. The command reads exactly one JSON input from stdin and writes exactly one JSON result to stdout. Send diagnostic logs to stderr. The host launches a fresh process per case.
-- service: command replaces evaluator; omit browser entrypoint. Include healthPath (for example /health) and invokePath (for example /invoke), distinct local paths. Bind to loopback using the host-provided PORT. Health requests must return success; POST invokePath receives a JSON input and returns one JSON result. Process startup, health and invocation have host-enforced budgets.
+- service: command replaces evaluator; omit browser entrypoint. Include healthPath (for example /health) and invokePath (for example /invoke), distinct local paths. Bind using the host-provided HOST and PORT: loopback during verification, 0.0.0.0 inside an exported container. Optional port (integer 1 to 65535, default 8080) declares the delivery port; verification still assigns an ephemeral port. Health requests must return success; POST invokePath receives a JSON input and returns one JSON result. Process startup, health and invocation have host-enforced budgets. Dockerfile and compose.yaml at the bundle root are host-written delivery files and must not be listed in runtime.files.
 
 Every command has runtime (node or python), entrypoint (a relative file) and args (0–32 strings). The host uses executable arguments, not a shell. files is an explicit 1–256-file deployment allowlist, using portable relative paths with no traversal. Include all imported modules, static assets, runtime data and dependency manifests. Entry points and dependency files must occur in this allowlist. No host contracts/answer keys (solution-contract.json, evaluation-plan.json, acceptance-plan.json, ux-spec.json, packet.json), inputs/manifest.json host metadata, .fleet, .git, evidence directories, node_modules, .venv or secret .env files. Ordinary supplied data files may be listed. Do not package hidden copies of evaluation cases or expected outputs. The host verifies regular files and rejects symlinks before copying into a clean temporary directory. Declared deployment files must remain unchanged during execution; write mutable state to new files outside the allowlist or OS temporary storage. Deployment isolation is not an OS security sandbox.
 

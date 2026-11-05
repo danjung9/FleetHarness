@@ -30,6 +30,21 @@ test('solution contracts support browser, executable and service runtimes with f
   assert.deepEqual(result.evaluations[0].cases[0].input, { values: [1, 2] });
 });
 
+test('delivery ports are optional service-only integers', () => {
+  for (const port of [1, 8080, 65535]) {
+    const value = solution('service'); value.runtime.port = port;
+    assert.equal(parseSolutionContract(value, acceptance).runtime.port, port);
+  }
+  for (const port of [0, 65536, -1, 1.5, '8080', null]) {
+    const value = solution('service'); value.runtime.port = port;
+    assert.throws(() => parseSolutionContract(value, acceptance), /runtime.port must be an integer/);
+  }
+  for (const profile of ['browser', 'cli']) {
+    const value = solution(profile); value.runtime.port = 8080;
+    assert.throws(() => parseSolutionContract(value, acceptance), /Only service/);
+  }
+});
+
 test('a required core capability cannot be omitted, disconnected from acceptance, or left untested', () => {
   invalidSolution(value => { value.capabilities[0].required = false; }, /core capability must be required/);
   invalidSolution(value => { value.capabilities[0].evaluationIds = []; }, /must contain 1/);
