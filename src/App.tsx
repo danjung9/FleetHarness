@@ -298,7 +298,7 @@ export default function App() {
     </main>
     {p && !showHome && active !== 'settings' && <ProjectConversation
       key={p.id} project={p} open={conversationOpen} focusRequest={conversationFocus} onClose={closeConversation}
-      api={api} desktop={isDesktop} configured={!!configured} openSettings={() => navigate('settings')}
+      api={api} desktop={isDesktop} configured={!!configured} restartRequired={isDesktop && data.capabilities?.projectConversation !== true} openSettings={() => navigate('settings')}
       onApplied={proposal => { if (proposal.type !== 'stop') setActive('factory'); }}
     />}
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}

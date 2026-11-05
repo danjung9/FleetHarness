@@ -22,6 +22,8 @@ The user can open one Project lead conversation from any project view and keep i
 
 A research or planning question creates a visible waiting notice and a count on the collapsed trigger. Choices never submit automatically. An explicit answer button continues the current build. Chat remains a distinct input. Brief changes, stopping, and rebuilding use concrete proposed actions with visible consequences and exact before/after brief fields.
 
+Clarification questions use a text area for open answers, radio rows for one choice, or checkbox rows for several choices. Each question explains why the answer matters. Choice rows show selection through the native control and the existing selected-surface and accent tokens. Users can add written context or clear their choices to provide a custom answer. Text and selections survive reloads; a round waits until all its questions are answered.
+
 The panel includes empty, responding, cancelling, failed, disconnected, and browser preview states. Errors preserve text. Incoming text follows the transcript only while the reader is at its end; a Latest messages button lets a reader return deliberately. The composer stays available while earlier content scrolls. Browser preview explains the desktop requirement and disables model controls.
 
 Visual QA should check the normal desktop and minimum desktop widths, the pending question, the before/after brief proposal, long messages, keyboard opening/closing, independent scrolling, disabled browser preview, and the existing workspace with the panel closed.

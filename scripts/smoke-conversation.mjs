@@ -29,6 +29,7 @@ async function stateWhere(predicate, label, timeout) { return until(async () => 
 async function size(width, height) { await app.evaluate(({ BrowserWindow }, dimensions) => BrowserWindow.getAllWindows()[0].setContentSize(...dimensions), [width, height]); }
 async function capture(name) {
   await page.evaluate(() => document.fonts.ready);
+  await page.mouse.move(1, 1);
   const overflow = await page.evaluate(() => ['html', '.app-shell', '.workspace', '.conversation-panel', '.conversation-composer-area'].flatMap(selector => [...document.querySelectorAll(selector)].filter(element => element.clientWidth && element.scrollWidth > element.clientWidth + 1).map(element => ({ selector, width: element.clientWidth, content: element.scrollWidth }))));
   assert.deepEqual(overflow, [], `${name}: no outer horizontal overflow`);
   assert.equal(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight + 1), false, 'Scroll remains inside the app');
@@ -61,8 +62,17 @@ async function reopenProject() {
   await openLead();
 }
 async function captureQuestion(question, name) {
-  await questionForm(question).scrollIntoViewIfNeeded(); await capture(name);
-  await size(1120, 720); await questionForm(question).scrollIntoViewIfNeeded(); await capture(name + '-minimum');
+  for (const [width, height, suffix] of [[1512, 982, ''], [1120, 720, '-minimum']]) {
+    await size(width, height);
+    const form = questionForm(question);
+    await form.evaluate(element => element.scrollIntoView({ block: 'start' })); await capture(name + suffix);
+    const choices = form.locator('.conversation-options');
+    if (await choices.count()) {
+      await choices.scrollIntoViewIfNeeded(); await capture(name + suffix + '-options');
+    }
+    await form.locator('.conversation-answer-field').evaluate(element => element.scrollIntoView({ block: 'start' }));
+    await capture(name + suffix + '-answer');
+  }
   await size(1512, 982);
 }
 function answersInRequest(request) {
@@ -130,6 +140,13 @@ try {
   await questionForm(researchQuestion).getByRole('radio', { name: 'A team of analysts', exact: true }).check();
   await questionForm(researchQuestion).getByRole('radio', { name: researchAnswer, exact: true }).check();
   assert.equal(await questionForm(researchQuestion).getByRole('radio', { name: 'A team of analysts', exact: true }).isChecked(), false, 'Single-choice selection stays exclusive');
+  await questionForm(researchQuestion).getByRole('button', { name: 'Clear selection', exact: true }).click();
+  assert.equal(await questionForm(researchQuestion).locator('input:checked').count(), 0, 'A user can clear the suggested choices');
+  assert.equal(await answerButton(researchQuestion).isDisabled(), true);
+  await questionForm(researchQuestion).getByLabel('Additional details or your own answer', { exact: true }).fill('A reviewer handling shift handoffs');
+  assert.equal(await answerButton(researchQuestion).isEnabled(), true, 'A choice question accepts a custom answer without a selection');
+  await questionForm(researchQuestion).getByLabel('Additional details or your own answer', { exact: true }).fill('');
+  await questionForm(researchQuestion).getByRole('radio', { name: researchAnswer, exact: true }).check();
   await questionForm(researchTextQuestion).getByLabel('Your answer', { exact: true }).fill('   ');
   assert.equal(await answerButton(researchTextQuestion).isDisabled(), true, 'Whitespace is not a written answer');
   await questionForm(researchTextQuestion).getByLabel('Your answer', { exact: true }).fill(researchTextAnswer);
