@@ -17,8 +17,8 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
   const experiment = pendingExperiment(project);
   const pendingQuestion = project.status === 'running' && project.conversation?.questions.find(question => question.status === 'pending' && question.runId === project.runId);
   const startLabel = !isDesktop ? 'Desktop setup' : project.codexGoal
-    ? !configured ? 'Connect pipeline model' : project.runId ? 'Start new pipeline' : 'Start pipeline'
-    : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
+    ? project.runId ? 'Start new pipeline' : 'Start pipeline'
+    : project.runId ? 'Start new build' : 'Start build';
   let nextAction = null;
   if (project.status === 'running' || experimentRunning(experiment)) {
     nextAction = <button className="secondary" disabled={busy} onClick={stop}><Square size={14}/>Stop build</button>;
@@ -30,7 +30,7 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
   } else if (journey.resumeStage) {
     nextAction = <>
       {!continuingPlan && <button className="secondary" disabled={busy} onClick={() => isDesktop && configured ? start() : navigate('settings')}>{startLabel}</button>}
-      <button className="primary" disabled={busy || !isDesktop || !configured} onClick={resume}><Play size={15}/>{resuming ? continuingPlan ? 'Continuing…' : 'Resuming…' : resumeLabel(journey.resumeStage, project)}</button>
+      <button className="primary" disabled={busy || !isDesktop} onClick={() => configured ? resume() : navigate('settings')}><Play size={15}/>{resuming ? continuingPlan ? 'Continuing…' : 'Resuming…' : resumeLabel(journey.resumeStage, project)}</button>
     </>;
   } else if (journey.current === 'review' && view !== 'evidence') {
     nextAction = <button className="primary" onClick={() => navigate('evidence')}><ClipboardCheck size={16}/>Review build</button>;
@@ -38,15 +38,15 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
     nextAction = <button className="primary" onClick={() => navigate('delivery')}><Download size={16}/>Go to delivery</button>;
   } else if (journey.current === 'brief' || journey.current === 'build') {
     nextAction = <button className="primary" disabled={busy} onClick={() => isDesktop && configured ? start() : navigate('settings')}>
-      {isDesktop && configured ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
+      {isDesktop ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
     </button>;
   }
   const message = experiment ? journey.message : pendingQuestion ? `${pendingQuestion.phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer in Project lead.` : journey.resumeStage && !isDesktop
     ? 'Your work is saved. Open the desktop app to resume this phase.' : journey.resumeStage && !configured
-      ? 'Your work is saved. Connect a model in Settings to resume this phase.' : project.status === 'draft' && !isDesktop
+      ? 'Your work is saved. Choose the resume action to connect a model and continue this phase.' : project.status === 'draft' && !isDesktop
     ? 'Brief saved in this browser. Open the desktop app to build.'
     : project.status === 'draft' && !configured
-      ? 'Brief saved. Connect a model when you’re ready to build.' : journey.message;
+      ? `Brief saved. Choose ${startLabel} to connect a model, then start your build.` : journey.message;
   return <section className="run-header journey-header" aria-label="Challenge journey">
     <div className="journey-heading"><div className="run-title"><h1>{project.title}</h1></div><div className="journey-action">{nextAction}</div></div>
     <div className="journey-progress">

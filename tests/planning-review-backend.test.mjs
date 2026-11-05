@@ -287,10 +287,10 @@ test('host interruption preserves automatic planning findings and completed work
   }
 });
 
-test('a resumed correction restores its latest valid plan after invalid output without another correction turn', { timeout }, async t => {
+test('a resumed correction tries autonomous completion before restoring its latest valid plan after persistently invalid output', { timeout }, async t => {
   const h = await harness(t, { initialWeak: true, correctOnRevision: false, afterPlan: async ({ workspace, planCalls }) => {
     if (planCalls === 2) await fs.appendFile(path.join(workspace, 'plan.md'), '\nRetain this second-version planning note.');
-    if (planCalls === 3) await fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{invalid correction');
+    if (planCalls >= 3) await fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{invalid correction');
   } });
   await h.run(); await assertUnfrozen(h);
   const before = await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8');
@@ -298,12 +298,14 @@ test('a resumed correction restores its latest valid plan after invalid output w
   await h.restart(); await h.resume();
   const interrupted = await assertUnfrozen(h);
   assert.equal(interrupted.planningReview.phase, 'rereview');
-  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 2);
+  assert.ok(h.planCalls > 3, 'The correction receives autonomous artifact completion turns before rollback.');
+  const completionCalls = h.planCalls;
+  assert.equal(h.reviewCalls, 2, 'Invalid artifacts never reach an independent review.');
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8'), before);
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'acceptance-plan.json'), 'utf8'), acceptance);
   await h.restart(); await h.resume();
   const checkpoint = await assertUnfrozen(h);
-  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3, h.project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'));
+  assert.equal(h.planCalls, completionCalls, 'Resume reviews the restored plan without replaying completed correction work.'); assert.equal(h.reviewCalls, 3, h.project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'));
   assert.equal(checkpoint.planningReview.phase, 'revision');
   assert.ok(checkpoint.planningAudit.correctionDiscarded);
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'plan.md'), 'utf8'), before);

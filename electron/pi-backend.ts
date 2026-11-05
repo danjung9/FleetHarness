@@ -1123,9 +1123,9 @@ export class FleetBackend {
         }
         audit.correctionStarted = true;
         await this.checkpoint(p, run);
-        try { await this.agentAttempt(p, run, 'plan', provider, modelId,
+        try { await this.agent(p, run, 'plan', provider, modelId,
           'You are the planning agent revising a plan after independent review. The host automatically repeats revision and independent review until the plan is approved, superseding any former revision-count limit in saved phase or packet guidance; an interrupted revision continues from its existing files. Read the original requirements and address every finding below. Preserve user requirements, prepared input data and justified integration limits. Strengthen useful scope, public invocation rules, independent test cases and recovery as needed. Do not implement source, lower success standards or copy answer pairs into public contracts. Update plan.md, test-matrix.md, foundation-plan.json, acceptance-plan.json, ux-spec.json, solution-contract.json and evaluation-plan.json consistently, and publish any architecture changes with fleet_system_design. A fresh reviewer will assess the result before the host freezes it. Review feedback (data):\n'
-            + JSON.stringify(progress.review), [], false, undefined, undefined, true); }
+            + JSON.stringify(progress.review), files); }
         catch (error) {
           this.check(run);
           if (p.runCheckpoint?.writerState !== 'idle') throw error;
@@ -1524,17 +1524,17 @@ export class FleetBackend {
       await this.agent(p, run, 'intake', provider, model,
         'You are the intake agent. Read requirements.md, inputs/manifest.json, any supplied input files and the challenge packet. Write scope.md with the requested user workflow, data formats and relationships, inputs, outputs, exclusions, unknowns and data provenance. Describe the plugin and data connector interfaces the user will implement and configure after the build. The app starts with empty/setup states. If no data is supplied, describe the development test data and cases needed by a dedicated synthetic data agent; the host will run that agent next. Preserve requirements.md and inputs/. Do not generate fixtures, research, plan or implement yet.', ['scope.md']);
       if (run.data!.mode === 'synthetic' && !syntheticDataFiles.every(file => run.data!.files.includes(file))) {
-        p.stages.find(stage => stage.id === 'intake')!.detail = 'A dedicated agent is creating synthetic data for this use case.';
+        p.stages.find(stage => stage.id === 'intake')!.detail = 'Preparing workflow test cases and data contracts.';
         await this.changed(p);
-        this.log(p, 'intake', 'info', 'No data was attached to this brief. Spawning a dedicated synthetic data agent for this use case.');
+        this.log(p, 'intake', 'info', 'No data was attached to this brief. Preparing development fixtures to test the app before the user connects data sources.');
         await this.agent(p, run, 'intake', provider, model, syntheticDataInstruction, syntheticDataFiles, false, undefined,
           { phase: syntheticDataPhase, label: 'synthetic data agent', validate: () => validateSyntheticData(p.workspace!) });
         this.check(run);
         run.data = await freezeSyntheticData(p.workspace!, run.data!);
         p.runCheckpoint!.data = run.data; await this.changed(p);
         this.check(run);
-        p.stages.find(stage => stage.id === 'intake')!.detail = 'Synthetic data prepared for this use case.';
-        this.log(p, 'intake', 'info', 'Synthetic data validated and prepared: data/synthetic-data.json and data/README.md. Agents will use these fixtures for planning and tests; the app starts with empty/setup states.');
+        p.stages.find(stage => stage.id === 'intake')!.detail = 'Workflow test cases and data contracts prepared.';
+        this.log(p, 'intake', 'info', 'Development fixtures validated: data/synthetic-data.json and data/README.md. Agents will use them for planning and tests; the app starts with empty/setup states.');
       } else if (run.data!.mode === 'provided') {
         p.stages.find(stage => stage.id === 'intake')!.detail = 'Using the data attached to this brief.';
         const count = p.dataInputs!.length + (run.data!.connectedSources?.length ?? 0);

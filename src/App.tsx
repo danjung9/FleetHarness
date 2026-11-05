@@ -100,7 +100,7 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
     </div>
     <div className="requirements-footer">
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : 'Edits are unsaved until you save.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
+    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : isDesktop ? 'Save your edits, then open a Codex goal from Build when ready.' : 'Edits are unsaved until you save.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
     </div>
   </form>;
 }
