@@ -50,7 +50,7 @@ Delivered apps: [R] real account data is left out of the delivered bundle unless
 
 ## Safety rules, all tested
 
-- [R] Read-only only. Google scopes: `gmail.readonly`, `calendar.readonly`, `drive.readonly`. Microsoft scopes: `Mail.Read`, `Calendars.Read`, `Files.Read.All`, `User.Read`, `offline_access`. Data services: GET only during builds.
+- [R] Read-only only for connectors, which is separate from agent access. Google scopes: `gmail.readonly`, `calendar.readonly`, `drive.readonly`. Microsoft scopes: `Mail.Read`, `Calendars.Read`, `Files.Read.All`, `User.Read`, `offline_access`. Data services: GET only during builds.
 - [R] Tokens and keys never appear in logs, errors, saved state, what the renderer receives, the workspace, agent environments or exports. Tested with distinctive fake values.
 - [R] Content from these sources is untrusted data. `context/README.md` says so, and an email containing instructions gets no special treatment. The real protection is that agents have no network and no secrets.
 - [R] Marking check: any item carrying a standard banner or portion marking is left out by default and counted in the preview. It reduces accidents and is not a classification decision. The preview must say so.

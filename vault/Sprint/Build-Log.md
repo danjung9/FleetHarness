@@ -120,3 +120,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 19:39 Mukul decided: build agents get full access (read, write, network) and the locks come out, including Pi containment and the sandbox around generated tests. Stop's process cleanup, secret redaction, safe writes, approval gates and repair baselines stay.
 - 19:40 Astra merge-dan finished, exit 143. Report: `Research/Backend-Audit/merge-dan.md`
 - 19:40 Astra genai finished, exit 143. Report: `Research/Backend-Audit/genai.md`
+- 19:45 The Mac slept from 18:49 to 19:37, which froze two agents. Keeping it awake from here.
+- 19:45 Astra genai started: Your last turn was interrupted when the machine slept. Your working tree is intact. Continue and finish, with one change
