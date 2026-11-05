@@ -48,7 +48,9 @@ let lead: ProjectLead, clarifications: ClarificationBroker;
 const conversationActions = new Map<string, Promise<void>>();
 const previewing = new Set<string>();
 const previewStarts = new Map<string, AbortController>();
-const previews = new ApplicationPreviews(process.execPath);
+const previews = new ApplicationPreviews(process.execPath, {
+  clearStorage: origin => window!.webContents.session.clearStorageData({ origin })
+});
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Map<string, Promise<void>>();
 const approvals = new Set<string>();
@@ -273,6 +275,7 @@ function registerIPC() {
       if (result.canceled) return null;
       controller.signal.throwIfAborted();
       destination = await exportVerifiedBundle({ workspace: p.workspace!, parent: result.filePaths[0], title: p.title,
+        verifiedRuntime: p.report!.quality?.solutionEvaluation?.runtime.runtime,
         verifiedHash: p.report!.sourceHash, evidence: deliveryEvidence(p), deliveryMarkdown: [
           '# ' + p.title, '', 'Follow README.md for the declared runtime, dependency installation, required environment settings and startup command.', '',
           'Tests: follow the prerequisites in README.md, then run: ' + (p.report!.portableCommand ?? portableTestCommand(await applicationTestFiles(p.workspace!))), '',

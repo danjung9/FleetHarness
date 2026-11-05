@@ -24,14 +24,14 @@ import type { CodexAccount } from './codex-account.js';
 import { runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
 import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
-import { runIndependentJudge, runPlanningAudit, planningAuditSummary, type PlanningAuditRecord } from './independent-judge.js';
+import { runIndependentJudge, runPlanningAudit, planningAuditSummary, planningAuditEvidence, type PlanningAuditRecord } from './independent-judge.js';
 import { GENAI_MIL_PROVIDER, type GenAiMil } from './genai-mil.js';
 import type { ConnectorStore } from './connectors/store.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -121,7 +121,7 @@ export class FleetBackend {
     const checkpoint: RunCheckpoint = { version: 1, projectId: p.id, runId: p.runId!, workspace: p.workspace!, briefHash: run.briefHash, stage,
       context: run.context, phases: run.phases, globalTools: run.globalTools, packetHash: run.packetHash, requirements: run.requirements,
       acceptance: run.acceptance, data: run.data, quality: run.quality, foundation: run.foundation,
-      foundationPlan: run.foundationPlan, planningAudit: run.planningAudit,
+      foundationPlan: run.foundationPlan, planningAudit: run.planningAudit, planningSnapshot: run.planningSnapshot,
       clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview };
     await writeRunCheckpoint(this.store.root, p, checkpoint);
     run.checkpointStage = stage;
@@ -398,6 +398,7 @@ export class FleetBackend {
     if (p.resumeStage || p.qualityVersion === 3) saved = await readRunCheckpoint(this.store.root, p);
     run.briefHash = briefFingerprint(p);
     run.planningAudit = saved?.planningAudit;
+    run.planningSnapshot = saved?.planningSnapshot;
     run.visualReview = saved?.visualReview; run.foundationPlan = saved?.foundationPlan;
     const first = p.stages.find(s => s.status !== 'complete');
     if (!first || !['intake', 'research', 'plan', 'build', 'verify', 'review'].includes(first.id)) throw new Error('No incomplete build stage can resume. Start a new run.');
@@ -433,8 +434,9 @@ export class FleetBackend {
     run.data = checkpoint.data; run.foundation = checkpoint.foundation ?? saved?.foundation; run.clarifications = checkpoint.clarifications ?? saved?.clarifications;
     if (!run.data) throw new Error('The frozen brief data checkpoint is missing. Start a new run.');
     run.planHash = checkpoint.planHash;
-    await this.checkRecoveryInputs(p, run);
     run.planBodies = checkpoint.planBodies;
+    if (!run.quality && run.planningSnapshot) await this.loadPlannedQuality(p, run);
+    await this.checkRecoveryInputs(p, run);
     run.phases = run.phases!.map(phase => resolvePhaseForRuntime(phase, run.quality?.solution?.runtime.profile));
   }
   private async retryStage<T>(p: Project, run: ActiveRun, stage: StageId, work: () => Promise<T>): Promise<T> {
@@ -496,6 +498,10 @@ export class FleetBackend {
     quality.sealedEvaluation = true;
     await this.checkpoint(p, run);
     await this.checkInputs(p, run);
+    if (run.planningSnapshot) {
+      run.planningSnapshot = undefined;
+      await this.checkpoint(p, run);
+    }
   }
   private async agent(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }) {
     return this.retryStage(p, run, stage, () => this.agentAttempt(p, run, stage, provider, modelId, instruction, files, tests, followUp, variant));
@@ -692,7 +698,7 @@ export class FleetBackend {
           const complete = async (text: string, required: string[], requireComponents = true) => {
             await prompt(text);
             check(); await this.checkInputs(p, run); check();
-            if (awaitingClarification() || singleTurn) return;
+            if (awaitingClarification()) return;
             let missing = await validateOutputs(required, requireComponents); check();
             // Plan contract errors are mechanical and often come one at a time, so planning gets more attempts.
             const attempts = stage === 'plan' ? 5 : 1;
@@ -894,6 +900,13 @@ export class FleetBackend {
     if (!audit.attempts.length) await inspect();
     if (audit.attempts[0].status === 'corrections') {
       if (!audit.correctionStarted) {
+        const files: [string, string][] = [];
+        for (const file of ['scope.md', 'plan.md', 'test-matrix.md', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json', 'system-design.json', 'foundation-plan.json']) {
+          try { files.push([file, await fs.readFile(await safeFile(p.workspace!, file), 'utf8')]); }
+          catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+        }
+        // The private run checkpoint is outside the workspace and survives Stop/restart.
+        run.planningSnapshot = { files, systemDesign: structuredClone(p.systemDesign) };
         // Spend before calling the writer. Stop or restart cannot grant another correction turn.
         audit.correctionStarted = true;
         await this.checkpoint(p, run); this.check(run);
@@ -905,6 +918,7 @@ export class FleetBackend {
         } catch (error) {
           this.check(run);
           if (p.runCheckpoint?.writerState !== 'idle') throw error;
+          if (run.planningSnapshot) await this.loadPlannedQuality(p, run);
           await this.checkInputs(p, run);
           audit.correctionError = 'Planning correction could not complete. Remaining gaps need review. ' + redactSecrets(error instanceof Error ? error.message : String(error)).slice(0, 4000);
         }
@@ -915,8 +929,21 @@ export class FleetBackend {
     audit.complete = true;
     // This is private host evidence, never part of the sealed quality contract.
     await this.checkpoint(p, run);
-    for (const line of planningAuditSummary(audit).split('\n')) this.log(p, 'plan', 'info', line);
+    for (const line of planningAuditEvidence(audit).split('\n')) this.log(p, 'plan', 'info', line);
     await this.changed(p);
+  }
+  private async loadPlannedQuality(p: Project, run: ActiveRun) {
+    try { return await loadQualityContract(p.workspace!, run.acceptance!, true); }
+    catch (error) {
+      if (!run.planningAudit?.correctionStarted || !run.planningSnapshot) throw error;
+      this.check(run);
+      for (const [file, body] of run.planningSnapshot.files) await atomicHostWrite(p.workspace!, file, body);
+      p.systemDesign = structuredClone(run.planningSnapshot.systemDesign);
+      run.planningAudit.correctionDiscarded = redactSecrets(error instanceof Error ? error.message : String(error));
+      await this.checkpoint(p, run);
+      this.log(p, 'plan', 'info', 'The planning correction left an invalid contract, so the earlier plan was restored; details are in the saved planning audit.');
+      return loadQualityContract(p.workspace!, run.acceptance!, true);
+    }
   }
   private async execute(p: Project, run: ActiveRun, provider: string, model: string) {
     try {
@@ -959,7 +986,7 @@ export class FleetBackend {
         'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/foundation-guide.md and .fleet/foundation-catalog.json; write foundation-plan.json selecting a versioned starter and computation pack with a concrete reason. Align solution-contract.json with that starter runtime and all its files. The host copies the foundation after planning; do not generate scaffold files yourself. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Read .fleet/solution-contract.md. Produce solution-contract.json and evaluation-plan.json, and acceptance-plan.json schemaVersion 2. Identify the mandatory computational capabilities, independently derived evaluation cases, baselines and thresholds. In solution-contract.json include invocation with public input, output and rules: every action, field type, exact status/error string, array ordering and validation precedence. The builder must be able to implement the complete wire protocol without seeing evaluation-plan.json; never leave interface details only in sealed cases. Derive held-out cases from these public rules without copying answer pairs into the public contract. Choose browser, CLI or service runtime with a complete file manifest, locked dependencies and explicit model environment requirements. Use a shared implementation for the delivered runtime and tests. The host seals the answer key outside the builder workspace. Browser/service profiles need primary and recovery journeys; CLI can have no browser journeys. Keep Node orchestration tests named *.test.cjs or *.test.mjs. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'foundation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json']);
       await this.auditPlan(p, run, provider, model);
       this.check(run);
-      run.quality = await loadQualityContract(p.workspace!, run.acceptance!, true);
+      run.quality = await this.loadPlannedQuality(p, run);
       run.foundationPlan = await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8');
       await this.checkpoint(p, run);
       }

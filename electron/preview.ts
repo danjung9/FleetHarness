@@ -4,11 +4,11 @@ import { promises as fs } from 'node:fs';
 import { safeFile } from './storage.js';
 import path from 'node:path';
 
-// Each run gets a separate loopback origin. Preview scripts cannot access the
-// file:// application origin, its preload bridge, or another run's localStorage.
+// Preview scripts use loopback rather than the file:// application origin.
+// ApplicationPreviews clears browser storage when an origin changes owners.
 export class PreviewServers {
   private servers = new Map<string, { server: Server; url: string }>();
-  // A reload in the same run keeps its origin, so the app's browser storage survives. A new run has a new workspace, so a new origin.
+  // A reload in the same run keeps its origin, so the app's browser storage survives.
   private ports = new Map<string, number>();
   async url(workspace: string, files?: readonly string[]) {
     const key = workspace + '\0' + JSON.stringify(files ?? []);

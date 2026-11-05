@@ -230,7 +230,7 @@ test('planning audit: approval proceeds without an extra planning turn and is re
   assert.equal(saved.planningAudit.complete, true);
   assert.equal(saved.quality.planningAudit, undefined);
   assert.match(h.project.report.output, /approved planning coverage only/);
-  assert.match(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')).output, /Planning correction turns used: 0 of 1/);
+  assert.match(JSON.parse(await fs.readFile(path.join(h.project.workspace, 'test-report.json'), 'utf8')).output, /Unresolved items: 0/);
 });
 
 for (const second of [auditApproved, auditCorrections, 'unreadable second audit']) {
@@ -251,8 +251,9 @@ for (const second of [auditApproved, auditCorrections, 'unreadable second audit'
     const audit = (await auditCheckpoint(h)).planningAudit;
     assert.equal(audit.correctionStarted, true); assert.equal(audit.complete, true);
     assert.notEqual(audit.attempts[0].inputHash, audit.attempts[1].inputHash);
-    assert.ok(h.project.report.output.includes(auditCorrections.corrections[0]));
-    if (second !== auditApproved) assert.match(h.project.report.output, /Remaining gaps:/);
+    assert.equal(h.project.report.output.includes(auditCorrections.corrections[0]), false);
+    assert.match(h.project.report.output, new RegExp('Unresolved items: ' + (second === auditApproved ? 0 : 1)));
+    assert.ok(h.project.logs.some(log => log.text.includes(auditCorrections.corrections[0])));
     assert.match(h.project.logs.map(log => log.text).join('\n'), /Planning correction turns used: 1 of 1/);
   });
 }
@@ -303,7 +304,7 @@ test('planning audit: a failed correction gets no transport retry or completion 
   assert.deepEqual(h.sessions.filter(s => s.stage === 'plan').map(s => s.prompts.length), [1, 1]);
   assert.equal(h.auditSessions.length, 2);
   assert.match((await auditCheckpoint(h)).planningAudit.correctionError, /could not complete/);
-  assert.match(h.project.report.output, /Remaining gaps:/);
+  assert.match(h.project.report.output, /Unresolved items: 1/);
 });
 
 test('planning audit: Resume after planning restores its result without repeating it', { timeout: 15000 }, async t => {
@@ -404,7 +405,73 @@ test('planning audit: Codex lifecycle uses the read-only snapshot adapter and ex
     assert.deepEqual(thread.dynamicTools.map(tool => tool.name), ['judge_read']);
   }
   assert.equal((await auditCheckpoint(h)).planningAudit.attempts[1].status, 'approved');
-  assert.match(h.project.report.output, /Planning correction turns used: 1 of 1/);
+  assert.match(h.project.report.output, /Unresolved items: 0/);
+});
+
+for (const stop of [false, true]) test(`planning audit: invalid correction restores the earlier plan${stop ? ' after Stop and restart/Resume' : ''}`, { timeout: 15000 }, async t => {
+  const entered = deferred(), released = deferred();
+  let original;
+  const h = await harness(t, { verify: syntheticReport, auditAnswers: [auditCorrections, auditApproved],
+    abort: () => released.resolve(true), scenario: async ({ cwd, stage, session }) => {
+      if (stage !== 'plan' || !session.prompts[0].includes('single planning correction turn')) return false;
+      const saved = await auditCheckpoint(h);
+      original = saved.planningSnapshot.files;
+      assert.equal(saved.planningAudit.correctionStarted, true);
+      assert.deepEqual(original.map(([name]) => name), ['scope.md', 'plan.md', 'test-matrix.md', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json', 'system-design.json', 'foundation-plan.json']);
+      for (const [file] of original) await fs.writeFile(path.join(cwd, file), file.endsWith('.json') ? '{"unfinished":' : 'Incomplete correction');
+      entered.resolve();
+      return stop ? released.promise : true;
+    } });
+  let project = h.project;
+  if (stop) {
+    await h.backend.start(project.id); await entered.promise; await h.backend.stop(project.id);
+    await h.assertSettled('stopped');
+    assert.ok((await auditCheckpoint(h)).planningSnapshot);
+    const restored = new Store(h.root); await restored.init();
+    project = restored.project(project.id);
+    const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
+    resumed.runtime = h.backend.runtime; resumed.verify = syntheticReport; resumed.evaluateCore = async () => true;
+    await resumed.resume(project.id); await resumed.active.get(project.id)?.done;
+  } else await h.run();
+  assert.equal(project.status, 'review', project.error);
+  for (const [file, body] of original) assert.equal(await fs.readFile(path.join(project.workspace, file), 'utf8'), body, file);
+  const saved = await auditCheckpoint(h);
+  assert.equal(saved.planningSnapshot, undefined, 'Successful sealing removes the private snapshot');
+  assert.ok(saved.planningAudit.correctionDiscarded);
+  assert.ok(project.logs.some(log => log.text.includes('earlier plan was restored')));
+  assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 2);
+  assert.ok(h.sessions.some(s => s.stage === 'build'));
+  assert.match(project.report.output, /Unresolved items: 1/);
+});
+
+test('planning audit: held-out answers stay private through build and repair', { timeout: 15000 }, async t => {
+  const answer = 'SYNTHETIC_HELD_OUT_ANSWER_7391';
+  const correction = { approved: false, corrections: ['For held-out input 19 the answer must be ' + answer] };
+  const checkWorkspace = async cwd => {
+    for (const entry of await fs.readdir(cwd, { recursive: true, withFileTypes: true })) {
+      if (entry.isFile() && entry.name !== 'auth.json') assert.equal((await fs.readFile(path.join(entry.parentPath, entry.name), 'utf8')).includes(answer), false, entry.name);
+    }
+  };
+  let repairs = 0;
+  const h = await harness(t, { verify: syntheticReport, auditAnswers: [correction, correction], judgeAnswers: [judgeNot],
+    scenario: async ({ cwd, stage, session }) => {
+      if (stage === 'plan' && session.prompts[0].includes('single planning correction turn')) {
+        assert.ok(session.prompts[0].includes(answer), 'The planning correction still receives full feedback');
+        return true;
+      }
+      if (['build', 'verify', 'repair'].includes(stage)) {
+        assert.equal(session.prompts.join('\n').includes(answer), false);
+        await checkWorkspace(cwd);
+        if (stage === 'repair') repairs++;
+      }
+      return false;
+    } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(repairs, 1);
+  await checkWorkspace(h.project.workspace);
+  assert.equal(JSON.stringify(h.project.report).includes(answer), false);
+  assert.ok(JSON.stringify((await auditCheckpoint(h)).planningAudit).includes(answer));
+  assert.ok(h.project.logs.some(log => log.text.includes(answer)));
 });
 
 test('verification, host repair, judge and judge repair share persisted usage and timing', async t => {
@@ -827,9 +894,9 @@ test('legacy resume refusal leaves the restored answer key and saved evidence un
   const key = await fs.readFile(path.join(h.root, 'evaluations', h.project.runId + '.json'), 'utf8');
   const keyPath = path.join(h.project.workspace, 'evaluation-plan.json');
   await fs.writeFile(keyPath, key);
-  await fs.appendFile(path.join(h.project.workspace, 'plan.md'), '\nUnexpected plan change.');
+  await fs.appendFile(path.join(h.project.workspace, 'requirements.md'), '\nUnexpected requirement change.');
   const count = h.sessions.length;
-  await resumeRefused(h.backend, h.project, /plan.*changed/i);
+  await resumeRefused(h.backend, h.project, /requirements.*changed|integrity failed/i);
   assert.equal(await fs.readFile(keyPath, 'utf8'), key, 'Rejected admission cannot reseal or remove saved files');
   assert.equal(h.sessions.length, count);
 });
@@ -1632,13 +1699,31 @@ for (const file of ['plan.md', 'test-matrix.md']) {
   });
 }
 
-for (const file of ['requirements.md', '.fleet/packet.json', '.fleet/README.md', 'acceptance-plan.json', 'ux-spec.json', 'plan.md', 'test-matrix.md']) {
+for (const file of ['requirements.md', '.fleet/packet.json', '.fleet/README.md', 'acceptance-plan.json', 'ux-spec.json']) {
   test(`resume refuses changed frozen inputs: ${file}`, { timeout: 10000 }, async t => {
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Synthetic stage defect'); return false; } });
     await h.run(); const count = h.sessions.length;
     await fs.appendFile(path.join(h.project.workspace, file), '\nChanged synthetic input');
     await resumeRefused(h.backend, h.project, /requirements.*changed|integrity failed|changed after planning|plan.*changed/i);
     assert.equal(h.sessions.length, count); assert.equal(h.backend.active.size, 0);
+  });
+}
+
+for (const file of ['plan.md', 'test-matrix.md']) {
+  test(`resume restores changed frozen inputs from saved bodies: ${file}`, { timeout: 15000 }, async t => {
+    let fail = true;
+    const h = await harness(t, { verify: syntheticReport, scenario: ({ stage }) => { if (stage === 'build' && fail) throw new Error('Synthetic stage defect'); return false; } });
+    await h.run(); await h.assertSettled('failed');
+    const original = await fs.readFile(path.join(h.project.workspace, file), 'utf8');
+    await fs.appendFile(path.join(h.project.workspace, file), '\nChanged synthetic input');
+    const restored = new Store(h.root); await restored.init();
+    const project = restored.project(h.project.id);
+    const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
+    resumed.runtime = h.backend.runtime; resumed.verify = syntheticReport; resumed.evaluateCore = async () => true; fail = false;
+    await resumed.resume(project.id); await resumed.active.get(project.id)?.done;
+    assert.equal(project.status, 'review', project.error);
+    assert.equal(await fs.readFile(path.join(project.workspace, file), 'utf8'), original);
+    assert.equal(h.sessions.filter(s => s.stage === 'plan').length, 1);
   });
 }
 

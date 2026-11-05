@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "8d536c279b72d2ff13191abce25e1fa965f2d5c0969e3ca2327f7261dfcf8c89",
+  "electron/pi-backend.ts": "2d56300772459ed222bee8cc5a1786a4d48eccc502b13ee5e43a252716172861",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -53,7 +53,7 @@ const errorInventory = {
   "electron/codex-account.ts": "2d711e84ada731b8f50b15e977dd642e78711eec8eb8492c4eeae62ae7ceeded",
   "electron/chatgpt-oauth.ts": "0ca0327dadc0c210ab712024aa614ed49b4760a28a7ab6292b5789fa6473e9dd",
   "electron/genai-mil.ts": "149b1bf5f65e95e0cd1461c6fa0d654463d860d9de10d5784f9027dcd62da818",
-  "electron/independent-judge.ts": "d3f20768e455e4233ee98969cea05cb07b934609e3f373ec73991f655b22dee8",
+  "electron/independent-judge.ts": "13f76dc2c0af124a6475515a8a27c554e62c274e29a6f30a995f82ecae0aca69",
   "electron/connectors/store.ts": "e42422dbdf1f5a4271031a0c908ad1194f4d79d580fcf6351ba8088c6f2540a1",
   "electron/connectors/sample-data.ts": "ce5a604160b1b1df0cbffcfef7ce3d195474c216613c5a9d028f756713eb35ec",
   "electron/delivery.ts": "9a096ce495a49934ac8d4b72a3b2e4343fdb913f80383a351024cb5679ede5a1",
@@ -71,7 +71,9 @@ const errorInventory = {
   "electron/service-package.ts": "2fd75c5a6ec4a34b3c74bcd378d10c563a0b3ead8d29a48b6d08a01a07d2f1f3",
   "electron/standalone-service.ts": "9534a4407faa851ffda8c369d5205aa06e8a5f7b20a80b1de2d6820e69bd6a91",
   "electron/package-worker.ts": "dff5d82e269d492975fa14d138cd654bd80b07c224a1394e4b2ea43b3db783da",
-  "electron/package-runtime.ts": "2adf0212b7ffdb7fbaf40cae75d20eb3e097946e38d4fff13fd9bcb713fefe49"
+  "electron/package-runtime.ts": "2adf0212b7ffdb7fbaf40cae75d20eb3e097946e38d4fff13fd9bcb713fefe49",
+  "electron/source-export.ts": "6174ea4ba9e0ec1e489c6e5c15387047db8cb4ed9360f8c5ce3a2a1fd2c73339",
+  "electron/container-export.ts": "ec70fb7e4febbb893ba154c6b2a64c4917e34fbf818fcb7b39684ae2a75842d7"
 };
 // fail(message) is the local agent-runner error wrapper. Its literal/template
 // inputs need the same mapping checks as direct constructors. Dynamic arguments
@@ -91,7 +93,7 @@ async function flowErrors(file = 'electron/pi-backend.ts', found = new Map()) {
 }
 async function allFlowErrors() {
   const files = await flowErrors();
-  for (const file of ['electron/preflight.ts', 'electron/plain-errors.ts', 'electron/executable.ts', 'electron/package-worker.ts']) await flowErrors(file, files);
+  for (const file of ['electron/preflight.ts', 'electron/plain-errors.ts', 'electron/executable.ts', 'electron/package-worker.ts', 'electron/source-export.ts']) await flowErrors(file, files);
   return files;
 }
 const signature = messages => createHash('sha256').update(JSON.stringify(messages)).digest('hex');

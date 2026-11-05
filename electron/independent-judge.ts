@@ -250,17 +250,27 @@ export interface PlanningAuditRecord {
   attempts: PlanningAuditAttempt[];
   correctionStarted: boolean;
   correctionError?: string;
+  correctionDiscarded?: string;
   complete: boolean;
 }
 
 export function planningAuditSummary(audit: PlanningAuditRecord) {
+  const latest = audit.correctionDiscarded ? audit.attempts[0] : audit.attempts.at(-1);
+  const unresolved = latest?.status === 'approved' ? 0 : latest?.corrections.length || audit.attempts[0]?.corrections.length || 0;
+  return 'Planning audit: ' + (latest?.status === 'approved' ? 'approved planning coverage only; human review is still required.'
+    : latest?.status === 'corrections' ? 'unresolved planning gaps remain.' : 'Coverage remains unconfirmed; human review is required.')
+    + ' Unresolved items: ' + unresolved + '.';
+}
+
+/** Private host evidence. Never include correction text in agent-readable reports. */
+export function planningAuditEvidence(audit: PlanningAuditRecord) {
   const latest = audit.attempts.at(-1);
   return [
-    'Planning audit: ' + (latest?.status === 'approved' ? 'approved planning coverage only; human review is still required.'
-      : latest?.status === 'corrections' ? 'unresolved planning gaps remain.' : 'could not confirm planning coverage; human review is required.'),
+    planningAuditSummary(audit),
     ...audit.attempts.flatMap((attempt, i) => [`Planning audit ${i + 1}: ${attempt.status}.`,
       ...(attempt.error ? [attempt.error] : []), ...attempt.corrections.map(correction => 'Planning correction: ' + correction)]),
     ...(audit.correctionError ? [audit.correctionError] : []),
+    ...(audit.correctionDiscarded ? ['Planning correction discarded: ' + audit.correctionDiscarded] : []),
     ...(latest?.status !== 'approved' ? ['Remaining gaps: ' + (latest?.corrections.length ? latest.corrections.join(' ')
       : 'Planning coverage is unconfirmed. Earlier corrections, if any, remain unconfirmed.')] : []),
     'Planning correction turns used: ' + Number(audit.correctionStarted) + ' of 1. The build continues with this evidence.'

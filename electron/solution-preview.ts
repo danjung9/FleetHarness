@@ -13,19 +13,29 @@ export class ApplicationPreviews {
   private controllers = new Map<string, AbortController>();
   private closed = false;
   private origins = new Map<string, string>();
+  // Retain ownership after Stop: a released port can be reused by another workspace.
+  private originOwners = new Map<string, string>();
   // A reload in the same run keeps its port, so the app's browser storage survives.
   private servicePorts = new Map<string, number>();
   allows(address: string) {
     try { return [...this.origins.values()].includes(new URL(address).origin); } catch { return false; }
   }
-  constructor(private executable: string) {}
+  constructor(private executable: string, private options: { clearStorage?: (origin: string) => Promise<void> } = {}) {}
   async url(root: string): Promise<string | null> {
     if (this.closed) return null;
     const pending = this.pending.get(root);
     if (pending) return pending;
     const controller = new AbortController(); this.controllers.set(root, controller);
-    const operation = this.open(root, controller.signal).then(url => {
-      if (url) this.origins.set(root, new URL(url).origin);
+    const operation = this.open(root, controller.signal).then(async url => {
+      if (url) {
+        const origin = new URL(url).origin;
+        if (this.originOwners.get(origin) !== root) {
+          await this.options.clearStorage?.(origin);
+          this.originOwners.set(origin, root);
+        }
+        if (this.closed || controller.signal.aborted) return null;
+        this.origins.set(root, origin);
+      }
       return url;
     }).catch(error => {
       if (!(error instanceof VerificationShutdownError) && (this.closed || controller.signal.aborted)) return null;

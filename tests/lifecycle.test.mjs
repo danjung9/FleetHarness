@@ -17,6 +17,34 @@ import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 
+test('preview storage clearing uses the iframe window session', async t => {
+  const { store } = await fixture(t), cleared = [];
+  let clearStorage;
+  await mainHarness(store, undefined, 'electron/main.ts', {
+    ApplicationPreviews: class { constructor(_executable, options) { clearStorage = options.clearStorage; } },
+    hostWindow: { webContents: { session: { async clearStorageData(options) { cleared.push(options); } } } }
+  });
+  await clearStorage('http://127.0.0.1:43210');
+  assert.equal(cleared.length, 1);
+  assert.equal(cleared[0].origin, 'http://127.0.0.1:43210');
+  assert.deepEqual(Object.keys(cleared[0]), ['origin']);
+});
+
+test('source export receives the verified runtime from the authoritative report', async t => {
+  const { store, p, root } = await fixture(t);
+  p.report.quality.solutionEvaluation = { runtime: { runtime: 'v24.22.2' } };
+  p.verification.reportHash = reportHash(p.report);
+  let received;
+  const { exportVerifiedBundle } = await import('../dist-electron/electron/source-export.js');
+  const main = await mainHarness(store, undefined, 'electron/main.ts', {
+    dialog: { async showOpenDialog() { return { filePaths: [root] }; } },
+    async exportVerifiedBundle(input, signal) { received = input.verifiedRuntime; return exportVerifiedBundle(input, signal); }
+  });
+  await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
+  await main.invoke('fleet:export', p.id);
+  assert.equal(received, 'v24.22.2');
+});
+
 // Exercise IPC, real startup, disk copies, persistence and delivery gates. Model
 // sessions and native readiness/process discovery are synthetic here. These
 // checks do not establish native process cleanup or generated-app correctness.
