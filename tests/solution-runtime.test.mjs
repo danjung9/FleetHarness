@@ -190,10 +190,12 @@ test('hung health responses have a bounded startup deadline', { timeout: 5000 },
   assert.ok(Date.now() - started < 2000);
 });
 
-test('output overflow, malformed JSON and hung invocations fail explicitly', { timeout: 5000 }, async t => {
+test('output overflow, malformed JSON and hung invocations fail explicitly', { timeout: 10000 }, async t => {
   for (const [script, error] of [['console.log("x".repeat(10000));', /output limit/], ['console.log("not-json");', /exactly one JSON/], ['console.log("1e400");', /nonfinite/], ['console.log("[".repeat(70)+"0"+"]".repeat(70));', /structural limits/], ['setInterval(()=>{},1000);', /execution limit/]]) {
     const root = await fixture(t, { 'engine.mjs': script });
-    const runtime = await prepare(t, root, cli(), { maxOutputBytes: 1000, invocationTimeoutMs: 150 });
+    // Normal Node startup can exceed 150 ms under full-suite load. Keep that
+    // deliberately short deadline only for the hanging-process case.
+    const runtime = await prepare(t, root, cli(), { maxOutputBytes: 1000, invocationTimeoutMs: script.startsWith('setInterval') ? 150 : 1000 });
     await assert.rejects(runtime.invoke(null), error);
   }
 });

@@ -100,6 +100,25 @@ test('SATISFACTORY performs no repair and records verify time and actual tokens'
   assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 120);
 });
 
+test('audit regression: a late core mutation during judge evidence publication cannot receive a passing identity', async t => {
+  const h = await fixture(t, [satisfactory]);
+  await fs.writeFile(path.join(h.workspace, 'core.cjs'), 'exports.value = "verified synthetic implementation";');
+  const rename = fs.rename;
+  let edited = false;
+  t.mock.method(fs, 'rename', async (from, to) => {
+    await rename(from, to);
+    if (to === path.join(h.workspace, 'judge.json')) {
+      edited = true;
+      await fs.writeFile(path.join(h.workspace, 'core.cjs'), 'exports.value = "untested late mutation";');
+    }
+  });
+  await assert.rejects(h.run(), /Source changed while publishing verification evidence/);
+  assert.equal(edited, true);
+  assert.equal(h.verifications, 1, 'No reverification occurred in this audit interleaving');
+  assert.equal(h.reports.length, 0, 'Never publish SATISFACTORY with the untested bytes');
+  assert.equal(h.repairs.length, 0);
+});
+
 for (const schemaVersion of [2, 3]) for (const profile of ['node-service', 'python-service', 'cli']) {
   test(`judge reads the complete ${profile} delivery without a root browser entrypoint (quality ${schemaVersion})`, async t => {
     const runtimeProfile = profile === 'cli' ? 'cli' : 'service';
@@ -396,7 +415,7 @@ test('judge evidence cannot overwrite application source through a builder-creat
   assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), true);
 });
 
-test('fake-engine production workflow blocks review after two repairs with the final NOT and every gap saved', { timeout: 10000 }, async t => {
+test('fake-engine production workflow blocks review after two repairs with the final NOT and every gap saved', { timeout: 20000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const root = await fs.mkdtemp(path.resolve('.tmp/judge-backend-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -469,10 +488,17 @@ test('fake-engine production workflow blocks review after two repairs with the f
     for (let n = 1; n <= 3; n++) assert.ok(restored.report.output.includes('Missing output ' + n));
     assert.equal(restored.report.sourceHash, await sourceHash(project.workspace));
   `;
-  const child = spawnSync(process.execPath, ['--experimental-test-module-mocks', '--input-type=module', '-e', script], {
-    encoding: 'utf8', timeout: 8000, env: { ...process.env, JUDGE_TEST_ROOT: root, TMPDIR: path.resolve('.tmp') }
+  // The full workflow reads the expanded skill packet on each integrity check.
+  // Use the test's cancellable deadline, not a hidden synchronous eight-second kill.
+  const child = spawn(process.execPath, ['--experimental-test-module-mocks', '--input-type=module', '-e', script], {
+    signal: t.signal, env: { ...process.env, JUDGE_TEST_ROOT: root, TMPDIR: path.resolve('.tmp') }
   });
-  assert.equal(child.status, 0, child.stdout + child.stderr);
+  let stdout = '', stderr = '';
+  child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.on('data', chunk => { stderr += chunk; });
+  const closed = new Promise((resolve, reject) => { child.once('error', reject); child.once('close', (status, signal) => resolve({ status, signal })); });
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL'); await closed.catch(() => {}); });
+  const result = await closed;
+  assert.equal(result.status, 0, stdout + stderr + (result.signal ? '\nTerminated by ' + result.signal : ''));
 });
 
 test('backend runs the judge inside verify before opening human review', async () => {

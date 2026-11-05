@@ -66,6 +66,25 @@ task.onkeydown=e=>{if(e.key==='Enter')document.querySelector('#save').click();};
 document.querySelector('#api').onclick=()=>fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({task:task.value})}).then(r=>r.json()).then(data=>{result.textContent='API saved: '+data.task;});
 </script></html>`;
 
+test('browser startup has a separate bounded budget from short interaction deadlines', async t => {
+  const root = await workspace(t), controller = new AbortController();
+  let launchedWith, navigatedWith, closed = 0;
+  const page = { on() {}, async goto(_url, options) { navigatedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30)); }, async close() {} };
+  const context = { on() {}, setDefaultTimeout(value) { assert.equal(value, 5); }, async route() {}, async routeWebSocket() {}, async newPage() { return page; }, async close() {} };
+  t.mock.method(chromium, 'launchServer', async options => {
+    launchedWith = options.timeout; await new Promise(resolve => setTimeout(resolve, 30));
+    return { wsEndpoint: () => 'ws://synthetic-startup', async kill() { closed++; } };
+  });
+  t.mock.method(chromium, 'connect', async () => ({ async newContext() { return context; }, async close() {} }));
+  const browser = new AgentBrowserSession({ root, signal: controller.signal, stepTimeoutMs: 5, startupTimeoutMs: 1000,
+    prepare: async () => ({ url: 'http://127.0.0.1:1/', async close() {} }) });
+  t.after(() => browser.close());
+  await browser.open('desktop', controller.signal);
+  assert.ok(launchedWith > 5 && launchedWith <= 1000);
+  assert.ok(navigatedWith > 5 && navigatedWith < launchedWith, 'Startup shares one bounded deadline');
+  await browser.close(); assert.equal(closed, 1);
+});
+
 async function workspace(t, html = application) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-agent-browser-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

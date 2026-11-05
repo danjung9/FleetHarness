@@ -64,6 +64,19 @@ test('document redaction picks up newly configured credentials on each save', ()
   } finally { if (previous === undefined) delete process.env[name]; else process.env[name] = previous; }
 });
 
+test('credential-like filenames preserve hashes and encoded baseline bytes while real credential fields stay redacted', () => {
+  const secret = 'synthetic-baseline-field-credential'; registerCredential(secret);
+  const digest = 'a'.repeat(64), bytes = Buffer.from('require("node:test")("synthetic case", () => {});').toString('base64');
+  const baseline = { buildTests: { 'token.test.cjs': digest, 'tests/password.test.cjs': digest },
+    buildTestContents: { 'token.test.cjs': bytes, 'tests/password.test.cjs': bytes },
+    headers: { Authorization: 'Bearer synthetic-unregistered-value' }, apiKey: secret, output: secret };
+  const redacted = redactValue(baseline);
+  assert.deepEqual(redacted.buildTests, baseline.buildTests);
+  assert.deepEqual(redacted.buildTestContents, baseline.buildTestContents);
+  assert.equal(redacted.headers.Authorization, '[REDACTED]'); assert.equal(redacted.apiKey, '[REDACTED]');
+  assert.equal(redacted.output, '[REDACTED]');
+});
+
 test('streamed text is redacted across every possible credential and header split', () => {
   const credential = 'synthetic-split-credential'; registerCredential(credential);
   for (const input of [credential, 'Authorization: Bearer synthetic-split-header']) for (let split = 1; split < input.length; split++) {

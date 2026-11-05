@@ -5,6 +5,11 @@ export const qualityFixtureProject = {
   description: 'Parse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft. No publication or operational-format validation is performed.',
   criteria: ['Parse a synthetic task and recover from empty input.', 'Publication of the synthetic review draft requires owner approval.']
 };
+export const cliFixtureProject = {
+  title: 'Synthetic command-line task parser fixture',
+  description: 'Parse an invented TASK: prefix through a JSON command-line protocol.',
+  criteria: ['Parse a synthetic task and recover from empty input.']
+};
 
 export function qualityFixture(criterionIds) {
   const recipeOutcomes = {

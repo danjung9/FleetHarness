@@ -21,6 +21,17 @@ export function solutionFixture(ids) {
   return files;
 }
 
+export function cliSolutionFixture(ids) {
+  const files = solutionFixture(ids), solution = JSON.parse(files['solution-contract.json']), plan = JSON.parse(files['acceptance-plan.json']);
+  solution.runtime = { profile: 'cli', files: ['evaluate.cjs', 'core.cjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] } };
+  plan.journeys = [];
+  for (const criterion of plan.criteria) { criterion.journeyIds = []; if (criterion.disposition === 'implemented') criterion.capabilityIds = ['parse']; }
+  solution.capabilities[0].criterionIds = plan.criteria.filter(criterion => criterion.disposition === 'implemented').map(criterion => criterion.criterionId);
+  files['solution-contract.json'] = JSON.stringify(solution);
+  files['acceptance-plan.json'] = JSON.stringify(plan);
+  return files;
+}
+
 // Invoke the same pure function embedded in the actual UI, not copied test logic.
 export const solutionFixtureEvaluator = String.raw`const fs=require('node:fs');
 const vm=require('node:vm');

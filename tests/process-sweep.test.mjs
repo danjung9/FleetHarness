@@ -249,6 +249,34 @@ test('macOS discovery matches only environment markers with the same start ident
     row(107, 'node different-worker')), /identity changed/);
 });
 
+test('macOS cleanup retains browser descendants and zombies until their identities disappear', async () => {
+  const row = (pid, parent, command, state = 'S') => `${pid} Wed Nov  4 16:08:30 2026 ${state} ${parent} ${command}\n`;
+  const plain = row(701, 1, 'node helper') + row(702, 701, 'browser') + row(703, 702, 'renderer');
+  const expanded = row(701, 1, 'node helper APPYARD_RUN_PROCESS=synthetic-tree') + row(702, 701, 'browser PATH=/bin') + row(703, 702, 'renderer PATH=/bin');
+  const owned = markedPsProcesses(plain, expanded, 'synthetic-tree');
+  assert.deepEqual(owned.map(p => p.pid), [701, 702, 703]);
+  const dying = row(701, 1, 'node helper') + row(702, 701, 'browser') + row(703, 702, '(renderer)', 'Z');
+  const retained = markedPsProcesses(dying, dying, 'synthetic-tree', dying, owned);
+  assert.deepEqual(retained.map(p => p.pid), [701, 702, 703]);
+  assert.equal(retained.find(p => p.pid === 703).zombie, true);
+  const gone = row(800, 1, 'unrelated');
+  assert.deepEqual(markedPsProcesses(gone, gone, 'synthetic-tree', gone, retained), []);
+  let remaining = owned, signals = [];
+  const scope = new RunProcessSweep({ scan: async () => remaining, signal: pid => {
+    signals.push(pid); remaining = remaining.filter(p => p.pid !== pid);
+  } });
+  scope.environment({}); await scope.stop();
+  assert.deepEqual(signals, [703, 702, 701], 'Children must exit while their parents can still reap them');
+});
+
+test('an unreaped owned zombie cannot authorize successful terminal cleanup', async () => {
+  const signals = [];
+  const scope = new RunProcessSweep({ graceMs: 1, killMs: 10,
+    scan: async () => [{ pid: 987654, started: 'synthetic', zombie: true }], signal: pid => signals.push(pid) });
+  scope.environment({}); await assert.rejects(scope.stop(), /PIDs 987654 remain/);
+  assert.deepEqual(signals, [], 'Signals cannot reap a zombie');
+});
+
 for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 'cleanup-failure']) {
   // Failed cleanup also runs startup recovery, which can spend its full retry
   // window after the session's five-second abort allowance.

@@ -148,12 +148,15 @@ export class FleetBackend {
       p.report.stageMetrics = p.stages.filter(s => s.metrics).map(s => ({ stage: s.id, ...structuredClone(s.metrics!) }));
       try {
         await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(redactValue(p.report), null, 2));
+        if (p.status === 'review' && await sourceHash(p.workspace!) !== p.report.sourceHash) throw new Error('Source changed during final process cleanup or report publication. Run verification again before review.');
         if (p.status === 'review' && p.processScope?.cleanup === 'confirmed') p.verification = { runId: p.runId!, reportHash: reportHash(p.report) };
       } catch (error) {
         const previous = p.error;
-        recordProjectError(p, new Error('Could not save verification report.', { cause: error }), detail => this.log(p, 'verify', 'error', detail));
+        recordProjectError(p, error instanceof Error && error.message.startsWith('Source changed') ? error : new Error('Could not save verification report.', { cause: error }), detail => this.log(p, 'verify', 'error', detail));
         p.error = [previous, p.error].filter(Boolean).join('\n');
         if (p.status !== 'stopped') p.status = 'failed';
+        p.resumeStage = run.checkpointStage;
+        p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       }
     }
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -943,11 +946,10 @@ export class FleetBackend {
       await this.checkInputs(p, run);
       const verifiedSource = p.report.sourceHash;
       if (await sourceHash(p.workspace!) !== verifiedSource) throw new Error('Source or visual evidence changed after verification. Resume verification before review.');
-      await restoreEvaluationPlan(p.workspace!, run.quality!);
+      const finalSource = await restoreEvaluationPlan(p.workspace!, run.quality!, verifiedSource);
       await this.checkpoint(p, run);
       await this.checkInputs(p, run);
-      const finalSource = await sourceHash(p.workspace!);
-      if (await sourceHash(p.workspace!, { excludeEvaluationPlan: true }) !== verifiedSource) throw new Error('Source or visual evidence changed while finalizing verification. Resume verification before review.');
+      if (await sourceHash(p.workspace!) !== finalSource) throw new Error('Source or visual evidence changed while finalizing verification. Resume verification before review.');
       p.report.sourceHash = finalSource;
       await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(redactValue(p.report), null, 2));
       await this.stage(p, 'verify', 'complete'); await this.stage(p, 'review', 'review');

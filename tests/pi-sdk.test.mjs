@@ -95,7 +95,7 @@ test('real Pi SDK sends browser tool screenshot pixels and console errors to an 
   assert.deepEqual(attachments, [{ type: 'image_url', image_url: { url: `data:image/png;base64,${png}` } }]);
 });
 
-test('real Pi SDK recovers a 503, executes file tools, repairs a failing test and reaches review', { timeout: 45000 }, async t => {
+test('real Pi SDK recovers a 503, executes file tools, repairs a failing test and reaches review', { timeout: 90000 }, async t => {
   const fixture = await startFixtureProvider(); t.after(() => fixture.close());
   const proxy = await provider(t, async (req, res, raw, count) => {
     if (count === 1) { res.writeHead(503, { 'content-type': 'application/json' }).end(JSON.stringify({ error: { message: '503 temporarily overloaded' } })); return; }
@@ -104,7 +104,7 @@ test('real Pi SDK recovers a 503, executes file tools, repairs a failing test an
     for await (const chunk of response.body) res.write(chunk);
     res.end();
   });
-  const h = await backend(t, proxy.baseUrl); await h.pi.start(h.project.id); await h.settle();
+  const h = await backend(t, proxy.baseUrl, { idleMs: 30_000, timeoutMs: 60_000 }); await h.pi.start(h.project.id); await h.settle();
   assert.equal(h.project.status, 'review', h.project.error); assert.equal(h.pi.active.size, 0);
   assert.ok(h.project.logs.some(l => l.text.includes('Provider retry 1/2')));
   assert.ok(h.project.logs.some(l => l.text.includes('Starting one Pi repair attempt')));

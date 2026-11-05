@@ -48,6 +48,39 @@ test('failed cleanup cannot be approved, exported, or packaged', async t => {
   }
 });
 
+test('late helper writes during cleanup cannot acquire authoritative passing evidence', async t => {
+  const { store, p } = await fixture(t), verifiedHash = p.report.sourceHash;
+  const backend = new FleetBackend(store, process.execPath, () => {}, process.cwd());
+  await backend.finish(p, { controller: new AbortController(), outcome: 'review', checkpointStage: 'verify', resolve() {},
+    processes: { marker: p.processScope.marker, async stop() {
+      await fs.appendFile(path.join(p.workspace, 'index.html'), '<p>Untested late helper write</p>');
+    } } });
+  assert.equal(p.processScope.cleanup, 'confirmed');
+  assert.equal(p.status, 'failed'); assert.equal(p.resumeStage, 'verify');
+  assert.equal(p.verification, undefined); assert.equal(p.approval, undefined);
+  assert.equal(p.report.sourceHash, verifiedHash); assert.notEqual(await sourceHash(p.workspace), verifiedHash);
+  assert.ok(p.logs.some(log => log.text.includes('Source changed during final process cleanup')));
+  const main = await mainHarness(store, backend);
+  await assert.rejects(main.invoke('fleet:approve', p.id, 'Synthetic approval'), /review|verification/i);
+});
+
+test('Stop cancels a preview reserved before its first state save resumes', async t => {
+  const { store, p } = await fixture(t), entered = deferred(), release = deferred();
+  const save = store.save.bind(store); let first = true, starts = 0, sweeps = 0;
+  store.save = async () => { if (first) { first = false; entered.resolve(); await release.promise; } return save(); };
+  const main = await mainHarness(store, { active: new Map(), async stop() {} }, 'electron/main.ts', {
+    ApplicationPreviews: class { async url() { starts++; return 'http://127.0.0.1:1'; } async stop() {} },
+    RunProcessSweep: class { run(work) { return work(); } async stop() { sweeps++; } }
+  });
+  const opening = main.invoke('fleet:preview', p.id);
+  await entered.promise;
+  await main.invoke('fleet:stop', p.id);
+  assert.equal(p.processScope.cleanup, 'confirmed'); assert.equal(sweeps, 1);
+  release.resolve();
+  assert.equal(await opening, null); assert.equal(starts, 0, 'No generated runtime may start after Stop settled');
+  await main.invoke('fleet:stop', p.id); assert.equal(starts, 0);
+});
+
 for (const mismatch of ['run', 'cleanup', 'report']) test('approval rejects mismatched ' + mismatch + ' evidence', async t => {
   const { store, p } = await fixture(t);
   if (mismatch === 'run') p.runId = 'another-run';

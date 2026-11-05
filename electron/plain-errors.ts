@@ -88,7 +88,7 @@ const rules: [PlainCode, RegExp][] = [
   ['shutdown', /shutdown was not confirmed|Possible background job detected/i],
   ['shutdown', /Could not terminate the verification process tree|Verification process did not close after termination/i],
   ['recovery', /Only a failed or stopped build can resume|no saved recovery checkpoint|No incomplete build stage can resume|Invalid recovery checkpoint|build-test baseline is (?:missing|invalid)|frozen plan checkpoint is missing/i],
-  ['changed', /The brief changed|The frozen (?:requirements|plan) changed|Source changed (?:after verification|during read-only independent judgment)/i],
+  ['changed', /The brief changed|The frozen (?:requirements|plan) changed|Source changed (?:after verification|during read-only independent judgment|during final process cleanup|while publishing verification evidence)/i],
   ['quota', /insufficient_quota|quota (?:exceeded|exhausted)|billing|usage (?:limit|allowance)/i],
   ['busy', /\b429\b|rate.?limit|too many requests|overloaded|\b50[0234]\b/i],
   ['connection', /\b40[13]\b|unauthori[sz]ed|forbidden|invalid.{0,12}(?:api.?key|token)|No API key found|authentication_error|(?:choose a model and|sign in with ChatGPT)|Codex returned an unexpected sign-in address/i],

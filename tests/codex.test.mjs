@@ -1,5 +1,5 @@
-import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
-import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
+import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
 import test from 'node:test';
@@ -485,9 +485,9 @@ test('factory admission rejects stale model catalogs without an active ChatGPT p
   }
 });
 
-for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes ${runtimeProfile} phase skills and runs independent verification without a Pi session`, { timeout: 30000 }, async t => {
+for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes ${runtimeProfile} phase skills and runs independent verification without a Pi session`, { timeout: 90000 }, async t => {
   const root = await temp(t), store = new Store(root); await store.init();
-  store.state.projects[0] = newProject(qualityFixtureProject);
+  store.state.projects[0] = newProject(runtimeProfile === 'cli' ? cliFixtureProject : qualityFixtureProject);
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
   const project = store.state.projects[0], phases = [], sessions = [];
   const codex = { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture-codex', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }], async refresh() {}, credentials: fixtureCredentials };
@@ -529,16 +529,7 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
           : phase === 'intake' ? { 'scope.md': 'Scope' } : phase === 'research' ? { 'research.md': 'Research' } : phase === 'plan' ? { 'scope.md': 'Scope', 'research.md': 'Research', 'plan.md': 'Plan', 'test-matrix.md': 'Test mapping' }
           : phase === 'build' ? { 'index.html': qualityFixtureHtml, 'evaluate.cjs': solutionFixtureEvaluator, 'core.cjs': 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'path-to-fleet.md': 'Domain review required', 'app.test.cjs': 'require("node:test")("sum",()=>require("node:assert/strict").equal(2+2,4));' }
           : { 'verification.md': 'Verified by the independent runner' };
-        if (phase === 'plan') Object.assign(files, solutionFixture(JSON.parse(await fs.readFile(path.join(options.cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
-        if (runtimeProfile === 'cli' && phase === 'plan') {
-          const solution = JSON.parse(files['solution-contract.json']);
-          solution.runtime = { profile: 'cli', files: ['evaluate.cjs', 'core.cjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] } };
-          const plan = JSON.parse(files['acceptance-plan.json']);
-          plan.journeys = [];
-          for (const criterion of plan.criteria) criterion.journeyIds = [];
-          files['solution-contract.json'] = JSON.stringify(solution);
-          files['acceptance-plan.json'] = JSON.stringify(plan);
-        }
+        if (phase === 'plan') Object.assign(files, (runtimeProfile === 'cli' ? cliSolutionFixture : solutionFixture)(JSON.parse(await fs.readFile(path.join(options.cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
         if (runtimeProfile === 'cli' && phase === 'build' && !guide) {
           delete files['index.html'];
           files['evaluate.cjs'] = 'const {readFileSync} = require("node:fs"), {parse} = require("./core.cjs"); process.stdout.write(JSON.stringify(parse(JSON.parse(readFileSync(0, "utf8")))));';

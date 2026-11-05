@@ -8,7 +8,7 @@ import { syncBuiltinESMExports } from 'node:module';
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed, verifyWorkspace } from '../dist-electron/electron/verification.js';
-import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
 import { plainError } from '../dist-electron/electron/plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
 
@@ -42,7 +42,7 @@ async function resumeRefused(backend, project, expected) {
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const workflowTimeout = functionalTimeout;
-import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { solutionFixture, solutionFixtureEvaluator, cliSolutionFixture } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
@@ -84,7 +84,7 @@ async function harness(t, options = {}) {
   if (options.verify || options.syntheticBrowser) syntheticBrowser(t);
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-flow-'));
   const store = new Store(root); await store.init();
-  store.state.projects[0] = newProject(qualityFixtureProject);
+  store.state.projects[0] = newProject(options.project ?? qualityFixtureProject);
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
   const project = store.state.projects[0], sessions = [], judgeSessions = [], snapshots = [];
   const broker = options.clarifications ? new ClarificationBroker(store, () => snapshots.push(structuredClone(project))) : undefined;
@@ -446,7 +446,10 @@ test('combined prerequisite: host verification persists an active writer until c
 });
 
 test('combined prerequisite: an unconfirmed verifier shutdown blocks retry and persisted resume', { timeout: 10000 }, async t => {
-  const h = await harness(t, { verificationLimits: { timeoutMs: 1000 } });
+  const h = await harness(t, { syntheticBrowser: true, verificationLimits: { timeoutMs: 1000 } });
+  // This case withholds the real verifier's close receipt. Browser rendering and
+  // the earlier core check have separate native tests and need not precede it here.
+  h.backend.evaluateCore = async () => true;
   const originalSpawn = childProcess.spawn;
   const mocked = t.mock.method(childProcess, 'spawn', (...args) => {
     const child = originalSpawn(...args), once = child.once;
@@ -608,6 +611,34 @@ test('legacy resume refusal leaves the restored answer key and saved evidence un
   await resumeRefused(h.backend, h.project, /plan.*changed/i);
   assert.equal(await fs.readFile(keyPath, 'utf8'), key, 'Rejected admission cannot reseal or remove saved files');
   assert.equal(h.sessions.length, count);
+});
+
+test('persisted resume preserves original tests with credential-like filenames', { timeout: 10000 }, async t => {
+  const original = 'require("node:test")("synthetic baseline case", () => {});';
+  const names = ['token.test.cjs', 'tests/password.test.cjs'];
+  const h = await harness(t, { verify: async () => { throw new Error('Synthetic verification interrupted'); },
+    scenario: async ({ cwd, stage }) => {
+      if (stage === 'build') for (const name of names) {
+        await fs.mkdir(path.dirname(path.join(cwd, name)), { recursive: true });
+        await fs.writeFile(path.join(cwd, name), original);
+      }
+      return false;
+    } });
+  await h.run(); await h.assertSettled('failed');
+  const baseline = structuredClone(h.project.runCheckpoint);
+  const store = new Store(h.root); await store.init(); const saved = store.project(h.project.id);
+  assert.deepEqual(saved.runCheckpoint.buildTests, baseline.buildTests);
+  assert.deepEqual(saved.runCheckpoint.buildTestContents, baseline.buildTestContents);
+  for (const name of names) {
+    assert.match(saved.runCheckpoint.buildTests[name], /^[a-f0-9]{64}$/);
+    assert.equal(Buffer.from(saved.runCheckpoint.buildTestContents[name], 'base64').toString(), original);
+  }
+  const resumed = new PiBackend(store, process.execPath, () => {}, resourcesRoot, h.backend.options);
+  resumed.runtime = h.backend.runtime; resumed.verify = syntheticReport; resumed.evaluateCore = async () => true;
+  await resumed.resume(saved.id); await resumed.active.get(saved.id)?.done;
+  assert.equal(saved.status, 'review', saved.error);
+  assert.deepEqual(saved.runCheckpoint.buildTests, baseline.buildTests);
+  for (const name of names) assert.equal(await fs.readFile(path.join(saved.workspace, name), 'utf8'), original);
 });
 
 test('resume preserves latest failure details after an interrupted repair and counts its retry', { timeout: 10000 }, async t => {
@@ -1586,17 +1617,12 @@ for (const supplied of [false, true]) {
 }
 
 for (const runtimeProfile of ['browser', 'cli']) test(`the complete ${runtimeProfile} workflow routes skills by role and persists real test evidence before human review`, { timeout: workflowTimeout }, async t => {
-  const h = await harness(t, { modelInput: runtimeProfile === 'cli' ? ['text'] : ['text', 'image'], scenario: runtimeProfile === 'cli' ? async ({ cwd, stage }) => {
+  const h = await harness(t, { project: runtimeProfile === 'cli' ? cliFixtureProject : qualityFixtureProject, modelInput: runtimeProfile === 'cli' ? ['text'] : ['text', 'image'], scenario: runtimeProfile === 'cli' ? async ({ cwd, stage }) => {
     if (!['plan', 'build', 'guide'].includes(stage)) return false;
     await artifacts(cwd, stage);
     if (stage === 'plan') {
-      const solution = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
-      solution.runtime = { profile: 'cli', files: ['evaluate.cjs', 'core.cjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] } };
-      const plan = JSON.parse(await fs.readFile(path.join(cwd, 'acceptance-plan.json'), 'utf8'));
-      plan.journeys = [];
-      for (const criterion of plan.criteria) criterion.journeyIds = [];
-      await fs.writeFile(path.join(cwd, 'solution-contract.json'), JSON.stringify(solution));
-      await fs.writeFile(path.join(cwd, 'acceptance-plan.json'), JSON.stringify(plan));
+      const acceptance = JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8')).acceptance;
+      for (const [name, body] of Object.entries(cliSolutionFixture(acceptance.map(criterion => criterion.id)))) await fs.writeFile(path.join(cwd, name), body);
     } else if (stage === 'build') {
       await fs.rm(path.join(cwd, 'index.html'));
       await fs.writeFile(path.join(cwd, 'evaluate.cjs'), 'const {readFileSync} = require("node:fs"), {parse} = require("./core.cjs"); process.stdout.write(JSON.stringify(parse(JSON.parse(readFileSync(0, "utf8")))));');

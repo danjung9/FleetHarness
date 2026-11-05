@@ -22,6 +22,8 @@ export interface AgentBrowserOptions {
   executable?: string;
   timeoutMs?: number;
   stepTimeoutMs?: number;
+  startupTimeoutMs?: number;
+  observationTimeoutMs?: number;
 }
 
 const viewports = { desktop: { width: 1280, height: 800 }, narrow: { width: 390, height: 844 } } as const;
@@ -128,6 +130,8 @@ export class AgentBrowserSession {
   private readonly controller = new AbortController();
   private readonly timeout: number;
   private readonly stepTimeout: number;
+  private readonly startupTimeout: number;
+  private readonly observationTimeout: number;
   private timer?: ReturnType<typeof setTimeout>;
   private active?: Generation;
   private closing?: Promise<void>;
@@ -141,8 +145,10 @@ export class AgentBrowserSession {
 
   constructor(private readonly options: AgentBrowserOptions) {
     this.timeout = options.timeoutMs ?? 600_000;
-    this.stepTimeout = options.stepTimeoutMs ?? 5000;
-    for (const [name, value] of Object.entries({ timeoutMs: this.timeout, stepTimeoutMs: this.stepTimeout })) {
+    this.stepTimeout = options.stepTimeoutMs ?? 10_000;
+    this.startupTimeout = options.startupTimeoutMs ?? 30_000;
+    this.observationTimeout = options.observationTimeoutMs ?? 10_000;
+    for (const [name, value] of Object.entries({ timeoutMs: this.timeout, stepTimeoutMs: this.stepTimeout, startupTimeoutMs: this.startupTimeout, observationTimeoutMs: this.observationTimeout })) {
       if (!Number.isSafeInteger(value) || value <= 0) throw new Error('Invalid browser session limit: ' + name);
     }
     options.signal.addEventListener('abort', this.aborted, { once: true });
@@ -264,29 +270,31 @@ export class AgentBrowserSession {
     let runtime: Runtime;
     try { runtime = await within(preparing, 120_000, generation.signal); }
     catch (error) { await this.dispose(generation); throw error; }
+    const startupDeadline = Date.now() + this.startupTimeout;
+    const startupRemaining = () => Math.max(1, startupDeadline - Date.now());
     const address = runtimeAddress(runtime.url);
     const proxying = originProxy(address.origin).then(async proxy => {
       if (generation.closed || generation.signal.aborted) { await proxy.close(); throw new Error('Browser launch stopped.'); }
       generation.proxy = proxy; return proxy;
     });
-    const proxy = await within(proxying, this.stepTimeout, generation.signal);
+    const proxy = await within(proxying, startupRemaining(), generation.signal);
     const failures: string[] = [];
     const candidates = this.options.executable ? [{ executablePath: this.options.executable }] : [{}, { channel: 'chrome' }];
     for (const candidate of candidates) {
       generation.signal.throwIfAborted();
       let accepting = true;
       try {
-        const launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: false, host: '127.0.0.1', timeout: 5000,
+        const launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: false, host: '127.0.0.1', timeout: startupRemaining(),
           proxy: { server: proxy.url, bypass: '<-loopback>' }, args: ['--disable-quic', '--force-webrtc-ip-handling-policy=disable_non_proxied_udp'] }).then(async server => {
           if (!accepting || generation.closed || generation.signal.aborted) { await settle(server.kill()); throw new Error('Browser launch stopped.'); }
           generation.server = server; return server;
         });
-        const server = await within(launching, 5500, generation.signal);
-        const connecting = chromium.connect(server.wsEndpoint(), { timeout: 5000 }).then(async browser => {
+        const server = await within(launching, startupRemaining(), generation.signal);
+        const connecting = chromium.connect(server.wsEndpoint(), { timeout: startupRemaining() }).then(async browser => {
           if (!accepting || generation.closed || generation.signal.aborted) { await settle(browser.close()); throw new Error('Browser connection stopped.'); }
           generation.browser = browser; return browser;
         });
-        await within(connecting, 5500, generation.signal);
+        await within(connecting, startupRemaining(), generation.signal);
         break;
       } catch (error) {
         accepting = false;
@@ -301,7 +309,7 @@ export class AgentBrowserSession {
       if (generation.closed || generation.signal.aborted) { await settle(context.close()); throw new Error('Browser context stopped.'); }
       generation.context = context; return context;
     });
-    const context = await within(creating, this.stepTimeout, generation.signal);
+    const context = await within(creating, startupRemaining(), generation.signal);
     context.setDefaultTimeout(this.stepTimeout);
     await within(context.route('**/*', async route => {
       try {
@@ -311,16 +319,16 @@ export class AgentBrowserSession {
           else await route.continue();
         } else { this.record('Blocked resource outside the application origin: ' + url.href.slice(0, 500)); await route.abort('blockedbyclient'); }
       } catch { await route.abort().catch(() => {}); }
-    }), this.stepTimeout, generation.signal);
+    }), startupRemaining(), generation.signal);
     await within(context.routeWebSocket(/.*/, async socket => {
       this.record('Blocked WebSocket: ' + socket.url().slice(0, 500));
       await socket.close({ code: 1008, reason: 'WebSockets are unavailable in development browser sessions.' }).catch(() => {});
-    }), this.stepTimeout, generation.signal);
+    }), startupRemaining(), generation.signal);
     context.on('page', opened => {
       if (!generation.page) { generation.page = opened; return; }
       this.record('Blocked application popup.'); void opened.close().catch(() => {});
     });
-    const page = await within(context.newPage(), this.stepTimeout, generation.signal);
+    const page = await within(context.newPage(), startupRemaining(), generation.signal);
     generation.page = page;
     page.on('pageerror', error => this.record('Browser error: ' + error.message));
     page.on('console', entry => this.record(entry.text(), entry.type()));
@@ -335,7 +343,7 @@ export class AgentBrowserSession {
     page.on('requestfailed', request => this.record('Request failed: ' + request.url().slice(0, 500) + ' ' + (request.failure()?.errorText ?? '')));
     page.on('dialog', dialog => { this.record('Dismissed ' + dialog.type() + ' dialog: ' + dialog.message()); void dialog.dismiss().catch(() => {}); });
     page.on('download', download => { this.record('Blocked download: ' + download.suggestedFilename()); void download.cancel().catch(() => {}); });
-    await within(page.goto(address.href, { waitUntil: 'load', timeout: this.stepTimeout }), this.stepTimeout, generation.signal);
+    await within(page.goto(address.href, { waitUntil: 'load', timeout: startupRemaining() }), startupRemaining(), generation.signal);
   }
 
   private async artifactDirectory() {
@@ -403,11 +411,11 @@ export class AgentBrowserSession {
               ...(element.localName === 'select' ? { options: Array.from((element as HTMLSelectElement).options).slice(0, 30).map(option => ({ value: compact(option.value), label: compact(option.label) })) } : {}) };
           });
         return { pageText: compact(document.body?.innerText, 12_000), controls };
-      }), Math.min(this.stepTimeout, 2000), signal);
+      }), this.observationTimeout, signal);
     } catch (error) { observationErrors.push('Page summary: ' + errorText(error)); }
     try {
-      png = await within(page.screenshot({ animations: 'disabled', fullPage: false, type: 'png', timeout: Math.min(this.stepTimeout, 3000) }), Math.min(this.stepTimeout, 3000), signal);
-      screenshot = await within(this.saveImage(png, signal), this.stepTimeout, signal);
+      png = await within(page.screenshot({ animations: 'disabled', fullPage: false, type: 'png', timeout: this.observationTimeout }), this.observationTimeout, signal);
+      screenshot = await within(this.saveImage(png, signal), this.observationTimeout, signal);
     } catch (error) { png = undefined; observationErrors.push('Screenshot: ' + errorText(error)); }
     signal.throwIfAborted();
     let captureId: string | undefined;

@@ -10,7 +10,7 @@ import type { QualityPlan, UxSpec, QualityReport, CapabilityResult, PackageEvide
 import type { SolutionContract, EvaluationPlan, SolutionEvaluationReport } from '../shared/solution.js';
 import type { TestReport } from '../shared/types.js';
 import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
-import { safeFile, sourceHash, artifactManifest } from './storage.js';
+import { safeFile, sourceHash, artifactManifest, writeVerifiedArtifact, manifestHash, isDevelopmentEvidence } from './storage.js';
 import { verifyWorkspace, VerificationShutdownError, type VerificationOptions } from './verification.js';
 import { parseSolutionContract, parseEvaluationPlan } from '../harness/solution-contract.js';
 import { applicationTestFiles } from './verification.js';
@@ -95,12 +95,14 @@ export async function sealEvaluationPlan(root: string, contract: QualityContract
   await assertQualityContract(root, contract);
 }
 
-export async function restoreEvaluationPlan(root: string, contract: QualityContract) {
-  if (!contract.sealedEvaluation) return;
+export async function restoreEvaluationPlan(root: string, contract: QualityContract, verifiedHash?: string) {
+  if (!contract.sealedEvaluation) return verifiedHash;
   await assertQualityContract(root, contract);
-  await atomicHostWrite(root, 'evaluation-plan.json', contract.evaluationBody!, { exclusive: true });
+  const hash = verifiedHash === undefined ? undefined : await writeVerifiedArtifact(root, verifiedHash, 'evaluation-plan.json', contract.evaluationBody!);
+  if (verifiedHash === undefined) await atomicHostWrite(root, 'evaluation-plan.json', contract.evaluationBody!, { exclusive: true });
   contract.sealedEvaluation = false;
   await assertQualityContract(root, contract);
+  return hash;
 }
 
 function capabilityResults(contract: QualityContract, evaluation?: SolutionEvaluationReport): CapabilityResult[] {
@@ -212,7 +214,8 @@ export async function verifyApplication(root: string, executable: string, contra
   }
   signal?.throwIfAborted();
   await assertQualityContract(root, contract);
-  if (before !== await sourceHash(root, { excludeEvidence: true })) throw new Error('Source files changed during application verification. Run verification again before review.');
+  const verifiedManifest = await artifactManifest(root);
+  if (before !== manifestHash(verifiedManifest.filter(file => !isDevelopmentEvidence(file.path)))) throw new Error('Source files changed during application verification. Run verification again before review.');
   const capabilities = capabilityResults(contract, solutionEvaluation);
   const criteria: QualityReport['criteria'] = contract.plan.criteria.map(item => {
     const requirement = contract.acceptance.find(criterion => criterion.id === item.criterionId)!.requirement;
@@ -251,5 +254,5 @@ export async function verifyApplication(root: string, executable: string, contra
     `Requirements: ${criteria.filter(criterion => criterion.status === 'passed').length} demonstrated, ${criteria.filter(criterion => criterion.status === 'failed').length} failed, ${criteria.filter(criterion => criterion.status === 'unverified').length} unverified.`
   ].join('\n');
   return { ...report, quality, output: report.output + '\n' + summary,
-    durationMs: Math.round(performance.now() - started), sourceHash: await sourceHash(root) };
+    durationMs: Math.round(performance.now() - started), sourceHash: manifestHash(verifiedManifest) };
 }

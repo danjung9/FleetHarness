@@ -4,7 +4,9 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runInNewContext } from 'node:vm';
-import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
+import { cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+import { prepareFleetWorkspace } from '../dist-electron/harness/integration.js';
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
@@ -12,6 +14,20 @@ import { loadQualityContract, assertQualityContract, sealEvaluationPlan, restore
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { assertReviewState, verifiedManifest, reportHash } from '../dist-electron/electron/delivery.js';
+
+test('both engine CLI fixtures use a CLI brief and complete capability coverage without dangling browser journeys', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-cli-contract-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const packet = await prepareFleetWorkspace({ ...cliFixtureProject, workspace: root, resourcesRoot: process.cwd() });
+  for (const [name, body] of Object.entries(cliSolutionFixture(packet.acceptance.map(criterion => criterion.id)))) await fs.writeFile(path.join(root, name), body);
+  const contract = await loadQualityContract(root, packet.acceptance, true);
+  assert.equal(contract.solution.runtime.profile, 'cli'); assert.deepEqual(contract.plan.journeys, []);
+  const implemented = contract.plan.criteria.filter(criterion => criterion.disposition === 'implemented');
+  assert.ok(implemented.length >= 2, 'The explicit criterion and prose obligation both need evidence');
+  assert.ok(implemented.every(criterion => criterion.capabilityIds.includes('parse')));
+  assert.deepEqual(contract.solution.capabilities[0].criterionIds, implemented.map(criterion => criterion.criterionId));
+  assert.ok(contract.plan.criteria.some(criterion => criterion.disposition === 'deferred'), 'Unrelated recipe outcomes stay unverified');
+});
 
 test('shared parser fixture preserves primary approval deferral with synthetic journey evidence', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-fixture-contract-'));

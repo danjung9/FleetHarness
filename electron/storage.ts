@@ -123,12 +123,12 @@ export async function safeFile(root: string, relative: string) {
   return resolved;
 }
 export type ArtifactManifest = { path: string; contents: Buffer }[];
+export const isDevelopmentEvidence = (name: string) => /^\.(?:quality-evidence|browser-observations)(?:\/|\\)/.test(name) || name === 'visual-review.json';
 export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
   const files: ArtifactManifest = [];
-  for (const file of await listArtifacts(root)) {
-    if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    if (options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') continue;
-    if (options.excludeEvidence && (/^\.(?:quality-evidence|browser-observations)(?:\/|\\)/.test(file.path) || file.path === 'visual-review.json')) continue;
+  const artifacts = (await listArtifacts(root)).filter(file => !['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)
+    && !(options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') && !(options.excludeEvidence && isDevelopmentEvidence(file.path)));
+  const read = async (file: Artifact) => {
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     const handle = await fs.open(await safeFile(root, file.path), constants.O_RDONLY | constants.O_NOFOLLOW);
     let contents: Buffer;
@@ -137,8 +137,11 @@ export async function artifactManifest(root: string, options: { excludeEvidence?
       contents = await handle.readFile();
     } finally { await handle.close(); }
     if (contents.length > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-    files.push({ path: file.path, contents });
-  }
+    return { path: file.path, contents };
+  };
+  // Large skill packets otherwise serialize thousands of independent metadata
+  // and read operations on every identity check. Keep every validation and order.
+  for (let offset = 0; offset < artifacts.length; offset += 16) files.push(...await Promise.all(artifacts.slice(offset, offset + 16).map(read)));
   if (options.requireEntryPoint && !files.some(file => file.path === 'index.html' && file.contents.length)) throw new Error('A regular, nonempty index.html entry point is required.');
   return files;
 }
@@ -149,4 +152,17 @@ export function manifestHash(files: ArtifactManifest) {
 }
 export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean } = {}) {
   return manifestHash(await artifactManifest(root, options));
+}
+
+/** Advance a verified identity only by the exact host-owned bytes being published. */
+export async function writeVerifiedArtifact(root: string, verifiedHash: string, name: 'judge.json' | 'evaluation-plan.json', contents: string) {
+  const before = await artifactManifest(root);
+  if (manifestHash(before) !== verifiedHash) throw new Error('Source changed after verification. Run verification again before review.');
+  const expected = before.filter(file => file.path !== name);
+  expected.push({ path: name, contents: Buffer.from(contents) });
+  expected.sort((a, b) => a.path.localeCompare(b.path));
+  const hash = manifestHash(expected);
+  await atomicHostWrite(root, name, contents, { exclusive: name === 'evaluation-plan.json' });
+  if (await sourceHash(root) !== hash) throw new Error('Source changed while publishing verification evidence. Run verification again before review.');
+  return hash;
 }

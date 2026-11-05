@@ -8,7 +8,7 @@ import { atomicHostWrite } from '../shared/host-files.js';
 import type { AgentBackend, TestReport, StageTokenUsage } from '../shared/types.js';
 import { runAgentStage, tokenUsage, type AgentLimits, type StageEvent, type StageSession } from './agent-runner.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
-import { listArtifacts, safeFile, sourceHash } from './storage.js';
+import { listArtifacts, safeFile, sourceHash, writeVerifiedArtifact } from './storage.js';
 import { CodexRpc, CHATGPT_MODEL_PROVIDER, CHATGPT_ACCESS_TOKEN_ENV, type CodexCredentials } from './codex-rpc.js';
 import { parseSolutionContract } from '../harness/solution-contract.js';
 
@@ -263,7 +263,7 @@ export async function runIndependentJudge(options: Options): Promise<JudgedRepor
   const persist = async () => {
     options.signal.throwIfAborted();
     result.durationMs = result.attempts.reduce((sum, item) => sum + item.durationMs, 0);
-    await writeEvidence(options.workspace, 'judge.json', result);
+    const hash = await writeVerifiedArtifact(options.workspace, report.sourceHash!, 'judge.json', JSON.stringify(redactValue(result), null, 2));
     const summary = ['Independent judge: ' + result.verdict + '. Human review is required.',
       ...result.attempts.flatMap((item, i) => [`Judgment ${i + 1}: ${item.evaluationError ? 'EVALUATION ERROR' : item.verdict}`, ...item.gaps.map(g => `${g.requirement}: ${g.evidence} Fix: ${g.fix}`)]),
       ...result.gaps.filter(g => !result.attempts.at(-1)?.gaps.includes(g)).map(g => `${g.requirement}: ${g.evidence} Fix: ${g.fix}`),
@@ -275,8 +275,9 @@ export async function runIndependentJudge(options: Options): Promise<JudgedRepor
           return gaps.length ? { ...criterion, status: 'unverified' as const,
             detail: criterion.detail + '\nIndependent judgment: ' + gaps.map(gap => gap.evidence).join(' ') } : criterion;
         }) } } : {}),
-      sourceHash: await sourceHash(options.workspace) };
+      sourceHash: hash };
     await writeEvidence(options.workspace, 'test-report.json', final);
+    if (await sourceHash(options.workspace) !== hash) throw new Error('Source changed while publishing verification evidence. Run verification again before review.');
     await options.recordReport?.(final);
     return final;
   };

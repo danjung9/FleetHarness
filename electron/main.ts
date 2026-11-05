@@ -40,6 +40,7 @@ let store: Store, backend: FleetBackend, codex: CodexAccount;
 let lead: ProjectLead, clarifications: ClarificationBroker;
 const conversationActions = new Map<string, Promise<void>>();
 const previewing = new Set<string>();
+const previewStarts = new Map<string, AbortController>();
 const previews = new ApplicationPreviews(process.execPath);
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Map<string, Promise<void>>();
@@ -118,6 +119,7 @@ async function readArtifact(id: string, file: string) {
 }
 async function stopPreview(id: string) {
   if (!previewing.has(id)) return;
+  previewStarts.get(id)?.abort();
   const p = store.project(id);
   try {
     await previews.stop(p.workspace!);
@@ -217,9 +219,15 @@ function registerIPC() {
       if (!p.workspace) return null;
       if (!p.runId || !p.processScope) throw new Error('Start a new build before opening a runtime preview.');
       const scope = new RunProcessSweep({ marker: p.processScope.marker });
-      p.processScope.cleanup = 'pending'; previewing.add(id); await store.save();
-      try { return await scope.run(() => previews.url(p.workspace!)); }
+      const starting = new AbortController(); previewStarts.set(id, starting);
+      p.processScope.cleanup = 'pending'; previewing.add(id);
+      try {
+        await store.save();
+        if (starting.signal.aborted || previewStarts.get(id) !== starting || quitting) return null;
+        return await scope.run(() => previews.url(p.workspace!));
+      }
       catch (error) { await stopPreview(id); throw error; }
+      finally { if (previewStarts.get(id) === starting) previewStarts.delete(id); }
     }
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || !store.project(id).workspace) return null; throw error; }
   });
