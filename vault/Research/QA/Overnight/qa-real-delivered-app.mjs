@@ -1,5 +1,5 @@
 // Main runs this after real-journey.mjs. No build, model, account or approval calls.
-// node qa-real-delivered-app.mjs --repo CLONE --journey /absolute/journey.json --output EXISTING_DIRECTORY
+// node qa-real-delivered-app.mjs --repo CLONE --journey /absolute/journey.json --output EXISTING_DIRECTORY [--profile EXACT_GENERATED_APP_USER_DATA]
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -8,8 +8,7 @@ import { createRequire } from 'node:module';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createServer } from 'node:http';
-import { runInNewContext } from 'node:vm';
-import { PROJECT_ID, RUN_ID, expectedRecords, mutatedRecords, mutatedInputs, checkBrief } from './morning-brief-oracle.mjs';
+import { PROJECT_ID, RUN_ID, SAMPLE_DATE, expectedRecords, mutatedRecords, mutatedInputs, checkBrief } from './morning-brief-oracle.mjs';
 import { ready, observe, reviewItem, importSources } from './morning-brief-adapter.mjs';
 
 const exec = promisify(execFile), stamp = () => new Date().toISOString();
@@ -23,23 +22,6 @@ const need = (condition, message) => { if (!condition) throw new Error(message);
 async function bounded(promise, ms, message) { let timer; try { return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); })]); } finally { clearTimeout(timer); } }
 function allowedURL(value) { try { const u = new URL(value); return u.protocol === 'fleet-app:' && u.host === 'app' || ['data:', 'blob:', 'about:'].includes(u.protocol); } catch { return false; } }
 function exitEvidence(a, b) { assert.ok(a.exitedAt, 'Previous native process did not exit.'); assert.equal(a.exitCode, 0); assert.notEqual(a.pid, b.pid); assert.ok(Date.parse(b.launchedAt) > Date.parse(a.exitedAt), 'Restart preceded full exit.'); assert.equal(b.userData, a.userData); }
-function profilePreload(root, home) {
-  return `const {app,session}=require('electron'); const fs=require('node:fs'); const path=require('node:path');
-const root=${JSON.stringify(root)}, appData=${JSON.stringify(path.join(home, 'appData'))};
-const beforeReady=!app.isReady(); if(!beforeReady) throw new Error('Profile preload ran too late');
-fs.mkdirSync(appData,{recursive:true}); app.setPath('appData',appData);
-fs.writeFileSync(path.join(root,'prelaunch-'+process.pid+'.json'),JSON.stringify({beforeReady,appData:app.getPath('appData')}));
-const events=[]; const record=value=>{events.push({...value,at:new Date().toISOString()});fs.writeFileSync(path.join(root,'startup-'+process.pid+'.json'),JSON.stringify(events));};
-record({kind:'preload'});
-app.on('web-contents-created',(_event,contents)=>{
- contents.on('console-message',(details,level,message)=>{if(details.level==='error'||level===3)record({kind:'console-error',message:String(details.message??message).slice(0,300)});});
- contents.on('render-process-gone',(_event,details)=>{if(details.reason!=='clean-exit')record({kind:'renderer-exit',reason:details.reason});});
-});
-app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{
- let allowed=false;try{const u=new URL(details.url);allowed=(u.protocol==='fleet-app:'&&u.host==='app')||['data:','blob:','about:','devtools:'].includes(u.protocol);}catch{}
- if(!allowed)record({kind:'external-request',scheme:details.url.split(':')[0]});callback({cancel:!allowed});
-}));\n`;
-}
 if (process.argv.includes('--validate-only')) {
   const rows = ids.map(id => ({ id, result: 'PASS' })); assert.equal(verdict(rows, [], 'PASS'), 'PASS'); assert.equal(verdict(rows.slice(1), [], 'PASS'), 'ERROR');
   assert.equal(verdict(rows.map((r, i) => i ? r : { ...r, result: 'FAIL' }), [], 'PASS'), 'FAIL'); assert.equal(verdict(rows, ['network'], 'PASS'), 'ERROR'); assert.equal(verdict(rows, [], 'UNCONFIRMED'), 'ERROR');
@@ -48,26 +30,16 @@ if (process.argv.includes('--validate-only')) {
   const a = { pid: 1, userData: '/owned/profile', exitedAt: '2026-11-05T10:00:00Z', exitCode: 0 }, b = { pid: 2, userData: '/owned/profile', launchedAt: '2026-11-05T10:00:01Z' }; exitEvidence(a, b);
   for (const change of [{ pid: 1 }, { userData: '/other' }, { launchedAt: '2026-11-05T09:59:59Z' }]) assert.throws(() => exitEvidence(a, { ...b, ...change }));
   assert.equal(inside('/owned', '/owned-other/file'), false);
-  const writes = new Map(), events = new Map(); let appData, requestHandler;
-  const fakeApp = { isReady: () => false, setPath: (name, value) => { assert.equal(name, 'appData'); appData = value; }, getPath: () => appData, on: (name, callback) => events.set(name, callback), whenReady: () => ({ then: fn => fn() }) };
-  const fakeFS = { mkdirSync: () => {}, writeFileSync: (file, value) => writes.set(file, value) };
-  const context = { require: name => { if (name === 'electron') return { app: fakeApp, session: { defaultSession: { webRequest: { onBeforeRequest: fn => { requestHandler = fn; } } } } }; if (name === 'node:fs') return fakeFS; if (name === 'node:path') return path; throw new Error('Unexpected preload import'); }, process: { pid: 123 }, URL, Date };
-  runInNewContext(profilePreload('/owned/run', '/owned/home'), context);
-  assert.deepEqual(JSON.parse(writes.get('/owned/run/prelaunch-123.json')), { beforeReady: true, appData: '/owned/home/appData' });
-  let canceled; requestHandler({ url: 'https://api.example.invalid/run' }, value => { canceled = value.cancel; }); assert.equal(canceled, true);
-  requestHandler({ url: 'fleet-app://app/index.html' }, value => { canceled = value.cancel; }); assert.equal(canceled, false);
-  const listeners = new Map(); events.get('web-contents-created')({}, { on: (name, fn) => listeners.set(name, fn) });
-  listeners.get('console-message')({ level: 'error', message: 'Owned control error' });
-  assert.deepEqual(JSON.parse(writes.get('/owned/run/startup-123.json')).map(event => event.kind), ['preload', 'external-request', 'console-error']);
-  fakeApp.isReady = () => true; assert.throws(() => runInNewContext(profilePreload('/owned/run', '/owned/home'), context), /too late/);
-  console.log(JSON.stringify({ validationOnly: true, passed: true, nativeExecuted: false, listenersOpened: false, filesWritten: false, controls: ['missing-row/failure sensitivity', 'offline URL rules', 'full process restart', 'profile ownership', 'prelaunch profile and startup observers'] })); process.exit(0);
+  console.log(JSON.stringify({ validationOnly: true, passed: true, nativeExecuted: false, listenersOpened: false, filesWritten: false, controls: ['missing-row/failure sensitivity', 'offline URL rules', 'full process restart', 'profile ownership'] })); process.exit(0);
 }
 const result = { schemaVersion: 1, suite: 'real-generated-morning-brief-delivery', startedAt: stamp(), result: 'ERROR',
-  scope: 'Actual downloaded browser app from the existing Morning training brief build. Independent synthetic source values, source-scoped review, two complete native restarts and offered source import. No new build, model, credentials or approval. Prior scratch approval is not human acceptance. No Node-service, Windows, live account, crash-recovery or general containment claim.',
+  scope: 'Actual downloaded browser app from the existing Morning training brief build. Independent synthetic source values, source-scoped review, two complete native restarts and offered source import. Temporarily preserves/restores only its owner-supplied dedicated generated-app profile. No new build, model, credentials or approval. Prior scratch approval is not human acceptance. No Node-service, Windows, live account, crash-recovery or general containment claim.',
+  startupObservationLimit: 'Denying proxy and DNS flags precede launch; offline browser options are supplied at launch. Page error/request observers attach when Playwright returns. Initial unreported console errors before attachment remain outside that observer. The first page must work without an intervening reload.',
   rows: ids.map(id => ({ id, result: 'NOT RUN' })), processes: [], observations: [], errors: [], pageErrors: [], blockedRequests: [], proxyAttempts: [], cleanup: 'UNCONFIRMED' };
-let resultPath, root, app, page, proxy, electron, executablePath, home, bundle, bundleBefore, archivePath, archiveHash, scriptHashes, interrupted = false, cleanupPromise, pendingLaunch, watchdog, preloadPath;
+let resultPath, root, app, page, proxy, electron, executablePath, home, bundle, bundleBefore, archivePath, archiveHash, scriptHashes, interrupted = false, cleanupPromise, pendingLaunch, watchdog, ownedProfile, profileBackup, profileCreated = false, originalProfileExisted = false;
 const children = [], save = async () => { if (resultPath) await fs.writeFile(resultPath, JSON.stringify(result, null, 2) + '\n'); };
-for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, () => { interrupted = true; result.errors.push('Interrupted by ' + signal); void cleanup().then(save); });
+function interrupt(message) { interrupted = true; result.errors.push(message); if (app) void app.close().catch(() => {}); }
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, () => interrupt('Interrupted by ' + signal));
 async function files(rootPath) {
   const found = []; async function walk(dir) { for (const entry of (await fs.readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
     const absolute = path.join(dir, entry.name), relative = path.relative(rootPath, absolute);
@@ -99,7 +71,7 @@ async function row(id, action) {
 async function launch() {
   need(!interrupted, 'Execution interrupted.'); const launchedAt = stamp();
   let p;
-  pendingLaunch = electron.launch({ executablePath, cwd: root, offline: true, args: ['-r', preloadPath, '--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', '--proxy-server=http://127.0.0.1:' + proxy.address().port, '--proxy-bypass-list=<-loopback>'],
+  pendingLaunch = electron.launch({ executablePath, cwd: root, offline: true, args: [ '--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', '--proxy-server=http://127.0.0.1:' + proxy.address().port, '--proxy-bypass-list=<-loopback>'],
     env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: path.join(home, '.config'), TMPDIR: path.join(root, 'tmp'), LANG: 'en_US.UTF-8' }, timeout: 60000 }).then(handle => {
       app = handle; const child = app.process(); children.push(child); p = { pid: child.pid, launchedAt }; result.processes.push(p);
       child.once('exit', (code, signal) => { p.exitedAt = stamp(); p.exitCode = code; p.exitSignal = signal; }); return handle;
@@ -111,10 +83,9 @@ async function launch() {
   await context.route('**/*', route => allowedURL(route.request().url()) ? route.continue() : route.abort('internetdisconnected'));
   page = await app.firstWindow(); page.setDefaultTimeout(10000); page.on('pageerror', error => result.pageErrors.push({ message: error.message.slice(0, 300), at: stamp() }));
   const paths = await app.evaluate(({ app }) => ({ appData: app.getPath('appData'), userData: app.getPath('userData'), appPath: app.getAppPath() }));
-  need(paths.appData === path.join(home, 'appData') && inside(paths.appData, paths.userData), 'Prelaunch profile isolation failed.'); p.appData = paths.appData; p.userData = paths.userData; p.appPath = paths.appPath;
-  const prelaunch = JSON.parse(await fs.readFile(path.join(root, 'prelaunch-' + p.pid + '.json'), 'utf8')); need(prelaunch.beforeReady === true && prelaunch.appData === paths.appData, 'Profile was not isolated before application startup.');
+  need(paths.userData === ownedProfile && paths.appData === path.dirname(ownedProfile), 'App did not use the owner-supplied generated-app profile.'); p.appData = paths.appData; p.userData = paths.userData; p.appPath = paths.appPath;
   need(inside(bundle, paths.appPath), 'Native app is outside the delivered bundle.');
-  await page.reload({ waitUntil: 'load', timeout: 30000 }); await ready(page); assert.equal(page.url(), 'fleet-app://app/index.html'); return p;
+  const initialState = await ready(page); p.initialState = initialState; assert.equal(initialState.sampleDate, SAMPLE_DATE); assert.equal(page.url(), 'fleet-app://app/index.html'); return p;
 }
 async function quit() {
   const p = result.processes.at(-1); need(app, 'No owned app to close.'); p.quitRequestedAt = stamp(); await bounded(app.close(), 20000, 'Native quit did not complete.'); app = undefined; page = undefined;
@@ -127,25 +98,31 @@ async function cleanup() {
     if (app) { try { await bounded(app.close(), 20000, 'Cleanup close timed out.'); } catch { clean = false; } app = undefined; }
     for (const child of children) if (child.exitCode === null && child.signalCode === null) { clean = false; try { child.kill('SIGKILL'); } catch { /* Unconfirmed cleanup is retained. */ } }
     if (proxy) { proxy.closeAllConnections(); await bounded(new Promise(resolve => proxy.close(resolve)), 3000, 'Proxy close timed out.').catch(() => { clean = false; }); }
+    if (clean && profileCreated) { try { await fs.rename(ownedProfile, path.join(root, 'profile-after')); profileCreated = false; result.profile.after = path.join(root, 'profile-after'); } catch (error) { clean = false; result.errors.push('Could not retain owned profile: ' + error.message); } }
+    if (clean && originalProfileExisted) { try { await fs.rename(profileBackup, ownedProfile); originalProfileExisted = false; result.profile.restored = true; } catch (error) { clean = false; result.errors.push('Original scratch profile remains at ' + profileBackup + ': ' + error.message); } }
     result.cleanup = clean ? 'PASS' : 'UNCONFIRMED';
-  })(); // Retain owned evidence/profile. Never erase another profile.
+  })(); // Retain this test's profile and restore the preceding owner's scratch profile.
 }
 try {
   const args = process.argv.slice(2), options = {};
-  for (let i = 0; i < args.length; i += 2) { need(['--repo', '--journey', '--output'].includes(args[i]) && args[i + 1], 'Usage: --repo CLONE --journey JOURNEY_JSON --output EXISTING_DIRECTORY'); options[args[i].slice(2)] = path.resolve(args[i + 1]); }
+  for (let i = 0; i < args.length; i += 2) { need(['--repo', '--journey', '--output', '--profile'].includes(args[i]) && args[i + 1], 'Usage: --repo CLONE --journey JOURNEY_JSON --output EXISTING_DIRECTORY [--profile EXACT_GENERATED_APP_PROFILE]'); options[args[i].slice(2)] = path.resolve(args[i + 1]); }
   need(options.repo && options.journey && options.output, 'All three named arguments are required.'); need(process.platform === 'darwin', 'This checker supports the delivered macOS browser app only.');
   const output = await fs.realpath(options.output); need((await fs.stat(output)).isDirectory(), 'Output directory must exist.'); root = path.join(output, 'real-delivered-app-' + randomUUID()); await fs.mkdir(root);
   resultPath = path.join(root, 'result.json'); home = path.join(root, 'home'); await fs.mkdir(home); await fs.mkdir(path.join(root, 'tmp'));
-  watchdog = setTimeout(() => { interrupted = true; result.errors.push('Overall 12 minute checker deadline exceeded.'); void cleanup().then(save); }, 12 * 60000);
-  preloadPath = path.join(root, 'owned-profile-preload.cjs');
-  await fs.writeFile(preloadPath, profilePreload(root, home));
+  watchdog = setTimeout(() => interrupt('Overall 12 minute checker watchdog requested shutdown.'), 12 * 60000);
   const require = createRequire(path.join(await fs.realpath(options.repo), 'package.json')); ({ _electron: electron } = require('playwright')); const asar = require('@electron/asar');
   result.dependencies = {};
   for (const name of ['playwright', '@electron/asar']) { const file = require.resolve(name + '/package.json'); const bytes = await fs.readFile(file); result.dependencies[name] = { version: JSON.parse(bytes).version, packageHash: sha(bytes) }; }
   const bytes = await fs.readFile(options.journey), journey = JSON.parse(bytes); result.precedingJourney = { path: options.journey, sha256: sha(bytes), priorClaimedPass: journey.passed, projectId: journey.project?.id, approvalIsScratchTest: true };
   need(journey.project?.id === PROJECT_ID, 'Journey is not the selected synthetic project.');
   const download = journey.steps?.find(s => s.name === 'download app or see the plain reason'); need(download?.ok && download.value?.offered === true && download.value.bytes > 0, 'No actual successful app download in the preceding journey.');
-  const base = path.dirname(options.journey); archivePath = path.join(base, 'delivered.zip'); const archiveBytes = await fs.readFile(archivePath); need(archiveBytes.length === download.value.bytes, 'Archive size differs from journey.'); archiveHash = sha(archiveBytes);
+  const base = path.dirname(options.journey); home = path.join(base, 'home');
+  const appId = 'dev.fleetharness.generated.' + sha(PROJECT_ID).slice(0, 24);
+  const suppliedProfile = journey.deliveredProfile?.userData || options.profile;
+  need(typeof suppliedProfile === 'string' && path.isAbsolute(suppliedProfile) && path.basename(suppliedProfile) === appId, 'Main must supply the exact dedicated generated-app userData path via deliveredProfile.userData or --profile.');
+  ownedProfile = path.join(await fs.realpath(path.dirname(suppliedProfile)), appId);
+  result.profile = { path: ownedProfile, appId, policy: 'Temporarily preserve the preceding scratch journey profile, create an empty profile for this app only, and restore the original after all owned app processes exit. No profile contents are read.' };
+  archivePath = path.join(base, 'delivered.zip'); const archiveBytes = await fs.readFile(archivePath); need(archiveBytes.length === download.value.bytes, 'Archive size differs from journey.'); archiveHash = sha(archiveBytes);
   const exports = (await fs.readdir(path.join(base, 'export'), { withFileTypes: true })).filter(e => e.isDirectory()); need(exports.length === 1, 'Exactly one export required; do not select a stale first child.');
   const exportedRoot = path.join(base, 'export', exports[0].name), reportBytes = await fs.readFile(path.join(exportedRoot, 'test-report.json')), report = JSON.parse(reportBytes), review = JSON.parse(await fs.readFile(path.join(exportedRoot, 'review.json'), 'utf8'));
   need(review.runId === RUN_ID && review.reportHash === sha(reportBytes) && review.sourceHash === report.sourceHash, 'Export does not bind to the selected run and review.');
@@ -156,11 +133,16 @@ try {
   const bundles = (await fs.readdir(unpacked, { withFileTypes: true })).filter(e => e.isDirectory() && e.name.endsWith('.app')); need(bundles.length === 1, 'Expected exactly one .app.'); bundle = path.join(unpacked, bundles[0].name);
   const executable = (await exec('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleExecutable', path.join(bundle, 'Contents/Info.plist')])).stdout.trim(); need(executable && path.basename(executable) === executable, 'Invalid executable name.'); executablePath = path.join(bundle, 'Contents/MacOS', executable);
   const asarPath = path.join(bundle, 'Contents/Resources/app.asar'); bundleBefore = await files(bundle); scriptHashes = await ownHashes();
-  result.identity = { archive: { path: archivePath, sha256: archiveHash, bytes: archiveBytes.length }, exportedRoot, sourceHash: report.sourceHash, reportHash: sha(reportBytes), runId: review.runId, scriptHashes, profilePreloadHash: sha(await fs.readFile(preloadPath)), bundleBefore, runtimeFiles: [] };
+  result.identity = { archive: { path: archivePath, sha256: archiveHash, bytes: archiveBytes.length }, exportedRoot, sourceHash: report.sourceHash, reportHash: sha(reportBytes), runId: review.runId, scriptHashes, bundleBefore, runtimeFiles: [] };
   await row('DELIVERED-IDENTITY', async () => {
     for (const relative of contract.runtime.files) { need(typeof relative === 'string' && inside(exportedRoot, path.resolve(exportedRoot, relative)), 'Invalid payload path.'); const data = asar.extractFile(asarPath, 'application/' + relative), source = await fs.readFile(path.join(exportedRoot, relative)); assert.equal(sha(data), sha(source), 'Downloaded runtime differs from reviewed export: ' + relative); result.identity.runtimeFiles.push({ path: relative, sha256: sha(data) }); }
-    const host = asar.extractFile(asarPath, 'main.cjs').toString('utf8'); need(host.includes('protocol.registerSchemesAsPrivileged') && !host.includes('createServiceHost'), 'Unexpected native wrapper.'); result.identity.hostHash = sha(host); return { payloadBoundToExport: true, priorApprovalIsNotHumanAcceptance: true };
+    const host = asar.extractFile(asarPath, 'main.cjs').toString('utf8'); need(host.includes('protocol.registerSchemesAsPrivileged') && !host.includes('createServiceHost') && host.includes(JSON.stringify(appId)), 'Unexpected native wrapper or app identity.'); result.identity.hostHash = sha(host); return { payloadBoundToExport: true, priorApprovalIsNotHumanAcceptance: true };
   });
+  need(!interrupted, 'Shutdown requested before profile setup.');
+  profileBackup = ownedProfile + '.qa-preserved-' + path.basename(root);
+  try { const stat = await fs.lstat(ownedProfile); need(stat.isDirectory() && !stat.isSymbolicLink(), 'Owned generated-app profile must be a regular directory.'); await fs.rename(ownedProfile, profileBackup); originalProfileExisted = true; result.profile.backup = profileBackup; } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  await fs.mkdir(ownedProfile); profileCreated = true; await save();
+  need(!interrupted, 'Shutdown requested before listener setup.');
   proxy = createServer((request, response) => { result.proxyAttempts.push({ method: request.method, at: stamp() }); response.writeHead(502); response.end('Offline acceptance check'); });
   proxy.on('connect', (_request, socket) => { result.proxyAttempts.push({ method: 'CONNECT', at: stamp() }); socket.end('HTTP/1.1 502 Offline\r\n\r\n'); });
   await new Promise((resolve, reject) => { proxy.once('error', reject); proxy.listen(0, '127.0.0.1', resolve); });
@@ -172,9 +154,7 @@ try {
   await row('CHANGED-SOURCE-INPUT', async () => { await importSources(page, mutatedInputs); checkBrief(await capture('05-source-updated'), { [workOrder]: true }, mutatedRecords); return { changedSource: training, capacity: 7, priorAcknowledgmentInvalidated: true, otherSourceReviewPreserved: true, scope: 'Offered import/version behavior, supplemental to simple public brief.' }; });
   await row('SECOND-EXIT-RESTART', async () => { const prior = await quit(), next = await launch(); exitEvidence(prior, next); checkBrief(await capture('06-updated-restart'), { [workOrder]: true }, mutatedRecords); return { previousPID: prior.pid, newPID: next.pid }; });
   await row('QUIET-OFFLINE-CLOSE', async () => {
-    await sleep(1000); await quit(); result.startupEvents = [];
-    for (const p of result.processes) result.startupEvents.push({ pid: p.pid, events: JSON.parse(await fs.readFile(path.join(root, 'startup-' + p.pid + '.json'), 'utf8')) });
-    assert.deepEqual(result.startupEvents.flatMap(p => p.events.filter(event => event.kind !== 'preload')), [], 'Startup observer recorded an error or external request.');
+    await sleep(1000); await quit();
     assert.deepEqual(result.pageErrors, []); assert.deepEqual(result.blockedRequests, [], 'Browser attempted external request.'); assert.deepEqual(result.proxyAttempts, [], 'App attempted proxied request.');
     need(sha(await fs.readFile(archivePath)) === archiveHash, 'Archive identity changed during execution.');
     need(JSON.stringify(await files(bundle)) === JSON.stringify(bundleBefore), 'Bundle identity changed during execution.');

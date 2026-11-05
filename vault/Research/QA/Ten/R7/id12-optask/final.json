@@ -1,0 +1,133 @@
+{
+ "title": "Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+ "status": "failed",
+ "error": "The build stopped because it took too long; check the saved work and try again.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:40:31.041Z",
+    "finishedAt": "2026-11-05T09:44:27.616Z",
+    "durationMs": 236576,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 236480,
+    "usage": {
+     "inputTokens": 290933,
+     "cachedInputTokens": 220061,
+     "uncachedInputTokens": 70872,
+     "outputTokens": 11736,
+     "reasoningOutputTokens": 323,
+     "totalTokens": 302669,
+     "uncachedPlusOutputTokens": 82608
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:44:27.632Z",
+    "finishedAt": "2026-11-05T09:46:43.138Z",
+    "durationMs": 135506,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 135467,
+    "usage": {
+     "inputTokens": 536521,
+     "cachedInputTokens": 465416,
+     "uncachedInputTokens": 71105,
+     "outputTokens": 7049,
+     "reasoningOutputTokens": 318,
+     "totalTokens": 543570,
+     "uncachedPlusOutputTokens": 78154
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:46:43.153Z",
+    "finishedAt": "2026-11-05T09:54:15.523Z",
+    "durationMs": 452371,
+    "agentAttempts": 4,
+    "inferenceDurationMs": 451755,
+    "usage": {
+     "inputTokens": 2110911,
+     "cachedInputTokens": 1850529,
+     "uncachedInputTokens": 260382,
+     "outputTokens": 19218,
+     "reasoningOutputTokens": 1600,
+     "totalTokens": 2130129,
+     "uncachedPlusOutputTokens": 279600
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T09:54:15.545Z",
+    "finishedAt": "2026-11-05T10:00:06.822Z",
+    "durationMs": 351278,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 351148,
+    "usage": {
+     "inputTokens": 3615933,
+     "cachedInputTokens": 3457887,
+     "uncachedInputTokens": 158046,
+     "outputTokens": 20710,
+     "reasoningOutputTokens": 648,
+     "totalTokens": 3636643,
+     "uncachedPlusOutputTokens": 178756
+    }
+   }
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T10:00:06.869Z",
+    "finishedAt": "2026-11-05T10:11:55.825Z",
+    "durationMs": 708959,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 707869,
+    "usage": {
+     "inputTokens": 1272242,
+     "cachedInputTokens": 1074150,
+     "uncachedInputTokens": 198092,
+     "outputTokens": 4666,
+     "reasoningOutputTokens": 276,
+     "totalTokens": 1276908,
+     "uncachedPlusOutputTokens": 202758
+    }
+   }
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 31.6,
+ "challengeId": "12",
+ "workspace": "~/fhten/ud-r7/workspaces/7f907c03-10d0-4717-b564-9dee9396cf82/106ba11d-91ac-4a42-a1b7-a6e5551c7e7b"
+}

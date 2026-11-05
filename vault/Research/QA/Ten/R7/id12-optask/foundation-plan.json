@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "messages",
+  "reason": "Node 22.19+ standard-library local HTTP service fits raw-text deterministic extraction and external-network-independent browser operation. Extend compute.mjs with SYN-OPTASK/1 typed extraction, evidence, UTC projection and review/export; preserve the messages baseline but do not mistake its EVENT/TASK grammar for OPTASK support. No third-party dependencies, OCR or model required."
+}

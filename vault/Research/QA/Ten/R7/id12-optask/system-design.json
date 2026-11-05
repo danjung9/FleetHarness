@@ -1,0 +1,115 @@
+{
+  "title": "Synthetic OPTASK review and daily schedule",
+  "description": "Local-only mock USMTF-style text extraction, evidence review and synchronized UTC timeline. SYN-OPTASK/1 is invented; no operational integration or transmission.",
+  "components": [
+    {
+      "id": "input",
+      "label": "Raw message and selection",
+      "description": "Preserved editable draft, embedded exact synthetic fixtures, date and fictional ship selection.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local HTTP service",
+      "description": "Foundation HTTP service; local API only, no external integration.",
+      "kind": "integration",
+      "files": [
+        "server.mjs"
+      ]
+    },
+    {
+      "id": "extract",
+      "label": "Typed extraction and evidence",
+      "description": "Validate SYN-OPTASK/1; extract frequency, crypto and flight sets with exact UTF-16 spans and unresolved review flags.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "lib/optask.mjs",
+        "lib/validation.js",
+        "lib/messages.js"
+      ]
+    },
+    {
+      "id": "time",
+      "label": "UTC normalization and day projection",
+      "description": "Gregorian validation, explicit offset conversion, ship filtering, day clipping and stable order.",
+      "kind": "logic",
+      "files": [
+        "lib/optask.mjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Evidence review and 24-hour timeline",
+      "description": "Visible three-category timeline, accessible agenda, source evidence, uncertain lines and deliberate review.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Reviewed synthetic schedule export",
+      "description": "Backend produces complete JSON content from same computation, browser downloads locally; no operational delivery.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "samples",
+      "label": "Preserved synthetic sample corpus",
+      "description": "Validated fixture inputs embedded in HTML; original corpus retained for application tests.",
+      "kind": "data",
+      "files": [
+        "data/synthetic-data.json",
+        "data/README.md",
+        "public/index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "input",
+      "to": "api",
+      "label": "Raw text, day, ship and review action"
+    },
+    {
+      "from": "api",
+      "to": "extract",
+      "label": "Shared computation invocation"
+    },
+    {
+      "from": "extract",
+      "to": "time",
+      "label": "Valid typed events plus evidence"
+    },
+    {
+      "from": "time",
+      "to": "review",
+      "label": "UTC segments, source order and review flags"
+    },
+    {
+      "from": "review",
+      "to": "export",
+      "label": "Deliberately reviewed current snapshot"
+    },
+    {
+      "from": "samples",
+      "to": "input",
+      "label": "Exact labeled synthetic raw examples"
+    },
+    {
+      "from": "export",
+      "to": "review",
+      "label": "Local JSON download and saved status"
+    }
+  ]
+}

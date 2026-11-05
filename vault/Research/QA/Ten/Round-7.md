@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Ten-challenge benchmark, round 7 at 4a57562: 1 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 7 at 4a57562: 2 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 7
@@ -17,7 +17,9 @@ summary: "Ten-challenge benchmark, round 7 at 4a57562: 1 of 10 finished, 0 passe
 | Challenge | Status | Min | Tests | Journeys | Criteria met / deferred / failed | Repair | Open errors | Tokens, uncached plus output | Bar | Judge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [[Research/QA/Ten/R7/id36-paperless/final\|id36-paperless]] | failed at plan | 23.9 | - | 0/0 | 0 / 0 / 0 | no | 0 | 357043 | FAIL | pending |
+| [[Research/QA/Ten/R7/id12-optask/final\|id12-optask]] | failed at verify | 31.6 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 717993 | FAIL | pending |
 
 ## What failed
 
 - [E] `id36-paperless`: status failed, stage plan. The build stopped because it took too long; check the saved work and try again. Open: {"pageErrors": null, "external": null, "blank": null}. Details: `Research/QA/Ten/R7/id36-paperless/log-tail.txt`
+- [E] `id12-optask`: status failed, stage verify. The build stopped because it took too long; check the saved work and try again. Open: {"pageErrors": null, "external": null, "blank": false}. Details: `Research/QA/Ten/R7/id12-optask/log-tail.txt`

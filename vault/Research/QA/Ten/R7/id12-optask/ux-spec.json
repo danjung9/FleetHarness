@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders reviewing fictional tasking; no operational authorization.",
+  "primaryTask": "Paste or load clearly labeled synthetic mock OPTASK text, extract and inspect frequency plans, crypto change-over windows and flight quarters, choose ship and UTC day, then review and download.",
+  "successOutcome": "All named events appear on one 00:00–24:00 UTC axis and equivalent chronological agenda, with exact source evidence and a complete reviewed synthetic JSON download.",
+  "screens": [
+    {
+      "name": "Message and schedule",
+      "purpose": "One workspace: labeled raw draft and sample controls, date/ship selection, status, named output sections and common daily timeline.",
+      "primaryAction": "Parse message"
+    },
+    {
+      "name": "Evidence and local review",
+      "purpose": "Inspect source fields and original line, see unresolved codes, correct the draft, deliberately acknowledge the current parse and download.",
+      "primaryAction": "Confirm local review"
+    }
+  ],
+  "states": {
+    "empty": "Show synthetic disclaimer, raw input guidance and Load sample; no inferred schedule. Empty parse shows EMPTY_INPUT with draft preserved.",
+    "loading": "Show Parsing message… and aria-busy; disable repeated parse/review/export until current request completes. Preserve visible input; discard any stale request response after edits.",
+    "error": "Show field-specific input errors or Local service unavailable. Start the local service and try again. Preserve draft and mark any previous schedule stale; disable review/export until rerun. Unresolved source sets remain visible with reason and source line.",
+    "success": "Show exact extracted/scheduled/unresolved counts, category output summaries, visible timeline and agenda. Confirmed local review shows Reviewed locally; not operational authorization. Export is enabled only for the same reviewed content."
+  },
+  "persistence": "Save draft rawText/date/ship and last parsed/reviewed snapshot to namespaced localStorage after edits and confirmed review. Reload restores exact state; label Saved locally, with no server storage. Failed storage must show warning, keep in-memory work and allow export. Samples embedded directly in public/index.html from exact validated raw strings, no fixture fetch. Loading a sample over changed content requires deliberate discard or cancel; no silent loss.",
+  "recovery": "Edits invalidate review immediately: Draft changed; parse and review again. Correct raw input and reparse; old results cannot be exported as new content. Unknown/malformed lines stay unresolved. Export retains them after explicit acknowledgment. Clear uses explicit discard/cancel; cancellation preserves draft. Service errors offer Try again; do not silently fallback or invent results. Stop local server ends parsing; saved draft can be recovered after restart.",
+  "keyboard": "Native labels on textarea/date/ship/sample and review checkbox; logical Tab order, visible focus, Enter/Space activate native buttons. Evidence controls expose original source text, field spans and line without relying on color. Desktop uses input/result columns; 390px stacks controls, wraps long source values and supplies an accessible agenda beside a scrollable labeled 24-hour axis. Separate lanes/rows retain overlapping events; points have no duration. Restrained system typography, high contrast, no external assets or decorative motion."
+}

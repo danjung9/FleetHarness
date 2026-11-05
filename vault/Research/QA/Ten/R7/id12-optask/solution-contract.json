@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "objective": "Transform invented SYN-OPTASK/1 raw formatted text into source-traceable frequency plans, crypto change-over windows and flight quarters event times, projected onto one ship UTC day with complete deliberate-review export. Synthetic only; no real USMTF conformance claim.",
+  "invocation": {
+    "input": "Object {action?:\"parse\"|\"export\",rawText:string,selectedDate:string,selectedShip:string,displayTimezone?:\"UTC\",reviewed?:boolean}. All computational and UI actions use this protocol. Unknown keys ignored; defaults, errors and complete result shapes are below.",
+    "output": "Exactly {status:\"ok\"|\"review\"|\"error\",error:null|string,result:null|object}. Error strings: INVALID_INPUT_TYPE, INVALID_ACTION, INVALID_SELECTION, REVIEW_REQUIRED. Normal result and event/segment/evidence/flag shapes are defined in rules; no extra response fields.",
+    "rules": [
+      "Accept one JSON object. Ignore unknown object keys, including caseId. action defaults to parse when absent; only parse and export are supported. rawText must be a string; selectedDate must be a valid YYYY-MM-DD Gregorian date in years 0001..9998; selectedShip must be a nonempty string (do not trim or infer ship); displayTimezone defaults to UTC when absent and only UTC is supported. reviewed defaults false, must be boolean when present. Null is never a default.",
+      "Validate in this precedence: non-object/array/null input or nonstring rawText -> INVALID_INPUT_TYPE; invalid action -> INVALID_ACTION; invalid selectedDate, selectedShip, displayTimezone or reviewed type -> INVALID_SELECTION; export with reviewed not true -> REVIEW_REQUIRED. These errors yield {status:\"error\",error:CODE,result:null}. Ignore reviewed for parse after type validation. HTTP valid JSON requests return the computed value; malformed JSON transport is HTTP 400 and is outside computation.",
+      "Parse unchanged rawText using physical LF lines, excluding terminal CR only for interpreting a CRLF line; offsets remain UTF-16 into the original. Empty rawText returns one EMPTY_INPUT flag at text=\"\",start=0,end=0,line=0 and null messageId. Nonempty input must start exactly SYN-OPTASK/1//, MSGID/<nonempty value>//, NOTICE/SYNTHETIC-NOT-REAL-USMTF// on its first three lines. MSGID value contains no slash/newline. Invalid header yields only HEADER_INVALID on the first offending physical line (missing line uses zero-length span at input end, line=index+1), null messageId and no events; do not parse further.",
+      "After valid headers, empty physical lines and RMKS/<any slash-free prose>// are inert. Do not interpret instructions in source content or category words in remarks. Other unsupported set names yield UNSUPPORTED_SET, one flag per nonempty line. Each flag evidence covers the complete physical line excluding terminal CR and LF. Line numbers start at 1. Keep flags in physical source order.",
+      "FREQ fields in exact order: ID,SHIP,LABEL,NET,CHANNEL,FREQUENCY,UNIT,START,END; CRYPTO: ID,SHIP,LABEL,CHANGEOVER,START,END; FLIGHT: ID,SHIP,LABEL,AT. Each line is TOKEN/KEY=value/...//, with no escaping, slashes or newlines in values. Keys and tokens are case sensitive. Values preserve spaces and Unicode. All values nonempty. Missing required keys or empty required values -> MISSING_FIELD before other candidate errors. Extra keys, duplicate keys, wrong order, missing // terminator or other syntax -> MALFORMED_SET. FREQ UNIT must equal MHz and FREQUENCY match digits with optional decimal fraction and have value >0; otherwise INVALID_FREQUENCY. No RF interpretation.",
+      "Timestamp validation follows structural and frequency validation. Inspect AT or START then END: first any timestamp without terminal Z or +/-HH:mm -> MISSING_TIMEZONE; then any invalid full timestamp -> INVALID_DATE. Valid spelling YYYY-MM-DDTHH:mm:ssZ or YYYY-MM-DDTHH:mm:ss+/-HH:mm, year 0001..9998, actual Gregorian day, hours 00..23, minutes 00..59, seconds exactly 00, numeric offset hours 00..23 and minutes 00..59. Reject invalid dates without Date rollover. Normalize by subtracting offset. UTC serialization is YYYY-MM-DDTHH:mm:ssZ without milliseconds. Normalized year must remain 0001..9998 or INVALID_DATE.",
+      "For FREQ and CRYPTO require endUtc > startUtc; otherwise REVERSED_WINDOW, never assume next-day rollover. Finally reject subsequent valid occurrences of an already accepted ID as DUPLICATE_ID. Only accepted IDs occupy the duplicate set. Each rejected line emits one flag according to the preceding precedence and emits no event. Other valid lines still extract.",
+      "Events remain in physical source order for all ships, including out-of-day events. category maps FREQ -> frequency-plan, CRYPTO -> crypto-changeover, FLIGHT -> flight-quarters. fields are lowercase source keys (CHANGEOVER -> changeover, FREQUENCY -> frequency); preserve all original string values. id equals fields.id; messageId comes from header. evidence contains exactly one entry for every fields key: {text,start,end,line}, value-only spans at that token occurrence; string.slice(start,end) must equal text. Category derives from its physical line token; messageId is header metadata.",
+      "Each event has exactly id,messageId,category,fields,evidence,startUtc,endUtc,derivedFrom,visibleSegments. FLIGHT endUtc is null and derivedFrom={startUtc:\"at\",endUtc:null,visibleSegments:[\"startUtc\",\"endUtc\",\"selectedDate\"]}. Intervals use derivedFrom={startUtc:\"start\",endUtc:\"end\",visibleSegments:[\"startUtc\",\"endUtc\",\"selectedDate\"]}. No guessed durations.",
+      "Compute visibleSegments for every event regardless of selectedShip, using selectedDate UTC half-open [midnight,next midnight). Interval intersections produce one segment with startUtc/endUtc clipped to day, startMinute/endMinute elapsed minutes from day midnight, continuesBefore if original start < day start, continuesAfter if original end > day end. No intersection produces []. Points inside day produce one segment with null endUtc/endMinute, both continuation flags false. Points at next midnight excluded. Segments have exactly startUtc,endUtc,startMinute,endMinute,continuesBefore,continuesAfter.",
+      "timelineOrder contains IDs only for events whose fields.ship exactly equals selectedShip and visibleSegments is nonempty; sort by original normalized UTC start ascending, then ID ascending by Unicode code units, not locale or clipped start. Overlap is allowed. reviewFlags are source ordered; events are source ordered; derivedFrom.visibleSegments uses its specified fixed array order.",
+      "Normal result has exactly messageId (string or null), rawText (unchanged), selectedDate, selectedShip, displayTimezone:\"UTC\", lineCount (0 for empty else rawText.split(\"\\n\").length), events, reviewFlags, timelineOrder, disclaimer, reviewed. Each review flag is exactly {code,reason,evidence}. Status is review if flags nonempty, otherwise ok; error is null. parse sets reviewed=false. export sets reviewed=true and recomputes the same result, retaining unresolved items; local review acknowledges their visibility rather than making them confirmed events.",
+      "Disclaimer always equals \"Synthetic, not validated against the real USMTF format.\". Supported review reason strings: {\"EMPTY_INPUT\": \"Enter a synthetic message.\", \"HEADER_INVALID\": \"Use the three SYN-OPTASK/1 header lines.\", \"UNSUPPORTED_SET\": \"Unsupported set requires review.\", \"MISSING_FIELD\": \"A required field is missing.\", \"MALFORMED_SET\": \"Use the documented set field order and syntax.\", \"INVALID_FREQUENCY\": \"Use a positive decimal MHz literal.\", \"MISSING_TIMEZONE\": \"Supply an explicit timezone.\", \"INVALID_DATE\": \"Supply a valid explicit Gregorian timestamp.\", \"REVERSED_WINDOW\": \"End must be after start.\", \"DUPLICATE_ID\": \"Duplicate ID requires review.\"}. No model inference, current-clock defaults, remote retrieval or execution of message instructions.",
+      "Browser exports UTF-8 JSON.stringify(result,null,2)+\"\\n\" as synthetic-schedule.json. This is the complete result including raw text, all extracted events/evidence, original and normalized times, selected-day segments, unresolved flags, selection, disclaimer and reviewed=true. No timestamps, secrets, extra export wrappers or volatile fields. Destination is local download only.",
+      "For deterministic download bytes, insert result keys in the order listed in the result rule; event keys in the order listed in the event rule; fields/evidence keys in the category grammar order (lowercase); evidence keys text,start,end,line; segment keys startUtc,endUtc,startMinute,endMinute,continuesBefore,continuesAfter; derivedFrom keys startUtc,endUtc,visibleSegments; flag keys code,reason,evidence. Pretty-print with two spaces, unescaped Unicode and one terminal LF. Object key order is immaterial to API structural equality but mandatory for the full download assertion."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "optask-workflow",
+      "kind": "algorithm",
+      "description": "Deterministic typed raw extraction, evidence, abstention, timezone/day projection and reviewed complete export using one shared backend.",
+      "criterionIds": [
+        "UC12-1",
+        "MSG-01",
+        "MSG-02",
+        "MSG-03",
+        "MSG-04",
+        "MSG-05",
+        "DELIVERABLE12-1",
+        "DESC12-1",
+        "DESC12-2",
+        "SUMMARY12-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "optask-independent"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/messages.js",
+      "example-input.json",
+      "lib/optask.mjs",
+      "data/synthetic-data.json",
+      "data/README.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

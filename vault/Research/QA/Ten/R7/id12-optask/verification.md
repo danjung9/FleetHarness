@@ -1,0 +1,30 @@
+# Primary deferrals
+
+None in the frozen synthetic prototype scope. No real USMTF conformance, operational accuracy, real integration, reviewer acceptance or owner delivery approval is established.
+
+# Build evidence, 2026-11-05
+
+Generated: shared `compute.mjs` / `lib/optask.mjs`, extended foundation UI, preserved foundation HTTP service, exact embedded synthetic sample inputs, review/persistence/export flow, tests and handoff documentation. The foundation's generic EVENT/TASK parser remains bundled but does not supply the OPTASK computation. UI invokes the same core through POST /api/invoke; tests import compute.mjs. No model, credentials, external dependencies or external services were used. Helper discovery returned none; optional Impeccable engine was not run. Assigned guidance was read directly.
+
+Runnable/tested locally: `node --test optask.test.mjs service.test.mjs` on Node v26.0.0: **19 passed, 0 failed**. Node 22.19 minimum was not independently exercised here. Full response comparisons cover all 13 preserved records, complete novel point/export response, error envelopes and validation precedence. Additional tests include year 0004 Gregorian leap day and offset, missing header, empty duplicate required field, invalid-first ID reuse, HTTP health/invocation/malformed JSON/static assets. Prepared fixtures cover CRLF/repeated labels, emoji, cross-midnight clipping, equivalent instants, other-ship retention, missing timezone, invalid dates, reversed and missing windows, unsupported/duplicate sets, empty input and inert instructions.
+
+Fixture flag wording/spans differ from the later frozen public protocol: fixtures use descriptive reasons and sometimes timestamp-value spans; invocation explicitly specifies fixed reasons and complete physical-line spans. Tests preserve the original fixtures and derive flag expectations from the protocol, while directly comparing every fixture event, evidence, UTC segment and order. This is documented reconciliation of public artifacts, not a change to frozen plans. Initial locally authored tests failed on that mismatch and on two manually miscounted offsets; those test authoring errors were corrected against unchanged literal strings and the protocol. A subsequent boundary review fixed empty duplicate-field precedence in the application and added a regression check.
+
+Synthetic per-category event metrics over the preserved records: frequency-plan TP=3, FP=0, FN=0; crypto-changeover TP=3, FP=0, FN=0; flight-quarters TP=11, FP=0, FN=0. Precision and recall are 1.0 for each. Full event/evidence and time/order comparisons pass on those fixtures; these are public synthetic examples, not a held-out or SME-reviewed accuracy benchmark. Dense 320-line compute mean over 100 iterations was 0.0796 ms on Node v26.0.0 in this workspace; this excludes HTTP/browser latency and is not an operational performance guarantee.
+
+# Browser development observations
+
+`fleet_browser` opened the actual service and exercised sample loading/parsing, F01 source inspection, checkbox/confirmed local review, draft changes, MISSING_TIMEZONE abstention and corrected Q10 at 10:00 UTC. Returned console/errors were empty. Actual screenshot review was recorded using fleet_visual_review at desktop and narrow widths, with initial reviews followed by fresh rechecks at both widths. No visual findings remain open. After the last core boundary fix, runtime was reopened and both widths rechecked again. Final captures: desktop `00f0d56e-98db-4c0b-981f-82c0f1e8e2e4`, narrow `ed7d6cb7-1ac8-4dd6-bc7c-75ec8be9a1da`. Host owns the visual review ledger; no visual-review.json was authored. These are development observations, not independent acceptance journey results.
+
+# Pending host gates and limitations
+
+The host-owned clean computational evaluation has now **passed**, as recorded in `.quality-evidence/core-report.json`: optask-independent exact case pass rate 1.0 against threshold 1.0, 14 cases, one trial each, zero failures. Runtime Node v24.22.2; declared runtime filesHash `9437729322334450133ec957bafbfeec83782e7ffcecbf504399bbef68c257b6`. Dataset planner-optask-reference version 1 is synthetic, not SME ground truth. No host report was edited. The evaluated core and runtime files remain unchanged in this documentation follow-up. Frozen contracts and prepared fixtures remain unchanged.
+
+Independent frozen browser journeys at both widths, exact downloaded file bytes, reload/persistence acceptance, service-shutdown recovery, storage-failure/race injection, keyboard-only completion and external-network isolation have not been independently executed by the host here. No full accessibility audit or operational validation is claimed. The UI contains only local assets and calls the loopback service; this source property is not a network-isolation test. Owner approval is still required before delivery/deployment.
+
+Canonical criteria remain pending independent host verification: UC12-1, MSG-01 through MSG-05, DELIVERABLE12-1, DESC12-1, DESC12-2, SUMMARY12-1, SCOPE12-3, SCOPE12-5 and SCOPE12-7. Passing local prototype checks is separate from requirementsMet. Human/domain review must assess invented mapping, format fidelity and operational usefulness. No actual USMTF, OCR/handwriting, CAC, device encryption, government connection, remote dissemination or installation authorization is established.
+
+
+# User-guide follow-up
+
+Inspected declared service runtime, source, sample provenance and test files. Rewrote README.md with startup, actual workflow labels, prepared sample results, grammar, review/export, local persistence, deliberate discard/cancel, troubleshooting and separate developer instructions. Browser follow-up exercised the complete sample, F01 evidence, acknowledgment/confirmed review and Clear draft cancellation; no console/errors were returned. Desktop/narrow visual observations and fresh rechecks were recorded for unchanged runtime files. The browser preview cannot validate downloads or reload through its exposed controls; independent acceptance remains the authority for those journeys.

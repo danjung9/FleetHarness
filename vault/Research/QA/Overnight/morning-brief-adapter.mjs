@@ -11,14 +11,14 @@ const TIMEOUT = 7000;
 const ROWS = '#today-events > article[data-key], #order-items > article[data-key], #vessel-items > article[data-key], #email-items > article[data-key]';
 const normalized = value => value.replace(/\s+/g, ' ').trim();
 async function visible(locator) {
-  assert.equal(await locator.count(), 1, 'Required UI selector must identify one element');
+  if (await locator.count() !== 1) throw new Error('Adapter selector must identify exactly one element. Inspect the current UI before assigning a product verdict.');
   await locator.waitFor({ state: 'visible', timeout: TIMEOUT });
   return locator;
 }
 async function button(page, id, label) {
   const control = await visible(page.locator(id));
-  assert.equal(await control.evaluate(element => element.tagName), 'BUTTON', `${id} must be a real button`);
-  assert.equal(normalized(await control.innerText()), label, `Changed button label at ${id}`);
+  if (await control.evaluate(element => element.tagName) !== 'BUTTON') throw new Error(`Adapter control ${id} is no longer a button.`);
+  if (normalized(await control.innerText()) !== label) throw new Error(`Adapter button label changed at ${id}.`);
   assert.ok(await control.isEnabled(), `${label} must be enabled`);
   return control;
 }

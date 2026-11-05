@@ -1,0 +1,517 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Under the declared synthetic assumptions, raw SYN-OPTASK/1 yields complete category fields and a consolidated timeline: complete gives F01 06:00–12:00, C01 08:15–08:30 and Q01 09:00 UTC for FSV LANTERN; other-ship Q02 stays extracted. Actual USMTF conformance remains unestablished.",
+      "journeyIds": [
+        "complete-schedule",
+        "boundary-schedule",
+        "fresh-review-export"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every extracted source field has exact UTF-16 start/end and one-based line into unchanged rawText, including Unicode and repeated CRLF labels; complete frequency 123.450 slices 201–208 on line 5.",
+      "journeyIds": [
+        "complete-schedule"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Missing zones, invalid Gregorian dates, unsupported sets, duplicates, reversed/missing windows and empty input yield explicit unresolved flags and no invented events; corrected Q10 is exactly 10:00 UTC.",
+      "journeyIds": [
+        "recover-time",
+        "recover-empty"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "F02 clips to 0–90 minutes with prior-day continuation; Q03 and Q04 normalize to midnight; C02 clips to 1430–1440 with next-day continuation; next-midnight Q05 is excluded.",
+      "journeyIds": [
+        "boundary-schedule"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Host exact evaluations compare complete independent authored responses at threshold 1; application tests measure exact per-category precision/recall 1 and validate every evidence slice on preserved fixtures. Synthetic answers are not independent SME truth.",
+      "journeyIds": [
+        "fresh-review-export"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "implemented",
+      "expectedOutcome": "With external networking unavailable but loopback local service running, a fresh nonpreset message parses, can be reviewed and exports complete JSON. No remote assets or APIs. Service shutdown shows recovery error; browser-only parsing after shutdown is not provided.",
+      "journeyIds": [
+        "fresh-review-export"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Mock SYN-OPTASK/1 raw text becomes one synchronized 00:00–24:00 UTC visual schedule and equivalent accessible agenda with frequency plans, crypto windows and point flight quarters; reviewed local JSON contains complete source, evidence, times and unresolved items.",
+      "journeyIds": [
+        "complete-schedule",
+        "boundary-schedule",
+        "fresh-review-export"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "DESC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Dense fictional formatted telecommunication text is accepted intact without executing embedded instructions. This source span supplies context, not a requested transmission integration; no actual dissemination is performed.",
+      "journeyIds": [
+        "dense-schedule"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "DESC12-2",
+      "disposition": "implemented",
+      "expectedOutcome": "The supplied 320-line dense message yields exactly three events for FSV LANTERN in order F90,C90,Q90, at minutes 240–1200,790–800,1125; no prose becomes an event.",
+      "journeyIds": [
+        "dense-schedule"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic raw tasking produces traceable typed events, daily timeline, deliberate local review and complete consistent download.",
+      "journeyIds": [
+        "complete-schedule",
+        "fresh-review-export"
+      ],
+      "capabilityIds": [
+        "optask-workflow"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements grouping is retained in documentation and connected to UC12-1 all-category extraction; contextual heading adds no separate operational action.",
+      "journeyIds": [
+        "complete-schedule"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE12-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables grouping is retained in documentation and connected to DELIVERABLE12-1 complete mock schedule and export.",
+      "journeyIds": [
+        "fresh-review-export"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE12-7",
+      "disposition": "implemented",
+      "expectedOutcome": "The application displays exactly Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/12 and the synthetic/nonvalidated disclaimer; guide and export retain the disclaimer.",
+      "journeyIds": [
+        "complete-schedule"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "complete-schedule",
+      "title": "Extract and review all named outputs",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/COMPLETE//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nRMKS/🌊 Café exercise; fictional identities only//\nFREQ/ID=F01/SHIP=FSV LANTERN/LABEL=Training voice/NET=TRAIN-A/CHANNEL=C01/FREQUENCY=123.450/UNIT=MHz/START=2026-11-06T06:00:00Z/END=2026-11-06T12:00:00Z//\nCRYPTO/ID=C01/SHIP=FSV LANTERN/LABEL=Fictional change-over/CHANGEOVER=DEMO-ONLY-C01/START=2026-11-06T08:15:00Z/END=2026-11-06T08:30:00Z//\nFLIGHT/ID=Q01/SHIP=FSV LANTERN/LABEL=Flight quarters/AT=2026-11-06T09:00:00Z//\nFLIGHT/ID=Q02/SHIP=FSV PEBBLE/LABEL=Other ship flight quarters/AT=2026-11-06T09:30:00Z//\nRMKS/Flight quarters discussed here is not tasking//"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2026-11-06"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV LANTERN"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-status",
+          "text": "4 extracted; 3 scheduled; 0 unresolved."
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-plans",
+          "text": "F01 | Training voice | TRAIN-A | C01 | 123.450 MHz | 06:00–12:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-windows",
+          "text": "C01 | Fictional change-over | DEMO-ONLY-C01 | 08:15–08:30 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-times",
+          "text": "Q01 | Flight quarters | 09:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-order",
+          "text": "F01, C01, Q01"
+        },
+        {
+          "action": "click",
+          "selector": "#evidence-F01"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-frequency",
+          "text": "123.450 | UTF-16 201–208 | line 5"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed locally; not operational authorization."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-schedule.json",
+          "text": "\"reviewed\": true"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "Synthetic, not validated against the real USMTF format."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-attribution",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/12"
+        }
+      ]
+    },
+    {
+      "id": "dense-schedule",
+      "title": "Find own ship events in 320 lines",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "dense"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#line-count",
+          "text": "320 lines"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-status",
+          "text": "3 extracted; 3 scheduled; 0 unresolved."
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-plans",
+          "text": "F90 | Dense net | TRAIN-Z | C90 | 310.125 MHz | 04:00–20:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-order",
+          "text": "F90, C90, Q90"
+        }
+      ]
+    },
+    {
+      "id": "boundary-schedule",
+      "title": "Preserve equivalent instants and midnight continuation",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/BOUNDARIES//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFREQ/ID=F02/SHIP=FSV LANTERN/LABEL=Midnight guard/NET=TRAIN-A/CHANNEL=C01/FREQUENCY=245.600/UNIT=MHz/START=2026-11-05T23:30:00Z/END=2026-11-06T01:30:00Z//\nCRYPTO/ID=C02/SHIP=FSV LANTERN/LABEL=Late change-over/CHANGEOVER=DEMO-ONLY-C02/START=2026-11-06T23:50:00Z/END=2026-11-07T00:10:00Z//\nFLIGHT/ID=Q03/SHIP=FSV LANTERN/LABEL=Offset point/AT=2026-11-06T02:00:00+02:00//\nFLIGHT/ID=Q04/SHIP=FSV LANTERN/LABEL=UTC equivalent/AT=2026-11-06T00:00:00Z//\nFLIGHT/ID=Q05/SHIP=FSV LANTERN/LABEL=Next day excluded/AT=2026-11-07T00:00:00Z//"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2026-11-06"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV LANTERN"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-order",
+          "text": "F02, Q03, Q04, C02"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-F02",
+          "text": "00:00–01:30 UTC | continues from previous day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-C02",
+          "text": "23:50–24:00 UTC | continues into next day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-Q03",
+          "text": "00:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#segment-Q04",
+          "text": "00:00 UTC"
+        }
+      ]
+    },
+    {
+      "id": "recover-time",
+      "title": "Correct unresolved timezone without guessing",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/MISSING-ZONE//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFLIGHT/ID=Q10/SHIP=FSV LANTERN/LABEL=Needs zone/AT=2026-11-06T10:00:00//"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2026-11-06"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV LANTERN"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-status",
+          "text": "0 extracted; 0 scheduled; 1 unresolved."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-codes",
+          "text": "MISSING_TIMEZONE"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/MISSING-ZONE//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFLIGHT/ID=Q10/SHIP=FSV LANTERN/LABEL=Needs zone/AT=2026-11-06T10:00:00//"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/RECOVERY//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFLIGHT/ID=Q10/SHIP=FSV LANTERN/LABEL=Needs zone/AT=2026-11-06T10:00:00Z//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-times",
+          "text": "Q10 | Needs zone | 10:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-codes",
+          "text": "None"
+        }
+      ]
+    },
+    {
+      "id": "fresh-review-export",
+      "title": "Enter a new message, review, persist and export complete content",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/NEW-UI//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFLIGHT/ID=U7/SHIP=FSV SPARROW/LABEL=New rehearsal/AT=2028-03-04T12:15:00Z//"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2028-03-04"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV SPARROW"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-times",
+          "text": "U7 | New rehearsal | 12:15 UTC"
+        },
+        {
+          "action": "check",
+          "selector": "#reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-review"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed locally; not operational authorization."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-schedule.json",
+          "text": "{\n  \"messageId\": \"NEW-UI\",\n  \"rawText\": \"SYN-OPTASK/1//\\nMSGID/NEW-UI//\\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\\nFLIGHT/ID=U7/SHIP=FSV SPARROW/LABEL=New rehearsal/AT=2028-03-04T12:15:00Z//\",\n  \"selectedDate\": \"2028-03-04\",\n  \"selectedShip\": \"FSV SPARROW\",\n  \"displayTimezone\": \"UTC\",\n  \"lineCount\": 4,\n  \"events\": [\n    {\n      \"id\": \"U7\",\n      \"messageId\": \"NEW-UI\",\n      \"category\": \"flight-quarters\",\n      \"fields\": {\n        \"id\": \"U7\",\n        \"ship\": \"FSV SPARROW\",\n        \"label\": \"New rehearsal\",\n        \"at\": \"2028-03-04T12:15:00Z\"\n      },\n      \"evidence\": {\n        \"id\": {\n          \"text\": \"U7\",\n          \"start\": 74,\n          \"end\": 76,\n          \"line\": 4\n        },\n        \"ship\": {\n          \"text\": \"FSV SPARROW\",\n          \"start\": 82,\n          \"end\": 93,\n          \"line\": 4\n        },\n        \"label\": {\n          \"text\": \"New rehearsal\",\n          \"start\": 100,\n          \"end\": 113,\n          \"line\": 4\n        },\n        \"at\": {\n          \"text\": \"2028-03-04T12:15:00Z\",\n          \"start\": 117,\n          \"end\": 137,\n          \"line\": 4\n        }\n      },\n      \"startUtc\": \"2028-03-04T12:15:00Z\",\n      \"endUtc\": null,\n      \"derivedFrom\": {\n        \"startUtc\": \"at\",\n        \"endUtc\": null,\n        \"visibleSegments\": [\n          \"startUtc\",\n          \"endUtc\",\n          \"selectedDate\"\n        ]\n      },\n      \"visibleSegments\": [\n        {\n          \"startUtc\": \"2028-03-04T12:15:00Z\",\n          \"endUtc\": null,\n          \"startMinute\": 735,\n          \"endMinute\": null,\n          \"continuesBefore\": false,\n          \"continuesAfter\": false\n        }\n      ]\n    }\n  ],\n  \"reviewFlags\": [],\n  \"timelineOrder\": [\n    \"U7\"\n  ],\n  \"disclaimer\": \"Synthetic, not validated against the real USMTF format.\",\n  \"reviewed\": true\n}\n"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2028-03-05"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Draft changed; parse and review again."
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-order",
+          "text": "None"
+        }
+      ]
+    },
+    {
+      "id": "recover-empty",
+      "title": "Recover from empty input",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": ""
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2026-11-06"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV LANTERN"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-codes",
+          "text": "EMPTY_INPUT"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYN-OPTASK/1//\nMSGID/NEW-UI//\nNOTICE/SYNTHETIC-NOT-REAL-USMTF//\nFLIGHT/ID=U7/SHIP=FSV SPARROW/LABEL=New rehearsal/AT=2028-03-04T12:15:00Z//"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-date",
+          "value": "2028-03-04"
+        },
+        {
+          "action": "fill",
+          "selector": "#selected-ship",
+          "value": "FSV SPARROW"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-order",
+          "text": "U7"
+        }
+      ]
+    }
+  ]
+}
