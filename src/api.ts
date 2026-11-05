@@ -11,8 +11,19 @@ function makeProject(input: NewProject): Project {
     logs: [], feedback: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
 const empty = (): AppState => ({ version: 1, settings: { provider: '', model: '', rememberKey: false, developerMode: false }, projects: starters.map(makeProject) });
+const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
+const isSavedProject = (value: unknown) => isRecord(value) && typeof value.id === 'string' && typeof value.title === 'string'
+  && typeof value.description === 'string' && typeof value.status === 'string' && Array.isArray(value.stages) && Array.isArray(value.logs);
+// Browser storage can hold anything, so only a state that can actually render is kept.
+function restoreBrowserState(saved: string | null): AppState {
+  let parsed: unknown;
+  try { parsed = JSON.parse(saved || 'null'); } catch { return empty(); }
+  if (!isRecord(parsed) || !isRecord(parsed.settings) || !Array.isArray(parsed.projects) || !parsed.projects.every(isSavedProject)) return empty();
+  return parsed as unknown as AppState;
+}
+// Declared first: building the starter projects reads browserState.
 let browserState: AppState;
-try { browserState = JSON.parse(localStorage.getItem('fleet-browser-preview') || 'null') || empty(); } catch { browserState = empty(); }
+browserState = restoreBrowserState(localStorage.getItem('fleet-browser-preview'));
 browserState.settings.developerMode = browserState.settings.developerMode === true;
 const listeners = new Set<(state: AppState) => void>();
 function save(nextState: AppState) {
