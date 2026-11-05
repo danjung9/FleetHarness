@@ -22,3 +22,5 @@ The host separately executes the frozen browser journeys and returns results, sc
 ## Sailor bar
 
 The person does not code. Every primary workflow must be completable through visible controls, with the sample data loaded or one obvious button away. Do not make them edit JSON, use a terminal, or convert units or times by hand. Show dates, times and quantities the way the person would say them, for example Tue 0900, never minute offsets, epoch numbers or internal IDs. Anything the person must change to do the task, such as a roster, a rule or an input record, gets a form. Give outputs a person can use directly: a readable screen, a printable page or CSV. JSON may be offered as an extra, never as the only form.
+
+Put the person's main task first and make it complete without coaching, using only what is on screen. Setup, signing keys, protocol exercises and evidence belong behind a clearly labeled section, not mixed into the watchstanding controls.

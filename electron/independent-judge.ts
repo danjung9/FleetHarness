@@ -482,7 +482,7 @@ export async function runIndependentJudge(options: Options): Promise<JudgedRepor
       if (reportPassed(report, true)) {
         options.log('The judge repair did not hold, so it was undone. The application that passed verification is kept.');
         result.verdict = 'NOT';
-        result.gaps = [...attempt.gaps, { requirement: 'Judge repair', evidence: failure + ' The repair was undone.', fix: 'The gaps above are still open in this version.' }];
+        result.gaps = [...attempt.gaps, { requirement: 'Judge repair', plain: 'An automatic fix for these gaps did not work, so it was undone. You are reviewing the version that passed its checks.', evidence: failure + ' The repair was undone.', fix: 'The gaps above are still open in this version.' }];
         return persist();
       }
     }
