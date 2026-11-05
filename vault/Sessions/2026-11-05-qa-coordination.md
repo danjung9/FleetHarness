@@ -21,4 +21,8 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 
 ## Next
 
-[R] Main should repair checked preparation/report identity and return a matching build plus native detached-worker receipt. Independently assess the actual receipt before closing Stop. Do not treat driver stopped messages, source presence or aggregate unit counts as closure. Keep the original failure and historical reports unchanged.
+[E, main reply] Main identified the overseer as runtime owner and supplied receipt 6b784ff0 at 16a6940. Independent review confirms all seven checks, unchanged script, owned detached identity before Stop, absent PIDs, stable heartbeats, watchdog exclusion, seven control hashes, 108 retained build-artifact hashes and pre-cleanup verdict ordering. The bounded Pi detached Stop defect closes on this revision. Main also repaired checked QA preparation and marked old reports invalid; source inspection confirms that change.
+
+[R] Proceed to the queued combined-app acceptance in merge-dan. Preserve acceptance-script ownership and the sole runtime owner. Stop additional investigation of this closed bounded fixture. No broader shutdown or combined-app acceptance claim follows from the narrow PASS.
+
+[E, initial combined-app handoff] Located branch merge-dan in fh-org/astra-merge at a6d42c6dbeaefadefdc8c2c1ba390c54eb780b33. Six files are unmerged and other integration edits are present. This is the merge owner's active workspace, not a frozen acceptance target. No files or index entries were changed. Main was informed; queued acceptance should bind to the owner's completed integrated revision and matching runtime build.

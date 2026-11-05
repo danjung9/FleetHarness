@@ -12,6 +12,8 @@ Last updated 2026-11-04, during coordinated execution against the ten-challenge 
 
 ## Latest session
 
+- [E, November 5 native Stop closure] Receipt 6b784ff0 passes the unchanged detached Pi Stop case at clean 16a6940. Independent checks confirm absent owned PIDs, stable heartbeats, unchanged script, artifact/control hashes and verdict before cleanup. [[Research/QA/GUI-16a6940/Detached-Stop-Review]] closes this bounded reproduction. Main repaired QA checkout validation and invalidated old reports. Next assignment is combined-app acceptance in merge-dan.
+
 - [E, November 5 QA coordination] Main bridge accepted resumed coordination and the automatic-report blocker. New source through 16a6940 fixes the macOS ps option bug, but qa-auto remains at 1d9eeee and ignores checkout failures. [[Research/QA/Auto/Review-16a6940]] rejects newer-head attribution of those reports. [[Research/QA/GUI-16a6940/Detached-Stop-Review]] supplies the unchanged pinned regression; native Stop remains open.
 
 - [E, backend relay QA] e27ad6a diverges before the process sweep and does not close Stop. QA remains pinned; integration must retain shutdown protections and cover cancellation during the new data-preparation session. See [[Research/QA/GUI-0da7ce9/Detached-Stop-Review]].

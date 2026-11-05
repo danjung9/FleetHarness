@@ -1,12 +1,14 @@
 ---
 type: qa-review
-status: blocked-evidence
+status: source-repaired
 owner: mukul
 updated: 2026-11-05
 summary: "Automatic reports label requested revisions without verifying checkout success; they do not establish native cleanup at the newer heads."
 ---
 
 # Automatic QA revision mismatch
+
+[E, later November 5 handoff] Main acknowledged the defect and marked the old reports NOT VALID. Current qa_loop.py now checks the targeted branch fetch, checks checkout success, and compares actual HEAD with the requested full SHA before proceeding. This repairs the demonstrated preparation defect in source. A new automatic-run receipt is still required; prior counts do not become valid for the newer commits. The separate independent native Stop receipt is reviewed in [[Research/QA/GUI-16a6940/Detached-Stop-Review]].
 
 [E, read-only recheck on November 5] **Do not use Auto/16a6940.md or Auto/f5fec32.md to close native process cleanup.** Both report 125 unit passes, 51 harness passes and two smoke failures. The automatic runner does not verify its checkout, and the retained checkout and reported stack point to older source. Original reports are preserved.
 
