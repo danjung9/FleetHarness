@@ -619,3 +619,11 @@ test('native Codex judge advertises no shell, source-writing or delegation tools
   assert.equal(await fs.readFile(path.join(h.workspace, 'index.html'), 'utf8'), original);
   assert.equal(h.repairs.length, 0);
 });
+
+test('a plain sentence for the person is kept with the gap and is optional', async t => {
+  const plain = 'If an older record arrives, a conflict you have not resolved disappears.';
+  const h = await fixture(t, [{ verdict: 'NOT', gaps: [{ ...gap, plain: '  ' + plain + '  ' }, gap] }], { repairLimit: 0 });
+  const report = await h.run();
+  assert.equal(report.independentJudge.gaps[0].plain, plain);
+  assert.equal('plain' in report.independentJudge.gaps[1], false);
+});
