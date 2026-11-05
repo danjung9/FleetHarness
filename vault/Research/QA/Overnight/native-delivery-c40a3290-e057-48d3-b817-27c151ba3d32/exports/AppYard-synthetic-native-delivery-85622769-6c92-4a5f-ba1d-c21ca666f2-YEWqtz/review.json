@@ -1,0 +1,21 @@
+{
+  "id": "5565a959-2a7c-4da5-ba95-74a09d4a12aa",
+  "runId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+  "decision": "approved",
+  "feedback": "Exercised changed synthetic TASK inputs, empty-input recovery, persisted draft behavior and visible evidence. This approves only the local prototype fixture; operational readiness remains unverified.",
+  "createdAt": "2026-11-05T09:53:51.540Z",
+  "sourceHash": "c5b3fdea415cdab33354cd9c76ad8c9862614ec4507a740a09a2fb3a20087800",
+  "reportHash": "5129d3239edab73f7dea683e791cd9e46663c03c159ae8fb07e252d56fe1b292",
+  "approvedAt": "2026-11-05T09:53:51.540Z",
+  "scope": "Prototype delivery only. Operational readiness is unverified.",
+  "history": [
+    {
+      "id": "5565a959-2a7c-4da5-ba95-74a09d4a12aa",
+      "runId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+      "decision": "approved",
+      "feedback": "Exercised changed synthetic TASK inputs, empty-input recovery, persisted draft behavior and visible evidence. This approves only the local prototype fixture; operational readiness remains unverified.",
+      "createdAt": "2026-11-05T09:53:51.540Z",
+      "sourceHash": "c5b3fdea415cdab33354cd9c76ad8c9862614ec4507a740a09a2fb3a20087800"
+    }
+  ]
+}

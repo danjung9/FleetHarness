@@ -1,0 +1,32 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/native-delivery-c40a3290-e057-48d3-b817-27c151ba3d32/exports/AppYard-synthetic-native-delivery-85622769-6c92-4a5f-ba1d-c21ca666f2-YEWqtz/index.html",
+  "title": "Fixture parser",
+  "text": "Fixture parser\n\nLocal synthetic integration-test fixture. No publication or operational approval.\n\nMessage\nParse message\nEnter a message.\nPrepare synthetic review draft",
+  "controls": [
+    {
+      "tag": "TEXTAREA",
+      "text": "TASK: inspect pump",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Parse message",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Prepare synthetic review draft",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

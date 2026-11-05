@@ -1,0 +1,446 @@
+{
+  "schemaVersion": 1,
+  "challenge": {
+    "id": "custom",
+    "title": "Synthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7",
+    "summary": "Parse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft. No publication or operational-format validation is performed.",
+    "category": null,
+    "recipe": "workflow",
+    "related": [],
+    "requirements": [
+      "Parse a synthetic task and recover from empty input.",
+      "Publication of the synthetic review draft requires owner approval."
+    ],
+    "dataNeeds": [
+      "Owner-confirmed source data and workflow rules",
+      "Review the provisional workflow recipe before implementation"
+    ],
+    "sourceUrl": "",
+    "sourceScope": "user",
+    "capturedOn": "2026-11-05",
+    "pilot": false
+  },
+  "recipe": {
+    "id": "workflow",
+    "title": "Versioned records and review workflow",
+    "approach": "Model records and revisions before UI. Make allowed transitions, reviewer roles and release authority explicit; retain change history and route offline work through reviewed synchronization.",
+    "skills": [
+      "fleet-intake",
+      "fleet-workflows",
+      "fleet-offline",
+      "fleet-evidence",
+      "fleet-delivery"
+    ],
+    "tools": [
+      "fleet_reconcile_records",
+      "fleet_search_evidence"
+    ],
+    "components": [
+      {
+        "name": "Microsoft Power Apps",
+        "url": "https://learn.microsoft.com/en-us/power-apps/",
+        "rationale": "Evaluate when a challenge requires an existing licensed Microsoft 365 platform.",
+        "status": "candidate"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "WFL-01",
+        "requirement": "Reject invalid state transitions and stale approvals.",
+        "scenario": "Revise a record after approval and verify it cannot be released with the previous decision.",
+        "method": "integration"
+      },
+      {
+        "id": "WFL-02",
+        "requirement": "Retain record lineage and conflicts.",
+        "scenario": "Submit competing amendments and verify both source revisions are recoverable.",
+        "method": "automated"
+      },
+      {
+        "id": "WFL-03",
+        "requirement": "Complete the owner-specific workflow.",
+        "scenario": "Have a reviewer perform the full intake, review, return-for-edit and export journey.",
+        "method": "human"
+      }
+    ],
+    "limitations": [
+      "Identity providers, formal release channels and Microsoft 365 connectors are not preconfigured.",
+      "Classified source systems are represented only by synthetic substitutes."
+    ]
+  },
+  "dataPolicy": "synthetic-only",
+  "globalTools": [
+    "read",
+    "write",
+    "edit",
+    "bash",
+    "fleet_helpers",
+    "fleet_run_helper"
+  ],
+  "acceptance": [
+    {
+      "id": "UCcustom-1",
+      "requirement": "Parse a synthetic task and recover from empty input.",
+      "method": "human",
+      "scenario": "Define the complete independent expected outcome in acceptance-plan.json and test-matrix.md. Map it to capability evaluation and/or applicable browser journeys, or explicitly defer a non-core requirement with a reason; a partial demonstration does not establish the full requirement.",
+      "provenance": [
+        {
+          "kind": "requirement",
+          "id": "UCcustom-1",
+          "path": "challenge.requirements[0]"
+        },
+        {
+          "kind": "user",
+          "id": "USERcustom-1",
+          "path": "userScope.criteria[0]"
+        }
+      ]
+    },
+    {
+      "id": "UCcustom-2",
+      "requirement": "Publication of the synthetic review draft requires owner approval.",
+      "method": "human",
+      "scenario": "Define the complete independent expected outcome in acceptance-plan.json and test-matrix.md. Map it to capability evaluation and/or applicable browser journeys, or explicitly defer a non-core requirement with a reason; a partial demonstration does not establish the full requirement.",
+      "provenance": [
+        {
+          "kind": "requirement",
+          "id": "UCcustom-2",
+          "path": "challenge.requirements[1]"
+        },
+        {
+          "kind": "user",
+          "id": "USERcustom-2",
+          "path": "userScope.criteria[1]"
+        }
+      ]
+    },
+    {
+      "id": "WFL-01",
+      "requirement": "Reject invalid state transitions and stale approvals.",
+      "scenario": "Revise a record after approval and verify it cannot be released with the previous decision.",
+      "method": "integration",
+      "provenance": [
+        {
+          "kind": "recipe",
+          "id": "WFL-01",
+          "path": "recipe.acceptance[0]"
+        }
+      ]
+    },
+    {
+      "id": "WFL-02",
+      "requirement": "Retain record lineage and conflicts.",
+      "scenario": "Submit competing amendments and verify both source revisions are recoverable.",
+      "method": "automated",
+      "provenance": [
+        {
+          "kind": "recipe",
+          "id": "WFL-02",
+          "path": "recipe.acceptance[1]"
+        }
+      ]
+    },
+    {
+      "id": "WFL-03",
+      "requirement": "Complete the owner-specific workflow.",
+      "scenario": "Have a reviewer perform the full intake, review, return-for-edit and export journey.",
+      "method": "human",
+      "provenance": [
+        {
+          "kind": "recipe",
+          "id": "WFL-03",
+          "path": "recipe.acceptance[2]"
+        }
+      ]
+    },
+    {
+      "id": "SUMMARYcustom-1",
+      "requirement": "Parse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft.",
+      "method": "human",
+      "scenario": "Demonstrate every obligation in this source span, including named formats, generated outputs and end-to-end delivery. Presets, invented formats and simulated delivery do not establish the requested behavior. Keep unsupported obligations unverified.",
+      "provenance": [
+        {
+          "kind": "summary",
+          "id": "SUMMARYcustom-1",
+          "path": "challenge.summary[0:98]"
+        }
+      ]
+    },
+    {
+      "id": "SUMMARYcustom-2",
+      "requirement": "No publication or operational-format validation is performed.",
+      "method": "human",
+      "scenario": "Demonstrate every obligation in this source span, including named formats, generated outputs and end-to-end delivery. Presets, invented formats and simulated delivery do not establish the requested behavior. Keep unsupported obligations unverified.",
+      "provenance": [
+        {
+          "kind": "summary",
+          "id": "SUMMARYcustom-2",
+          "path": "challenge.summary[99:160]"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "intake",
+      "role": "Requirements analyst",
+      "owner": "agent",
+      "inputs": [
+        "requirements.md",
+        ".fleet/packet.json",
+        "inputs/manifest.json",
+        "Supplied data files, when attached"
+      ],
+      "outputs": [
+        "scope.md",
+        "data/synthetic-data.json and data/README.md when no inputs are attached"
+      ],
+      "exit": "The primary user task, source-linked requirements, evaluation criteria, deliverables, user criteria, data boundaries and unknowns are recorded. With no supplied inputs, a dedicated synthetic data agent creates validated use-case fixtures before research begins. Report primary deferrals first; missing specifications or experts require explicit synthetic assumptions and examples in the requested input format.",
+      "skills": [
+        "fleet-intake"
+      ],
+      "tools": [
+        "fleet_get_challenge"
+      ],
+      "hostTools": [
+        "Save original requirements, challenge packet and attached inputs",
+        "Spawn a dedicated synthetic data agent when no inputs are attached",
+        "Validate and freeze prepared data"
+      ]
+    },
+    {
+      "id": "research",
+      "role": "Reuse researcher",
+      "owner": "agent",
+      "inputs": [
+        "scope.md",
+        "Recipe candidates",
+        ".fleet/foundation-catalog.json",
+        ".fleet/foundation-guide.md",
+        "inputs/manifest.json",
+        "Supplied inputs or validated synthetic data"
+      ],
+      "outputs": [
+        "research.md"
+      ],
+      "exit": "Reuse decisions and source limitations are documented. Unchecked versions, licenses and integrations remain explicit.",
+      "skills": [
+        "fleet-research",
+        "fleet-evidence",
+        "fleet-workflows",
+        "fleet-offline",
+        "ponytail"
+      ],
+      "tools": [
+        "fleet_search_evidence"
+      ],
+      "hostTools": []
+    },
+    {
+      "id": "plan",
+      "role": "Implementation planner",
+      "owner": "agent",
+      "inputs": [
+        "scope.md",
+        "research.md",
+        "inputs/manifest.json",
+        "Supplied inputs or data/synthetic-data.json and data/README.md",
+        "Source-linked acceptance criteria",
+        ".fleet/quality-contract.md"
+      ],
+      "outputs": [
+        "plan.md",
+        "test-matrix.md",
+        "system-design.json",
+        "foundation-plan.json",
+        "acceptance-plan.json",
+        "ux-spec.json",
+        "solution-contract.json",
+        "evaluation-plan.json"
+      ],
+      "exit": "Architecture, runtime, the public invocation protocol, mandatory capabilities and independent evaluation cases are planned before implementation. The public protocol specifies input/output shapes, literal statuses/errors and array ordering without exposing held-out answer pairs. Criteria map to computational checks and applicable browser journeys. Core capabilities cannot be deferred. Primary deferrals include source-linked syntheticCoverage and independently fixed outputs in the requested format. The independent judge assesses semantic adequacy. The host freezes all contracts and seals evaluation answers outside the builder workspace.",
+      "skills": [
+        "fleet-planning",
+        "fleet-ux",
+        "fleet-evidence",
+        "ponytail",
+        "impeccable",
+        "fleet-workflows",
+        "fleet-offline"
+      ],
+      "tools": [
+        "fleet_system_design"
+      ],
+      "hostTools": [
+        "Validate and freeze solution, evaluation, acceptance and UX contracts",
+        "Validate foundation choice and copy pinned starter files",
+        "Seal evaluation answer keys outside the builder workspace"
+      ]
+    },
+    {
+      "id": "build",
+      "role": "Implementation agent",
+      "owner": "agent",
+      "inputs": [
+        "plan.md",
+        "test-matrix.md",
+        "system-design.json",
+        "foundation-plan.json",
+        "foundation-lock.json",
+        "Materialized starter files and FOUNDATION.md when bundled",
+        "Frozen acceptance-plan.json",
+        "Frozen ux-spec.json",
+        "Frozen solution-contract.json",
+        ".fleet/solution-contract.md",
+        ".fleet/quality-contract.md",
+        "inputs/manifest.json",
+        "Supplied inputs or validated data/synthetic-data.json fixtures"
+      ],
+      "outputs": [
+        "Declared runtime entrypoint and manifest files",
+        "Application modules",
+        "*.test.cjs or *.test.mjs",
+        "README.md",
+        "path-to-fleet.md",
+        ".quality-evidence/core-report.json",
+        "Host-recorded initial visual review and recheck at both widths"
+      ],
+      "exit": "The computational core passes host-owned evaluation in a clean runtime before completing application interactions. The application uses the evaluated core, implements the frozen user tasks, and includes meaningful tests. Browser/service apps require initial visual reviews, resolved findings and fresh rechecks at desktop and narrow widths against the final runtime files. README.md describes the finished application. The frozen plans remain unchanged.",
+      "skills": [
+        "fleet-workflows",
+        "fleet-offline",
+        "fleet-ux",
+        "fleet-evidence",
+        "fleet-delivery",
+        "ponytail",
+        "impeccable"
+      ],
+      "tools": [
+        "fleet_reconcile_records",
+        "fleet_search_evidence",
+        "fleet_component_progress",
+        "fleet_browser",
+        "fleet_visual_review"
+      ],
+      "hostTools": [
+        "Run independent capability evaluation before application completion",
+        "Require initial visual review, resolved findings and fresh rechecks of final files at desktop and narrow sizes",
+        "Share one bounded repair budget across core and final verification"
+      ]
+    },
+    {
+      "id": "verify",
+      "role": "Verifier and bounded repair",
+      "owner": "agent",
+      "inputs": [
+        "Application source",
+        "Frozen acceptance-plan.json",
+        "Frozen ux-spec.json",
+        "Frozen solution-contract.json",
+        ".fleet/solution-contract.md",
+        ".fleet/quality-contract.md",
+        "Acceptance matrix",
+        "Application tests",
+        "README.md"
+      ],
+      "outputs": [
+        "verification.md",
+        "test-report.json",
+        "Capability results and clean-runtime evidence",
+        "Browser screenshots and traces"
+      ],
+      "exit": "Node tests, required capability evaluations and clean runtime execution pass. Applicable browser journeys pass on desktop and narrow viewports. Browser/service apps require this verifier session to complete its own initial visual reviews and fresh rechecks of the final runtime files, with no unresolved findings. Deferred criteria remain unverified and requirementsMet is reported separately from prototype checks. The README matches the application. Bounded repair within the shared two-attempt budget may change implementation, never the frozen plans.",
+      "skills": [
+        "fleet-evidence",
+        "fleet-ux",
+        "fleet-workflows",
+        "fleet-offline",
+        "ponytail",
+        "impeccable"
+      ],
+      "tools": [
+        "fleet_reconcile_records",
+        "fleet_search_evidence",
+        "fleet_component_progress",
+        "fleet_browser",
+        "fleet_visual_review"
+      ],
+      "hostTools": [
+        "Install and run the declared package in a fresh temporary directory",
+        "Evaluate capabilities using host-owned scorers and frozen cases",
+        "Run Node tests and planned browser journeys",
+        "Capture screenshots and traces",
+        "Require a fresh visual review and recheck, including after repairs",
+        "Check frozen plans, packet integrity and source hash"
+      ]
+    },
+    {
+      "id": "review",
+      "role": "Human reviewer",
+      "owner": "human",
+      "inputs": [
+        "Verified prototype source",
+        "README.md",
+        "Criterion and journey evidence",
+        "Screenshots and traces",
+        "Deferred requirements and limitations"
+      ],
+      "outputs": [
+        "review.json"
+      ],
+      "exit": "You inspect the application, task outcomes and remaining requirements, then approve this specific prototype revision with review notes. Prototype approval does not establish that deferred requirements are met.",
+      "skills": [
+        "fleet-evidence"
+      ],
+      "tools": [],
+      "hostTools": [
+        "App preview",
+        "Evidence viewer",
+        "Record human approval"
+      ]
+    },
+    {
+      "id": "deliver",
+      "role": "Host packager",
+      "owner": "host",
+      "inputs": [
+        "Approved source revision",
+        "README.md",
+        "path-to-fleet.md"
+      ],
+      "outputs": [
+        "DELIVERY.md",
+        "Source and evidence bundle"
+      ],
+      "exit": "You choose an export destination. The host checks the approved source hash before copying the package.",
+      "skills": [
+        "fleet-delivery"
+      ],
+      "tools": [],
+      "hostTools": [
+        "Check approved source hash",
+        "Export source and evidence"
+      ]
+    }
+  ],
+  "unknowns": [
+    "Owner-confirmed source data and workflow rules",
+    "Review the provisional workflow recipe before implementation",
+    "Identity providers, formal release channels and Microsoft 365 connectors are not preconfigured.",
+    "Classified source systems are represented only by synthetic substitutes."
+  ],
+  "userScope": {
+    "title": "Synthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7",
+    "description": "Parse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft. No publication or operational-format validation is performed.",
+    "criteria": [
+      "Parse a synthetic task and recover from empty input.",
+      "Publication of the synthetic review draft requires owner approval."
+    ],
+    "inputs": "",
+    "outputs": "",
+    "resources": "",
+    "links": [],
+    "dataInputs": [],
+    "inputManifest": "inputs/manifest.json"
+  }
+}

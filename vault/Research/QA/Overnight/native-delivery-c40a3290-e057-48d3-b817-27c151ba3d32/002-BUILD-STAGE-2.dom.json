@@ -1,0 +1,184 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture · In use\nNative delivery fixture\nConnect a provider…\nStop active builds to change models.\nSynthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7\nStop build\nBrief\n2\nBuild\n3\nReview\n4\nDeliver\n\nUnderstanding your brief. Research comes next automatically.\n\nBuild phases\n0 of 5 complete\nUnderstand brief\nWorking now\n2\nResearch\nComing up\n3\nPlan\nComing up\n4\nImplement\nComing up\n5\nTest\nComing up\n\nResearch and planning may ask for your input.\nYour review follows testing.\n\nUnderstand brief\nWorking now\n\nDefine the app’s scope and prepare connected inputs or synthetic data for this use case.\n\nA dedicated agent is creating synthetic data for this use case.\n\nOutputs\n\nChecking for saved outputs…\n\nActivity4\nPhase details\nBuild started.",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7Operational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "16e2d0a5-e15e-4b4f-8fde-4630a841ea61"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": true,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Stop build",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "2Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Understand briefWorking now",
+      "type": "button",
+      "ariaLabel": "Understand brief: Working now",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "2ResearchComing up",
+      "type": "button",
+      "ariaLabel": "Research: Coming up",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3PlanComing up",
+      "type": "button",
+      "ariaLabel": "Plan: Coming up",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4ImplementComing up",
+      "type": "button",
+      "ariaLabel": "Implement: Coming up",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "5TestComing up",
+      "type": "button",
+      "ariaLabel": "Test: Coming up",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Following live",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UCcustom-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Parse a synthetic task and recover from empty input.",
+      "journeyIds": [
+        "parse-task",
+        "recover-empty"
+      ],
+      "capabilityIds": [
+        "parse"
+      ]
+    },
+    {
+      "criterionId": "UCcustom-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Owner approval is required before publication; the synthetic review draft does not grant it.",
+      "journeyIds": [],
+      "reason": "human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional local review only; no publication, real reviewer identity or operational authority.",
+        "journeyIds": [
+          "parse-task"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UCcustom-2",
+            "name": "synthetic review draft"
+          }
+        ]
+      },
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "WFL-01",
+      "disposition": "deferred",
+      "expectedOutcome": "Reject invalid state transitions and stale approvals.",
+      "journeyIds": [],
+      "reason": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "WFL-02",
+      "disposition": "deferred",
+      "expectedOutcome": "Retain record lineage and conflicts.",
+      "journeyIds": [],
+      "reason": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "WFL-03",
+      "disposition": "deferred",
+      "expectedOutcome": "Complete the owner-specific workflow.",
+      "journeyIds": [],
+      "reason": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SUMMARYcustom-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Parse a synthetic task and recover from empty input.",
+      "journeyIds": [
+        "parse-task",
+        "recover-empty"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SUMMARYcustom-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Parse a synthetic task and recover from empty input.",
+      "journeyIds": [
+        "parse-task",
+        "recover-empty"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "parse-task",
+      "title": "Parse a synthetic task",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "TASK: inspect pump"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result",
+          "text": "inspect pump"
+        },
+        {
+          "action": "click",
+          "selector": "#review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-result",
+          "text": "Synthetic review draft: inspect pump. Publication requires owner approval."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result",
+          "text": "inspect pump"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-result",
+          "text": "Synthetic review draft: inspect pump. Publication requires owner approval."
+        }
+      ]
+    },
+    {
+      "id": "recover-empty",
+      "title": "Recover from empty input",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result",
+          "text": "Enter a message."
+        },
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "TASK: inspect pump"
+        },
+        {
+          "action": "press",
+          "selector": "#parse",
+          "key": "Enter"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result",
+          "text": "inspect pump"
+        }
+      ]
+    }
+  ]
+}

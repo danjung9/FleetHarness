@@ -35,7 +35,7 @@ if (process.argv.includes('--validate-only')) {
 const result = { schemaVersion: 1, suite: 'real-generated-morning-brief-delivery', startedAt: stamp(), result: 'ERROR',
   scope: 'Actual downloaded browser app from the existing Morning training brief build. Independent synthetic source values, source-scoped review, two complete native restarts and offered source import. No new build, model, credentials or approval. Prior scratch approval is not human acceptance. No Node-service, Windows, live account, crash-recovery or general containment claim.',
   rows: ids.map(id => ({ id, result: 'NOT RUN' })), processes: [], observations: [], errors: [], pageErrors: [], blockedRequests: [], proxyAttempts: [], cleanup: 'UNCONFIRMED' };
-let resultPath, root, app, page, proxy, electron, executablePath, home, bundle, bundleBefore, archivePath, archiveHash, scriptHashes, interrupted = false, cleanupPromise;
+let resultPath, root, app, page, proxy, electron, executablePath, home, bundle, bundleBefore, archivePath, archiveHash, scriptHashes, interrupted = false, cleanupPromise, pendingLaunch, watchdog, preloadPath;
 const children = [], save = async () => { if (resultPath) await fs.writeFile(resultPath, JSON.stringify(result, null, 2) + '\n'); };
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, () => { interrupted = true; result.errors.push('Interrupted by ' + signal); void cleanup().then(save); });
 async function files(rootPath) {
@@ -46,27 +46,43 @@ async function files(rootPath) {
   } } await walk(rootPath); return found;
 }
 async function ownHashes() { const hashes = {}; for (const name of ['qa-real-delivered-app.mjs', 'morning-brief-oracle.mjs', 'morning-brief-adapter.mjs']) hashes[name] = sha(await fs.readFile(new URL(name, import.meta.url))); return hashes; }
+async function sourceDigest(rootPath) {
+  const artifacts = [], ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);
+  async function walk(dir) { for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+    need(!entry.isSymbolicLink(), 'Export contains a symlink.'); if (ignored.has(entry.name)) continue;
+    const full = path.join(dir, entry.name), relative = path.relative(rootPath, full);
+    if (entry.isDirectory()) await walk(full); else if (entry.isFile() && !['test-report.json', 'review.json', 'DELIVERY.md', 'Dockerfile', 'compose.yaml'].includes(relative)) artifacts.push({ path: relative, full });
+  } } await walk(rootPath); need(artifacts.length > 0 && artifacts.length <= 2000, 'Invalid source manifest size.');
+  const hash = createHash('sha256').update('AppYard source hash v2\0');
+  for (const file of artifacts.sort((a, b) => a.path.localeCompare(b.path))) { const bytes = await fs.readFile(file.full), key = Buffer.from(file.path), lengths = Buffer.alloc(8); need(bytes.length <= 10 * 1024 * 1024, 'Oversized source file.'); lengths.writeUInt32BE(key.length, 0); lengths.writeUInt32BE(bytes.length, 4); hash.update(lengths).update(key).update(bytes); }
+  return hash.digest('hex');
+}
 async function capture(name) {
   const records = await observe(page), value = { name, time: stamp(), url: page.url(), records }; result.observations.push(value);
   await fs.writeFile(path.join(root, name + '.json'), JSON.stringify(value, null, 2) + '\n'); await page.screenshot({ path: path.join(root, name + '.png'), fullPage: true, scale: 'css' }); return records;
 }
 async function row(id, action) {
   need(!interrupted, 'Execution interrupted.'); const r = result.rows.find(item => item.id === id); r.startedAt = stamp();
-  try { r.observation = await action(); r.result = 'PASS'; } catch (error) { r.result = error instanceof assert.AssertionError ? 'FAIL' : 'ERROR'; r.error = String(error).slice(0, 1200); if (r.result === 'ERROR') result.errors.push(r.error); throw error; }
+  try { r.observation = await bounded(action(), 120000, 'Checker row exceeded its deadline.'); r.result = 'PASS'; } catch (error) { r.result = error instanceof assert.AssertionError ? 'FAIL' : 'ERROR'; r.error = String(error).slice(0, 1200); if (r.result === 'ERROR') result.errors.push(r.error); throw error; }
   finally { r.finishedAt = stamp(); await save(); }
 }
 async function launch() {
   need(!interrupted, 'Execution interrupted.'); const launchedAt = stamp();
-  app = await electron.launch({ executablePath, cwd: root, args: ['--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', '--proxy-server=http://127.0.0.1:' + proxy.address().port, '--proxy-bypass-list=<-loopback>'],
-    env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: path.join(home, '.config'), TMPDIR: path.join(root, 'tmp'), LANG: 'en_US.UTF-8' }, timeout: 60000 });
-  const child = app.process(); children.push(child); const p = { pid: child.pid, launchedAt }; result.processes.push(p);
-  child.once('exit', (code, signal) => { p.exitedAt = stamp(); p.exitCode = code; p.exitSignal = signal; });
+  let p;
+  pendingLaunch = electron.launch({ executablePath, cwd: root, offline: true, args: ['-r', preloadPath, '--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', '--proxy-server=http://127.0.0.1:' + proxy.address().port, '--proxy-bypass-list=<-loopback>'],
+    env: { PATH: '/usr/bin:/bin:/usr/sbin:/sbin', HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: path.join(home, '.config'), TMPDIR: path.join(root, 'tmp'), LANG: 'en_US.UTF-8' }, timeout: 60000 }).then(handle => {
+      app = handle; const child = app.process(); children.push(child); p = { pid: child.pid, launchedAt }; result.processes.push(p);
+      child.once('exit', (code, signal) => { p.exitedAt = stamp(); p.exitCode = code; p.exitSignal = signal; }); return handle;
+    });
+  try { await pendingLaunch; } finally { pendingLaunch = undefined; }
+  need(!interrupted && !cleanupPromise, 'Launch completed after shutdown was requested.');
   const context = app.context(); await context.setOffline(true);
   context.on('request', request => { if (!allowedURL(request.url())) result.blockedRequests.push({ scheme: request.url().split(':')[0], at: stamp() }); });
   await context.route('**/*', route => allowedURL(route.request().url()) ? route.continue() : route.abort('internetdisconnected'));
   page = await app.firstWindow(); page.setDefaultTimeout(10000); page.on('pageerror', error => result.pageErrors.push({ message: error.message.slice(0, 300), at: stamp() }));
-  const paths = await app.evaluate(({ app }) => ({ userData: app.getPath('userData'), appPath: app.getAppPath() }));
-  need(inside(home, paths.userData), 'Native userData is outside the owned scratch HOME; stop without deleting that directory.'); p.userData = paths.userData; p.appPath = paths.appPath;
+  const paths = await app.evaluate(({ app }) => ({ appData: app.getPath('appData'), userData: app.getPath('userData'), appPath: app.getAppPath() }));
+  need(paths.appData === path.join(home, 'appData') && inside(paths.appData, paths.userData), 'Prelaunch profile isolation failed.'); p.appData = paths.appData; p.userData = paths.userData; p.appPath = paths.appPath;
+  const prelaunch = JSON.parse(await fs.readFile(path.join(root, 'prelaunch-' + p.pid + '.json'), 'utf8')); need(prelaunch.beforeReady === true && prelaunch.appData === paths.appData, 'Profile was not isolated before application startup.');
   need(inside(bundle, paths.appPath), 'Native app is outside the delivered bundle.');
   await page.reload({ waitUntil: 'load', timeout: 30000 }); await ready(page); assert.equal(page.url(), 'fleet-app://app/index.html'); return p;
 }
@@ -77,6 +93,7 @@ async function quit() {
 }
 async function cleanup() {
   return cleanupPromise ??= (async () => { let clean = true;
+    if (pendingLaunch) await pendingLaunch.catch(() => { clean = false; });
     if (app) { try { await bounded(app.close(), 20000, 'Cleanup close timed out.'); } catch { clean = false; } app = undefined; }
     for (const child of children) if (child.exitCode === null && child.signalCode === null) { clean = false; try { child.kill('SIGKILL'); } catch { /* Unconfirmed cleanup is retained. */ } }
     if (proxy) { proxy.closeAllConnections(); await bounded(new Promise(resolve => proxy.close(resolve)), 3000, 'Proxy close timed out.').catch(() => { clean = false; }); }

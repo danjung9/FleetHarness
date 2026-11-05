@@ -126,6 +126,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | R6/native QA and meeting-194 records | project evidence | QA allocation | project QA/runner. | 2026-11-05 |
 | R6 and native QA records | project evidence | coordination review | project QA. | 2026-11-05 |
 | Supplied R6 synthetic artifacts | dataset | evidence review | project benchmark. | 2026-11-05 |
+| Morning training brief synthetic connector snapshots, 2026-11-05 | Dataset | Freeze independent source values and source-scoped review expectations for delivered-app acceptance; all records are synthetic and sample true | Main session checked synthetic connector fixtures | 2026-11-05 |
+| real-journey.mjs, 2026-11-05 source review | Test script | Review native journey assertions and identify missing delivered-app behavior and restart checks; no runtime execution here | Project test owner | 2026-11-05 |
 
 ## Data and sources
 

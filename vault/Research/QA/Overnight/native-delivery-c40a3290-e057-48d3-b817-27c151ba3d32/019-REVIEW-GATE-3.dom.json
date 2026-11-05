@@ -1,0 +1,201 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture\nNative delivery fixture\nConnect a provider…\nUsed for new builds. Completed builds keep their recorded model.\nSynthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7\nBrief\nBuild\n3\nReview\n4\nDeliver\n\nYour review is needed. Try the app and check the evidence.\n\nReview\n\nTry the app, inspect its evidence, then approve the prototype or request changes.\n\nVisual review\nRecorded\n\nSaved screenshots and the agent’s comparison with the expected result. The host checks these records and their source version; the observations are the agent’s assessment.\n\nBuild review\nRecorded\nVerification review\nRecorded\nBuild review\nRecorded\n4 reviews\nVerification review\nRecorded\n4 reviews\nVerification review · Attempt 2\nRecorded\n4 reviews\nDesktop\n1280 × 800\nInitial review\nExpand image\nNov 5, 04:53 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nRecheck\nExpand image\nNov 5, 04:53 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nNarrow\n390 × 844\nInitial review\nExpand image\nNov 5, 04:53 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nRecheck\nExpand image\nNov 5, 04:53 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nTry the app\n\nUse the main workflow and check the result against your brief.\n\nOpen preview\nCheck evidence and limitations\n\nAutomated checks passed\nNode tests: 1 passed · 0 failed · 0 skipped · Browser journeys: 4/4 passed\n\nInspect test evidence · 4 requirements unverified\n\nOperational readiness is unverified. Synthetic tests and prototype review do not validate production integrations, security accreditation, or field performance.\n\nRecord your review\nReview notes\n\nUse at least 10 characters. Request changes sends these notes back for another build and test cycle.\n\nI inspected the application, test evidence, and limitations.\nApprove prototype\nRequest changes\n\nTo approve: Add at least 10 characters describing what you checked and any limitations.\n\nTo request changes: Add at least 10 characters describing what needs to change.",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7Operational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "16e2d0a5-e15e-4b4f-8fde-4630a841ea61"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": false,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand desktop initial review screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand desktop recheck screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand narrow initial review screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand narrow recheck screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Open preview",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": "short",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": "short"
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "type": "checkbox",
+      "ariaLabel": null,
+      "disabled": false,
+      "checked": true,
+      "value": "on"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Approve prototype",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Request changes",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

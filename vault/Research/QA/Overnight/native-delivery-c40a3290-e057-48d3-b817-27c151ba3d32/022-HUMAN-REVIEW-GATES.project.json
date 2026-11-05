@@ -1,0 +1,740 @@
+{
+  "id": "16e2d0a5-e15e-4b4f-8fde-4630a841ea61",
+  "title": "Synthetic native delivery 85622769-6c92-4a5f-ba1d-c21ca666f2d7",
+  "runId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+  "workspace": "/private/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/fleet-native-delivery-HkRZKd/state/workspaces/16e2d0a5-e15e-4b4f-8fde-4630a841ea61/05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+  "status": "review",
+  "stages": [
+    {
+      "id": "intake",
+      "status": "complete"
+    },
+    {
+      "id": "research",
+      "status": "complete"
+    },
+    {
+      "id": "plan",
+      "status": "complete"
+    },
+    {
+      "id": "build",
+      "status": "complete"
+    },
+    {
+      "id": "verify",
+      "status": "complete"
+    },
+    {
+      "id": "review",
+      "status": "review"
+    },
+    {
+      "id": "deliver",
+      "status": "queued"
+    }
+  ],
+  "report": {
+    "time": "2026-11-05T09:53:47.533Z",
+    "command": "node \"--no-global-search-paths\" \"--test\" \"--test-reporter=data:text/javascript;base64,CmltcG9ydCB7IHRhcCB9IGZyb20gJ25vZGU6dGVzdC9yZXBvcnRlcnMnOwpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiogKGV2ZW50cykgewogIGNvbnN0IHN1bW1hcmllcyA9IFtdOwogIGFzeW5jIGZ1bmN0aW9uKiBvYnNlcnZlKCkgewogICAgZm9yIGF3YWl0IChjb25zdCBldmVudCBvZiBldmVudHMpIHsKICAgICAgaWYgKGV2ZW50LnR5cGUgPT09ICd0ZXN0OnN1bW1hcnknICYmIGV2ZW50LmRhdGEuZmlsZSkgc3VtbWFyaWVzLnB1c2goZXZlbnQuZGF0YSk7CiAgICAgIHlpZWxkIGV2ZW50OwogICAgfQogIH0KICBmb3IgYXdhaXQgKGNvbnN0IHRleHQgb2YgdGFwKG9ic2VydmUoKSkpIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ291dHB1dCcsIHRleHQgfSkgKyAnXG4nOwogIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ3JlZ2lzdGVyZWQnLCBzdW1tYXJpZXMgfSkgKyAnXG4nOwp9Cg==\" \"./parser.test.cjs\"",
+    "portableCommand": "node --test './parser.test.cjs'",
+    "provenance": {
+      "runner": "/Users/mukul/Documents/CDAO/fh-org/astra-test/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+      "args": [
+        "--input-type=commonjs",
+        "-e",
+        "process.stdout.write(\"appyard-verification-ready-89e68ab3-5a48-4248-9603-7223086e6403\\n\");const child=require('node:child_process').spawn(process.execPath,[\"--no-global-search-paths\",\"--test\",\"--test-reporter=data:text/javascript;base64,CmltcG9ydCB7IHRhcCB9IGZyb20gJ25vZGU6dGVzdC9yZXBvcnRlcnMnOwpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiogKGV2ZW50cykgewogIGNvbnN0IHN1bW1hcmllcyA9IFtdOwogIGFzeW5jIGZ1bmN0aW9uKiBvYnNlcnZlKCkgewogICAgZm9yIGF3YWl0IChjb25zdCBldmVudCBvZiBldmVudHMpIHsKICAgICAgaWYgKGV2ZW50LnR5cGUgPT09ICd0ZXN0OnN1bW1hcnknICYmIGV2ZW50LmRhdGEuZmlsZSkgc3VtbWFyaWVzLnB1c2goZXZlbnQuZGF0YSk7CiAgICAgIHlpZWxkIGV2ZW50OwogICAgfQogIH0KICBmb3IgYXdhaXQgKGNvbnN0IHRleHQgb2YgdGFwKG9ic2VydmUoKSkpIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ291dHB1dCcsIHRleHQgfSkgKyAnXG4nOwogIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ3JlZ2lzdGVyZWQnLCBzdW1tYXJpZXMgfSkgKyAnXG4nOwp9Cg==\",\"./parser.test.cjs\"],{stdio:'inherit'});child.once('error',e=>{console.error('Could not start Node tests: '+e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});"
+      ],
+      "cwd": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/package",
+      "environment": {
+        "APPYARD_RUN_PROCESS": "[redacted]",
+        "PATH": "/Users/mukul/Documents/CDAO/fh-org/astra-test/node_modules/electron/dist/Electron.app/Contents/MacOS:/usr/local/bin:/usr/bin:/bin",
+        "HOME": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/home",
+        "TMPDIR": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/tmp",
+        "TEMP": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/tmp",
+        "TMP": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/tmp",
+        "ELECTRON_RUN_AS_NODE": "1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "LANG": "C.UTF-8",
+        "USERPROFILE": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-solution-cR7TKw/home",
+        "CODEX_HOME": "/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.TVk7jh6cZd/appyard-verification-JEGMIx",
+        "ELECTRON_NO_ASAR": "1"
+      }
+    },
+    "exitCode": 0,
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "registeredTests": [
+      {
+        "file": "parser.test.cjs",
+        "tests": 1
+      }
+    ],
+    "output": "TAP version 13\n# Subtest: extracts a task\nok 1 - extracts a task\n  ---\n  duration_ms: 0.4895\n  type: 'test'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 55.244958\n\nClean package: passed.\nCapabilities: 1/1 passed.\nBrowser journeys: 4/4 passed.\nVisual review: passed; initial captures and rechecks required at desktop and narrow sizes.\nRequirements: 3 demonstrated, 0 failed, 4 unverified.\nPlanning audit: could not confirm planning coverage; human review is required.\nPlanning audit 1: unavailable.\nPlanning audit response was unreadable: expected approval or concrete corrections. Coverage remains unconfirmed.\nRemaining gaps: Planning coverage is unconfirmed. Earlier corrections, if any, remain unconfirmed.\nPlanning correction turns used: 0 of 1. The build continues with this evidence.\nIndependent judge: SATISFACTORY. Human review is required.\nJudgment 1: SATISFACTORY\nJudge repairs: 0.",
+    "durationMs": 2381,
+    "sourceHash": "c5b3fdea415cdab33354cd9c76ad8c9862614ec4507a740a09a2fb3a20087800",
+    "quality": {
+      "schemaVersion": 3,
+      "contractHash": "89216baefa64e57bd9e8c321c3d2c3cfb614440960714700fdd0cf7f120bb4e5",
+      "status": "passed",
+      "requirementsMet": false,
+      "criteria": [
+        {
+          "criterionId": "UCcustom-1",
+          "requirement": "Parse a synthetic task and recover from empty input.",
+          "status": "passed",
+          "capabilityIds": [
+            "parse"
+          ],
+          "detail": "Parse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes; host evaluations for parse."
+        },
+        {
+          "criterionId": "UCcustom-2",
+          "requirement": "Publication of the synthetic review draft requires owner approval.",
+          "status": "unverified",
+          "detail": "human-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated.",
+          "capabilityIds": []
+        },
+        {
+          "criterionId": "WFL-01",
+          "requirement": "Reject invalid state transitions and stale approvals.",
+          "status": "unverified",
+          "detail": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+          "capabilityIds": []
+        },
+        {
+          "criterionId": "WFL-02",
+          "requirement": "Retain record lineage and conflicts.",
+          "status": "unverified",
+          "detail": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+          "capabilityIds": []
+        },
+        {
+          "criterionId": "WFL-03",
+          "requirement": "Complete the owner-specific workflow.",
+          "status": "unverified",
+          "detail": "human-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.",
+          "capabilityIds": []
+        },
+        {
+          "criterionId": "SUMMARYcustom-1",
+          "requirement": "Parse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft.",
+          "status": "passed",
+          "capabilityIds": [],
+          "detail": "Parse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes."
+        },
+        {
+          "criterionId": "SUMMARYcustom-2",
+          "requirement": "No publication or operational-format validation is performed.",
+          "status": "passed",
+          "capabilityIds": [],
+          "detail": "Parse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes."
+        }
+      ],
+      "journeys": [
+        {
+          "id": "parse-task",
+          "title": "Parse a synthetic task",
+          "viewport": "desktop",
+          "status": "passed",
+          "detail": "Completed 8 steps at 1280×800; no browser errors or horizontal overflow.",
+          "screenshot": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/parse-task-desktop.png",
+          "trace": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/parse-task-desktop.zip"
+        },
+        {
+          "id": "parse-task",
+          "title": "Parse a synthetic task",
+          "viewport": "narrow",
+          "status": "passed",
+          "detail": "Completed 8 steps at 390×844; no browser errors or horizontal overflow.",
+          "screenshot": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/parse-task-narrow.png",
+          "trace": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/parse-task-narrow.zip"
+        },
+        {
+          "id": "recover-empty",
+          "title": "Recover from empty input",
+          "viewport": "desktop",
+          "status": "passed",
+          "detail": "Completed 6 steps at 1280×800; no browser errors or horizontal overflow.",
+          "screenshot": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/recover-empty-desktop.png",
+          "trace": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/recover-empty-desktop.zip"
+        },
+        {
+          "id": "recover-empty",
+          "title": "Recover from empty input",
+          "viewport": "narrow",
+          "status": "passed",
+          "detail": "Completed 6 steps at 390×844; no browser errors or horizontal overflow.",
+          "screenshot": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/recover-empty-narrow.png",
+          "trace": ".quality-evidence/fbacb548aceb-041dc12c-4b28-466a-aa1e-3e80055f1bd1/recover-empty-narrow.zip"
+        }
+      ],
+      "errors": [],
+      "visualReview": {
+        "schemaVersion": 1,
+        "runId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+        "contractHash": "89216baefa64e57bd9e8c321c3d2c3cfb614440960714700fdd0cf7f120bb4e5",
+        "status": "passed",
+        "activeSessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+        "sessions": [
+          {
+            "id": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "startedAt": "2026-11-05T09:53:37.632Z",
+            "status": "passed",
+            "errors": [],
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60"
+          },
+          {
+            "id": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "startedAt": "2026-11-05T09:53:39.612Z",
+            "status": "passed",
+            "errors": [],
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60"
+          },
+          {
+            "id": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "startedAt": "2026-11-05T09:53:43.639Z",
+            "status": "passed",
+            "errors": [],
+            "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61"
+          }
+        ],
+        "captures": [
+          {
+            "id": "ab0747d3-4e94-427d-b64e-702e9f0ca9e3",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/ca4a5bee-5845-4cfe-9074-12736bc2841a/5dc19f6ad427-013824cb-5223-44cf-8f3e-0b941595d180.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:39.094Z",
+            "sequence": 1
+          },
+          {
+            "id": "b1c82ced-cfb6-45bb-913e-68700816f62c",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/ca4a5bee-5845-4cfe-9074-12736bc2841a/5dc19f6ad427-d4acc824-eedb-4014-88e6-e72e8b5af425.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:39.206Z",
+            "sequence": 3
+          },
+          {
+            "id": "eecfcdc6-bfd8-44d0-b9ca-190b82ea5cf5",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/ca4a5bee-5845-4cfe-9074-12736bc2841a/cf716e3aee3a-b1279aec-e6a9-4a88-bd7f-9478586e03f5.png",
+            "screenshotHash": "cf716e3aee3a94bd80720480d22a631cd6fa10a372a6a5b62e651c9847db73f0",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:39.333Z",
+            "sequence": 5
+          },
+          {
+            "id": "527a60da-186d-421f-949d-9a81ca58ef6d",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/ca4a5bee-5845-4cfe-9074-12736bc2841a/cf716e3aee3a-7dc695f2-3d56-4ac3-baaa-a7e99b78ef28.png",
+            "screenshotHash": "cf716e3aee3a94bd80720480d22a631cd6fa10a372a6a5b62e651c9847db73f0",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:39.434Z",
+            "sequence": 7
+          },
+          {
+            "id": "1fccbd81-59ad-4ce8-93bc-6ee84b7635d8",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/7c51a871-0946-4924-9fa7-b025d0ad54ab/5dc19f6ad427-0b47909b-b6d8-440b-9212-b3f4aab287fe.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:40.634Z",
+            "sequence": 9
+          },
+          {
+            "id": "0f3a59d7-4954-47a4-aeca-6d1f0432db57",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/7c51a871-0946-4924-9fa7-b025d0ad54ab/5dc19f6ad427-ec03492c-88e2-465f-a57f-ca99d329b8bc.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:40.739Z",
+            "sequence": 11
+          },
+          {
+            "id": "0b3f7a9f-5c00-4967-8450-14ad1c807a9e",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/7c51a871-0946-4924-9fa7-b025d0ad54ab/d4f12196852b-fb271324-0b23-467b-9113-9d17b1ef8188.png",
+            "screenshotHash": "d4f12196852bbb58a5c6d62ab51b66acb77856359a23189c1420a2367fc0b305",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:40.838Z",
+            "sequence": 13
+          },
+          {
+            "id": "98d87d80-7229-45f0-b38d-99f3812e8c8e",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/7c51a871-0946-4924-9fa7-b025d0ad54ab/cf716e3aee3a-6a86b5fe-0f75-4bba-a8f5-e6c54efc6888.png",
+            "screenshotHash": "cf716e3aee3a94bd80720480d22a631cd6fa10a372a6a5b62e651c9847db73f0",
+            "filesHash": "d7802f5d9db1966e49c681ba297ed39f488322f16b74938a61b9cd13f4e5fa60",
+            "capturedAt": "2026-11-05T09:53:40.922Z",
+            "sequence": 15
+          },
+          {
+            "id": "38b469a1-5a03-4d93-9276-ec6ce3da4961",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/17edbf32-2b97-4548-bbca-64d0eca0c30a/5dc19f6ad427-84d656a9-bf70-4aa2-9984-6a6fb9955722.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+            "capturedAt": "2026-11-05T09:53:44.615Z",
+            "sequence": 17
+          },
+          {
+            "id": "16bb93cc-abbb-4674-b553-ec56e96feccc",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "viewport": "desktop",
+            "screenshot": ".browser-observations/17edbf32-2b97-4548-bbca-64d0eca0c30a/5dc19f6ad427-b824f38e-9914-4437-9bed-26e86d30ed1e.png",
+            "screenshotHash": "5dc19f6ad427c068c8f82df572dab6b52e07c1d06e869e9f9f4f1dc9917428c7",
+            "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+            "capturedAt": "2026-11-05T09:53:44.710Z",
+            "sequence": 19
+          },
+          {
+            "id": "3550ec84-e3b8-4233-86f7-dcfcf1e5bae7",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/17edbf32-2b97-4548-bbca-64d0eca0c30a/cf716e3aee3a-8f01fa30-6650-4ca1-9aa1-a369c5af6ba6.png",
+            "screenshotHash": "cf716e3aee3a94bd80720480d22a631cd6fa10a372a6a5b62e651c9847db73f0",
+            "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+            "capturedAt": "2026-11-05T09:53:44.829Z",
+            "sequence": 21
+          },
+          {
+            "id": "9238ff37-7978-4fcc-9734-6371d4103821",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "viewport": "narrow",
+            "screenshot": ".browser-observations/17edbf32-2b97-4548-bbca-64d0eca0c30a/cf716e3aee3a-b673afbf-74a1-4f36-8a93-700681d61773.png",
+            "screenshotHash": "cf716e3aee3a94bd80720480d22a631cd6fa10a372a6a5b62e651c9847db73f0",
+            "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+            "capturedAt": "2026-11-05T09:53:44.928Z",
+            "sequence": 23
+          }
+        ],
+        "reviews": [
+          {
+            "id": "30d55abd-31c2-46cc-8a9d-c63d4e9d8b27",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "captureId": "ab0747d3-4e94-427d-b64e-702e9f0ca9e3",
+            "viewport": "desktop",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:39.142Z",
+            "sequence": 2
+          },
+          {
+            "id": "4438854b-bc48-4d61-8d80-7fc31e807420",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "captureId": "b1c82ced-cfb6-45bb-913e-68700816f62c",
+            "viewport": "desktop",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:39.255Z",
+            "sequence": 4
+          },
+          {
+            "id": "fc731492-9846-4fc1-a98b-fb067270e45e",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "captureId": "eecfcdc6-bfd8-44d0-b9ca-190b82ea5cf5",
+            "viewport": "narrow",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:39.384Z",
+            "sequence": 6
+          },
+          {
+            "id": "dbb59794-0d91-4f4c-ae88-d7609ef7f02c",
+            "sessionId": "2402a92f-f14e-4379-aea7-c05dc2aa4219",
+            "stage": "build",
+            "captureId": "527a60da-186d-421f-949d-9a81ca58ef6d",
+            "viewport": "narrow",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:39.472Z",
+            "sequence": 8
+          },
+          {
+            "id": "30f2fa6c-44ce-448a-9bb4-e4b25be7f596",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "captureId": "1fccbd81-59ad-4ce8-93bc-6ee84b7635d8",
+            "viewport": "desktop",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:40.676Z",
+            "sequence": 10
+          },
+          {
+            "id": "48632e57-c3da-4d21-b0f0-06ab12d064c9",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "captureId": "0f3a59d7-4954-47a4-aeca-6d1f0432db57",
+            "viewport": "desktop",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:40.778Z",
+            "sequence": 12
+          },
+          {
+            "id": "8d8612b8-157d-43cc-8ad2-03254f7816a5",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "captureId": "0b3f7a9f-5c00-4967-8450-14ad1c807a9e",
+            "viewport": "narrow",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:40.875Z",
+            "sequence": 14
+          },
+          {
+            "id": "7b857286-820c-4122-bbc7-914cd59233cd",
+            "sessionId": "fb0261fe-7e1e-4b12-a1dc-c7a5494fe2f7",
+            "stage": "verify",
+            "captureId": "98d87d80-7229-45f0-b38d-99f3812e8c8e",
+            "viewport": "narrow",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:40.956Z",
+            "sequence": 16
+          },
+          {
+            "id": "a53ccf75-5781-4732-98a1-02ea93d20ae1",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "captureId": "38b469a1-5a03-4d93-9276-ec6ce3da4961",
+            "viewport": "desktop",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:44.659Z",
+            "sequence": 18
+          },
+          {
+            "id": "051d2bc3-6fde-4fff-a35d-df6fe3bea783",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "captureId": "16bb93cc-abbb-4674-b553-ec56e96feccc",
+            "viewport": "desktop",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:44.754Z",
+            "sequence": 20
+          },
+          {
+            "id": "a99d0cfa-6522-485a-954a-958ed1c19ce5",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "captureId": "3550ec84-e3b8-4233-86f7-dcfcf1e5bae7",
+            "viewport": "narrow",
+            "round": "initial",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:44.871Z",
+            "sequence": 22
+          },
+          {
+            "id": "f21c7518-d358-4559-aedf-157600cdad90",
+            "sessionId": "9e100dd9-44a5-4fb7-8e6d-499edfb197a1",
+            "stage": "verify",
+            "captureId": "9238ff37-7978-4fcc-9734-6371d4103821",
+            "viewport": "narrow",
+            "round": "recheck",
+            "expected": "The application heading, labeled inputs, primary action and result area remain readable within the viewport.",
+            "observed": "The captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.",
+            "findings": [],
+            "resolutions": [],
+            "reviewedAt": "2026-11-05T09:53:44.968Z",
+            "sequence": 24
+          }
+        ],
+        "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61"
+      },
+      "expectedJourneys": 4,
+      "capabilities": [
+        {
+          "id": "parse",
+          "required": true,
+          "criterionIds": [
+            "UCcustom-1"
+          ],
+          "evaluationIds": [
+            "parse-cases"
+          ],
+          "status": "passed",
+          "detail": "Host evaluation passed: parse-cases."
+        }
+      ],
+      "solutionEvaluation": {
+        "schemaVersion": 1,
+        "status": "passed",
+        "runtime": {
+          "profile": "browser",
+          "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+          "runtime": "v24.22.2",
+          "environmentNames": []
+        },
+        "evaluations": [
+          {
+            "id": "parse-cases",
+            "capabilityId": "parse",
+            "evaluator": "exact",
+            "dataset": {
+              "name": "task-parser",
+              "version": "1",
+              "provenance": "synthetic"
+            },
+            "metric": "case_pass_rate",
+            "threshold": 1,
+            "actual": 1,
+            "trials": 1,
+            "status": "passed",
+            "cases": [
+              {
+                "id": "pump",
+                "trial": 1,
+                "passed": true,
+                "score": 1,
+                "durationMs": 49,
+                "detail": "Output matches the frozen JSON answer.",
+                "output": "inspect pump"
+              },
+              {
+                "id": "valve",
+                "trial": 1,
+                "passed": true,
+                "score": 1,
+                "durationMs": 47,
+                "detail": "Output matches the frozen JSON answer.",
+                "output": "close valve"
+              },
+              {
+                "id": "empty",
+                "trial": 1,
+                "passed": true,
+                "score": 1,
+                "durationMs": 45,
+                "detail": "Output matches the frozen JSON answer.",
+                "output": null
+              },
+              {
+                "id": "not-task",
+                "trial": 1,
+                "passed": true,
+                "score": 1,
+                "durationMs": 57,
+                "detail": "Output matches the frozen JSON answer.",
+                "output": null
+              }
+            ]
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "parse",
+            "required": true,
+            "status": "passed"
+          }
+        ],
+        "errors": [],
+        "durationMs": 198
+      },
+      "package": {
+        "status": "passed",
+        "cleanCopy": true,
+        "profile": "browser",
+        "filesHash": "dde1619d81792d732ada9c337bf888604376797ab61ac05f666aa1cdd4d87f61",
+        "detail": "Host evaluation, browser journeys and developer tests use separate fresh packages with matching declared files, dependencies and runtime configuration."
+      }
+    },
+    "testBaseline": {
+      "hashes": {
+        "parser.test.cjs": "3d0782206ef1a3de63005ece02a3d895306674fe3f6f0fb720487b0dd24671df"
+      },
+      "changes": [],
+      "policy": "Original build tests are restored and rerun unchanged. Add coverage in new test files. Expectation changes require an explicit contract revision in a new run; repairs cannot authorize one."
+    },
+    "independentJudge": {
+      "stage": "verify",
+      "verdict": "SATISFACTORY",
+      "gaps": [],
+      "attempts": [
+        {
+          "verdict": "SATISFACTORY",
+          "gaps": [],
+          "durationMs": 51,
+          "tokens": {
+            "inputTokens": 0,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 0,
+            "outputTokens": 0,
+            "reasoningOutputTokens": null,
+            "totalTokens": 0,
+            "uncachedPlusOutputTokens": 0
+          },
+          "sourceHash": "9c238c90d29641c41ed58b5a81618fb7f328fdf5ff562f78b9668ddf72e3cd08"
+        }
+      ],
+      "repairs": 0,
+      "repairLimitReached": false,
+      "durationMs": 51,
+      "evaluatorRetries": 0
+    },
+    "stageMetrics": [
+      {
+        "stage": "intake",
+        "startedAt": "2026-11-05T09:53:37.118Z",
+        "finishedAt": "2026-11-05T09:53:37.247Z",
+        "durationMs": 129,
+        "agentAttempts": 2,
+        "inferenceDurationMs": 83,
+        "usage": {
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "uncachedInputTokens": 0,
+          "outputTokens": 0,
+          "reasoningOutputTokens": null,
+          "totalTokens": 0,
+          "uncachedPlusOutputTokens": 0
+        }
+      },
+      {
+        "stage": "research",
+        "startedAt": "2026-11-05T09:53:37.297Z",
+        "finishedAt": "2026-11-05T09:53:37.349Z",
+        "durationMs": 53,
+        "agentAttempts": 1,
+        "inferenceDurationMs": 27,
+        "usage": {
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "uncachedInputTokens": 0,
+          "outputTokens": 0,
+          "reasoningOutputTokens": null,
+          "totalTokens": 0,
+          "uncachedPlusOutputTokens": 0
+        }
+      },
+      {
+        "stage": "plan",
+        "startedAt": "2026-11-05T09:53:37.359Z",
+        "finishedAt": "2026-11-05T09:53:37.603Z",
+        "durationMs": 244,
+        "agentAttempts": 2,
+        "inferenceDurationMs": 61,
+        "usage": {
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "uncachedInputTokens": 0,
+          "outputTokens": 0,
+          "reasoningOutputTokens": null,
+          "totalTokens": 0,
+          "uncachedPlusOutputTokens": 0
+        }
+      },
+      {
+        "stage": "build",
+        "startedAt": "2026-11-05T09:53:37.620Z",
+        "finishedAt": "2026-11-05T09:53:39.586Z",
+        "durationMs": 1966,
+        "agentAttempts": 1,
+        "inferenceDurationMs": 1902,
+        "usage": {
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "uncachedInputTokens": 0,
+          "outputTokens": 0,
+          "reasoningOutputTokens": null,
+          "totalTokens": 0,
+          "uncachedPlusOutputTokens": 0
+        }
+      },
+      {
+        "stage": "verify",
+        "startedAt": "2026-11-05T09:53:39.595Z",
+        "finishedAt": "2026-11-05T09:53:47.869Z",
+        "durationMs": 8274,
+        "agentAttempts": 3,
+        "inferenceDurationMs": 2831,
+        "usage": {
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "uncachedInputTokens": 0,
+          "outputTokens": 0,
+          "reasoningOutputTokens": null,
+          "totalTokens": 0,
+          "uncachedPlusOutputTokens": 0
+        }
+      }
+    ]
+  },
+  "verification": {
+    "runId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+    "reportHash": "5129d3239edab73f7dea683e791cd9e46663c03c159ae8fb07e252d56fe1b292"
+  },
+  "feedback": "",
+  "runtimeProfile": "browser",
+  "processCleanup": "pending",
+  "processRunId": "05611ce0-84b5-44df-80bd-1a3d86f6da9b",
+  "writerState": "idle"
+}

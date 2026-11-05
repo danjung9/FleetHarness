@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "audience": "A reviewer trying a synthetic task parser.",
+  "primaryTask": "Enter a task message and inspect its parsed task.",
+  "successOutcome": "The correct task and synthetic review draft survive reload, with publication approval still unverified.",
+  "screens": [
+    {
+      "name": "Parser",
+      "purpose": "Review a task message.",
+      "primaryAction": "Parse message"
+    }
+  ],
+  "states": {
+    "empty": "Message field and Parse message button.",
+    "loading": "Parsing is synchronous.",
+    "error": "Enter a message.",
+    "success": "Parsed task shown in the result."
+  },
+  "persistence": "The last successful task and review draft persist in localStorage. Parsing again clears the old review draft.",
+  "recovery": "Enter a valid task after an empty submission.",
+  "keyboard": "Labelled input and native buttons operable with Tab and Enter."
+}
