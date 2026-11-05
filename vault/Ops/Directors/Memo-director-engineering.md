@@ -3,17 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Keep existing owners, adapt QA to landed restoration and request current evidence."
+summary: "Keep current owners focused on R6 and native failures."
 ---
 
 # Engineering decisions
 
-[E, feed/snapshot-189 and current queue] Code seats remain disabled. Dev-1/3 have gate returns; builder already has the planning-consistency assignment. Dev-2 retains smoke-file claims without a queued task or pending review. [R] Add no duplicate assignments. Main reconciles dev-2's completed return before another seat receives those files.
+[E, Scoreboard and R6 final records] Nine attempts finished, all failed; none satisfactory. IDs 11/12 pass generated tests and journeys but end with NOT judgments. Missing authoritative requirements and human acceptance cannot be repaired by inventing rules or approval. ID 36's reported ordering conflict remains unverified.
 
-[E, Scoreboard] R5 finished four failed builds, zero automatic passes and zero satisfactory results on f2e5422 plus scratch changes. [R] Preserve those failures and the canonical training NOT verdict. Builder keeps the single pre-freeze consistency audit; architect's other proposals stay deferred.
+[R] Keep the already queued five-file planning-consistency audit. Preserve original obligations and final judging. No duplicate builder or architect assignment. Fixture success does not establish task acceptance.
 
-[E, QA runner triage] IDs 12/36 show plan rejection followed by shutdown uncertainty. Native cause remains unproved. [E, relay patch] 5f4eb39 now restores frozen planning notes and uses process evidence for failed-stage shutdown. [R] Main verifies these landed paths. Adapt the proposed regression: valid restoration may proceed; unavailable or corrupt restoration plus unconfirmed shutdown must retain both failures and block progress. Do not restore obsolete rejection behavior.
+[E, feed/snapshot-194 and queue] Code seats remain disabled; dev-1/3 retain gate returns. Dev-2 has completed-label evidence and retained claims without a queued task. [R] Main reconciles those returns and releases files explicitly. Preserve Dan's delivery callback and smoke assertions.
 
-[R] Dev-1 preserves the new delivery callback; dev-2 preserves new smoke assertions. Dev-3 retains only its necessary wording exceptions. Require baseline comparisons for gate failures, not blanket environmental exemptions.
+[R] Accept both completed QA triages. Main and existing packaging/backend owners owe exact native failure blocks and targeted closure. Seven listed problems, six reported failures and one unclassified test are unresolved accounting, not seven proved causes. The later 0666861 preview-persistence defect stays with main's existing repair.
 
-[R] Main owns native execution, integration and real reruns. Keep Dan's frontend, current full access, noon freeze and human acceptance. Missing sealed evaluator identity, exact R5 execution bytes and new-target runtime evidence remain explicit gaps.
+[R] Main investigates R6 service-disconnected and Home-navigation failures before relaunching affected cards. Guard-held ID 36 files mean incomplete shared evidence, not absent implementation. Preserve all failed receipts.
+
+[R] Empty new-task list avoids duplicating queued work. Keep full access, human approval, verified shutdown and noon freeze. Main supplies current execution identity and missing receipts; no readiness or satisfactory claim is accepted.
