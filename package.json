@@ -11,11 +11,14 @@
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "tsc && vite build && npm run build:electron",
     "build:web": "tsc && vite build --outDir dist-web --base /",
+    "icons": "node scripts/create-icon.mjs",
     "start": "electron .",
     "preview": "vite preview",
-    "test": "npm run build:electron && node --test tests/*.test.mjs",
+    "test": "npm run build:electron && node --test --test-concurrency=4 tests/*.test.mjs",
+    "check": "node scripts/check.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
+    "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
     "sync:norfolk": "node scripts/sync-norfolk.mjs",
@@ -23,12 +26,20 @@
     "harness:build": "tsc -p harness/tsconfig.json",
     "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
     "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
+    "test:foundations": "npm run build:electron && node scripts/check-foundations.mjs && node --test tests/foundations.test.mjs",
     "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
+    "test:data-storage": "npm run build && node scripts/smoke-data-storage.mjs",
+    "test:brief-data": "npm run build && node scripts/smoke-brief-data.mjs",
     "test:system-design": "npm run build && node scripts/smoke-system-design.mjs",
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
+    "test:visual-review": "npm run build && node --test tests/visual-review.test.mjs && node scripts/smoke-visual-review.mjs",
     "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
     "test:models": "npm run build && node scripts/smoke-model-selector.mjs",
-    "test:executable": "npm run build && node scripts/smoke-executable.mjs"
+    "test:executable": "npm run build && node scripts/smoke-executable.mjs",
+    "test:solutions": "npm run build:electron && node --test tests/solution-*.test.mjs tests/factory-benchmark.test.mjs",
+    "test:experiments": "npm run build:electron && node --test --test-concurrency=4 tests/experiment-*.test.mjs tests/learning-*.test.mjs tests/isolated-*.test.mjs tests/integration-broker.test.mjs tests/runtime-broker.test.mjs tests/codex-isolation.test.mjs tests/execution-*.test.mjs tests/preview-proxy.test.mjs",
+    "smoke:experiments": "npm run build && node scripts/smoke-experiments.mjs && node scripts/smoke-experiment-activity.mjs && node scripts/smoke-experiment-isolation.mjs",
+    "benchmark:factory": "npm run build:electron && node scripts/benchmark-factory.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.5.0",
@@ -37,6 +48,7 @@
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/manrope": "5.3.0",
     "@openai/codex": "0.166.0",
+    "jose": "6.2.15",
     "lucide-react": "1.68.0",
     "playwright": "1.64.1",
     "react": "19.3.1",
@@ -66,9 +78,11 @@
       "dist/**/*",
       "dist-electron/**/*",
       "skills/**/*",
+      "templates/**/*",
       "package.json"
     ],
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools",
       "target": [
         "dmg",
@@ -83,9 +97,14 @@
     },
     "artifactName": "AppYard-${version}-${arch}.${ext}",
     "npmRebuild": false,
+    "extraResources": [
+      { "from": "node_modules/electron/dist", "to": "electron-runtime" }
+    ],
     "asarUnpack": [
       "node_modules/**/*",
+      "templates/runtime-broker/**/*",
       "dist-electron/electron/package-worker.js",
+      "dist-electron/electron/package-runtime.js",
       "package.json"
     ]
   },

@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { Store } from '../dist-electron/electron/storage.js';
 import { verifyWorkspace } from '../dist-electron/electron/verification.js';
+import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
+import { reportHash } from '../dist-electron/electron/delivery.js';
 
 const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-executable-smoke-')));
 const output = path.resolve('output/playwright'); await fs.mkdir(output, { recursive: true });
@@ -16,7 +18,13 @@ await fs.mkdir(project.workspace);
 await fs.writeFile(path.join(project.workspace, 'core.cjs'), 'exports.increment = value => value + 1;');
 await fs.writeFile(path.join(project.workspace, 'counter.test.cjs'), 'require("node:test")("increments a saved count", () => require("node:assert/strict").equal(require("./core.cjs").increment(7), 8));');
 await fs.writeFile(path.join(project.workspace, 'index.html'), `<!doctype html><html><head><title>Offline counter</title></head><body><h1>Offline counter</h1><button>Add one</button><output>0</output><script>const out=document.querySelector('output'); out.textContent=localStorage.getItem('count')||'0'; document.querySelector('button').onclick=()=>{out.textContent=Number(out.textContent)+1;localStorage.setItem('count',out.textContent)};</script></body></html>`);
-project.report = await verifyWorkspace(project.workspace, process.execPath, () => {});
+const processes = new RunProcessSweep();
+project.processScope = { runId: project.runId, marker: processes.marker, cleanup: 'pending' };
+await store.save();
+try { project.report = await processes.run(() => verifyWorkspace(project.workspace, process.execPath, () => {})); }
+finally { await processes.stop(); }
+project.processScope.cleanup = 'confirmed';
+project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
 project.status = 'review'; project.stages.forEach(s => { s.status = s.id === 'review' ? 'review' : s.id === 'deliver' ? 'queued' : 'complete'; });
 await store.save();
 let app, generated, generatedData;
@@ -25,18 +33,22 @@ try {
   app = await electron.launch({ ...(executablePath ? { executablePath, args: [] } : { args: ['.'] }), env: { ...process.env, FLEET_USER_DATA: store.root, PI_CODING_AGENT_DIR: path.join(root, 'pi') }, timeout: 45000 });
   const page = await app.firstWindow(); await page.locator('.app-shell').waitFor();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.getByRole('button', { name: 'Review — evidence & delivery', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
   await assert.rejects(page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), /approve/);
   await page.getByLabel('Review notes').fill('Verified the counter changes and persists locally. Tested for prototype use only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
+  // This fixture has no independent check on record, which a person must accept explicitly.
+  await page.getByLabel('I read these gaps and accept them for this prototype').check();
   await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
   await page.getByText('Prototype approved for delivery.', { exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
   await app.evaluate(({ dialog, shell }) => { dialog.showSaveDialog = async () => ({ canceled: true }); shell.showItemInFolder = () => {}; });
   assert.equal(await page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), null);
   assert.equal(await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.id === id).executable, project.id), undefined);
   const archive = path.join(root, 'standalone.zip');
   await app.evaluate(({ dialog }, file) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: file }); }, archive);
-  await page.getByRole('button', { name: 'Download executable', exact: true }).click();
+  await page.getByRole('button', { name: 'Download app', exact: true }).click();
   await page.getByRole('button', { name: 'Packaging app…', exact: true }).waitFor();
   await assert.rejects(page.evaluate(id => window.fleetHarness.startRun(id), project.id), /download to finish/);
   await assert.rejects(page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), /download to finish/);

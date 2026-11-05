@@ -7,6 +7,7 @@ import { prepareFleetWorkspace } from './integration.js';
 import { toolRegistry, invokeFleetTool } from './tool-registry.js';
 import { fixtures } from './fixtures.js';
 import { runToolkitDemo } from './evaluate.js';
+import { foundationCatalog, recommendFoundation, materializeFoundation, foundationRuntime, validateFoundationPlan } from './foundations.js';
 
 const resourcesRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const [command,...args]=process.argv.slice(2);
@@ -19,9 +20,29 @@ function option(name:string): string|undefined {
 }
 async function main() {
   if (!command || command==='help' || command==='--help') {
-    process.stdout.write(`AppYard challenge pipeline\n\n  catalog                         List 34 source-linked challenges\n  plan <id> [--out <directory>]    Print a packet or prepare an isolated workspace\n  tools                           List tool schemas\n  fixture <tool>                  Print a synthetic input\n  tool <tool> --input <json-file>  Run a validated local tool\n  demo [--out <new-directory>]    Run reproducible toolkit scenarios without a model\n\nDesktop Pi runs use the same packets, selected skills and tools.\n`);return;
+    process.stdout.write(`AppYard challenge pipeline\n\n  catalog                         List source-linked challenges\n  plan <id> [--out <directory>]    Print a packet or prepare an isolated workspace\n  foundations                     List bundled versioned application starters\n  scaffold <id> --out <new-dir>    Copy the recipe-selected starter without model calls\n    [--template node-service|python-service]\n  tools                           List tool schemas\n  fixture <tool>                  Print a synthetic input\n  tool <tool> --input <json-file>  Run a validated local tool\n  demo [--out <new-directory>]    Run reproducible toolkit scenarios without a model\n\nDesktop Pi and Codex runs use the same packets, selected skills, tools and foundations.\n`);return;
   }
   if (command==='catalog') {print(challenges);return;}
+  if (command==='foundations') {print(foundationCatalog);return;}
+  if (command==='scaffold') {
+    const packet = createPacket(args[0]), out = option('--out');
+    if (!out) throw new Error('scaffold requires --out <new-directory>.');
+    const recommended = recommendFoundation(packet.recipe.id), override = option('--template');
+    if (override && !['node-service', 'python-service'].includes(override)) throw new Error('Unknown bundled template. Run foundations to list available starters.');
+    const selection = validateFoundationPlan(override ? { ...recommended, templateId: override,
+      computePack: override === 'python-service' ? 'custom' : recommended.computePack, reason: `Explicit CLI template choice for the ${packet.recipe.id} specialist.` } : recommended);
+    const workspace = path.resolve(out);
+    await fs.mkdir(path.dirname(workspace), { recursive: true });
+    await fs.mkdir(workspace, { mode: 0o700 }); // Deliberately refuse every existing destination.
+    await fs.writeFile(path.join(workspace, 'foundation-plan.json'), JSON.stringify(selection, null, 2) + '\n', { flag: 'wx' });
+    const snapshot = await materializeFoundation({ workspace, resourcesRoot, selection });
+    const runtime = foundationRuntime(selection);
+    await fs.writeFile(path.join(workspace, 'runtime-manifest.json'), JSON.stringify(runtime, null, 2) + '\n', { flag: 'wx' });
+    print({ workspace, selection, copiedFiles: snapshot.files, copiedBytes: snapshot.bytes, templateHash: snapshot.templateHash,
+      start: runtime.command!.runtime === 'node' ? 'node server.mjs' : 'python3 server.py',
+      scope: 'Starter foundation only; extend the computation and UI, then run application acceptance tests.' });
+    return;
+  }
   if (command==='tools') {print(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters})));return;}
   if (command==='fixture') {
     if (!Object.hasOwn(fixtures,args[0])) throw new Error('Unknown fixture tool. Run tools to list available names.');

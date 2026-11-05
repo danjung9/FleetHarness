@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildActivity, resultText } from '../dist-electron/shared/activity.js';
+import { buildActivity, resultText, summarizeToolResult } from '../dist-electron/shared/activity.js';
 
 const log = (id, text, overrides = {}) => ({ id, text, time: '2026-11-04T12:00:00Z', stage: 'build', kind: 'tool', ...overrides });
 const tool = (callId, phase) => ({ callId, phase, name: 'write' });
@@ -65,4 +65,20 @@ test('result decoder handles structured text, nulls, and non-text attachments', 
   assert.equal(resultText('null'), 'null');
   assert.equal(resultText('{"content":[{"type":"image","data":"private-base64"}]}'), '[Image output — inspect original record]');
   assert.equal(resultText('"Plain result"'), 'Plain result');
+});
+
+test('browser tool activity retains observations without persisting Pi or Codex image payloads', () => {
+  const imageData = Buffer.from('private pixels'.repeat(1000)).toString('base64');
+  const observation = JSON.stringify({ screenshot: '.browser-observations/current.png', errors: ['Broken handler'] });
+  const result = { content: [{ type: 'text', text: observation }, { type: 'image', mimeType: 'image/png', data: imageData }] };
+  const pi = summarizeToolResult(result);
+  const codex = summarizeToolResult([{ type: 'inputText', text: observation }, { type: 'inputImage', imageUrl: `data:image/png;base64,${imageData}` }]);
+  for (const summary of [pi, codex]) {
+    assert.ok(summary.length < 1000);
+    assert.match(summary, /current.png/); assert.match(summary, /Broken handler/);
+    assert.doesNotMatch(summary, /base64|private pixels/); assert.equal(summary.includes(imageData.slice(0, 30)), false);
+  }
+  assert.equal(result.content[1].data, imageData, 'model-facing result is unchanged');
+  assert.match(resultText(pi), /Broken handler/);
+  assert.equal(summarizeToolResult({ imageUrl: `data:image/png;base64,${imageData}` }), '{"imageUrl":"[Image attachment omitted from activity]"}');
 });

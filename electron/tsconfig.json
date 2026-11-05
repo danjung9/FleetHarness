@@ -10,5 +10,5 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["*.ts", "*.cts", "../shared/*.ts", "../harness/*.ts"]
+  "include": ["*.ts", "*.cts", "connectors/**/*.ts", "../shared/*.ts", "../harness/*.ts"]
 }

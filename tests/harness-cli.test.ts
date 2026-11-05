@@ -27,3 +27,26 @@ test('CLI runs fixtures, materializes a challenge and writes a non-overwriting e
   await assert.rejects(run(['plan','999']),/Unknown/);
   await assert.rejects(run(['tool','fleet_extract_messages']),/requires --input/);
 });
+
+test('CLI scaffolds repeatable specialist foundations without model calls and refuses existing destinations', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-scaffold-cli-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const catalog = JSON.parse((await run(['foundations'])).stdout);
+  assert.deepEqual(catalog.map((item: {id: string}) => item.id), ['node-service', 'python-service']);
+  const first = path.join(root, 'first'), second = path.join(root, 'second');
+  const one = JSON.parse((await run(['scaffold', '11', '--out', first])).stdout);
+  const two = JSON.parse((await run(['scaffold', '11', '--out', second])).stdout);
+  assert.equal(one.selection.computePack, 'scheduling');
+  assert.equal(one.templateHash, two.templateHash);
+  assert.ok(one.copiedFiles > 0 && one.copiedBytes > 0);
+  assert.equal(await fs.readFile(path.join(first, 'foundation-lock.json'), 'utf8'), await fs.readFile(path.join(second, 'foundation-lock.json'), 'utf8'));
+  const manifest = JSON.parse(await fs.readFile(path.join(first, 'runtime-manifest.json'), 'utf8'));
+  assert.equal(manifest.command.entrypoint, 'server.mjs');
+  for (const file of manifest.files) await fs.access(path.join(first, file));
+  await assert.rejects(run(['scaffold', '11', '--out', first]), /EEXIST/);
+  const python = JSON.parse((await run(['scaffold', '11', '--out', path.join(root, 'python'), '--template', 'python-service'])).stdout);
+  assert.equal(python.selection.templateId, 'python-service');
+  assert.equal(python.selection.computePack, 'custom');
+  await assert.rejects(run(['scaffold', '11', '--out', path.join(root, 'invalid'), '--template', 'remote-latest']), /Unknown/);
+  await assert.rejects(fs.access(path.join(root, 'invalid')), /ENOENT/);
+});

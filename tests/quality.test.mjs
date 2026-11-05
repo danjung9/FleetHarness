@@ -3,10 +3,72 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { qualityFixture } from '../scripts/quality-fixture.mjs';
-import { loadQualityContract, assertQualityContract } from '../dist-electron/electron/quality.js';
+import { runInNewContext } from 'node:vm';
+import { qualityFixture, qualityFixtureHtml, qualityFixtureProject, cliFixtureProject } from '../scripts/quality-fixture.mjs';
+import { cliSolutionFixture } from '../scripts/solution-fixture.mjs';
+import { prepareFleetWorkspace } from '../dist-electron/harness/integration.js';
+import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
+import { loadQualityContract, assertQualityContract, sealEvaluationPlan, restoreEvaluationPlan, verifyApplication } from '../dist-electron/electron/quality.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
+import { assertReviewState, verifiedManifest, reportHash } from '../dist-electron/electron/delivery.js';
+
+test('both engine CLI fixtures use a CLI brief and complete capability coverage without dangling browser journeys', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-cli-contract-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const packet = await prepareFleetWorkspace({ ...cliFixtureProject, workspace: root, resourcesRoot: process.cwd() });
+  for (const [name, body] of Object.entries(cliSolutionFixture(packet.acceptance.map(criterion => criterion.id)))) await fs.writeFile(path.join(root, name), body);
+  const contract = await loadQualityContract(root, packet.acceptance, true);
+  assert.equal(contract.solution.runtime.profile, 'cli'); assert.deepEqual(contract.plan.journeys, []);
+  const implemented = contract.plan.criteria.filter(criterion => criterion.disposition === 'implemented');
+  assert.ok(implemented.length >= 2, 'The explicit criterion and prose obligation both need evidence');
+  assert.ok(implemented.every(criterion => criterion.capabilityIds.includes('parse')));
+  assert.deepEqual(contract.solution.capabilities[0].criterionIds, implemented.map(criterion => criterion.criterionId));
+  assert.ok(contract.plan.criteria.some(criterion => criterion.disposition === 'deferred'), 'Unrelated recipe outcomes stay unverified');
+});
+
+test('shared parser fixture preserves primary approval deferral with synthetic journey evidence', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-fixture-contract-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const acceptance = [
+    { id: 'UCcustom-1', requirement: 'Parse a synthetic task and recover from empty input.', method: 'integration', scenario: 'Parse and reload a task.' },
+    { id: 'UCcustom-2', requirement: 'Publication of the synthetic review draft requires owner approval.', method: 'integration', scenario: 'Review a local draft without publishing it.' }
+  ];
+  assert.deepEqual(qualityFixtureProject.criteria, acceptance.map(item => item.requirement));
+  for (const [name, body] of Object.entries(qualityFixture(acceptance.map(item => item.id)))) await fs.writeFile(path.join(root, name), body);
+  const { plan } = await loadQualityContract(root, acceptance);
+  assert.equal(plan.criteria[1].disposition, 'deferred');
+  assert.deepEqual(plan.criteria[1].journeyIds, []);
+  assert.match(plan.criteria[1].reason, /^human-authority:/);
+  const expected = 'Synthetic review draft: inspect pump. Publication requires owner approval.';
+  assert.ok(plan.journeys.some(journey => journey.kind === 'primary' && journey.steps.some(step => step.action === 'expectText' && step.text === expected)), 'The deferred publication needs a checked synthetic review draft.');
+
+  // Run the delivered fixture script with a tiny DOM/storage adapter, without a browser claim.
+  const storage = new Map();
+  const load = () => {
+    const elements = Object.fromEntries(['message', 'parse', 'result', 'review', 'review-result'].map(id => [id, { value: '', textContent: '' }]));
+    const script = /<script>([\s\S]*?)<\/script>/.exec(qualityFixtureHtml)[1];
+    runInNewContext(script, { document: { getElementById: id => elements[id] }, localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) } });
+    return elements;
+  };
+  let app = load();
+  app.message.value = 'TASK: inspect pump'; app.parse.onclick();
+  assert.equal(app.result.textContent, 'inspect pump');
+  app.review.onclick(); assert.equal(app['review-result'].textContent, expected);
+  app = load(); assert.equal(app.result.textContent, 'inspect pump');
+  assert.equal(app['review-result'].textContent, expected);
+  app.message.value = 'TASK: inspect valve'; app.parse.onclick();
+  assert.equal(app.result.textContent, 'inspect valve');
+  assert.equal(app['review-result'].textContent, '', 'Changing a task invalidates the old review.');
+  app.review.onclick();
+  assert.equal(app['review-result'].textContent, 'Synthetic review draft: inspect valve. Publication requires owner approval.');
+  app.message.value = ''; app.parse.onclick();
+  assert.equal(app.result.textContent, 'Enter a message.');
+  assert.equal(app['review-result'].textContent, '');
+  app.review.onclick(); assert.equal(app['review-result'].textContent, '', 'Invalid input cannot create a review draft.');
+});
 
 test('frozen quality contract rejects changed expected outcomes and UX behavior', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-quality-')); t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -43,4 +105,435 @@ test('browser evidence is excluded only during execution and bound to delivery s
   const verified = await sourceHash(root);
   await fs.writeFile(path.join(root, '.quality-evidence', 'desktop.png'), 'tampered screenshot');
   assert.notEqual(await sourceHash(root), verified);
+});
+
+test('restoring the sealed evaluation plan preserves the verified tree comparison without accepting later source edits', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-final-evidence-hash-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.writeFile(path.join(root, 'index.html'), '<h1>Reviewed application</h1>');
+  await fs.writeFile(path.join(root, 'visual-review.json'), '{"hostEvidence":"reviewed"}');
+  const verified = await sourceHash(root);
+  await fs.writeFile(path.join(root, 'evaluation-plan.json'), '{"frozen":"expectations"}');
+  assert.notEqual(await sourceHash(root), verified);
+  assert.equal(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
+  await fs.appendFile(path.join(root, 'index.html'), '<button>Unreviewed change</button>');
+  assert.notEqual(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
+});
+
+const acceptance = [{ id: 'R1', requirement: 'Compute totals for arbitrary input lists.', method: 'automated', scenario: 'Compare independently calculated totals.' }];
+
+function computationalFixture(broken = false) {
+  const legacy = qualityFixture(['R1']);
+  return {
+    'ux-spec.json': legacy['ux-spec.json'],
+    'acceptance-plan.json': JSON.stringify({ schemaVersion: 2, criteria: [{ criterionId: 'R1', disposition: 'implemented',
+      expectedOutcome: 'Totals match independent examples including different input sizes.', journeyIds: [], capabilityIds: ['total'] }], journeys: [] }),
+    'solution-contract.json': JSON.stringify({ schemaVersion: 1, objective: 'Calculate totals reliably.',
+      capabilities: [{ id: 'total', kind: 'algorithm', description: 'Sum supplied numeric values.', required: true, criterionIds: ['R1'], evaluationIds: ['reference'] }],
+      runtime: { profile: 'cli', files: ['engine.mjs', 'math.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } } }),
+    'evaluation-plan.json': JSON.stringify({ schemaVersion: 1, evaluations: [{ id: 'reference', capabilityId: 'total', description: 'Independent sums.',
+      dataset: { name: 'Arithmetic reference', version: '1', provenance: 'reviewed' }, evaluator: 'numeric', threshold: 1, trials: 1,
+      cases: [{ id: 'short', input: { values: [2, 3] }, expected: { total: 5 } }, { id: 'long', input: { values: [10, 20, 5] }, expected: { total: 35 } }] }] }),
+    'math.mjs': `export const sum = values => ${broken ? '5' : 'values.reduce((total, value) => total + value, 0)'};`,
+    'engine.mjs': `import { readFileSync, existsSync } from 'node:fs'; import { sum } from './math.mjs';
+if (existsSync('evaluation-plan.json')) throw new Error('Answer keys leaked into the delivered runtime');
+const input = JSON.parse(readFileSync(0, 'utf8')); console.log(JSON.stringify({ total: sum(input.values) }));`,
+    // A locally green developer example must never override the independent host cases.
+    'math.test.mjs': "import test from 'node:test'; import assert from 'node:assert/strict'; import { sum } from './math.mjs'; test('development example', () => assert.equal(sum([2,3]), 5));"
+  };
+}
+
+async function computationWorkspace(t, broken = false) {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-quality-solution-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const files = computationalFixture(broken);
+  for (const [name, body] of Object.entries(files)) await fs.writeFile(path.join(root, name), body);
+  return { root, files };
+}
+
+test('current runs require complete solution contracts and freeze every planned expectation', async t => {
+  const { root, files } = await computationWorkspace(t);
+  const contract = await loadQualityContract(root, acceptance, true);
+  assert.equal(contract.plan.schemaVersion, 2);
+  assert.equal(contract.solution.capabilities[0].required, true);
+  for (const name of ['acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json']) {
+    await fs.appendFile(path.join(root, name), ' ');
+    await assert.rejects(assertQualityContract(root, contract), /changed after planning/);
+    await fs.writeFile(path.join(root, name), files[name]);
+  }
+  await fs.rm(path.join(root, 'evaluation-plan.json'));
+  await assert.rejects(loadQualityContract(root, acceptance), /Missing required quality contract: evaluation-plan/);
+  await fs.rm(path.join(root, 'solution-contract.json'));
+  await assert.rejects(loadQualityContract(root, acceptance, true), /Missing required quality contract: solution-contract/);
+});
+
+test('evaluation keys are sealed outside implementation workspace and restored without changing the frozen hash', async t => {
+  const { root, files } = await computationWorkspace(t);
+  const host = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-quality-host-'));
+  t.after(() => fs.rm(host, { recursive: true, force: true }));
+  const contract = await loadQualityContract(root, acceptance, true);
+  await assert.rejects(sealEvaluationPlan(root, contract, path.join(root, 'keys.json')), /outside the builder workspace/);
+  await sealEvaluationPlan(root, contract, path.join(host, 'keys.json'));
+  await assert.rejects(fs.stat(path.join(root, 'evaluation-plan.json')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(host, 'keys.json'), 'utf8'), files['evaluation-plan.json']);
+  await assertQualityContract(root, contract);
+  assert.equal(reportPassed(await verifyApplication(root, process.execPath, contract), true), true);
+  await fs.writeFile(path.join(root, 'evaluation-plan.json'), files['evaluation-plan.json']);
+  await assert.rejects(assertQualityContract(root, contract), /sealed evaluation plan was recreated/);
+  await fs.rm(path.join(root, 'evaluation-plan.json'));
+  await restoreEvaluationPlan(root, contract);
+  assert.equal(contract.sealedEvaluation, false);
+  assert.equal(await fs.readFile(path.join(root, 'evaluation-plan.json'), 'utf8'), files['evaluation-plan.json']);
+  await assertQualityContract(root, contract);
+});
+
+test('sealing preserves the public protocol but rejects implementation changes to its vocabulary', async t => {
+  const { root } = await computationWorkspace(t);
+  const host = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-protocol-host-'));
+  t.after(() => fs.rm(host, { recursive: true, force: true }));
+  const file = path.join(root, 'solution-contract.json');
+  const solution = JSON.parse(await fs.readFile(file, 'utf8'));
+  solution.invocation = { input: 'Object with values: finite number[].', output: 'Exactly {total: number}.', rules: ['Sum values; empty array totals zero.'] };
+  const body = JSON.stringify(solution);
+  await fs.writeFile(file, body);
+  const contract = await loadQualityContract(root, acceptance, true);
+  await sealEvaluationPlan(root, contract, path.join(host, 'keys.json'));
+  assert.deepEqual(JSON.parse(await fs.readFile(file, 'utf8')).invocation, contract.solution.invocation);
+  await assert.rejects(fs.access(path.join(root, 'evaluation-plan.json')), /ENOENT/);
+  solution.invocation.output = 'Exactly {answer: number}.';
+  await fs.writeFile(file, JSON.stringify(solution));
+  await assert.rejects(assertQualityContract(root, contract), /changed after planning/);
+  await fs.writeFile(file, body);
+  await assertQualityContract(root, contract);
+});
+
+function v2Report() {
+  const runtime = { profile: 'browser', filesHash: 'verified-files', runtime: 'node', environmentNames: [] };
+  return { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, quality: {
+    schemaVersion: 2, contractHash: 'frozen', status: 'passed', requirementsMet: true, errors: [], expectedJourneys: 4,
+    criteria: [{ criterionId: 'R1', requirement: 'Compute totals', status: 'passed', detail: 'Verified', capabilityIds: ['total'] }],
+    journeys: ['primary', 'recovery'].flatMap(id => ['desktop', 'narrow'].map(viewport => ({ id, viewport, title: id, status: 'passed', detail: 'Verified' }))),
+    package: { status: 'passed', cleanCopy: true, profile: runtime.profile, filesHash: runtime.filesHash, detail: 'Clean copy' },
+    capabilities: [{ id: 'total', required: true, criterionIds: ['R1'], evaluationIds: ['reference'], status: 'passed', detail: 'Verified' }],
+    solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime, durationMs: 20,
+      capabilities: [{ id: 'total', required: true, status: 'passed' }], evaluations: [{ id: 'reference', capabilityId: 'total', evaluator: 'numeric',
+        dataset: { name: 'Reference', version: '1', provenance: 'reviewed' }, metric: 'accuracy', threshold: 1, actual: 1, trials: 1, status: 'passed',
+        cases: ['first', 'second'].map(id => ({ id, trial: 1, passed: true, score: 1, durationMs: 1, detail: 'Matches' })) }] }
+  } };
+}
+
+test('version 2 gate rejects failed or missing computational evidence even with green Node and browser checks', () => {
+  assert.equal(reportPassed(v2Report(), true), true);
+  const mutations = [
+    report => { delete report.quality.solutionEvaluation; },
+    report => { report.quality.solutionEvaluation.evaluations = []; },
+    report => { report.quality.solutionEvaluation.evaluations[0].status = 'failed'; },
+    report => { report.quality.solutionEvaluation.evaluations[0].actual = 0.5; },
+    report => { report.quality.solutionEvaluation.evaluations[0].baseline = 1.1; },
+    report => { report.quality.solutionEvaluation.evaluations[0].cases = []; },
+    report => { report.quality.solutionEvaluation.evaluations[0].capabilityId = 'unrelated'; },
+    report => { report.quality.capabilities[0].status = 'failed'; },
+    report => { report.quality.capabilities[0].evaluationIds = []; },
+    report => { report.quality.criteria[0].status = 'unverified'; },
+    report => { report.quality.criteria[0].capabilityIds = []; },
+    report => { delete report.quality.package; },
+    report => { report.quality.package.cleanCopy = false; },
+    report => { report.quality.package.filesHash = 'other-source'; },
+    report => { report.quality.expectedJourneys = 0; },
+    report => { report.quality.journeys.pop(); },
+    report => { report.quality.journeys[1] = report.quality.journeys[0]; }
+  ];
+  for (const mutate of mutations) { const report = v2Report(); mutate(report); assert.equal(reportPassed(report, true), false, String(mutate)); }
+  const cli = v2Report(); cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
+  cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
+  assert.equal(reportPassed(cli, true), true);
+});
+
+for (const evaluator of ['exact', 'numeric', 'schedule']) {
+  test(`deterministic approval rejects incomplete ${evaluator} saved evidence despite passing summaries`, () => {
+    const complete = v2Report();
+    complete.quality.solutionEvaluation.evaluations[0].evaluator = evaluator;
+    assert.equal(reportPassed(complete, true), true, 'Complete deterministic evidence remains approvable.');
+    const mutations = [
+      ['legacy half-correct evaluation', result => {
+        result.threshold = 0.5; result.actual = 0.5;
+        Object.assign(result.cases[1], { passed: false, score: 0 });
+      }],
+      ['weakened threshold with currently passing cases', result => { result.threshold = 0.5; }],
+      ['inflated aggregate score', result => { result.actual = 1.1; }],
+      ['failed case hidden by a perfect aggregate', result => { result.cases[1].passed = false; }],
+      ['non-boolean case pass flag', result => { result.cases[1].passed = 'true'; }],
+      ['partial case score hidden by a pass flag', result => { result.cases[1].score = 0.5; }],
+      ['missing case score', result => { delete result.cases[1].score; }]
+    ];
+    for (const [label, mutate] of mutations) {
+      const report = structuredClone(complete);
+      mutate(report.quality.solutionEvaluation.evaluations[0]);
+      assert.equal(reportPassed(report, true), false, label);
+    }
+  });
+}
+
+test('statistical approval preserves fractional classification and retrieval evidence', () => {
+  for (const evaluator of ['classification', 'retrieval']) {
+    const report = v2Report(), result = report.quality.solutionEvaluation.evaluations[0];
+    Object.assign(result, { evaluator, threshold: 0.6, actual: 0.625, baseline: 0.5,
+      metric: evaluator === 'classification' ? 'mean_label_accuracy' : 'mean_relevant_id_f1' });
+    Object.assign(result.cases[0], { passed: false, score: 0.75 });
+    Object.assign(result.cases[1], { passed: false, score: 0.5 });
+    assert.equal(reportPassed(report, true), true, `${evaluator} may pass its frozen aggregate threshold without perfect cases.`);
+    result.threshold = 0.7;
+    assert.equal(reportPassed(report, true), false, `${evaluator} still must meet its frozen threshold.`);
+  }
+});
+
+test('deterministic approval checks optional evaluations even when their criterion is deferred', () => {
+  for (const evaluator of ['exact', 'numeric', 'schedule']) {
+    const report = v2Report(), quality = report.quality, evaluation = quality.solutionEvaluation;
+    quality.requirementsMet = false;
+    quality.criteria.push({ criterionId: 'R2', requirement: 'Compute an optional result', status: 'unverified',
+      detail: 'The optional workflow is deferred.', capabilityIds: [] });
+    quality.capabilities.push({ id: 'optional', required: false, criterionIds: ['R2'], evaluationIds: ['optional-reference'],
+      status: 'passed', detail: 'Evaluated but not used by an implemented criterion.' });
+    evaluation.capabilities.push({ id: 'optional', required: false, status: 'passed' });
+    const optional = { ...structuredClone(evaluation.evaluations[0]), id: 'optional-reference', capabilityId: 'optional', evaluator };
+    evaluation.evaluations.push(optional);
+    assert.equal(reportPassed(report, true), true, `${evaluator}: complete optional evidence does not prevent prototype approval.`);
+    optional.threshold = 0.5; optional.actual = 0.5;
+    Object.assign(optional.cases[1], { passed: false, score: 0 });
+    assert.equal(reportPassed(report, true), false, `${evaluator}: deferral must not hide incomplete recorded deterministic evidence.`);
+  }
+});
+
+function visuallyReviewedReport() {
+  const report = v2Report(), filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64), sessionId = 'verifier';
+  Object.assign(report.quality, { schemaVersion: 3, contractHash });
+  report.quality.package.filesHash = filesHash;
+  report.quality.solutionEvaluation.runtime.filesHash = filesHash;
+  const captures = [], reviews = [], time = '2026-11-05T12:00:00.000Z';
+  for (const [index, viewport] of ['desktop', 'narrow', 'desktop', 'narrow'].entries()) {
+    const captureId = 'capture-' + index;
+    captures.push({ id: captureId, sessionId, stage: 'verify', viewport, screenshot: '.browser-observations/' + captureId + '.png',
+      screenshotHash: 'c'.repeat(64), filesHash, capturedAt: time, sequence: index * 2 + 1 });
+    reviews.push({ id: 'review-' + index, sessionId, stage: 'verify', viewport, captureId, round: index < 2 ? 'initial' : 'recheck',
+      expected: 'The result and recovery controls fit the viewport.', observed: 'The result and recovery controls are visible without clipping.',
+      findings: [], resolutions: [], reviewedAt: time, sequence: index * 2 + 2 });
+  }
+  report.quality.visualReview = { schemaVersion: 1, runId: 'current-run', contractHash, status: 'passed', filesHash, activeSessionId: sessionId,
+    sessions: [{ id: sessionId, stage: 'verify', startedAt: time, status: 'passed', filesHash, errors: [] }], captures, reviews };
+  return report;
+}
+
+test('the review gate keeps visual review and same-run cleanup while judge gaps await human acceptance', () => {
+  const project = { qualityVersion: 3, runId: 'current-run', workspace: 'synthetic-gate-only', status: 'review',
+    stages: [{ id: 'review', status: 'review' }], processScope: { runId: 'current-run', cleanup: 'confirmed' }, report: visuallyReviewedReport() };
+  const bind = () => { project.verification = { runId: project.runId, reportHash: reportHash(project.report) }; };
+  bind(); assert.doesNotThrow(() => assertReviewState(project));
+  project.report = v2Report(); bind();
+  assert.throws(() => assertReviewState(project), /Passing automated tests/);
+  project.report = visuallyReviewedReport(); project.report.independentJudge = { verdict: 'NOT', gaps: [{ requirement: 'R1', evidence: 'Synthetic gap', fix: 'Implement the missing output.' }] }; bind();
+  assert.doesNotThrow(() => assertReviewState(project));
+  assert.equal(reportPassed(project.report, 3), true);
+  project.report = visuallyReviewedReport(); bind(); project.processScope.cleanup = 'pending';
+  assert.throws(() => assertReviewState(project), /cleanup must be confirmed/);
+  project.processScope.cleanup = 'confirmed'; project.processScope.runId = 'other-run';
+  assert.throws(() => assertReviewState(project), /cleanup must be confirmed/);
+});
+
+test('version 3 CLI delivery uses the validated manifest without requiring a root HTML page', async t => {
+  const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-v3-manifest-'));
+  t.after(() => fs.rm(workspace, { recursive: true, force: true }));
+  await fs.writeFile(path.join(workspace, 'engine.mjs'), 'console.log(2);');
+  const report = v2Report(); report.quality.schemaVersion = 3;
+  report.quality.package.profile = 'cli'; report.quality.solutionEvaluation.runtime.profile = 'cli';
+  report.quality.expectedJourneys = 0; report.quality.journeys = [];
+  report.sourceHash = await sourceHash(workspace);
+  const project = { title: 'Synthetic manifest fixture', qualityVersion: 3, runId: 'current-run', workspace, status: 'review', report,
+    stages: [{ id: 'review', status: 'review' }], processScope: { runId: 'current-run', cleanup: 'confirmed' },
+    verification: { runId: 'current-run', reportHash: reportHash(report) } };
+  assert.deepEqual((await verifiedManifest(project)).map(file => file.path), ['engine.mjs']);
+  await fs.appendFile(path.join(workspace, 'engine.mjs'), '// Unverified edit');
+  await assert.rejects(verifiedManifest(project), /changed after verification/);
+});
+
+test('version 3 approval gate requires complete verifier comparisons of the delivered revision', () => {
+  assert.equal(reportPassed(visuallyReviewedReport(), 3), true);
+  const mutations = [
+    report => { delete report.quality.visualReview; },
+    report => { report.quality.schemaVersion = 2; },
+    report => { report.quality.visualReview.contractHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.status = 'pending'; },
+    report => { report.quality.visualReview.sessions[0].status = 'failed'; },
+    report => { report.quality.visualReview.sessions[0].errors = ['A visual finding is still open.']; },
+    report => { report.quality.visualReview.captures.at(-1).filesHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.reviews.pop(); },
+    report => { report.quality.visualReview.reviews[2].captureId = report.quality.visualReview.reviews[0].captureId; },
+    report => { report.quality.visualReview.reviews[0].findings = [{ id: 'clipping', description: 'The action is clipped.' }]; },
+    report => {
+      const visual = report.quality.visualReview;
+      for (const item of [...visual.sessions, ...visual.captures, ...visual.reviews]) item.stage = 'build';
+    }
+  ];
+  for (const mutate of mutations) { const report = visuallyReviewedReport(); mutate(report); assert.equal(reportPassed(report, 3), false, String(mutate)); }
+  assert.equal(reportPassed(v2Report(), 2), true, 'Legacy reports remain readable without claiming visual review.');
+  assert.equal(reportPassed(v2Report(), 3), false, 'New projects cannot downgrade their required evidence version.');
+  const cli = v2Report(); cli.quality.schemaVersion = 3;
+  cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
+  cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
+  assert.equal(reportPassed(cli, 3), true, 'CLI delivery has no visual review requirement.');
+});
+
+test('workflow-aware visual reports must cover the same journeys as independent verification before approval', () => {
+  const report = visuallyReviewedReport(), visual = report.quality.visualReview;
+  const ids = [...new Set(report.quality.journeys.map(journey => journey.id))];
+  visual.schemaVersion = 2;
+  visual.sessions[0].requiredJourneyIds = ids;
+  for (const [index, capture] of visual.captures.entries()) {
+    capture.journey = { id: ids[Math.floor(index / 2)], status: 'passed', completedSteps: 2, totalSteps: 2, detail: 'All workflow steps completed.' };
+    capture.errors = [];
+  }
+  assert.equal(reportPassed(report, 3), true);
+  for (const mutate of [
+    value => { value.quality.visualReview.sessions[0].requiredJourneyIds = []; },
+    value => { delete value.quality.visualReview.captures[0].journey; },
+    value => { value.quality.visualReview.captures[0].journey.status = 'failed'; },
+    value => { value.quality.visualReview.captures[0].errors = ['The application threw while saving.']; },
+    value => { value.quality.visualReview.captures[0].filesHash = 'd'.repeat(64); },
+  ]) {
+    const changed = structuredClone(report); mutate(changed);
+    assert.equal(reportPassed(changed, 3), false, String(mutate));
+  }
+});
+
+test('clean CLI verification passes real computation and rejects a hardcoded demo despite passing developer tests', async t => {
+  for (const broken of [false, true]) {
+    const { root } = await computationWorkspace(t, broken);
+    const contract = await loadQualityContract(root, acceptance, true);
+    const report = await verifyApplication(root, process.execPath, contract);
+    assert.equal(report.exitCode, 0);
+    assert.equal(report.passed, 1);
+    assert.equal(report.quality.schemaVersion, 2);
+    assert.equal(report.quality.package.cleanCopy, true);
+    assert.equal(report.quality.solutionEvaluation.evaluations[0].status, broken ? 'failed' : 'passed');
+    assert.equal(report.quality.criteria[0].status, broken ? 'failed' : 'passed');
+    assert.equal(reportPassed(report, true), !broken);
+    assert.equal(report.sourceHash, await sourceHash(root));
+  }
+});
+
+test('developer setup cannot seed the state that makes an otherwise broken delivered engine pass', async t => {
+  const { root } = await computationWorkspace(t);
+  await fs.writeFile(path.join(root, 'math.mjs'), `import { existsSync } from 'node:fs'; import path from 'node:path';
+export const sum = values => existsSync(path.join(process.env.TMPDIR, 'developer-initialized')) ? values.reduce((total, value) => total + value, 0) : 0;`);
+  await fs.writeFile(path.join(root, 'math.test.mjs'), `import test from 'node:test'; import assert from 'node:assert/strict'; import { writeFileSync } from 'node:fs'; import path from 'node:path'; import { sum } from './math.mjs';
+test('development setup initializes state', () => { writeFileSync(path.join(process.env.TMPDIR, 'developer-initialized'), 'ready'); assert.equal(sum([2, 3]), 5); });`);
+  const contract = await loadQualityContract(root, acceptance, true);
+  const report = await verifyApplication(root, process.execPath, contract);
+  assert.equal(report.exitCode, 0, JSON.stringify(report)); assert.equal(report.passed, 1);
+  assert.equal(report.quality.solutionEvaluation.evaluations[0].actual, 0);
+  assert.equal(report.quality.solutionEvaluation.evaluations[0].status, 'failed');
+  assert.equal(reportPassed(report, true), false);
+});
+
+test('browser delivery starts cold without inheriting service state from successful host evaluation', { timeout: 30_000 }, async t => {
+  const { root, files } = await computationWorkspace(t);
+  const plan = JSON.parse(qualityFixture(['R1'])['acceptance-plan.json']);
+  plan.schemaVersion = 2; plan.criteria[0].capabilityIds = ['total'];
+  const solution = JSON.parse(files['solution-contract.json']);
+  solution.runtime = { profile: 'service', files: ['engine.mjs', 'math.mjs'], requiredEnv: [],
+    command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] }, healthPath: '/health', invokePath: '/invoke' };
+  await fs.writeFile(path.join(root, 'solution-contract.json'), JSON.stringify(solution));
+  await fs.writeFile(path.join(root, 'acceptance-plan.json'), JSON.stringify(plan));
+  await fs.writeFile(path.join(root, 'engine.mjs'), `import { createServer } from 'node:http'; import { sum } from './math.mjs';
+let initialized = false;
+createServer(async (request, response) => {
+  if (request.url === '/health') { response.end('healthy'); return; }
+  if (request.url === '/invoke') { let body = ''; for await (const chunk of request) body += chunk; initialized = true; response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ total: sum(JSON.parse(body).values) })); return; }
+  response.setHeader('content-type', 'text/html'); response.end(initialized ? ${JSON.stringify(qualityFixtureHtml)} : '<h1>Cold startup is broken</h1>');
+}).listen(Number(process.env.PORT), process.env.HOST);`);
+  const contract = await loadQualityContract(root, acceptance, true);
+  const report = await verifyApplication(root, process.execPath, contract, undefined, { browserTimeoutMs: 15000, browserStepTimeoutMs: 300 });
+  assert.equal(report.quality.solutionEvaluation.status, 'passed');
+  assert.equal(report.exitCode, 0);
+  assert.ok(report.quality.journeys.length > 0);
+  assert.ok(report.quality.journeys.every(journey => journey.status === 'failed'));
+  assert.equal(reportPassed(report, true), false);
+});
+
+test('unavailable runtime dependencies produce failed package evidence for repair without falling back to samples', async t => {
+  const { root, files } = await computationWorkspace(t);
+  const solution = JSON.parse(files['solution-contract.json']);
+  solution.runtime.requiredEnv = ['APPYARD_TEST_MISSING_MODEL_CREDENTIAL_173843'];
+  delete process.env.APPYARD_TEST_MISSING_MODEL_CREDENTIAL_173843;
+  await fs.writeFile(path.join(root, 'solution-contract.json'), JSON.stringify(solution));
+  const contract = await loadQualityContract(root, acceptance, true);
+  const report = await verifyApplication(root, process.execPath, contract);
+  assert.equal(report.quality.package.status, 'failed');
+  assert.equal(report.quality.package.cleanCopy, false);
+  assert.equal(report.exitCode, null);
+  assert.equal(report.total, 0);
+  assert.match(report.quality.errors[0], /Missing required runtime environment/);
+  assert.equal(reportPassed(report, true), false);
+});
+
+test('passing delivered browser journeys cannot conceal a failing computational engine', { timeout: 30_000 }, async t => {
+  const { root, files } = await computationWorkspace(t, true);
+  const plan = JSON.parse(qualityFixture(['R1'])['acceptance-plan.json']);
+  plan.schemaVersion = 2; plan.criteria[0].capabilityIds = ['total'];
+  const solution = JSON.parse(files['solution-contract.json']);
+  solution.runtime = { profile: 'browser', entrypoint: 'index.html', files: ['index.html', 'engine.mjs', 'math.mjs'], requiredEnv: [],
+    evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+  await fs.writeFile(path.join(root, 'acceptance-plan.json'), JSON.stringify(plan));
+  await fs.writeFile(path.join(root, 'solution-contract.json'), JSON.stringify(solution));
+  await fs.writeFile(path.join(root, 'index.html'), qualityFixtureHtml);
+  const contract = await loadQualityContract(root, acceptance, true);
+  const report = await verifyApplication(root, process.execPath, contract, undefined, { browserTimeoutMs: 20_000, browserStepTimeoutMs: 2_000 });
+  assert.equal(report.passed, 1);
+  assert.equal(report.quality.journeys.length, 4);
+  assert.ok(report.quality.journeys.every(journey => journey.status === 'passed'), JSON.stringify(report.quality.journeys));
+  assert.equal(report.quality.capabilities[0].status, 'failed');
+  assert.equal(report.quality.criteria[0].status, 'failed');
+  assert.equal(reportPassed(report, true), false);
+  for (const journey of report.quality.journeys) assert.ok((await fs.stat(path.join(root, journey.screenshot))).size > 0);
+});
+
+test('developer tests use declared installed dependencies in the clean package without ambient helpers or answer keys', async t => {
+  const { root, files } = await computationWorkspace(t);
+  const tarEntry = (name, text) => {
+    const content = Buffer.from(text), header = Buffer.alloc(512);
+    header.write(name, 0); header.write('0000644\0', 100); header.write('0000000\0', 108); header.write('0000000\0', 116);
+    header.write(content.length.toString(8).padStart(11, '0') + '\0', 124); header.write('00000000000\0', 136);
+    header.fill(32, 148, 156); header.write('0', 156); header.write('ustar\0', 257); header.write('00', 263);
+    header.write(header.reduce((sum, byte) => sum + byte, 0).toString(8).padStart(6, '0') + '\0 ', 148);
+    return Buffer.concat([header, content, Buffer.alloc((512 - content.length % 512) % 512)]);
+  };
+  const tarball = gzipSync(Buffer.concat([
+    tarEntry('package/package.json', JSON.stringify({ name: 'fixture-math', version: '1.0.0', main: 'index.cjs' })),
+    tarEntry('package/index.cjs', 'exports.sum = values => values.reduce((a,b) => a+b, 0);'), Buffer.alloc(1024)
+  ]));
+  const registry = createServer((request, response) => {
+    if (request.url === '/fixture-math.tgz') response.writeHead(200, { 'Content-Type': 'application/octet-stream' }).end(tarball);
+    else response.writeHead(404).end();
+  });
+  await new Promise(resolve => registry.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => registry.close(resolve)));
+  const solution = JSON.parse(files['solution-contract.json']);
+  solution.runtime.files.push('package.json', 'package-lock.json');
+  solution.runtime.dependencies = { manager: 'npm', manifest: 'package.json', lockfile: 'package-lock.json' };
+  const packageJson = { name: 'clean-quality-test', version: '1.0.0', private: true, dependencies: { 'fixture-math': '1.0.0' } };
+  const lock = { name: packageJson.name, version: packageJson.version, lockfileVersion: 3, requires: true, packages: {
+    '': packageJson, 'node_modules/fixture-math': { version: '1.0.0', resolved: `http://127.0.0.1:${registry.address().port}/fixture-math.tgz`,
+      integrity: 'sha512-' + createHash('sha512').update(tarball).digest('base64') }
+  } };
+  await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(packageJson));
+  await fs.writeFile(path.join(root, 'package-lock.json'), JSON.stringify(lock));
+  await fs.writeFile(path.join(root, 'math.mjs'), "import math from 'fixture-math'; export const sum = math.sum;");
+  await fs.writeFile(path.join(root, 'not-delivered.json'), '{"hidden":"ambient fixture"}');
+  await fs.writeFile(path.join(root, 'math.test.mjs'), `import test from 'node:test'; import assert from 'node:assert/strict'; import { existsSync } from 'node:fs'; import { sum } from './math.mjs';
+test('locked dependency without ambient workspace', () => { assert.equal(sum([2,3]), 5); assert.equal(existsSync('not-delivered.json'), false); assert.equal(existsSync('evaluation-plan.json'), false); });`);
+  await fs.writeFile(path.join(root, 'solution-contract.json'), JSON.stringify(solution));
+  const contract = await loadQualityContract(root, acceptance, true);
+  const report = await verifyApplication(root, process.execPath, contract);
+  assert.equal(reportPassed(report, true), true, report.output);
+  await assert.rejects(fs.stat(path.join(root, 'node_modules')), { code: 'ENOENT' });
 });
