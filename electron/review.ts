@@ -87,5 +87,6 @@ export function reviewIterationPrompt(record: ReviewRecord): string {
   return ['## Requested review changes',
     'This is another iteration of the existing app. Read the previous implementation and planning context in .review-source/. Reuse working code and behavior while addressing the reviewer comments below. The previous run is preserved.',
     'Research and planning must account for each comment, and verification must check the requested corrections. Original requirements and independent verification still apply. Preserve .review-source/ as reference material; its old tests do not count as current evidence.',
+    'Copy an old test only if it still describes what this version should do. A test for behavior these comments change or a design you replace must be updated or left out now, and named in verification.md. Every test in the workspace when implementation ends is frozen, must pass, and cannot change afterwards.',
     'Reviewed run: ' + record.runId, 'Reviewer comments:', record.feedback].join('\n\n');
 }
