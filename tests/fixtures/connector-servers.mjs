@@ -11,10 +11,13 @@ export async function startConnectorServers(initial = {}) {
   const distinctive = `SYNTHETIC_ONLY_${randomUUID().replaceAll('-', '')}`;
   const tokens = new Set(), refreshTokens = new Set(), codes = new Map();
   let base = '', currentAccess = '', currentRefresh = '';
+  // A refresh keeps the scopes of the sign-in it came from, even when several accounts share this server.
+  const refreshScopes = new Map();
   const issue = scope => {
     currentAccess = `${distinctive}_access_${tokens.size}`;
     currentRefresh = `${distinctive}_refresh_${refreshTokens.size}`;
     tokens.add(currentAccess); refreshTokens.add(currentRefresh);
+    refreshScopes.set(currentRefresh, scope);
     return { token_type: 'Bearer', access_token: currentAccess, refresh_token: currentRefresh,
       expires_in: state.expiresIn ?? 3600, scope: state.grantedScope ?? scope };
   };
@@ -71,8 +74,9 @@ export async function startConnectorServers(initial = {}) {
         if (!refreshTokens.has(form.get('refresh_token'))) return send(res, 400, { error: 'invalid_grant' });
         state.refreshes++;
         // Rotation proves the adapter saves the new refresh token.
+        const grantedBefore = refreshScopes.get(form.get('refresh_token'));
         refreshTokens.delete(form.get('refresh_token'));
-        const data = issue(state.authorizations.at(-1)?.scopes.join(' ') ?? state.deviceScope);
+        const data = issue(grantedBefore ?? state.authorizations.at(-1)?.scopes.join(' ') ?? state.deviceScope);
         if (state.refreshDelayMs) {
           const timer = setTimeout(() => { timers.delete(timer); send(res, 200, data); }, state.refreshDelayMs); timers.add(timer); return;
         }

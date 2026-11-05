@@ -52,8 +52,9 @@ export function fixtureSource(configuration: ReturnType<typeof connectorConfigur
 export function connectorEncryption(isPackaged: boolean, env: NodeJS.ProcessEnv, native: Encryption): Encryption {
   if (isPackaged || env.APPYARD_CONNECTOR_TEST_MODE !== '1') return native;
   if (!connectorConfiguration(isPackaged, env).fixture) return native;
-  if (native.isEncryptionAvailable() && native.getSelectedStorageBackend?.() !== 'basic_text') return native;
+  // When the test key is supplied, never touch the OS keychain: probing it can open a system prompt and hang an unattended run.
   const encoded = env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY;
+  if (!encoded && native.isEncryptionAvailable() && native.getSelectedStorageBackend?.() !== 'basic_text') return native;
   if (!encoded || !/^[a-f0-9]{64}$/.test(encoded)) throw new Error('Local test encryption is not configured. Start the connector smoke script again.');
   const key = Buffer.from(encoded, 'hex'), header = Buffer.from('appyard-connector-test-v1\0');
   return {

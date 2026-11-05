@@ -68,14 +68,19 @@ async function checkAndSave(card) {
   const choices = card.locator('.connector-choices');
   if (!(await choices.evaluate(element => element.open))) await choices.locator('summary').click();
   await card.getByRole('button', { name: 'Check data', exact: true }).click();
-  await card.getByRole('heading', { name: 'Check it', exact: true }).waitFor();
+  await card.getByRole('heading', { name: 'Check it', exact: true }).waitFor({ timeout: 15_000 }).catch(async error => {
+    console.log('Card at failure:', (await card.innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 900));
+    throw error;
+  });
   const text = await card.locator('.connector-preview').innerText(); assertNoSecrets(text);
   assert.match(text, /2 items ready/);
   await card.getByRole('button', { name: 'Use this', exact: true }).click();
   await card.locator('.connector-preview').waitFor({ state: 'hidden' });
   await card.getByRole('status').filter({ hasText: 'Sample data ready: 2 items.' }).waitFor();
 }
+const step = name => console.log(new Date().toISOString().slice(11, 19), name);
 try {
+  step('launch');
   let launched = await launch(); app = launched.application; let page = launched.page;
   await openConnectors(page);
   await page.locator('.connector-card').first().waitFor();
@@ -106,15 +111,18 @@ try {
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   await page.waitForFunction(() => document.querySelectorAll('.connector-saved').length === 7);
 
+  step('sample cards done');
   // Exercise the real OS encryption implementation through the real store.
   // Return only booleans, never the distinctive synthetic value or ciphertext.
+  // Opt-in only. The real keychain can open a system prompt, which would hang an unattended run.
+  let nativeStorage = { exercised: false, reason: 'set APPYARD_NATIVE_KEYCHAIN_CHECK=1 to exercise the real keychain' };
+  if (process.env.APPYARD_NATIVE_KEYCHAIN_CHECK === '1') {
   const nativeRun = await new Promise(resolve => execFile(electronBinary, [path.resolve('scripts/connector-native-check.mjs'), path.join(root, 'native-storage-check')],
     { env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined }, timeout: 60_000 }, (error, stdout) => resolve({ error, stdout: String(stdout) })));
   assertNoSecrets(nativeRun.stdout);
   const reports = [...nativeRun.stdout.matchAll(/^NATIVE (.*)$/gm)];
   assert.equal(reports.length, 1, 'The native storage check must return one result.');
   const nativeResult = JSON.parse(reports[0][1]);
-  let nativeStorage;
   if (nativeResult.error === 'Secure storage is unavailable. Use sample data.') {
     assert.deepEqual(nativeResult, { error: 'Secure storage is unavailable. Use sample data.' });
     assert.equal(nativeRun.error?.code, 1); assert.equal(nativeRun.error?.killed, false); assert.equal(nativeRun.error?.signal, null);
@@ -126,6 +134,8 @@ try {
     nativeStorage = nativeResult;
   }
 
+  step('native storage done');
+  }
   // All actions below go through the real screen, preload, IPC and adapters.
   // Sign-in opens the ordinary system browser. The local provider redirects to
   // the adapter's real loopback callback and checks its authorization proof.
@@ -152,7 +162,9 @@ try {
   assert.match(echoed, /1 item ready/); assertNoSecrets(echoed);
   await serviceCard.getByRole('button', { name: 'Cancel', exact: true }).click();
   dataService.setMode('header'); await checkAndSave(serviceCard);
+  step('data service done');
   for (const name of ['Gmail', 'Outlook']) {
+    step('sign-in ' + name);
     const card = page.getByRole('article', { name, exact: true });
     await card.getByRole('button', { name: 'Connect', exact: true }).click();
     if (name === 'Outlook') await question(card, 'Which Microsoft account?', 'commercial');
@@ -165,6 +177,7 @@ try {
   assert.ok(dataService.requests.every(request => request.method === 'GET'));
   const connectedIds = await page.evaluate(async () => (await window.fleetHarness.connectors.list()).filter(card => card.signedIn).map(card => ({ kind: card.kind, id: card.signedIn.id })));
   assert.equal(connectedIds.length, 3);
+  step('sign-ins done');
   // Restart the actual process, retaining native encrypted credentials.
   await app.close(); app = undefined;
   await scanSaved(stateDir); assertNoSecrets(JSON.stringify(logs));
@@ -179,6 +192,7 @@ try {
   await checkAndSave(serviceCard);
   assert.equal(accounts.state.pkceVerified, 2);
 
+  step('restart and refresh done');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('radio', { name: 'Pi Model providers' }).check();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
@@ -199,12 +213,20 @@ try {
   await brief.getByRole('button', { name: 'Save challenge', exact: true }).click();
   await page.getByText('Challenge saved.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
+  step('starting fixture build');
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
-  await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, { timeout: 120_000 });
+  for (let waited = 0; waited < 240; waited++) {
+    const status = await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status, id);
+    if (['review', 'failed', 'stopped'].includes(status)) break;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  step('fixture build finished');
   const final = await page.evaluate(async id => (await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id), id);
   assertNoSecrets(JSON.stringify(final));
-  assert.equal(final.status, 'review', final.error);
+  console.log('Build result:', final.status, String(final.error ?? '').slice(0, 400), (final.stages ?? []).map(stage => stage.id + ':' + stage.status).join(' '));
+  for (const log of (final.logs ?? []).slice(-6)) console.log(' log', log.stage, log.kind, String(log.text).slice(0, 240));
+  assert.equal(final.status, 'review', String(final.error ?? 'no error recorded'));
   assert.equal(final.report.passed, 1); assert.equal(final.connectedData.length, 4);
   assert.ok(final.runCheckpoint.connectedContextHash); await assertContext(final.workspace, final.runCheckpoint.connectedContextHash);
   const requirements = await fs.readFile(path.join(final.workspace, 'requirements.md'), 'utf8');
