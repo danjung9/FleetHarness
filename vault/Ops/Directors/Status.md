@@ -3,21 +3,21 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Meeting 169: merged fixture checks pass, three current benchmark builds fail, and existing owners retain the remaining work."
+summary: "Meeting 189: current native QA has failures; R5 has four failed builds; existing owners retain implementation."
 ---
 
 # Team status
 
-[E, [[Research/QA/Auto/f2e5422]]] Done: 934/934 unit and 94/94 harness tests pass outside the sandbox with fixtures. The report lists 15 successful screen scripts; the charter says 16, so that count needs reconciliation. [[Research/QA/Acceptance/Review-3da8ad8]] independently confirms four bounded native/browser passes at its stated revision. Full delivered-app acceptance remains pending.
+[E, [[Research/QA/Auto/5f4eb39]], 03:39 to 03:53 EST] Current fixture QA: compilation/type checks and 94/94 harness tests pass. Unit tests fail: 971 total, 964 passed, six failed; seven problem names are listed, leaving the count unresolved. Smoke-electron times out; the other 14 screen scripts pass. These ran outside the seat sandbox. Causes need evidence, not a blanket environment exemption.
 
-[E, [[Research/QA/Ten/Scoreboard]] and R5 finals] Three of ten finished, zero automatic passes, zero satisfactory, at f2e5422 plus scratch changes. IDs 12/36 record frozen-plan errors before cleanup rejection. [[Research/QA/Officer/JUDGE-R5-id11-training]] now confirms ID 11's prepared-key ordering contradiction and retains NOT. The sealed evaluator plan is still missing.
+[E] Done: [[Research/QA/Acceptance/Review-3da8ad8]] confirms four bounded native/browser receipts at its stated revision. [[Research/RandE/UX/Merged-Walkthrough]] completes six source/screenshot findings. [[Research/QA/Officer/JUDGE-R5-id11-training]] confirms a prepared-key contradiction and retains NOT; the sealed evaluator remains missing.
 
-[E, closing relay/patch] mvp is now 5f4eb39: shutdown confirmation, frozen-plan restoration, local packaging, service containers and changes after delivery. It retains Dan through 29ac921, connectors and sign-in. Native/benchmark closure on this revision is unverified. Dev-1's App.tsx and dev-2's smoke-quality changes must preserve the landed additions. Separate budget/Windows branches and hosted prod retain separate evidence.
+[E, [[Research/QA/Ten/Scoreboard]]] R5 finished four of ten builds, all failed, zero satisfactory, at f2e5422 plus scratch changes. Plan rejection, computation failure and shutdown warnings need distinct attribution. Exact executed bytes remain unverified.
 
-[E, [[Research/RandE/UX/Merged-Walkthrough]]] Research finished six source/screenshot findings. Lost brief edits, account switching and Stop reachability lead the handoff for Dan; those paths lack new runtime reproduction. Dev-3's local journal reports 188 passing connector wording checks; review/landing is unverified.
+[E, relay] mvp 5f4eb39 includes frozen-plan restoration, process-based shutdown confirmation, local packaging, service containers and changes after delivery. Dan's work through 29ac921 remains integrated. These additions lack complete native/benchmark acceptance. Budget, Windows and hosted branches retain separate evidence.
 
-[R] In progress: Quality's runner finishes IDs 12/36 triage; ID 11's review is complete. Main owns real runs, shutdown recovery and missing evaluator/native evidence. Existing owners finish integration and acceptance of the landed packaging and change-request work. Writer retains one submission package. Return the confirmed planning inconsistency to the existing factory owner. No duplicate tasks or research scans; protect Dan's frontend. Fix demonstrated factory failures without changing frozen expectations or hand-editing outputs.
+[E/R, current queue and chair decision] Quality's runner is updating R5 chronology. One new native-failure triage follows it. Builder already owns planning consistency; dev-1/dev-3 retain gate returns; dev-2's completed label patch needs queue/claim reconciliation. Code seats remain disabled. Main owns execution, integration and shutdown recovery; existing Acceptance owners retain delivery/Resume checks. Research idles. Preserve Dan's frontend and landed callbacks/assertions. Writer retains one package with dated claims.
 
-[R] Person-only: approve final bytes and submission; confirm portal/team/form/terms, category and partial eligibility; confirm user/process and arrange the existing synthetic trial; resolve contribution rights and mission/technical owners. Full access is already decided. Keep noon freeze, 1:15 PM target and 2 PM EST deadline.
+[R] Person-only: accept final bytes and authorize submission; confirm portal/team/form/terms, category and partial eligibility, user/process and measured burden, contribution rights and mission/technical owners. Full access is settled. Keep noon freeze, 1:15 PM target and 2 PM EST deadline.
 
-[E, snapshot-169, 02:49:23 EST] Organization tokens: 19,008,993 of 1,000,000,000, up 6,249,407 since snapshot-118. This predates R5; current meeting usage and dollar cost are unknown. Central log/session/status transfer remains pending in [[Ops/Directors/Sprint/Product-Meeting-169]].
+[E, snapshot-189, 03:45:58 EST] Organization usage: 21,014,767 of 1,000,000,000 tokens, up 2,005,774 since snapshot-169. Later meeting usage and dollar cost are unknown. Central record transfer is staged in [[Ops/Directors/Sprint/Product-Meeting-189]].

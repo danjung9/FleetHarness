@@ -118,6 +118,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Native build review and source-delivery checker revision 1 | QA script | Prepared independent literal input/output checks through native preview, review gates, stale source denial, real source export and fresh offline exported-copy browser; native execution belongs to main | Event team QA | 2026-11-05 |
 | Screens-f2e5422 | synthetic screenshot dataset | walkthrough evidence | Project QA. | 2026-11-05 |
 | R5 synthetic benchmark records | evidence dataset | QA prioritization | project benchmark. | 2026-11-05 |
+| Local patch interface, version unavailable | document editing | amended local records | session runtime. | 2026-11-05 |
 
 ## Data and sources
 
