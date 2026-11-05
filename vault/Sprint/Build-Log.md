@@ -164,3 +164,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 02:53 dev-2: Renamed overstated labels, including `resumeBuild` to `reopensProject` and `cliExportsRunnablePackage` to `exportInvoked`. Narrowed restart, build and evaluation claims. All assertions and a
 - 02:54 dev-1: Confirmed and fixed. Failed reads now show a pane error with working Retry.
 - 02:55 Automatic QA at f2e5422 on dev/reviewed: all passed. Fixture provider only. `Research/QA/Auto/f2e5422.md`
+- 02:58 dev-3: Audited 94 error literals and notices; corrected ten phrases. All nine required failure cases and synthetic-secret checks pass. Connector suite: 188/188; both type checks pass.
