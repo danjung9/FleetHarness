@@ -7,9 +7,9 @@ import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { build } from 'esbuild';
 import { Sandbox } from '@vercel/sandbox';
-import { prepareFleetWorkspace } from '../dist-worker/harness/integration.js';
-import { newProject, sourceHash, listArtifacts } from '../dist-worker/electron/storage.js';
-import { loadQualityContract } from '../dist-worker/electron/quality.js';
+import { prepareFleetWorkspace } from '../dist-worker/worker/runtime/harness/integration.js';
+import { newProject, sourceHash, listArtifacts } from '../dist-worker/worker/runtime/electron/storage.js';
+import { loadQualityContract } from '../dist-worker/worker/runtime/electron/quality.js';
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-sandbox-smoke-'));

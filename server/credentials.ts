@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { openaiProvider } from '@earendil-works/pi-ai/providers/openai';
-import type { AgentModel } from '../shared/types.js';
+import type { AgentModel } from '../worker/runtime/shared/types.js';
 import { HttpError } from './http.js';
 
 function encryptionKey(encoded = process.env.CREDENTIAL_ENCRYPTION_KEY): Buffer {

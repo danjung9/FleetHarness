@@ -2,8 +2,8 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ModelRuntime } from '@earendil-works/pi-coding-agent';
-import { FleetBackend, type PipelineCheckpoint } from '../electron/pi-backend.js';
-import { Store } from '../electron/storage.js';
+import { FleetBackend, type PipelineCheckpoint } from './runtime/electron/pi-backend.js';
+import { Store } from './runtime/electron/storage.js';
 import { atomicJson, collectArtifacts, readJson, restoreArtifacts, type ArtifactBundle } from './files.js';
 import type { CheckpointPointer, WorkerInput, WorkerProgress } from './types.js';
 

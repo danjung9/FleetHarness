@@ -5,14 +5,18 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { startFixtureProvider } from './mock-provider.mjs';
+import { qualityFixtureProject } from './quality-fixture.mjs';
+import { Store, newProject } from '../dist-electron/electron/storage.js';
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-model-selector-'));
+const store = new Store(path.join(root, 'state')); await store.init();
+store.state.projects[0] = newProject(qualityFixtureProject); await store.save();
 const piDir = path.join(root, 'pi');
 const output = path.resolve('output/playwright/model-selector');
 await fs.mkdir(piDir);
 await fs.mkdir(output, { recursive: true });
 const fixture = await startFixtureProvider();
-const model = (id, name) => ({ id, name, reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } });
+const model = (id, name) => ({ id, name, reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } });
 const provider = models => ({ baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models });
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: {
   'fleet-fixture': provider([model('fixture-a', 'Fixture model A'), model('fixture-b', 'Fixture model B')]),
@@ -40,8 +44,20 @@ try {
   await selector.waitFor();
   assert.equal(await selector.inputValue(), '');
   await selector.selectOption('settings');
-  await page.getByRole('heading', { name: 'Model settings', exact: true }).waitFor();
-  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
+  assert.deepEqual(await page.getByRole('tab').allTextContents(), ['ChatGPT', 'API key', 'GenAI.mil', 'Other model providers']);
+  await page.getByRole('tab', { name: 'ChatGPT', exact: true }).click();
+  assert.equal(await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).isVisible(), true);
+  assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).count(), 0);
+  await page.getByRole('tab', { name: 'API key', exact: true }).click();
+  assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).isVisible(), true);
+  assert.equal(await page.getByRole('button', { name: 'Sign in with API key', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).count(), 0);
+  await page.getByRole('tab', { name: 'GenAI.mil', exact: true }).click();
+  assert.equal(await page.getByLabel('Service address', { exact: true }).inputValue(), 'https://api.genai.mil/v1');
+  assert.equal(await page.getByText('Not connected', { exact: true }).isVisible(), true);
+  assert.equal(await page.getByRole('button', { name: 'Save and connect', exact: true }).isDisabled(), true);
+  await page.getByRole('tab', { name: 'Other model providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByLabel('Model', { exact: true }).selectOption('fixture-a');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
@@ -63,15 +79,18 @@ try {
   assert.equal(await selector.inputValue(), second);
   await capture(page, 'home-desktop.png');
 
-  const screens = ['Flow — build pipeline', 'Preview — development workspace', 'Agents — coding sessions', 'Review — evidence & delivery', 'Brief — requirements', 'Files — artifacts', 'Model settings', 'Home — challenge portfolio'];
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Settings', 'Home \u2014 challenge portfolio'];
   for (const screen of screens) {
-    await page.getByRole('button', { name: screen, exact: true }).first().click();
+    const navigation = ['Build', 'Review', 'Brief', 'Deliver'].includes(screen) ? page.getByRole('navigation', { name: 'Challenge progress', exact: true }) : page;
+    await navigation.getByRole('button', { name: screen, exact: true }).click();
     assert.equal(await selector.isVisible(), true, screen);
     assert.equal(await selector.inputValue(), second, screen);
   }
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
   await capture(page, 'home-minimum.png');
-  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Build', exact: true }).click();
   await selector.focus();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Shift+Tab');
@@ -81,13 +100,28 @@ try {
   fixture.setDelay(2000);
   const id = (await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].id;
   await page.getByRole('button', { name: 'Start build', exact: true }).click();
-  await page.getByRole('button', { name: 'Run Pi agents', exact: true }).click();
-  await page.getByRole('button', { name: 'Stop run', exact: true }).waitFor();
+  await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
+  await page.getByRole('button', { name: 'Stop build', exact: true }).waitFor();
   assert.equal(await selector.isDisabled(), true);
   assert.match(await selector.getAttribute('title'), /Stop active builds/);
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].model, 'fleet-fixture/fixture-b');
-  await assert.rejects(page.evaluate(() => window.fleetHarness.saveSettings({ backend: 'pi', provider: 'fleet-fixture', model: 'fixture-a', rememberKey: false })), /Stop active runs/);
-  await page.evaluate(id => window.fleetHarness.stopRun(id), id);
+  await assert.rejects(page.evaluate(() => window.fleetHarness.saveSettings({ backend: 'pi', provider: 'fleet-fixture', model: 'fixture-a', rememberKey: false })), /Stop active builds and project lead replies before changing accounts or providers\./);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const developerMode = page.getByRole('switch', { name: 'Developer mode', exact: true });
+  assert.equal(await developerMode.isEnabled(), true, 'Developer mode remains available during a build');
+  await developerMode.click();
+  await page.getByRole('switch', { name: 'Developer mode', exact: true, checked: true }).waitFor();
+  assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true);
+  assert.equal(await selector.isDisabled(), true, 'Changing developer mode does not unlock the build model');
+  for (const screen of ['Home \u2014 challenge portfolio', 'Connectors', 'Settings']) {
+    if (screen === 'Connectors') await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: screen, exact: true }).click();
+    const header = page.locator('header[aria-label="Running build"]');
+    assert.equal(await header.getByRole('button', { name: 'Stop build', exact: true }).isVisible(), true, screen);
+    assert.ok((await header.innerText()).includes(qualityFixtureProject.title));
+    await capture(page, 'running-' + screen.split(' ')[0].toLowerCase() + '.png');
+  }
+  await page.locator('header[aria-label="Running build"]').getByRole('button', { name: 'Stop build', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('[aria-label="Build model"]').disabled);
 
   // A failed save leaves the previous model selected and reports the failure.
@@ -127,9 +161,9 @@ try {
   await unavailable.waitFor();
   assert.match(await unavailable.locator('option:checked').textContent(), /fixture-b · not connected/);
   await unavailable.selectOption('settings');
-  await empty.getByRole('heading', { name: 'Model settings', exact: true }).waitFor();
+  await empty.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, allScreens: screens.length, modelAndProviderSwitching: true, settingsSync: true, persistence: true, keyboardFocus: true, runningBuildLock: true, failedSavePreservesModel: true, unavailableModelSetup: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, allScreens: screens.length, modelAndProviderSwitching: true, settingsSync: true, persistence: true, keyboardFocus: true, runningBuildLock: true, developerModeDuringBuild: true, failedSavePreservesModel: true, unavailableModelSetup: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close(); await browser?.close(); await server?.close(); await fixture.close();
   await fs.rm(root, { recursive: true, force: true });

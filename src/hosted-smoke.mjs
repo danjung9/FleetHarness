@@ -68,9 +68,13 @@ try {
   const screenshot = name => page.screenshot({ path: join(tmpdir(), `appyard-hosted-${name}.png`), fullPage: true });
   async function signIn(id) { await page.getByLabel('Email', { exact: true }).fill(`${id}@demo.test`); await page.getByLabel('Password', { exact: true }).fill('demo-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.getByRole('button', { name: 'Sign out', exact: true }).waitFor(); }
   async function signOut() { await page.getByRole('button', { name: 'Sign out', exact: true }).click(); await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor({ state: 'visible' }); await page.getByRole('button', { name: 'Sign in', exact: true }).isEnabled(); }
-  async function brief(title) { await page.getByRole('button', { name: 'New challenge', exact: true }).first().click(); const dialog = page.getByRole('dialog'); await dialog.getByLabel('Challenge title').fill(title); await dialog.getByLabel('Problem statement').fill('Build a small local task board with reliable saved tasks and a clear user interface.'); await dialog.getByLabel('Evaluation criteria (optional)').fill('Add and complete a task.'); await dialog.getByRole('button', { name: 'Save challenge', exact: true }).click(); await page.getByRole('heading', { name: title, exact: true }).waitFor(); }
+  async function brief(title) { await page.getByRole('button', { name: 'New challenge', exact: true }).first().click(); const dialog = page.getByRole('dialog'); await dialog.getByLabel('Challenge title').fill(title); await dialog.getByLabel('Problem statement').fill('Build a small local task board with reliable saved tasks and a clear user interface.'); await dialog.getByLabel('Evaluation criteria (optional)').fill('Add and complete a task.'); await dialog.getByRole('button', { name: 'Save challenge', exact: true }).click(); await page.getByRole('combobox', { name: 'Current challenge' }).waitFor(); }
   await page.goto(base); await page.getByRole('heading', { name: 'Welcome back' }).waitFor(); await screenshot('login');
-  await signIn('a'); await page.getByRole('button', { name: 'Model settings', exact: true }).click();
+  await signIn('a');
+  assert.equal(await page.getByRole('button', { name: 'Data & storage', exact: true }).count(), 0);
+  await page.getByRole('link', { name: 'Explore all 39 demos' }).waitFor();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  assert.equal(await page.getByRole('button', { name: 'Connectors', exact: true }).count(), 0);
   await page.getByLabel('OpenAI API key').fill('sk-test-browser-secret'); await page.getByRole('combobox', { name: 'Model', exact: true }).selectOption('test-model'); await page.getByRole('button', { name: 'Test connection & save', exact: true }).click();
   await page.getByText('OpenAI connected', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => JSON.stringify(localStorage).includes('sk-test-browser-secret')), false);
@@ -90,12 +94,12 @@ try {
   await page.getByText('Model changed to Alternate model.', { exact: true }).waitFor();
   const resumeCount = calls.filter(call => call.path.endsWith('/resume')).length;
   await page.getByRole('button', { name: 'Resume build', exact: true }).first().click();
-  await page.getByRole('heading', { name: 'Model settings', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
   assert.equal(calls.filter(call => call.path.endsWith('/resume')).length, resumeCount);
   await page.getByRole('combobox', { name: 'Model', exact: true }).selectOption('test-model');
   await page.getByRole('button', { name: 'Test connection & save', exact: true }).click();
   await page.getByText('OpenAI connection tested and saved.', { exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Flow — build pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to challenge', exact: true }).click();
   await page.getByRole('button', { name: 'Resume build', exact: true }).first().click();
   await page.getByRole('button', { name: 'Pause build', exact: true }).waitFor();
   const project = accounts.a.projects[0];

@@ -1,4 +1,8 @@
-import { qualityFixture, qualityFixtureHtml } from './quality-fixture.mjs';
+import { qualityFixtureHtml } from './quality-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator } from './solution-fixture.mjs';
+import { syntheticDataFiles } from './data-fixture.mjs';
+import { fixtureVisualReviewInput } from './visual-review-fixture.mjs';
+import { fixturePlanningReviewPaths, fixturePlanningReviewInput } from './planning-review-fixture.mjs';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -12,6 +16,77 @@ export const fixtureSystemDesign = {
   connections: [{ from: 'review-ui', to: 'parser', label: 'Synthetic message text' }, { from: 'review-ui', to: 'local-history', label: 'Save parse history locally' }, { from: 'parser', to: 'review-ui', label: 'Structured task for review' }]
 };
 
+function planningReviewCalls(messages, contentText, tools) {
+  const calls = messages.flatMap(message => message.tool_calls ?? []);
+  if (calls.some(call => call.function?.name === 'fleet_submit_planning_review')) return [];
+  const documents = {}, pending = [];
+  const reader = tools.find(tool => tool.function?.name === 'fleet_read_planning_artifact');
+  for (const path of fixturePlanningReviewPaths(reader?.function?.parameters)) {
+    let offset = 0, body = '';
+    for (;;) {
+      const read = calls.find(call => {
+        if (call.function?.name !== 'fleet_read_planning_artifact') return false;
+        const args = JSON.parse(call.function.arguments);
+        return args.path === path && args.offset === offset;
+      });
+      const result = read && messages.find(message => message.role === 'tool' && message.tool_call_id === read.id);
+      if (!result) {
+        pending.push({ name: 'fleet_read_planning_artifact', arguments: JSON.stringify({ path, offset }) });
+        break;
+      }
+      const page = JSON.parse(contentText(result));
+      body += page.text;
+      if (page.nextOffset === null) { documents[path] = body; break; }
+      if (!Number.isSafeInteger(page.nextOffset) || page.nextOffset <= offset) throw new Error('Fixture planning snapshot pagination did not advance.');
+      offset = page.nextOffset;
+    }
+  }
+  return pending.length ? pending : [{ name: 'fleet_submit_planning_review', arguments: JSON.stringify(fixturePlanningReviewInput(documents)) }];
+}
+
+function browserFixtureCalls(messages, contentText, review) {
+  const calls = messages.flatMap(message => message.tool_calls ?? []);
+  const browserCalls = calls.filter(call => call.function?.name === 'fleet_browser');
+  const args = call => JSON.parse(call.function.arguments);
+  const result = call => JSON.parse(contentText(messages.find(message => message.role === 'tool' && message.tool_call_id === call.id)));
+  const comparisons = [];
+  // Reviewing an existing capture is independent of the next browser action.
+  const browser = input => [...comparisons, { name: 'fleet_browser', arguments: JSON.stringify(input) }];
+  const compare = observation => calls.some(call => call.function?.name === 'fleet_visual_review' && args(call).captureId === observation.captureId)
+    ? [] : [{ name: 'fleet_visual_review', arguments: JSON.stringify(fixtureVisualReviewInput(observation)) }];
+  for (const viewport of ['desktop', 'narrow']) {
+    const openIndex = browserCalls.findIndex(call => args(call).action === 'open' && args(call).viewport === viewport);
+    if (openIndex < 0) return browser({ action: 'open', viewport });
+    const nextOpen = browserCalls.findIndex((call, index) => index > openIndex && args(call).action === 'open');
+    const viewportCalls = browserCalls.slice(openIndex, nextOpen < 0 ? undefined : nextOpen);
+    const opened = viewportCalls[0];
+    const initial = result(opened);
+    if (review) comparisons.push(...compare(initial));
+    if (!viewportCalls.some(call => args(call).action === 'click')) {
+      // Select each action from the latest observation delivered through the SDK.
+      const observed = result(viewportCalls.at(-1));
+      const input = observed.controls.find(control => ['Message', 'Input JSON', 'JSON input'].includes(control.name));
+      if (!input) throw new Error('Fixture browser did not expose its labeled task input.');
+      const text = input.name === 'Message' ? 'TASK: inspect pump' : '"TASK: inspect pump"';
+      if (input.value !== text) return browser({ action: 'type', selector: input.selector, text });
+      const submit = observed.controls.find(control => ['Parse message', 'Run computation'].includes(control.name));
+      if (!submit) throw new Error('Fixture browser did not expose its task action.');
+      return browser({ action: 'click', selector: submit.selector });
+    }
+    if (review) {
+      const observations = initial.journeys?.length
+        ? initial.journeys.map(journey => ({ action: 'journey', journeyId: journey.id, viewport }))
+        : [{ action: 'screenshot', viewport }];
+      for (const observation of observations) {
+        const captured = viewportCalls.find(call => args(call).action === observation.action && args(call).journeyId === observation.journeyId);
+        if (!captured) return browser(observation);
+        comparisons.push(...compare(result(captured)));
+      }
+    }
+  }
+  return comparisons;
+}
+
 // An explicit local test fixture, never registered by production code.
 export async function startFixtureProvider() {
   const requests = [];
@@ -22,13 +97,21 @@ export async function startFixtureProvider() {
     let raw = ''; for await (const chunk of req) raw += chunk;
     const body = JSON.parse(raw); requests.push(body);
     if (delayMs) await new Promise(resolve=>setTimeout(resolve,delayMs));
-    const last = body.messages.at(-1);
-    const prompt = body.messages.filter(m => m.role === 'user').map(m => typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(part => part.text ?? '').join('\n') : JSON.stringify(m.content)).join('\n');
+    const contentText = message => typeof message.content === 'string' ? message.content : Array.isArray(message.content) ? message.content.map(part => part.text ?? '').join('\n') : '';
+    // Pi appends screenshot pixels as a user message with a short attachment
+    // caption. That image-bearing message is still part of the current turn.
+    const isTaskPrompt = message => message.role === 'user' && contentText(message).trim()
+      && !(Array.isArray(message.content) && message.content.some(part => part.type === 'image_url'));
+    const lastPromptIndex = body.messages.findLastIndex(isTaskPrompt);
+    const turnMessages = body.messages.slice(lastPromptIndex);
+    const startingTurn = turnMessages.length === 1;
+    const prompt = body.messages.filter(isTaskPrompt).map(contentText).join('\n');
     let files = [], extraCalls = [];
     const guide = prompt.includes('Implementation is complete.');
     const implementation = prompt.includes('You are the implementation agent') && !guide;
     const verification = prompt.includes('You are the verification agent') || prompt.includes('The independent test run failed');
-    if (last?.role === 'user') {
+    const workflow = /^Implement the first complete user workflow now:|^The primary user workflow checkpoint failed\./.test(contentText(body.messages[lastPromptIndex]));
+    if (startingTurn) {
       if (guide) files = [['README.md', '# Fixture parser user guide\n\nOpen index.html in a browser; no install or server is required.\n\n## Walkthrough\n1. Enter the synthetic input `TASK: inspect pump` in Message.\n2. Select Parse message.\n3. The result is `inspect pump`.\n\n## Data and limitations\nThe fixture strips the TASK prefix; empty input asks you to enter a message. A successful result is retained after reload in browser storage. No export or reset control is provided.\n\n## Troubleshooting\nIf no result appears, select Parse message and check that browser scripts are enabled.\n\n## Developer tests\nWith Node installed, run `node --test parser.test.cjs`. See [verification notes](verification.md) and [field validation](path-to-fleet.md). This is a synthetic integration-test fixture.\n']];
       else if (prompt.includes('The independent test run failed')) files = [
         ['core.cjs', 'exports.parse = text => ({task:text.replace(/^TASK: /,"")});\n'],
@@ -36,31 +119,42 @@ export async function startFixtureProvider() {
       ];
       else if (prompt.includes('You are the verification agent')) files = [['verification.md', '# Verification\nOne source behavior is covered. Operational readiness is unverified.\n']];
       else if (prompt.includes('You are the implementation agent')) files = [
-        ['index.html', html], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
+        ['index.html', html], ['evaluate.cjs', solutionFixtureEvaluator], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
         ['core.cjs', 'exports.parse = text => ({task:"intentional defect"});\n'],
         ['parser.test.cjs', 'const {test}=require("node:test");const assert=require("node:assert/strict");const {parse}=require("./core.cjs");test("extracts a task",()=>assert.deepEqual(parse("TASK: inspect pump"),{task:"inspect pump"}));\n']
       ];
+      else if (prompt.includes('You are the synthetic data agent')) files = Object.entries(syntheticDataFiles);
       else if (prompt.includes('You are the intake agent')) files = [['scope.md', '# Scope assessment\nSynthetic browser prototype only.\n']];
       else if (prompt.includes('You are the research agent')) files = [['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n']];
       else files = [['test-matrix.md', '# Test matrix\nTask extraction requires an application test.\n'], ['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n'], ['plan.md', '# Plan\nCreate a parser and one meaningful behavior test.\n']];
     }
-    if (last?.role === 'user' && prompt.includes('You are the planning agent')) {
+    if (startingTurn && prompt.includes('You are the planning agent')) {
       const ids = /Acceptance IDs: ([^\n]+)/.exec(prompt)?.[1].split(', ').filter(Boolean) ?? [];
-      files.push(...Object.entries(qualityFixture(ids)));
+      try { files.push(...Object.entries(solutionFixture(ids))); }
+      catch (error) {
+        res.writeHead(422, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: { message: error.message, type: 'invalid_request_error' } }));
+        return;
+      }
     }
     const progress = (componentId, status) => ({ name: 'fleet_component_progress', arguments: JSON.stringify({ componentId, status, detail: status === 'building' ? 'Implementing the fixture component.' : 'Fixture implementation written. Independent tests still determine correctness.' }) });
-    if (last?.role === 'user') {
+    if (startingTurn) {
       if (implementation || verification) extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'building'));
       else if (prompt.includes('You are the planning agent')) extraCalls = [{ name: 'fleet_system_design', arguments: JSON.stringify(fixtureSystemDesign) }];
-    } else if ((implementation || verification) && !body.messages.some(m => m.tool_calls?.some(c => c.function?.name === 'fleet_component_progress' && JSON.parse(c.function.arguments).status === 'generated'))) {
+    } else if ((implementation || verification) && !turnMessages.some(m => m.tool_calls?.some(c => c.function?.name === 'fleet_component_progress' && JSON.parse(c.function.arguments).status === 'generated'))) {
       extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'generated'));
     }
-    const calls = [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
+    if (!startingTurn && !extraCalls.length && (workflow || guide || verification)) extraCalls = browserFixtureCalls(turnMessages, contentText, guide || verification);
+    const reviewingPlan = body.tools?.some(tool => tool.function?.name === 'fleet_submit_planning_review');
+    const calls = reviewingPlan ? planningReviewCalls(turnMessages, contentText, body.tools)
+      : [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];
+    const judgment = body.tools?.some(tool => tool.function?.name === 'judge_read');
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
     const base = { id: 'chatcmpl-' + randomUUID(), object: 'chat.completion.chunk', created: Math.floor(Date.now()/1000), model:'fixture-model' };
     function send(delta, finish_reason = null) { res.write('data: ' + JSON.stringify({ ...base, choices: [{index:0, delta, finish_reason}] }) + '\n\n'); }
     send({role:'assistant', content:''});
-    if (calls.length) {
+    if (judgment) {
+      send({ content: JSON.stringify({ verdict: 'SATISFACTORY', gaps: [] }) }); send({}, 'stop');
+    } else if (calls.length) {
       send({tool_calls:calls.map((call, index) => ({index,id:'call_'+randomUUID().replaceAll('-',''),type:'function',function:call}))});
       send({}, 'tool_calls');
     } else { send({content:'Local fixture stage completed. No live model was called.'}); send({}, 'stop'); }

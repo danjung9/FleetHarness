@@ -4,11 +4,17 @@ The hosted build uses Vite/React, Nitro API routes and Vercel Workflow. OpenAI a
 
 Each account owns its projects and encrypted OpenAI connection. Signing out or closing a tab leaves the durable workflow running. Pause saves the last completed stage; Resume restores that checkpoint in a new sandbox and may rerun the interrupted stage. A process crash follows the same recovery path. A run cannot resume with a different model.
 
+## Application updates and demos
+
+The hosted UI includes the application development from `codex/main-update`. Authentication, account storage, encryption, workflows and build APIs remain hosted. The production engine and skills are preserved in `worker/runtime/` so existing checkpoints and verification reports keep their original contracts. Desktop-only connectors, attached data files, conversation tools and local storage management are not exposed on the hosted site.
+
+All 39 refined Norfolk demos are available at `/demos/index.html`, with a link from Home. These standalone demos use synthetic data and browser-local state; they do not create or replace account builds.
+
 ## Deployment
 
 Keep hosted changes on branches based on `prod` and test staging before merging into `prod`. The production GitHub Actions workflow deploys only pushes to `prod` to `fleetharness-studio`. The `main` branch retains the local Electron application and static browser preview. On `prod`, `vercel.json` runs `npm run build:hosted`; Nitro produces the Vercel Build Output API directory automatically.
 
-The current Vercel Hobby project belongs to George. For this private repository, commits authored by other teammates are blocked even when GitHub Actions uses `vercel deploy --prebuilt`. A successful build or a triggered workflow does not confirm deployment. Team-wide automatic deployment requires an appropriate Vercel team plan and contributor access; see [Vercel's project collaboration rules](https://vercel.com/docs/deployments/troubleshoot-project-collaboration). The verified George-authored staging deployment remains usable for the demo.
+The production repository is public. A successful build alone does not confirm deployment: check the production workflow result and the live application after each push to `prod`.
 
 Staging is a separate Vercel project, `fleetharness-staging`, at `https://fleetharness-staging.vercel.app`. Its public address is needed so sandbox workers can reach the authenticated model proxy. Do not use a Vercel-authentication-protected deployment URL as `APP_ORIGIN`.
 

@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 import { ZipFile } from 'yazl';
-import type { Bootstrap, NewProject, Settings } from '../shared/types.js';
-import { refreshNorfolkCatalog } from '../harness/catalog.js';
+import type { Bootstrap, NewProject, Settings } from '../worker/runtime/shared/types.js';
+import { refreshNorfolkCatalog } from '../worker/runtime/harness/catalog.js';
 import { db, type HostedDatabase, type HostedRun } from './data.js';
 import { decryptKey, encryptKey, openAIModels, validateModelId, validateOpenAIKey } from './credentials.js';
 import { errorResponse, HttpError, json, readJson, requireUuid } from './http.js';

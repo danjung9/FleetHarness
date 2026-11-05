@@ -6,7 +6,7 @@ import os from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { collectArtifacts, restoreArtifacts, validateBundle, digest } from '../dist-worker/worker/files.js';
 import { runWorker, createRuntime } from '../dist-worker/worker/runner.js';
-import { newProject, sourceHash } from '../dist-worker/electron/storage.js';
+import { newProject, sourceHash } from '../dist-worker/worker/runtime/electron/storage.js';
 import { qualityFixture, qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 const resourcesRoot = path.resolve('dist-worker');

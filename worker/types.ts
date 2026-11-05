@@ -1,5 +1,5 @@
-import type { Project, Settings } from '../shared/types.js';
-import type { PipelineCheckpoint } from '../electron/pi-backend.js';
+import type { Project, Settings } from './runtime/shared/types.js';
+import type { PipelineCheckpoint } from './runtime/electron/pi-backend.js';
 
 export interface CheckpointPointer {
   checkpointId: string;

@@ -1,26 +1,21 @@
-.model-settings-form .engine-selector{min-width:0;margin:0 0 24px;padding:0;border:0}
-.model-settings-form .engine-selector legend{padding:0;margin-bottom:10px;font-size:12px;font-weight:600}
-.model-settings-form .engine-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--field-border,var(--line));border-radius:6px;overflow:hidden}
-.model-settings-form .engine-option{display:flex;align-items:center;gap:10px;min-width:0;min-height:72px;margin:0;padding:12px 16px;cursor:pointer}
-.model-settings-form .engine-option+.engine-option{border-left:1px solid var(--field-border,var(--line))}
-.model-settings-form .engine-option:has(:checked){background:var(--selected,var(--raised,#e2ebf1))}
-.model-settings-form .engine-option:hover:has(:enabled){background:var(--panel,var(--raised,#f3f6f8))}
-.model-settings-form .engine-option:has(:focus-visible){outline:2px solid var(--focus,var(--accent,var(--blue)));outline-offset:-3px}
-.model-settings-form .engine-option:has(:disabled){cursor:not-allowed;opacity:.55}
-.model-settings-form .engine-option input[type=radio]{appearance:auto;display:block;flex:0 0 16px;width:16px;height:16px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;accent-color:var(--accent,var(--ink));cursor:inherit}
-.model-settings-form .engine-option input[type=radio]:focus-visible{outline:none}
-.model-settings-form .engine-option strong{display:block;font-size:14px;font-weight:600;line-height:1.4}
-.model-settings-form .engine-option small{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:400;line-height:1.4}
+.model-settings-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line)}
+.model-settings-tabs [role=tab]{padding:12px 16px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font:inherit;cursor:pointer}
+.model-settings-tabs [aria-selected=true]{border-bottom-color:var(--accent,var(--ink));color:var(--ink);font-weight:600}
+.model-settings-tabs [role=tab]:focus-visible{outline:2px solid var(--focus,var(--accent));outline-offset:-2px}
+.model-settings-tabs [role=tab]:disabled{cursor:not-allowed;opacity:.55}
+.genai-mil-connection h3{margin:0 0 8px;font-size:17px}
+.genai-mil-connection p{font-size:13px;line-height:1.6;max-width:65ch;overflow-wrap:anywhere}
 .model-settings-form .chatgpt-connection{margin:24px 0;padding:20px 0;border-top:1px solid var(--line,#d2d0c9);border-bottom:1px solid var(--line,#d2d0c9)}
 .model-settings-form .chatgpt-connection h3{margin:0 0 8px;font-size:17px}
 .model-settings-form .chatgpt-connection p{font-size:13px;line-height:1.6;max-width:65ch}
+.model-settings-form .saved-chatgpt-account{margin-top:18px}
 .model-settings-form .account-identity{display:flex;align-items:center;gap:10px;overflow-wrap:anywhere}
 .model-settings-form .account-identity svg{flex-shrink:0}
 .model-settings-form .account-identity small{display:block;text-transform:capitalize;margin-top:3px;color:var(--muted,#626c72)}
 .model-settings-form .connection-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
 .model-settings-form .connection-note{font-size:12px;color:var(--muted,#626c72);line-height:1.65;margin:16px 0}
 .model-settings-form .connection-error{color:var(--danger,#9b3022);overflow-wrap:anywhere}
-.model-settings-form .subscription-usage{display:flex;gap:24px;flex-wrap:wrap;margin:20px 0}
-.model-settings-form .subscription-usage>div{display:grid;gap:4px;font-size:12px}
-.model-settings-form .subscription-usage strong{font-size:17px;font-variant-numeric:tabular-nums}
-.model-settings-form .subscription-usage small{color:var(--muted,#626c72)}
+.desktop-setup-notice{margin:0 0 28px;padding:20px;border:1px solid var(--field-border);border-radius:6px;background:var(--selected)}
+.desktop-setup-notice h3{margin:0 0 10px;font-size:20px}
+.desktop-setup-notice p{font-size:13px;line-height:1.65;max-width:65ch;margin:0}
+.desktop-setup-notice p+p{margin-top:10px;color:var(--muted)}

@@ -1,7 +1,7 @@
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { sourceHash } from '../electron/storage.js';
+import { sourceHash } from './runtime/electron/storage.js';
 
 export const artifactLimits = { count: 2000, fileBytes: 10 * 1024 * 1024, totalBytes: 20 * 1024 * 1024 } as const;
 const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);

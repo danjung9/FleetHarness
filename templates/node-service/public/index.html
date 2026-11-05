@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Application workspace</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Application workspace</h1>
+      <p>Run an input and inspect the computed result.</p>
+    </header>
+    <div class="workspace">
+      <form id="compute-form">
+        <label for="input">JSON input</label>
+        <p id="input-help" class="help">Enter the input required by this application.</p>
+        <textarea id="input" name="input" rows="14" spellcheck="false" aria-describedby="input-help error" required>{}</textarea>
+        <button id="run" type="submit">Run computation</button>
+        <p id="status" role="status" aria-live="polite">Ready for input.</p>
+        <p id="error" role="alert" hidden></p>
+      </form>
+      <section id="output" aria-labelledby="result-title" aria-busy="false">
+        <h2 id="result-title">Result</h2>
+        <pre id="result" tabindex="0" aria-labelledby="result-title">Run a computation to see its result.</pre>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

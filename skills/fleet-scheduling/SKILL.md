@@ -5,7 +5,7 @@ description: Build and evaluate training or resource scheduling workflows with e
 
 # Constraint-based scheduling
 
-Separate departmental proposals from constraint enforcement. Treat operational windows, personnel qualifications, availability, rest and duty budgets as explicit inputs. Obtain fatigue and training-periodicity rules from the owner; do not invent SFTRM requirements.
+Separate departmental proposals from constraint enforcement. Treat operational windows, personnel qualifications, availability, rest and duty budgets as explicit inputs. Use fatigue and training-periodicity rules from the owner when supplied. Otherwise build the scheduling with clearly labeled sample rules the person can edit, and never present them as SFTRM requirements.
 
 `fleet_solve_schedule` accepts minutes relative to one declared epoch, a roster, and requests with explicit candidate starts. `people` assigns exact people; each required qualification must be held by at least one assigned person. Resources have exclusive capacity. `maxMinutes` is a budget across the entire supplied horizon, not a daily policy. Rest applies between every pair of assignments for a person. Back-to-back windows are permitted only when the supplied rest is zero.
 

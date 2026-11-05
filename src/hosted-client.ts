@@ -93,7 +93,7 @@ export function createHostedClient(options: HostedClientOptions) {
   }
   const projectPath = (id: string) => `/projects/${encodeURIComponent(id)}`;
   const unavailable = async (): Promise<never> => { throw new Error('This action is available in the desktop app.'); };
-  const api: FleetAPI = {
+  const api = {
     bootstrap,
     refreshNorfolkCatalog: () => mutate('/catalog/refresh'),
     createProject: input => mutate('/projects', input),
@@ -135,7 +135,7 @@ export function createHostedClient(options: HostedClientOptions) {
       listeners.add(listener); schedule();
       return () => { listeners.delete(listener); if (!listeners.size) clearTimeout(timer); };
     }
-  };
+  } satisfies Partial<FleetAPI>;
   return {
     api,
     setUserId(next: string | null) {

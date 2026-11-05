@@ -1,7 +1,9 @@
+import { codexGoalActive } from '../shared/codex-goal';
 import { useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2, CircleDot, FileCode2, Plus, Search } from 'lucide-react';
 import { challenges } from '../harness/catalog';
 import type { Project } from '../shared/types';
+import { getJourneyState } from '../shared/journey';
 import { Mark } from './Mark';
 import './home.css';
 
@@ -16,10 +18,20 @@ const examples = [
 const statusNames: Record<Project['status'], string> = { draft: 'Brief saved', running: 'Building', pausing: 'Saving checkpoint', paused: 'Paused', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered' };
 
 function BuildRow({ project, open }: { project: Project; open: (id: string) => void }) {
+  const goalActive = codexGoalActive(project.codexGoal);
+  const goal = goalActive || project.status === 'draft' ? project.codexGoal : undefined;
+  const goalLabel = goal ? { prepared: 'Preparing Codex', running: 'Codex building', stopping: 'Stopping Codex', completed: 'Codex completed', stopped: 'Codex stopped', blocked: 'Codex needs attention', failed: 'Codex failed', opened: 'Earlier Codex session' }[goal.status] : undefined;
+  const badgeStatus = goal ? goal.status === 'completed' ? 'complete' : goal.status === 'blocked' ? 'failed' : goal.status : project.status;
+  const nextAction = goal ? 'View Codex build' : {
+    brief: 'Edit brief',
+    build: project.status === 'running' ? 'View build' : 'Inspect build',
+    review: 'Review build',
+    deliver: 'View delivery'
+  }[getJourneyState(project).current];
   return <button onClick={() => open(project.id)}>
     <FileCode2 size={24} aria-hidden="true"/>
-    <span className="home-build-copy"><strong>{project.title}</strong><small>{project.criteria.length} criteria · Updated {new Date(project.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</small></span>
-    <span className={'badge ' + project.status}>{project.status === 'approved' || project.status === 'delivered' ? <CheckCircle2 size={13} aria-hidden="true"/> : <CircleDot size={13} aria-hidden="true"/>} {statusNames[project.status]}</span>
+    <span className="home-build-copy"><strong>{project.title}</strong><small>{nextAction} · Updated {new Date(project.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</small></span>
+    <span className={'badge ' + badgeStatus}>{badgeStatus === 'complete' || badgeStatus === 'approved' || badgeStatus === 'delivered' ? <CheckCircle2 size={13} aria-hidden="true"/> : <CircleDot size={13} aria-hidden="true"/>} {goalLabel || statusNames[project.status]}</span>
     <ArrowUpRight size={19} aria-hidden="true"/>
   </button>;
 }
@@ -54,7 +66,7 @@ export function Home({ projects, open, create }: {
           <div className="home-build-list">{recentBuilds.map(project => <BuildRow key={project.id} project={project} open={open}/>)}</div>
         </section>}
         <section className="home-examples" aria-labelledby="home-examples-title">
-          <h2 id="home-examples-title">Start with an example</h2>
+          <h2 id="home-examples-title">Start with an example</h2><a className="home-builds-link" href={`${import.meta.env.BASE_URL}demos/index.html`} target="_blank" rel="noreferrer">Explore all 39 demos <ArrowUpRight size={15}/></a>
           <div className="home-grid">{examples.map(({ id, title, challenge }) => <button className="home-example" key={id} onClick={() => create(id)} aria-label={'Start a brief: ' + title + '. ' + challenge.title}>
             <span className="home-example-title">{title}<ArrowUpRight size={16} aria-hidden="true"/></span>
             <span className="home-example-summary">{challenge.summary}</span>

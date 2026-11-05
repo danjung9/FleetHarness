@@ -11,24 +11,37 @@
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "tsc && vite build && npm run build:electron",
     "build:web": "tsc && vite build --outDir dist-web --base /",
+    "icons": "node scripts/create-icon.mjs",
     "start": "electron .",
     "preview": "vite preview",
-    "test": "npm run build:electron && npm run build:worker && node --test tests/*.test.mjs",
+    "test": "npm run build:electron && npm run build:worker && node --test --test-concurrency=4 tests/*.test.mjs",
+    "check": "node scripts/check.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
+    "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
+    "demo:mailmcp": "npm run build && node scripts/prepare-mailmcp-demo.mjs && node scripts/package-mailmcp-demo.mjs",
+    "test:mailmcp-demo": "npm run build && node --test tests/mailmcp-demo.test.mjs && node scripts/smoke-mailmcp-demo.mjs",
     "sync:norfolk": "node scripts/sync-norfolk.mjs",
     "test:norfolk": "npm run build && node --test tests/norfolk.test.mjs && node scripts/smoke-norfolk.mjs",
     "harness:build": "tsc -p harness/tsconfig.json",
     "harness": "npm run harness:build --silent && node dist-harness/harness/cli.js",
     "test:harness": "npm run harness:build && node --test dist-harness/tests/harness*.test.js",
+    "test:foundations": "npm run build:electron && node scripts/check-foundations.mjs && node --test tests/foundations.test.mjs",
     "test:desktop": "npm run build && node scripts/smoke-electron.mjs",
+    "test:data-storage": "npm run build && node scripts/smoke-data-storage.mjs",
+    "test:brief-data": "npm run build && node scripts/smoke-brief-data.mjs",
     "test:system-design": "npm run build && node scripts/smoke-system-design.mjs",
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
+    "test:visual-review": "npm run build && node --test tests/visual-review.test.mjs && node scripts/smoke-visual-review.mjs",
     "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
     "test:models": "npm run build && node scripts/smoke-model-selector.mjs",
     "test:executable": "npm run build && node scripts/smoke-executable.mjs",
+    "test:solutions": "npm run build:electron && node --test tests/solution-*.test.mjs tests/factory-benchmark.test.mjs",
+    "test:experiments": "npm run build:electron && node --test --test-concurrency=4 tests/experiment-*.test.mjs tests/learning-*.test.mjs tests/isolated-*.test.mjs tests/integration-broker.test.mjs tests/runtime-broker.test.mjs tests/codex-isolation.test.mjs tests/execution-*.test.mjs tests/preview-proxy.test.mjs",
+    "smoke:experiments": "npm run build && node scripts/smoke-experiments.mjs && node scripts/smoke-experiment-activity.mjs && node scripts/smoke-experiment-isolation.mjs",
+    "benchmark:factory": "npm run build:electron && node scripts/benchmark-factory.mjs",
     "build:worker": "node scripts/build-worker.mjs",
     "build:hosted": "npm run build:worker && node scripts/stage-worker.mjs && tsc && tsc -p tsconfig.hosted.json && vite build --config vite.hosted.config.ts && npm run test:hosted-build",
     "dev:hosted": "vite --config vite.hosted.config.ts --host 127.0.0.1",
@@ -55,7 +68,8 @@
     "undici": "7.30.1",
     "unstorage": "2.0.0-alpha.10",
     "workflow": "5.3.0",
-    "yazl": "3.3.1"
+    "yazl": "3.3.1",
+    "jose": "6.2.15"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
@@ -81,9 +95,11 @@
       "dist/**/*",
       "dist-electron/**/*",
       "skills/**/*",
+      "templates/**/*",
       "package.json"
     ],
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools",
       "target": [
         "dmg",
@@ -98,18 +114,26 @@
     },
     "artifactName": "AppYard-${version}-${arch}.${ext}",
     "npmRebuild": false,
+    "extraResources": [
+      {
+        "from": "node_modules/electron/dist",
+        "to": "electron-runtime"
+      }
+    ],
     "asarUnpack": [
       "node_modules/**/*",
+      "templates/runtime-broker/**/*",
       "dist-electron/electron/package-worker.js",
+      "dist-electron/electron/package-runtime.js",
       "package.json"
     ]
   },
   "author": "AppYard",
-  "engines": {
-    "node": "24.x"
-  },
   "overrides": {
     "undici@^7.0.0": "7.30.1",
     "zod@^4.0.0": "4.6.7"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

@@ -1,4 +1,5 @@
 {
-  "origin": "AppYard's AY monogram, matching src/Mark.tsx and public/favicon.svg, drawn in scripts/create-icon.swift and rasterized by AppKit for the macOS application icon.",
-  "authoring": "Original geometric letterforms on a charcoal rounded square with peach linework. No generated or externally sourced imagery."
+  "origin": "AppYard anchor artwork supplied in the partner handoff, preserved in branding/.",
+  "authoring": "Vector anchor with an app-shaped eye; navy #081F35 and gold #E1B75B.",
+  "regenerate": "npm run icons copies the checked-in master assets into web, UI, and desktop locations."
 }

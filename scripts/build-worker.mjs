@@ -11,7 +11,7 @@ const run = (command, args) => {
 };
 await fs.rm(output, { recursive: true, force: true });
 run(process.execPath, [path.join(root, 'node_modules/typescript/bin/tsc'), '-p', 'worker/tsconfig.json']);
-await fs.cp(path.join(root, 'skills'), path.join(output, 'skills'), { recursive: true });
+await fs.cp(path.join(root, 'worker/runtime/skills'), path.join(output, 'skills'), { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 const dependencies = Object.fromEntries(['@earendil-works/pi-coding-agent', 'typebox', 'playwright'].map(name => [name, manifest.dependencies[name]]));
 if (Object.values(dependencies).some(version => typeof version !== 'string' || !/^\d+\.\d+\.\d+/.test(version))) throw new Error('Worker dependencies must be pinned.');

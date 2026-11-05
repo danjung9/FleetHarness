@@ -2,13 +2,13 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { Project } from '../shared/types.js';
-import { stageDefinitions } from '../shared/types.js';
-import type { PipelineCheckpoint } from '../electron/pi-backend.js';
-import { sourceHash } from '../electron/storage.js';
-import { verifyApplication, loadQualityContract } from '../electron/quality.js';
-import { reportPassed } from '../electron/verification.js';
-import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/integration.js';
+import type { Project } from './runtime/shared/types.js';
+import { stageDefinitions } from './runtime/shared/types.js';
+import type { PipelineCheckpoint } from './runtime/electron/pi-backend.js';
+import { sourceHash } from './runtime/electron/storage.js';
+import { verifyApplication, loadQualityContract } from './runtime/electron/quality.js';
+import { reportPassed } from './runtime/electron/verification.js';
+import { prepareFleetWorkspace, assertFleetPacketIntegrity } from './runtime/harness/integration.js';
 import { atomicJson, collectArtifacts, readJson } from './files.js';
 
 export interface VerificationInput {

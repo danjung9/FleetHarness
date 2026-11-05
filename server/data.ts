@@ -1,10 +1,10 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import type { Artifact, NewProject, Project, Settings, StageId } from '../shared/types.js';
-import { stageDefinitions } from '../shared/types.js';
-import { normalizeProjectInput } from '../shared/project-input.js';
-import { reportPassed } from '../shared/verification.js';
-import { bundledNorfolkCatalog, getChallenge } from '../harness/catalog.js';
-import type { NorfolkCatalog } from '../harness/norfolk.js';
+import type { Artifact, NewProject, Project, Settings, StageId } from '../worker/runtime/shared/types.js';
+import { stageDefinitions } from '../worker/runtime/shared/types.js';
+import { normalizeProjectInput } from '../worker/runtime/shared/project-input.js';
+import { reportPassed } from '../worker/runtime/shared/verification.js';
+import { bundledNorfolkCatalog, getChallenge } from '../worker/runtime/harness/catalog.js';
+import type { NorfolkCatalog } from '../worker/runtime/harness/norfolk.js';
 import { HttpError, requireUuid } from './http.js';
 
 export type HostedRunStatus = 'queued' | 'running' | 'pausing' | 'paused' | 'failed' | 'review' | 'approved' | 'delivered';

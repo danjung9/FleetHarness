@@ -1,0 +1,236 @@
+[
+  {
+    "id": 8,
+    "title": "CASREP Command",
+    "description": "CASREP Command: Unified Casualty Report Drafting, Routing & Release",
+    "path": "norfolk-08-casrep/index.html"
+  },
+  {
+    "id": 9,
+    "title": "Agent Orchestration",
+    "description": "AI automated systems",
+    "path": "norfolk-09-agent-orchestration/index.html"
+  },
+  {
+    "id": 10,
+    "title": "Mooring Planner",
+    "description": "Physics-Informed Mooring & Tug Allocation Planning Agent",
+    "path": "norfolk-10-mooring-planner/index.html"
+  },
+  {
+    "id": 11,
+    "title": "Training Planner",
+    "description": "PB4T (Planning Board for Training) Autonomous Deconfliction Agent",
+    "path": "norfolk-11-training-planner/index.html"
+  },
+  {
+    "id": 12,
+    "title": "SIGNAL Refinement",
+    "description": "Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+    "path": "norfolk-12-optask/index.html"
+  },
+  {
+    "id": 13,
+    "title": "Total Ship System",
+    "description": "TSS (Total Ship System) Authoritative  aggregated sensor and system information platform for real time decision making",
+    "path": "norfolk-13-total-ship-system/index.html"
+  },
+  {
+    "id": 14,
+    "title": "Mission Consequences",
+    "description": "Fleet Mission Consequence Assistant \u2014 Reducing Watchstander Cognitive Burden at the Tactical Edge",
+    "path": "norfolk-14-mission-consequences/index.html"
+  },
+  {
+    "id": 15,
+    "title": "Acquisition Workspace",
+    "description": "Collaborative AI Sandboxes for Geographically Segregated Acquisition Teams",
+    "path": "norfolk-15-acquisition-workspace/index.html"
+  },
+  {
+    "id": 16,
+    "title": "MORDECAI",
+    "description": "MORDECAI \u2014 \"Adult Supervision\" for Shipboard AI",
+    "path": "norfolk-16-mordecai/index.html"
+  },
+  {
+    "id": 17,
+    "title": "Surf Observations",
+    "description": "Digital SUROB: AI-Assisted Surf Observation & Craft GO/NO-GO Agent",
+    "path": "norfolk-17-surf-observations/index.html"
+  },
+  {
+    "id": 18,
+    "title": "Cyber Handoff",
+    "description": "From Alert to Handoff: Cyber Watchstander Agent",
+    "path": "norfolk-18-cyber-handoff/index.html"
+  },
+  {
+    "id": 19,
+    "title": "Risk Register",
+    "description": "Risk registry and risk assessment tool",
+    "path": "norfolk-19-risk-register/index.html"
+  },
+  {
+    "id": 20,
+    "title": "Contact Brief",
+    "description": "Cited Contact Brief \u2014 Evidence-Backed Intelligence on Contacts of Interest",
+    "path": "norfolk-20-contact-brief/index.html"
+  },
+  {
+    "id": 21,
+    "title": "Engineering Copilot",
+    "description": "Trusted Watchstander Copilot for Engineering Plant Casualties",
+    "path": "norfolk-21-engineering-copilot/index.html"
+  },
+  {
+    "id": 22,
+    "title": "Document Digitizer",
+    "description": "Handwritten to Digitized Fleet Documents",
+    "path": "norfolk-22-document-digitizer/index.html"
+  },
+  {
+    "id": 23,
+    "title": "Vibranium Gateway",
+    "description": "VIBRANIUM GATEWAY: Deterministic Multi-Agent Zero-Trust Orchestration & Tactical Casualty Triage Core",
+    "path": "norfolk-23-vibranium-gateway/index.html"
+  },
+  {
+    "id": 24,
+    "title": "Action Inbox",
+    "description": "Automated Message Traffic Task & Event Extraction",
+    "path": "norfolk-24-action-inbox/index.html"
+  },
+  {
+    "id": 25,
+    "title": "Policy Inspector",
+    "description": "DoW Web Application Standard Tools",
+    "path": "norfolk-25-policy-inspector/index.html"
+  },
+  {
+    "id": 26,
+    "title": "Restoration Planner",
+    "description": "Restore to Mission",
+    "path": "norfolk-26-restoration-planner/index.html"
+  },
+  {
+    "id": 32,
+    "title": "Readiness Radar",
+    "description": "Know Before It Breaks the Mission",
+    "path": "norfolk-32-readiness-radar/index.html"
+  },
+  {
+    "id": 33,
+    "title": "Trusted Watchstander",
+    "description": "Trusted Watchstander",
+    "path": "norfolk-33-trusted-watchstander/index.html"
+  },
+  {
+    "id": 34,
+    "title": "Maritime Picture",
+    "description": "Maritime Picture in Minutes",
+    "path": "norfolk-34-maritime-picture/index.html"
+  },
+  {
+    "id": 35,
+    "title": "Cyber Defender",
+    "description": "Autonomous Cyber Defender",
+    "path": "norfolk-35-cyber-defender/index.html"
+  },
+  {
+    "id": 36,
+    "title": "Paperless Underway",
+    "description": "Paperless Underway",
+    "path": "norfolk-36-paperless-underway/index.html"
+  },
+  {
+    "id": 37,
+    "title": "Fielding Workspace",
+    "description": "Sailor-Built to Fleet-Fielded",
+    "path": "norfolk-37-fielding-workspace/index.html"
+  },
+  {
+    "id": 39,
+    "title": "Lessons Library",
+    "description": "Lessons Learned Agentic Integrator",
+    "path": "norfolk-39-lessons-library/index.html"
+  },
+  {
+    "id": 40,
+    "title": "ANCHOR",
+    "description": "ANCHOR: Authoritative Naval Communications Hub for Official Records",
+    "path": "norfolk-40-anchor/index.html"
+  },
+  {
+    "id": 41,
+    "title": "Service Queue",
+    "description": "Next in Line: One-Scan AI Service Queue for Sailor Support",
+    "path": "norfolk-41-service-queue/index.html"
+  },
+  {
+    "id": 42,
+    "title": "PA Operations",
+    "description": "Enterprise PA-Ops Platform: Fleet-Wide Operational Planning, Media Tracking, and Decision Advantage",
+    "path": "norfolk-42-pa-operations/index.html"
+  },
+  {
+    "id": 43,
+    "title": "Requirements Manager",
+    "description": "Warfighting Requirements Manager",
+    "path": "norfolk-43-requirements-manager/index.html"
+  },
+  {
+    "id": 44,
+    "title": "Edge Maintenance",
+    "description": "Equipment Maintenance at the Edge using AI",
+    "path": "norfolk-44-edge-maintenance/index.html"
+  },
+  {
+    "id": 45,
+    "title": "Sync Triage",
+    "description": "Detecting and triaging for disconnected and low data fidelity environment.",
+    "path": "norfolk-45-sync-triage/index.html"
+  },
+  {
+    "id": 46,
+    "title": "NavyLINK",
+    "description": "NavyLINK -  Navy Locator for Innovation, Networking, and Knowledge",
+    "path": "norfolk-46-navylink/index.html"
+  },
+  {
+    "id": 47,
+    "title": "Frame Hunter",
+    "description": "FRAME HUNTER: Edge SI for Shipboard Video, Photo & Story Triage",
+    "path": "norfolk-47-frame-hunter/index.html"
+  },
+  {
+    "id": 48,
+    "title": "Decision Workspace",
+    "description": "Decision Autonomy Under Uncertainty",
+    "path": "norfolk-48-decision-workspace/index.html"
+  },
+  {
+    "id": 49,
+    "title": "Threat Tracker",
+    "description": "Global Cyber Threat Tracker",
+    "path": "norfolk-49-threat-tracker/index.html"
+  },
+  {
+    "id": 50,
+    "title": "Maintenance Portfolio",
+    "description": "More Boats to Sea",
+    "path": "norfolk-50-maintenance-portfolio/index.html"
+  },
+  {
+    "id": 51,
+    "title": "BSO Service Desk",
+    "description": "Enterprise BSO Customer Service and Intelligent Ticket Management System",
+    "path": "norfolk-51-bso-service-desk/index.html"
+  },
+  {
+    "id": 52,
+    "title": "Data Onboarding",
+    "description": "Gamified Onboarding Framework for Data Plaforms",
+    "path": "norfolk-52-data-onboarding/index.html"
+  }
+]

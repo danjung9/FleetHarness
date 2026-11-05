@@ -5,11 +5,11 @@ import { HttpError } from './http.js';
 import { modelToken } from './model-proxy.js';
 import { Sandbox, CONTROL, WORKSPACE, installRuntime, stageInputs, runtimeLaunch, readControl, sha256, appOrigin } from './sandbox.js';
 import { buildWorkflow } from '../workflows/build.js';
-import type { Project, TestReport } from '../shared/types.js';
+import type { Project, TestReport } from '../worker/runtime/shared/types.js';
 import type { WorkerInput, WorkerProgress, CheckpointPointer } from '../worker/types.js';
 import { validateBundle, type ArtifactBundle } from '../worker/files.js';
-import type { PipelineCheckpoint } from '../electron/pi-backend.js';
-import { reportPassed } from '../shared/verification.js';
+import type { PipelineCheckpoint } from '../worker/runtime/electron/pi-backend.js';
+import { reportPassed } from '../worker/runtime/shared/verification.js';
 import { completedCommand } from './command-status.js';
 
 type BuildMetadata = Record<string, unknown> & {

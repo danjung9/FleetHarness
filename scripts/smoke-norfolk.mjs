@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -13,8 +14,11 @@ let app;
 try {
   app=await electron.launch({args:['.'],env:{...process.env,FLEET_USER_DATA:path.join(root,'state'),PI_CODING_AGENT_DIR:path.join(root,'pi')}});
   const page=await app.firstWindow();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await stubCodexGoalLaunch(app);
   await page.getByRole('region',{name:'Home workspace',exact:true}).getByRole('button',{name:'New challenge',exact:true}).click();
-  await page.getByRole('button',{name:`Norfolk catalog · ${norfolkSnapshot.useCases.length}`,exact:true}).click();
+  const intake=page.getByRole('dialog',{name:'New challenge',exact:true});
+  await intake.getByRole('group',{name:'Challenge source',exact:true}).getByRole('button',{name:/^Norfolk catalog\b/}).click();
+  await intake.getByText(`${norfolkSnapshot.useCases.length} of ${norfolkSnapshot.useCases.length} challenges`,{exact:true}).waitFor();
   await app.evaluate(()=>{globalThis.fetch=async()=>{throw new Error('Offline test');};});
   await page.getByRole('button',{name:'Refresh from Norfolk',exact:true}).click();
   await page.getByRole('alert').filter({hasText:'Could not refresh Norfolk'}).waitFor();
@@ -26,7 +30,7 @@ try {
       : Response.json({...records.find(c=>String(url).endsWith(`/use-cases/${c.id}/`)),event_id:1,is_active:true});
   },norfolkSnapshot.useCases);
   await page.getByRole('button',{name:'Refresh from Norfolk',exact:true}).click();
-  await page.getByRole('button',{name:`Norfolk catalog · ${norfolkSnapshot.useCases.length+1}`,exact:true}).waitFor();
+  await intake.getByText(`${norfolkSnapshot.useCases.length+1} of ${norfolkSnapshot.useCases.length+1} challenges`,{exact:true}).waitFor();
   assert.equal(await page.getByRole('alert').count(),0);
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('Sailor-Built');
   await page.locator('.catalog-results>button').click();
@@ -34,6 +38,7 @@ try {
   assert.equal(await page.getByLabel('Challenge title',{exact:true}).inputValue(),expected.title);
   assert.equal(await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?').inputValue(),expected.description);
   assert.equal(await page.getByLabel(/^Evaluation criteria \(optional\)/).inputValue(),expected.criteria.join('\n'));
+  await intake.locator('.brief-context > summary').click();
   assert.equal(await page.getByLabel(/^Resources \(optional\)/).inputValue(),expected.resources);
   assert.equal(await page.getByLabel(/^Links \(optional\)/).inputValue(),expected.links.join('\n'));
   await page.screenshot({path:path.join(output,'norfolk-brief.png'),scale:'css'});
@@ -42,13 +47,14 @@ try {
   await page.screenshot({path:path.join(output,'norfolk-fields-minimum.png'),scale:'css'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.getByRole('button',{name:'Save challenge',exact:true}).click();
-  await page.getByRole('heading',{name:'Build flow',exact:true}).waitFor();
+  await page.getByRole('navigation',{name:'Challenge progress',exact:true}).getByRole('button',{name:'Build',exact:true}).click();
+  await page.getByRole('heading',{name:'Build phases',exact:true}).waitFor();
   const saved=(await page.evaluate(()=>window.fleetHarness.bootstrap())).state.projects[0];
   assert.equal(saved.challengeId,'37');assert.deepEqual(saved.criteria,expected.criteria);assert.equal(saved.resources,expected.resources);assert.deepEqual(saved.links,expected.links);
   assert.equal(saved.sourceChallenge.id,'37');
   await page.reload();
   const restored=(await page.evaluate(()=>window.fleetHarness.bootstrap())).state;
-  assert.deepEqual(restored.projects[0],saved);assert.equal(restored.norfolkCatalog.challenges.length,40);
+  assert.deepEqual(restored.projects[0],saved);assert.equal(restored.norfolkCatalog.challenges.length,norfolkSnapshot.useCases.length+1);
   const newProject=await page.evaluate(async()=>window.fleetHarness.createProject({title:'New source',description:'Use the newly published source requirements.',criteria:[],challengeId:'99'}));
   assert.equal(newProject.sourceChallenge.id,'99');
   assert.deepEqual(errors,[]);
