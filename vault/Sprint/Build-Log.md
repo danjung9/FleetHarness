@@ -222,3 +222,4 @@ Call log:
 - 04:57 Team branch: mvp now ed90894
 - 05:04 Real build, round 7, id36-paperless: failed in 23.9 minutes, tests None, journeys 0/0. The build stopped because it took too long; check the saved work and try again.
 - 05:12 Real build, round 7, id12-optask: failed in 31.6 minutes, tests None, journeys 0/0. The build stopped because it took too long; check the saved work and try again.
+- 05:26 Real build, round 7, id08-casrep: failed in 21.5 minutes, tests None, journeys 0/0. The build did not produce all the required files; check the saved work and try again.

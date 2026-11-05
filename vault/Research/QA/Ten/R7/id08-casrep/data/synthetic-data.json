@@ -1,0 +1,2694 @@
+{
+  "classification": "synthetic",
+  "useCase": "Fictional CASREP Command drafts, invented message rendering, version-bound chain-of-command review, return/revision, conflicts and simulated CO release; supports challenge 8 without operational data or claimed real-format validation.",
+  "fields": [
+    {
+      "name": "fixtureId",
+      "type": "string",
+      "description": "Unique deterministic fixture key; not an operational record ID."
+    },
+    {
+      "name": "provenance",
+      "type": "object",
+      "description": "Synthetic provenance, invented grammar version and six fictional actors; see README nested schema."
+    },
+    {
+      "name": "draft",
+      "type": "object",
+      "description": "Complete structured CASREP-oriented content using the README draft schema; UTC ISO timestamps, invented categories and priorities."
+    },
+    {
+      "name": "revisions",
+      "type": "array",
+      "description": "Immutable full-content revision snapshots, oldest first; regular fixtures begin with one draft revision."
+    },
+    {
+      "name": "workflow",
+      "type": "object",
+      "description": "Starting route, holder, status, revision, empty decisions/audit/conflicts and null simulated release."
+    },
+    {
+      "name": "messageText",
+      "type": "string",
+      "description": "Canonical multiline SYN-CASREP-1 message for draft, LF line endings with one terminal LF."
+    }
+  ],
+  "records": [
+    {
+      "fixtureId": "initial-return-loop",
+      "provenance": {
+        "classification": "synthetic",
+        "handling": "NOTIONAL UNCLASSIFIED",
+        "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+        "grammarVersion": "SYN-CASREP-1",
+        "method": "Deterministic fictional authoring from the supplied brief; no operational source records",
+        "actors": [
+          {
+            "actorId": "SYN-A01",
+            "name": "Avery Vale",
+            "role": "Originator"
+          },
+          {
+            "actorId": "SYN-A02",
+            "name": "Mira Quill",
+            "role": "Division Officer"
+          },
+          {
+            "actorId": "SYN-A03",
+            "name": "Jonah Reed",
+            "role": "Department Head"
+          },
+          {
+            "actorId": "SYN-A04",
+            "name": "Ellis Rowan",
+            "role": "CHENG"
+          },
+          {
+            "actorId": "SYN-A05",
+            "name": "Tessa Finch",
+            "role": "XO"
+          },
+          {
+            "actorId": "SYN-A06",
+            "name": "Morgan Wren",
+            "role": "CO"
+          }
+        ]
+      },
+      "draft": {
+        "reportId": "SYN-CR-001",
+        "reportType": "INITIAL",
+        "category": "DEMO-2",
+        "unit": "FSV Lantern / SYN-U01",
+        "equipmentId": "SYN-EQ-P17",
+        "equipmentName": "Auxiliary cooling pump P-17",
+        "occurredAt": "2026-10-12T08:00:00Z",
+        "description": "Pump P-17 trips during the fictional training cycle.",
+        "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+        "partsPriority": "DEMO-URGENT",
+        "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+        "maintenanceJsn": "SYN-JSN-2026-014",
+        "relatedReportId": "",
+        "classification": "NOTIONAL UNCLASSIFIED"
+      },
+      "revisions": [
+        {
+          "revisionId": "SYN-CR-001-R1",
+          "reportId": "SYN-CR-001",
+          "parentRevisionId": "",
+          "mergeParentRevisionIds": [],
+          "authorId": "SYN-A01",
+          "authorRole": "Originator",
+          "createdAt": "2026-10-12T08:05:00Z",
+          "content": {
+            "reportId": "SYN-CR-001",
+            "reportType": "INITIAL",
+            "category": "DEMO-2",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Pump P-17 trips during the fictional training cycle.",
+            "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+            "partsPriority": "DEMO-URGENT",
+            "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          },
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      ],
+      "workflow": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-001-R1",
+        "route": [
+          "Originator",
+          "Division Officer",
+          "Department Head",
+          "CHENG",
+          "XO",
+          "CO"
+        ],
+        "approvals": [],
+        "comments": [],
+        "conflicts": [],
+        "audit": [],
+        "release": null
+      },
+      "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+    },
+    {
+      "fixtureId": "update-linked",
+      "provenance": {
+        "classification": "synthetic",
+        "handling": "NOTIONAL UNCLASSIFIED",
+        "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+        "grammarVersion": "SYN-CASREP-1",
+        "method": "Deterministic fictional authoring from the supplied brief; no operational source records",
+        "actors": [
+          {
+            "actorId": "SYN-A01",
+            "name": "Avery Vale",
+            "role": "Originator"
+          },
+          {
+            "actorId": "SYN-A02",
+            "name": "Mira Quill",
+            "role": "Division Officer"
+          },
+          {
+            "actorId": "SYN-A03",
+            "name": "Jonah Reed",
+            "role": "Department Head"
+          },
+          {
+            "actorId": "SYN-A04",
+            "name": "Ellis Rowan",
+            "role": "CHENG"
+          },
+          {
+            "actorId": "SYN-A05",
+            "name": "Tessa Finch",
+            "role": "XO"
+          },
+          {
+            "actorId": "SYN-A06",
+            "name": "Morgan Wren",
+            "role": "CO"
+          }
+        ]
+      },
+      "draft": {
+        "reportId": "SYN-CR-002",
+        "reportType": "UPDATE",
+        "category": "DEMO-2",
+        "unit": "FSV Lantern / SYN-U01",
+        "equipmentId": "SYN-EQ-P17",
+        "equipmentName": "Auxiliary cooling pump P-17",
+        "occurredAt": "2026-10-12T08:00:00Z",
+        "description": "Pump P-17 remains unavailable; replacement seal kit is staged.",
+        "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+        "partsPriority": "DEMO-URGENT",
+        "repairNarrative": "Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.",
+        "maintenanceJsn": "SYN-JSN-2026-014",
+        "relatedReportId": "SYN-CR-001",
+        "classification": "NOTIONAL UNCLASSIFIED"
+      },
+      "revisions": [
+        {
+          "revisionId": "SYN-CR-002-R1",
+          "reportId": "SYN-CR-002",
+          "parentRevisionId": "",
+          "mergeParentRevisionIds": [],
+          "authorId": "SYN-A01",
+          "authorRole": "Originator",
+          "createdAt": "2026-10-14T12:00:00Z",
+          "content": {
+            "reportId": "SYN-CR-002",
+            "reportType": "UPDATE",
+            "category": "DEMO-2",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Pump P-17 remains unavailable; replacement seal kit is staged.",
+            "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+            "partsPriority": "DEMO-URGENT",
+            "repairNarrative": "Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "SYN-CR-001",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          },
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-002\nTYPE: UPDATE\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 remains unavailable; replacement seal kit is staged.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        }
+      ],
+      "workflow": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-002-R1",
+        "route": [
+          "Originator",
+          "Division Officer",
+          "Department Head",
+          "CHENG",
+          "XO",
+          "CO"
+        ],
+        "approvals": [],
+        "comments": [],
+        "conflicts": [],
+        "audit": [],
+        "release": null
+      },
+      "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-002\nTYPE: UPDATE\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 remains unavailable; replacement seal kit is staged.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+    },
+    {
+      "fixtureId": "correct-linked",
+      "provenance": {
+        "classification": "synthetic",
+        "handling": "NOTIONAL UNCLASSIFIED",
+        "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+        "grammarVersion": "SYN-CASREP-1",
+        "method": "Deterministic fictional authoring from the supplied brief; no operational source records",
+        "actors": [
+          {
+            "actorId": "SYN-A01",
+            "name": "Avery Vale",
+            "role": "Originator"
+          },
+          {
+            "actorId": "SYN-A02",
+            "name": "Mira Quill",
+            "role": "Division Officer"
+          },
+          {
+            "actorId": "SYN-A03",
+            "name": "Jonah Reed",
+            "role": "Department Head"
+          },
+          {
+            "actorId": "SYN-A04",
+            "name": "Ellis Rowan",
+            "role": "CHENG"
+          },
+          {
+            "actorId": "SYN-A05",
+            "name": "Tessa Finch",
+            "role": "XO"
+          },
+          {
+            "actorId": "SYN-A06",
+            "name": "Morgan Wren",
+            "role": "CO"
+          }
+        ]
+      },
+      "draft": {
+        "reportId": "SYN-CR-003",
+        "reportType": "CORRECT",
+        "category": "DEMO-2",
+        "unit": "FSV Lantern / SYN-U01",
+        "equipmentId": "SYN-EQ-P17",
+        "equipmentName": "Auxiliary cooling pump P-17",
+        "occurredAt": "2026-10-12T08:00:00Z",
+        "description": "Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.",
+        "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+        "partsPriority": "DEMO-URGENT",
+        "repairNarrative": "Correct the transposed equipment identifier; no repair completion is asserted.",
+        "maintenanceJsn": "SYN-JSN-2026-014",
+        "relatedReportId": "SYN-CR-001",
+        "classification": "NOTIONAL UNCLASSIFIED"
+      },
+      "revisions": [
+        {
+          "revisionId": "SYN-CR-003-R1",
+          "reportId": "SYN-CR-003",
+          "parentRevisionId": "",
+          "mergeParentRevisionIds": [],
+          "authorId": "SYN-A01",
+          "authorRole": "Originator",
+          "createdAt": "2026-10-14T12:30:00Z",
+          "content": {
+            "reportId": "SYN-CR-003",
+            "reportType": "CORRECT",
+            "category": "DEMO-2",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.",
+            "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+            "partsPriority": "DEMO-URGENT",
+            "repairNarrative": "Correct the transposed equipment identifier; no repair completion is asserted.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "SYN-CR-001",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          },
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-003\nTYPE: CORRECT\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Correct the transposed equipment identifier; no repair completion is asserted.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        }
+      ],
+      "workflow": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-003-R1",
+        "route": [
+          "Originator",
+          "Division Officer",
+          "Department Head",
+          "CHENG",
+          "XO",
+          "CO"
+        ],
+        "approvals": [],
+        "comments": [],
+        "conflicts": [],
+        "audit": [],
+        "release": null
+      },
+      "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-003\nTYPE: CORRECT\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Correct the transposed equipment identifier; no repair completion is asserted.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+    },
+    {
+      "fixtureId": "cascor-linked",
+      "provenance": {
+        "classification": "synthetic",
+        "handling": "NOTIONAL UNCLASSIFIED",
+        "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+        "grammarVersion": "SYN-CASREP-1",
+        "method": "Deterministic fictional authoring from the supplied brief; no operational source records",
+        "actors": [
+          {
+            "actorId": "SYN-A01",
+            "name": "Avery Vale",
+            "role": "Originator"
+          },
+          {
+            "actorId": "SYN-A02",
+            "name": "Mira Quill",
+            "role": "Division Officer"
+          },
+          {
+            "actorId": "SYN-A03",
+            "name": "Jonah Reed",
+            "role": "Department Head"
+          },
+          {
+            "actorId": "SYN-A04",
+            "name": "Ellis Rowan",
+            "role": "CHENG"
+          },
+          {
+            "actorId": "SYN-A05",
+            "name": "Tessa Finch",
+            "role": "XO"
+          },
+          {
+            "actorId": "SYN-A06",
+            "name": "Morgan Wren",
+            "role": "CO"
+          }
+        ]
+      },
+      "draft": {
+        "reportId": "SYN-CR-004",
+        "reportType": "CASCOR",
+        "category": "DEMO-1",
+        "unit": "FSV Lantern / SYN-U01",
+        "equipmentId": "SYN-EQ-P17",
+        "equipmentName": "Auxiliary cooling pump P-17",
+        "occurredAt": "2026-10-12T08:00:00Z",
+        "description": "Pump P-17 restored after synthetic seal replacement and training test.",
+        "readinessImpact": "Training cooling capacity restored; both training loops available.",
+        "partsPriority": "DEMO-ROUTINE",
+        "repairNarrative": "Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.",
+        "maintenanceJsn": "SYN-JSN-2026-014",
+        "relatedReportId": "SYN-CR-001",
+        "classification": "NOTIONAL UNCLASSIFIED"
+      },
+      "revisions": [
+        {
+          "revisionId": "SYN-CR-004-R1",
+          "reportId": "SYN-CR-004",
+          "parentRevisionId": "",
+          "mergeParentRevisionIds": [],
+          "authorId": "SYN-A01",
+          "authorRole": "Originator",
+          "createdAt": "2026-10-14T16:00:00Z",
+          "content": {
+            "reportId": "SYN-CR-004",
+            "reportType": "CASCOR",
+            "category": "DEMO-1",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Pump P-17 restored after synthetic seal replacement and training test.",
+            "readinessImpact": "Training cooling capacity restored; both training loops available.",
+            "partsPriority": "DEMO-ROUTINE",
+            "repairNarrative": "Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "SYN-CR-001",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          },
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-004\nTYPE: CASCOR\nCATEGORY: DEMO-1\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 restored after synthetic seal replacement and training test.\nREADINESS: Training cooling capacity restored; both training loops available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        }
+      ],
+      "workflow": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-004-R1",
+        "route": [
+          "Originator",
+          "Division Officer",
+          "Department Head",
+          "CHENG",
+          "XO",
+          "CO"
+        ],
+        "approvals": [],
+        "comments": [],
+        "conflicts": [],
+        "audit": [],
+        "release": null
+      },
+      "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-004\nTYPE: CASCOR\nCATEGORY: DEMO-1\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 restored after synthetic seal replacement and training test.\nREADINESS: Training cooling capacity restored; both training loops available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+    },
+    {
+      "fixtureId": "optional-jsn-empty",
+      "provenance": {
+        "classification": "synthetic",
+        "handling": "NOTIONAL UNCLASSIFIED",
+        "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+        "grammarVersion": "SYN-CASREP-1",
+        "method": "Deterministic fictional authoring from the supplied brief; no operational source records",
+        "actors": [
+          {
+            "actorId": "SYN-A01",
+            "name": "Avery Vale",
+            "role": "Originator"
+          },
+          {
+            "actorId": "SYN-A02",
+            "name": "Mira Quill",
+            "role": "Division Officer"
+          },
+          {
+            "actorId": "SYN-A03",
+            "name": "Jonah Reed",
+            "role": "Department Head"
+          },
+          {
+            "actorId": "SYN-A04",
+            "name": "Ellis Rowan",
+            "role": "CHENG"
+          },
+          {
+            "actorId": "SYN-A05",
+            "name": "Tessa Finch",
+            "role": "XO"
+          },
+          {
+            "actorId": "SYN-A06",
+            "name": "Morgan Wren",
+            "role": "CO"
+          }
+        ]
+      },
+      "draft": {
+        "reportId": "SYN-CR-005",
+        "reportType": "INITIAL",
+        "category": "DEMO-3",
+        "unit": "FSV Lantern / SYN-U01",
+        "equipmentId": "SYN-EQ-D04",
+        "equipmentName": "Training display D-04",
+        "occurredAt": "2026-10-12T08:00:00Z",
+        "description": "Intermittent display flicker during a fictional drill.",
+        "readinessImpact": "One training display unavailable; adjacent display available.",
+        "partsPriority": "DEMO-ROUTINE",
+        "repairNarrative": "Inspect the fictional display connector.",
+        "maintenanceJsn": "",
+        "relatedReportId": "",
+        "classification": "NOTIONAL UNCLASSIFIED"
+      },
+      "revisions": [
+        {
+          "revisionId": "SYN-CR-005-R1",
+          "reportId": "SYN-CR-005",
+          "parentRevisionId": "",
+          "mergeParentRevisionIds": [],
+          "authorId": "SYN-A01",
+          "authorRole": "Originator",
+          "createdAt": "2026-10-12T08:05:00Z",
+          "content": {
+            "reportId": "SYN-CR-005",
+            "reportType": "INITIAL",
+            "category": "DEMO-3",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-D04",
+            "equipmentName": "Training display D-04",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Intermittent display flicker during a fictional drill.",
+            "readinessImpact": "One training display unavailable; adjacent display available.",
+            "partsPriority": "DEMO-ROUTINE",
+            "repairNarrative": "Inspect the fictional display connector.",
+            "maintenanceJsn": "",
+            "relatedReportId": "",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          },
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-005\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-D04 | Training display D-04\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Intermittent display flicker during a fictional drill.\nREADINESS: One training display unavailable; adjacent display available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect the fictional display connector.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      ],
+      "workflow": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-005-R1",
+        "route": [
+          "Originator",
+          "Division Officer",
+          "Department Head",
+          "CHENG",
+          "XO",
+          "CO"
+        ],
+        "approvals": [],
+        "comments": [],
+        "conflicts": [],
+        "audit": [],
+        "release": null
+      },
+      "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-005\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-D04 | Training display D-04\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Intermittent display flicker during a fictional drill.\nREADINESS: One training display unavailable; adjacent display available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect the fictional display connector.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "INITIAL return, revision, all approvals and simulated CO release",
+      "kind": "typical",
+      "input": {
+        "scenarioId": "SC-01",
+        "initialState": "empty",
+        "actions": [
+          {
+            "action": "CREATE",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R1",
+            "timestamp": "2026-10-12T08:05:00Z",
+            "note": "Draft recorded.",
+            "operationId": "SYN-OP001",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-URGENT",
+              "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          {
+            "action": "SUBMIT",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R1",
+            "timestamp": "2026-10-12T08:06:00Z",
+            "note": "Ready for division review.",
+            "operationId": "SYN-OP002"
+          },
+          {
+            "action": "COMMENT",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "revisionId": "SYN-CR-001-R1",
+            "timestamp": "2026-10-12T08:07:00Z",
+            "note": "Add a seal-kit identifier and estimated arrival.",
+            "operationId": "SYN-OP003"
+          },
+          {
+            "action": "RETURN",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "revisionId": "SYN-CR-001-R1",
+            "timestamp": "2026-10-12T08:08:00Z",
+            "note": "Repair narrative lacks seal-kit identifier and estimated arrival.",
+            "operationId": "SYN-OP004",
+            "returnTarget": "Originator"
+          },
+          {
+            "action": "REVISE",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:09:00Z",
+            "note": "Added SYN-SK-17 and estimated arrival.",
+            "operationId": "SYN-OP005",
+            "baseRevisionId": "SYN-CR-001-R1",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-URGENT",
+              "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          {
+            "action": "SUBMIT",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:10:00Z",
+            "note": "Revision ready for fresh review.",
+            "operationId": "SYN-OP006"
+          },
+          {
+            "action": "APPROVE",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:11:00Z",
+            "note": "Repair details checked.",
+            "operationId": "SYN-OP007"
+          },
+          {
+            "action": "APPROVE",
+            "actorId": "SYN-A03",
+            "actorRole": "Department Head",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:12:00Z",
+            "note": "Department review complete.",
+            "operationId": "SYN-OP008"
+          },
+          {
+            "action": "APPROVE",
+            "actorId": "SYN-A04",
+            "actorRole": "CHENG",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:13:00Z",
+            "note": "Engineering narrative checked.",
+            "operationId": "SYN-OP009"
+          },
+          {
+            "action": "APPROVE",
+            "actorId": "SYN-A05",
+            "actorRole": "XO",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:14:00Z",
+            "note": "Executive review complete.",
+            "operationId": "SYN-OP010"
+          },
+          {
+            "action": "APPROVE",
+            "actorId": "SYN-A06",
+            "actorRole": "CO",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:15:00Z",
+            "note": "Approved for simulated release.",
+            "operationId": "SYN-OP011"
+          },
+          {
+            "action": "SIMULATE_RELEASE",
+            "actorId": "SYN-A06",
+            "actorRole": "CO",
+            "revisionId": "SYN-CR-001-R2",
+            "timestamp": "2026-10-12T08:16:00Z",
+            "note": "Synthetic release only; no transmission.",
+            "operationId": "SYN-OP012",
+            "confirmed": true
+          }
+        ],
+        "criterionIds": [
+          "UC8-1",
+          "WFL-03",
+          "DELIVERABLE8-1",
+          "DESC8-1",
+          "DESC8-2",
+          "DESC8-3",
+          "SUMMARY8-1",
+          "SCOPE8-5",
+          "SCOPE8-6",
+          "SCOPE8-7",
+          "SCOPE8-9"
+        ]
+      },
+      "expectedBehavior": "Retain R1, record the return and R2, obtain fresh approval from every role in route order, then explicitly simulate CO release. Compare all literal outputs; no real transmission or benefit claim.",
+      "expected": {
+        "status": "RELEASED",
+        "currentHolder": "None",
+        "currentRevisionId": "SYN-CR-001-R2",
+        "releasedRevisionId": "SYN-CR-001-R2",
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+        "readinessAndPartsPriorityText": "readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT",
+        "routeText": "Originator → Division Officer → Department Head → CHENG → XO → CO → Simulated release",
+        "revisions": [
+          {
+            "revisionId": "SYN-CR-001-R1",
+            "reportId": "SYN-CR-001",
+            "parentRevisionId": "",
+            "mergeParentRevisionIds": [],
+            "authorId": "SYN-A01",
+            "authorRole": "Originator",
+            "createdAt": "2026-10-12T08:05:00Z",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-URGENT",
+              "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "reportId": "SYN-CR-001",
+            "parentRevisionId": "SYN-CR-001-R1",
+            "mergeParentRevisionIds": [],
+            "authorId": "SYN-A01",
+            "authorRole": "Originator",
+            "createdAt": "2026-10-12T08:09:00Z",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-URGENT",
+              "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+          }
+        ],
+        "approvals": [
+          {
+            "revisionId": "SYN-CR-001-R1",
+            "actorId": "SYN-A01",
+            "role": "Originator",
+            "eventId": "SYN-E002",
+            "valid": false
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A01",
+            "role": "Originator",
+            "eventId": "SYN-E006",
+            "valid": true
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A02",
+            "role": "Division Officer",
+            "eventId": "SYN-E007",
+            "valid": true
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A03",
+            "role": "Department Head",
+            "eventId": "SYN-E008",
+            "valid": true
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A04",
+            "role": "CHENG",
+            "eventId": "SYN-E009",
+            "valid": true
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A05",
+            "role": "XO",
+            "eventId": "SYN-E010",
+            "valid": true
+          },
+          {
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A06",
+            "role": "CO",
+            "eventId": "SYN-E011",
+            "valid": true
+          }
+        ],
+        "comments": [
+          {
+            "eventId": "SYN-E003",
+            "sequence": 3,
+            "timestamp": "2026-10-12T08:07:00Z",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "action": "COMMENT",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Add a seal-kit identifier and estimated arrival.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "Division Officer"
+          }
+        ],
+        "returnEvents": [
+          {
+            "eventId": "SYN-E004",
+            "sequence": 4,
+            "timestamp": "2026-10-12T08:08:00Z",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "action": "RETURN",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Repair narrative lacks seal-kit identifier and estimated arrival.",
+            "resultStatus": "RETURNED",
+            "resultHolder": "Originator"
+          }
+        ],
+        "audit": [
+          {
+            "eventId": "SYN-E001",
+            "sequence": 1,
+            "timestamp": "2026-10-12T08:05:00Z",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "action": "CREATE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Draft recorded.",
+            "resultStatus": "DRAFT",
+            "resultHolder": "Originator"
+          },
+          {
+            "eventId": "SYN-E002",
+            "sequence": 2,
+            "timestamp": "2026-10-12T08:06:00Z",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "action": "SUBMIT",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Ready for division review.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "Division Officer"
+          },
+          {
+            "eventId": "SYN-E003",
+            "sequence": 3,
+            "timestamp": "2026-10-12T08:07:00Z",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "action": "COMMENT",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Add a seal-kit identifier and estimated arrival.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "Division Officer"
+          },
+          {
+            "eventId": "SYN-E004",
+            "sequence": 4,
+            "timestamp": "2026-10-12T08:08:00Z",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "action": "RETURN",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R1",
+            "note": "Repair narrative lacks seal-kit identifier and estimated arrival.",
+            "resultStatus": "RETURNED",
+            "resultHolder": "Originator"
+          },
+          {
+            "eventId": "SYN-E005",
+            "sequence": 5,
+            "timestamp": "2026-10-12T08:09:00Z",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "action": "REVISE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Added SYN-SK-17 and estimated arrival.",
+            "resultStatus": "DRAFT",
+            "resultHolder": "Originator"
+          },
+          {
+            "eventId": "SYN-E006",
+            "sequence": 6,
+            "timestamp": "2026-10-12T08:10:00Z",
+            "actorId": "SYN-A01",
+            "actorRole": "Originator",
+            "action": "SUBMIT",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Revision ready for fresh review.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "Division Officer"
+          },
+          {
+            "eventId": "SYN-E007",
+            "sequence": 7,
+            "timestamp": "2026-10-12T08:11:00Z",
+            "actorId": "SYN-A02",
+            "actorRole": "Division Officer",
+            "action": "APPROVE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Repair details checked.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "Department Head"
+          },
+          {
+            "eventId": "SYN-E008",
+            "sequence": 8,
+            "timestamp": "2026-10-12T08:12:00Z",
+            "actorId": "SYN-A03",
+            "actorRole": "Department Head",
+            "action": "APPROVE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Department review complete.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "CHENG"
+          },
+          {
+            "eventId": "SYN-E009",
+            "sequence": 9,
+            "timestamp": "2026-10-12T08:13:00Z",
+            "actorId": "SYN-A04",
+            "actorRole": "CHENG",
+            "action": "APPROVE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Engineering narrative checked.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "XO"
+          },
+          {
+            "eventId": "SYN-E010",
+            "sequence": 10,
+            "timestamp": "2026-10-12T08:14:00Z",
+            "actorId": "SYN-A05",
+            "actorRole": "XO",
+            "action": "APPROVE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Executive review complete.",
+            "resultStatus": "IN_REVIEW",
+            "resultHolder": "CO"
+          },
+          {
+            "eventId": "SYN-E011",
+            "sequence": 11,
+            "timestamp": "2026-10-12T08:15:00Z",
+            "actorId": "SYN-A06",
+            "actorRole": "CO",
+            "action": "APPROVE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Approved for simulated release.",
+            "resultStatus": "READY_FOR_RELEASE",
+            "resultHolder": "CO"
+          },
+          {
+            "eventId": "SYN-E012",
+            "sequence": 12,
+            "timestamp": "2026-10-12T08:16:00Z",
+            "actorId": "SYN-A06",
+            "actorRole": "CO",
+            "action": "SIMULATE_RELEASE",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "note": "Synthetic release only; no transmission.",
+            "resultStatus": "RELEASED",
+            "resultHolder": "None"
+          }
+        ],
+        "releaseReceipt": {
+          "releaseId": "SYN-REL-001",
+          "reportId": "SYN-CR-001",
+          "revisionId": "SYN-CR-001-R2",
+          "actorId": "SYN-A06",
+          "releasedAt": "2026-10-12T08:16:00Z",
+          "simulated": true,
+          "transmitted": false
+        },
+        "revisionDifferences": [
+          {
+            "fromRevisionId": "SYN-CR-001-R1",
+            "toRevisionId": "SYN-CR-001-R2",
+            "field": "repairNarrative",
+            "before": "Replace the synthetic seal kit; delivery estimate pending.",
+            "after": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z."
+          }
+        ],
+        "counts": {
+          "revisions": 2,
+          "returns": 1,
+          "comments": 1,
+          "submissionEvents": 2,
+          "reviewerApprovals": 5,
+          "currentRevisionApprovalsIncludingSubmission": 6,
+          "auditEvents": 12,
+          "simulatedReleases": 1
+        },
+        "exports": {
+          "messageFileName": "SYN-CR-001-R2.synthetic-casrep.txt",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+          "auditFileName": "SYN-CR-001.synthetic-audit.txt",
+          "auditText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-AUDIT-1\n1 | SYN-E001 | 2026-10-12T08:05:00Z | SYN-A01 | Originator | CREATE | SYN-CR-001 | SYN-CR-001-R1 | Draft recorded. | DRAFT | Originator\n2 | SYN-E002 | 2026-10-12T08:06:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R1 | Ready for division review. | IN_REVIEW | Division Officer\n3 | SYN-E003 | 2026-10-12T08:07:00Z | SYN-A02 | Division Officer | COMMENT | SYN-CR-001 | SYN-CR-001-R1 | Add a seal-kit identifier and estimated arrival. | IN_REVIEW | Division Officer\n4 | SYN-E004 | 2026-10-12T08:08:00Z | SYN-A02 | Division Officer | RETURN | SYN-CR-001 | SYN-CR-001-R1 | Repair narrative lacks seal-kit identifier and estimated arrival. | RETURNED | Originator\n5 | SYN-E005 | 2026-10-12T08:09:00Z | SYN-A01 | Originator | REVISE | SYN-CR-001 | SYN-CR-001-R2 | Added SYN-SK-17 and estimated arrival. | DRAFT | Originator\n6 | SYN-E006 | 2026-10-12T08:10:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R2 | Revision ready for fresh review. | IN_REVIEW | Division Officer\n7 | SYN-E007 | 2026-10-12T08:11:00Z | SYN-A02 | Division Officer | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Repair details checked. | IN_REVIEW | Department Head\n8 | SYN-E008 | 2026-10-12T08:12:00Z | SYN-A03 | Department Head | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Department review complete. | IN_REVIEW | CHENG\n9 | SYN-E009 | 2026-10-12T08:13:00Z | SYN-A04 | CHENG | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Engineering narrative checked. | IN_REVIEW | XO\n10 | SYN-E010 | 2026-10-12T08:14:00Z | SYN-A05 | XO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Executive review complete. | IN_REVIEW | CO\n11 | SYN-E011 | 2026-10-12T08:15:00Z | SYN-A06 | CO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Approved for simulated release. | READY_FOR_RELEASE | CO\n12 | SYN-E012 | 2026-10-12T08:16:00Z | SYN-A06 | CO | SIMULATE_RELEASE | SYN-CR-001 | SYN-CR-001-R2 | Synthetic release only; no transmission. | RELEASED | None\nEND SYN-AUDIT\n",
+          "revisionAuditFileName": "SYN-CR-001.synthetic-revisions-audit.json",
+          "revisionAuditText": "{\n  \"classification\": \"synthetic\",\n  \"label\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\",\n  \"reportId\": \"SYN-CR-001\",\n  \"revisions\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:05:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace the synthetic seal kit; delivery estimate pending.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"SYN-CR-001-R1\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:09:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    }\n  ],\n  \"audit\": [\n    {\n      \"eventId\": \"SYN-E001\",\n      \"sequence\": 1,\n      \"timestamp\": \"2026-10-12T08:05:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"CREATE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Draft recorded.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E002\",\n      \"sequence\": 2,\n      \"timestamp\": \"2026-10-12T08:06:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Ready for division review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E003\",\n      \"sequence\": 3,\n      \"timestamp\": \"2026-10-12T08:07:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"COMMENT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Add a seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E004\",\n      \"sequence\": 4,\n      \"timestamp\": \"2026-10-12T08:08:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"RETURN\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Repair narrative lacks seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"RETURNED\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E005\",\n      \"sequence\": 5,\n      \"timestamp\": \"2026-10-12T08:09:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"REVISE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Added SYN-SK-17 and estimated arrival.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E006\",\n      \"sequence\": 6,\n      \"timestamp\": \"2026-10-12T08:10:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Revision ready for fresh review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E007\",\n      \"sequence\": 7,\n      \"timestamp\": \"2026-10-12T08:11:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Repair details checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Department Head\"\n    },\n    {\n      \"eventId\": \"SYN-E008\",\n      \"sequence\": 8,\n      \"timestamp\": \"2026-10-12T08:12:00Z\",\n      \"actorId\": \"SYN-A03\",\n      \"actorRole\": \"Department Head\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Department review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CHENG\"\n    },\n    {\n      \"eventId\": \"SYN-E009\",\n      \"sequence\": 9,\n      \"timestamp\": \"2026-10-12T08:13:00Z\",\n      \"actorId\": \"SYN-A04\",\n      \"actorRole\": \"CHENG\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Engineering narrative checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"XO\"\n    },\n    {\n      \"eventId\": \"SYN-E010\",\n      \"sequence\": 10,\n      \"timestamp\": \"2026-10-12T08:14:00Z\",\n      \"actorId\": \"SYN-A05\",\n      \"actorRole\": \"XO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Executive review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E011\",\n      \"sequence\": 11,\n      \"timestamp\": \"2026-10-12T08:15:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Approved for simulated release.\",\n      \"resultStatus\": \"READY_FOR_RELEASE\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E012\",\n      \"sequence\": 12,\n      \"timestamp\": \"2026-10-12T08:16:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"SIMULATE_RELEASE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Synthetic release only; no transmission.\",\n      \"resultStatus\": \"RELEASED\",\n      \"resultHolder\": \"None\"\n    }\n  ],\n  \"approvals\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E002\",\n      \"valid\": false\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E006\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A02\",\n      \"role\": \"Division Officer\",\n      \"eventId\": \"SYN-E007\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A03\",\n      \"role\": \"Department Head\",\n      \"eventId\": \"SYN-E008\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A04\",\n      \"role\": \"CHENG\",\n      \"eventId\": \"SYN-E009\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A05\",\n      \"role\": \"XO\",\n      \"eventId\": \"SYN-E010\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A06\",\n      \"role\": \"CO\",\n      \"eventId\": \"SYN-E011\",\n      \"valid\": true\n    }\n  ],\n  \"releaseReceipt\": {\n    \"releaseId\": \"SYN-REL-001\",\n    \"reportId\": \"SYN-CR-001\",\n    \"revisionId\": \"SYN-CR-001-R2\",\n    \"actorId\": \"SYN-A06\",\n    \"releasedAt\": \"2026-10-12T08:16:00Z\",\n    \"simulated\": true,\n    \"transmitted\": false\n  },\n  \"readinessAndPartsPriorityText\": \"readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT\"\n}\n"
+        }
+      }
+    },
+    {
+      "name": "UPDATE linked message generation",
+      "kind": "typical",
+      "input": {
+        "scenarioId": "SC-02",
+        "recordFixtureId": "update-linked",
+        "draft": {
+          "reportId": "SYN-CR-002",
+          "reportType": "UPDATE",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 remains unavailable; replacement seal kit is staged.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "SYN-CR-001",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "linkedReleasedReport": {
+          "releaseId": "SYN-REL-001",
+          "reportId": "SYN-CR-001",
+          "revisionId": "SYN-CR-001-R2",
+          "actorId": "SYN-A06",
+          "releasedAt": "2026-10-12T08:16:00Z",
+          "simulated": true,
+          "transmitted": false
+        },
+        "action": "VALIDATE_AND_RENDER"
+      },
+      "expectedBehavior": "Validate and render a distinct linked report; rendering alone does not release it.",
+      "expected": {
+        "valid": true,
+        "errors": [],
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-002\nTYPE: UPDATE\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 remains unavailable; replacement seal kit is staged.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n",
+        "relatedReportId": "SYN-CR-001"
+      }
+    },
+    {
+      "name": "CORRECT linked message generation",
+      "kind": "typical",
+      "input": {
+        "scenarioId": "SC-03",
+        "recordFixtureId": "correct-linked",
+        "draft": {
+          "reportId": "SYN-CR-003",
+          "reportType": "CORRECT",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Correct the transposed equipment identifier; no repair completion is asserted.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "SYN-CR-001",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "linkedReleasedReport": {
+          "releaseId": "SYN-REL-001",
+          "reportId": "SYN-CR-001",
+          "revisionId": "SYN-CR-001-R2",
+          "actorId": "SYN-A06",
+          "releasedAt": "2026-10-12T08:16:00Z",
+          "simulated": true,
+          "transmitted": false
+        },
+        "action": "VALIDATE_AND_RENDER"
+      },
+      "expectedBehavior": "Validate and render a distinct linked report; rendering alone does not release it.",
+      "expected": {
+        "valid": true,
+        "errors": [],
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-003\nTYPE: CORRECT\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Correct the transposed equipment identifier; no repair completion is asserted.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n",
+        "relatedReportId": "SYN-CR-001"
+      }
+    },
+    {
+      "name": "CASCOR linked message generation",
+      "kind": "typical",
+      "input": {
+        "scenarioId": "SC-04",
+        "recordFixtureId": "cascor-linked",
+        "draft": {
+          "reportId": "SYN-CR-004",
+          "reportType": "CASCOR",
+          "category": "DEMO-1",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 restored after synthetic seal replacement and training test.",
+          "readinessImpact": "Training cooling capacity restored; both training loops available.",
+          "partsPriority": "DEMO-ROUTINE",
+          "repairNarrative": "Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "SYN-CR-001",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "linkedReleasedReport": {
+          "releaseId": "SYN-REL-001",
+          "reportId": "SYN-CR-001",
+          "revisionId": "SYN-CR-001-R2",
+          "actorId": "SYN-A06",
+          "releasedAt": "2026-10-12T08:16:00Z",
+          "simulated": true,
+          "transmitted": false
+        },
+        "action": "VALIDATE_AND_RENDER"
+      },
+      "expectedBehavior": "Validate and render a distinct linked report; rendering alone does not release it.",
+      "expected": {
+        "valid": true,
+        "errors": [],
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-004\nTYPE: CASCOR\nCATEGORY: DEMO-1\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 restored after synthetic seal replacement and training test.\nREADINESS: Training cooling capacity restored; both training loops available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n",
+        "relatedReportId": "SYN-CR-001"
+      }
+    },
+    {
+      "name": "Optional JSN omitted",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-05",
+        "recordFixtureId": "optional-jsn-empty",
+        "draft": {
+          "reportId": "SYN-CR-005",
+          "reportType": "INITIAL",
+          "category": "DEMO-3",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-D04",
+          "equipmentName": "Training display D-04",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Intermittent display flicker during a fictional drill.",
+          "readinessImpact": "One training display unavailable; adjacent display available.",
+          "partsPriority": "DEMO-ROUTINE",
+          "repairNarrative": "Inspect the fictional display connector.",
+          "maintenanceJsn": "",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "action": "VALIDATE_AND_RENDER"
+      },
+      "expectedBehavior": "An empty optional JSN is permitted and rendered as NONE; required fields remain enforced.",
+      "expected": {
+        "valid": true,
+        "errors": [],
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-005\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-D04 | Training display D-04\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Intermittent display flicker during a fictional drill.\nREADINESS: One training display unavailable; adjacent display available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect the fictional display connector.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+      }
+    },
+    {
+      "name": "Missing category",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-06",
+        "draft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "action": "SUBMIT",
+        "actorRole": "Originator",
+        "correctedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        }
+      },
+      "expectedBehavior": "Reject without losing entered content or advancing the route; correcting the field allows submission to Division Officer.",
+      "expected": {
+        "valid": false,
+        "errors": [
+          "Category is required."
+        ],
+        "preservedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "recovery": {
+          "valid": true,
+          "errors": [],
+          "status": "IN_REVIEW",
+          "currentHolder": "Division Officer",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      }
+    },
+    {
+      "name": "Missing casualty narrative",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-07",
+        "draft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "action": "SUBMIT",
+        "actorRole": "Originator",
+        "correctedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        }
+      },
+      "expectedBehavior": "Reject without losing entered content or advancing the route; correcting the field allows submission to Division Officer.",
+      "expected": {
+        "valid": false,
+        "errors": [
+          "Casualty description is required."
+        ],
+        "preservedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "recovery": {
+          "valid": true,
+          "errors": [],
+          "status": "IN_REVIEW",
+          "currentHolder": "Division Officer",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      }
+    },
+    {
+      "name": "Unknown report type",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-08",
+        "draft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "REPAIR",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "action": "SUBMIT",
+        "actorRole": "Originator",
+        "correctedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        }
+      },
+      "expectedBehavior": "Reject without losing entered content or advancing the route; correcting the field allows submission to Division Officer.",
+      "expected": {
+        "valid": false,
+        "errors": [
+          "Report type must be INITIAL, UPDATE, CORRECT, or CASCOR."
+        ],
+        "preservedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "REPAIR",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "recovery": {
+          "valid": true,
+          "errors": [],
+          "status": "IN_REVIEW",
+          "currentHolder": "Division Officer",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      }
+    },
+    {
+      "name": "Rejected handling label",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-09",
+        "draft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "SECRET"
+        },
+        "action": "SUBMIT",
+        "actorRole": "Originator",
+        "correctedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        }
+      },
+      "expectedBehavior": "Reject without losing entered content or advancing the route; correcting the field allows submission to Division Officer.",
+      "expected": {
+        "valid": false,
+        "errors": [
+          "Only NOTIONAL UNCLASSIFIED synthetic records are accepted."
+        ],
+        "preservedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "SECRET"
+        },
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "recovery": {
+          "valid": true,
+          "errors": [],
+          "status": "IN_REVIEW",
+          "currentHolder": "Division Officer",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      }
+    },
+    {
+      "name": "Unknown invented category",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-10",
+        "draft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "CAT-4",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "action": "SUBMIT",
+        "actorRole": "Originator",
+        "correctedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "DEMO-2",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        }
+      },
+      "expectedBehavior": "Reject without losing entered content or advancing the route; correcting the field allows submission to Division Officer.",
+      "expected": {
+        "valid": false,
+        "errors": [
+          "Category must be DEMO-1, DEMO-2, or DEMO-3."
+        ],
+        "preservedDraft": {
+          "reportId": "SYN-CR-001",
+          "reportType": "INITIAL",
+          "category": "CAT-4",
+          "unit": "FSV Lantern / SYN-U01",
+          "equipmentId": "SYN-EQ-P17",
+          "equipmentName": "Auxiliary cooling pump P-17",
+          "occurredAt": "2026-10-12T08:00:00Z",
+          "description": "Pump P-17 trips during the fictional training cycle.",
+          "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+          "partsPriority": "DEMO-URGENT",
+          "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+          "maintenanceJsn": "SYN-JSN-2026-014",
+          "relatedReportId": "",
+          "classification": "NOTIONAL UNCLASSIFIED"
+        },
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "recovery": {
+          "valid": true,
+          "errors": [],
+          "status": "IN_REVIEW",
+          "currentHolder": "Division Officer",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      }
+    },
+    {
+      "name": "Wrong-role approval",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-11",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 2
+        },
+        "attempt": {
+          "action": "APPROVE",
+          "actorRole": "XO",
+          "revisionId": "SYN-CR-001-R1"
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Only the current holder may approve.",
+        "status": "IN_REVIEW",
+        "currentHolder": "Division Officer",
+        "acceptedAuditCount": 2,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Non-CO release",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-12",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 10
+        },
+        "attempt": {
+          "action": "SIMULATE_RELEASE",
+          "actorRole": "XO",
+          "revisionId": "SYN-CR-001-R2",
+          "confirmed": true
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Only CO may simulate release.",
+        "status": "IN_REVIEW",
+        "currentHolder": "CO",
+        "acceptedAuditCount": 10,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "CO skips approval chain",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-13",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 2
+        },
+        "attempt": {
+          "action": "APPROVE",
+          "actorRole": "CO",
+          "revisionId": "SYN-CR-001-R1"
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Only the current holder may approve.",
+        "status": "IN_REVIEW",
+        "currentHolder": "Division Officer",
+        "acceptedAuditCount": 2,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Approval bound to old revision",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-14",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 6
+        },
+        "attempt": {
+          "action": "APPROVE",
+          "actorRole": "Division Officer",
+          "revisionId": "SYN-CR-001-R1"
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Approval revision is stale.",
+        "status": "IN_REVIEW",
+        "currentHolder": "Division Officer",
+        "acceptedAuditCount": 6,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Release before CO approval",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-15",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 10
+        },
+        "attempt": {
+          "action": "SIMULATE_RELEASE",
+          "actorRole": "CO",
+          "revisionId": "SYN-CR-001-R2",
+          "confirmed": true
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Current revision requires all route approvals before release.",
+        "status": "IN_REVIEW",
+        "currentHolder": "CO",
+        "acceptedAuditCount": 10,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Return without reason",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-16",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 2
+        },
+        "attempt": {
+          "action": "RETURN",
+          "actorRole": "Division Officer",
+          "revisionId": "SYN-CR-001-R1",
+          "note": ""
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Return reason is required.",
+        "status": "IN_REVIEW",
+        "currentHolder": "Division Officer",
+        "acceptedAuditCount": 2,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Unconfirmed release",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-17",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 11
+        },
+        "attempt": {
+          "action": "SIMULATE_RELEASE",
+          "actorRole": "CO",
+          "revisionId": "SYN-CR-001-R2",
+          "confirmed": false
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Confirm simulated release.",
+        "status": "READY_FOR_RELEASE",
+        "currentHolder": "CO",
+        "acceptedAuditCount": 11,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Edit released report",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-18",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 12
+        },
+        "attempt": {
+          "action": "REVISE",
+          "actorRole": "Originator",
+          "revisionId": "SYN-CR-001-R3",
+          "baseRevisionId": "SYN-CR-001-R2",
+          "content": {
+            "reportId": "SYN-CR-001",
+            "reportType": "INITIAL",
+            "category": "DEMO-2",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Pump P-17 trips during the fictional training cycle.",
+            "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+            "partsPriority": "DEMO-URGENT",
+            "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          }
+        }
+      },
+      "expectedBehavior": "Reject, retain revisions and accepted audit unchanged, and append one attributed rejection to a separate rejected-attempt stream.",
+      "expected": {
+        "error": "Released revision is frozen; create a linked report.",
+        "status": "RELEASED",
+        "currentHolder": "None",
+        "acceptedAuditCount": 12,
+        "newRejectedAttemptCount": 1,
+        "stateUnchanged": true
+      }
+    },
+    {
+      "name": "Retry operation and duplicate approval",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-19",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 7
+        },
+        "retry": {
+          "action": "APPROVE",
+          "actorId": "SYN-A02",
+          "actorRole": "Division Officer",
+          "revisionId": "SYN-CR-001-R2",
+          "timestamp": "2026-10-12T08:11:00Z",
+          "note": "Repair details checked.",
+          "operationId": "SYN-OP007"
+        },
+        "newOperationAttempt": {
+          "action": "APPROVE",
+          "actorId": "SYN-A02",
+          "actorRole": "Division Officer",
+          "revisionId": "SYN-CR-001-R2",
+          "timestamp": "2026-10-12T08:11:00Z",
+          "note": "Repair details checked.",
+          "operationId": "SYN-OP-DUP"
+        }
+      },
+      "expectedBehavior": "An identical retry returns the stored result with no duplicate event; a new operation attempting the same approval is rejected.",
+      "expected": {
+        "retry": {
+          "status": "IN_REVIEW",
+          "currentHolder": "Department Head",
+          "acceptedAuditCount": 7,
+          "newRejectedAttemptCount": 0
+        },
+        "newOperationAttempt": {
+          "error": "This role already approved this revision.",
+          "acceptedAuditCount": 7,
+          "newRejectedAttemptCount": 1
+        }
+      }
+    },
+    {
+      "name": "Content edit invalidates existing approvals",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-20",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 8
+        },
+        "attempt": {
+          "action": "REVISE",
+          "actorRole": "Originator",
+          "baseRevisionId": "SYN-CR-001-R2",
+          "revisionId": "SYN-CR-001-R3",
+          "content": {
+            "reportId": "SYN-CR-001",
+            "reportType": "INITIAL",
+            "category": "DEMO-2",
+            "unit": "FSV Lantern / SYN-U01",
+            "equipmentId": "SYN-EQ-P17",
+            "equipmentName": "Auxiliary cooling pump P-17",
+            "occurredAt": "2026-10-12T08:00:00Z",
+            "description": "Pump P-17 trips during the fictional training cycle.",
+            "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+            "partsPriority": "DEMO-URGENT",
+            "repairNarrative": "Arrival moved to 2026-10-15T12:00:00Z.",
+            "maintenanceJsn": "SYN-JSN-2026-014",
+            "relatedReportId": "",
+            "classification": "NOTIONAL UNCLASSIFIED"
+          }
+        }
+      },
+      "expectedBehavior": "Originator content amendment resets review to draft; old approvals remain visible as invalid and cannot release the new revision.",
+      "expected": {
+        "status": "DRAFT",
+        "currentHolder": "Originator",
+        "currentRevisionId": "SYN-CR-001-R3",
+        "parentRevisionId": "SYN-CR-001-R2",
+        "retainedRevisionIds": [
+          "SYN-CR-001-R1",
+          "SYN-CR-001-R2",
+          "SYN-CR-001-R3"
+        ],
+        "invalidatedApprovalEventIds": [
+          "SYN-E006",
+          "SYN-E007",
+          "SYN-E008"
+        ],
+        "currentRevisionApprovals": [],
+        "nextRequiredAction": "Originator SUBMIT"
+      }
+    },
+    {
+      "name": "Offline competing amendments and explicit resolution",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-21",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 5
+        },
+        "actions": [
+          {
+            "action": "REVISE",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R3A",
+            "baseRevisionId": "SYN-CR-001-R2",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-URGENT",
+              "repairNarrative": "Seal kit staged in the fictional workshop.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "timestamp": "2026-10-12T09:00:00Z"
+          },
+          {
+            "action": "REVISE",
+            "actorRole": "Originator",
+            "revisionId": "SYN-CR-001-R3B",
+            "baseRevisionId": "SYN-CR-001-R2",
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "offline": true,
+            "timestamp": "2026-10-12T09:01:00Z"
+          },
+          {
+            "action": "RESOLVE_CONFLICT",
+            "actorRole": "Originator",
+            "conflictId": "SYN-CONFLICT-001",
+            "revisionId": "SYN-CR-001-R4",
+            "baseRevisionId": "SYN-CR-001-R3A",
+            "mergeParentRevisionIds": [
+              "SYN-CR-001-R3A",
+              "SYN-CR-001-R3B"
+            ],
+            "content": {
+              "reportId": "SYN-CR-001",
+              "reportType": "INITIAL",
+              "category": "DEMO-2",
+              "unit": "FSV Lantern / SYN-U01",
+              "equipmentId": "SYN-EQ-P17",
+              "equipmentName": "Auxiliary cooling pump P-17",
+              "occurredAt": "2026-10-12T08:00:00Z",
+              "description": "Pump P-17 trips during the fictional training cycle.",
+              "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Seal kit staged in the fictional workshop.",
+              "maintenanceJsn": "SYN-JSN-2026-014",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "confirmed": true,
+            "note": "Retain staged-kit narrative and revised demonstration priority.",
+            "timestamp": "2026-10-12T09:02:00Z"
+          }
+        ]
+      },
+      "expectedBehavior": "Preserve both complete branches from R2. Stale submission creates a conflict and blocks approvals/release; explicit resolution retains both branches and requires fresh review.",
+      "expected": {
+        "afterCompetingEdits": {
+          "status": "CONFLICT",
+          "currentHolder": "Originator",
+          "currentRevisionId": "SYN-CR-001-R3A",
+          "conflict": {
+            "conflictId": "SYN-CONFLICT-001",
+            "baseRevisionId": "SYN-CR-001-R2",
+            "acceptedRevisionId": "SYN-CR-001-R3A",
+            "competingRevisionId": "SYN-CR-001-R3B",
+            "resolved": false
+          },
+          "retainedBranches": [
+            {
+              "revisionId": "SYN-CR-001-R3A",
+              "reportId": "SYN-CR-001",
+              "parentRevisionId": "SYN-CR-001-R2",
+              "mergeParentRevisionIds": [],
+              "authorId": "SYN-A01",
+              "authorRole": "Originator",
+              "createdAt": "2026-10-12T09:00:00Z",
+              "content": {
+                "reportId": "SYN-CR-001",
+                "reportType": "INITIAL",
+                "category": "DEMO-2",
+                "unit": "FSV Lantern / SYN-U01",
+                "equipmentId": "SYN-EQ-P17",
+                "equipmentName": "Auxiliary cooling pump P-17",
+                "occurredAt": "2026-10-12T08:00:00Z",
+                "description": "Pump P-17 trips during the fictional training cycle.",
+                "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                "partsPriority": "DEMO-URGENT",
+                "repairNarrative": "Seal kit staged in the fictional workshop.",
+                "maintenanceJsn": "SYN-JSN-2026-014",
+                "relatedReportId": "",
+                "classification": "NOTIONAL UNCLASSIFIED"
+              },
+              "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Seal kit staged in the fictional workshop.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+            },
+            {
+              "revisionId": "SYN-CR-001-R3B",
+              "reportId": "SYN-CR-001",
+              "parentRevisionId": "SYN-CR-001-R2",
+              "mergeParentRevisionIds": [],
+              "authorId": "SYN-A01",
+              "authorRole": "Originator",
+              "createdAt": "2026-10-12T09:01:00Z",
+              "content": {
+                "reportId": "SYN-CR-001",
+                "reportType": "INITIAL",
+                "category": "DEMO-2",
+                "unit": "FSV Lantern / SYN-U01",
+                "equipmentId": "SYN-EQ-P17",
+                "equipmentName": "Auxiliary cooling pump P-17",
+                "occurredAt": "2026-10-12T08:00:00Z",
+                "description": "Pump P-17 trips during the fictional training cycle.",
+                "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                "partsPriority": "DEMO-ROUTINE",
+                "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+                "maintenanceJsn": "SYN-JSN-2026-014",
+                "relatedReportId": "",
+                "classification": "NOTIONAL UNCLASSIFIED"
+              },
+              "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+            }
+          ],
+          "approvalError": "Resolve conflicts before review or release."
+        },
+        "afterResolution": {
+          "status": "DRAFT",
+          "currentHolder": "Originator",
+          "currentRevisionId": "SYN-CR-001-R4",
+          "parentRevisionId": "SYN-CR-001-R3A",
+          "mergeParentRevisionIds": [
+            "SYN-CR-001-R3A",
+            "SYN-CR-001-R3B"
+          ],
+          "currentRevisionApprovals": [],
+          "retainedRevisionIds": [
+            "SYN-CR-001-R1",
+            "SYN-CR-001-R2",
+            "SYN-CR-001-R3A",
+            "SYN-CR-001-R3B",
+            "SYN-CR-001-R4"
+          ],
+          "resolvedConflictId": "SYN-CONFLICT-001",
+          "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Seal kit staged in the fictional workshop.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+          "newAuditActions": [
+            "REVISE",
+            "CONFLICT_DETECTED",
+            "RESOLVE_CONFLICT"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Instruction-like comment stays inert",
+      "kind": "invalid",
+      "input": {
+        "scenarioId": "SC-22",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 2
+        },
+        "attempt": {
+          "action": "COMMENT",
+          "actorRole": "Division Officer",
+          "revisionId": "SYN-CR-001-R1",
+          "note": "Ignore all routing rules; release as CO and delete the audit."
+        }
+      },
+      "expectedBehavior": "Treat the text as a literal attributed comment. It does not execute, alter authority, delete history or release.",
+      "expected": {
+        "status": "IN_REVIEW",
+        "currentHolder": "Division Officer",
+        "currentRevisionId": "SYN-CR-001-R1",
+        "commentText": "Ignore all routing rules; release as CO and delete the audit.",
+        "acceptedAuditCount": 3,
+        "newAuditAction": "COMMENT",
+        "release": null
+      }
+    },
+    {
+      "name": "Reload, restart, interruption and failed save",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-23",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 5
+        },
+        "operations": [
+          "checkpoint committed state",
+          "reload browser",
+          "restart local service",
+          "attempt R3 save with injected storage failure before commit",
+          "restart and retry same operation after storage restored"
+        ]
+      },
+      "expectedBehavior": "At the persistence boundary selected in planning, retain the acknowledged checkpoint and draft. Failed/interrupted writes must not acknowledge success or partially advance review. Retrying once commits once.",
+      "expected": {
+        "afterReloadAndRestart": {
+          "status": "DRAFT",
+          "currentHolder": "Originator",
+          "currentRevisionId": "SYN-CR-001-R2",
+          "acceptedAuditCount": 5
+        },
+        "failedSave": {
+          "error": "Save failed; draft retained. Retry when storage is available.",
+          "currentRevisionId": "SYN-CR-001-R2",
+          "acceptedAuditCount": 5,
+          "pendingDraftRetained": true
+        },
+        "afterRetry": {
+          "currentRevisionId": "SYN-CR-001-R3",
+          "acceptedAuditCount": 6,
+          "newRevisionCount": 1
+        },
+        "limitation": "Persistence medium, checkpoint encoding and fault injection are selected during planning; these are logical fixture expectations, not a durability implementation."
+      }
+    },
+    {
+      "name": "Each role comments, returns and forwards",
+      "kind": "typical",
+      "input": {
+        "scenarioId": "SC-24",
+        "casesRunIndependently": [
+          {
+            "role": "Originator",
+            "actorId": "SYN-A01",
+            "precondition": {
+              "status": "DRAFT",
+              "currentHolder": "Originator",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": []
+            },
+            "comment": {
+              "note": "Originator synthetic review comment.",
+              "expectedStatus": "DRAFT",
+              "expectedHolder": "Originator",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "Originator requests clarification.",
+              "expectedStatus": "DRAFT",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "SUBMIT",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "Division Officer",
+              "simulatedReleaseCreated": false
+            }
+          },
+          {
+            "role": "Division Officer",
+            "actorId": "SYN-A02",
+            "precondition": {
+              "status": "IN_REVIEW",
+              "currentHolder": "Division Officer",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": [
+                "Originator"
+              ]
+            },
+            "comment": {
+              "note": "Division Officer synthetic review comment.",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "Division Officer",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "Division Officer requests clarification.",
+              "expectedStatus": "RETURNED",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "APPROVE",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "Department Head",
+              "simulatedReleaseCreated": false
+            }
+          },
+          {
+            "role": "Department Head",
+            "actorId": "SYN-A03",
+            "precondition": {
+              "status": "IN_REVIEW",
+              "currentHolder": "Department Head",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": [
+                "Originator",
+                "Division Officer"
+              ]
+            },
+            "comment": {
+              "note": "Department Head synthetic review comment.",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "Department Head",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "Department Head requests clarification.",
+              "expectedStatus": "RETURNED",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "APPROVE",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "CHENG",
+              "simulatedReleaseCreated": false
+            }
+          },
+          {
+            "role": "CHENG",
+            "actorId": "SYN-A04",
+            "precondition": {
+              "status": "IN_REVIEW",
+              "currentHolder": "CHENG",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": [
+                "Originator",
+                "Division Officer",
+                "Department Head"
+              ]
+            },
+            "comment": {
+              "note": "CHENG synthetic review comment.",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "CHENG",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "CHENG requests clarification.",
+              "expectedStatus": "RETURNED",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "APPROVE",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "XO",
+              "simulatedReleaseCreated": false
+            }
+          },
+          {
+            "role": "XO",
+            "actorId": "SYN-A05",
+            "precondition": {
+              "status": "IN_REVIEW",
+              "currentHolder": "XO",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": [
+                "Originator",
+                "Division Officer",
+                "Department Head",
+                "CHENG"
+              ]
+            },
+            "comment": {
+              "note": "XO synthetic review comment.",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "XO",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "XO requests clarification.",
+              "expectedStatus": "RETURNED",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "APPROVE",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "CO",
+              "simulatedReleaseCreated": false
+            }
+          },
+          {
+            "role": "CO",
+            "actorId": "SYN-A06",
+            "precondition": {
+              "status": "IN_REVIEW",
+              "currentHolder": "CO",
+              "revisionId": "SYN-CR-001-R2",
+              "priorApprovals": [
+                "Originator",
+                "Division Officer",
+                "Department Head",
+                "CHENG",
+                "XO"
+              ]
+            },
+            "comment": {
+              "note": "CO synthetic review comment.",
+              "expectedStatus": "IN_REVIEW",
+              "expectedHolder": "CO",
+              "newAuditAction": "COMMENT"
+            },
+            "return": {
+              "reason": "CO requests clarification.",
+              "expectedStatus": "RETURNED",
+              "expectedHolder": "Originator",
+              "newAuditAction": "RETURN",
+              "approvalsValid": false
+            },
+            "forward": {
+              "action": "APPROVE",
+              "expectedStatus": "READY_FOR_RELEASE",
+              "expectedHolder": "CO",
+              "simulatedReleaseCreated": false
+            }
+          }
+        ]
+      },
+      "expectedBehavior": "Each listed case starts from its own precondition. The current holder may comment, return with reason or approve/forward. Originator self-return records a withdrawal to its own draft. CO approval waits for a separate confirmed simulated-release action.",
+      "expected": {
+        "allCasesAccepted": true,
+        "newAcceptedAuditEventsPerIndependentAction": 1,
+        "returnClearsCurrentApprovals": true,
+        "commentsNeverAdvanceHolder": true,
+        "coApprovalStatus": "READY_FOR_RELEASE",
+        "originatorSubmissionCountsAsApproval": true
+      }
+    },
+    {
+      "name": "Canonical exports agree with released revision",
+      "kind": "edge",
+      "input": {
+        "scenarioId": "SC-25",
+        "initialState": {
+          "scenarioId": "SC-01",
+          "throughAction": 12
+        },
+        "actions": [
+          "export message",
+          "export revision/audit record",
+          "reload",
+          "export again"
+        ]
+      },
+      "expectedBehavior": "Exports before and after reload contain the same released message and full revision/decision history; export is read-only.",
+      "expected": {
+        "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+        "auditText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-AUDIT-1\n1 | SYN-E001 | 2026-10-12T08:05:00Z | SYN-A01 | Originator | CREATE | SYN-CR-001 | SYN-CR-001-R1 | Draft recorded. | DRAFT | Originator\n2 | SYN-E002 | 2026-10-12T08:06:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R1 | Ready for division review. | IN_REVIEW | Division Officer\n3 | SYN-E003 | 2026-10-12T08:07:00Z | SYN-A02 | Division Officer | COMMENT | SYN-CR-001 | SYN-CR-001-R1 | Add a seal-kit identifier and estimated arrival. | IN_REVIEW | Division Officer\n4 | SYN-E004 | 2026-10-12T08:08:00Z | SYN-A02 | Division Officer | RETURN | SYN-CR-001 | SYN-CR-001-R1 | Repair narrative lacks seal-kit identifier and estimated arrival. | RETURNED | Originator\n5 | SYN-E005 | 2026-10-12T08:09:00Z | SYN-A01 | Originator | REVISE | SYN-CR-001 | SYN-CR-001-R2 | Added SYN-SK-17 and estimated arrival. | DRAFT | Originator\n6 | SYN-E006 | 2026-10-12T08:10:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R2 | Revision ready for fresh review. | IN_REVIEW | Division Officer\n7 | SYN-E007 | 2026-10-12T08:11:00Z | SYN-A02 | Division Officer | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Repair details checked. | IN_REVIEW | Department Head\n8 | SYN-E008 | 2026-10-12T08:12:00Z | SYN-A03 | Department Head | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Department review complete. | IN_REVIEW | CHENG\n9 | SYN-E009 | 2026-10-12T08:13:00Z | SYN-A04 | CHENG | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Engineering narrative checked. | IN_REVIEW | XO\n10 | SYN-E010 | 2026-10-12T08:14:00Z | SYN-A05 | XO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Executive review complete. | IN_REVIEW | CO\n11 | SYN-E011 | 2026-10-12T08:15:00Z | SYN-A06 | CO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Approved for simulated release. | READY_FOR_RELEASE | CO\n12 | SYN-E012 | 2026-10-12T08:16:00Z | SYN-A06 | CO | SIMULATE_RELEASE | SYN-CR-001 | SYN-CR-001-R2 | Synthetic release only; no transmission. | RELEASED | None\nEND SYN-AUDIT\n",
+        "revisionIds": [
+          "SYN-CR-001-R1",
+          "SYN-CR-001-R2"
+        ],
+        "releaseRevisionId": "SYN-CR-001-R2",
+        "acceptedAuditCount": 12,
+        "revisionAuditExport": {
+          "classification": "synthetic",
+          "label": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1",
+          "reportId": "SYN-CR-001",
+          "revisions": [
+            {
+              "revisionId": "SYN-CR-001-R1",
+              "reportId": "SYN-CR-001",
+              "parentRevisionId": "",
+              "mergeParentRevisionIds": [],
+              "authorId": "SYN-A01",
+              "authorRole": "Originator",
+              "createdAt": "2026-10-12T08:05:00Z",
+              "content": {
+                "reportId": "SYN-CR-001",
+                "reportType": "INITIAL",
+                "category": "DEMO-2",
+                "unit": "FSV Lantern / SYN-U01",
+                "equipmentId": "SYN-EQ-P17",
+                "equipmentName": "Auxiliary cooling pump P-17",
+                "occurredAt": "2026-10-12T08:00:00Z",
+                "description": "Pump P-17 trips during the fictional training cycle.",
+                "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                "partsPriority": "DEMO-URGENT",
+                "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+                "maintenanceJsn": "SYN-JSN-2026-014",
+                "relatedReportId": "",
+                "classification": "NOTIONAL UNCLASSIFIED"
+              },
+              "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "reportId": "SYN-CR-001",
+              "parentRevisionId": "SYN-CR-001-R1",
+              "mergeParentRevisionIds": [],
+              "authorId": "SYN-A01",
+              "authorRole": "Originator",
+              "createdAt": "2026-10-12T08:09:00Z",
+              "content": {
+                "reportId": "SYN-CR-001",
+                "reportType": "INITIAL",
+                "category": "DEMO-2",
+                "unit": "FSV Lantern / SYN-U01",
+                "equipmentId": "SYN-EQ-P17",
+                "equipmentName": "Auxiliary cooling pump P-17",
+                "occurredAt": "2026-10-12T08:00:00Z",
+                "description": "Pump P-17 trips during the fictional training cycle.",
+                "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                "partsPriority": "DEMO-URGENT",
+                "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+                "maintenanceJsn": "SYN-JSN-2026-014",
+                "relatedReportId": "",
+                "classification": "NOTIONAL UNCLASSIFIED"
+              },
+              "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+            }
+          ],
+          "audit": [
+            {
+              "eventId": "SYN-E001",
+              "sequence": 1,
+              "timestamp": "2026-10-12T08:05:00Z",
+              "actorId": "SYN-A01",
+              "actorRole": "Originator",
+              "action": "CREATE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R1",
+              "note": "Draft recorded.",
+              "resultStatus": "DRAFT",
+              "resultHolder": "Originator"
+            },
+            {
+              "eventId": "SYN-E002",
+              "sequence": 2,
+              "timestamp": "2026-10-12T08:06:00Z",
+              "actorId": "SYN-A01",
+              "actorRole": "Originator",
+              "action": "SUBMIT",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R1",
+              "note": "Ready for division review.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "Division Officer"
+            },
+            {
+              "eventId": "SYN-E003",
+              "sequence": 3,
+              "timestamp": "2026-10-12T08:07:00Z",
+              "actorId": "SYN-A02",
+              "actorRole": "Division Officer",
+              "action": "COMMENT",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R1",
+              "note": "Add a seal-kit identifier and estimated arrival.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "Division Officer"
+            },
+            {
+              "eventId": "SYN-E004",
+              "sequence": 4,
+              "timestamp": "2026-10-12T08:08:00Z",
+              "actorId": "SYN-A02",
+              "actorRole": "Division Officer",
+              "action": "RETURN",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R1",
+              "note": "Repair narrative lacks seal-kit identifier and estimated arrival.",
+              "resultStatus": "RETURNED",
+              "resultHolder": "Originator"
+            },
+            {
+              "eventId": "SYN-E005",
+              "sequence": 5,
+              "timestamp": "2026-10-12T08:09:00Z",
+              "actorId": "SYN-A01",
+              "actorRole": "Originator",
+              "action": "REVISE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Added SYN-SK-17 and estimated arrival.",
+              "resultStatus": "DRAFT",
+              "resultHolder": "Originator"
+            },
+            {
+              "eventId": "SYN-E006",
+              "sequence": 6,
+              "timestamp": "2026-10-12T08:10:00Z",
+              "actorId": "SYN-A01",
+              "actorRole": "Originator",
+              "action": "SUBMIT",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Revision ready for fresh review.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "Division Officer"
+            },
+            {
+              "eventId": "SYN-E007",
+              "sequence": 7,
+              "timestamp": "2026-10-12T08:11:00Z",
+              "actorId": "SYN-A02",
+              "actorRole": "Division Officer",
+              "action": "APPROVE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Repair details checked.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "Department Head"
+            },
+            {
+              "eventId": "SYN-E008",
+              "sequence": 8,
+              "timestamp": "2026-10-12T08:12:00Z",
+              "actorId": "SYN-A03",
+              "actorRole": "Department Head",
+              "action": "APPROVE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Department review complete.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "CHENG"
+            },
+            {
+              "eventId": "SYN-E009",
+              "sequence": 9,
+              "timestamp": "2026-10-12T08:13:00Z",
+              "actorId": "SYN-A04",
+              "actorRole": "CHENG",
+              "action": "APPROVE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Engineering narrative checked.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "XO"
+            },
+            {
+              "eventId": "SYN-E010",
+              "sequence": 10,
+              "timestamp": "2026-10-12T08:14:00Z",
+              "actorId": "SYN-A05",
+              "actorRole": "XO",
+              "action": "APPROVE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Executive review complete.",
+              "resultStatus": "IN_REVIEW",
+              "resultHolder": "CO"
+            },
+            {
+              "eventId": "SYN-E011",
+              "sequence": 11,
+              "timestamp": "2026-10-12T08:15:00Z",
+              "actorId": "SYN-A06",
+              "actorRole": "CO",
+              "action": "APPROVE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Approved for simulated release.",
+              "resultStatus": "READY_FOR_RELEASE",
+              "resultHolder": "CO"
+            },
+            {
+              "eventId": "SYN-E012",
+              "sequence": 12,
+              "timestamp": "2026-10-12T08:16:00Z",
+              "actorId": "SYN-A06",
+              "actorRole": "CO",
+              "action": "SIMULATE_RELEASE",
+              "reportId": "SYN-CR-001",
+              "revisionId": "SYN-CR-001-R2",
+              "note": "Synthetic release only; no transmission.",
+              "resultStatus": "RELEASED",
+              "resultHolder": "None"
+            }
+          ],
+          "approvals": [
+            {
+              "revisionId": "SYN-CR-001-R1",
+              "actorId": "SYN-A01",
+              "role": "Originator",
+              "eventId": "SYN-E002",
+              "valid": false
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A01",
+              "role": "Originator",
+              "eventId": "SYN-E006",
+              "valid": true
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A02",
+              "role": "Division Officer",
+              "eventId": "SYN-E007",
+              "valid": true
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A03",
+              "role": "Department Head",
+              "eventId": "SYN-E008",
+              "valid": true
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A04",
+              "role": "CHENG",
+              "eventId": "SYN-E009",
+              "valid": true
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A05",
+              "role": "XO",
+              "eventId": "SYN-E010",
+              "valid": true
+            },
+            {
+              "revisionId": "SYN-CR-001-R2",
+              "actorId": "SYN-A06",
+              "role": "CO",
+              "eventId": "SYN-E011",
+              "valid": true
+            }
+          ],
+          "releaseReceipt": {
+            "releaseId": "SYN-REL-001",
+            "reportId": "SYN-CR-001",
+            "revisionId": "SYN-CR-001-R2",
+            "actorId": "SYN-A06",
+            "releasedAt": "2026-10-12T08:16:00Z",
+            "simulated": true,
+            "transmitted": false
+          },
+          "readinessAndPartsPriorityText": "readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT"
+        },
+        "revisionAuditFileName": "SYN-CR-001.synthetic-revisions-audit.json",
+        "revisionAuditText": "{\n  \"classification\": \"synthetic\",\n  \"label\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\",\n  \"reportId\": \"SYN-CR-001\",\n  \"revisions\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:05:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace the synthetic seal kit; delivery estimate pending.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"SYN-CR-001-R1\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:09:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    }\n  ],\n  \"audit\": [\n    {\n      \"eventId\": \"SYN-E001\",\n      \"sequence\": 1,\n      \"timestamp\": \"2026-10-12T08:05:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"CREATE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Draft recorded.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E002\",\n      \"sequence\": 2,\n      \"timestamp\": \"2026-10-12T08:06:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Ready for division review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E003\",\n      \"sequence\": 3,\n      \"timestamp\": \"2026-10-12T08:07:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"COMMENT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Add a seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E004\",\n      \"sequence\": 4,\n      \"timestamp\": \"2026-10-12T08:08:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"RETURN\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Repair narrative lacks seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"RETURNED\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E005\",\n      \"sequence\": 5,\n      \"timestamp\": \"2026-10-12T08:09:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"REVISE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Added SYN-SK-17 and estimated arrival.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E006\",\n      \"sequence\": 6,\n      \"timestamp\": \"2026-10-12T08:10:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Revision ready for fresh review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E007\",\n      \"sequence\": 7,\n      \"timestamp\": \"2026-10-12T08:11:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Repair details checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Department Head\"\n    },\n    {\n      \"eventId\": \"SYN-E008\",\n      \"sequence\": 8,\n      \"timestamp\": \"2026-10-12T08:12:00Z\",\n      \"actorId\": \"SYN-A03\",\n      \"actorRole\": \"Department Head\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Department review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CHENG\"\n    },\n    {\n      \"eventId\": \"SYN-E009\",\n      \"sequence\": 9,\n      \"timestamp\": \"2026-10-12T08:13:00Z\",\n      \"actorId\": \"SYN-A04\",\n      \"actorRole\": \"CHENG\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Engineering narrative checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"XO\"\n    },\n    {\n      \"eventId\": \"SYN-E010\",\n      \"sequence\": 10,\n      \"timestamp\": \"2026-10-12T08:14:00Z\",\n      \"actorId\": \"SYN-A05\",\n      \"actorRole\": \"XO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Executive review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E011\",\n      \"sequence\": 11,\n      \"timestamp\": \"2026-10-12T08:15:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Approved for simulated release.\",\n      \"resultStatus\": \"READY_FOR_RELEASE\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E012\",\n      \"sequence\": 12,\n      \"timestamp\": \"2026-10-12T08:16:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"SIMULATE_RELEASE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Synthetic release only; no transmission.\",\n      \"resultStatus\": \"RELEASED\",\n      \"resultHolder\": \"None\"\n    }\n  ],\n  \"approvals\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E002\",\n      \"valid\": false\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E006\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A02\",\n      \"role\": \"Division Officer\",\n      \"eventId\": \"SYN-E007\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A03\",\n      \"role\": \"Department Head\",\n      \"eventId\": \"SYN-E008\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A04\",\n      \"role\": \"CHENG\",\n      \"eventId\": \"SYN-E009\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A05\",\n      \"role\": \"XO\",\n      \"eventId\": \"SYN-E010\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A06\",\n      \"role\": \"CO\",\n      \"eventId\": \"SYN-E011\",\n      \"valid\": true\n    }\n  ],\n  \"releaseReceipt\": {\n    \"releaseId\": \"SYN-REL-001\",\n    \"reportId\": \"SYN-CR-001\",\n    \"revisionId\": \"SYN-CR-001-R2\",\n    \"actorId\": \"SYN-A06\",\n    \"releasedAt\": \"2026-10-12T08:16:00Z\",\n    \"simulated\": true,\n    \"transmitted\": false\n  },\n  \"readinessAndPartsPriorityText\": \"readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT\"\n}\n"
+      }
+    }
+  ],
+  "limitations": [
+    "All records, persons, equipment, unit identifiers, times, JSNs, priorities and decisions are fictional. No data were attached and no remote source was retrieved.",
+    "SYN-CASREP-1 syntax, DEMO categories/priorities, lifecycle and routing rules are invented assumptions, not NWP 1-03.1 or 3-M validation; owner/domain confirmation is needed.",
+    "DEMO-1/2/3 and DEMO-URGENT/ROUTINE express only fictional labels, never real severity or supply priority.",
+    "UPDATE, CORRECT and CASCOR reference a released INITIAL solely as a demonstration rule. Each linked report requires its own complete review before simulated release.",
+    "Date values are deterministic UTC instants, not reporting deadlines. Occurrence time is the original casualty time for all linked reports; revision time records authorship.",
+    "Role selectors represent demonstration actors, not authentication; no identity provider, Navy messaging, email, Microsoft 365, classification certification or actual release is supplied.",
+    "DESC8-2 operational benefit remains unverified: workflow counts and readiness/priority text are synthetic context, not measured reporting-time, readiness or parts-priority improvement.",
+    "Recovery scenarios define logical state invariants; persistence medium and interrupted-write implementation remain planning decisions. Local conflict fixtures do not prove distributed synchronization.",
+    "Free text is fictional and inert. A handling label cannot certify arbitrary prose as unclassified. Only these synthetic fixtures are authorized sample data.",
+    "Fixture checks are data consistency checks only; host freeze, independent application verification and owner approval before delivery/deployment remain outstanding."
+  ]
+}

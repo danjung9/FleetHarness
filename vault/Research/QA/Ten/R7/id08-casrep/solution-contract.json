@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "objective": "Demonstrate complete synthetic CASREP drafting, canonical messages, durable versioned review and explicit simulated CO release with revision-bound authority; preserve conflicts and export exact records without claiming operational format compliance or transmission.",
+  "invocation": {
+    "input": "JSON object with action discriminator VALIDATE_AND_RENDER or WORKFLOW. VALIDATE_AND_RENDER: draft object and optional linkedReleasedReports array (default []). WORKFLOW: actions array (0..500 operations), optional linkedReleasedReports array (default []). No null defaults. Unknown fields are ignored. Draft has exactly these interpreted string fields: reportId, reportType, category, unit, equipmentId, equipmentName, occurredAt, description, readinessImpact, partsPriority, repairNarrative, maintenanceJsn, relatedReportId, classification. maintenanceJsn and relatedReportId default to empty string if omitted; other fields required. A linked receipt has reportId, revisionId, releaseId, actorId, releasedAt strings, simulated:true and transmitted:false. It represents an INITIAL prerequisite asserted by the synthetic caller, never an authenticated release. Each WORKFLOW operation has action CREATE, SUBMIT, COMMENT, RETURN, REVISE, APPROVE, SIMULATE_RELEASE or RESOLVE_CONFLICT; actorRole and revisionId strings required. Optional actorId defaults to SYN-A01..SYN-A06 by route order; supplied actorId must match role. Optional operationId defaults to AUTO- plus one-based unpadded input position; timestamp defaults to 2026-01-01T00:00:00Z; note defaults to empty string. confirmed and offline default false. CREATE, REVISE, RESOLVE_CONFLICT require content draft. REVISE requires baseRevisionId string; RESOLVE_CONFLICT also requires baseRevisionId, conflictId and mergeParentRevisionIds array of unique revision ID strings. RETURN returnTarget defaults Originator, only Originator is accepted. Extra operation fields ignored. Max 500 revisions; all strings at most 2000 UTF-16 code units, except operationId, IDs and actorRole at most 100. No CR/LF in draft fields; equipment fields cannot contain literal space-pipe-space. Notes may contain arbitrary inert text but no CR/LF or space-pipe-space to keep audit serialization unambiguous.",
+    "output": "Malformed request returns exactly {\"error\":\"Invalid request.\"}. VALIDATE_AND_RENDER returns exactly {valid:boolean,errors:string[],messageText:string}; errors has only the first error, invalid messageText is empty. WORKFLOW returns exactly {ok:boolean,error:string|null,status:string,currentHolder:string,currentRevisionId:string,revisionIds:string[],validApprovalRoles:string[],acceptedEventCount:integer,rejectedCount:integer,conflictRevisionIds:string[],messageText:string,readinessAndPartsPriorityText:string,transmitted:false}. ok and error describe the last operation (empty batch => true/null). Successful replay sets true/null without changing counts. An operation failure increments rejectedCount but processing continues; accepted state is unchanged. EMPTY state has status EMPTY, holder None, revision empty string, empty arrays/text and zero counts. Other statuses: DRAFT, IN_REVIEW, RETURNED, READY_FOR_RELEASE, CONFLICT, RELEASED. currentHolder is a route role or None. No extra response fields. Full revision/audit records are exposed by the workspace API and downloads, not this summary protocol.",
+    "rules": [
+      "Invalid request. is returned for a non-object envelope, unknown action, missing/non-array actions, over 500 actions, non-object operation, unknown operation action, missing/non-string actorRole or revisionId, wrongly typed optional fields, invalid timestamp, exceeded string/revision limits or prohibited note delimiters. Preflight the whole envelope before replay. Draft semantic failures instead return the first domain validation error; no exception or HTML response. API domain responses use HTTP 200. Malformed JSON uses HTTP 400 with {\"error\":\"Invalid request.\"}.",
+      "Draft validation first checks all interpreted fields are strings after optional defaults; else Invalid draft fields. Then classification must equal NOTIONAL UNCLASSIFIED else Only NOTIONAL UNCLASSIFIED synthetic records are accepted. Then reportId, reportType, category, unit, equipmentId, equipmentName, occurredAt, description, readinessImpact, partsPriority, repairNarrative in this order: blank trim => Required field: <field>. except category => Category is required. and description => Casualty description is required. Preserve nonblank supplied whitespace; do not trim output.",
+      "After required checks: reportType not INITIAL/UPDATE/CORRECT/CASCOR => Report type must be INITIAL, UPDATE, CORRECT, or CASCOR. Category not DEMO-1/DEMO-2/DEMO-3 => Category must be DEMO-1, DEMO-2, or DEMO-3. partsPriority not DEMO-URGENT/DEMO-ROUTINE => Parts priority must be DEMO-URGENT or DEMO-ROUTINE. occurredAt must be a real UTC calendar instant exactly YYYY-MM-DDTHH:mm:ssZ else Occurrence time must be a valid UTC instant. Then CR/LF or forbidden equipment delimiter => Draft fields must be single-line and unambiguous.",
+      "INITIAL must have relatedReportId empty else INITIAL must not reference a related report. All other types need nonblank relatedReportId matching a supplied synthetic released INITIAL receipt or another already released INITIAL in the local workspace, else A released INITIAL report is required. Receipt fields must have the stated types and true/false flags or Invalid request. No implicit real-system lookup. maintenanceJsn empty emits NONE.",
+      "Canonical message is UTF-8 with LF, exactly one terminal LF, no indentation, header SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1 then SYN-CASREP-1 then KEY: value lines REPORT, TYPE, CATEGORY, CLASSIFICATION, UNIT, EQUIPMENT, OCCURRED_UTC, CASUALTY, READINESS, PARTS_PRIORITY, REPAIR, MAINTENANCE_JSN, RELATED_REPORT then END SYN-CASREP. Map fields respectively reportId, reportType, category, classification, unit, equipmentId + \" | \" + equipmentName, occurredAt, description, readinessImpact, partsPriority, repairNarrative, maintenanceJsn or NONE, relatedReportId or NONE. No escaping or inference.",
+      "WORKFLOW replays from empty state for exactly one report. The route is Originator, Division Officer, Department Head, CHENG, XO, CO. Content and revision report IDs remain identical to CREATE. Every accepted operation appends exactly one event; a competing REVISE appends CONFLICT_DETECTED instead of REVISE. Event IDs are SYN-E plus global accepted sequence zero padded to at least 3 digits; accepted event ordering is insertion sequence, never clock order. Each new revision retains full content and canonical message.",
+      "Before domain checks, an existing operationId with identical normalized payload is replay, changes nothing and returns success. Same ID with changed payload => Operation ID already used with different content. Compare payload after specified defaults, key-order independently; do not include ignored fields. Store rejection results for idempotent replay too; identical replay of a rejected operation returns its original error without incrementing rejectedCount. Unknown actorRole or actorId-role mismatch => Unknown demonstration actor. Next validate CREATE/REVISE/RESOLVE content. Every rejected domain attempt is separately attributed, never appended to accepted audit.",
+      "CREATE requires Originator else Only Originator may edit. Requires empty state else Report already exists. Adds root revision, CREATE event, status DRAFT holder Originator. Existing revision ID collision => Revision ID already exists. Non-CREATE without report => Create a report first. For all content operations mismatched content.reportId => Report ID cannot change. Validate content before these transition checks.",
+      "For existing reports after replay, actor and content validation: RELEASED blocks every mutation with Released revision is frozen; create a linked report. Next unresolved conflict blocks SUBMIT, COMMENT, RETURN, APPROVE, SIMULATE_RELEASE and REVISE with Resolve conflicts before review or release. RESOLVE_CONFLICT is the only mutation allowed while conflicted. REVISE and RESOLVE require Originator else Only Originator may edit.",
+      "REVISE with unknown base => Revision parent is missing. With existing revision ID => Revision ID already exists. Current-base revision creates child, invalidates every approval, resets DRAFT/Originator. Noncurrent-base revision preserves accepted current head and competing full revision; creates SYN-CONFLICT- plus conflict sequence padded 3, status CONFLICT/Originator, clears approval validity. Never choose a branch by timestamps. Known ancestor required; no missing/cross-report parents or cycles accepted.",
+      "RESOLVE_CONFLICT requires current unresolved conflictId else Unknown conflict. Requires confirmed true else Confirm conflict resolution. baseRevisionId must equal accepted head and mergeParentRevisionIds set must equal all conflict heads else Review all conflict heads. New revisionId must be unused else Revision ID already exists. Creates a merged revision with explicit chosen content; primary parent accepted head, merge parents sorted lexically with primary retained once; marks conflict resolved, invalidates approvals, returns DRAFT/Originator. All historical revisions retained.",
+      "For SUBMIT, COMMENT, RETURN, APPROVE and SIMULATE_RELEASE next check revisionId equals current revision else Approval revision is stale. APPROVE or SUBMIT by actor with already-valid approval on current revision => Role already approved this revision. Check this before holder mismatch.",
+      "SIMULATE_RELEASE checks actorRole CO else Only CO may simulate release. Then requires READY_FOR_RELEASE and all six valid decisions else Current revision requires all route approvals before release. Then confirmed true else Confirm simulated release. Creates one simulated receipt SYN-REL-001, transmitted false; status RELEASED/None. Release is separate from CO approval; no real messaging call exists.",
+      "APPROVE requires holder match else Only the current holder may approve. It also requires IN_REVIEW and non-Originator else Invalid state transition. Records current-revision decision and forwards to next route role. CO approval changes to READY_FOR_RELEASE/CO. SUBMIT requires Originator/current holder and DRAFT or RETURNED else Invalid state transition. Counts Originator submission as approval and forwards IN_REVIEW/Division Officer.",
+      "COMMENT requires holder match else Only the current holder may comment. Nonblank note else Comment is required. Keeps status, holder and content; store text inertly. RETURN requires holder match else Only the current holder may return. Nonblank note else Return reason is required. returnTarget other than Originator => Return target must be Originator. Invalidate all approvals; Originator self-return => DRAFT/Originator, all other returns => RETURNED/Originator. READY_FOR_RELEASE CO may comment or return.",
+      "Output revisionIds preserves accepted arrival order including competing revisions; validApprovalRoles follows route order and includes only valid decisions for the current revision; conflictRevisionIds is the lexically sorted unresolved heads, empty after resolution. acceptedEventCount includes CREATE and conflict detection; rejectedCount counts unique failed operations only. Summary messageText is current accepted revision canonical message even in CONFLICT. readinessAndPartsPriorityText is exactly \"readiness and parts priority: \" + current readinessImpact + \" | \" + partsPriority, empty in EMPTY state. No elapsed-time, readiness score or parts-priority benefit is calculated.",
+      "Validation precedence is request preflight, operation replay/collision, actor, content, CREATE/existing-report rules, released lock, conflict lock, edit/resolve rules, stale revision, duplicate decision, then action-specific authority/state/required-note/confirmation. Within content rules follow the field/enum/link order above. On failure preserve content, holder, accepted audit, approvals and revision arrays; only rejection log and idempotency registry change.",
+      "UI and evaluations use this same backend, never scenario-ID dispatch or expected-output lookup. Service wraps the reducer with durable filesystem checkpoints and browser pending drafts. Generation is deterministic; no model, network authority, real-format validator or hidden credentials. Lifecycle links are synthetic: UPDATE amends ongoing context, CORRECT preserves correction history, CASCOR describes restoration. Cancellation/expiry/supersession are explicit annotations in the local workspace, never deletion or real-message cancellation; no official automatic deadline is invented."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "casrep-format",
+      "kind": "generation",
+      "description": "Validate every declared synthetic field and render complete INITIAL/UPDATE/CORRECT/CASCOR messages; abstain on invalid content. Official NWP compliance remains unverified.",
+      "criterionIds": [
+        "UC8-1",
+        "SCOPE8-4",
+        "SCOPE8-6",
+        "SCOPE8-7"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "format-reference"
+      ]
+    },
+    {
+      "id": "review-route",
+      "kind": "workflow",
+      "description": "Ordered six-role review with comments, returns, revision-bound decisions, idempotent operations, stale/unauthorized rejection and separate confirmed simulated CO release.",
+      "criterionIds": [
+        "UC8-1",
+        "WFL-01",
+        "WFL-03",
+        "DELIVERABLE8-1",
+        "DESC8-1",
+        "DESC8-3",
+        "SUMMARY8-1",
+        "SCOPE8-4",
+        "SCOPE8-5",
+        "SCOPE8-6",
+        "SCOPE8-9"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "route-reference"
+      ]
+    },
+    {
+      "id": "revision-lineage",
+      "kind": "stateful",
+      "description": "Retain full immutable snapshots and competing branches, block conflicted review and explicitly merge every reviewed head before fresh review.",
+      "criterionIds": [
+        "UC8-1",
+        "WFL-02",
+        "SCOPE8-6"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "lineage-reference"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json",
+      "casrep.mjs",
+      "storage.mjs",
+      "data/synthetic-data.json",
+      "data/README.md",
+      "public/brief.html",
+      "public/walkthrough.html"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

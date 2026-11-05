@@ -1,0 +1,1597 @@
+{
+  "schemaVersion": 1,
+  "evaluations": [
+    {
+      "id": "format-reference",
+      "capabilityId": "casrep-format",
+      "description": "Complete canonical messages, changed type/link prerequisite and invalid fields.",
+      "dataset": {
+        "name": "format-reference-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Fixed by planner before implementation from public grammar and route truth table. Distinct from bundled examples; no candidate code or helper self-tests used. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "unseen-initial",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "INITIAL",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "Training vent stops.",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          "expected": {
+            "valid": true,
+            "errors": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+          }
+        },
+        {
+          "id": "changed-linked-type",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "UPDATE",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "Training vent stops.",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "SYN-BASE-19",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            },
+            "linkedReleasedReports": [
+              {
+                "reportId": "SYN-BASE-19",
+                "revisionId": "BASE-R1",
+                "releaseId": "BASE-REL",
+                "actorId": "SYN-A06",
+                "releasedAt": "2026-09-18T00:00:00Z",
+                "simulated": true,
+                "transmitted": false
+              }
+            ]
+          },
+          "expected": {
+            "valid": true,
+            "errors": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: UPDATE\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: SYN-BASE-19\nEND SYN-CASREP\n"
+          }
+        },
+        {
+          "id": "changed-link-impossible",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "UPDATE",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "Training vent stops.",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "SYN-BASE-19",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          "expected": {
+            "valid": false,
+            "errors": [
+              "A released INITIAL report is required."
+            ],
+            "messageText": ""
+          }
+        },
+        {
+          "id": "multi-error-order",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "INITIAL",
+              "category": "",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          "expected": {
+            "valid": false,
+            "errors": [
+              "Category is required."
+            ],
+            "messageText": ""
+          }
+        },
+        {
+          "id": "invalid-classification",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "INITIAL",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "Training vent stops.",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "",
+              "classification": "SECRET"
+            }
+          },
+          "expected": {
+            "valid": false,
+            "errors": [
+              "Only NOTIONAL UNCLASSIFIED synthetic records are accepted."
+            ],
+            "messageText": ""
+          }
+        },
+        {
+          "id": "invalid-occurredAt",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "INITIAL",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-02-30T00:00:00Z",
+              "description": "Training vent stops.",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          "expected": {
+            "valid": false,
+            "errors": [
+              "Occurrence time must be a valid UTC instant."
+            ],
+            "messageText": ""
+          }
+        },
+        {
+          "id": "invalid-description",
+          "input": {
+            "action": "VALIDATE_AND_RENDER",
+            "draft": {
+              "reportId": "SYN-HOLD-73",
+              "reportType": "INITIAL",
+              "category": "DEMO-3",
+              "unit": "Fictional FSV Cedar",
+              "equipmentId": "SYN-Q9",
+              "equipmentName": "Training vent Q9",
+              "occurredAt": "2026-09-19T03:04:05Z",
+              "description": "x\ny",
+              "readinessImpact": "One fictional compartment training lane unavailable.",
+              "partsPriority": "DEMO-ROUTINE",
+              "repairNarrative": "Inspect synthetic relay.",
+              "maintenanceJsn": "",
+              "relatedReportId": "",
+              "classification": "NOTIONAL UNCLASSIFIED"
+            }
+          },
+          "expected": {
+            "valid": false,
+            "errors": [
+              "Draft fields must be single-line and unambiguous."
+            ],
+            "messageText": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "route-reference",
+      "capabilityId": "review-route",
+      "description": "Changed actor, stale decision, replay, full route, release confirmation and invalidation.",
+      "dataset": {
+        "name": "route-reference-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Fixed by planner before implementation from public grammar and route truth table. Distinct from bundled examples; no candidate code or helper self-tests used. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "unseen-submit",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "IN_REVIEW",
+            "currentHolder": "Division Officer",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator"
+            ],
+            "acceptedEventCount": 2,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "changed-actor",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "XO",
+                "revisionId": "C1"
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Invalid state transition.",
+            "status": "DRAFT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 1,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "stale-before-holder",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "XO",
+                "revisionId": "OLD"
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Approval revision is stale.",
+            "status": "IN_REVIEW",
+            "currentHolder": "Division Officer",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator"
+            ],
+            "acceptedEventCount": 2,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "all-roles-ready",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Division Officer",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Department Head",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CHENG",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "XO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CO",
+                "revisionId": "C1"
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "READY_FOR_RELEASE",
+            "currentHolder": "CO",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator",
+              "Division Officer",
+              "Department Head",
+              "CHENG",
+              "XO",
+              "CO"
+            ],
+            "acceptedEventCount": 7,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "unconfirmed-release",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Division Officer",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Department Head",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CHENG",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "XO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "SIMULATE_RELEASE",
+                "actorRole": "CO",
+                "revisionId": "C1",
+                "confirmed": false
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Confirm simulated release.",
+            "status": "READY_FOR_RELEASE",
+            "currentHolder": "CO",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator",
+              "Division Officer",
+              "Department Head",
+              "CHENG",
+              "XO",
+              "CO"
+            ],
+            "acceptedEventCount": 7,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "confirmed-release",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Division Officer",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Department Head",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CHENG",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "XO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "SIMULATE_RELEASE",
+                "actorRole": "CO",
+                "revisionId": "C1",
+                "confirmed": true
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "RELEASED",
+            "currentHolder": "None",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator",
+              "Division Officer",
+              "Department Head",
+              "CHENG",
+              "XO",
+              "CO"
+            ],
+            "acceptedEventCount": 8,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "edit-invalidates",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Division Officer",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "Department Head",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CHENG",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "XO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "APPROVE",
+                "actorRole": "CO",
+                "revisionId": "C1"
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay tomorrow.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "DRAFT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C2",
+            "revisionIds": [
+              "C1",
+              "C2"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 8,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay tomorrow.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "replay",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "operationId": "ONCE"
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "operationId": "ONCE"
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "IN_REVIEW",
+            "currentHolder": "Division Officer",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [
+              "Originator"
+            ],
+            "acceptedEventCount": 2,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "fixture-full-return-loop",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorId": "SYN-A01",
+                "actorRole": "Originator",
+                "revisionId": "SYN-CR-001-R1",
+                "timestamp": "2026-10-12T08:05:00Z",
+                "note": "Draft recorded.",
+                "operationId": "SYN-OP001",
+                "content": {
+                  "reportId": "SYN-CR-001",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-2",
+                  "unit": "FSV Lantern / SYN-U01",
+                  "equipmentId": "SYN-EQ-P17",
+                  "equipmentName": "Auxiliary cooling pump P-17",
+                  "occurredAt": "2026-10-12T08:00:00Z",
+                  "description": "Pump P-17 trips during the fictional training cycle.",
+                  "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Replace the synthetic seal kit; delivery estimate pending.",
+                  "maintenanceJsn": "SYN-JSN-2026-014",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorId": "SYN-A01",
+                "actorRole": "Originator",
+                "revisionId": "SYN-CR-001-R1",
+                "timestamp": "2026-10-12T08:06:00Z",
+                "note": "Ready for division review.",
+                "operationId": "SYN-OP002"
+              },
+              {
+                "action": "COMMENT",
+                "actorId": "SYN-A02",
+                "actorRole": "Division Officer",
+                "revisionId": "SYN-CR-001-R1",
+                "timestamp": "2026-10-12T08:07:00Z",
+                "note": "Add a seal-kit identifier and estimated arrival.",
+                "operationId": "SYN-OP003"
+              },
+              {
+                "action": "RETURN",
+                "actorId": "SYN-A02",
+                "actorRole": "Division Officer",
+                "revisionId": "SYN-CR-001-R1",
+                "timestamp": "2026-10-12T08:08:00Z",
+                "note": "Repair narrative lacks seal-kit identifier and estimated arrival.",
+                "operationId": "SYN-OP004",
+                "returnTarget": "Originator"
+              },
+              {
+                "action": "REVISE",
+                "actorId": "SYN-A01",
+                "actorRole": "Originator",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:09:00Z",
+                "note": "Added SYN-SK-17 and estimated arrival.",
+                "operationId": "SYN-OP005",
+                "baseRevisionId": "SYN-CR-001-R1",
+                "content": {
+                  "reportId": "SYN-CR-001",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-2",
+                  "unit": "FSV Lantern / SYN-U01",
+                  "equipmentId": "SYN-EQ-P17",
+                  "equipmentName": "Auxiliary cooling pump P-17",
+                  "occurredAt": "2026-10-12T08:00:00Z",
+                  "description": "Pump P-17 trips during the fictional training cycle.",
+                  "readinessImpact": "Training cooling capacity reduced; backup pump supports one training loop.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.",
+                  "maintenanceJsn": "SYN-JSN-2026-014",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorId": "SYN-A01",
+                "actorRole": "Originator",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:10:00Z",
+                "note": "Revision ready for fresh review.",
+                "operationId": "SYN-OP006"
+              },
+              {
+                "action": "APPROVE",
+                "actorId": "SYN-A02",
+                "actorRole": "Division Officer",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:11:00Z",
+                "note": "Repair details checked.",
+                "operationId": "SYN-OP007"
+              },
+              {
+                "action": "APPROVE",
+                "actorId": "SYN-A03",
+                "actorRole": "Department Head",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:12:00Z",
+                "note": "Department review complete.",
+                "operationId": "SYN-OP008"
+              },
+              {
+                "action": "APPROVE",
+                "actorId": "SYN-A04",
+                "actorRole": "CHENG",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:13:00Z",
+                "note": "Engineering narrative checked.",
+                "operationId": "SYN-OP009"
+              },
+              {
+                "action": "APPROVE",
+                "actorId": "SYN-A05",
+                "actorRole": "XO",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:14:00Z",
+                "note": "Executive review complete.",
+                "operationId": "SYN-OP010"
+              },
+              {
+                "action": "APPROVE",
+                "actorId": "SYN-A06",
+                "actorRole": "CO",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:15:00Z",
+                "note": "Approved for simulated release.",
+                "operationId": "SYN-OP011"
+              },
+              {
+                "action": "SIMULATE_RELEASE",
+                "actorId": "SYN-A06",
+                "actorRole": "CO",
+                "revisionId": "SYN-CR-001-R2",
+                "timestamp": "2026-10-12T08:16:00Z",
+                "note": "Synthetic release only; no transmission.",
+                "operationId": "SYN-OP012",
+                "confirmed": true
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "RELEASED",
+            "currentHolder": "None",
+            "currentRevisionId": "SYN-CR-001-R2",
+            "revisionIds": [
+              "SYN-CR-001-R1",
+              "SYN-CR-001-R2"
+            ],
+            "validApprovalRoles": [
+              "Originator",
+              "Division Officer",
+              "Department Head",
+              "CHENG",
+              "XO",
+              "CO"
+            ],
+            "acceptedEventCount": 12,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "unseen-comment-return",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C1"
+              },
+              {
+                "action": "COMMENT",
+                "actorRole": "Division Officer",
+                "revisionId": "C1",
+                "note": "Fictional review observation."
+              },
+              {
+                "action": "RETURN",
+                "actorRole": "Division Officer",
+                "revisionId": "C1",
+                "note": "Add fictional evidence."
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "RETURNED",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 4,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "lineage-reference",
+      "capabilityId": "revision-lineage",
+      "description": "Unseen sibling amendments, changed merge head constraint, missing history and review block.",
+      "dataset": {
+        "name": "lineage-reference-planner-reference",
+        "version": "1",
+        "provenance": "synthetic",
+        "description": "Fixed by planner before implementation from public grammar and route truth table. Distinct from bundled examples; no candidate code or helper self-tests used. Not SME ground truth."
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "baseline": 0,
+      "cases": [
+        {
+          "id": "unseen-conflict",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2A",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2B",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "offline": true
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "CONFLICT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C2A",
+            "revisionIds": [
+              "C1",
+              "C2A",
+              "C2B"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 3,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [
+              "C2A",
+              "C2B"
+            ],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Bench inspection chosen.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "review-blocked",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2A",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2B",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "offline": true
+              },
+              {
+                "action": "SUBMIT",
+                "actorRole": "Originator",
+                "revisionId": "C2A"
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Resolve conflicts before review or release.",
+            "status": "CONFLICT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C2A",
+            "revisionIds": [
+              "C1",
+              "C2A",
+              "C2B"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 3,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [
+              "C2A",
+              "C2B"
+            ],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Bench inspection chosen.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "changed-merge-constraint",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2A",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2B",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "offline": true
+              },
+              {
+                "action": "RESOLVE_CONFLICT",
+                "actorRole": "Originator",
+                "revisionId": "C3",
+                "baseRevisionId": "C2A",
+                "conflictId": "SYN-CONFLICT-001",
+                "mergeParentRevisionIds": [
+                  "C2A",
+                  "C2B"
+                ],
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "confirmed": true
+              }
+            ]
+          },
+          "expected": {
+            "ok": true,
+            "error": null,
+            "status": "DRAFT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C3",
+            "revisionIds": [
+              "C1",
+              "C2A",
+              "C2B",
+              "C3"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 4,
+            "rejectedCount": 0,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Bench inspection chosen.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-URGENT",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "missing-reviewed-head",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2A",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2B",
+                "baseRevisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "offline": true
+              },
+              {
+                "action": "RESOLVE_CONFLICT",
+                "actorRole": "Originator",
+                "revisionId": "C3",
+                "baseRevisionId": "C2A",
+                "conflictId": "SYN-CONFLICT-001",
+                "mergeParentRevisionIds": [
+                  "C2A"
+                ],
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-URGENT",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                },
+                "confirmed": true
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Review all conflict heads.",
+            "status": "CONFLICT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C2A",
+            "revisionIds": [
+              "C1",
+              "C2A",
+              "C2B"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 3,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [
+              "C2A",
+              "C2B"
+            ],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Bench inspection chosen.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        },
+        {
+          "id": "missing-ancestor",
+          "input": {
+            "action": "WORKFLOW",
+            "actions": [
+              {
+                "action": "CREATE",
+                "actorRole": "Originator",
+                "revisionId": "C1",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Inspect synthetic relay.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              },
+              {
+                "action": "REVISE",
+                "actorRole": "Originator",
+                "revisionId": "C2",
+                "baseRevisionId": "GONE",
+                "content": {
+                  "reportId": "SYN-HOLD-73",
+                  "reportType": "INITIAL",
+                  "category": "DEMO-3",
+                  "unit": "Fictional FSV Cedar",
+                  "equipmentId": "SYN-Q9",
+                  "equipmentName": "Training vent Q9",
+                  "occurredAt": "2026-09-19T03:04:05Z",
+                  "description": "Training vent stops.",
+                  "readinessImpact": "One fictional compartment training lane unavailable.",
+                  "partsPriority": "DEMO-ROUTINE",
+                  "repairNarrative": "Bench inspection chosen.",
+                  "maintenanceJsn": "",
+                  "relatedReportId": "",
+                  "classification": "NOTIONAL UNCLASSIFIED"
+                }
+              }
+            ]
+          },
+          "expected": {
+            "ok": false,
+            "error": "Revision parent is missing.",
+            "status": "DRAFT",
+            "currentHolder": "Originator",
+            "currentRevisionId": "C1",
+            "revisionIds": [
+              "C1"
+            ],
+            "validApprovalRoles": [],
+            "acceptedEventCount": 1,
+            "rejectedCount": 1,
+            "conflictRevisionIds": [],
+            "messageText": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-HOLD-73\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: Fictional FSV Cedar\nEQUIPMENT: SYN-Q9 | Training vent Q9\nOCCURRED_UTC: 2026-09-19T03:04:05Z\nCASUALTY: Training vent stops.\nREADINESS: One fictional compartment training lane unavailable.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect synthetic relay.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n",
+            "readinessAndPartsPriorityText": "readiness and parts priority: One fictional compartment training lane unavailable. | DEMO-ROUTINE",
+            "transmitted": false
+          }
+        }
+      ]
+    }
+  ]
+}

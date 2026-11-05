@@ -1,0 +1,824 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. All four report types, required fields, category, linked lifecycle prerequisites and all six roles are exercised under the disclosed invented SYN-CASREP-1 grammar. NWP 1-03.1 compliance is not established; this implemented synthetic stand-in cannot satisfy the real-format obligation, which remains unverified in review.",
+      "journeyIds": [
+        "synthetic-primary",
+        "linked-types",
+        "recover-validation",
+        "recover-conflict"
+      ],
+      "capabilityIds": [
+        "casrep-format",
+        "review-route",
+        "revision-lineage"
+      ]
+    },
+    {
+      "criterionId": "WFL-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Wrong holder, stale revision, duplicate approval, non-CO release and missing confirmation fail without altering accepted state. Editing after approvals resets DRAFT and requires six fresh decisions; tests verify retained invalid approvals.",
+      "journeyIds": [
+        "recover-validation",
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "WFL-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Competing full snapshots survive reconciliation; unresolved heads block review/release; explicit confirmed merge retains all heads and requires fresh decisions. Missing history/collisions fail without losing queued revisions.",
+      "journeyIds": [
+        "recover-conflict"
+      ],
+      "capabilityIds": [
+        "revision-lineage"
+      ]
+    },
+    {
+      "criterionId": "WFL-03",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. A reviewer performs the live walkthrough; one-page brief is available as printable HTML.",
+      "journeyIds": [
+        "synthetic-primary",
+        "recover-storage"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. A reviewer performs the live walkthrough; one-page brief is available as printable HTML.",
+      "journeyIds": [
+        "synthetic-primary",
+        "recover-storage",
+        "review-material"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DESC8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. Current holder, saved state and review decisions remain visible through reload; no external email or paper handoff is required for the demonstration.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DESC8-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Measured reporting-time, rework, readiness and parts-priority improvement remains unverified; the full synthetic workflow produces the fixed readiness/priority result and exports.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Representative authorized baseline and follow-up reporting-time, rework, readiness and parts-priority measurements are absent. Withhold measured fleet-benefit claims; demonstrate the complete synthetic return/revision/release workflow and fixed readiness and parts priority context.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional CASREP inputs, grammar, readiness descriptions, parts priorities, routing rules and measurements; no real-format validation or operational benefit validation.",
+        "journeyIds": [
+          "synthetic-primary"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC8-2",
+            "name": "readiness and parts priority"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC8-3",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. Current holder, saved state and review decisions remain visible through reload; no external email or paper handoff is required for the demonstration.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. Current holder, saved state and review decisions remain visible through reload; no external email or paper handoff is required for the demonstration.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-4",
+      "disposition": "implemented",
+      "expectedOutcome": "The Requirements heading is retained as provenance for the complete role, format, audit, route and synthetic-data obligations, with no separate behavior invented for the heading.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "casrep-format",
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-5",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. SC-24 independently exercises comment, return and forward for all six roles, including Originator withdrawal and separate CO release.",
+      "journeyIds": [
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-6",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. All four report types, required fields, category, linked lifecycle prerequisites and all six roles are exercised under the disclosed invented SYN-CASREP-1 grammar. NWP 1-03.1 compliance is not established; this implemented synthetic stand-in cannot satisfy the real-format obligation, which remains unverified in review.",
+      "journeyIds": [
+        "synthetic-primary",
+        "linked-types",
+        "recover-validation",
+        "recover-conflict"
+      ],
+      "capabilityIds": [
+        "casrep-format",
+        "review-route",
+        "revision-lineage"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Only notional synthetic samples are supplied; invalid handling labels are rejected and all pages/messages/exports visibly disclaim operational format validation. Text is inert, and role switching is disclosed as demonstration identity.",
+      "journeyIds": [
+        "recover-validation",
+        "synthetic-primary"
+      ],
+      "capabilityIds": [
+        "casrep-format"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-8",
+      "disposition": "implemented",
+      "expectedOutcome": "Deliver a working full mock return/revise/release flow, an executable live walkthrough and a printable one-page brief covering role permissions, classification, Navy messaging integration, fielding prerequisites and owner approval.",
+      "journeyIds": [
+        "review-material",
+        "synthetic-primary"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE8-9",
+      "disposition": "implemented",
+      "expectedOutcome": "One tracked synthetic CASREP workspace produces the complete SC-01 canonical message, preserved R1/R2 history, twelve accepted audit events, one comment, one return, six current-revision decisions, exact exports and a separate confirmed CO simulated release with no transmission. A reviewer performs the live walkthrough; one-page brief is available as printable HTML.",
+      "journeyIds": [
+        "synthetic-primary",
+        "recover-storage"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-10",
+      "disposition": "implemented",
+      "expectedOutcome": "Deliver a working full mock return/revise/release flow, an executable live walkthrough and a printable one-page brief covering role permissions, classification, Navy messaging integration, fielding prerequisites and owner approval.",
+      "journeyIds": [
+        "review-material",
+        "synthetic-primary"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE8-11",
+      "disposition": "implemented",
+      "expectedOutcome": "Retain exact source URL and capture date in the UI and documentation; no claim of live retrieval, source-format validation or operational integration.",
+      "journeyIds": [
+        "review-material"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "synthetic-primary",
+      "title": "Write, return, revise, approve every role and explicitly release a synthetic CASREP",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "Division Officer"
+        },
+        {
+          "action": "fill",
+          "selector": "#decision-note",
+          "value": "Add a seal-kit identifier and estimated arrival."
+        },
+        {
+          "action": "click",
+          "selector": "#add-comment"
+        },
+        {
+          "action": "fill",
+          "selector": "#decision-note",
+          "value": "Repair narrative lacks seal-kit identifier and estimated arrival."
+        },
+        {
+          "action": "click",
+          "selector": "#return-revision"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "RETURNED · Originator"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "Originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#repairNarrative",
+          "value": "Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z."
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "Division Officer"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "Department Head"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "CHENG"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "XO"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "CO"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-release"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "RELEASED · None"
+        },
+        {
+          "action": "expectText",
+          "selector": "#release-receipt",
+          "text": "Simulated CO release · SYN-CR-001-R2 · transmitted: false"
+        },
+        {
+          "action": "expectText",
+          "selector": "#readiness-parts-result",
+          "text": "readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-history",
+          "text": "Originator → Division Officer → Department Head → CHENG → XO → CO → Simulated release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-summary",
+          "text": "2 revisions · 1 return · 1 comment · 2 submissions · 5 reviewer approvals · 6 current revision decisions · 12 accepted events"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-message",
+          "fileName": "SYN-CR-001-R2.synthetic-casrep.txt",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-audit",
+          "fileName": "SYN-CR-001.synthetic-audit.txt",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-AUDIT-1\n1 | SYN-E001 | 2026-10-12T08:05:00Z | SYN-A01 | Originator | CREATE | SYN-CR-001 | SYN-CR-001-R1 | Draft recorded. | DRAFT | Originator\n2 | SYN-E002 | 2026-10-12T08:06:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R1 | Ready for division review. | IN_REVIEW | Division Officer\n3 | SYN-E003 | 2026-10-12T08:07:00Z | SYN-A02 | Division Officer | COMMENT | SYN-CR-001 | SYN-CR-001-R1 | Add a seal-kit identifier and estimated arrival. | IN_REVIEW | Division Officer\n4 | SYN-E004 | 2026-10-12T08:08:00Z | SYN-A02 | Division Officer | RETURN | SYN-CR-001 | SYN-CR-001-R1 | Repair narrative lacks seal-kit identifier and estimated arrival. | RETURNED | Originator\n5 | SYN-E005 | 2026-10-12T08:09:00Z | SYN-A01 | Originator | REVISE | SYN-CR-001 | SYN-CR-001-R2 | Added SYN-SK-17 and estimated arrival. | DRAFT | Originator\n6 | SYN-E006 | 2026-10-12T08:10:00Z | SYN-A01 | Originator | SUBMIT | SYN-CR-001 | SYN-CR-001-R2 | Revision ready for fresh review. | IN_REVIEW | Division Officer\n7 | SYN-E007 | 2026-10-12T08:11:00Z | SYN-A02 | Division Officer | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Repair details checked. | IN_REVIEW | Department Head\n8 | SYN-E008 | 2026-10-12T08:12:00Z | SYN-A03 | Department Head | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Department review complete. | IN_REVIEW | CHENG\n9 | SYN-E009 | 2026-10-12T08:13:00Z | SYN-A04 | CHENG | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Engineering narrative checked. | IN_REVIEW | XO\n10 | SYN-E010 | 2026-10-12T08:14:00Z | SYN-A05 | XO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Executive review complete. | IN_REVIEW | CO\n11 | SYN-E011 | 2026-10-12T08:15:00Z | SYN-A06 | CO | APPROVE | SYN-CR-001 | SYN-CR-001-R2 | Approved for simulated release. | READY_FOR_RELEASE | CO\n12 | SYN-E012 | 2026-10-12T08:16:00Z | SYN-A06 | CO | SIMULATE_RELEASE | SYN-CR-001 | SYN-CR-001-R2 | Synthetic release only; no transmission. | RELEASED | None\nEND SYN-AUDIT\n"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-revisions",
+          "fileName": "SYN-CR-001.synthetic-revisions-audit.json",
+          "text": "{\n  \"classification\": \"synthetic\",\n  \"label\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\",\n  \"reportId\": \"SYN-CR-001\",\n  \"revisions\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:05:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace the synthetic seal kit; delivery estimate pending.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace the synthetic seal kit; delivery estimate pending.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionId\": \"SYN-CR-001-R1\",\n      \"mergeParentRevisionIds\": [],\n      \"authorId\": \"SYN-A01\",\n      \"authorRole\": \"Originator\",\n      \"createdAt\": \"2026-10-12T08:09:00Z\",\n      \"content\": {\n        \"reportId\": \"SYN-CR-001\",\n        \"reportType\": \"INITIAL\",\n        \"category\": \"DEMO-2\",\n        \"unit\": \"FSV Lantern / SYN-U01\",\n        \"equipmentId\": \"SYN-EQ-P17\",\n        \"equipmentName\": \"Auxiliary cooling pump P-17\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"description\": \"Pump P-17 trips during the fictional training cycle.\",\n        \"readinessImpact\": \"Training cooling capacity reduced; backup pump supports one training loop.\",\n        \"partsPriority\": \"DEMO-URGENT\",\n        \"repairNarrative\": \"Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\",\n        \"maintenanceJsn\": \"SYN-JSN-2026-014\",\n        \"relatedReportId\": \"\",\n        \"classification\": \"NOTIONAL UNCLASSIFIED\"\n      },\n      \"messageText\": \"SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\\nSYN-CASREP-1\\nREPORT: SYN-CR-001\\nTYPE: INITIAL\\nCATEGORY: DEMO-2\\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\\nUNIT: FSV Lantern / SYN-U01\\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\\nOCCURRED_UTC: 2026-10-12T08:00:00Z\\nCASUALTY: Pump P-17 trips during the fictional training cycle.\\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\\nPARTS_PRIORITY: DEMO-URGENT\\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\\nMAINTENANCE_JSN: SYN-JSN-2026-014\\nRELATED_REPORT: NONE\\nEND SYN-CASREP\\n\"\n    }\n  ],\n  \"audit\": [\n    {\n      \"eventId\": \"SYN-E001\",\n      \"sequence\": 1,\n      \"timestamp\": \"2026-10-12T08:05:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"CREATE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Draft recorded.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E002\",\n      \"sequence\": 2,\n      \"timestamp\": \"2026-10-12T08:06:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Ready for division review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E003\",\n      \"sequence\": 3,\n      \"timestamp\": \"2026-10-12T08:07:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"COMMENT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Add a seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E004\",\n      \"sequence\": 4,\n      \"timestamp\": \"2026-10-12T08:08:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"RETURN\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"note\": \"Repair narrative lacks seal-kit identifier and estimated arrival.\",\n      \"resultStatus\": \"RETURNED\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E005\",\n      \"sequence\": 5,\n      \"timestamp\": \"2026-10-12T08:09:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"REVISE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Added SYN-SK-17 and estimated arrival.\",\n      \"resultStatus\": \"DRAFT\",\n      \"resultHolder\": \"Originator\"\n    },\n    {\n      \"eventId\": \"SYN-E006\",\n      \"sequence\": 6,\n      \"timestamp\": \"2026-10-12T08:10:00Z\",\n      \"actorId\": \"SYN-A01\",\n      \"actorRole\": \"Originator\",\n      \"action\": \"SUBMIT\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Revision ready for fresh review.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Division Officer\"\n    },\n    {\n      \"eventId\": \"SYN-E007\",\n      \"sequence\": 7,\n      \"timestamp\": \"2026-10-12T08:11:00Z\",\n      \"actorId\": \"SYN-A02\",\n      \"actorRole\": \"Division Officer\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Repair details checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"Department Head\"\n    },\n    {\n      \"eventId\": \"SYN-E008\",\n      \"sequence\": 8,\n      \"timestamp\": \"2026-10-12T08:12:00Z\",\n      \"actorId\": \"SYN-A03\",\n      \"actorRole\": \"Department Head\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Department review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CHENG\"\n    },\n    {\n      \"eventId\": \"SYN-E009\",\n      \"sequence\": 9,\n      \"timestamp\": \"2026-10-12T08:13:00Z\",\n      \"actorId\": \"SYN-A04\",\n      \"actorRole\": \"CHENG\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Engineering narrative checked.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"XO\"\n    },\n    {\n      \"eventId\": \"SYN-E010\",\n      \"sequence\": 10,\n      \"timestamp\": \"2026-10-12T08:14:00Z\",\n      \"actorId\": \"SYN-A05\",\n      \"actorRole\": \"XO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Executive review complete.\",\n      \"resultStatus\": \"IN_REVIEW\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E011\",\n      \"sequence\": 11,\n      \"timestamp\": \"2026-10-12T08:15:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"APPROVE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Approved for simulated release.\",\n      \"resultStatus\": \"READY_FOR_RELEASE\",\n      \"resultHolder\": \"CO\"\n    },\n    {\n      \"eventId\": \"SYN-E012\",\n      \"sequence\": 12,\n      \"timestamp\": \"2026-10-12T08:16:00Z\",\n      \"actorId\": \"SYN-A06\",\n      \"actorRole\": \"CO\",\n      \"action\": \"SIMULATE_RELEASE\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"note\": \"Synthetic release only; no transmission.\",\n      \"resultStatus\": \"RELEASED\",\n "
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-revisions",
+          "fileName": "SYN-CR-001.synthetic-revisions-audit.json",
+          "text": "     \"resultHolder\": \"None\"\n    }\n  ],\n  \"approvals\": [\n    {\n      \"revisionId\": \"SYN-CR-001-R1\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E002\",\n      \"valid\": false\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A01\",\n      \"role\": \"Originator\",\n      \"eventId\": \"SYN-E006\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A02\",\n      \"role\": \"Division Officer\",\n      \"eventId\": \"SYN-E007\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A03\",\n      \"role\": \"Department Head\",\n      \"eventId\": \"SYN-E008\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A04\",\n      \"role\": \"CHENG\",\n      \"eventId\": \"SYN-E009\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A05\",\n      \"role\": \"XO\",\n      \"eventId\": \"SYN-E010\",\n      \"valid\": true\n    },\n    {\n      \"revisionId\": \"SYN-CR-001-R2\",\n      \"actorId\": \"SYN-A06\",\n      \"role\": \"CO\",\n      \"eventId\": \"SYN-E011\",\n      \"valid\": true\n    }\n  ],\n  \"releaseReceipt\": {\n    \"releaseId\": \"SYN-REL-001\",\n    \"reportId\": \"SYN-CR-001\",\n    \"revisionId\": \"SYN-CR-001-R2\",\n    \"actorId\": \"SYN-A06\",\n    \"releasedAt\": \"2026-10-12T08:16:00Z\",\n    \"simulated\": true,\n    \"transmitted\": false\n  },\n  \"readinessAndPartsPriorityText\": \"readiness and parts priority: Training cooling capacity reduced; backup pump supports one training loop. | DEMO-URGENT\"\n}\n"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "RELEASED · None"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-message",
+          "fileName": "SYN-CR-001-R2.synthetic-casrep.txt",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-001\nTYPE: INITIAL\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 trips during the fictional training cycle.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Replace synthetic seal kit SYN-SK-17; estimated arrival 2026-10-14T12:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        }
+      ]
+    },
+    {
+      "id": "recover-validation",
+      "title": "Retain invalid draft and recover from a wrong-role decision",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#category",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Category is required."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#repairNarrative",
+          "value": "Replace the synthetic seal kit; delivery estimate pending."
+        },
+        {
+          "action": "fill",
+          "selector": "#category",
+          "value": "DEMO-2"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "IN_REVIEW · Division Officer"
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "XO"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Only the current holder may approve."
+        },
+        {
+          "action": "select",
+          "selector": "#actor-role",
+          "value": "Division Officer"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "IN_REVIEW · Department Head"
+        }
+      ]
+    },
+    {
+      "id": "new-user-report",
+      "title": "Supply a new report beyond presets through editable native fields",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-choice",
+          "value": "optional-jsn-empty"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#reportId",
+          "value": "SYN-USER-91"
+        },
+        {
+          "action": "fill",
+          "selector": "#description",
+          "value": "Fictional panel indicator fails during drill."
+        },
+        {
+          "action": "fill",
+          "selector": "#repairNarrative",
+          "value": "Inspect fictional indicator connector."
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "IN_REVIEW · Division Officer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-USER-91\nTYPE: INITIAL\nCATEGORY: DEMO-3\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-D04 | Training display D-04\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Fictional panel indicator fails during drill.\nREADINESS: One training display unavailable; adjacent display available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Inspect fictional indicator connector.\nMAINTENANCE_JSN: NONE\nRELATED_REPORT: NONE\nEND SYN-CASREP\n"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#reportId",
+          "value": "SYN-USER-91"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "IN_REVIEW · Division Officer"
+        }
+      ]
+    },
+    {
+      "id": "linked-types",
+      "title": "Render UPDATE, CORRECT and CASCOR with an explicit synthetic linked receipt",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-choice",
+          "value": "update-linked"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#linked-receipts",
+          "value": "[{\"releaseId\":\"SYN-REL-001\",\"reportId\":\"SYN-CR-001\",\"revisionId\":\"SYN-CR-001-R2\",\"actorId\":\"SYN-A06\",\"releasedAt\":\"2026-10-12T08:16:00Z\",\"simulated\":true,\"transmitted\":false}]"
+        },
+        {
+          "action": "click",
+          "selector": "#validate-message"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-002\nTYPE: UPDATE\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 remains unavailable; replacement seal kit is staged.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Seal kit SYN-SK-17 arrived; fictional installation planned for 2026-10-14T14:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        },
+        {
+          "action": "select",
+          "selector": "#sample-choice",
+          "value": "correct-linked"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#linked-receipts",
+          "value": "[{\"releaseId\":\"SYN-REL-001\",\"reportId\":\"SYN-CR-001\",\"revisionId\":\"SYN-CR-001-R2\",\"actorId\":\"SYN-A06\",\"releasedAt\":\"2026-10-12T08:16:00Z\",\"simulated\":true,\"transmitted\":false}]"
+        },
+        {
+          "action": "click",
+          "selector": "#validate-message"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-003\nTYPE: CORRECT\nCATEGORY: DEMO-2\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Correction: the affected equipment identifier is SYN-EQ-P17, not SYN-EQ-P71.\nREADINESS: Training cooling capacity reduced; backup pump supports one training loop.\nPARTS_PRIORITY: DEMO-URGENT\nREPAIR: Correct the transposed equipment identifier; no repair completion is asserted.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        },
+        {
+          "action": "select",
+          "selector": "#sample-choice",
+          "value": "cascor-linked"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#linked-receipts",
+          "value": "[{\"releaseId\":\"SYN-REL-001\",\"reportId\":\"SYN-CR-001\",\"revisionId\":\"SYN-CR-001-R2\",\"actorId\":\"SYN-A06\",\"releasedAt\":\"2026-10-12T08:16:00Z\",\"simulated\":true,\"transmitted\":false}]"
+        },
+        {
+          "action": "click",
+          "selector": "#validate-message"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1\nSYN-CASREP-1\nREPORT: SYN-CR-004\nTYPE: CASCOR\nCATEGORY: DEMO-1\nCLASSIFICATION: NOTIONAL UNCLASSIFIED\nUNIT: FSV Lantern / SYN-U01\nEQUIPMENT: SYN-EQ-P17 | Auxiliary cooling pump P-17\nOCCURRED_UTC: 2026-10-12T08:00:00Z\nCASUALTY: Pump P-17 restored after synthetic seal replacement and training test.\nREADINESS: Training cooling capacity restored; both training loops available.\nPARTS_PRIORITY: DEMO-ROUTINE\nREPAIR: Synthetic replacement and training test completed at 2026-10-14T16:00:00Z.\nMAINTENANCE_JSN: SYN-JSN-2026-014\nRELATED_REPORT: SYN-CR-001\nEND SYN-CASREP\n"
+        }
+      ]
+    },
+    {
+      "id": "recover-conflict",
+      "title": "Reconnect a labeled disconnected copy and review both branches before merging",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#open-offline-copy"
+        },
+        {
+          "action": "fill",
+          "selector": "#offline-repair",
+          "value": "Fictional disconnected repair note."
+        },
+        {
+          "action": "click",
+          "selector": "#queue-offline-edit"
+        },
+        {
+          "action": "fill",
+          "selector": "#repairNarrative",
+          "value": "Fictional online repair note."
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "CONFLICT · Originator"
+        },
+        {
+          "action": "expectText",
+          "selector": "#accepted-branch-repair",
+          "text": "Fictional online repair note."
+        },
+        {
+          "action": "expectText",
+          "selector": "#competing-branch-repair",
+          "text": "Fictional disconnected repair note."
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Resolve conflicts before review or release."
+        },
+        {
+          "action": "fill",
+          "selector": "#merge-repair",
+          "value": "Fictional combined repair note."
+        },
+        {
+          "action": "select",
+          "selector": "#merge-priority",
+          "value": "DEMO-ROUTINE"
+        },
+        {
+          "action": "check",
+          "selector": "#confirm-merge"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflict"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "DRAFT · Originator"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-summary",
+          "text": "Both source revisions retained · Merge confirmed · Fresh review required"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "IN_REVIEW · Division Officer"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#lineage-summary",
+          "text": "4 revisions retained · Merge parents: SYN-CR-001-R2, SYN-CR-001-R3"
+        }
+      ]
+    },
+    {
+      "id": "recover-storage",
+      "title": "Fail a labeled checkpoint before commit, preserve draft through reload and retry once",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "fill",
+          "selector": "#repairNarrative",
+          "value": "Fictional repair note retained after failed checkpoint."
+        },
+        {
+          "action": "check",
+          "selector": "#fail-next-save"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Save failed; draft retained. Retry when storage is available."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#repairNarrative",
+          "value": "Fictional repair note retained after failed checkpoint."
+        },
+        {
+          "action": "expectText",
+          "selector": "#saved-revision",
+          "text": "SYN-CR-001-R1"
+        },
+        {
+          "action": "click",
+          "selector": "#retry-save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#saved-revision",
+          "text": "SYN-CR-001-R2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally · 2 revisions · 2 accepted events"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#saved-revision",
+          "text": "SYN-CR-001-R2"
+        }
+      ]
+    },
+    {
+      "id": "review-material",
+      "title": "Inspect the one-page brief and follow the live walkthrough",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#open-brief"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-fielding",
+          "text": "Demonstration roles only; identity is not authenticated. Real release requires an authorized Navy messaging adapter, approved routing and format validation, classification handling, security assessment, representative evaluation and owner approval."
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-permissions",
+          "text": "Originator → Division Officer → Department Head → CHENG → XO → CO; only the current holder comments, returns or forwards. Originator edits invalidate prior approvals. CO approval and simulated release are separate."
+        },
+        {
+          "action": "click",
+          "selector": "#open-walkthrough"
+        },
+        {
+          "action": "expectText",
+          "selector": "#walkthrough-summary",
+          "text": "Load INITIAL → Save draft → Submit → Division Officer comment and return → Originator revise and submit → Division Officer, Department Head, CHENG, XO and CO approve → Confirm simulated release → Download message and audit."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-credit",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/8 · captured 2026-11-04 · synthetic demonstration"
+        }
+      ]
+    }
+  ]
+}

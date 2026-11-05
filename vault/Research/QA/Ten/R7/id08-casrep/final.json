@@ -1,0 +1,101 @@
+{
+ "title": "CASREP Command: Unified Casualty Report Drafting, Routing & Release",
+ "status": "failed",
+ "error": "The build did not produce all the required files; check the saved work and try again.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T10:04:38.216Z",
+    "finishedAt": "2026-11-05T10:15:21.256Z",
+    "durationMs": 643042,
+    "agentAttempts": 3,
+    "inferenceDurationMs": 642311,
+    "usage": {
+     "inputTokens": 407628,
+     "cachedInputTokens": 299971,
+     "uncachedInputTokens": 107657,
+     "outputTokens": 17131,
+     "reasoningOutputTokens": 582,
+     "totalTokens": 424759,
+     "uncachedPlusOutputTokens": 124788
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T10:15:21.313Z",
+    "finishedAt": "2026-11-05T10:17:49.392Z",
+    "durationMs": 148079,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 147946,
+    "usage": {
+     "inputTokens": 590870,
+     "cachedInputTokens": 512001,
+     "uncachedInputTokens": 78869,
+     "outputTokens": 6580,
+     "reasoningOutputTokens": 186,
+     "totalTokens": 597450,
+     "uncachedPlusOutputTokens": 85449
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T10:17:49.456Z",
+    "finishedAt": "2026-11-05T10:26:01.811Z",
+    "durationMs": 492356,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 491685,
+    "usage": {
+     "inputTokens": 1202184,
+     "cachedInputTokens": 1103253,
+     "uncachedInputTokens": 98931,
+     "outputTokens": 22697,
+     "reasoningOutputTokens": 3525,
+     "totalTokens": 1224881,
+     "uncachedPlusOutputTokens": 121628
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "queued"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "queued"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 21.5,
+ "challengeId": "8",
+ "workspace": "~/fhten/ud-r7/workspaces/9ef9d378-20d3-4fb7-9ebd-4435c63989ff/b3c8ff97-e1cd-4c2a-be8f-66a3484f5090"
+}

@@ -1,0 +1,71 @@
+plan tool bash completed
+"# Shape\n\nDiscover what should be made and how it should work, then return a confirmed design brief without code.\n\n## Phase 1: Discovery interview\n\nDo not write code or choose visual direction yet.\n\n### Cadence\n\n- Use the structured question tool when available; otherwise ask and stop.\n- Ask two or three related questions per round, then wait. One round is the default; ad
+plan tool fleet_system_design
+{
+  "title": "Synthetic CASREP Command",
+  "description": "Local synthetic CASREP drafting, revision-bound review and explicit simulated CO release. No operational messaging or identity integration.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "CASREP workspace",
+      "kind": "interface",
+      "description": "Editable report, route holder, comments, side-
+plan tool fleet_system_design completed
+[{"type":"inputText","text":"System design published. Components: workspace, service, domain, lineage, storage, fixtures"}]
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nD=json.load(open('data/synthetic-data.json'))\nfor n in [19,20]:\n s=D['scenarios'][n];print(json.dumps(s,indent=2)[:14000])\nprint(json.dumps(D['scenarios'][0]['expected']['counts']))\nPY\""
+}
+plan tool bash completed
+"{\n  \"name\": \"Content edit invalidates existing approvals\",\n  \"kind\": \"edge\",\n  \"input\": {\n    \"scenarioId\": \"SC-20\",\n    \"initialState\": {\n      \"scenarioId\": \"SC-01\",\n      \"throughAction\": 8\n    },\n    \"attempt\": {\n      \"action\": \"REVISE\",\n      \"actorRole\": \"Originator\",\n      \"baseRevisionId\": \"SYN-CR-001-R2\",\n      \"revisionId
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"cat > /tmp/write_casrep_plan.py <<'PY'\nimport json,copy,pathlib\nP=pathlib.Path('.'); packet=json.load(open('.fleet/packet.json')); D=json.load(open('data/synthetic-data.json')); S={s['input']['scenarioId']:s for s in D['scenarios']}; E=S['SC-01']['expected']; roles=['Originator','Division Officer','Department Head','CHENG','XO','CO']\ndef write(n,v): P.joinpat
+plan tool bash completed
+"completed"
+plan text The architecture is published. I’m fixing the protocol and browser journeys around revision-bound approvals, preservation of both conflicting edits, and a separate confirmed CO release that records `transmitted: false`. The main journey will also check the complete message and audit downloads against the fixture’s fixed contents.
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> /tmp/write_casrep_plan.py <<'PY'\ndef st(action,selector=None,**kw):return dict(action=action,**({'selector':selector} if selector else {}),**kw)\ndef click(s):return st('click',s)\ndef select(s,v):return st('select',s,value=v)\ndef fill(s,v):return st('fill',s,value=v)\ndef expect(s,t):return st('expectText',s,text=t)\nmain=[click('#load-sample'),click('
+plan tool bash completed
+"journey steps [('synthetic-primary', 37), ('recover-validation', 15), ('new-user-report', 12), ('linked-types', 15), ('recover-conflict', 23), ('recover-storage', 14), ('review-material', 6)]\nexport JSON chars 9534\n"
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nD=json.load(open('data/synthetic-data.json'));E=D['scenarios'][0]['expected'];print('exports',[(k,len(v),repr(v[-10:])) for k,v in E['exports'].items()]);print('revision difference',E['revisionDifferences']); print('research headings');print('\\\\n'.join(x for x in open('research.md').read().splitlines() if x.startswith('#')))\nPY\
+plan tool bash completed
+"exports [('messageFileName', 34, \"'casrep.txt'\"), ('messageText', 594, \"'YN-CASREP\\\\n'\"), ('auditFileName', 30, \"'-audit.txt'\"), ('auditText', 1971, \"'SYN-AUDIT\\\\n'\"), ('revisionAuditFileName', 41, \"'audit.json'\"), ('revisionAuditText', 9534, '\\'URGENT\"\\\\n}\\\\n\\'')]\nrevision difference [{'fromRevisionId': 'SYN-CR-001-R1', 'toRevisionId': 'SYN-CR-001-R2', 'field
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> /tmp/write_casrep_plan.py <<'PY'\n# Add complete supplied end-to-end oracle and new-input return/comment checks to frozen computational evidence.\nEP=json.load(open('evaluation-plan.json'))\nroutecases=EP['evaluations'][1]['cases']\nroutecases.append(case('fixture-full-return-loop',S['SC-01']['input']['actions'],summary('RELEASED','None','SYN-CR-001-R2',[
+plan tool bash completed
+"journey steps [('synthetic-primary', 37), ('recover-validation', 15), ('new-user-report', 12), ('linked-types', 15), ('recover-conflict', 23), ('recover-storage', 14), ('review-material', 6)]\nexport JSON chars 9534\n"
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json,pathlib\np=json.load(open('.fleet/packet.json')); a=json.load(open('acceptance-plan.json'));s=json.load(open('solution-contract.json'));e=json.load(open('evaluation-plan.json'));u=json.load(open('ux-spec.json'));f=json.load(open('foundation-plan.json'))\nassert a['schemaVersion']==2\nids=[c['criterionId'] for c in a['criteria']];ass
+plan error bash failed
+"Planning artifacts checked: 17 criteria, 7 journeys, 3 required capabilities, 22 frozen evaluation cases.\nAll foundation runtime files declared. No application test or visual verification was run.\n   20876 plan.md\n   29096 test-matrix.md\n   44412 acceptance-plan.json\n    5109 ux-spec.json\n   14956 solution-contract.json\n   68067 evaluation-plan.json\n    3072 system-design.json
+plan text Created all eight planning artifacts and published the application architecture.
+
+The plan covers 17 criteria, 7 browser journeys, 3 mandatory capabilities and 22 frozen synthetic evaluation cases.
+
+DESC8-2 remains deferred for missing operational measurements. NWP compliance remains unverified. No application code was implemented or tests claimed passed.
+
+Ready for host audit and contract freezin
+plan info Stage artifacts missing: valid quality contract: criteria[4] references capability review-route without its criterion mapping in the solution contract.. Starting one completion attempt.
+plan text I’ll check and repair all criterion-to-capability mappings. This is still the planning phase, which has no application runtime or assigned visual-review tools; visual review remains a build and verification check.
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nA=json.load(open('acceptance-plan.json'));S=json.load(open('solution-contract.json'))\nfor c in S['capabilities']:\n linked=[x['criterionId'] for x in A['criteria'] if c['id'] in x['capabilityIds']]\n print(c['id'],'missing:',[x for x in linked if x not in c['criterionIds']],'extra:',[x for x in c['criterionIds'] if x not in linked
+plan tool bash completed
+"casrep-format missing: ['SCOPE8-4'] extra: []\nreview-route missing: ['DELIVERABLE8-1', 'SCOPE8-4', 'SCOPE8-6'] extra: []\nrevision-lineage missing: [] extra: []\n"
+plan tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nfrom pathlib import Path\nnames=['foundation-plan.json','acceptance-plan.json','ux-spec.json','solution-contract.json','evaluation-plan.json','system-design.json']\nd={n:json.loads(Path(n).read_text()) for n in names}\na=d['acceptance-plan.json'];s=d['solution-contract.json'];e=d['evaluation-plan.json'];p=json.load(open('.fleet/pac
+plan tool bash completed
+"PASS: 17 criteria mapped bidirectionally to 3 required capabilities; 7 journeys and 22 evaluation cases retained.\nPASS: JSON parsing, canonical criterion inventory, capability/evaluation references, journey bounds, invocation bounds and foundation file manifest.\nPlanning only: no application runtime or source edits; visual reviews remain required during build/verification.\n"
+plan text Fixed four missing criterion mappings in [solution-contract.json](solution-contract.json). All 17 criteria now map consistently in both directions; structural checks passed.
+
+Requirements and `.fleet` were preserved. Visual review remains unperformed: this planning phase has no application runtime or assigned browser-review tools.
+plan error Error: Codex did not produce the required artifacts after one completion attempt: valid quality contract: Every journey must map to an implemented criterion or deferred syntheticCoverage. Unmapped journeys: new-user-report.. Inspect the session, then resume this phase to continue from its saved files.
+    at complete (file://~/fhten/app/dist-electron/electron/pi-backend.js:909:43)
+    a

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Originator (Sailor/LPO), Division Officer, Department Head, Engineer Officer/CHENG, XO and CO reviewing fictional unclassified casualty reports; owner assessing a local prototype. Role selector is a demonstration, never authentication.",
+  "primaryTask": "Write and save a synthetic CASREP, route the exact revision through all roles, handle a return and fresh review, then explicitly confirm simulated CO release and download its message and complete audit.",
+  "successOutcome": "RELEASED · None appears for the reviewed revision; all six valid decisions and old invalid decisions remain inspectable, the exact synthetic message/audit downloads agree with the current revision and receipt states transmitted: false. Operational benefit and NWP compliance remain unverified.",
+  "screens": [
+    {
+      "name": "CASREP workspace",
+      "purpose": "Report list, current holder and route, native labeled draft fields, complete message preview, comments and decisions; show saved and unsaved content explicitly.",
+      "primaryAction": "Save draft, then Submit for review; reviewers see Approve and forward or Return for revision."
+    },
+    {
+      "name": "History and conflict review",
+      "purpose": "Immutable revision snapshots, field-level before/after differences, valid/invalid approvals, attributed comments, accepted audit and separate rejected attempts; competing values shown side by side.",
+      "primaryAction": "Choose or edit every merged field, confirm all heads reviewed, then Resolve conflict."
+    },
+    {
+      "name": "Release and exports",
+      "purpose": "Preview frozen current message and all decisions, require separate CO confirmation; show simulated receipt and local downloads.",
+      "primaryAction": "Confirm simulated release, then Download message, Download audit or Download revisions and audit."
+    },
+    {
+      "name": "Brief and live walkthrough",
+      "purpose": "Inline review panels backed by printable brief.html and walkthrough.html; explain roles, synthetic grammar, classification boundaries, integration and fielding prerequisites.",
+      "primaryAction": "Follow the walkthrough or print the one-page brief."
+    }
+  ],
+  "states": {
+    "empty": "Explain that no report is saved. Offer five editable synthetic starting samples and a blank draft. Sample loading changes only draft inputs, never fabricates approvals. Keep persistent SYNTHETIC — NOT VALIDATED AGAINST NWP 1-03.1 banner and local-only disclosure.",
+    "loading": "On initial workspace restore use a quiet skeleton and Restoring local workspace. During writes show Saving locally and block repeat controls until acknowledgement; preserve form and keyboard focus. API unavailable shows Pending locally, not Saved.",
+    "error": "Show exact validation/rejection beside the action and affected field in a live region; preserve pending text. Unknown/missing history requests missing revisions rather than selecting a winner. Quota/checkpoint failure states Save failed; draft retained. Retry when storage is available. Conflict shows both complete branches and blocks review/release.",
+    "success": "After durable commit show Saved locally with revision and event counts; always show current holder, route position and next action. Returns highlight required revision without hiding comments. Simulated release creates a visible receipt, frozen preview and export actions. No green state claims NWP compliance, real authentication, real release or measured benefit."
+  },
+  "persistence": "Server atomic checkpoints in an app-specific OS temporary directory outside deployment allowlist, indexed by a random browser workspace key. Browser stores unfinished draft and disconnected queue before marking Pending locally. Reload/restart restores the acknowledged journal and pending edits. CAS compare-and-swap prevents overwrites; client may not replace committed history wholesale. State is local to this machine/browser and is not encrypted or a distributed synchronization service. Export before clearing local data.",
+  "recovery": "Ordinary role/tab changes preserve pending fields. Approve, sample/report switching and release require deliberate Save or Discard if pending content differs from committed revision. Return reason is mandatory. Keep original queue on missing history or write failure; Retry uses same operation ID and commits once. Disconnected-copy simulation queues a branch; reconnect shows competing values, edited merge, all reviewed heads and explicit confirmation. Reset local workspace requires confirmation. Diagnostics are collapsed and labeled simulations.",
+  "keyboard": "Native labels and inputs for every field, logical Tab sequence, visible high-contrast focus, Enter submits only the intended form, buttons do not accidentally submit. Error summary links to fields and status uses aria-live. Side-by-side desktop layout stacks at narrow width; history tables have labeled scroll regions or cards, no page horizontal overflow. Avoid color-only state, decorative motion, external fonts and custom controls."
+}

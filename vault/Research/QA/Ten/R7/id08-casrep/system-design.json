@@ -1,0 +1,107 @@
+{
+  "title": "Synthetic CASREP Command",
+  "description": "Local synthetic CASREP drafting, revision-bound review and explicit simulated CO release. No operational messaging or identity integration.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "CASREP workspace",
+      "description": "Editable report, route holder, comments, side-by-side revisions, export and synthetic disclosure.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "Local HTTP service",
+      "description": "Foundation HTTP service; shared backend invocation and durable workspace checkpoint endpoints.",
+      "kind": "integration",
+      "files": [
+        "server.mjs"
+      ]
+    },
+    {
+      "id": "domain",
+      "label": "CASREP rules and review engine",
+      "description": "Invented SYN-CASREP-1 validation/rendering, ordered role transitions, audit, replay protection and simulated release.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "casrep.mjs"
+      ]
+    },
+    {
+      "id": "lineage",
+      "label": "Revision reconciliation",
+      "description": "Lossless adapter to offline pack; preserve competing branches and require reviewed merge.",
+      "kind": "logic",
+      "files": [
+        "casrep.mjs",
+        "lib/offline.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Durable local workspace",
+      "description": "Atomic filesystem checkpoints outside deployment files; browser pending drafts and offline queue. Local reconnect simulation only.",
+      "kind": "data",
+      "files": [
+        "storage.mjs",
+        "public/app.js"
+      ]
+    },
+    {
+      "id": "fixtures",
+      "label": "Synthetic samples and review material",
+      "description": "Unchanged intake fixture data, embedded editable inputs, printable one-page brief and live walkthrough.",
+      "kind": "data",
+      "files": [
+        "data/synthetic-data.json",
+        "data/README.md",
+        "public/index.html",
+        "public/brief.html",
+        "public/walkthrough.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "workspace",
+      "to": "service",
+      "label": "POST domain operations and checkpoint requests"
+    },
+    {
+      "from": "service",
+      "to": "domain",
+      "label": "One shared computation implementation"
+    },
+    {
+      "from": "domain",
+      "to": "lineage",
+      "label": "Immutable revision graph reconciliation"
+    },
+    {
+      "from": "service",
+      "to": "storage",
+      "label": "Persist before saved acknowledgement"
+    },
+    {
+      "from": "storage",
+      "to": "workspace",
+      "label": "Restore committed and pending work"
+    },
+    {
+      "from": "fixtures",
+      "to": "workspace",
+      "label": "Labeled editable CASREP samples"
+    },
+    {
+      "from": "domain",
+      "to": "workspace",
+      "label": "Message, route, decisions and local downloads; simulated release"
+    }
+  ]
+}

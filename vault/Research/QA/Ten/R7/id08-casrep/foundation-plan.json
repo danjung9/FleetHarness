@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "offline",
+  "reason": "Adopt the recommended dependency-free Node 22.19+ HTTP/browser foundation and immutable revision reconciliation pack. CASREP routing, formatting, audit, persistence and explicit conflict review extend its shared backend. No distributed replication endpoint exists; PouchDB was evaluated in research but adds transport/database complexity without satisfying revision-bound approval semantics. This choice supports the complete local synthetic workflow without rebuilding setup."
+}
