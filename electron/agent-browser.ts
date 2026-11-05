@@ -45,7 +45,7 @@ type Generation = {
   proxy?: { url: string; close: () => Promise<void> };
 };
 type Result = { content: ({ type: 'text'; text: string } | { type: 'image'; data: string; mimeType: 'image/png' })[]; details: Record<string, unknown>; isError: boolean };
-const maxImageBytes = 8_000_000, maxImages = 100, maxTotalImageBytes = 128_000_000;
+const maxImageBytes = 8_000_000, maxImages = 200, maxTotalImageBytes = 128_000_000;
 const finalCheckImages = 8;
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 1800);
 
@@ -218,7 +218,7 @@ export class AgentBrowserSession {
         this.active = undefined;
         return this.result({ action: 'close', status: 'closed', scope: 'Development observation only; independent verification is still required.' });
       }
-      if (this.imageCount >= maxImages || this.imageBytes >= maxTotalImageBytes) throw new Error('Browser observation limit reached. This stage permits at most 100 screenshots and 128 MB of image artifacts.');
+      if (this.imageCount >= maxImages || this.imageBytes >= maxTotalImageBytes) throw new Error('Browser observation limit reached. This stage permits at most 200 screenshots and 128 MB of image artifacts.');
       let failure: string | undefined;
       try {
         if (input.action === 'open') await this.open(input.viewport ?? 'desktop', signal);
@@ -375,7 +375,7 @@ export class AgentBrowserSession {
 
   private async saveImage(png: Buffer, signal: AbortSignal) {
     signal.throwIfAborted();
-    if (png.length > maxImageBytes || this.imageCount >= maxImages || this.imageBytes + png.length > maxTotalImageBytes) throw new Error('Browser screenshot exceeds the observation image limits (8 MB/image, 100 images, 128 MB total).');
+    if (png.length > maxImageBytes || this.imageCount >= maxImages || this.imageBytes + png.length > maxTotalImageBytes) throw new Error('Browser screenshot exceeds the observation image limits (8 MB/image, 200 images, 128 MB total).');
     const { base, relative } = await this.artifactDirectory();
     const name = createHash('sha256').update(png).digest('hex').slice(0, 12) + '-' + randomUUID() + '.png';
     const target = path.join(base, relative, name);
