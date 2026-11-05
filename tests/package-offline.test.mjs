@@ -6,6 +6,9 @@ import os from 'node:os';
 import { createRequire } from 'node:module';
 import { extract } from '@electron-internal/extract-zip';
 import { extractFile } from '@electron/asar';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { serviceAppFixture, packagedPaths, assertProcessesGone } from '../scripts/service-app-fixture.mjs';
 import { runPackageWorker } from '../dist-electron/electron/executable.js';
 import { localElectronZip } from '../dist-electron/electron/package-runtime.js';
 
@@ -74,4 +77,54 @@ test('missing local runtime and failed download return one actionable sentence',
   await assert.rejects(runPackageWorker(job, process.execPath, undefined, 12_000), {
     message: 'No local Electron runtime was found and its download failed; reinstall AppYard with its bundled runtime or connect to the internet and retry.'
   });
+});
+
+test('offline packaged Node service uses its bundled runtime and stops its detached child', { timeout: 240_000 }, async t => {
+  const { root, job } = await fixture(t);
+  const staging = path.join(root, 'service-staging'); await fs.mkdir(staging);
+  const { staged, runtime: contract } = await serviceAppFixture(staging);
+  Object.assign(job, staged);
+  await runPackageWorker(job, process.execPath, undefined, 200_000);
+  const unpacked = path.join(root, 'service-unpacked');
+  await extract(job.archive, { dir: unpacked });
+  const { binary, source } = packagedPaths(unpacked, job.name);
+  assert.equal((await fs.stat(path.join(source, 'application/server.cjs'))).isFile(), true);
+  assert.equal(await fs.stat(path.join(source, 'application/index.html')).then(() => true, () => false), false);
+  const driver = path.join(root, 'drive-service.cjs');
+  await fs.writeFile(driver, `const path=require('node:path');
+const [source,data,appId,contract]=process.argv.slice(2);
+const host=require(path.join(source,'standalone-service.cjs'))({appId,runtime:JSON.parse(contract),payloadHash:'test'},path.join(source,'application'),data,process.execPath,path.join(source,'process-sweep.mjs'));
+process.on('message',async message=>{if(message==='stop'){try{await host.stop();process.disconnect()}catch{process.exitCode=1;process.disconnect()}}});
+host.start().then(ready=>process.send(ready),async()=>{process.exitCode=1;await host.stop();process.disconnect()});`);
+  const child = spawn(binary, [driver, source, path.join(root, 'user-data'), staged.appId, JSON.stringify(contract)], {
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', PATH: '' }, stdio: ['ignore', 'ignore', 'pipe', 'ipc']
+  });
+  let stderr = ''; child.stderr.on('data', chunk => { stderr += chunk; });
+  const exited = once(child, 'exit');
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.send('stop'); await exited; } });
+  const [ready] = await Promise.race([once(child, 'message'), exited.then(() => { throw new Error('Packaged service driver exited: ' + stderr); })]);
+  assert.match(ready.origin, /^http:\/\/127\.0\.0\.1:\d+$/);
+  assert.equal((await fetch(ready.origin + '/ready')).status, 200);
+  assert.match(await (await fetch(ready.origin + '/')).text(), /Synthetic service notebook/);
+  const pids = JSON.parse(await fs.readFile(path.join(ready.directory, 'pids.json'), 'utf8'));
+  assert.equal(await fs.realpath(pids.cwd), await fs.realpath(ready.directory)); assert.equal(await fs.realpath(pids.data), await fs.realpath(ready.directory));
+  assert.equal(JSON.parse(await fs.readFile(path.join(ready.directory, 'bound-address.json'), 'utf8')).address, '127.0.0.1');
+  const heartbeatFile = path.join(ready.directory, 'heartbeat.txt');
+  let before = '';
+  for (let attempt = 0; !before && attempt < 50; attempt++) {
+    before = await fs.readFile(heartbeatFile, 'utf8').catch(() => '');
+    if (!before) await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  assert.ok(before, 'The child must be running before shutdown.');
+  await new Promise(resolve => setTimeout(resolve, 150));
+  assert.ok((await fs.readFile(heartbeatFile, 'utf8')).length > before.length);
+  child.send('stop');
+  const [code] = await exited;
+  assert.equal(code, 0, stderr);
+  await assertProcessesGone(assert, pids);
+  const heartbeat = await fs.readFile(path.join(ready.directory, 'heartbeat.txt'), 'utf8');
+  await new Promise(resolve => setTimeout(resolve, 250));
+  assert.equal(await fs.readFile(path.join(ready.directory, 'heartbeat.txt'), 'utf8'), heartbeat);
+  await assert.rejects(fetch(ready.origin + '/ready'));
+  assert.equal(await fs.stat(process.env.electron_config_cache).then(() => true, () => false), false);
 });

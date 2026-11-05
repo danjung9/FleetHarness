@@ -32,7 +32,7 @@ const errorInventory = {
   "harness/solution-contract.ts": "4b11e8c746d973b2073a4b90578ff429060ed1d1f0fe6cb8a7c7fe88aa1ec039",
   "electron/browser-verification.ts": "f4b4688364370ada03a7ba31fc23fb04c6acdee99896eb62b023c36ce998801d",
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
-  "electron/solution-runtime.ts": "6b1fd16810a8b2cbdb0cf57bc1a89b0caecaddb85ffeb0dfdc1ef039e6e3894a",
+  "electron/solution-runtime.ts": "adff71659e0a5bc4e897aac805cdef71088321682ba564fd5edaefd19c6989cc",
   "electron/visual-review.ts": "4f3f4aade42b2032aa0bf27774110cf9c2393c04b8a85f927c1b2367ee64eac9",
   "electron/agent-runner.ts": "cd2dda17f8cef33368a53bf9aa2f7430d76c12318760dc846089db0bfd476025",
   "harness/integration.ts": "dcf498a183b90defa591068b54ee13485230a5359ded4d030cd0cd023b00cf34",
@@ -57,7 +57,7 @@ const errorInventory = {
   "electron/connectors/store.ts": "e42422dbdf1f5a4271031a0c908ad1194f4d79d580fcf6351ba8088c6f2540a1",
   "electron/connectors/sample-data.ts": "ce5a604160b1b1df0cbffcfef7ce3d195474c216613c5a9d028f756713eb35ec",
   "electron/delivery.ts": "9a096ce495a49934ac8d4b72a3b2e4343fdb913f80383a351024cb5679ede5a1",
-  "electron/delivery-secrets.ts": "cceca542c59784e7c57e0e18a7e95edea4259f52abb061d64547c994a8e908d1",
+  "electron/delivery-secrets.ts": "7625dfa1265723b450a72f3187630569ef4159e0161f3be6cd44f5f0dbf9ec2e",
   "electron/test-baseline.ts": "6c7f91885cb4fbf34534fc2e1dfede54425ec0791a8fbf75ec851a45a8596554",
   "electron/brief-data.ts": "e8df4e61613810a8e3f41fe167b678cf7106450cfa08feee5be6d2629d95ee8a",
   "electron/connectors/snapshot.ts": "e802d54afc8f94410b741b80df35595a18fe659fee6d73039a9ae7e171e9d975",
@@ -66,7 +66,12 @@ const errorInventory = {
   "electron/agent-helpers.ts": "c1366645d3f2ffb0f4013f120752cc9ba5d01b02f9b4b1549181af252ba81a7e",
   "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4",
   "electron/agent-browser.ts": "0c5763c5405303f5fc4cb1d3b7508b4d049a483d0c7f715c2e615dc3ceba8626",
-  "electron/run-checkpoint.ts": "9b33234a062aff1763bcd5b674311b07639b1d3941fa8b3d1365a2eb6a03139f"
+  "electron/run-checkpoint.ts": "9b33234a062aff1763bcd5b674311b07639b1d3941fa8b3d1365a2eb6a03139f",
+  "electron/executable.ts": "01b2ac13f34acf7c23675a48c8a877322658b8794e642ce9981cf1096b52f785",
+  "electron/service-package.ts": "2fd75c5a6ec4a34b3c74bcd378d10c563a0b3ead8d29a48b6d08a01a07d2f1f3",
+  "electron/standalone-service.ts": "9534a4407faa851ffda8c369d5205aa06e8a5f7b20a80b1de2d6820e69bd6a91",
+  "electron/package-worker.ts": "dff5d82e269d492975fa14d138cd654bd80b07c224a1394e4b2ea43b3db783da",
+  "electron/package-runtime.ts": "2adf0212b7ffdb7fbaf40cae75d20eb3e097946e38d4fff13fd9bcb713fefe49"
 };
 // fail(message) is the local agent-runner error wrapper. Its literal/template
 // inputs need the same mapping checks as direct constructors. Dynamic arguments
@@ -84,6 +89,11 @@ async function flowErrors(file = 'electron/pi-backend.ts', found = new Map()) {
   }
   return found;
 }
+async function allFlowErrors() {
+  const files = await flowErrors();
+  for (const file of ['electron/preflight.ts', 'electron/plain-errors.ts', 'electron/executable.ts', 'electron/package-worker.ts']) await flowErrors(file, files);
+  return files;
+}
 const signature = messages => createHash('sha256').update(JSON.stringify(messages)).digest('hex');
 function assertInventory(files) {
   const inventory = Object.fromEntries([...files].filter(([, errors]) => errors.producers.length).map(([file, errors]) => [file, signature(errors.producers)]));
@@ -95,7 +105,7 @@ test('coverage rejects an unmapped message passed to an existing fail helper', a
   const source = await fs.readFile(file, 'utf8');
   const mutated = source.replace('made no progress for', 'Synthetic unclassified fault for');
   assert.notEqual(mutated, source);
-  const files = await flowErrors();
+  const files = await allFlowErrors();
   files.set(file, { producers: errorProducers(mutated), literals: errorLiterals(mutated) });
   assert.throws(() => assertInventory(files), /Raw errors changed/);
   assert.ok(errorLiterals(mutated).some(raw => raw.includes('Synthetic unclassified fault for')), 'Helper arguments must be checked for plain mappings');
@@ -111,7 +121,7 @@ for (const mutation of [
   'throw new\nRangeError\n(\n"Synthetic unmapped readiness failure"\n);'
 ]) test('the inventory rejects a new producer: ' + mutation.replace(/\s+/g, ' '), async () => {
   const source = await fs.readFile('electron/preflight.ts', 'utf8');
-  const files = await flowErrors();
+  const files = await allFlowErrors();
   await flowErrors('electron/preflight.ts', files); await flowErrors('electron/plain-errors.ts', files);
   assertInventory(files);
   files.set('electron/preflight.ts', { producers: errorProducers(source + '\n' + mutation), literals: [] });
@@ -120,7 +130,7 @@ for (const mutation of [
 });
 
 test('every known local flow error has a plain instruction and new raw errors fail coverage', async () => {
-  const files = await flowErrors();
+  const files = await allFlowErrors();
   await flowErrors('electron/preflight.ts', files);
   await flowErrors('electron/plain-errors.ts', files);
   assertInventory(files);
@@ -261,4 +271,15 @@ test('specific errors keep their raw cause in the log and their plain message on
     assert.match(project.error, /;/);
     assert.match(logs[0], /Synthetic startup detail/);
   }
+});
+
+test('service download and startup messages keep a plain next step', async () => {
+  const { offlineDependenciesMessage } = await import('../dist-electron/electron/service-package.js');
+  assert.equal(plainError(offlineDependenciesMessage).code, 'download-dependencies');
+  for (const [raw, code] of [
+    ['This app uses Python or a command-line engine; export the runnable source package and follow its README to run it.', 'download-source'],
+    ['The app could not start; close it and open it again.', 'app-start'],
+    ['The app could not stop; restart this computer before opening it again.', 'app-stop'],
+    ['The app needs settings before it can start; ask the person who supplied it for help.', 'app-settings']
+  ]) assert.equal(plainError(raw).code, code);
 });

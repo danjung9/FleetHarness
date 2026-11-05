@@ -9,6 +9,8 @@ import type { Project } from '../shared/types.js';
 import { verifiedManifest } from './delivery.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { parseSolutionContract } from '../harness/solution-contract.js';
+import { installServiceDependencies } from './service-package.js';
+import { serviceHostSource, standaloneServiceMain } from './standalone-service.js';
 
 export function executableName(project: Pick<Project, 'title'>) {
   // Prefix also avoids Windows reserved device names.
@@ -20,7 +22,7 @@ export function executableFileName(project: Pick<Project, 'title'>) {
 export async function assertExecutableSource(project: Project) {
   const manifest = await verifiedManifest(project, true);
   const solution = deliveredSolution(manifest);
-  if (solution && solution.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');
+  if (solution && solution.runtime.profile !== 'browser' && !(solution.runtime.profile === 'service' && solution.runtime.command?.runtime === 'node')) throw new Error('This app uses Python or a command-line engine; export the runnable source package and follow its README to run it.');
   return manifest;
 }
 
@@ -75,33 +77,51 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 `;
 }
 
-export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string; runtimeDirectory?: string }
+export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string; runtimeDirectory?: string; service?: boolean }
 
 export async function stageExecutable(project: Project, root: string) {
   const manifest = await assertExecutableSource(project);
+  const solution = deliveredSolution(manifest);
+  const service = solution?.runtime.profile === 'service';
   const source = path.join(root, 'source');
   await fs.mkdir(source);
-  const html = manifest.find(file => file.path === 'index.html')!.contents;
-  if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
+  const html = manifest.find(file => file.path === 'index.html')?.contents;
+  if (!service && (!html?.length || html.length > 2_000_000)) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
   const name = executableName(project);
   const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
-  const solution = deliveredSolution(manifest);
   const declared = solution?.runtime.files ?? ['index.html'];
   const payloadDirectory = solution ? 'application' : '';
   const payloadRoot = path.join(source, payloadDirectory);
   if (payloadDirectory) await fs.mkdir(payloadRoot);
   // Generated manifests and main scripts remain payload data; only the host wrapper is an Electron entrypoint.
-  await atomicHostWrite(payloadRoot, 'index.html', html);
-  for (const relative of declared.filter(file => file !== 'index.html')) {
+  for (const relative of declared) {
     const target = path.join(payloadRoot, relative);
     await fs.mkdir(path.dirname(target), { recursive: true });
     await atomicHostWrite(payloadRoot, relative, manifest.find(file => file.path === relative)!.contents);
   }
-  await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId, declared, payloadDirectory));
+  if (service && solution.runtime.dependencies) await installServiceDependencies(payloadRoot);
+  const payloadHash = createHash('sha256');
+  for (const relative of declared) payloadHash.update(relative + '\0').update(manifest.find(file => file.path === relative)!.contents).update('\0');
+  if (service) {
+    await atomicHostWrite(source, 'standalone-service.cjs', serviceHostSource());
+    await atomicHostWrite(source, 'process-sweep.mjs', await fs.readFile(new URL('./process-sweep.js', import.meta.url)));
+    await atomicHostWrite(source, 'service-loopback.cjs', `const net = require('node:net');
+const listen = net.Server.prototype.listen;
+net.Server.prototype.listen = function(...args) {
+  if (args[0] && typeof args[0] === 'object' && 'port' in args[0]) args[0] = { ...args[0], host: '127.0.0.1', ipv6Only: false };
+  else if (typeof args[0] === 'number' || (typeof args[0] === 'string' && /^\\d+$/.test(args[0]))) {
+    if (typeof args[1] === 'string') args[1] = '127.0.0.1'; else args.splice(1, 0, '127.0.0.1');
+  }
+  return listen.apply(this, args);
+};\n`);
+  }
+  await atomicHostWrite(source, 'main.cjs', service
+    ? standaloneServiceMain(project.title, appId, solution.runtime, payloadHash.digest('hex'))
+    : standaloneMain(project.title, appId, declared, payloadDirectory));
   await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);
-  await assertCredentialFreeDelivery(source);
-  return { source, name, appId };
+  await assertCredentialFreeDelivery(source, true);
+  return { source, name, appId, service };
 }
 
 export async function runPackageWorker(job: PackageJob, executable: string, signal?: AbortSignal, timeoutMs = 10 * 60_000,

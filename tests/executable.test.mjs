@@ -225,6 +225,6 @@ test('CLI runtime delivery offers source export and cannot become a browser-only
   project.report = await verifyApplication(project.workspace, process.execPath, contract);
   project.qualityVersion = 2; project.runtimeProfile = 'cli'; bindEvidence(project);
   assert.equal(reportPassed(project.report, true), true, project.report.output);
-  await assert.rejects(assertExecutableSource(project), /CLI or service runtime.*Export the runnable source package/);
-  await assert.rejects(stageExecutable(project, root), /Export the runnable source package/);
+  await assert.rejects(assertExecutableSource(project), /Python or a command-line engine; export the runnable source package/);
+  await assert.rejects(stageExecutable(project, root), /export the runnable source package/);
 });
