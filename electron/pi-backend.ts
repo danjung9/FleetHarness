@@ -695,7 +695,7 @@ export class FleetBackend {
             if (awaitingClarification() || singleTurn) return;
             let missing = await validateOutputs(required, requireComponents); check();
             // Plan contract errors are mechanical and often come one at a time, so planning gets more attempts.
-            const attempts = stage === 'plan' ? 3 : 1;
+            const attempts = stage === 'plan' ? 5 : 1;
             for (let attempt = 0; missing.length && attempt < attempts; attempt++) {
               this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
               await prompt('The stage is incomplete. Complete these required outputs and checks before finishing: ' + missing.join(', ') + '. For visual review, use fleet_browser and fleet_visual_review to record initial desktop/narrow observations, resolve findings after fixing the source, then capture and review both sizes again. Reopen after source edits; previous captures cannot verify changed files. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
