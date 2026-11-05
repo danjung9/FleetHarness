@@ -72,13 +72,39 @@ for (const status of ['approved', 'delivered']) test(`project lead proposes chan
   assert.equal(JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects[0].conversation.actions[0].feedback, feedback);
 });
 
-for (const status of ['draft', 'running', 'review']) test(`project lead refuses post-approval changes for ${status} apps`, async t => {
+for (const status of ['draft', 'running']) test(`project lead refuses changes for ${status} apps`, async t => {
   const h = await fixture(t, { scenario: async ({ config }) => {
-    await assert.rejects(tool(config, 'fleet_propose_action').execute('change', { type: 'request_changes', reason: 'Correct validation.', feedback: 'Keep entered messages visible.' }), /Review and approve/);
+    await assert.rejects(tool(config, 'fleet_propose_action').execute('change', { type: 'request_changes', reason: 'Correct validation.', feedback: 'Keep entered messages visible.' }), /Finish a build/);
   } });
   h.project.status = status;
   await h.ask('Keep entered messages visible.');
   assert.deepEqual(h.project.conversation.actions, []);
+});
+
+for (const status of ['review', 'failed']) test(`project lead proposes a change for a finished build under ${status}`, async t => {
+  const feedback = 'Keep entered messages visible.';
+  const h = await fixture(t, { scenario: async ({ config }) => {
+    await tool(config, 'fleet_propose_action').execute('change', { type: 'request_changes', reason: 'Correct validation.', feedback });
+  } });
+  h.project.status = status; h.project.report = { passed: 1, failed: 0, skipped: 0, total: 1, exitCode: 0, output: 'done', command: 'test', time: new Date().toISOString(), durationMs: 1 };
+  await h.ask(feedback);
+  assert.equal(h.project.conversation.actions[0].type, 'request_changes');
+  assert.equal(h.project.conversation.actions[0].feedback, feedback);
+});
+
+test('applying a saved proposal while the reply finishes is not reported as a stopped reply', async t => {
+  const ready = deferred();
+  const h = await fixture(t, { scenario: async ({ config }) => {
+    await tool(config, 'fleet_propose_action').execute('change', { type: 'start', reason: 'Start again.' });
+    ready.resolve(); await never();
+  } });
+  h.project.status = 'review';
+  await h.lead.send(h.project.id, 'Start this again.'); await ready.promise;
+  await h.lead.cancel(h.project.id);
+  assert.equal(h.project.conversation.status, 'idle');
+  assert.equal(h.project.conversation.error, undefined);
+  assert.equal(h.project.conversation.messages.at(-1).status, 'complete');
+  assert.equal(h.project.conversation.actions[0].status, 'proposed');
 });
 
 test('project lead responds on demand beside an active build with only its own tools and session', async t => {

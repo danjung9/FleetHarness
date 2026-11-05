@@ -12,7 +12,7 @@ import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
 import { reportHash, deliveryEvidence } from '../dist-electron/electron/delivery.js';
 import { atomicHostWrite } from '../dist-electron/shared/host-files.js';
 import { mainHarness } from './helpers/main-harness.mjs';
-import { briefHash as conversationBriefHash } from '../dist-electron/electron/conversation.js';
+import { briefHash as conversationBriefHash, canRequestChange } from '../dist-electron/electron/conversation.js';
 import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -157,7 +157,7 @@ for (const failure of ['preflight', 'source copy', 'commit']) test(`post-approva
 
 test('post-approval chat action waits for confirmation, rejects stale proposals and starts through IPC', async t => {
   const { store, p } = await fixture(t), { backend, entered } = iterationBackend(t, store);
-  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
+  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, canRequestChange, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
   await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
   const action = { id: 'change-proposal', type: 'request_changes', title: 'Request a change', reason: 'Add a reset button.', feedback: 'Add a reset button for the synthetic example.',
     status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
@@ -179,13 +179,13 @@ test('post-approval chat action waits for confirmation, rejects stale proposals 
   await backend.stop(p.id);
 });
 
-for (const status of ['draft', 'running', 'review', 'failed', 'approved', 'delivered']) test(`post-approval proposal refuses ${status} without approval`, async t => {
+for (const status of ['draft', 'running', 'approved', 'delivered']) test(`change proposal refuses ${status} without approval`, async t => {
   const { store, p } = await fixture(t), { backend } = iterationBackend(t, store);
   p.status = status;
   const action = { id: 'unapproved-change', type: 'request_changes', feedback: 'Add a reset button to the synthetic example.', status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
   p.conversation = { status: 'idle', messages: [], actions: [action], questions: [] };
-  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
-  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /Review and approve this build/);
+  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, canRequestChange, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /Finish a build/);
   assert.equal(action.status, 'proposed'); assert.equal(backend.active.size, 0); assert.equal(p.reviewHistory, undefined);
   if (!['review', 'failed'].includes(status)) await assert.rejects(main.invoke('fleet:request-changes', p.id, 'Add a reset button to the synthetic example.'), /Finish a build/);
 });
