@@ -128,6 +128,9 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Supplied R6 synthetic artifacts | dataset | evidence review | project benchmark. | 2026-11-05 |
 | Morning training brief synthetic connector snapshots, 2026-11-05 | Dataset | Freeze independent source values and source-scoped review expectations for delivered-app acceptance; all records are synthetic and sample true | Main session checked synthetic connector fixtures | 2026-11-05 |
 | real-journey.mjs, 2026-11-05 source review | Test script | Review native journey assertions and identify missing delivered-app behavior and restart checks; no runtime execution here | Project test owner | 2026-11-05 |
+| Delivered Morning training brief acceptance checker v1, preparation | Test script | Prepare independent native archive, source values, source-scoped review, graceful restart and offered import checks; runtime remains with main | Project QA scripts | 2026-11-05 |
+| @electron/asar 3.4.1 | Library | Inspect archive API and prepare read-only payload comparison in the native delivered-app checker; no packaged app executed here | Electron project | 2026-11-05 |
+| macOS ditto and PlistBuddy, bundled versions | System tools | Prepared owned-archive extraction and executable-name lookup for the native checker owner; not executed during preparation | Apple | 2026-11-05 |
 
 ## Data and sources
 
