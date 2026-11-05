@@ -147,6 +147,53 @@ function assertPublicSnapshot(account, state) {
   assert.doesNotMatch(exposed, /code_verifier|authorization_code/);
 }
 
+// Integration-branch OAuth scenarios use the app-owned SIWC flow. The app-server
+// no longer supplies ChatGPT login URLs, completion events or rate-limit metadata.
+test('ChatGPT login uses an isolated home, waits for completion and exposes only safe account fields', async t => {
+  const f = await fixture(t); await f.account.refresh();
+  assert.equal(f.account.home, path.join(f.root, 'codex'));
+  assert.equal(f.account.account.status, 'disconnected'); assert.deepEqual(f.account.models, []);
+  const auth = await f.authorize(); await f.account.login();
+  assert.equal(f.state.opened.length, 1); assert.equal(f.account.account.status, 'connecting');
+  assert.equal((await f.callback(auth, { state: 'stale-login' })).status, 400);
+  assert.equal(f.account.account.status, 'connecting');
+  await f.complete(auth);
+  assert.equal(f.account.account.status, 'connected'); assert.equal(f.account.models[0].configured, true);
+  assert.equal(f.account.account.planUsageEnabled, true);
+  assert.deepEqual(f.account.route, { provider: 'chatgpt', label: 'ChatGPT subscription' });
+  assert.deepEqual(Object.keys(f.account.account).sort(), ['accounts', 'activeAccountId', 'email', 'planUsageEnabled', 'status']);
+  assertPublicSnapshot(f.account, f.state);
+  await f.account.logout(); assert.equal(f.account.account.status, 'disconnected'); assert.deepEqual(f.account.models, []);
+});
+
+test('login cancellation and OAuth rejection stay disconnected', async t => {
+  const f = await fixture(t), auth = await f.authorize(); await f.account.cancel();
+  assert.equal(f.account.account.status, 'disconnected');
+  await assert.rejects(f.callback(auth));
+  assert.equal(f.state.tokenForms.length, 0);
+  const next = await f.authorize(); await (await f.callback(next, { error: 'access_denied' })).text();
+  await until(() => f.account.account.status !== 'connecting');
+  assert.equal(f.account.account.status, 'disconnected'); assert.match(f.account.account.error, /declined/);
+  assert.equal(f.state.tokenForms.length, 0);
+});
+
+test('untrusted login URLs are never opened and browser-open failures cancel the login', async t => {
+  const f = await fixture(t); f.state.browserFailure = true;
+  await assert.rejects(f.account.login(), /Could not open your browser/);
+  assert.equal(f.account.account.status, 'disconnected'); assert.deepEqual(f.account.models, []);
+  assert.equal(f.state.opened.length, 1);
+  const auth = new URL(f.state.opened[0]); assert.equal(auth.origin + auth.pathname, issuer + '/api/accounts/authorize');
+  await assert.rejects(f.callback(auth));
+  assert.equal(f.state.tokenForms.length, 0);
+  // Untrusted callback content cannot redirect the main process to a login URL.
+  f.state.browserFailure = false; const next = await f.authorize();
+  await (await f.callback(next, { error: 'https://malicious.example/signin' })).text();
+  await until(() => f.account.account.status !== 'connecting');
+  assert.equal(f.state.opened.length, 2);
+  assert.ok(f.state.opened.every(address => new URL(address).origin === issuer));
+  assert.equal(f.account.account.status, 'disconnected');
+});
+
 test('ChatGPT signs in through a verified public-client OAuth flow and persists a private session', async t => {
   const f = await fixture(t);
   assert.equal(f.account.home, path.join(f.root, 'codex'));

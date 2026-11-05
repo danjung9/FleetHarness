@@ -253,12 +253,16 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       entered();
       if (outcome === 'failure') throw new Error('synthetic stage failure');
     };
-    const never = () => new Promise(() => {});
+    let cancelPrompt;
+    const cancelled = new Promise(resolve => { cancelPrompt = resolve; });
     let prematureStatus = false;
     const backend = new FleetBackend(store, process.execPath, () => {
       if (['stopped', 'review'].includes(project.status) && owned && !owned.exited) prematureStatus = true;
     }, path.resolve('.'), {
-      codex: { home: root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), models: [{ id: 'fixture', configured: true }], async refresh() {} },
+      codex: { home: root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), models: [{ id: 'fixture', name: 'Fixture', backend: 'codex', provider: 'chatgpt', configured: true }], async refresh() {} },
+      // This fixture checks process ownership and cleanup. Native readiness and
+      // discovery are covered separately and require the permitted-host run.
+      preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
       processSweep: () => new RunProcessSweep({ graceMs: 1, killMs: outcome === 'cleanup-failure' ? 20 : 500,
         scan: async marker => jobs.filter(j => !j.exited && j.env.APPYARD_RUN_PROCESS === marker)
           .map(j => ({ pid: j.child.pid, started: 'fixture' })),
@@ -266,12 +270,12 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       }),
       createSession: async ({ customTools }) => ({
         session: {
-          subscribe: () => () => {}, abort() {}, dispose() {},
+          subscribe: () => () => {}, abort() { cancelPrompt(); }, dispose() {},
           async prompt() {
             const bash = customTools.find(tool => tool.name === 'bash');
             const result = await bash.execute('marker-fixture', { command: 'printf "%s" "$APPYARD_RUN_PROCESS"' });
             await begin({ APPYARD_RUN_PROCESS: result.content.find(c => c.type === 'text').text });
-            await never();
+            await cancelled;
           },
         },
       }),
@@ -306,6 +310,18 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       assert.match(project.error, /processes may still be active/);
       assert.doesNotMatch(project.error, /Run stopped by you/);
     } else assert.doesNotMatch(project.error ?? '', /cleanup could not be confirmed/);
+    if (engine === 'pi' && outcome === 'stop') {
+      assert.equal(project.runCheckpoint.writerState, 'idle');
+      assert.match(project.error, /build was stopped/);
+      assert.doesNotMatch(project.error, /may still be active|could not confirm/);
+    }
+    if (engine === 'codex' && outcome !== 'cleanup-failure') {
+      // A clean process sweep is distinct from the adapter's conservative
+      // refusal to authorize Resume without writer-exit evidence.
+      assert.equal(project.runCheckpoint.writerState, 'unconfirmed');
+      assert.match(project.error, /could not confirm that all build work stopped/);
+      assert.match(project.error, /operator shutdown procedure/);
+    }
     const restored = new Store(root); await restored.init();
     const recovered = restored.project(project.id);
     if (outcome === 'cleanup-failure' && recovered.processScope.cleanup === 'confirmed') {
@@ -315,6 +331,7 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
     } else {
       assert.equal(recovered.status, project.status);
       assert.equal(recovered.error, project.error);
+      assert.equal(recovered.runCheckpoint.writerState, project.runCheckpoint.writerState);
       assert.equal(recovered.processScope.cleanup, project.processScope.cleanup);
     }
   });

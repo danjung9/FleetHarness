@@ -259,7 +259,9 @@ test('a run marker is durable before the first engine session launches', async t
   });
   backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
   await backend.start(p.id); await backend.active.get(p.id)?.done;
-  assert.equal(launched, true); assert.match(p.error, /Synthetic session launch boundary/);
+  assert.equal(launched, true);
+  assert.match(p.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Synthetic session launch boundary/);
+  assert.match(p.error, /could not confirm that all build work stopped/);
 });
 
 test('startup and repeated Stop never relabel another run marker as the current run', async t => {

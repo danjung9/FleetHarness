@@ -1,3 +1,4 @@
+import { redactValue } from './secrets.js';
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -78,14 +79,14 @@ export class Store {
     await this.save();
   }
   save() {
-    this.writes = this.writes.catch(() => {}).then(() => atomicHostWrite(this.root, 'state.json', JSON.stringify(this.state, null, 2)));
+    this.writes = this.writes.catch(() => {}).then(() => atomicHostWrite(this.root, 'state.json', JSON.stringify(redactValue(this.state), null, 2)));
     return this.writes;
   }
   saveProject(next: Project) {
     this.writes = this.writes.catch(() => {}).then(async () => {
       const current = this.project(next.id);
       const state = { ...this.state, projects: this.state.projects.map(p => p.id === next.id ? next : p) };
-      await atomicHostWrite(this.root, 'state.json', JSON.stringify(state, null, 2));
+      await atomicHostWrite(this.root, 'state.json', JSON.stringify(redactValue(state), null, 2));
       Object.assign(current, next);
     });
     return this.writes;

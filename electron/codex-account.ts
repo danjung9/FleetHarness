@@ -3,7 +3,9 @@ import { promises as fs } from 'node:fs';
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';
 import type { AgentModel, ChatGPTAccount } from '../shared/types.js';
-import { CHATGPT_AGENT_NAME, type CodexCredentials } from './codex-rpc.js';
+import { CHATGPT_AGENT_NAME, CodexRpc, prepareCodexHome, protectCodexKey, type CodexCredentials } from './codex-rpc.js';
+import { atomicHostWrite } from '../shared/host-files.js';
+import { registerCredential } from './secrets.js';
 import { CHATGPT_ISSUER, CHATGPT_RESOURCE, CHATGPT_SCOPES, ChatGPTAuthError, ChatGPTIdentityVerifier,
   authError, authJSON, chatGPTTokenSet, planEnabled, readChatGPTState, secretString, writeChatGPTState,
   type ChatGPTRegistration, type ChatGPTState } from './chatgpt-oauth.js';
@@ -14,7 +16,7 @@ interface LoginAttempt {
   redirectUri?: string; authUrl?: string; timer?: ReturnType<typeof setTimeout>;
   registrationId?: string;
 }
-interface Options { fetch?: typeof fetch; now?: () => number; loginTimeoutMs?: number }
+interface Options { fetch?: typeof fetch; now?: () => number; loginTimeoutMs?: number; launch?: typeof CodexRpc.launch }
 const random = () => randomBytes(32).toString('base64url');
 const unusableRefresh = new Set(['invalid_grant', 'invalid_refresh_token', 'token_expired', 'refresh_token_expired', 'refresh_token_invalidated', 'refresh_token_reused']);
 
@@ -37,6 +39,11 @@ export class CodexAccount {
   private changingAccount = false;
   private storageFailed = false;
   private lastError?: string;
+  private apiMode = false;
+  private keyLogin?: Promise<void>;
+  private keyRpc?: CodexRpc;
+  private keyInitialization?: Promise<CodexRpc>;
+  get route() { return this.apiMode ? { provider: 'openai', label: 'API key' } : { provider: 'chatgpt', label: 'ChatGPT subscription' }; }
 
   constructor(root: string, private openExternal: (url: string) => Promise<void>, private options: Options = {}) {
     this.home = path.join(root, 'codex');
@@ -55,6 +62,9 @@ export class CodexAccount {
       const saved = await readChatGPTState(this.file);
       if (saved) this.state = saved;
       else await this.persist({ version: 1, hostId: `urn:uuid:${randomUUID()}`, registrations: [] });
+      for (const registration of this.state!.registrations) for (const value of Object.values(registration.tokens ?? {})) registerCredential(value);
+      try { this.apiMode = JSON.parse(await fs.readFile(path.join(this.home, 'connection.json'), 'utf8')).authType === 'apiKey'; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
     })();
     await this.initialization;
     if (this.disposed) throw new ChatGPTAuthError('AppYard is closing.');
@@ -65,6 +75,7 @@ export class CodexAccount {
   }
   private selected() { return this.state?.registrations.find(r => r.id === this.state?.activeId); }
   private snapshot() {
+    if (this.apiMode) return;
     const active = this.selected();
     this.account = {
       status: this.pending ? 'connecting' : this.storageFailed ? 'unavailable' : active?.tokens && !this.changingAccount ? 'connected' : 'disconnected',
@@ -97,6 +108,8 @@ export class CodexAccount {
   }
 
   async login(accountId?: string) {
+    if (this.keyLogin) throw new ChatGPTAuthError('Finish or cancel the current sign-in before trying again.');
+    if (this.apiMode) { await this.useApiMode(false); this.models = []; }
     if (this.pending) return;
     if (this.changingAccount) throw new ChatGPTAuthError('Wait for the account change to finish.');
     const attempt: LoginAttempt = { epoch: ++this.epoch, server: createServer(), controller: new AbortController(), state: random(), nonce: random(), verifier: random(), consumed: false };
@@ -109,6 +122,7 @@ export class CodexAccount {
     }, this.options.loginTimeoutMs ?? 5 * 60_000);
     try {
       await this.ready(); this.checkAttempt(attempt);
+      if (this.apiMode) await this.useApiMode(false);
       if (this.storageFailed) throw new ChatGPTAuthError('ChatGPT credential storage is unavailable. Restart AppYard after checking local file access.');
       const registration = this.state!.registrations.find(r => r.id === (accountId ?? this.state!.retryId));
       if (accountId && !registration) throw new ChatGPTAuthError('Select a saved ChatGPT account.');
@@ -203,6 +217,7 @@ export class CodexAccount {
     catch { throw new ChatGPTAuthError('Could not open your browser. Check your default browser and try again.'); }
   }
   async cancel() {
+    if (this.keyLogin) { await this.keyLogin.catch(() => {}); await this.logout(); return; }
     // Cancelling a new sign-in preserves the working account and its catalog.
     // A stale Cancel click must not invalidate an unrelated switch or sign-out.
     if (!this.pending) return;
@@ -212,6 +227,11 @@ export class CodexAccount {
 
   /** Main-process only. Serialize rotating tokens with account changes. */
   async credentials(): Promise<CodexCredentials> {
+    await this.ready();
+    if (this.apiMode) {
+      if (this.keyLogin || this.account.status !== 'connected') throw new ChatGPTAuthError('Sign in with an API key in Model settings before running Codex.');
+      return { authType: 'apiKey', accessToken: '', expiresAt: Number.MAX_SAFE_INTEGER };
+    }
     await this.ready(); const epoch = this.epoch;
     return this.serial(async () => {
       const assertActive = () => {
@@ -249,18 +269,20 @@ export class CodexAccount {
         }
         active = assertActive();
       }
+      for (const value of Object.values(active.tokens!)) registerCredential(value);
       return { accessToken: active.tokens!.accessToken!, expiresAt: active.tokens!.expiresAt };
     });
   }
 
   async refresh() {
     const epoch = this.epoch;
-    if (this.pending || this.changingAccount || this.disposed) return;
+    if (this.pending || this.keyLogin || this.changingAccount || this.disposed) return;
     if (this.refreshing?.epoch === epoch) return this.refreshing.promise;
     const promise = (async () => {
       try {
         await this.ready();
         if (epoch !== this.epoch || this.pending || this.disposed) return;
+        if (this.apiMode) { await this.refreshKey(); return; }
         if (!this.selected()?.tokens || !planEnabled(this.selected()?.tokens)) { this.models = []; this.snapshot(); return; }
         const token = await this.credentials();
         const body = await authJSON(this.request, `${CHATGPT_RESOURCE}/models`, { headers: { Authorization: `Bearer ${token.accessToken}` } });
@@ -273,6 +295,7 @@ export class CodexAccount {
       } catch (error) {
         if (epoch !== this.epoch || this.pending || this.disposed) return;
         this.models = []; this.lastError = authError(error); this.snapshot();
+        if (this.apiMode) this.account = { status: 'unavailable', authType: 'apiKey', error: this.lastError };
         if (!this.state) this.account.status = 'unavailable';
       }
     })();
@@ -282,7 +305,9 @@ export class CodexAccount {
 
   async selectAccount(id: string) {
     await this.ready();
+    if (this.keyLogin) throw new ChatGPTAuthError('Finish or cancel the current sign-in before trying again.');
     if (!this.state!.registrations.some(r => r.id === id)) throw new ChatGPTAuthError('Select a saved ChatGPT account.');
+    await this.useApiMode(false);
     this.invalidate(); const epoch = this.epoch; this.changingAccount = true; this.snapshot();
     try {
       await this.serial(async () => { if (this.disposed || epoch !== this.epoch) return; await this.persist({ ...this.state!, activeId: id }); });
@@ -310,6 +335,13 @@ export class CodexAccount {
     return false;
   }
   async logout() {
+    if (this.keyLogin) await this.keyLogin.catch(() => {});
+    if (this.apiMode) {
+      this.invalidate();
+      await (await this.apiConnection()).request('account/logout');
+      this.models = []; this.account = { status: 'disconnected' };
+      return;
+    }
     this.invalidate(); const epoch = this.epoch; this.changingAccount = true; this.snapshot();
     try {
       await this.ready();
@@ -326,5 +358,65 @@ export class CodexAccount {
     } finally { if (epoch === this.epoch) { this.changingAccount = false; this.snapshot(); } }
   }
   async manageUsage() { await this.openExternal('https://chatgpt.com/settings/usage'); }
-  dispose() { this.disposed = true; this.invalidate(); }
+  private async useApiMode(enabled: boolean) {
+    await fs.mkdir(this.home, { recursive: true, mode: 0o700 });
+    await atomicHostWrite(this.home, 'connection.json', JSON.stringify({ authType: enabled ? 'apiKey' : 'chatgpt' }));
+    this.apiMode = enabled;
+  }
+  private async apiConnection() {
+    if (this.disposed) throw new ChatGPTAuthError('AppYard is closing.');
+    if (this.keyRpc) return this.keyRpc;
+    if (this.keyInitialization) return this.keyInitialization;
+    const work = (async () => {
+      await prepareCodexHome(this.home);
+      if (this.disposed) throw new ChatGPTAuthError('AppYard is closing.');
+      const rpc = (this.options.launch ?? CodexRpc.launch)(this.home, { authType: 'apiKey', accessToken: '' });
+      try { await rpc.initialize(); if (this.disposed) throw new Error('AppYard is closing.'); }
+      catch (error) { await rpc.dispose(); throw error; }
+      rpc.onClose(() => { if (this.keyRpc === rpc) this.keyRpc = undefined; });
+      this.keyRpc = rpc; return rpc;
+    })();
+    this.keyInitialization = work;
+    try { return await work; } finally { if (this.keyInitialization === work) this.keyInitialization = undefined; }
+  }
+  private async refreshKey() {
+    const epoch = this.epoch;
+    const rpc = await this.apiConnection();
+    const { account } = await rpc.request('account/read', { refreshToken: false });
+    const models: AgentModel[] = [];
+    let cursor: string | null = null;
+    if (account?.type === 'apiKey') do {
+      const page = await rpc.request('model/list', { limit: 100, ...(cursor ? { cursor } : {}) });
+      models.push(...page.data.filter((model: any) => !model.hidden).map((model: any) => ({ id: model.model, name: model.displayName, provider: 'chatgpt', backend: 'codex' as const, configured: true })));
+      cursor = page.nextCursor;
+    } while (cursor);
+    if (epoch !== this.epoch || this.disposed || !this.apiMode) return;
+    this.models = models;
+    this.account = account?.type === 'apiKey' ? { status: 'connected', authType: 'apiKey', email: 'API key' } : { status: 'disconnected' };
+    if (this.state?.registrations.length) this.account.accounts = this.state.registrations.map(r => ({ id: r.id, label: r.label, email: r.email, connected: !!r.tokens }));
+  }
+  async loginWithKey(value: unknown) {
+    if (typeof value !== 'string' || !value.trim() || value.length > 20_000 || /\s/.test(value.trim())) throw new Error('Enter a valid API key in Model settings.');
+    if (this.pending || this.keyLogin || this.changingAccount) throw new Error('Finish or cancel the current sign-in before trying again.');
+    const apiKey = value.trim(); protectCodexKey(apiKey);
+    const work = (async () => {
+      try {
+        await this.ready(); this.invalidate(); await this.useApiMode(true);
+        this.models = []; this.account = { status: 'connecting', authType: 'apiKey' };
+        const rpc = await this.apiConnection();
+        const result = await rpc.request('account/login/start', { type: 'apiKey', apiKey });
+        if (result.type !== 'apiKey') throw new Error('API-key sign-in did not complete.');
+        await this.refreshKey();
+        if (this.account.status !== 'connected') throw new Error('API-key sign-in did not complete.');
+      } catch {
+        try { await this.keyRpc?.request('account/logout'); } catch {}
+        const message = 'API-key sign-in failed; check the key and its access, then try again in Model settings.';
+        this.models = []; this.account = { status: 'disconnected', error: message };
+        throw new Error(message);
+      }
+    })();
+    this.keyLogin = work;
+    try { await work; } finally { this.keyLogin = undefined; }
+  }
+  async dispose() { this.disposed = true; this.invalidate(); await this.keyInitialization?.catch(() => {}); await this.keyRpc?.dispose(); }
 }

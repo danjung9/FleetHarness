@@ -1,3 +1,4 @@
+import { redactValue } from './secrets.js';
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager, type CreateAgentSessionOptions, type ModelRuntime, type ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
 import { promises as fs } from 'node:fs';
@@ -36,7 +37,7 @@ interface Options {
 }
 const responseLimit = 100_000;
 async function writeEvidence(workspace: string, name: string, value: unknown) {
-  await atomicHostWrite(workspace, name, JSON.stringify(value, null, 2));
+  await atomicHostWrite(workspace, name, JSON.stringify(redactValue(value), null, 2));
 }
 const invalid = (detail: string): Verdict => ({ verdict: 'NOT', evaluationError: detail, gaps: [{ requirement: 'Independent judgment',
   evidence: detail, fix: 'Inspect the evaluation failure and produce a complete evidence-backed judgment. Do not infer acceptance.' }] });
@@ -95,7 +96,8 @@ function readTool(files: Map<string, string>): ToolDefinition {
 async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortSignal, instructions: string,
   tool: ToolDefinition, answer: (text: string) => void): Promise<StageSession> {
   if (!engine.codexHome) throw new Error('The judge requires the configured Codex home.');
-  const rpc = engine.launchCodex ? engine.launchCodex(engine.codexHome) : CodexRpc.launch(engine.codexHome, await engine.getCodexCredentials!());
+  const credentials = await engine.getCodexCredentials?.();
+  const rpc = engine.launchCodex ? engine.launchCodex(engine.codexHome) : CodexRpc.launch(engine.codexHome, credentials!);
   const listeners = new Set<(event: StageEvent) => void>();
   const emit = (event: object) => { for (const fn of listeners) fn(event as StageEvent); };
   let thread = '', turn = '', finalText = '', explicitFinal = false;
@@ -159,7 +161,7 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
   try {
     signal.throwIfAborted(); await rpc.initialize(); signal.throwIfAborted();
     const result = await rpc.request('thread/start', {
-      cwd: workspace, model: engine.model, modelProvider: CHATGPT_MODEL_PROVIDER, approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
+      cwd: workspace, model: engine.model, modelProvider: credentials?.authType === 'apiKey' ? 'openai' : CHATGPT_MODEL_PROVIDER, approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
       config: { 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV], web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
         'features.multi_agent': false, 'features.goals': false, 'features.view_image': false, 'features.apps': false, 'features.plugins': false },
       baseInstructions: instructions, developerInstructions: instructions,

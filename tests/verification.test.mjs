@@ -66,14 +66,12 @@ test('combined prerequisite: a zero-byte file beside real cases cannot pass veri
   assert.match(report.output, /No registered application tests.*app\.test\.cjs/i);
 });
 
-test('combined prerequisite: production default obtains registered evidence through exactly one sandbox launch', async t => {
+test('combined prerequisite: production default obtains registered evidence through exactly one runtime launch', async t => {
   const root = await workspace(t, 'console.log("synthetic execution receipt"); require("node:test")("actual case", () => {});');
   const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.equal(args[0], 'sandbox');
-    assert.ok(args.includes('permissions.fleet-build.network.enabled=false'));
-    const command = args.slice(args.indexOf('--') + 1);
-    return spawn(command[0], command.slice(1), options);
+    assert.equal(executable, process.execPath);
+    assert.equal(args[0], '--input-type=commonjs');
+    return spawn(executable, args, options);
   });
   const report = await verifyWorkspace(root, process.execPath, () => {});
   assert.equal(calls.mock.callCount(), 1, 'No second direct execution may collect registered-test evidence');
@@ -86,7 +84,7 @@ test('combined prerequisite: production default obtains registered evidence thro
   assert.deepEqual(report.provenance.environment, options.env);
   assert.equal(report.portableCommand, "node --test './app.test.cjs'");
   assert.equal(report.output.match(/synthetic execution receipt/g).length, 1);
-  assert.match(report.command, /^codex sandbox/);
+  assert.match(report.command, /^node /);
 });
 
 test('combined prerequisite: empty suites are rejected and nested registered assertions pass', async t => {
@@ -158,7 +156,7 @@ test('an injected launcher preparation failure never retries the production laun
   let launches = 0;
   await assert.rejects(verifyWorkspace(root, process.execPath, () => {}, undefined, {
     launcher: async () => { launches++; throw new Error('synthetic preparation failure'); }
-  }), /Could not start verification sandbox.*synthetic preparation failure/s);
+  }), /Could not start the verification runtime.*synthetic preparation failure/s);
   assert.equal(launches, 1);
   assert.equal(calls.mock.callCount(), 0);
   await assert.rejects(fs.access(path.join(root, 'must-not-run')), /ENOENT/);
@@ -183,102 +181,76 @@ test('invalid process limits reject before invoking an injected launcher', async
   }
 });
 
-test('sandbox startup failure is actionable and never launches an unsandboxed fallback', async t => {
-  const root = await workspace(t, `require('node:fs').writeFileSync('unsandboxed-marker', 'must not run');`);
+test('runtime startup failure is actionable and never launches an unstarted fallback', async t => {
+  const root = await workspace(t, `require('node:fs').writeFileSync('unstarted-marker', 'must not run');`);
   const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.equal(args[0], 'sandbox');
-    return spawn(process.execPath, ['-e', 'process.stderr.write("synthetic sandbox unavailable"); process.exit(71);'], options);
+    assert.equal(executable, process.execPath);
+    assert.equal(args[0], '--input-type=commonjs');
+    return spawn(process.execPath, ['-e', 'process.stderr.write("synthetic runtime unavailable"); process.exit(71);'], options);
   });
-  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start verification sandbox.*synthetic sandbox unavailable/s);
+  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start the verification runtime.*synthetic runtime unavailable/s);
   assert.equal(calls.mock.callCount(), 1);
-  await assert.rejects(fs.access(path.join(root, 'unsandboxed-marker')), /ENOENT/);
+  await assert.rejects(fs.access(path.join(root, 'unstarted-marker')), /ENOENT/);
 });
 
-test('sandbox startup timeout fails clearly and kills the launcher without a fallback', { timeout: 5000 }, async t => {
-  const root = await workspace(t, `require('node:fs').writeFileSync('unsandboxed-marker', 'must not run');`);
+test('runtime startup timeout fails clearly and kills the launcher without a fallback', { timeout: 5000 }, async t => {
+  const root = await workspace(t, `require('node:fs').writeFileSync('unstarted-marker', 'must not run');`);
   const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.equal(args[0], 'sandbox');
+    assert.equal(executable, process.execPath);
+    assert.equal(args[0], '--input-type=commonjs');
     return spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000);'], options);
   });
   let exited;
   await assert.rejects(verifyWorkspace(root, process.execPath, child => { exited = once(child, 'exit'); }, undefined, { timeoutMs: 500 }),
-    /Could not start verification sandbox.*Tests will never run unsandboxed.*exceeded the 0\.5-second limit/s);
+    /Could not start the verification runtime.*exceeded the 0\.5-second limit/s);
   assertKilled(await exited);
   assert.equal(calls.mock.callCount(), 1);
-  await assert.rejects(fs.access(path.join(root, 'unsandboxed-marker')), /ENOENT/);
+  await assert.rejects(fs.access(path.join(root, 'unstarted-marker')), /ENOENT/);
 });
 
-test('sandbox startup output overflow fails clearly and kills the launcher without a fallback', { timeout: 5000 }, async t => {
-  const root = await workspace(t, `require('node:fs').writeFileSync('unsandboxed-marker', 'must not run');`);
+test('runtime startup output overflow fails clearly and kills the launcher without a fallback', { timeout: 5000 }, async t => {
+  const root = await workspace(t, `require('node:fs').writeFileSync('unstarted-marker', 'must not run');`);
   const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.equal(args[0], 'sandbox');
+    assert.equal(executable, process.execPath);
+    assert.equal(args[0], '--input-type=commonjs');
     return spawn(process.execPath, ['-e', 'setInterval(() => process.stdout.write("x".repeat(4096)), 1);'], options);
   });
   let exited;
   await assert.rejects(verifyWorkspace(root, process.execPath, child => { exited = once(child, 'exit'); }, undefined, { timeoutMs: 3000, maxOutputBytes: 8192 }), error => {
-    assert.match(error.message, /Could not start verification sandbox/);
-    assert.match(error.message, /Tests will never run unsandboxed/);
+    assert.match(error.message, /Could not start the verification runtime/);
     assert.match(error.message, /exceeded the output limit/);
     assert.ok(error.message.length < 8500, 'Startup diagnostics must stay bounded.');
     return true;
   });
   assertKilled(await exited);
   assert.equal(calls.mock.callCount(), 1);
-  await assert.rejects(fs.access(path.join(root, 'unsandboxed-marker')), /ENOENT/);
+  await assert.rejects(fs.access(path.join(root, 'unstarted-marker')), /ENOENT/);
 });
 
-test('a rejected nested macOS sandbox explains the required host-side verification', async t => {
-  const root = await workspace(t, `require('node:fs').writeFileSync('unsandboxed-marker', 'must not run');`);
-  const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.equal(args[0], 'sandbox');
-    return spawn(process.execPath, ['-e', 'process.stderr.write("sandbox-exec: sandbox_apply: Operation not permitted\\n"); process.exit(71);'], options);
-  });
-  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), error => {
-    assert.match(error.message, /Could not start verification sandbox/);
-    assert.match(error.message, /enclosing sandbox.*host.*verification sandbox/s);
-    assert.match(error.message, /Tests will never run unsandboxed/);
-    assert.match(error.message, /sandbox_apply: Operation not permitted/);
-    return true;
-  });
-  assert.equal(calls.mock.callCount(), 1);
-  await assert.rejects(fs.access(path.join(root, 'unsandboxed-marker')), /ENOENT/);
-});
 
-test('a sandbox that exits successfully without starting Node cannot pass verification', async t => {
+test('a runtime that exits successfully without starting Node cannot pass verification', async t => {
   const root = await workspace(t, 'require("node:test")("exists", () => {});');
   const calls = interceptSpawn(t, (spawn, _executable, _args, options) => spawn(process.execPath, ['-e', 'process.stdout.write("TAP version 13\\n# tests 1\\n# pass 1\\n# fail 0\\n")'], options));
-  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start verification sandbox/);
+  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start the verification runtime/);
   assert.equal(calls.mock.callCount(), 1);
 });
 
-test('sandbox spawn errors fail closed with a clear message', async t => {
+test('runtime spawn errors fail closed with a clear message', async t => {
   const root = await workspace(t, 'require("node:test")("exists", () => {});');
-  const calls = interceptSpawn(t, (spawn, _executable, _args, options) => spawn(path.join(root, 'missing-sandbox'), [], options));
-  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start verification sandbox.*ENOENT/s);
+  const calls = interceptSpawn(t, (spawn, _executable, _args, options) => spawn(path.join(root, 'missing-runtime'), [], options));
+  await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /Could not start the verification runtime.*ENOENT/s);
   assert.equal(calls.mock.callCount(), 1);
 });
 
-test('packaged launch uses the supplied Electron Node runtime and an isolated restricted profile', async t => {
+test('packaged launch uses the supplied Electron Node runtime directly without a permission profile', async t => {
   // The launcher resolves symlinks, and macOS temporary folders sit behind one (/var).
   const root = await fs.realpath(await workspace(t, 'require("node:test")("exists", () => {});'));
   const runtime = path.join(root, 'App Yard.app', 'Contents', 'MacOS', 'AppYard');
   await fs.mkdir(path.dirname(runtime), { recursive: true }); await fs.writeFile(runtime, 'synthetic runtime fixture');
   let home;
   const calls = interceptSpawn(t, (spawn, executable, args, options) => {
-    assert.match(executable, /codex(?:\.exe)?$/);
-    assert.deepEqual(args.slice(0, 3), ['sandbox', '-P', 'fleet-build']);
-    assert.equal(args[args.indexOf('--') + 1], runtime);
-    assert.ok(args.includes('permissions.fleet-build.network.enabled=false'));
-    const policy = args.find(arg => arg.startsWith('permissions.fleet-build.filesystem='));
-    assert.ok(policy.includes('\":root\"=\"deny\"'));
-    assert.ok(policy.includes('\":minimal\"=\"read\"'));
-    assert.ok(policy.includes('\":workspace_roots\"=\"write\"'));
-    assert.ok(policy.includes(JSON.stringify(path.join(root, 'App Yard.app')) + '=\"read\"'), 'Electron needs its bundle Frameworks.');
-    assert.ok(args.includes('projects={' + JSON.stringify(root) + '={trust_level="untrusted"}}'));
+    assert.equal(executable, runtime);
+    assert.deepEqual(args.slice(0, 2), ['--input-type=commonjs', '-e']);
     assert.equal(options.env.ELECTRON_RUN_AS_NODE, '1');
     assert.equal(options.env.ELECTRON_NO_ASAR, '1');
     assert.equal(options.env.HOME, root);
@@ -291,7 +263,7 @@ test('packaged launch uses the supplied Electron Node runtime and an isolated re
     assert.equal(options.windowsHide, true);
     return spawn(process.execPath, ['-e', 'process.exit(71)'], options);
   });
-  await assert.rejects(verifyWorkspace(root, runtime, () => {}), /Could not start verification sandbox/);
+  await assert.rejects(verifyWorkspace(root, runtime, () => {}), /Could not start the verification runtime/);
   assert.equal(calls.mock.callCount(), 1);
   await assert.rejects(fs.access(home), /ENOENT/);
 });

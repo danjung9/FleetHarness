@@ -36,7 +36,7 @@ export async function runAgentStage(options: {
   signal: AbortSignal;
   limits?: Partial<AgentLimits>;
   create: (signal: AbortSignal) => Promise<StageSession>;
-  work: (prompt: (text: string) => Promise<void>, signal: AbortSignal) => Promise<void>;
+  work: (prompt: (text: string) => Promise<void>, signal: AbortSignal, hostWork: <T>(work: () => Promise<T>) => Promise<T>) => Promise<void>;
   onEvent: (event: StageEvent) => void;
   onMetrics?: (metrics: { durationMs: number; usage: StageTokenUsage | null }) => void;
 }) {
@@ -55,6 +55,7 @@ export async function runAgentStage(options: {
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
   let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
   let lastActivity = 'initializing the agent session';
+  let hostWorking = false;
   let idleTimer: ReturnType<typeof setTimeout>;
   let rejectInterrupted!: (error: Error) => void;
   const interrupted = new Promise<never>((_resolve, reject) => { rejectInterrupted = reject; });
@@ -66,6 +67,7 @@ export async function runAgentStage(options: {
   };
   const heartbeat = () => {
     clearTimeout(idleTimer);
+    if (hostWorking) return;
     idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. Inspect the saved activity and start a new run.`), limits.idleMs);
   };
   const abort = () => fail(stoppedMessage);
@@ -73,7 +75,7 @@ export async function runAgentStage(options: {
   const release = (target: StageSession, cancel: boolean) => {
     // abort() waits for idle in Pi. Cleanup must not depend on that promise settling.
     if (cancel) { try { void Promise.resolve(target.abort()).catch(() => {}); } catch {} }
-    try { target.dispose(); } catch {}
+    try { void Promise.resolve(target.dispose()).catch(() => {}); } catch {}
   };
   options.signal.addEventListener('abort', abort, { once: true });
   const deadline = setTimeout(() => fail(`${options.label} exceeded the ${limits.timeoutMs / 60_000}-minute limit. Inspect the saved artifacts before retrying.`), limits.timeoutMs);
@@ -136,7 +138,11 @@ export async function runAgentStage(options: {
       check();
       if (assistantError) throw new Error(assistantError);
       lastActivity = 'checking stage artifacts'; heartbeat();
-    }, controller.signal);
+    }, controller.signal, async hostWork => {
+      check(); hostWorking = true; clearTimeout(idleTimer);
+      try { return await hostWork(); }
+      finally { hostWorking = false; if (!closed && !failure) heartbeat(); }
+    });
     check();
   })();
   try { await Promise.race([work, interrupted]); succeeded = true; }

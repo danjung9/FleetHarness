@@ -1,9 +1,11 @@
+import { assertCredentialFreeManifest } from './delivery-secrets.js';
+import { assertNoCredentials, redactValue } from './secrets.js';
 import { createHash } from 'node:crypto';
 import type { Project, TestReport } from '../shared/types.js';
 import { reportPassed } from '../shared/verification.js';
 import { artifactManifest, manifestHash } from './storage.js';
 
-export const evidenceJson = (value: unknown) => JSON.stringify(value, null, 2);
+export const evidenceJson = (value: unknown) => JSON.stringify(redactValue(value), null, 2);
 export const reportHash = (report: TestReport) => createHash('sha256').update(evidenceJson(report)).digest('hex');
 
 export function assertReviewState(p: Project, approved = false) {
@@ -19,6 +21,7 @@ export async function verifiedManifest(p: Project, approved = false) {
   assertReviewState(p, approved);
   const files = await artifactManifest(p.workspace!, { requireEntryPoint: p.qualityVersion !== 2 });
   if (manifestHash(files) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before approving or exporting.');
+  assertNoCredentials(p.title); assertCredentialFreeManifest(files);
   return files;
 }
 

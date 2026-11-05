@@ -1,3 +1,5 @@
+import { assertCredentialFreeDelivery } from './delivery-secrets.js';
+import { redactSecrets } from './secrets.js';
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -29,7 +31,7 @@ function deliveredSolution(manifest: Awaited<ReturnType<typeof verifiedManifest>
   return parseSolutionContract(JSON.parse(body.toString('utf8')), packet.acceptance);
 }
 
-// This is host-owned code. Generated code only runs inside the sandboxed renderer.
+// This is host-owned code. Generated code runs in the browser renderer.
 export function standaloneMain(title: string, appId: string, files: string[] = ['index.html'], payloadDirectory: '' | 'application' = '') {
   return `const { app, BrowserWindow, protocol, Menu } = require('electron');
 const fs = require('node:fs/promises');
@@ -43,7 +45,7 @@ const payloadRoot = path.join(__dirname, ${JSON.stringify(payloadDirectory)});
 const contentTypes = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.wasm':'application/wasm'};
 function openWindow() {
   window = new BrowserWindow({ title: ${JSON.stringify(title)}, width: 1200, height: 800,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webviewTag: false } });
+    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: false, webviewTag: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.on('will-frame-navigate', event => event.preventDefault());
@@ -60,7 +62,6 @@ app.whenReady().then(() => {
     if (url.host !== 'app' || !allowedFiles.has(relative) || !type || request.method !== 'GET') return new Response('', { status: 404 });
     return new Response(await fs.readFile(path.join(payloadRoot, relative)), { headers: {
       'Content-Type': type,
-      'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
     } });
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -99,6 +100,7 @@ export async function stageExecutable(project: Project, root: string) {
   await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId, declared, payloadDirectory));
   await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);
+  await assertCredentialFreeDelivery(source);
   return { source, name, appId };
 }
 
@@ -115,7 +117,7 @@ export async function runPackageWorker(job: PackageJob, executable: string, sign
       detached: process.platform !== 'win32', windowsHide: true
     });
     let output = '', failure: Error | undefined;
-    const collect = (data: Buffer) => { output = (output + data.toString()).slice(-8000); };
+    const collect = (data: Buffer) => { output = redactSecrets(output + data.toString()).slice(-8000); };
     child.stdout.on('data', collect); child.stderr.on('data', collect);
     const stop = (message: string) => {
       failure = new Error(message);

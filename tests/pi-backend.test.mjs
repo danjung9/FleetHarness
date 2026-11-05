@@ -9,6 +9,7 @@ import { Store, newProject, sourceHash } from '../dist-electron/electron/storage
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { reportPassed, verifyWorkspace } from '../dist-electron/electron/verification.js';
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
+import { plainError } from '../dist-electron/electron/plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
 
 const resourcesRoot = path.resolve('.');
@@ -16,6 +17,28 @@ const resourcesRoot = path.resolve('.');
 // scheduling allowance separate from deliberately short timeout/cancel limits.
 const functionalTimeout = 60_000;
 const never = () => new Promise(() => {});
+
+// Public errors are plain instructions; the original diagnostics remain testable in the log.
+function rawError(project) {
+  assert.equal(typeof project.error, 'string');
+  assert.doesNotMatch(project.error, /\b(stage|session|SDK|Codex turn|thread|artifact)\b/i);
+  return project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n');
+}
+
+// Public rejection and saved error must agree; retain each original diagnostic
+// assertion against the logged cause when refusal crossed the plain-error boundary.
+async function resumeRefused(backend, project, expected) {
+  project = backend.store.project(project.id); // Inspect the reloaded project's current state, not the previous Store's object.
+  await assert.rejects(backend.resume(project.id), error => {
+    if (error.cause) {
+      assert.equal(error.message, plainError(error.cause).message);
+      assert.equal(project.error, error.message);
+      assert.match(rawError(project), expected);
+    } else assert.match(error.message, expected);
+    return true;
+  });
+}
+
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const workflowTimeout = functionalTimeout;
 import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
@@ -28,7 +51,7 @@ const stageOf = prompt => prompt.includes('The independent test run failed') || 
   : prompt.includes('You are the research agent') ? 'research'
   : prompt.includes('You are the implementation agent') ? 'build'
   : prompt.includes('You are the verification agent') ? 'verify' : 'plan';
-// Scripted fixtures opt in explicitly. Production retains the native sandbox.
+// Scripted fixtures opt in explicitly. Production uses its own direct Node launcher.
 function plainLauncher(_root, executable, args) {
   const ready = 'synthetic-verification-ready\n';
   const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(args)},{stdio:'inherit'});child.once('error',e=>{console.error(e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
@@ -65,6 +88,7 @@ async function harness(t, options = {}) {
     // detached-worker shutdown require the separate permitted-host receipt.
     processSweep: options.processSweep ?? (() => new RunProcessSweep({ scan: async () => [] })),
     clarifications: broker,
+    preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
     agentLimits: options.agentLimits ?? { idleMs: 2000, timeoutMs: 5000, maxTurns: 40 },
     shutdownTimeoutMs: options.shutdownTimeoutMs ?? 150,
     verificationLimits: { launcher: plainLauncher, browserTimeoutMs: 45_000, browserStepTimeoutMs: 2500, ...options.verificationLimits },
@@ -255,16 +279,20 @@ test('cleanup integration: resumed stages and verifier launches retain a new run
 
 test('cleanup integration: failed process cleanup persists an unsafe checkpoint and refuses resume', { timeout: 10000 }, async t => {
   const h = await harness(t, {
-    processSweep: () => ({ run: work => work(), stop: async () => { throw new Error('Synthetic cleanup denial'); } }),
+    processSweep: () => {
+      let started = false;
+      return { run: work => { started = true; return work(); },
+        stop: async () => { if (started) throw new Error('Synthetic cleanup denial'); } };
+    },
     scenario: async () => { throw new Error('Synthetic interruption'); }
   });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /Process cleanup could not be confirmed/);
+  assert.match(rawError(h.project), /Process cleanup could not be confirmed/);
   assert.equal(h.project.runCheckpoint.writerState, 'unconfirmed');
   const saved = new Store(h.root); await saved.init();
   assert.equal(saved.project(h.project.id).runCheckpoint.writerState, 'unconfirmed');
   const count = h.sessions.length;
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown was not confirmed/);
+  await resumeRefused(h.backend, h.project, /shutdown was not confirmed/);
   assert.equal(h.sessions.length, count);
 });
 
@@ -308,7 +336,7 @@ test('combined prerequisite: resume refuses a completed build with a missing evi
   delete h.project.runCheckpoint.buildTests;
   await h.store.save();
   const count = h.sessions.length;
-  await assert.rejects(h.backend.resume(h.project.id), /build.test baseline.*missing/i);
+  await resumeRefused(h.backend, h.project, /build.test baseline.*missing/i);
   assert.equal(h.sessions.length, count);
 });
 
@@ -319,12 +347,12 @@ test('combined prerequisite: foreground policy blocks advancement and persisted 
   } });
   await h.run(); await h.assertSettled('failed');
   assert.match(h.sessions[0].prompts[0], /Do not start background or detached jobs/);
-  assert.match(h.project.error, /background.*operator/i);
+  assert.match(rawError(h.project), /background.*operator/i);
   assert.equal(h.sessions.length, 1);
   const restored = new Store(h.root); await restored.init();
   const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
   resumed.runtime = h.backend.runtime;
-  await assert.rejects(resumed.resume(h.project.id), /background.*operator/i);
+  await resumeRefused(resumed, h.project, /background.*operator/i);
   assert.equal(h.sessions.length, 1);
 });
 
@@ -398,6 +426,9 @@ test('combined prerequisite: an unconfirmed verifier shutdown blocks retry and p
   const originalSpawn = childProcess.spawn;
   const mocked = t.mock.method(childProcess, 'spawn', (...args) => {
     const child = originalSpawn(...args), once = child.once;
+    // The host now evaluates the core before verification. Withhold only the
+    // verifier's close receipt so this still exercises the intended boundary.
+    if (!args[1]?.some(arg => String(arg).includes('synthetic-verification-ready'))) return child;
     // The actual fixture exits; only its close acknowledgement is withheld.
     // This simulates missing shutdown evidence on both POSIX and Windows.
     child.once = function (event, listener) { return event === 'close' ? this : once.call(this, event, listener); };
@@ -406,12 +437,12 @@ test('combined prerequisite: an unconfirmed verifier shutdown blocks retry and p
   syncBuiltinESMExports();
   try { await h.run(); } finally { mocked.mock.restore(); syncBuiltinESMExports(); }
   await h.assertSettled('failed');
-  assert.match(h.project.error, /verification shutdown was not confirmed/i);
+  assert.match(rawError(h.project), /verification shutdown was not confirmed/i);
   assert.equal(h.project.runCheckpoint.writerState, 'unconfirmed');
   const restored = new Store(h.root); await restored.init();
   const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
   resumed.runtime = h.backend.runtime;
-  await assert.rejects(resumed.resume(h.project.id), /shutdown.*not confirmed/i);
+  await resumeRefused(resumed, h.project, /shutdown.*not confirmed/i);
 });
 
 test('review regression: timeout retry waits for the old prompt and abort before verifying actual files', { timeout: 10000 }, async t => {
@@ -448,13 +479,13 @@ test('review regression: unconfirmed writer blocks retry and persisted resume ev
     } });
   await h.run();
   assert.equal(h.project.status, 'failed', 'A timed-out writer cannot reach review through a retry');
-  assert.match(h.project.error, /shutdown.*not confirmed/i);
+  assert.match(rawError(h.project), /shutdown.*not confirmed/i);
   assert.equal(attempts, 1); assert.equal(h.project.report, undefined);
   pendingWrite.resolve(); await wrote.promise;
   const restored = new Store(h.root); await restored.init();
   const resumed = new PiBackend(restored, process.execPath, () => {}, resourcesRoot, h.backend.options);
   resumed.runtime = h.backend.runtime;
-  await assert.rejects(resumed.resume(h.project.id), /shutdown.*not confirmed/i);
+  await resumeRefused(resumed, h.project, /shutdown.*not confirmed/i);
   assert.equal(attempts, 1); assert.equal(resumed.active.size, 0);
   assert.match(await fs.readFile(path.join(h.project.workspace, 'core.cjs'), 'utf8'), /late write/);
 });
@@ -464,9 +495,9 @@ for (const abort of [() => Promise.resolve(), () => Promise.reject(new Error('Sy
     const h = await harness(t, { agentLimits: { idleMs: 60, timeoutMs: 3000 }, shutdownTimeoutMs: 60,
       verify: syntheticReport, abort, scenario: ({ stage }) => stage === 'build' ? never() : false });
     await h.run(); await h.assertSettled('failed');
-    assert.match(h.project.error, /shutdown.*not confirmed/i);
+    assert.match(rawError(h.project), /shutdown.*not confirmed/i);
     assert.equal(h.sessions.filter(s => s.stage === 'build').length, 1);
-    await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+    await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
   });
 }
 
@@ -521,19 +552,19 @@ test('late session initialization is quarantined and cannot authorize persisted 
   const h = await harness(t, { agentLimits: { idleMs: 60, timeoutMs: 3000 }, shutdownTimeoutMs: 60,
     createSession: () => created.promise });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /shutdown.*not confirmed/i);
+  assert.match(rawError(h.project), /shutdown.*not confirmed/i);
   created.resolve({ session: { subscribe: () => () => {}, prompt: async () => { prompts++; },
     abort: async () => { aborts++; }, dispose: () => disposed.resolve() } });
   await disposed.promise;
   assert.equal(prompts, 0); assert.equal(aborts, 1);
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+  await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
 });
 
 test('resume refuses a checkpoint without saved shutdown evidence', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Synthetic build failure'); return false; } });
   await h.run(); delete h.project.runCheckpoint.writerState;
   const count = h.sessions.length;
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+  await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
   assert.equal(h.sessions.length, count);
 });
 
@@ -572,7 +603,7 @@ test('an unchanged repair remains stopped across explicit resumes', { timeout: 1
   await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('failed');
   assert.equal(h.sessions.length, count, 'An unchanged repair must stop further automatic fixing passes');
   assert.equal(h.project.runCheckpoint.repairAttempts, 1);
-  assert.match(h.project.error, /no source changes/i);
+  assert.match(rawError(h.project), /no source changes/i);
 });
 
 test('Stop reports unconfirmed shutdown and refuses resume while preserving the saved artifacts', { timeout: 10000 }, async t => {
@@ -581,11 +612,11 @@ test('Stop reports unconfirmed shutdown and refuses resume while preserving the 
     if (stage === 'build') { entered.resolve(); return never(); } return false;
   } });
   await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
-  await h.assertSettled('stopped'); assert.match(h.project.error, /stopped by you/);
-  assert.match(h.project.error, /shutdown.*not confirmed/i);
-  assert.match(h.project.error, /clean up.*workers/i);
+  await h.assertSettled('stopped'); assert.match(rawError(h.project), /stopped by you/);
+  assert.match(rawError(h.project), /shutdown.*not confirmed/i);
+  assert.match(rawError(h.project), /clean up.*workers/i);
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'research.md'), 'utf8'), 'Local fixture research');
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+  await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
 });
 
 test('failed initialization without a session handle cannot confirm writer shutdown', { timeout: 10000 }, async t => {
@@ -593,8 +624,8 @@ test('failed initialization without a session handle cannot confirm writer shutd
   const h = await harness(t, { createSession: async () => { creations++; throw new Error('Provider error: 503 during initialization'); } });
   await h.run(); await h.assertSettled('failed');
   assert.equal(creations, 1, 'A rejected initializer provides no shutdown evidence for a same-workspace retry');
-  assert.match(h.project.error, /shutdown.*not confirmed/i);
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+  assert.match(rawError(h.project), /shutdown.*not confirmed/i);
+  await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
 });
 
 test('clarification-enabled automatic builds do not create extra model sessions or prompts', { timeout: workflowTimeout }, async t => {
@@ -677,7 +708,7 @@ test('a model failure after requesting clarification cancels pending questions',
     throw new Error('Provider disconnected after asking');
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /Provider disconnected/);
+  assert.match(rawError(h.project), /Provider disconnected/);
   assert.equal(h.project.conversation.questions[0].status, 'cancelled');
   assert.equal(h.sessions.some(session => session.stage === 'plan'), false);
 });
@@ -691,7 +722,7 @@ test('clarification rounds are bounded and never freeze unanswered planning cont
     return true;
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /two clarification rounds/);
+  assert.match(rawError(h.project), /two clarification rounds/);
   assert.equal(h.sessions.filter(session => session.stage === 'plan').length, 3);
   assert.equal(h.sessions.some(session => session.stage === 'build'), false);
   assert.deepEqual(h.project.conversation.questions.map(question => question.round), [1, 2]);
@@ -709,7 +740,7 @@ test('downstream agents cannot overwrite the recorded user answers', { timeout: 
     return false;
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /clarification answers changed/);
+  assert.match(rawError(h.project), /clarification answers changed/);
   assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
 });
 
@@ -717,15 +748,15 @@ test('a Codex abort acknowledgement cannot authorize recovery without worker exi
   let creations = 0;
   const h = await harness(t);
   h.store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture', rememberKey: false };
-  h.backend.options.codex = { home: h.root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), refresh: async () => {}, models: [{ id: 'fixture', configured: true }] };
+  h.backend.options.codex = { home: h.root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), refresh: async () => {}, models: [{ id: 'fixture', name: 'Fixture', provider: 'chatgpt', backend: 'codex', configured: true }] };
   h.backend.options.createCodexSession = async () => {
     creations++;
     return { subscribe: () => () => {}, prompt: async () => { throw new Error('Provider error: 503'); },
       abort: async () => {}, dispose: () => {} };
   };
   await h.run(); await h.assertSettled('failed');
-  assert.equal(creations, 1); assert.match(h.project.error, /shutdown.*not confirmed/i);
-  await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
+  assert.equal(creations, 1); assert.match(rawError(h.project), /shutdown.*not confirmed/i);
+  await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
 });
 
 for (const failure of ['Provider error: 503 service unavailable', 'Connection lost: ECONNRESET', 'Request timed out']) {
@@ -796,7 +827,7 @@ for (const field of ['title', 'description', 'criteria', 'resources', 'links', '
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Synthetic stage defect'); return false; } });
     await h.run(); const count = h.sessions.length;
     h.project[field] = field === 'criteria' || field === 'links' ? ['Changed synthetic value'] : field === 'sourceChallenge' ? { id: 'changed' } : 'Changed synthetic value';
-    await assert.rejects(h.backend.resume(h.project.id), /brief.*changed|changed.*brief/i);
+    await resumeRefused(h.backend, h.project, /brief.*changed|changed.*brief/i);
     assert.equal(h.sessions.length, count); assert.equal(h.backend.active.size, 0);
     assert.equal(h.project.status, 'failed');
   });
@@ -807,16 +838,16 @@ for (const file of ['requirements.md', '.fleet/packet.json', '.fleet/README.md',
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Synthetic stage defect'); return false; } });
     await h.run(); const count = h.sessions.length;
     await fs.appendFile(path.join(h.project.workspace, file), '\nChanged synthetic input');
-    await assert.rejects(h.backend.resume(h.project.id), /requirements.*changed|integrity failed|changed after planning|plan.*changed/i);
+    await resumeRefused(h.backend, h.project, /requirements.*changed|integrity failed|changed after planning|plan.*changed/i);
     assert.equal(h.sessions.length, count); assert.equal(h.backend.active.size, 0);
   });
 }
 
 test('resume requires an eligible status and a host checkpoint', { timeout: 10000 }, async t => {
   const h = await harness(t);
-  await assert.rejects(h.backend.resume(h.project.id), /failed or stopped/);
+  await resumeRefused(h.backend, h.project, /failed or stopped/);
   h.project.status = 'failed';
-  await assert.rejects(h.backend.resume(h.project.id), /checkpoint|new run/i);
+  await resumeRefused(h.backend, h.project, /checkpoint|new run/i);
   assert.equal(h.backend.active.size, 0);
 });
 
@@ -850,7 +881,7 @@ test('repair stops early when source does not change', { timeout: 10000 }, async
   const h = await harness(t, { verify: (p, run) => { checks++; return syntheticReport(p, run, true); },
     scenario: ({ stage }) => { if (stage === 'repair') { repairs++; return true; } return false; } });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(repairs, 1); assert.equal(checks, 1); assert.match(h.project.error, /repair.*no.*change/i);
+  assert.equal(repairs, 1); assert.equal(checks, 1); assert.match(rawError(h.project), /repair.*no.*change/i);
 });
 
 test('resume is exposed through the trusted IPC and preload bridge', async () => {
@@ -882,18 +913,21 @@ test('real Node failures get a second repair with the latest exact output', { ti
 });
 
 test('a stage timeout retries once and late events from the old attempt stay ignored', { timeout: 10000 }, async t => {
-  let attempts = 0; const finished = deferred();
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let attempts = 0; const finished = deferred(), entered = deferred();
   const h = await harness(t, { agentLimits: { idleMs: 80, timeoutMs: 3000 }, verify: syntheticReport,
     abort: async () => { finished.resolve(false); },
     scenario: ({ stage, sessions }) => {
       if (stage !== 'build') return false;
-      if (++attempts === 1) return finished.promise;
+      if (++attempts === 1) { entered.resolve(); return finished.promise; }
       const old = sessions.filter(s => s.stage === 'build')[0];
       assert.equal(old.aborts, 1); assert.equal(old.disposed, true);
       old.emit({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: 'Synthetic stale timeout event' } });
       return false;
     } });
-  await h.run(); await h.assertSettled('review'); assert.equal(attempts, 2);
+  const running = h.run(); await entered.promise;
+  t.mock.timers.tick(80); // Expire only the deliberately stalled attempt.
+  await running; await h.assertSettled('review'); assert.equal(attempts, 2);
   assert.ok(!h.project.logs.some(log => log.text.includes('Synthetic stale timeout event')));
 });
 
@@ -903,7 +937,7 @@ test('a transient error never retries over modified frozen inputs', { timeout: 1
     await fs.appendFile(path.join(cwd, 'requirements.md'), '\nSynthetic forbidden change');
     throw new Error('Provider error: 503');
   } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /requirements changed/);
+  await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /requirements changed/);
   assert.equal(h.sessions.filter(s => s.stage === 'build').length, 1);
 });
 
@@ -1045,7 +1079,7 @@ for (const supplied of [false, true]) {
     await h.run(); await h.assertSettled('failed');
     assert.equal(h.sessions.some(session => session.stage === 'build'), false);
     assert.equal(h.project.report, undefined);
-    assert.match(h.project.error, /input|data|integrity|changed/i);
+    assert.match(rawError(h.project), /input|data|integrity|changed/i);
   });
 }
 
@@ -1244,7 +1278,7 @@ test('builder cannot weaken a planned browser expectation', { timeout: workflowT
     return true;
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.match(h.project.error, /changed after planning/);
+  assert.match(rawError(h.project), /changed after planning/);
   assert.equal(h.project.report, undefined);
   assert.ok(!h.sessions.some(session => session.stage === 'verify'));
 });
@@ -1259,7 +1293,7 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
   } });
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 2);
-  assert.match(h.project.error, /quality contract/);
+  assert.match(rawError(h.project), /quality contract/);
   assert.ok(!h.sessions.some(session => session.stage === 'build'));
 });
 
@@ -1272,14 +1306,14 @@ for (const brokenRepair of [false, true]) {
     assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', 'repair', ...(brokenRepair ? ['repair'] : [])], JSON.stringify(h.project.logs));
     assert.equal(reportPassed(h.project.report), !brokenRepair, JSON.stringify(h.project.report));
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
-    if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
+    if (brokenRepair) { assert.match(rawError(h.project), /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
 for (const blockedStage of ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify']) {
   test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: workflowTimeout }, async t => {
     const h = await harness(t, { agentLimits: { idleMs: 200, timeoutMs: 3000 }, scenario: ({ stage }) => stage === blockedStage ? never() : false });
-    await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /no progress/);
+    await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /no progress/);
     assert.equal(h.sessions.at(-1).stage, blockedStage); assert.equal(h.sessions.at(-1).aborts, 1);
     assert.equal(h.project.report, undefined);
   });
@@ -1288,7 +1322,7 @@ for (const blockedStage of ['intake', 'synthetic-data', 'research', 'plan', 'bui
     const entered = deferred();
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === blockedStage) { entered.resolve(); return never(); } return false; } });
     await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
-    await h.assertSettled('stopped'); assert.match(h.project.error, /stopped by you/);
+    await h.assertSettled('stopped'); assert.match(rawError(h.project), /stopped by you/);
     assert.equal(h.sessions.at(-1).aborts, 1);
   });
 }
@@ -1307,7 +1341,7 @@ test('an agent that keeps omitting artifacts cannot advance or loop forever', { 
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
   assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
-  assert.match(h.project.error, /after one completion attempt.*plan\.md/);
+  assert.match(rawError(h.project), /after one completion attempt.*plan\.md/);
 });
 
 test('empty files and directories cannot satisfy stage outputs', { timeout: workflowTimeout }, async t => {
@@ -1315,7 +1349,7 @@ test('empty files and directories cannot satisfy stage outputs', { timeout: work
     if (stage !== 'plan') return false;
     await fs.writeFile(path.join(cwd, 'plan.md'), ''); await fs.mkdir(path.join(cwd, 'test-matrix.md'), { recursive: true }); return true;
   } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /plan\.md.*test-matrix\.md/);
+  await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /plan\.md.*test-matrix\.md/);
 });
 
 test('missing application tests are recovered before verification starts', { timeout: functionalTimeout }, async t => {
@@ -1362,7 +1396,7 @@ for (const recover of [true, false]) {
     assert.equal(attempts, 2);
     assert.match(h.sessions.find(s => s.stage === 'build').prompts[2], /README.md/);
     if (!recover) {
-      assert.match(h.project.error, /after one completion attempt.*README.md/);
+      assert.match(rawError(h.project), /after one completion attempt.*README.md/);
       assert.equal(h.project.report, undefined);
       assert.equal(h.project.stages.find(s => s.id === 'verify').status, 'queued');
     }
@@ -1399,15 +1433,16 @@ for (const target of ['requirements.md', '.fleet/README.md']) {
       if (stage === 'plan') await fs.appendFile(path.join(cwd, target), '\nChanged by agent'); return false;
     } });
     await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 4);
-    assert.match(h.project.error, /requirements changed|integrity failed/);
+    assert.match(rawError(h.project), /requirements changed|integrity failed/);
   });
 }
 
 test('session initialization errors and preparation errors release capacity', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { createSession: () => { throw new Error('Cannot initialize session'); } });
-  await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /Cannot initialize/);
+  await h.run(); await h.assertSettled('failed'); assert.match(rawError(h.project), /Cannot initialize/);
   const bad = await harness(t, { resourcesRoot: path.join(h.root, 'missing-resources') });
-  await assert.rejects(bad.backend.start(bad.project.id), /ENOENT/); await bad.assertSettled('failed');
+  await assert.rejects(bad.backend.start(bad.project.id), /required build files are missing/); await bad.assertSettled('failed');
+  assert.match(rawError(bad.project), /ENOENT/);
 });
 
 test('stopped runs can restart in fresh workspaces and late old events cannot corrupt the new run', { timeout: functionalTimeout }, async t => {
@@ -1427,7 +1462,7 @@ test('Stop during workspace preparation clears prior approval and test evidence'
   const h = await harness(t);
   h.project.status = 'approved'; h.project.approvedAt = 'previous approval';
   h.project.report = { passed: 5 }; h.project.exportedTo = 'previous export';
-  const rejected = assert.rejects(h.backend.start(h.project.id), /stopped by you/);
+  const rejected = assert.rejects(h.backend.start(h.project.id), /build was stopped/);
   await h.backend.stop(h.project.id); await rejected; await h.assertSettled('stopped');
   assert.equal(h.project.report, undefined); assert.equal(h.project.approvedAt, undefined);
   assert.equal(h.project.exportedTo, undefined); assert.equal(h.sessions.length, 0);

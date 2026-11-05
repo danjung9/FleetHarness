@@ -1,3 +1,4 @@
+import { redactSecrets, redactValue, registerCredential } from '../../dist-electron/electron/secrets.js';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -24,7 +25,7 @@ export async function mainHarness(store, backend = { active: new Map() }, source
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
-    ...storage, ...delivery, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, fs, disk: fs, path, fileURLToPath, process,
+    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },

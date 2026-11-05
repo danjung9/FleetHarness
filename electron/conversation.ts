@@ -1,3 +1,4 @@
+import { redactSecrets, redactPartialSecrets } from './secrets.js';
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager, type CreateAgentSessionOptions, type ModelRuntime, type ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
 import { createHash, randomUUID } from 'node:crypto';
@@ -51,6 +52,11 @@ export class ProjectLead {
   private async respond(p: Project, controller: AbortController, request: ConversationMessage) {
     const conversation = p.conversation!;
     const reply = { id: randomUUID(), role: 'assistant' as const, text: '', createdAt: new Date().toISOString(), runId: p.runId, status: 'streaming' as 'streaming' | 'complete' | 'error' };
+    let responseText = '';
+    const textLog = {
+      append(text: string) { responseText += text; reply.text = redactPartialSecrets(responseText).slice(0, 24000); },
+      flush() { if (responseText) reply.text = redactSecrets(responseText).slice(0, 24000); }
+    };
     const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
     const snapshotHash = briefHash(p), snapshotRunId = p.runId, workspace = p.workspace;
     let proposed = false;
@@ -143,7 +149,7 @@ export class ProjectLead {
           stageSignal = signal;
           if (backend === 'codex') {
             await this.options.codex?.refresh(); signal.throwIfAborted();
-            if (provider !== 'chatgpt' || this.options.codex?.account.status !== 'connected' || !this.options.codex.account.planUsageEnabled || !this.options.codex.models.some(m => m.id === modelId && m.configured)) throw new Error('Connect ChatGPT and choose a model in Settings to talk to the project lead.');
+            if (provider !== 'chatgpt' || this.options.codex?.account.status !== 'connected' || (this.options.codex.account.authType !== 'apiKey' && !this.options.codex.account.planUsageEnabled) || !this.options.codex.models.some(m => m.id === modelId && m.configured)) throw new Error('Connect ChatGPT or an API key and choose a model in Settings to talk to the project lead.');
             return (this.options.createCodexSession ?? createCodexSession)({ home: this.options.codex.home, getCredentials: () => this.options.codex!.credentials(), cwd, model: modelId, signal, tools: customTools, conversationInstructions: instructions });
           }
           const model = this.runtime.getModel(provider, modelId);
@@ -156,21 +162,25 @@ export class ProjectLead {
         },
         onEvent: event => {
           if (event.type === 'message_update' && event.assistantMessageEvent.type === 'text_delta') {
-            reply.text = (reply.text + event.assistantMessageEvent.delta).slice(0, 24000); this.notify();
+            textLog.append(event.assistantMessageEvent.delta);
+            this.notify();
           }
+          if (['message_end', 'turn_end', 'tool_execution_start'].includes(event.type)) textLog.flush();
           if (event.type === 'message_end' && event.message.role === 'assistant' && !reply.text) {
-            reply.text = event.message.content.filter(c => c.type === 'text').map(c => c.text).join('\n').slice(0, 24000); this.notify();
+            reply.text = redactSecrets(event.message.content.filter(c => c.type === 'text').map(c => c.text).join('\n')).slice(0, 24000); this.notify();
           }
         },
         work: async send => { await send(prompt); }
       });
+      textLog.flush();
       reply.text ||= proposed ? 'The proposed action is ready to review below.' : 'No reply was returned. Please try again.';
       reply.status = 'complete';
     } catch (error) {
-      const message = controller.signal.aborted ? 'Reply stopped. Your build is unchanged.' : error instanceof Error ? error.message : String(error);
+      const message = redactSecrets(controller.signal.aborted ? 'Reply stopped. Your build is unchanged.' : error instanceof Error ? error.message : String(error));
       reply.status = 'error'; reply.text ||= message;
       conversation.error = message;
     } finally {
+      textLog.flush();
       controller.abort();
       conversation.status = 'idle';
       try { await this.store.save(); } catch { conversation.error = 'The conversation could not be saved. Check available disk space.'; }

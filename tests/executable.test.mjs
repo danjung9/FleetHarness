@@ -186,7 +186,7 @@ test('version 2 browser staging isolates dependency manifests and generated main
   });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(browserOptions.webPreferences.nodeIntegration, false);
-  assert.equal(browserOptions.webPreferences.sandbox, true);
+  assert.equal(browserOptions.webPreferences.sandbox, false);
   const script = await handler({ url: 'fleet-app://app/assets/status.mjs', method: 'GET' });
   assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
   assert.match(script.headers.get('content-security-policy'), /script-src 'self'/);

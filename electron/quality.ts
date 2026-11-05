@@ -1,3 +1,4 @@
+import { redactValue } from './secrets.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';

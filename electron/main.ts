@@ -1,3 +1,4 @@
+import { redactValue, redactSecrets, registerCredential } from './secrets.js';
 import { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, Menu, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
@@ -46,19 +47,28 @@ const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenge
 let emitTimer: ReturnType<typeof setTimeout> | undefined;
 const notify = () => {
   if (emitTimer) return;
-  emitTimer = setTimeout(() => { emitTimer = undefined; if (window && !window.isDestroyed()) window.webContents.send('fleet:state', store.state); }, 100);
+  emitTimer = setTimeout(() => { emitTimer = undefined; if (window && !window.isDestroyed()) window.webContents.send('fleet:state', redactValue(store.state)); }, 100);
 };
 function checkSender(event: IpcMainInvokeEvent) {
   if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('Untrusted application frame.');
 }
 function handle(channel: string, fn: (...args: any[]) => unknown) {
-  ipcMain.handle(channel, async (event, ...args) => { checkSender(event); return fn(...args); });
+  ipcMain.handle(channel, async (event, ...args) => {
+    checkSender(event);
+    try { return redactValue(await fn(...args)); }
+    catch (error) {
+      const source = error as { message?: unknown; name?: unknown } | null;
+      const safe = new Error(redactSecrets(typeof source?.message === 'string' ? source.message : String(error)));
+      if (typeof source?.name === 'string') safe.name = redactSecrets(source.name);
+      throw safe;
+    }
+  });
 }
 const bootstrap = () => ({
-  state: store.state, models: backend.models(), storagePath: store.root,
+  state: redactValue(store.state), models: backend.models(), storagePath: store.root,
   capabilities: { projectConversation: true },
   chatgpt: codex.account,
-  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' && codex.account.planUsageEnabled ? 'Using ChatGPT plan' : 'Connect your ChatGPT plan to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
+  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
@@ -242,7 +252,7 @@ function registerIPC() {
         verifiedHash: p.report!.sourceHash, evidence: deliveryEvidence(p), deliveryMarkdown: [
           '# ' + p.title, '', 'Follow README.md for the declared runtime, dependency installation, required environment settings and startup command.', '',
           'Tests: follow the prerequisites in README.md, then run: ' + (p.report!.portableCommand ?? portableTestCommand(await applicationTestFiles(p.workspace!))), '',
-          'Original sandbox execution provenance is recorded separately in test-report.json (provenance).', '',
+          'Original runtime execution provenance is recorded separately in test-report.json (provenance).', '',
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
@@ -328,6 +338,7 @@ function registerIPC() {
   handle('fleet:chatgpt:select', async (accountId: unknown) => { requireNoRuns(); await codex.selectAccount(chatGPTAccountId(accountId)); return bootstrap(); });
   handle('fleet:chatgpt:reopen', async () => { requireNoRuns(); await codex.reopenLogin(); return bootstrap(); });
   handle('fleet:chatgpt:usage', async () => { await codex.manageUsage(); });
+  handle('fleet:codex:connect-key', async (key: unknown) => { requireNoRuns(); await codex.loginWithKey(key); return bootstrap(); });
   handle('fleet:chatgpt:cancel', async () => { requireNoRuns(); await codex.cancel(); return bootstrap(); });
   handle('fleet:chatgpt:disconnect', async () => { requireNoRuns(); await codex.logout(); return bootstrap(); });
   handle('fleet:chatgpt:refresh', async () => { requireNoRuns(); await codex.refresh(); return bootstrap(); });
@@ -345,8 +356,8 @@ function registerIPC() {
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
     if (settings.backend === 'codex') {
-      if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
-      if (codex.account.status !== 'connected' || !codex.account.planUsageEnabled || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT, allow plan usage, and select a Codex model first.');
+      if (key?.trim()) throw new Error('Use the Codex API-key sign-in control before saving model settings.');
+      if (codex.account.status !== 'connected' || (codex.account.authType !== 'apiKey' && !codex.account.planUsageEnabled) || !codex.models.some(m => (!settings.model || m.id === settings.model) && m.configured) || settings.provider !== 'chatgpt') throw new Error('Connect ChatGPT or an API key and select a Codex model first.');
       store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
       await store.save(); notify(); return bootstrap();
     }
@@ -354,8 +365,9 @@ function registerIPC() {
     const keyFile = path.join(store.root, 'credentials.enc');
     if (key?.trim()) {
       if (settings.rememberKey && !safeStorage.isEncryptionAvailable()) throw new Error('Secure credential storage is unavailable. Use a session-only key.');
+      registerCredential(key.trim());
       await backend.runtime.setRuntimeApiKey(settings.provider, key.trim());
-      if (settings.rememberKey) await fs.writeFile(keyFile, safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })), { mode: 0o600 });
+      if (settings.rememberKey) await atomicHostWrite(store.root, 'credentials.enc', safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })));
     }
     if (!settings.rememberKey) await fs.rm(keyFile, { force: true });
     store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
@@ -367,26 +379,13 @@ function createWindow() {
     width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'AppYard',
     icon: iconPath,
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
-    webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false }
+    webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: false, webviewTag: false }
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   window.webContents.session.setPermissionCheckHandler(() => false);
   const devURL = !app.isPackaged && process.env.VITE_DEV_SERVER_URL;
-  // Generated previews use Chromium's OS sandbox. The host also enforces their
-  // network boundary, including navigations and WebSockets, outside page code.
-  window.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-    const url = new URL(details.url);
-    const localApp = url.protocol === 'file:' || (devURL && url.origin === new URL(devURL).origin);
-    callback({ cancel: !localApp && !previews.allows(details.url) && !['data:', 'blob:'].includes(url.protocol) });
-  });
-  window.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    if (!previews.allows(details.url)) { callback({}); return; }
-    const headers = Object.fromEntries(Object.entries(details.responseHeaders ?? {}).filter(([name]) => name.toLowerCase() !== 'content-security-policy'));
-    headers['Content-Security-Policy'] = ["default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; sandbox allow-scripts allow-same-origin allow-downloads allow-forms"];
-    callback({ responseHeaders: headers });
-  });
   if (devURL) void window.loadURL(devURL);
   else void window.loadFile(path.join(dirname, '../../dist/index.html'));
   window.on('closed', () => { window = null; });
@@ -404,6 +403,7 @@ if (ownsInstance) app.whenReady().then(async () => {
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
       const { provider, key } = JSON.parse(safeStorage.decryptString(encrypted));
+      registerCredential(key);
       await backend.runtime.setRuntimeApiKey(provider, key);
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.error('Saved credential could not be loaded. Reconnect in Model settings.'); }
     registerIPC();

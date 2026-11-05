@@ -12,7 +12,7 @@ import { verifyBrowserJourneys } from '../dist-electron/electron/browser-verific
 
 const temp = () => fs.mkdtemp(path.join(os.tmpdir(), 'fleet-test-'));
 // Checked-in synthetic fixtures explicitly select their host launcher. This is
-// test wiring only; generated application tests retain the production sandbox.
+// test wiring only; production uses its own direct Node launcher.
 function fixtureLauncher(_root, executable, args) {
   const ready = 'synthetic-runtime-verification-ready\n';
   const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(args)},{stdio:'inherit'});child.once('error',e=>{console.error(e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
@@ -132,12 +132,12 @@ test('empty workspaces never count as verified', async () => {
   const dir=await temp();try {await assert.rejects(verifyWorkspace(dir,process.execPath,()=>{}),/did not produce/);}
   finally {await fs.rm(dir,{recursive:true,force:true});}
 });
-test('preview has a dedicated origin, token route, and restrictive network policy', async () => {
+test('preview has a dedicated origin and token route without a network restriction', async () => {
   const dir=await temp();const previews=new PreviewServers();try {
     await fs.writeFile(path.join(dir,'index.html'),'<h1>Preview</h1>');
     const url=await previews.url(dir);const response=await fetch(url);
     assert.equal(await response.text(),'<h1>Preview</h1>');
-    assert.match(response.headers.get('content-security-policy'),/connect-src 'none'/);
+    assert.equal(response.headers.get('content-security-policy'), null);
     assert.equal((await fetch(new URL('/wrong-token',url))).status,404);
     assert.equal(await previews.url(dir),url);
   } finally {previews.close();await fs.rm(dir,{recursive:true,force:true});}
@@ -167,8 +167,7 @@ test('declared static resources are served on a unique origin without exposing u
   assert.equal(await previews.url(root, files), url);
   const script = await fetch(new URL('./assets/core.mjs', url));
   assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
-  assert.match(script.headers.get('content-security-policy'), /script-src 'self'/);
-  assert.match(script.headers.get('content-security-policy'), /connect-src 'self'/);
+  assert.equal(script.headers.get('content-security-policy'), null);
   assert.equal(script.headers.get('x-content-type-options'), 'nosniff');
   assert.deepEqual(await (await fetch(new URL('./assets/data.json', url))).json(), { scale: 2 });
   for (const address of ['./.env', './evaluation-plan.json', '/index.html', './assets/missing.mjs', '../index.html']) {

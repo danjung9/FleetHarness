@@ -395,7 +395,8 @@ test('fake-engine production workflow blocks review after two repairs with the f
     };
     await backend.start(project.id); await backend.active.get(project.id)?.done;
     assert.equal(project.status, 'failed', project.error);
-    assert.match(project.error, /Independent judgment did not pass/);
+    assert.equal(project.error, 'The app did not pass its checks; review the failed checks in the activity log before trying again.');
+    assert.match(project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\\n'), /Independent judgment did not pass/);
     assert.equal(project.stages.find(s => s.id === 'verify').status, 'failed');
     assert.equal(project.stages.find(s => s.id === 'review').status, 'queued');
     assert.equal(project.approvedAt, undefined);

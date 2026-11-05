@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import { VerificationShutdownError } from './verification.js';
 import { PreviewServers } from './preview.js';
 import { prepareSolutionRuntime } from './solution-runtime.js';
 import { parseSolutionContract } from '../harness/solution-contract.js';
@@ -24,6 +25,9 @@ export class ApplicationPreviews {
     const operation = this.open(root, controller.signal).then(url => {
       if (url) this.origins.set(root, new URL(url).origin);
       return url;
+    }).catch(error => {
+      if (!(error instanceof VerificationShutdownError) && (this.closed || controller.signal.aborted)) return null;
+      throw error;
     }).finally(() => { this.pending.delete(root); this.controllers.delete(root); });
     this.pending.set(root, operation);
     return operation;

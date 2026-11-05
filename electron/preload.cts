@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   selectChatGPTAccount: (accountId: string) => ipcRenderer.invoke('fleet:chatgpt:select', accountId),
   reopenChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:reopen'),
   manageChatGPTUsage: () => ipcRenderer.invoke('fleet:chatgpt:usage'),
+  connectCodexKey: (apiKey: string) => ipcRenderer.invoke('fleet:codex:connect-key', apiKey),
   cancelChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:cancel'),
   disconnectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:disconnect'),
   refreshChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:refresh'),

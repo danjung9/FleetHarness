@@ -74,6 +74,7 @@ export interface AgentModel { id: string; provider: string; name: string; config
 export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
+  authType?: 'chatgpt' | 'apiKey';
   email?: string; plan?: string; error?: string;
   activeAccountId?: string;
   accounts?: { id: string; label: string; email?: string; connected: boolean }[];
@@ -111,6 +112,7 @@ export interface FleetAPI {
   selectChatGPTAccount(accountId: string): Promise<Bootstrap>;
   reopenChatGPTLogin(): Promise<Bootstrap>;
   manageChatGPTUsage(): Promise<void>;
+  connectCodexKey?(apiKey: string): Promise<Bootstrap>;
   cancelChatGPTLogin(): Promise<Bootstrap>;
   disconnectChatGPT(): Promise<Bootstrap>;
   refreshChatGPT(): Promise<Bootstrap>;

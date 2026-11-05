@@ -1,4 +1,4 @@
-import { generatedSandboxCommand } from './generated-sandbox.js';
+import { redactSecrets, registerCredential } from './secrets.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { VerificationShutdownError } from './verification.js';
 import { atomicHostWrite } from '../shared/host-files.js';
@@ -136,7 +136,7 @@ function registryLock(packageJson: unknown, packageLock: unknown) {
   }
 }
 
-/** A clean package whose generated commands always execute inside the mandatory OS sandbox. */
+/** A clean package that runs generated commands directly with run process ownership. */
 export async function prepareSolutionRuntime(sourceRoot: string, manifest: RuntimeManifest, nodeExecutable: string,
   signal?: AbortSignal, options: Partial<SolutionRuntimeLimits> = {}): Promise<SolutionRuntime> {
   const limits = { ...defaults, ...options };
@@ -149,13 +149,11 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   if (missing.length) throw new Error('Missing required runtime environment: ' + missing.join(', ') + '. No model or service fallback was used.');
   if (manifest.requiredEnv.some(name => !/^[A-Z_][A-Z0-9_]*$/.test(name) || reservedEnv.test(name))) throw new Error('Runtime environment contains a reserved or invalid name.');
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-solution-'));
-  const sandboxHome = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-solution-policy-'));
   const root = path.join(directory, 'package');
   const children = new Set<ChildProcess>();
   const closedChildren = new Map<ChildProcess, Promise<void>>();
   const inherited = runProcessEnvironment({});
   const ownScope = inherited.APPYARD_RUN_PROCESS ? undefined : new RunProcessSweep();
-  let loopbackPort: number | undefined;
   const controller = new AbortController();
   const previews = new PreviewServers();
   let failure: Error | undefined, closed = false;
@@ -177,26 +175,24 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     } catch (error) { throw new VerificationShutdownError(error); }
     finally { clearTimeout(timer); }
     await fs.rm(directory, { recursive: true, force: true });
-    await fs.rm(sandboxHome, { recursive: true, force: true });
   })();
-  const env: NodeJS.ProcessEnv = { ...inherited, CODEX_HOME: sandboxHome, PATH: [path.dirname(nodeExecutable), '/usr/local/bin', '/usr/bin', '/bin'].join(path.delimiter),
+  const env: NodeJS.ProcessEnv = { ...inherited, PATH: [path.dirname(nodeExecutable), '/usr/local/bin', '/usr/bin', '/bin'].join(path.delimiter),
     HOME: path.join(directory, 'home'), TMPDIR: path.join(directory, 'tmp'), TEMP: path.join(directory, 'tmp'), TMP: path.join(directory, 'tmp'),
     ELECTRON_RUN_AS_NODE: '1', PYTHONDONTWRITEBYTECODE: '1', LANG: 'C.UTF-8' };
   for (const name of manifest.requiredEnv) env[name] = process.env[name];
   const secrets = manifest.requiredEnv.map(name => env[name]!).filter(Boolean).sort((a, b) => b.length - a.length);
-  const redact = (text: string) => secrets.reduce((value, secret) => value.split(secret).join('[redacted]'), text);
+  secrets.forEach(registerCredential);
+  const redact = (text: string) => redactSecrets(secrets.reduce((value, secret) => value.split(secret).join('[redacted]'), text));
   const redactOutput = (value: JsonValue): JsonValue => {
     if (typeof value === 'string') return redact(value);
     if (value === null || typeof value !== 'object') return secrets.includes(String(value)) ? '[redacted]' : value;
     if (Array.isArray(value)) return value.map(redactOutput);
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [redact(key), redactOutput(entry)]));
   };
-  const launch = async (command: string, args: string[], timeout: number, input?: string, extraEnv?: NodeJS.ProcessEnv, dependencyInstall = false) => {
-    check();
-    const sandbox = await generatedSandboxCommand(root, command, args, { writableRoot: directory, ...(dependencyInstall ? { dependencyInstall: true } : { loopbackPort }) });
+  const launch = async (command: string, args: string[], timeout: number, input?: string, extraEnv?: NodeJS.ProcessEnv, _dependencyInstall = false) => {
     check();
     const baseEnv = { ...env, ...extraEnv };
-    const child = spawn(sandbox.runner, sandbox.args, { cwd: root, env: runProcessEnvironment(ownScope ? ownScope.environment(baseEnv) : baseEnv), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const child = spawn(command, args, { cwd: root, env: runProcessEnvironment(ownScope ? ownScope.environment(baseEnv) : baseEnv), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
     children.add(child);
     closedChildren.set(child, new Promise<void>(resolve => child.once('close', () => { children.delete(child); closedChildren.delete(child); resolve(); })));
     const stdout: Buffer[] = [], stderr: Buffer[] = []; let bytes = 0;
@@ -308,7 +304,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     if (manifest.profile === 'service') {
       if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
       for (const value of [manifest.healthPath, manifest.invokePath]) if (!value.startsWith('/') || value.startsWith('//') || /[\\?#]/.test(value)) throw new Error('Service paths must be local absolute URL paths.');
-      const assignedPort = await port(); loopbackPort = assignedPort; url = 'http://127.0.0.1:' + assignedPort + '/';
+      const assignedPort = await port(); url = 'http://127.0.0.1:' + assignedPort + '/';
       env.HOST = '127.0.0.1'; env.PORT = String(assignedPort);
       const [program, args] = commandFor(selected);
       const running = await launch(program, args, limits.totalTimeoutMs, undefined, { HOST: '127.0.0.1', PORT: String(assignedPort) });
