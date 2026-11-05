@@ -1,7 +1,8 @@
 import { qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
-import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
+import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -395,6 +396,11 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
   const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { codex,
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
+      // Reviewer lifecycle is covered separately; these assertions track the
+      // ordinary phase skills while the reviewer still submits through its host ledger.
+      if (options.tools.some(tool => tool.name === 'fleet_submit_planning_review')) {
+        return createFixturePlanningReviewSession(options.tools);
+      }
       const rpc = new FakeRpc();
       const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
       sessions.push(session);

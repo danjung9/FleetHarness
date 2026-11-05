@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getJourneyState, getResumeStage, resumeLabel } from '../dist-electron/shared/journey.js';
+import { canContinuePlanning, getJourneyState, getResumeStage, isPlanningReviewRejected, resumeLabel } from '../dist-electron/shared/journey.js';
 import { stageDefinitions } from '../dist-electron/shared/types.js';
 
 const report = (overrides = {}) => ({
@@ -25,6 +25,26 @@ const project = (overrides = {}) => ({
 });
 const atStage = (id, status = 'active') => stageDefinitions.map(stage => ({ ...stage, status: stage.id === id ? status : 'queued' }));
 const executable = (status, overrides = {}) => ({ status, platform: 'darwin', arch: 'arm64', fileName: 'app.zip', ...overrides });
+
+test('candidate execution drives the journey without promoting retained project artifacts', () => {
+  const experiment = { id: 'experiment', projectId: 'challenge', mode: 'single', status: 'running',
+    createdAt: '2026-11-05T12:00:00Z', updatedAt: '2026-11-05T12:01:00Z',
+    candidates: [{ id: 'candidate', profileId: 'node-cli', status: 'running', stage: 'build', success: null }] };
+  for (const status of ['draft', 'review', 'approved']) {
+    const retained = project({ status, report: report(), workspace: '/old-workspace', experiment });
+    const running = getJourneyState(retained);
+    assert.equal(running.current, 'build'); assert.equal(running.activeStage, 'build');
+    assert.match(running.message, /candidate/); assert.equal(running.resumeStage, undefined);
+    assert.equal(getJourneyState({ ...retained, experiment: { ...experiment, status: 'review' } }).current, 'review');
+    assert.match(getJourneyState({ ...retained, experiment: { ...experiment, status: 'stopped' } }).message, /candidate review to resume/);
+  }
+  const selected = project({ status: 'review', report: report(), workspace: '/new-workspace',
+    experiment: { ...experiment, status: 'complete', selectedCandidateId: 'candidate' } });
+  assert.match(getJourneyState(selected).message, /Try the app/);
+  const conversationUpdated = project({ updatedAt: '2026-11-06T12:00:00Z', experiment: { ...experiment, status: 'review' } });
+  assert.equal(getJourneyState(conversationUpdated).current, 'review', 'Conversation timestamps do not hide candidate review');
+  assert.equal(getJourneyState({ ...conversationUpdated, experiment: undefined }).current, 'brief', 'The host clears stale summaries after a brief or build revision changes');
+});
 
 test('saving a changed brief resets the journey despite a retained workspace and old stage records', () => {
   const state = getJourneyState(project({
@@ -105,6 +125,52 @@ test('only a persisted build-stage checkpoint on a stopped or failed run offers 
   const legacy = getJourneyState({ ...saved, resumeStage: undefined });
   assert.equal(legacy.resumeStage, undefined);
   assert.match(legacy.message, /new build/);
+});
+
+test('rejected planning reviews offer continuation for legacy and current errors without restarting', () => {
+  const saved = project({ status: 'failed', runId: 'same-run', workspace: '/workspace', resumeStage: 'plan',
+    stages: atStage('plan', 'failed').map(stage => ['intake', 'research'].includes(stage.id) ? { ...stage, status: 'complete' } : stage) });
+  for (const error of [
+    'Independent planning review still requires changes after its one revision. The plan remains unfrozen; start a new build with a revised brief.',
+    'Independent planning review still requires changes. Continue planning to revise the saved plan and run another independent review.'
+  ]) {
+    const rejected = { ...saved, error };
+    const state = getJourneyState(rejected);
+    assert.equal(isPlanningReviewRejected(rejected), true);
+    assert.equal(canContinuePlanning(rejected), true);
+    assert.equal(resumeLabel('plan', rejected), 'Continue planning');
+    assert.equal(state.current, 'build');
+    assert.equal(state.activeStage, 'plan');
+    assert.equal(state.resumeStage, 'plan');
+    assert.match(state.message, /Continue planning.*saved work.*Completed phases stay complete/);
+    assert.doesNotMatch(state.message, /start a new build|automatically/i);
+    assert.deepEqual(rejected.stages.filter(stage => stage.status === 'complete').map(stage => stage.id), ['intake', 'research']);
+  }
+  for (const changes of [
+    { status: 'running' }, { status: 'draft' }, { resumeStage: 'research' },
+    { workspace: undefined }, { runId: undefined },
+    { error: 'Independent planning reviewer could not initialize its model session.' }
+  ]) {
+    const interrupted = { ...saved, error: 'Independent planning review still requires changes after its one revision.', ...changes };
+    assert.equal(isPlanningReviewRejected(interrupted), false, JSON.stringify(changes));
+    assert.equal(canContinuePlanning(interrupted), false, JSON.stringify(changes));
+    assert.equal(resumeLabel('plan', interrupted), 'Resume planning');
+  }
+});
+
+test('a revised brief with saved planning work continues the same build', () => {
+  const revised = project({ status: 'stopped', runId: 'same-run', workspace: '/workspace', resumeStage: 'plan',
+    stages: atStage('plan', 'failed'),
+    error: 'Brief updated. Continue planning from the saved work; completed intake and research are preserved.' });
+  assert.equal(isPlanningReviewRejected(revised), false);
+  assert.equal(canContinuePlanning(revised), true);
+  assert.equal(resumeLabel('plan', revised), 'Continue planning');
+  const state = getJourneyState(revised);
+  assert.equal(state.current, 'build');
+  assert.equal(state.resumeStage, 'plan');
+  assert.match(state.message, /Brief updated.*Continue planning.*Completed phases stay complete/);
+  assert.doesNotMatch(state.message, /new build|retry/);
+  assert.equal(canContinuePlanning({ ...revised, resumeStage: undefined }), false);
 });
 
 test('Review requires usable verification evidence for the applicable quality contract', () => {

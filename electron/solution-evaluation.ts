@@ -1,6 +1,11 @@
 import { performance } from 'node:perf_hooks';
+import { isClassificationLabel, isDeterministicEvaluator } from '../shared/solution.js';
+import { meanEvaluationScore } from '../shared/evaluation-score.js';
+import { retrievalFixtureProblem } from '../shared/retrieval-fixture.js';
+import { scheduleFixtureProblem } from '../shared/schedule-fixture.js';
 import type { EvaluationPlan, EvaluationResult, JsonValue, SolutionContract, SolutionEvaluation, SolutionEvaluationReport } from '../shared/solution.js';
 import type { SolutionRuntime } from './solution-runtime.js';
+import { ClassifiedExecutionFailure } from './execution-failure.js';
 
 type Score = { score: number; detail: string; fatal?: boolean };
 export const solutionEvidenceLimits = { caseOutputBytes: 64 * 1024, totalOutputBytes: 8 * 1024 * 1024 } as const;
@@ -68,22 +73,18 @@ const invalid = (detail: string): Score => ({ score: 0, detail, fatal: true });
 
 /** Independent interval/constraint checker; this does not call the generated solver or toolkit solver. */
 function schedule(input: unknown, output: unknown, expected: unknown): Score {
+  const fixtureProblem = scheduleFixtureProblem(input, expected);
+  if (fixtureProblem) return invalid(fixtureProblem);
   if (!record(input) || !record(expected) || !record(output)) return invalid('Schedule inputs and outputs must be objects.');
   if (output.status !== expected.status) return scored(false, 'Expected schedule status ' + expected.status + ', received ' + output.status + '.');
   if (expected.status === 'infeasible') {
     if (output.assignments !== undefined && (!Array.isArray(output.assignments) || output.assignments.length !== 0)) return invalid('An infeasible result cannot contain assignments.');
     return scored(true, 'Infeasible status matches the frozen answer key; this is not a general infeasibility proof.');
   }
-  if (expected.status !== 'feasible' || !Array.isArray(input.requests) || !Array.isArray(input.people) || !Array.isArray(input.windows) || !Array.isArray(output.assignments)) return invalid('Feasibility checking requires requests, people, windows and assignments.');
-  const validWindow = (value: unknown) => record(value) && finite(value.start) && finite(value.end) && value.end > value.start;
-  if (!input.windows.every(validWindow) || !input.people.every((p: any) => record(p) && typeof p.id === 'string' && strings(p.qualifications) && Array.isArray(p.windows) && p.windows.every(validWindow) && finite(p.maxMinutes) && p.maxMinutes >= 0 && finite(p.restMinutes) && p.restMinutes >= 0)) return invalid('Schedule fixture contains malformed people or windows.');
+  if (!Array.isArray(output.assignments)) return invalid('Feasibility checking requires assignments.');
   const roster = new Map<string, RecordValue>(input.people.map((p: RecordValue) => [p.id, p]));
-  const requests = new Map<string, RecordValue>();
-  for (const request of input.requests) {
-    if (!record(request) || typeof request.id !== 'string' || requests.has(request.id) || !finite(request.duration) || request.duration <= 0 || !Array.isArray(request.starts) || !request.starts.every(finite) || !strings(request.people) || !strings(request.resources) || !strings(request.qualifications) || request.people.some((id: string) => !roster.has(id))) return invalid('Schedule fixture contains a malformed or duplicate request.');
-    requests.set(request.id, request);
-  }
-  if (roster.size !== input.people.length || output.assignments.length !== requests.size) return invalid('Schedule must include exactly one assignment for each request.');
+  const requests = new Map<string, RecordValue>(input.requests.map((request: RecordValue) => [request.id, request]));
+  if (output.assignments.length !== requests.size) return invalid('Schedule must include exactly one assignment for each request.');
   const seen = new Set<string>(), allocations: RecordValue[] = [];
   const fits = (windows: RecordValue[], start: number, end: number) => windows.some(w => start >= w.start && end <= w.end);
   for (const assignment of output.assignments) {
@@ -105,26 +106,27 @@ function schedule(input: unknown, output: unknown, expected: unknown): Score {
     }
   }
   for (const person of roster.values()) {
-    const minutes = allocations.filter(a => a.people.includes(person.id)).reduce((sum, a) => sum + a.end - a.start, 0);
+    const minutes = allocations.filter(a => a.people.includes(person.id)).reduce((sum, a) => sum + (a.end - a.start), 0);
     if (minutes > person.maxMinutes) return invalid('Schedule exceeds a personnel duty budget.');
   }
   return scored(true, 'Every request satisfies independent coverage, availability, qualification, resource, rest and duty checks.');
 }
 
 function retrieval(input: unknown, output: unknown, expected: unknown): Score {
-  if (!record(input) || !Array.isArray(input.documents) || !record(expected) || !strings(expected.ids) || !record(output) || !Array.isArray(output.results)) return invalid('Retrieval requires input documents, expected ids, and output results.');
-  const documents = new Map<string, RecordValue>();
-  for (const document of input.documents) {
-    if (!record(document) || typeof document.id !== 'string' || typeof document.text !== 'string' || documents.has(document.id)) return invalid('Retrieval fixture documents must have unique ids and text.');
-    documents.set(document.id, document);
-  }
-  if (expected.ids.some(id => !documents.has(id) || documents.get(id)!.approved === false)) return invalid('Retrieval answer key references an absent or excluded document.');
+  const fixtureProblem = retrievalFixtureProblem(input, expected);
+  if (fixtureProblem) return invalid(fixtureProblem);
+  // The shared preflight validator also protects direct scoring calls that bypass planning.
+  if (!record(input) || !record(expected) || !strings(expected.ids) || !record(output) || !Array.isArray(output.results)) return invalid('Retrieval requires input documents, expected ids, and output results.');
+  const documents = new Map<string, RecordValue>(input.documents.map((document: RecordValue) => [document.id, document]));
   const actual = new Set<string>();
   for (const result of output.results) {
     if (!record(result) || typeof result.id !== 'string' || actual.has(result.id)) return invalid('Retrieval results must contain unique source ids.');
     const source = documents.get(result.id), span = result.excerpt;
     if (!source || source.approved === false) return invalid('Retrieval returned an absent or excluded source.');
-    if (source.source !== undefined && result.source !== source.source) return invalid('Retrieval source locator does not match its document.');
+    const hasLocator = Object.hasOwn(source, 'source');
+    if (Object.hasOwn(result, 'source') !== hasLocator || (hasLocator && (typeof result.source !== 'string' || result.source !== source.source))) {
+      return invalid('Retrieval source locator must match its document exactly; omit it when the document has no source locator.');
+    }
     if (!record(span) || !Number.isSafeInteger(span.start) || !Number.isSafeInteger(span.end) || span.start < 0 || span.end <= span.start || span.end > source.text.length || source.text.slice(span.start, span.end) !== span.text) return invalid('Retrieval citation does not exactly reproduce its source span.');
     actual.add(result.id);
   }
@@ -147,6 +149,9 @@ export function scoreSolutionOutput(evaluation: Pick<SolutionEvaluation, 'evalua
     case 'classification': {
       const labels = Array.isArray(expected) ? expected : [expected], actual = Array.isArray(output) ? output : [output];
       if (Array.isArray(output) !== Array.isArray(expected) || actual.length !== labels.length || !labels.length) return invalid('Classification output must preserve the answer-key label shape.');
+      for (const values of [labels, actual]) for (const label of values) {
+        if (!isClassificationLabel(label)) return invalid('Classification labels must be strings, booleans or finite numbers.');
+      }
       const score = labels.filter((label, i) => equal(actual[i], label)).length / labels.length;
       return { score, detail: 'Label accuracy is ' + score.toFixed(4) + '.' };
     }
@@ -166,14 +171,33 @@ export async function runSolutionEvaluation(runtime: SolutionRuntime, solution: 
     const result: EvaluationResult = { id: evaluation.id, capabilityId: evaluation.capabilityId, evaluator: evaluation.evaluator,
       dataset: structuredClone(evaluation.dataset), metric: evaluation.evaluator === 'classification' ? 'mean_label_accuracy' : evaluation.evaluator === 'retrieval' ? 'mean_relevant_id_f1' : 'case_pass_rate',
       threshold: evaluation.threshold, actual: 0, trials: evaluation.trials, ...(evaluation.baseline === undefined ? {} : { baseline: evaluation.baseline }), status: 'failed', cases: [] };
+    const deterministic = isDeterministicEvaluator(evaluation.evaluator);
+    if (deterministic && evaluation.threshold !== 1) {
+      errors.push(`${evaluation.id}: the ${evaluation.evaluator} evaluator requires threshold 1; every case and trial must pass.`);
+    }
     let fatal = false;
     for (let trial = 1; trial <= evaluation.trials; trial++) for (const entry of evaluation.cases) {
       signal?.throwIfAborted();
       const caseStarted = performance.now();
       try {
         // Only input crosses the runtime boundary; the answer key stays in the host.
-        const output = await runtime.invoke(structuredClone(entry.input));
-        const scored = scoreSolutionOutput(evaluation, entry.input, output, entry.expected);
+        let output: JsonValue, httpStatus: number | undefined;
+        if (Object.hasOwn(entry, 'expectedStatus')) {
+          if (!Number.isInteger(entry.expectedStatus) || entry.expectedStatus! < 400 || entry.expectedStatus! > 499 ||
+              evaluation.evaluator !== 'exact' || solution.runtime.profile !== 'service') {
+            throw new Error('expectedStatus requires an integer from 400 to 499, the exact evaluator and a service runtime.');
+          }
+          if (!runtime.invokeHttp) throw new Error('This runtime adapter cannot observe HTTP rejection status.');
+          const response = await runtime.invokeHttp(structuredClone(entry.input));
+          if (!response || !Number.isInteger(response.status) || response.status < 100 || response.status > 599 || response.output === undefined) {
+            throw new Error('Runtime adapter returned a malformed HTTP outcome.');
+          }
+          output = response.output; httpStatus = response.status;
+        } else output = await runtime.invoke(structuredClone(entry.input));
+        const scored = httpStatus !== undefined && httpStatus !== entry.expectedStatus
+          ? invalid(`HTTP response status ${httpStatus} does not match the frozen rejection status.`)
+          : scoreSolutionOutput(evaluation, entry.input, output, entry.expected);
+        if (httpStatus !== undefined && httpStatus === entry.expectedStatus) scored.detail = `HTTP rejection status ${httpStatus} matched. ` + scored.detail;
         fatal ||= !!scored.fatal;
         let detail = runtime.redactMessage(scored.detail).slice(0, 2000), retainedOutput: JsonValue | undefined;
         const rawBytes = Buffer.byteLength(JSON.stringify(output), 'utf8');
@@ -188,14 +212,18 @@ export async function runSolutionEvaluation(runtime: SolutionRuntime, solution: 
           } else { retainedOutput = redacted; retainedOutputBytes += bytes; }
         }
         result.cases.push({ id: entry.id, trial, passed: scored.score === 1 && !scored.fatal, score: scored.score,
-          durationMs: Math.round(performance.now() - caseStarted), detail, ...(retainedOutput === undefined ? {} : { output: retainedOutput }) });
+          durationMs: Math.round(performance.now() - caseStarted), detail, ...(retainedOutput === undefined ? {} : { output: retainedOutput }),
+          ...(httpStatus === undefined ? {} : { httpStatus }) });
       } catch (error) {
-        signal?.throwIfAborted(); fatal = true;
+        signal?.throwIfAborted();
+        if (error instanceof ClassifiedExecutionFailure && error.classification !== 'implementation') throw error;
+        fatal = true;
         result.cases.push({ id: entry.id, trial, passed: false, score: 0, durationMs: Math.round(performance.now() - caseStarted), detail: runtime.redactMessage(error instanceof Error ? error.message : String(error)).slice(0, 2000) });
       }
     }
-    result.actual = result.cases.length ? result.cases.reduce((sum, entry) => sum + entry.score, 0) / result.cases.length : 0;
-    result.status = !fatal && result.cases.length > 0 && result.actual >= result.threshold && (result.baseline === undefined || result.actual >= result.baseline) ? 'passed' : 'failed';
+    result.actual = meanEvaluationScore(result.cases);
+    const complete = !deterministic || (result.threshold === 1 && result.cases.every(entry => entry.passed));
+    result.status = !fatal && complete && result.cases.length > 0 && result.actual >= result.threshold && (result.baseline === undefined || result.actual >= result.baseline) ? 'passed' : 'failed';
     evaluations.push(result);
   }
   const capabilities = solution.capabilities.map(capability => {

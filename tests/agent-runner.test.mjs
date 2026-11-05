@@ -133,3 +133,13 @@ test('prompt rejection and invalid limits fail clearly without leaking listeners
   await assert.rejects(run(s), /Transport failed/); assert.equal(s.listeners, 0); assert.equal(s.disposals, 1);
   await assert.rejects(run(s, { limits: { idleMs: 0 } }), /Invalid agent limit/);
 });
+
+test('private activity masks synchronous and asynchronous session setup errors', async () => {
+  for (const create of [() => { throw new Error('SEALED-private-setup'); }, async () => { throw new Error('SEALED-private-setup'); }]) {
+    await assert.rejects(run(session(), { create, privateActivity: true, recoveryHint: 'Resume planning with saved files.' }), error => {
+      assert.match(error.message, /could not initialize its model session.*Resume planning/);
+      assert.doesNotMatch(error.message, /SEALED/);
+      return true;
+    });
+  }
+});

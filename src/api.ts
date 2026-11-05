@@ -3,6 +3,7 @@ import { stageDefinitions, starters } from '../shared/types';
 import { normalizeProjectInput } from '../shared/project-input';
 import { getChallenge } from '../harness/catalog';
 import { withDesktopCompatibility } from '../shared/desktop-api';
+import { defaultLearningSettings } from '../shared/learning';
 export const isDesktop = !!window.fleetHarness;
 function makeProject(input: NewProject): Project {
   const normalized = normalizeProjectInput(input);
@@ -22,6 +23,16 @@ function save(nextState: AppState) {
 }
 const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to run coding agents and access local artifacts.'); };
 export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(window.fleetHarness) : {
+  storageOverview: desktopOnly, storageFiles: desktopOnly, storageReadFile: desktopOnly,
+  storageOpen: desktopOnly, storageExport: desktopOnly, storageTrash: desktopOnly,
+  storageRestore: desktopOnly, storageDeleteForever: desktopOnly, storageArchiveProject: desktopOnly,
+  experimentState: async () => ({ experiments: [], settings: { ...defaultLearningSettings }, availability: { available: false, reason: 'Open the AppYard desktop app to compare candidates.' } }),
+  startExperiment: desktopOnly, resumeExperiment: desktopOnly, stopExperiment: desktopOnly,
+  inspectCandidate: desktopOnly, previewCandidate: desktopOnly, closeCandidatePreview: async () => {},
+  candidateArtifacts: desktopOnly, readCandidateArtifact: desktopOnly, selectCandidate: desktopOnly,
+  submitExperimentPreference: desktopOnly, skipExperimentPreference: desktopOnly, saveLearningSettings: desktopOnly,
+  forgetProjectLearning: desktopOnly, rollbackLearningPolicy: desktopOnly, integrationOperations: async () => [],
+  saveIntegrationOperation: desktopOnly, removeIntegrationOperation: desktopOnly,
   sendMessage: desktopOnly,
   cancelMessage: desktopOnly,
   answerClarification: desktopOnly,

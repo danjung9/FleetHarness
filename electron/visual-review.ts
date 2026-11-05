@@ -5,8 +5,11 @@ import { Type, type Static } from 'typebox';
 import { Check } from 'typebox/value';
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { RuntimeManifest } from '../shared/solution.js';
-import { isVisualReviewReport, visualReviewLimits, visualReviewProblems, type VisualCapture, type VisualReview, type VisualReviewReport, type VisualReviewStage, type VisualViewport } from '../shared/visual-review.js';
+import { isBrowserJourneyCapture, isVisualReviewReport, visualReviewLimits, visualReviewProblems, type BrowserJourneyCapture, type VisualCapture, type VisualReview, type VisualReviewReport, type VisualReviewStage, type VisualViewport } from '../shared/visual-review.js';
+import type { BrowserJourney } from '../shared/quality.js';
 import { safeFile } from './storage.js';
+import { createRuntimeFilesHasher } from './runtime-files-hash.js';
+import { assertRuntimeSourceFiles } from '../shared/runtime-artifacts.js';
 
 const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 const hashPattern = /^[a-f0-9]{64}$/;
@@ -45,16 +48,17 @@ async function readOrdinary(root: string, relative: string, maximum: number) {
 
 /** Same digest as prepareSolutionRuntime, without executing the application. */
 export async function runtimeFilesHash(root: string, manifest: RuntimeManifest): Promise<string> {
+  assertRuntimeSourceFiles(manifest.files);
   if (!manifest.files.length || manifest.files.length > 256 || new Set(manifest.files).size !== manifest.files.length) throw new Error('Runtime files must be a nonempty unique allowlist of at most 256 files.');
-  const hash = createHash('sha256');
+  const hash = createRuntimeFilesHasher();
   let remaining = 100_000_000;
   for (const file of [...manifest.files].sort()) {
     if (forbidden.test(file)) throw new Error('Invalid runtime file: ' + file);
     const bytes = await readOrdinary(root, file, remaining);
     remaining -= bytes.length;
-    hash.update(file + '\0').update(bytes).update('\0');
+    hash.add(file, bytes);
   }
-  return hash.digest('hex');
+  return hash.digest();
 }
 
 export async function readVisualCapture(root: string, capture: VisualCapture): Promise<Buffer> {
@@ -68,13 +72,13 @@ export async function readVisualCapture(root: string, capture: VisualCapture): P
 }
 
 /** Revalidate an existing host ledger without starting a new stage or trusting workspace JSON. */
-export async function validateVisualReview(root: string, manifest: RuntimeManifest, report: VisualReviewReport | undefined, expectedStage: VisualReviewStage = 'verify'): Promise<string[]> {
+export async function validateVisualReview(root: string, manifest: RuntimeManifest, report: VisualReviewReport | undefined, expectedStage: VisualReviewStage = 'verify', requiredJourneyIds?: string[]): Promise<string[]> {
   if (!isVisualReviewReport(report)) return ['A valid host-recorded visual review is required.'];
   const problems: string[] = [];
   let currentHash: string;
   try { currentHash = await runtimeFilesHash(root, manifest); }
   catch (error) { return ['Visual review cannot verify runtime files: ' + message(error)]; }
-  problems.push(...visualReviewProblems(report, currentHash, expectedStage));
+  problems.push(...visualReviewProblems(report, currentHash, expectedStage, requiredJourneyIds));
   // Preserve the evidence trail, including findings carried over from an earlier session.
   const reviewed = new Set(report.reviews.map(review => review.captureId));
   for (const capture of report.captures.filter(item => reviewed.has(item.id))) {
@@ -93,6 +97,7 @@ export interface VisualReviewLedgerOptions {
   contractHash: string;
   runId: string;
   stage: VisualReviewStage;
+  journeys?: BrowserJourney[];
   sessionId?: string;
   /** Only a trusted host checkpoint may supply prior state. Never read an agent-authored report here. */
   prior?: VisualReviewReport;
@@ -105,21 +110,27 @@ export interface VisualCaptureInput {
   /** Digest of the prepared runtime that the browser actually rendered. */
   filesHash: string;
   screenshotHash?: string;
+  journey?: BrowserJourneyCapture;
+  errors?: string[];
 }
 
 export class VisualReviewLedger {
   private state: VisualReviewReport;
   private busy = false;
   private persistenceFailure?: string;
+  private readonly journeys: BrowserJourney[];
 
   constructor(private readonly options: VisualReviewLedgerOptions) {
+    this.journeys = structuredClone(options.journeys ?? []);
+    if (this.journeys.length > 24 || new Set(this.journeys.map(item => item.id)).size !== this.journeys.length
+      || this.journeys.some(item => !item.id || item.id.length > 200 || !item.steps.length || item.steps.length > 100)) throw new Error('Visual review requires valid frozen browser journeys.');
     if (!hashPattern.test(options.contractHash) || !options.runId || options.runId.length > 200 || !['build', 'verify'].includes(options.stage)) throw new Error('Visual review requires a valid host run and quality contract.');
     if (options.prior && (!isVisualReviewReport(options.prior) || options.prior.runId !== options.runId || options.prior.contractHash !== options.contractHash)) throw new Error('Visual review history does not match the host run and quality contract.');
     const prior = options.prior && structuredClone(options.prior), sessionId = options.sessionId ?? randomUUID();
     if (!sessionId || sessionId.length > 200 || prior?.sessions.some(session => session.id === sessionId)) throw new Error('Visual review requires a new host session identity.');
     if ((prior?.sessions.length ?? 0) >= visualReviewLimits.sessions) throw new Error('Visual review session limit reached.');
-    this.state = { schemaVersion: 1, runId: options.runId, contractHash: options.contractHash, status: 'pending', activeSessionId: sessionId,
-      sessions: [...(prior?.sessions ?? []), { id: sessionId, stage: options.stage, startedAt: new Date().toISOString(), status: 'pending', errors: [] }],
+    this.state = { schemaVersion: 2, runId: options.runId, contractHash: options.contractHash, status: 'pending', activeSessionId: sessionId,
+      sessions: [...(prior?.sessions ?? []), { id: sessionId, stage: options.stage, startedAt: new Date().toISOString(), status: 'pending', errors: [], requiredJourneyIds: this.journeys.map(item => item.id) }],
       captures: prior?.captures ?? [], reviews: prior?.reviews ?? [] };
   }
 
@@ -153,12 +164,16 @@ export class VisualReviewLedger {
     return this.exclusive(async () => {
       if (this.state.captures.length >= visualReviewLimits.captures) throw new Error('Visual review capture limit reached.');
       if (!input.filesHash || !hashPattern.test(input.filesHash)) throw new Error('The browser must provide its prepared runtime files digest.');
+      if (input.journey && (!isBrowserJourneyCapture(input.journey)
+        || !this.journeys.some(item => item.id === input.journey!.id && item.steps.length === input.journey!.totalSteps))) throw new Error('Browser evidence must identify a frozen journey and its actual step count.');
+      if (input.errors && (!Array.isArray(input.errors) || input.errors.length > 40 || input.errors.some(error => typeof error !== 'string' || !error.trim() || error.length > 2000))) throw new Error('Invalid browser diagnostics.');
       if (input.filesHash !== await runtimeFilesHash(this.options.root, this.options.manifest)) throw new Error('The browser is showing stale runtime files. Use fleet_browser open after edits before recording visual evidence.');
       const bytes = await readOrdinary(this.options.root, input.screenshot, 8_000_000);
       const screenshotHash = sha256(bytes);
       if (input.screenshotHash !== undefined && input.screenshotHash !== screenshotHash) throw new Error('Saved screenshot does not match the browser capture digest.');
       const capture: VisualCapture = { id: randomUUID(), sessionId: this.state.activeSessionId, stage: this.options.stage, viewport: input.viewport,
-        screenshot: input.screenshot, screenshotHash, filesHash: input.filesHash, capturedAt: new Date().toISOString(), sequence: this.sequence() };
+        screenshot: input.screenshot, screenshotHash, filesHash: input.filesHash, capturedAt: new Date().toISOString(), sequence: this.sequence(),
+        ...(input.journey ? { journey: structuredClone(input.journey) } : {}), errors: [...(input.errors ?? [])] };
       await readVisualCapture(this.options.root, capture);
       const next = this.pending(); next.captures.push(capture);
       await this.commit(next);
@@ -168,7 +183,7 @@ export class VisualReviewLedger {
 
   tool(): ToolDefinition {
     return { name: 'fleet_visual_review', label: 'Record screenshot comparison', parameters: schema,
-      description: 'Record what you visually inspected in a successful fleet_browser captureId. State expected layout/behavior and what the image actually shows, then list defects (findings) or []. The host assigns finding IDs. Both desktop and narrow require an initial review followed by a NEW screenshot taken after that review and a recheck, even if no defects were found. After fixing findings, open the changed runtime, capture the same viewport, and submit resolutions with the findingId and concrete code change. Findings stay open across sessions until explicitly resolved against changed runtime files. Reusing a screenshot, reviewing stale files, or borrowing a prior stage capture does not count. This records the agent’s comparison; it does not independently judge image quality.',
+      description: 'Record what you visually inspected in a fleet_browser captureId, including failed journey screenshots. State expected layout/behavior and what the image actually shows, then list defects (findings) or []. The host assigns finding IDs. Both desktop and narrow require an initial review followed by a NEW screenshot taken after that review and a recheck. Run every frozen fleet_browser journey at BOTH widths and review each result. Final journey results must pass all steps, contain no browser errors and match current files. After fixing findings, rerun the affected journey at the same viewport and submit resolutions with findingId and concrete code change. Findings stay open across sessions until explicitly resolved against changed runtime files. Reusing a screenshot, reviewing stale files, or borrowing a prior stage capture does not count. This records the agent’s comparison; it does not independently judge image quality.',
       execute: async (_id, raw, signal) => {
         try {
           signal?.throwIfAborted();
@@ -179,7 +194,9 @@ export class VisualReviewLedger {
             const latest = this.state.reviews.filter(item => item.sessionId === this.state.activeSessionId && item.viewport === viewport).at(-1);
             return [viewport, latest ? { round: latest.round, captureId: latest.captureId, newFindings: latest.findings.length } : { round: 'missing' }];
           }));
-          const details = { review, openFindings: openFindings.slice(0, 40), openFindingCount: openFindings.length, progress };
+          const remaining = visualReviewProblems(this.state, await runtimeFilesHash(this.options.root, this.options.manifest), this.options.stage);
+          const details = { review, openFindings: openFindings.slice(0, 40), openFindingCount: openFindings.length, progress, remaining,
+            journeys: this.journeys.map(({ id, title }) => ({ id, title })) };
           return { content: [{ type: 'text', text: JSON.stringify(details) }], details, isError: false };
         } catch (error) {
           const details = { error: message(error) };
@@ -207,6 +224,7 @@ export class VisualReviewLedger {
       const originalCapture = this.state.captures.find(item => item.id === originalReview?.captureId);
       if (!originalReview || !originalCapture || alreadyResolved.has(resolution.findingId)) throw new Error('Resolution must identify an existing open visual finding.');
       if (originalCapture.viewport !== capture.viewport || originalReview.sequence >= capture.sequence) throw new Error('Resolve a finding with a later screenshot of the same viewport.');
+      if (originalCapture.journey && originalCapture.journey.id !== capture.journey?.id) throw new Error('Resolve a workflow finding by rerunning and reviewing the same journey.');
       if (originalCapture.filesHash === capture.filesHash) throw new Error('A finding can be resolved only after changing the runtime files and opening a fresh application preview.');
       alreadyResolved.add(resolution.findingId);
     }
@@ -223,7 +241,7 @@ export class VisualReviewLedger {
   async problems(): Promise<string[]> {
     return this.exclusive(async () => {
       if (this.persistenceFailure) return [this.persistenceFailure];
-      const problems = await validateVisualReview(this.options.root, this.options.manifest, this.state, this.options.stage);
+      const problems = await validateVisualReview(this.options.root, this.options.manifest, this.state, this.options.stage, this.journeys.map(item => item.id));
       const next = this.report(), session = next.sessions.find(item => item.id === next.activeSessionId)!;
       next.status = session.status = problems.length ? 'failed' : 'passed'; session.errors = problems;
       try { next.filesHash = session.filesHash = await runtimeFilesHash(this.options.root, this.options.manifest); }

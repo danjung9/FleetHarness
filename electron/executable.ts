@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import type { Project } from '../shared/types.js';
-import { safeFile, sourceHash } from './storage.js';
+import { safeFile, sourceHash, type SourceFileOverride } from './storage.js';
 import { reportPassed } from './verification.js';
 import { parseSolutionContract } from '../harness/solution-contract.js';
 
@@ -20,15 +20,31 @@ export async function assertExecutableSource(project: Project) {
   if (!project.workspace || !reportPassed(project.report, project.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
   if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
   const solution = await deliveredSolution(project.workspace);
-  if (solution && solution.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');
+  if (solution && solution.contract.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');
 }
 
 async function deliveredSolution(root: string) {
-  let body: string;
-  try { body = await fs.readFile(await safeFile(root, 'solution-contract.json'), 'utf8'); }
+  let body: Buffer;
+  try { body = await fs.readFile(await safeFile(root, 'solution-contract.json')); }
   catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw error; }
-  const packet = JSON.parse(await fs.readFile(await safeFile(root, '.fleet/packet.json'), 'utf8'));
-  return parseSolutionContract(JSON.parse(body), packet.acceptance);
+  const packetBody = await fs.readFile(await safeFile(root, '.fleet/packet.json'));
+  const packet = JSON.parse(packetBody.toString('utf8'));
+  return { contract: parseSolutionContract(JSON.parse(body.toString('utf8')), packet.acceptance),
+    metadata: new Map([['solution-contract.json', body], ['.fleet/packet.json', packetBody]]) };
+}
+
+async function assertPayloadFiles(root: string, declared: readonly string[]) {
+  if (!(await fs.lstat(root)).isDirectory()) throw new Error('The copied application directory is unsafe. Download the app again.');
+  const remaining = new Set(declared.map(file => path.normalize(file)));
+  const visit = async (directory = '') => {
+    for (const entry of await fs.readdir(path.join(root, directory), { withFileTypes: true })) {
+      const relative = path.join(directory, entry.name);
+      if (entry.isDirectory()) await visit(relative);
+      else if (!entry.isFile() || !remaining.delete(relative)) throw new Error('The copied application contains an unexpected or unsafe file. Download the app again.');
+    }
+  };
+  await visit();
+  if (remaining.size) throw new Error('The copied application is missing a declared file. Download the app again.');
 }
 
 // This is host-owned code. Generated code only runs inside the sandboxed renderer.
@@ -43,12 +59,23 @@ let window;
 const allowedFiles = new Set(${JSON.stringify(files)});
 const payloadRoot = path.join(__dirname, ${JSON.stringify(payloadDirectory)});
 const contentTypes = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.wasm':'application/wasm'};
+function isApplicationPage(address) {
+  try {
+    const url = new URL(address);
+    const relative = decodeURIComponent(url.pathname).slice(1);
+    return url.protocol === 'fleet-app:' && url.host === 'app' && !url.username && !url.password
+      && allowedFiles.has(relative) && path.extname(relative) === '.html';
+  } catch { return false; }
+}
 function openWindow() {
   window = new BrowserWindow({ title: ${JSON.stringify(title)}, width: 1200, height: 800,
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webviewTag: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  window.webContents.on('will-navigate', event => event.preventDefault());
-  window.webContents.on('will-frame-navigate', event => event.preventDefault());
+  const restrictNavigation = event => {
+    if (event.isMainFrame !== true || !isApplicationPage(event.url)) event.preventDefault();
+  };
+  window.webContents.on('will-navigate', restrictNavigation);
+  window.webContents.on('will-frame-navigate', restrictNavigation);
   window.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   window.webContents.session.setPermissionCheckHandler(() => false);
   window.loadURL('fleet-app://app/index.html');
@@ -58,11 +85,14 @@ app.whenReady().then(() => {
   protocol.handle('fleet-app', async request => {
     const url = new URL(request.url);
     const relative = decodeURIComponent(url.pathname).slice(1);
-    const type = contentTypes[path.extname(relative)];
-    if (url.host !== 'app' || !allowedFiles.has(relative) || !type || request.method !== 'GET') return new Response('', { status: 404 });
+    const extension = path.extname(relative);
+    // Match preview data responses while keeping CommonJS entrypoints private.
+    const type = contentTypes[extension] || 'application/octet-stream';
+    if (url.host !== 'app' || !allowedFiles.has(relative) || extension.toLowerCase() === '.cjs' || request.method !== 'GET') return new Response('', { status: 404 });
     return new Response(await fs.readFile(path.join(payloadRoot, relative)), { headers: {
       'Content-Type': type,
-      'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
     } });
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -82,28 +112,44 @@ export async function stageExecutable(project: Project, root: string) {
   await assertExecutableSource(project);
   const source = path.join(root, 'source');
   await fs.mkdir(source);
-  const file = await safeFile(project.workspace!, 'index.html');
-  const html = await fs.readFile(file);
-  if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
-  const name = executableName(project);
-  const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
-  const solution = await deliveredSolution(project.workspace!);
-  const declared = solution?.runtime.files ?? ['index.html'];
-  const payloadDirectory = solution ? 'application' : '';
-  const payloadRoot = path.join(source, payloadDirectory);
-  if (payloadDirectory) await fs.mkdir(payloadRoot);
-  // Generated manifests and main scripts remain payload data; only the host wrapper is an Electron entrypoint.
-  await fs.writeFile(path.join(payloadRoot, 'index.html'), html);
-  for (const relative of declared.filter(file => file !== 'index.html')) {
-    const target = path.join(payloadRoot, relative);
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.copyFile(await safeFile(project.workspace!, relative), target);
+  try {
+    const file = await safeFile(project.workspace!, 'index.html');
+    const html = await fs.readFile(file);
+    if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
+    const name = executableName(project);
+    const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
+    const solution = await deliveredSolution(project.workspace!);
+    const declared = solution?.contract.runtime.files ?? ['index.html'];
+    const payloadDirectory = solution ? 'application' : '';
+    const payloadRoot = path.join(source, payloadDirectory);
+    if (payloadDirectory) await fs.mkdir(payloadRoot);
+    // Generated manifests and main scripts remain payload data; only the host wrapper is an Electron entrypoint.
+    await fs.writeFile(path.join(payloadRoot, 'index.html'), html);
+    for (const relative of declared.filter(file => file !== 'index.html')) {
+      const target = path.join(payloadRoot, relative);
+      await fs.mkdir(path.dirname(target), { recursive: true });
+      await fs.copyFile(await safeFile(project.workspace!, relative), target);
+    }
+    // Check every payload entry, including hidden files and symlinks. Do this
+    // before adding the trusted wrapper in the legacy single-page layout.
+    await assertPayloadFiles(source, declared.map(file => path.join(payloadDirectory, file)));
+    const fileOverrides = new Map<string, SourceFileOverride>(
+      declared.map(file => [file, { root: payloadRoot }]));
+    for (const [file, bytes] of solution?.metadata ?? []) fileOverrides.set(file, { bytes });
+    if (!solution) fileOverrides.set('solution-contract.json', { absent: true });
+    // Bind the actual copies and the exact manifest used to select them to the
+    // approved fingerprint. Rechecking only the workspace misses restored edits.
+    if (await sourceHash(project.workspace!, { fileOverrides }) !== project.report!.sourceHash) {
+      throw new Error('The copied application does not match the verified source. Start a new run before downloading.');
+    }
+    await assertExecutableSource(project);
+    await fs.writeFile(path.join(source, 'main.cjs'), standaloneMain(project.title, appId, declared, payloadDirectory));
+    await fs.writeFile(path.join(source, 'package.json'), JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
+    return { source, name, appId };
+  } catch (error) {
+    await fs.rm(source, { recursive: true, force: true });
+    throw error;
   }
-  await fs.writeFile(path.join(source, 'main.cjs'), standaloneMain(project.title, appId, declared, payloadDirectory));
-  await fs.writeFile(path.join(source, 'package.json'), JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
-  await assertExecutableSource(project);
-  if (!html.equals(await fs.readFile(await safeFile(project.workspace!, 'index.html')))) throw new Error('Application changed while preparing the download. Start a new run.');
-  return { source, name, appId };
 }
 
 export async function runPackageWorker(job: PackageJob, executable: string, signal?: AbortSignal, timeoutMs = 10 * 60_000,

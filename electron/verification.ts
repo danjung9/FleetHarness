@@ -2,12 +2,22 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { listArtifacts, sourceHash } from './storage.js';
 import type { TestReport } from '../shared/types.js';
+import { ApplicationTestEvidence, applicationTestCommand, applicationTestReporter } from './application-test-evidence.js';
 export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
 export async function applicationTestFiles(root: string) {
-  return (await listArtifacts(root)).filter(f => f.size > 0 && !/^\.(?:fleet|review-source|agent-tools|agent-output|browser-observations)(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+  // Empty test files must reach the reporter, which rejects files without executed cases.
+  return (await listArtifacts(root)).filter(f => !/^\.(?:fleet|review-source|agent-tools|agent-output|browser-observations)(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
+
+/** Derive delivery instructions from the verified inventory, including for older reports. */
+export async function applicationTestRerunCommand(root: string): Promise<string> {
+  const files = await applicationTestFiles(root);
+  if (!files.length) throw new Error('No application test files are available to rerun.');
+  return applicationTestCommand(['--test', ...files.map(file => './' + file)]);
+}
+
 export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
   return { total: count('tests'), passed: count('pass'), failed: count('fail'), skipped: count('skipped') + count('todo') };
@@ -24,24 +34,25 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = [...(environment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=tap', ...files.map(file => './' + file)];
+  const args = [...(environment ? ['--no-global-search-paths'] : []), '--test', applicationTestReporter, ...files.map(file => './' + file)];
   const child = spawn(executable, args, {
     cwd: root, env: environment ? { ...environment, ELECTRON_RUN_AS_NODE: '1' }
       : { PATH: process.env.PATH, HOME: root, TMPDIR: process.env.TMPDIR, ELECTRON_RUN_AS_NODE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32'
   });
   const stop = () => { try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch {} };
-  let output = '', outputBytes = 0, timedOut = false, overflow = false;
+  const evidence = new ApplicationTestEvidence();
+  let outputBytes = 0, timedOut = false, overflow = false;
   let interrupt!: () => void;
   const interrupted = new Promise<null>(resolve => { interrupt = () => { stop(); resolve(null); }; });
   // Register completion and cancellation before exposing the child to a caller.
   const completed = new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
-  const collect = (chunk: Buffer) => {
+  const collect = (chunk: Buffer, stderr: boolean) => {
     const remaining = Math.max(0, limits.maxOutputBytes - outputBytes);
-    output += chunk.subarray(0, remaining).toString(); outputBytes += chunk.length;
+    evidence[stderr ? 'stderr' : 'stdout'](chunk.subarray(0, remaining)); outputBytes += chunk.length;
     if (outputBytes > limits.maxOutputBytes) { overflow = true; interrupt(); }
   };
-  child.stdout?.on('data', collect); child.stderr?.on('data', collect);
+  child.stdout?.on('data', chunk => collect(chunk, false)); child.stderr?.on('data', chunk => collect(chunk, true));
   const timer = setTimeout(() => { timedOut = true; interrupt(); }, limits.timeoutMs);
   signal?.addEventListener('abort', interrupt, { once: true });
   if (signal?.aborted) interrupt();
@@ -52,11 +63,13 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     stop(); child.stdout?.destroy(); child.stderr?.destroy();
   }
   if (signal?.aborted) throw new Error('Run stopped.');
+  const { valid, output: testOutput, ...counts } = evidence.finish(files.length);
+  let output = testOutput;
   if (timedOut) output += `\nVerification exceeded the ${limits.timeoutMs / 1000}-second limit.`;
   if (overflow) output += '\nVerification exceeded the output limit.';
   const hash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
   if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
-  return { time: new Date().toISOString(), command: 'node ' + args.map(arg => JSON.stringify(arg)).join(' '),
-    exitCode: timedOut || overflow ? null : exitCode, ...summarizeTap(output), output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
+  return { time: new Date().toISOString(), command: applicationTestCommand(args),
+    exitCode: timedOut || overflow || (exitCode === 0 && !valid) ? null : exitCode, ...counts, output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
 }

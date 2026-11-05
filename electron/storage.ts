@@ -6,6 +6,7 @@ import { stageDefinitions, starters } from '../shared/types.js';
 import { getChallenge } from '../harness/catalog.js';
 import { normalizeProjectInput } from '../shared/project-input.js';
 import type { Challenge } from '../harness/types.js';
+import { artifactInventoryExclusions } from '../shared/runtime-artifacts.js';
 
 export function validateInput(input: NewProject, catalog?: readonly Challenge[]): NewProject {
   const normalized = normalizeProjectInput(input);
@@ -73,7 +74,7 @@ export class Store {
     return this.writes;
   }
 }
-const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);
+const ignored = new Set<string>(artifactInventoryExclusions);
 export async function listArtifacts(root: string, prefix = ''): Promise<Artifact[]> {
   const results: Artifact[] = [];
   for (const entry of await fs.readdir(path.join(root, prefix), { withFileTypes: true })) {
@@ -92,14 +93,32 @@ export async function safeFile(root: string, relative: string) {
   if (!resolved.startsWith(base + path.sep)) throw new Error('Artifact must stay inside its workspace.');
   return resolved;
 }
-export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean } = {}) {
-  const hash = createHash('sha256');
+export type SourceFileOverride = { root: string } | { bytes: Uint8Array } | { absent: true };
+export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean;
+  /** Hash delivered copies or pinned metadata at their original source paths. */
+  fileOverrides?: ReadonlyMap<string, SourceFileOverride> } = {}) {
+  // Version the encoding: earlier unframed hashes cannot authorize this revision.
+  const hash = createHash('sha256').update('fleetharness-source-v2\0');
+  const overrides = new Map([...options.fileOverrides ?? []].map(([file, value]) => [path.normalize(file), value]));
   for (const file of await listArtifacts(root)) {
+    const override = overrides.get(file.path);
+    if (override && 'absent' in override) throw new Error('Application metadata changed while preparing the download.');
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
     if (options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-    hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));
+    overrides.delete(file.path);
+    const name = Buffer.from(file.path, 'utf8');
+    const bytes = override && 'bytes' in override ? override.bytes
+      : await fs.readFile(await safeFile(override?.root ?? root, file.path));
+    if (bytes.length > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
+    // Explicit byte lengths bind each path to its contents, including binary
+    // artifacts. Delimiters alone can also occur inside those contents.
+    const lengths = Buffer.alloc(12);
+    lengths.writeUInt32BE(name.length, 0);
+    lengths.writeBigUInt64BE(BigInt(bytes.length), 4);
+    hash.update(lengths).update(name).update(bytes);
   }
+  if ([...overrides.values()].some(value => !('absent' in value))) throw new Error('A copied application file is absent from the verified source inventory.');
   return hash.digest('hex');
 }

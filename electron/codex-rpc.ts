@@ -41,6 +41,8 @@ export function codexExecutable() {
 export class CodexRpc {
   private nextId = 0;
   private closed = false;
+  private stopping = false;
+  private killTimer?: ReturnType<typeof setTimeout>;
   private pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   private listeners = new Set<(message: RpcMessage) => void>();
   private closeListeners = new Set<(error: Error) => void>();
@@ -59,7 +61,14 @@ export class CodexRpc {
     child.stderr.resume();
     child.on('error', () => this.fail(new Error('Could not start bundled Codex. Reinstall AppYard and retry.')));
     child.stdin.on('error', () => this.fail(new Error('The Codex connection closed. Reconnect in Settings.')));
-    child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
+    child.on('exit', () => {
+      this.stopping = true;
+      clearTimeout(this.killTimer);
+      // The app-server can exit before its tools or background workers. They
+      // must not keep writing to the workspace or holding the RPC pipes open.
+      if (process.platform !== 'win32') this.kill('SIGKILL');
+      lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.'));
+    });
   }
   static launch(home: string, credentials: Pick<CodexCredentials, 'accessToken'>) {
     const { args, env } = codexProcessConfig(home, credentials);
@@ -90,12 +99,15 @@ export class CodexRpc {
     for (const listener of this.closeListeners) listener(error);
     this.listeners.clear(); this.closeListeners.clear();
   }
-  dispose() {
-    this.fail(new Error('Codex session closed.'));
+  private kill(signal: NodeJS.Signals) {
     const pid = this.child.pid;
-    const kill = (signal: NodeJS.Signals) => { try { if (pid && process.platform !== 'win32') process.kill(-pid, signal); else this.child.kill(signal); } catch {} };
-    kill('SIGTERM');
-    const timer = setTimeout(() => kill('SIGKILL'), 1000); timer.unref();
-    this.child.once('exit', () => clearTimeout(timer));
+    try { if (pid && process.platform !== 'win32') process.kill(-pid, signal); else this.child.kill(signal); } catch {}
+  }
+  dispose() {
+    if (this.stopping) return;
+    this.stopping = true;
+    this.fail(new Error('Codex session closed.'));
+    this.kill('SIGTERM');
+    this.killTimer = setTimeout(() => this.kill('SIGKILL'), 1000); this.killTimer.unref();
   }
 }

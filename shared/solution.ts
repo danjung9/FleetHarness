@@ -48,10 +48,22 @@ export interface DatasetDescriptor {
 
 export type EvaluatorKind = 'exact' | 'numeric' | 'classification' | 'schedule' | 'retrieval';
 
+/** Classification accuracy applies only to well-formed scalar labels. */
+export function isClassificationLabel(value: unknown): value is string | number | boolean {
+  return typeof value === 'string' || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value));
+}
+
+/** Correctness and feasibility checks cannot trade a failed case for aggregate accuracy. */
+export function isDeterministicEvaluator(evaluator: EvaluatorKind): boolean {
+  return evaluator === 'exact' || evaluator === 'numeric' || evaluator === 'schedule';
+}
+
 export interface EvaluationCase {
   id: string;
   input: JsonValue;
   expected: JsonValue;
+  /** Exact service rejection: require this 4xx status as well as the expected JSON body. */
+  expectedStatus?: number;
 }
 
 export interface SolutionEvaluation {
@@ -80,6 +92,8 @@ export interface EvaluationCaseResult {
   durationMs: number;
   detail: string;
   output?: JsonValue;
+  /** Observed by the host HTTP adapter, never inferred from the application's JSON. */
+  httpStatus?: number;
 }
 
 export interface EvaluationResult {

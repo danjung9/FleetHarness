@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { isUtf8 } from 'node:buffer';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { BriefDataInput } from '../shared/types.js';
@@ -18,7 +19,10 @@ async function readDataFile(workspace: string, file: string) {
   }
   const resolved = await safeFile(workspace, file), stat = await fs.stat(resolved);
   if (!stat.isFile() || !stat.size || stat.size > maxArtifactBytes) throw new Error(file + ' must be a nonempty file of at most 2 MiB.');
-  const content = await fs.readFile(resolved, 'utf8');
+  const bytes = await fs.readFile(resolved);
+  // Lossy decoding can give changed bytes the same frozen text hash.
+  if (!isUtf8(bytes)) throw new Error(file + ' must contain valid UTF-8. Save the original text as UTF-8 before starting a new run.');
+  const content = bytes.toString('utf8');
   if (!content.trim()) throw new Error(file + ' must not be blank.');
   return content;
 }

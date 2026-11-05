@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
 import './model-settings.css';
+import { LearningSettingsPanel } from './ExperimentReview';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
 export function ModelSettings({ data, api, busy, action, updated, desktop, onSaved }: { data: Bootstrap; api: FleetAPI; busy: boolean; action: Action; updated: (value: Bootstrap) => void; desktop: boolean; onSaved?: (value: Bootstrap) => void }) {
@@ -33,7 +34,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     timer = setTimeout(() => void poll().catch(() => {}), 1500);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [api, connecting]);
-  return <form className="model-settings-form" onSubmit={e => {
+  return <><form className="model-settings-form" onSubmit={e => {
     e.preventDefault(); void action(async () => {
       const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined);
       updated(saved); setKey(''); onSaved?.(saved);
@@ -84,5 +85,5 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     {backend === 'codex' && planReady && <p className="connection-note">Model access depends on your plan and workspace.</p>}
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
     <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !planReady)} type="submit">Save model settings <ArrowRight size={16}/></button>
-  </form>;
+  </form><LearningSettingsPanel data={data} api={api} busy={busy} desktop={desktop} action={action}/></>;
 }

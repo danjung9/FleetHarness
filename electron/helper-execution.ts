@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
 import { codexExecutable } from './codex-rpc.js';
+import { applicationTestReporter } from './application-test-evidence.js';
 
 export interface HelperProcessOptions {
   workspace: string;
@@ -27,6 +28,21 @@ const maxStdinBytes = 1_000_000;
 const protectedPaths = ['.fleet', '.agent-tools', 'inputs', '.review-source', 'requirements.md',
   'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json'];
 const hiddenPaths = ['.git', '.agents', '.codex', '.aws', '.quality-evidence', '.solution-evidence'];
+const helperPermissions = ['--permission', '--allow-fs-read=*', '--allow-fs-write=*'];
+
+function testRunnerSource(workerArguments: string[]) {
+  const reporter = applicationTestReporter.slice('--test-reporter='.length);
+  // Only this host-owned parent may spawn. It never imports workspace code;
+  // Node loads each helper test in a separate permission-constrained worker.
+  // Parent permission flags would also be inherited by those workers.
+  return `import { run } from 'node:test';
+import reporter from ${JSON.stringify(reporter)};
+const stream = run({ files: process.argv.slice(2), isolation: 'process', concurrency: 1,
+  execArgv: ${JSON.stringify(workerArguments)} });
+stream.on('test:fail', () => { process.exitCode = 1; });
+for await (const chunk of reporter(stream)) process.stdout.write(chunk);
+`;
+}
 
 function bounded(value: number | undefined, fallback: number, maximum: number, label: string) {
   if (value !== undefined && (!Number.isSafeInteger(value) || value < 1)) throw new Error(`${label} must be a positive integer.`);
@@ -82,8 +98,7 @@ function runtimeArguments(command: string[]) {
   }
   if (entry === args.length) throw new Error('Helper command requires a script entrypoint.');
   if (tests && args.slice(entry).some(arg => arg.startsWith('-'))) throw new Error('Helper test files cannot contain runtime switches.');
-  return ['--permission', '--allow-fs-read=*', '--allow-fs-write=*',
-    ...(tests ? ['--experimental-test-isolation=none'] : []), ...args];
+  return [...helperPermissions, ...args];
 }
 
 /**
@@ -128,11 +143,21 @@ export async function executeHelperProcess(options: HelperProcessOptions): Promi
       const appContents = /^(.*\.app\/Contents)\//.exec(executable)?.[1];
       if (appContents) filesystem[appContents] = 'read';
     }
+    let executionArguments = nodeArgs;
+    if (tests) {
+      const runner = path.join(scratch, 'test-runner.mjs');
+      const workerArguments = [...helperPermissions,
+        ...(nodeArgs.includes('--no-global-search-paths') ? ['--no-global-search-paths'] : [])];
+      await fs.writeFile(runner, testRunnerSource(workerArguments), { flag: 'wx', mode: 0o400 });
+      filesystem[runner] = 'read';
+      executionArguments = [runner, ...nodeArgs.slice(firstScript)];
+    }
     const profile = { filesystem, network: { enabled: false } };
-    // Node's permission layer denies subprocesses, workers and native addons.
+    // Node's permission layer denies subprocesses, workers and native addons
+    // for helper entrypoints and test workers, never for the trusted runner.
     // This prevents helpers daemonizing beyond the process group timeout. The
     // Codex OS sandbox remains the authority for filesystem and network access.
-    const args = ['sandbox', '-C', workspace, '-P', 'fleet-helper', '-c', 'permissions.fleet-helper=' + toml(profile), '--', executable, ...nodeArgs];
+    const args = ['sandbox', '-C', workspace, '-P', 'fleet-helper', '-c', 'permissions.fleet-helper=' + toml(profile), '--', executable, ...executionArguments];
     // Do not inherit API keys, loader hooks, proxy settings, shell startup files,
     // or the user's Codex configuration. This invocation makes no model call.
     const env: NodeJS.ProcessEnv = {

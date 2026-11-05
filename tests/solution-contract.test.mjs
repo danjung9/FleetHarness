@@ -20,6 +20,19 @@ const plan = () => ({ schemaVersion: 1, evaluations: [{
 const parsedSolution = () => parseSolutionContract(solution(), acceptance);
 const invalidSolution = (mutate, expression) => { const value = solution(); mutate(value); assert.throws(() => parseSolutionContract(value, acceptance), expression); };
 const invalidPlan = (mutate, expression) => { const value = plan(); mutate(value); assert.throws(() => parseEvaluationPlan(value, parsedSolution()), expression); };
+const retrievalPlan = () => {
+  const value = plan(), item = value.evaluations[0];
+  item.evaluator = 'retrieval'; delete item.tolerance;
+  item.cases = [
+    { id: 'known', input: { query: 'Known facts', documents: [
+      { id: 'a', text: 'Known fact', source: 'source-a' },
+      { id: 'b', text: 'Approved fact', approved: true },
+      { id: 'excluded', text: 'Excluded fact', approved: false }
+    ] }, expected: { ids: ['a', 'b'] } },
+    { id: 'abstain', input: { query: 'Unsupported question', documents: [] }, expected: { ids: [] } }
+  ];
+  return value;
+};
 
 test('solution contracts support browser, executable and service runtimes with frozen evaluation inputs', () => {
   for (const profile of ['browser', 'cli', 'service']) assert.deepEqual(parseSolutionContract(solution(profile), acceptance), solution(profile));
@@ -81,10 +94,46 @@ test('required evaluation cases need two distinct inputs independent of object k
 
 test('evaluation thresholds cannot be zero, nonfinite, above one, or below the baseline', () => {
   for (const threshold of [0, -0.01, 1.01, NaN, Infinity, '1']) invalidPlan(value => { value.evaluations[0].threshold = threshold; }, /finite number/);
-  invalidPlan(value => { value.evaluations[0].threshold = 0.2; }, /meet or exceed/);
+  invalidPlan(value => {
+    const evaluation = value.evaluations[0];
+    evaluation.evaluator = 'classification'; evaluation.threshold = 0.2; delete evaluation.tolerance;
+    evaluation.cases.forEach(item => { item.expected = 'positive'; });
+  }, /meet or exceed/);
   invalidPlan(value => { value.evaluations[0].baseline = 1.01; }, /finite number/);
   invalidPlan(value => { value.evaluations[0].tolerance = -1; }, /finite number/);
   invalidPlan(value => { value.evaluations[0].evaluator = 'exact'; }, /tolerance is only supported/);
+});
+
+test('deterministic evaluation plans require complete correctness for every evaluator', () => {
+  for (const evaluator of ['exact', 'numeric', 'schedule']) {
+    const value = plan(), item = value.evaluations[0];
+    item.evaluator = evaluator;
+    if (evaluator !== 'numeric') delete item.tolerance;
+    if (evaluator === 'schedule') item.cases.forEach((entry, index) => {
+      entry.input = { windows: [], people: [], requests: [{ id: 'work', duration: index + 1, starts: [], people: [], resources: [], qualifications: [] }] };
+      entry.expected = { status: 'infeasible' };
+    });
+    assert.doesNotThrow(() => parseEvaluationPlan(value, parsedSolution()), evaluator);
+    for (const threshold of [0.5, 1 - Number.EPSILON]) {
+      item.threshold = threshold;
+      assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /threshold must be 1.*every case and trial must pass/, evaluator);
+      assert.equal(item.threshold, threshold, 'Validation must not rewrite frozen objectives.');
+    }
+  }
+});
+
+test('statistical evaluation plans retain fractional thresholds and baseline checks', () => {
+  for (const evaluator of ['classification', 'retrieval']) {
+    const value = plan(), item = value.evaluations[0];
+    item.evaluator = evaluator; item.threshold = 0.75; delete item.tolerance;
+    item.cases.forEach(entry => {
+      entry.expected = evaluator === 'classification' ? 'positive' : { ids: [] };
+      if (evaluator === 'retrieval') entry.input = { query: entry.id, documents: [] };
+    });
+    assert.equal(parseEvaluationPlan(value, parsedSolution()).evaluations[0].threshold, 0.75);
+    item.baseline = 0.8;
+    assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /meet or exceed/);
+  }
 });
 
 test('evaluation complexity and invocation budgets are enforced across the complete plan', () => {
@@ -186,7 +235,11 @@ test('numeric, classification, schedule and retrieval answer keys have appropria
   invalidPlan(value => { value.evaluations[0].cases[0].expected = { result: 'three' }; }, /numeric value/);
   const withEvaluator = (kind, expected) => {
     const value = plan(); value.evaluations[0].evaluator = kind; delete value.evaluations[0].tolerance;
-    value.evaluations[0].cases.forEach(item => { item.expected = expected; });
+    value.evaluations[0].cases.forEach((item, index) => {
+      item.expected = expected;
+      if (kind === 'retrieval') item.input = { query: item.id, documents: [{ id: 'a', text: 'Known fact' }] };
+      if (kind === 'schedule') item.input = { windows: [], people: [], requests: [{ id: 'work', duration: index + 1, starts: [], people: [], resources: [], qualifications: [] }] };
+    });
     return value;
   };
   for (const expected of [null, [], { label: 'yes' }, ['yes', null]]) assert.throws(() => parseEvaluationPlan(withEvaluator('classification', expected), parsedSolution()), /scalar label|contain 1/);
@@ -196,4 +249,43 @@ test('numeric, classification, schedule and retrieval answer keys have appropria
   assert.throws(() => parseEvaluationPlan(withEvaluator('retrieval', { ids: ['a', 'a'] }), parsedSolution()), /duplicate/);
   assert.throws(() => parseEvaluationPlan(withEvaluator('retrieval', { ids: ['a'], allowUnsupported: true }), parsedSolution()), /unknown field/);
   assert.doesNotThrow(() => parseEvaluationPlan(withEvaluator('retrieval', { ids: [] }), parsedSolution()));
+});
+
+test('retrieval plans freeze allowed source references and empty abstention without changing fixtures', () => {
+  const value = retrievalPlan(), before = structuredClone(value);
+  const parsed = parseEvaluationPlan(value, parsedSolution());
+  assert.deepEqual(parsed, before);
+  assert.deepEqual(value, before);
+  value.evaluations[0].cases[0].input.documents[0].text = 'Changed after parsing';
+  assert.equal(parsed.evaluations[0].cases[0].input.documents[0].text, 'Known fact');
+  const emptyText = retrievalPlan();
+  emptyText.evaluations[0].cases[1].input.documents = [{ id: 'empty', text: '' }];
+  assert.doesNotThrow(() => parseEvaluationPlan(emptyText, parsedSolution()));
+});
+
+test('retrieval plans reject missing or non-array documents before freezing', () => {
+  for (const input of [null, [], {}, { documents: null }, { documents: {} }, { documents: 'source-a' }]) {
+    const value = retrievalPlan(); value.evaluations[0].cases[0].input = input;
+    assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /evaluations\[0\]\.cases\[0\].*input\.documents.*array/, JSON.stringify(input));
+  }
+});
+
+test('retrieval plans reject malformed source documents before freezing', () => {
+  for (const document of [null, [], 'Known fact', {}, { id: 1, text: 'Known fact' }, { id: 'a' }, { id: 'a', text: null }, { id: 'a', text: 7 }]) {
+    const value = retrievalPlan(); value.evaluations[0].cases[0].input.documents[0] = document;
+    assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /evaluations\[0\]\.cases\[0\].*documents\[0\].*string.*id.*text/, JSON.stringify(document));
+  }
+});
+
+test('retrieval plans reject duplicate source identifiers before freezing', () => {
+  const value = retrievalPlan();
+  value.evaluations[0].cases[0].input.documents.push({ id: 'a', text: 'Conflicting fact' });
+  assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /evaluations\[0\]\.cases\[0\].*duplicate.*document ID/);
+});
+
+test('retrieval plans reject absent and explicitly excluded answer-key references before freezing', () => {
+  for (const id of ['missing', 'excluded']) {
+    const value = retrievalPlan(); value.evaluations[0].cases[0].expected.ids = ['a', id];
+    assert.throws(() => parseEvaluationPlan(value, parsedSolution()), /evaluations\[0\]\.cases\[0\].*expected\.ids\[1\].*absent or excluded document/, id);
+  }
 });

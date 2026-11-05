@@ -9,7 +9,7 @@ export function reviewFeedback(value: string): string {
   return value.trim();
 }
 
-export async function recordReview(store: Store, project: Project, decision: ReviewRecord['decision'], feedback: string): Promise<ReviewRecord> {
+export async function recordReview(store: Pick<Store, 'save'>, project: Project, decision: ReviewRecord['decision'], feedback: string): Promise<ReviewRecord> {
   const note = reviewFeedback(feedback);
   if (!project.runId || !project.workspace) throw new Error('Build an app before recording a review.');
   const record: ReviewRecord = { id: randomUUID(), runId: project.runId, decision, feedback: note, createdAt: new Date().toISOString(), sourceHash: project.report?.sourceHash };

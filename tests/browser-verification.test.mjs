@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { createServer } from 'node:http';
+import { createSocket } from 'node:dgram';
 import { verifyBrowserJourneys } from '../dist-electron/electron/browser-verification.js';
 import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verification.js';
 
@@ -123,6 +124,46 @@ test('console errors, runtime errors, external access and narrow overflow fail o
   assert.match(result.journeys[0].detail, /broken console/);
   assert.match(result.journeys[0].detail, /broken runtime/);
   assert.match(result.journeys.find(j => j.viewport === 'narrow').detail, /Horizontal overflow/);
+});
+
+test('verification blocks redirect, WebSocket and WebRTC egress while preserving same-origin service calls', { timeout: 20_000 }, async t => {
+  let remoteRequests = 0, upgrades = 0, datagrams = 0, serviceCalls = 0, redirects = 0;
+  const remote = createServer((_request, response) => { remoteRequests++; response.end('unexpected'); });
+  remote.on('upgrade', (_request, socket) => { upgrades++; socket.destroy(); });
+  await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => { remote.closeAllConnections(); remote.close(resolve); }));
+  const udp = createSocket('udp4');
+  udp.on('message', () => { datagrams++; });
+  await new Promise(resolve => udp.bind(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => udp.close(resolve)));
+  const remoteUrl = `http://127.0.0.1:${remote.address().port}/`;
+  const html = `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><p id="result">Checking</p><script>
+    fetch('/redirect').catch(()=>{});
+    const socket = new WebSocket(${JSON.stringify(remoteUrl.replace('http:', 'ws:'))});
+    const peer = new RTCPeerConnection({iceServers:[{urls:'stun:127.0.0.1:${udp.address().port}'}]});
+    peer.createDataChannel('probe');
+    peer.createOffer().then(offer=>peer.setLocalDescription(offer)).catch(()=>{});
+    fetch('/health').then(response=>response.text()).then(text=>setTimeout(()=>{document.querySelector('#result').textContent=text;peer.close();socket.close();},1000));
+  </script>`;
+  const root = await workspace(t, html);
+  const runtime = createServer((request, response) => {
+    if (request.url === '/redirect') { redirects++; response.writeHead(302, { Location: remoteUrl }).end(); }
+    else if (request.url === '/health') { serviceCalls++; response.end('Same-origin service works'); }
+    else response.writeHead(200, { 'Content-Type': 'text/html' }).end(html);
+  });
+  await new Promise(resolve => runtime.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => { runtime.closeAllConnections(); runtime.close(resolve); }));
+  const checks = plan([{ action: 'expectText', selector: '#result', text: 'Same-origin service works' }]);
+  checks.journeys = checks.journeys.slice(0, 1);
+  const result = await verify(root, { url: `http://127.0.0.1:${runtime.address().port}/`, allowSameOrigin: true, stepTimeoutMs: 2500, plan: checks });
+  assert.deepEqual(result.errors, []);
+  assert.equal(serviceCalls, 2, 'Both verification viewports must complete the allowed service call.');
+  assert.equal(redirects, 2, 'The test must exercise an allowed first redirect hop.');
+  assert.ok(result.journeys.every(journey => journey.status === 'failed' && /blocked WebSocket/.test(journey.detail)), JSON.stringify(result));
+  assert.ok(result.journeys.every(journey => !/expectText|step exceeded/i.test(journey.detail)), JSON.stringify(result));
+  assert.equal(remoteRequests, 0, 'Redirect destinations must pass the same-origin transport policy.');
+  assert.equal(upgrades, 0, 'WebSocket upgrades must never reach another server.');
+  assert.equal(datagrams, 0, 'WebRTC must never send non-proxied UDP datagrams.');
 });
 
 test('a hung browser script hits the overall deadline and releases the browser and preview', { timeout: 12_000 }, async t => {

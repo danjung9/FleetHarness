@@ -56,8 +56,13 @@ test('toolkit checks, browser observations and empty files cannot replace applic
   const root = await workspace(t, 'require("node:test")("toolkit only", () => {});', '.fleet/toolkit/reference.test.cjs');
   await fs.mkdir(path.join(root, '.browser-observations', 'session'), { recursive: true });
   await fs.writeFile(path.join(root, '.browser-observations', 'session', 'snapshot.test.mjs'), 'throw new Error("This is not an application test");');
-  await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
   await assert.rejects(verifyWorkspace(root, process.execPath, () => {}), /did not produce/);
+  await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
+  const report = await verifyWorkspace(root, process.execPath, () => {});
+  assert.equal(reportPassed(report), false);
+  assert.equal(report.passed, 0);
+  assert.equal(report.exitCode, null);
+  assert.match(report.output, /completed node:test cases in every test file/);
 });
 
 test('test filenames containing spaces are passed as single paths', async t => {

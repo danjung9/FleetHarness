@@ -205,10 +205,104 @@ test('the shared gate validates sequence, capture links, finding resolutions, an
   assert.equal(visualReviewPassed({ status: 'passed' }, hash), false);
 });
 
-test('runtime digest matches prepared-runtime hashing and rejects symlinked runtime files', async t => {
-  const { root } = await setup(t), bytes = await fs.readFile(path.join(root, 'index.html'));
-  assert.equal(await runtimeFilesHash(root, manifest), createHash('sha256').update('index.html\0').update(bytes).update('\0').digest('hex'));
+test('runtime digest uses its versioned encoding and rejects symlinked runtime files', async t => {
+  const { root } = await setup(t);
+  // Independently encoded v2 vector: UTF-8 path/content lengths as two uint64s.
+  assert.equal(await runtimeFilesHash(root, manifest), 'e6b4fdd38364e92104c511ae2c95fa0496428dbe0f778a8d16af27fb01580371');
   await fs.rename(path.join(root, 'index.html'), path.join(root, 'original.html'));
   await fs.symlink(path.join(root, 'original.html'), path.join(root, 'index.html'));
   await assert.rejects(runtimeFilesHash(root, manifest), /symlink/);
+});
+
+const journeys = [
+  { id: 'save-task', title: 'Save a task', kind: 'primary', steps: [{ action: 'click', selector: '#save' }, { action: 'expectText', selector: '#result', text: 'Saved' }] },
+  { id: 'recover-task', title: 'Recover invalid input', kind: 'recovery', steps: [{ action: 'click', selector: '#reset' }, { action: 'expectText', selector: '#result', text: 'Ready' }] },
+];
+const journeyResult = (id, extra = {}) => ({ id, status: 'passed', completedSteps: 2, totalSteps: 2, detail: 'All frozen journey steps passed.', ...extra });
+async function reviewedJourney(root, ledger, id, viewport = 'desktop', extra = {}, input = {}) {
+  return review(ledger, await capture(root, ledger, viewport, { journey: journeyResult(id), ...extra }), input);
+}
+async function completeJourneys(root, ledger) {
+  for (const viewport of ['desktop', 'narrow']) {
+    for (const journey of journeys) assert.equal((await reviewedJourney(root, ledger, journey.id, viewport)).isError, false);
+  }
+}
+
+test('untouched-page screenshots cannot substitute for exercising every frozen journey at both widths', async t => {
+  const { root, ledger } = await setup(t, { journeys });
+  await completeViewport(root, ledger); await completeViewport(root, ledger, 'narrow');
+  const problems = await ledger.problems();
+  assert.equal(problems.filter(problem => problem.includes('Run fleet_browser journey')).length, 4);
+  await reviewedJourney(root, ledger, 'save-task');
+  assert.equal((await ledger.problems()).filter(problem => problem.includes('Run fleet_browser journey')).length, 3);
+  await completeJourneys(root, ledger);
+  assert.deepEqual(await ledger.problems(), []);
+  assert.equal(visualReviewPassed(ledger.report(), await runtimeFilesHash(root, manifest), 'verify', journeys.map(item => item.id)), true);
+});
+
+test('a failed or unreviewed latest journey invalidates an earlier successful workflow review', async t => {
+  const { root, ledger } = await setup(t, { journeys });
+  await completeJourneys(root, ledger);
+  assert.deepEqual(await ledger.problems(), []);
+  const failed = await capture(root, ledger, 'desktop', { journey: journeyResult('save-task', { status: 'failed', completedSteps: 1, detail: 'Expected Saved, received Failed.' }) });
+  assert.match((await ledger.problems()).join(' '), /Run fleet_browser journey save-task at desktop/);
+  assert.equal((await review(ledger, failed)).isError, false, 'Failed workflow screenshots must remain reviewable.');
+  assert.match((await ledger.problems()).join(' '), /Journey save-task at desktop failed.*Expected Saved/);
+  await reviewedJourney(root, ledger, 'save-task');
+  assert.deepEqual(await ledger.problems(), []);
+});
+
+test('browser errors block final evidence even when the agent submits no findings', async t => {
+  const { root, ledger } = await setup(t, { journeys });
+  await completeJourneys(root, ledger);
+  await reviewedJourney(root, ledger, 'save-task', 'desktop', { errors: ['Uncaught TypeError in the Save handler'] });
+  assert.match((await ledger.problems()).join(' '), /browser errors.*TypeError/);
+  await reviewedJourney(root, ledger, 'save-task');
+  assert.deepEqual(await ledger.problems(), []);
+  await review(ledger, await capture(root, ledger, 'narrow', { errors: ['Console error: layout crashed'] }));
+  assert.match((await ledger.problems()).join(' '), /final narrow screenshot has browser errors/);
+});
+
+test('fixes require rerunning all frozen journeys on final files, and findings resolve only on the affected workflow', async t => {
+  const { root, ledger } = await setup(t, { journeys });
+  await completeJourneys(root, ledger);
+  const defect = await reviewedJourney(root, ledger, 'save-task', 'desktop', {}, { findings: ['Saved result is clipped by the layout.'] });
+  const resolution = { findingId: defect.details.review.findings[0].id, change: 'Changed the result layout to wrap long text.' };
+  await fs.appendFile(path.join(root, 'index.html'), '<style>#result{overflow-wrap:anywhere}</style>');
+  const wrong = await reviewedJourney(root, ledger, 'recover-task', 'desktop', {}, { resolutions: [resolution] });
+  assert.match(wrong.details.error, /same journey/);
+  assert.equal((await reviewedJourney(root, ledger, 'save-task', 'desktop', {}, { resolutions: [resolution] })).isError, false);
+  assert.match((await ledger.problems()).join(' '), /Journey .* stale/);
+  await completeJourneys(root, ledger);
+  assert.deepEqual(await ledger.problems(), []);
+});
+
+test('journey evidence is tied to frozen IDs, actual step counts, current sessions and the expected acceptance plan', async t => {
+  const { root, ledger, options } = await setup(t, { journeys });
+  await assert.rejects(capture(root, ledger, 'desktop', { journey: journeyResult('invented') }), /frozen journey/);
+  await assert.rejects(capture(root, ledger, 'desktop', { journey: journeyResult('save-task', { completedSteps: 1 }) }), /actual step count/);
+  await assert.rejects(capture(root, ledger, 'desktop', { journey: journeyResult('save-task', { totalSteps: 3, completedSteps: 3 }) }), /actual step count/);
+  await completeJourneys(root, ledger); await ledger.problems();
+  const hash = await runtimeFilesHash(root, manifest);
+  assert.equal(visualReviewPassed(ledger.report(), hash, 'verify', ['another-plan']), false);
+  assert.match((await validateVisualReview(root, manifest, ledger.report(), 'verify', ['another-plan'])).join(' '), /frozen browser journeys/);
+  const resumed = new VisualReviewLedger({ ...options, prior: ledger.report() });
+  assert.equal((await resumed.problems()).filter(problem => problem.includes('Run fleet_browser journey')).length, 4);
+  const invalid = ledger.report(); invalid.captures[0].journey.completedSteps = 0;
+  assert.equal(isVisualReviewReport(invalid), false);
+});
+
+test('legacy screenshot reports stay readable but resumed sessions require new workflow evidence', async t => {
+  const { root, ledger, options } = await setup(t);
+  await completeViewport(root, ledger); await completeViewport(root, ledger, 'narrow'); await ledger.problems();
+  const legacy = ledger.report(); legacy.schemaVersion = 1;
+  delete legacy.sessions[0].requiredJourneyIds;
+  assert.equal(isVisualReviewReport(legacy), true);
+  assert.match((await validateVisualReview(root, manifest, legacy, 'verify', journeys.map(item => item.id))).join(' '), /frozen browser journeys/);
+  const resumed = new VisualReviewLedger({ ...options, journeys, prior: legacy });
+  assert.equal(resumed.report().schemaVersion, 2);
+  assert.equal(isVisualReviewReport(resumed.report()), true);
+  assert.equal((await resumed.problems()).filter(problem => problem.includes('Run fleet_browser journey')).length, 4);
+  await completeJourneys(root, resumed);
+  assert.deepEqual(await resumed.problems(), []);
 });

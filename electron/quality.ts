@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import { isUtf8 } from 'node:buffer';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
@@ -7,7 +8,7 @@ import type { AcceptanceCriterion } from '../harness/types.js';
 import type { QualityPlan, UxSpec, QualityReport, CapabilityResult, PackageEvidence, JourneyResult } from '../shared/quality.js';
 import type { SolutionContract, EvaluationPlan, SolutionEvaluationReport } from '../shared/solution.js';
 import type { TestReport } from '../shared/types.js';
-import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
+import { assertPlannedCapabilityEvidence, assertPlannedRecoveryJourneys, assertPlannedUxStructure, parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
 import { parseSolutionContract, parseEvaluationPlan } from '../harness/solution-contract.js';
 import { safeFile, sourceHash } from './storage.js';
 import { applicationTestFiles, verifyWorkspace, type VerificationLimits } from './verification.js';
@@ -16,6 +17,7 @@ import { prepareSolutionRuntime, type SolutionRuntime } from './solution-runtime
 import { runSolutionEvaluation } from './solution-evaluation.js';
 import { validateVisualReview } from './visual-review.js';
 import { visualReviewPassed, type VisualReviewReport } from '../shared/visual-review.js';
+import { ClassifiedExecutionFailure } from './execution-failure.js';
 
 export interface QualityContract {
   plan: QualityPlan;
@@ -33,6 +35,9 @@ export interface ApplicationVerificationOptions extends Partial<ApplicationVerif
   requireVisualReview?: boolean;
   /** Supplied from private host state, never loaded from an agent-authored artifact. */
   visualReview?: VisualReviewReport;
+  /** Trusted host factories; experiment code execution must use the OS-isolated runtime. */
+  prepareRuntime?: typeof prepareSolutionRuntime;
+  verifyTests?: typeof verifyWorkspace;
 }
 const legacyFiles = ['acceptance-plan.json', 'ux-spec.json'];
 const solutionFiles = ['solution-contract.json', 'evaluation-plan.json'];
@@ -57,16 +62,25 @@ async function readContract(root: string, requireSolution = false, sealedBody?: 
     const file = await safeFile(root, name);
     const maxBytes = name === 'evaluation-plan.json' ? 2_000_000 : 250_000;
     if ((await fs.stat(file)).size > maxBytes) throw new Error(`${name} exceeds the ${maxBytes} byte contract limit.`);
-    bodies.push(await fs.readFile(file, 'utf8'));
+    const bytes = await fs.readFile(file);
+    if (!isUtf8(bytes)) throw new Error(`${name} must contain valid UTF-8.`);
+    bodies.push(bytes.toString('utf8'));
   }
   return { names, bodies, hash: createHash('sha256').update(bodies.map((body, i) => names[i] + '\0' + body).join('\0')).digest('hex') };
 }
 
-export async function loadQualityContract(root: string, acceptance: AcceptanceCriterion[], requireSolution = false): Promise<QualityContract> {
+/** Validate new planning output before freeze; resume uses the host's saved QualityContract. */
+export async function loadQualityContract(root: string, acceptance: AcceptanceCriterion[], requireSolution = false,
+  options: { requireStructuredUi?: boolean } = {}): Promise<QualityContract> {
   const { bodies, hash } = await readContract(root, requireSolution);
   const solution = bodies[2] === undefined ? undefined : parseSolutionContract(JSON.parse(bodies[2]), acceptance);
   const evaluation = solution ? parseEvaluationPlan(JSON.parse(bodies[3]), solution) : undefined;
-  return { plan: parseQualityPlan(JSON.parse(bodies[0]), acceptance, solution), ux: parseUxSpec(JSON.parse(bodies[1])), hash,
+  const plan = parseQualityPlan(JSON.parse(bodies[0]), acceptance, solution);
+  if (solution) assertPlannedCapabilityEvidence(plan.criteria, solution.capabilities);
+  assertPlannedRecoveryJourneys(plan.journeys);
+  const ux = parseUxSpec(JSON.parse(bodies[1]));
+  assertPlannedUxStructure(ux, plan.journeys, options.requireStructuredUi);
+  return { plan, ux, hash,
     acceptance: structuredClone(acceptance), ...(solution ? { solution, evaluation, evaluationBody: bodies[3] } : {}) };
 }
 
@@ -139,7 +153,8 @@ async function copyApplicationTests(source: string, runtimeRoot: string) {
 export async function verifyApplication(root: string, executable: string, contract: QualityContract,
   signal?: AbortSignal, options: ApplicationVerificationOptions = {}, onProcess: (child: ChildProcess) => void = () => {}) {
   const started = performance.now();
-  const { browserTimeoutMs, browserStepTimeoutMs, requireVisualReview, visualReview, ...nodeLimits } = options;
+  const { browserTimeoutMs, browserStepTimeoutMs, requireVisualReview, visualReview,
+    prepareRuntime = prepareSolutionRuntime, verifyTests = verifyWorkspace, ...nodeLimits } = options;
   await assertQualityContract(root, contract);
   const before = await sourceHash(root, { excludeEvidence: true });
   let report: TestReport = { time: new Date().toISOString(), command: 'node --test (clean runtime)', exitCode: null,
@@ -152,55 +167,58 @@ export async function verifyApplication(root: string, executable: string, contra
     let runtime: SolutionRuntime | undefined;
     packageEvidence = { status: 'failed', cleanCopy: false, profile: contract.solution.runtime.profile, detail: 'Clean package verification did not run.' };
     try {
-      runtime = await prepareSolutionRuntime(root, contract.solution.runtime, executable, signal);
+      runtime = await prepareRuntime(root, contract.solution.runtime, executable, signal);
       packageEvidence = { status: 'passed', cleanCopy: true, profile: contract.solution.runtime.profile, filesHash: runtime.provenance.filesHash,
-        detail: 'Host evaluation, browser journeys and developer tests use separate fresh packages with matching declared files, dependencies and runtime configuration.' };
+        detail: 'Host evaluation, each browser journey at each viewport, and developer tests use separate fresh packages with matching declared files, dependencies and runtime configuration.' };
       // Host checks must not inherit state or helper files created by developer tests.
       solutionEvaluation = await runSolutionEvaluation(runtime, contract.solution, contract.evaluation, signal);
       await runtime.assertIntegrity();
       await runtime.close(); runtime = undefined;
       if (contract.plan.journeys.length) {
-        runtime = await prepareSolutionRuntime(root, contract.solution.runtime, executable, signal);
-        if (runtime.provenance.filesHash !== packageEvidence.filesHash) throw new Error('Deployment files changed between independent verification packages.');
-        if (!runtime.url) throw new Error('The declared delivery runtime did not provide a browser URL.');
-        browser = await verifyBrowserJourneys({ root, plan: contract.plan, contractHash: contract.hash, signal,
-          url: runtime.url, allowSameOrigin: true, timeoutMs: browserTimeoutMs, stepTimeoutMs: browserStepTimeoutMs });
-        browser.errors = browser.errors.map(error => runtime!.redactMessage(error));
-        browser.journeys = browser.journeys.map(journey => ({ ...journey, detail: runtime!.redactMessage(journey.detail) }));
-        await runtime.assertIntegrity();
-        await runtime.close(); runtime = undefined;
+        const filesHash = packageEvidence.filesHash;
+        browser = await verifyBrowserJourneys({ root, plan: contract.plan, ux: contract.ux, contractHash: contract.hash, signal,
+          allowSameOrigin: true, timeoutMs: browserTimeoutMs, stepTimeoutMs: browserStepTimeoutMs,
+          prepareRuntime: async browserSignal => {
+            const prepared = await prepareRuntime(root, contract.solution!.runtime, executable, browserSignal);
+            if (prepared.provenance.filesHash !== filesHash) {
+              await prepared.close();
+              throw new ClassifiedExecutionFailure('integrity', 'Deployment files changed between independent verification packages.');
+            }
+            return prepared;
+          } });
       }
-      runtime = await prepareSolutionRuntime(root, contract.solution.runtime, executable, signal);
-      if (runtime.provenance.filesHash !== packageEvidence.filesHash) throw new Error('Deployment files changed between independent verification packages.');
+      runtime = await prepareRuntime(root, contract.solution.runtime, executable, signal);
+      if (runtime.provenance.filesHash !== packageEvidence.filesHash) throw new ClassifiedExecutionFailure('integrity', 'Deployment files changed between independent verification packages.');
       await copyApplicationTests(root, runtime.root);
-      report = await verifyWorkspace(runtime.root, executable, onProcess, signal, nodeLimits, runtime.testEnvironment);
+      report = await verifyTests(runtime.root, executable, onProcess, signal, nodeLimits, runtime.testEnvironment);
       report.output = runtime.redactMessage(report.output);
       await runtime.assertIntegrity();
     } catch (error) {
       signal?.throwIfAborted();
+      if (error instanceof ClassifiedExecutionFailure && error.classification !== 'implementation') throw error;
       const detail = 'Clean package verification: ' + (runtime ? runtime.redactMessage(message(error)) : message(error));
       errors.push(detail);
       packageEvidence = { ...packageEvidence, status: 'failed', detail };
     } finally { if (runtime) await runtime.close(); }
     errors.push(...(solutionEvaluation?.errors ?? []));
   } else {
-    report = await verifyWorkspace(root, executable, onProcess, signal, nodeLimits);
-    browser = await verifyBrowserJourneys({ root, plan: contract.plan, contractHash: contract.hash, signal,
+    report = await verifyTests(root, executable, onProcess, signal, nodeLimits);
+    browser = await verifyBrowserJourneys({ root, plan: contract.plan, ux: contract.ux, contractHash: contract.hash, signal,
       timeoutMs: browserTimeoutMs, stepTimeoutMs: browserStepTimeoutMs });
   }
   errors.push(...browser.errors);
   if (requireVisualReview && contract.solution?.runtime.profile !== 'cli') {
     if (!contract.solution) errors.push('Visual review requires a frozen application runtime.');
     else {
-      errors.push(...(await validateVisualReview(root, contract.solution.runtime, visualReview, 'verify')).map(error => 'Visual review: ' + error));
+      errors.push(...(await validateVisualReview(root, contract.solution.runtime, visualReview, 'verify', contract.plan.journeys.map(journey => journey.id))).map(error => 'Visual review: ' + error));
       if (visualReview?.contractHash !== contract.hash) errors.push('Visual review does not match the frozen requirements.');
       if (!packageEvidence?.filesHash || visualReview?.filesHash !== packageEvidence.filesHash) errors.push('Visual review does not match the independently verified application files.');
-      else if (!visualReviewPassed(visualReview, packageEvidence.filesHash, 'verify')) errors.push('Visual review session did not complete successfully.');
+      else if (!visualReviewPassed(visualReview, packageEvidence.filesHash, 'verify', contract.plan.journeys.map(journey => journey.id))) errors.push('Visual review session did not complete successfully.');
     }
   }
   signal?.throwIfAborted();
   await assertQualityContract(root, contract);
-  if (before !== await sourceHash(root, { excludeEvidence: true })) throw new Error('Source files changed during application verification. Run verification again before review.');
+  if (before !== await sourceHash(root, { excludeEvidence: true })) throw new ClassifiedExecutionFailure('integrity', 'Source files changed during application verification. Run verification again before review.');
   const capabilities = capabilityResults(contract, solutionEvaluation);
   const criteria: QualityReport['criteria'] = contract.plan.criteria.map(item => {
     const requirement = contract.acceptance.find(criterion => criterion.id === item.criterionId)!.requirement;

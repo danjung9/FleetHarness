@@ -1,14 +1,14 @@
-import { array, compareText, integer, object, text, timestamp, unique } from './validation.js';
+import { array, compareText, integer, object, requireTimestamp, text, unique } from './validation.js';
 
 export function searchEvidence(input: unknown) {
   const data = object(input);
   const query = text(data.query, 'query', 1000);
-  const asOf = timestamp(data.asOf); if (!asOf) throw new Error('asOf must be an explicit timestamp.');
+  const asOf = requireTimestamp(data.asOf, 'asOf');
   const maxAgeDays = integer(data.maxAgeDays ?? 90, 'maxAgeDays', 0, 36500);
   const limit = integer(data.limit ?? 5, 'limit', 1, 20);
   const terms = [...new Set(query.toLocaleLowerCase('en').match(/[\p{L}\p{N}]{2,}/gu) ?? [])];
-  const docs = unique(array(data.documents, 'documents', 200).map(x => {
-    const d = object(x); const updatedAt = timestamp(d.updatedAt); if (!updatedAt) throw new Error('Document updatedAt is invalid.');
+  const docs = unique(array(data.documents, 'documents', 200).map((x, i) => {
+    const d = object(x); const updatedAt = requireTimestamp(d.updatedAt, `documents[${i}].updatedAt`);
     if (typeof d.approved !== 'boolean') throw new Error('Document approved must be a boolean.');
     return {id: text(d.id, 'document.id', 200), title: text(d.title, 'title', 500),
       source: text(d.source, 'source', 2000), text: text(d.text, 'document.text', 100_000), approved: d.approved, updatedAt};

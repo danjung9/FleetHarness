@@ -6,7 +6,10 @@ import os from 'node:os';
 import { AgentHelperRuntime } from '../dist-electron/electron/agent-helpers.js';
 import { applicationTestFiles } from '../dist-electron/electron/verification.js';
 
-const passedTests = { exitCode: 0, stdout: 'TAP version 13\n# Subtest: sums actual records\n# tests 1\n# pass 1\n# fail 0\n# skipped 0\n# todo 0\n', stderr: '', timedOut: false, outputLimited: false };
+const counts = { tests: 1, passed: 1, failed: 0, cancelled: 0, skipped: 0, todo: 0 };
+const passedTests = { exitCode: 0, stdout: JSON.stringify({ type: 'summary', summaries: [
+  { file: 'run.test.mjs', success: true, counts }, { success: true, counts }
+], skippedSuites: 0 }) + '\n', stderr: '', timedOut: false, outputLimited: false };
 async function fixture(t, execute) {
   const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-helper-runtime-'));
   t.after(() => fs.rm(workspace, { recursive: true, force: true }));

@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { Activity, ArrowRight, Check, ChevronRight, FileText, Pause, Play, RefreshCw, XCircle } from 'lucide-react';
 import type { Artifact, Project, StageId, StageStatus } from '../shared/types';
 import { buildActivity } from '../shared/activity';
-import { getResumeStage, resumeLabel } from '../shared/journey';
+import { canContinuePlanning, getResumeStage, isPlanningReviewRejected, resumeLabel } from '../shared/journey';
 import { api, isDesktop } from './api';
 import { ActivityFeed } from './ActivityFeed';
 import { PhaseDetails, projectPhases } from './PhaseDetails';
@@ -61,6 +61,8 @@ export function BuildFlow({ project, developerMode = false, busy, configured, re
   const selectedId = inspection?.key === runKey ? inspection.id : currentId;
   const selected = phases.find(phase => phase.id === selectedId)!;
   const selectedState = stateOf(project, selectedId);
+  const continuingPlan = selectedId === 'plan' && canContinuePlanning(project);
+  const rejectedPlan = continuingPlan && isPlanningReviewRejected(project);
   const intakeStatus = selectedId === 'intake' && selectedState === 'active' ? project.stages.find(stage => stage.id === 'intake')?.detail : undefined;
   const activeId = project.stages.find(stage => stage.status === 'active')?.id;
   const contracts = useMemo(() => projectPhases(project), [project.phasePlan, project.challengeId, project.sourceChallenge]);
@@ -121,9 +123,9 @@ export function BuildFlow({ project, developerMode = false, busy, configured, re
       {!following && <div className="build-inspection-note"><span>{project.status === 'running' ? currentName + ' is running.' : 'Viewing another phase.'}</span><button className="text-button" type="button" onClick={() => setInspection(null)}>Back to current phase <ArrowRight size={14}/></button></div>}
       <header className="build-detail-heading"><h2 id={detailId + '-title'}>{selected.name}</h2><span className={'build-detail-state ' + selectedState}>{stateLabel(selectedState, !!project.runId && project.status !== 'draft')}</span></header>
       <p className="build-purpose">{selected.purpose}</p>
-      {blocked ? <div className="build-phase-problem" role="status"><strong>{selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{project.error && <p>{project.error}</p>}
-        <p className="build-recovery-note">{resumeStage ? 'Resume this phase using the saved files. Completed phases stay complete.' : 'Saved outputs remain available. Start a new build when you’re ready to try again.'}</p>
-        {resumeStage === selectedId && <div className="build-phase-recovery"><button className="primary" disabled={busy || !configured || !isDesktop} onClick={onResume}><Play size={15}/>{resuming ? 'Resuming…' : resumeLabel(resumeStage)}</button>
+      {blocked ? <div className="build-phase-problem" role="status"><strong>{rejectedPlan ? 'Independent review found changes the plan still needs.' : continuingPlan ? 'The updated brief is ready for planning.' : selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{!continuingPlan && project.error && <p>{project.error}</p>}
+        <p className="build-recovery-note">{rejectedPlan ? 'Continue planning to revise the saved plan and run another independent review. Completed phases stay complete.' : continuingPlan ? 'Continue planning with the updated brief and saved files. Completed phases stay complete.' : resumeStage ? 'Resume this phase using the saved files. Completed phases stay complete.' : 'Saved outputs remain available. Start a new build when you’re ready to try again.'}</p>
+        {resumeStage === selectedId && <div className="build-phase-recovery"><button className="primary" disabled={busy || !configured || !isDesktop} onClick={onResume}><Play size={15}/>{resuming ? continuingPlan ? 'Continuing…' : 'Resuming…' : resumeLabel(resumeStage, project)}</button>
           {!isDesktop ? <p>Open the desktop app to resume this phase.</p> : !configured && <p>Connect a model in Settings to resume this phase.</p>}
         </div>}
       </div> :

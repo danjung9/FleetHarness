@@ -5,6 +5,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { createServer } from 'node:http';
 import { executeHelperProcess } from '../dist-electron/electron/helper-execution.js';
+import { ApplicationTestEvidence } from '../dist-electron/electron/application-test-evidence.js';
+
+function testEvidence(result, expectedFiles = 1) {
+  const evidence = new ApplicationTestEvidence();
+  evidence.stdout(Buffer.from(result.stdout));
+  evidence.stderr(Buffer.from(result.stderr));
+  return evidence.finish(expectedFiles);
+}
 
 async function fixture(t, source) {
   const base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-helper-test-')));
@@ -128,6 +136,45 @@ test('helper validation can execute the Node test runner inside the same sandbox
   assert.equal(result.exitCode, 0, result.stderr);
   assert.match(result.stdout, /parser fixture/);
   assert.match(result.stdout, /pass 1/);
+  assert.equal(testEvidence(result).valid, true);
+});
+
+test('helper test workers cannot spawn processes, create workers or load native addons', { skip: !supported }, async t => {
+  const f = await fixture(t, `
+    import test from 'node:test'; import assert from 'node:assert/strict';
+    import { spawnSync } from 'node:child_process'; import { Worker } from 'node:worker_threads';
+    test('worker permissions remain restricted', () => {
+      assert.equal(process.execArgv.includes('--allow-child-process'), false);
+      assert.throws(() => spawnSync(process.execPath, ['-e', 'console.log(1)']), {code:'ERR_ACCESS_DENIED'});
+      assert.throws(() => new Worker('1', {eval:true}), {code:'ERR_ACCESS_DENIED'});
+      assert.throws(() => process.dlopen({exports:{}}, '/missing-addon.node'), {code:'ERR_DLOPEN_DISABLED'});
+    });
+  `);
+  const result = await f.run({ command: [process.execPath, '--test', '--test-reporter=tap', f.script] });
+  assert.equal(result.exitCode, 0, result.stderr + result.stdout);
+  const evidence = testEvidence(result);
+  assert.equal(evidence.valid, true, evidence.output);
+  assert.equal(evidence.passed, 1);
+});
+
+test('helper test assertion failures retain a nonzero exit and completed evidence', { skip: !supported }, async t => {
+  const f = await fixture(t, `import test from 'node:test'; import assert from 'node:assert/strict'; test('actual assertion failure', () => assert.equal(1, 2));`);
+  const result = await f.run({ command: [process.execPath, '--test', '--test-reporter=tap', f.script] });
+  assert.equal(result.exitCode, 1, result.stderr + result.stdout);
+  const evidence = testEvidence(result);
+  assert.equal(evidence.valid, false);
+  assert.equal(evidence.total, 1);
+  assert.equal(evidence.failed, 1);
+  assert.match(evidence.output, /actual assertion failure/);
+});
+
+test('helper after-hook failures cannot become zero-exit successes', { skip: !supported }, async t => {
+  const f = await fixture(t, `import test, {after} from 'node:test'; after(() => {throw new Error('cleanup failed')}); test('otherwise passes', () => {});`);
+  const result = await f.run({ command: [process.execPath, '--test', '--test-reporter=tap', f.script] });
+  assert.equal(result.exitCode, 1, result.stderr + result.stdout);
+  const evidence = testEvidence(result);
+  assert.equal(evidence.valid, false);
+  assert.match(evidence.output, /cleanup failed/);
 });
 
 test('cancellation terminates the helper process group', { skip: !supported, timeout: 10000 }, async t => {
@@ -153,6 +200,42 @@ test('cancellation terminates the helper process group', { skip: !supported, tim
     catch (error) { assert.equal(error.code, 'ESRCH'); stopped = true; break; }
   }
   assert.equal(stopped, true, 'helper process remained alive');
+});
+
+test('cancellation and timeout terminate process-isolated helper test workers', { skip: !supported, timeout: 20000 }, async t => {
+  for (const mode of ['cancellation', 'timeout']) await t.test(mode, async t => {
+    const f = await fixture(t, `
+      import test from 'node:test'; import fs from 'node:fs';
+      test('waiting worker', async () => {
+        fs.writeFileSync(process.env.FLEET_HELPER_OUTPUT + '/worker.pid', String(process.pid));
+        await new Promise(() => { setInterval(() => {}, 1000); });
+      });
+    `);
+    const controller = new AbortController();
+    const result = f.run({ command: [process.execPath, '--test', '--test-reporter=tap', f.script],
+      signal: controller.signal, timeoutMs: mode === 'timeout' ? 2000 : 10000 });
+    const rejected = mode === 'cancellation' ? assert.rejects(result, /stopped/) : undefined;
+    let pid;
+    for (let i = 0; i < 200; i++) {
+      try { pid = Number(await fs.readFile(path.join(f.workspace, '.agent-output/worker.pid'), 'utf8')); break; }
+      catch { await new Promise(resolve => setTimeout(resolve, 20)); }
+    }
+    if (mode === 'cancellation') {
+      controller.abort();
+      await rejected;
+    } else {
+      const execution = await result;
+      assert.equal(execution.timedOut, true);
+      assert.equal(execution.exitCode, null);
+    }
+    assert.ok(pid, 'the isolated test worker should have started before stopping');
+    let stopped = false;
+    for (let i = 0; i < 50; i++) {
+      try { process.kill(pid, 0); await new Promise(resolve => setTimeout(resolve, 20)); }
+      catch (error) { assert.equal(error.code, 'ESRCH'); stopped = true; break; }
+    }
+    assert.equal(stopped, true, `isolated test worker remained alive after ${mode}`);
+  });
 });
 
 test('helpers cannot spawn detached daemons, workers or disable runtime permissions', { skip: !supported }, async t => {

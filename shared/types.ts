@@ -1,7 +1,10 @@
+import type { ExperimentAPI } from './experiments.js';
+import type { DataStorageAPI } from './data-storage.js';
+
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings' | 'storage';
 export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
 export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
 export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string; tool?: ToolEvent }
@@ -17,9 +20,12 @@ export interface ReviewRecord {
   sourceHash?: string; nextRunId?: string;
 }
 export interface Project extends BriefContext {
+  archivedAt?: string;
   reviewHistory?: ReviewRecord[];
   conversation?: import('./conversation.js').ProjectConversation;
-  qualityVersion?: 1 | 2 | 3;
+  qualityVersion?: 1 | 2 | 3 | 4;
+  experiment?: import('./learning.js').ExperimentSummary;
+  executionFailure?: 'infrastructure' | 'integrity' | 'implementation' | 'budget' | 'cancelled';
   visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
@@ -47,10 +53,10 @@ export interface ChatGPTAccount {
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean } }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean; experiments?: boolean; planningContinuation?: boolean } }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
-export interface FleetAPI {
+export interface FleetAPI extends ExperimentAPI, DataStorageAPI {
   sendMessage(id: string, text: string): Promise<void>;
   cancelMessage(id: string): Promise<void>;
   answerClarification(id: string, questionId: string, answer: string | import('./conversation.js').ClarificationAnswer): Promise<void>;

@@ -2,10 +2,12 @@ import { useEffect, useId, useState } from 'react';
 import { CheckCircle2, ClipboardCheck, Code2, Download, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
 import type { Project } from '../shared/types';
 import { reportPassed } from '../shared/verification';
+import { pendingExperiment } from '../shared/journey';
 import { api, isDesktop } from './api';
 import { ExecutableDownload } from './ExecutableDownload';
 import { QualityEvidence } from './QualityEvidence';
 import { VisualReview } from './VisualReview';
+import { ExperimentReview } from './ExperimentReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
@@ -45,6 +47,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
   const gateId = useId();
   const changesGateId = useId();
   const report = project.report;
+  const choosingCandidate = !!pendingExperiment(project);
   const passed = reportPassed(report, project.qualityVersion ?? false);
   const unverified = report?.quality?.criteria.filter(criterion => criterion.status === 'unverified').length || 0;
   const approved = !!project.approvedAt;
@@ -66,12 +69,14 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
     if (approvalSubmitted && approved) onApproved();
   }, [approvalSubmitted, approved, onApproved]);
 
-  const unmetCondition = project.status === 'running' ? 'Wait for this build to finish before approving.'
+  const unmetCondition = choosingCandidate ? 'Choose a passing candidate before approving.'
+    : project.status === 'running' ? 'Wait for this build to finish before approving.'
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to approve it.'
       : !passed || !project.workspace ? 'Resolve failed or missing checks with a new build before approval.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what you checked and any limitations.'
           : !draft.reviewed ? 'Confirm that you inspected the app, test evidence, and limitations.' : '';
-  const changesUnmetCondition = project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
+  const changesUnmetCondition = choosingCandidate ? 'Choose a candidate before requesting changes.'
+    : project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
     : !isDesktop ? 'Open this challenge in the AppYard desktop app to request changes.'
       : !project.workspace || !report || !['review', 'failed'].includes(project.status) ? 'Finish a build before requesting changes.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what needs to change.' : '';
@@ -97,7 +102,9 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
 
   return <div className="page review-workspace">
     <div className="review-content">
-      <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      <div className="page-heading"><div><h1>Review</h1><p>{choosingCandidate ? 'Compare the candidate evidence and choose a build to review.' : approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      <ExperimentReview project={project} busy={busy} action={action}/>
+      {choosingCandidate ? <p className="review-pending" role="status">Choose a passing candidate above before approving or requesting changes.{report && ' Your previous build remains saved until you select a candidate.'}</p> : <>
       {pendingRequest && !submitting && <p className="review-pending" role="status">Your change request is saved. The next iteration has not started; you can retry below.</p>}
       {changeRequest && <details className="review-request"><summary>Changes requested for this iteration</summary><p className="review-recorded-notes">{changeRequest.feedback}</p><p className="review-report-time">Requested {date(changeRequest.createdAt)}</p></details>}
       <VisualReview projectId={project.id} report={project.visualReview ?? report?.quality?.visualReview} runtimeProfile={project.runtimeProfile} runStatus={project.status}/>
@@ -138,6 +145,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
           </>}
         </li>
       </ol>}
+      </>}
     </div>
   </div>;
 }
