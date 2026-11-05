@@ -1318,6 +1318,8 @@ test('a Codex abort acknowledgement cannot authorize recovery without worker exi
     return { subscribe: () => () => {}, prompt: async () => { throw new Error('Provider error: 503'); },
       abort: async () => {}, dispose: () => {} };
   };
+  // The process sweep is the evidence. When it cannot confirm, nothing may retry or resume.
+  h.backend.options.processSweep = () => ({ run: work => work(), stop: async () => {}, quiesce: async () => { throw new Error('Synthetic inspection failure'); } });
   await h.run(); await h.assertSettled('failed');
   assert.equal(creations, 1); assert.match(rawError(h.project), /shutdown.*not confirmed/i);
   await resumeRefused(h.backend, h.project, /shutdown.*not confirmed/i);
@@ -1394,6 +1396,23 @@ for (const field of ['title', 'description', 'criteria', 'resources', 'links', '
     await resumeRefused(h.backend, h.project, /brief.*changed|changed.*brief/i);
     assert.equal(h.sessions.length, count); assert.equal(h.backend.active.size, 0);
     assert.equal(h.project.status, 'failed');
+  });
+}
+
+for (const file of ['plan.md', 'test-matrix.md']) {
+  test(`an agent's note in frozen ${file} is undone and does not end the build`, { timeout: 10000 }, async t => {
+    let frozen;
+    const h = await harness(t, { verify: syntheticReport, scenario: async ({ cwd, stage }) => {
+      if (stage === 'build' && frozen === undefined) {
+        frozen = await fs.readFile(path.join(cwd, file), 'utf8');
+        await fs.appendFile(path.join(cwd, file), '\nResult: passed');
+      }
+      return false;
+    } });
+    await h.run(); await h.assertSettled('review');
+    assert.equal(await fs.readFile(path.join(h.project.workspace, file), 'utf8'), frozen);
+    assert.ok(h.project.logs.some(log => log.text.includes('The frozen text was restored')));
+    assert.equal(h.project.runCheckpoint.writerState, 'idle');
   });
 }
 

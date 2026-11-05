@@ -59,7 +59,7 @@ const rules: [PlainCode, RegExp][] = [
   ['tool', /Invalid fleet_browser input|Unsupported field for browser action|browser action requires a CSS selector|single CSS selector|Open the application with fleet_browser/i],
   ['plan', /frozen solution contract is required|no browser or service runtime/i],
   ['changed', /previous build source changed|Helper (?:files changed|changed while being inspected)/i],
-  ['input', /Add a review note|Build an app before recording a review|Request changes from a completed/i],
+  ['input', /Add a review note|Build an app before recording a review|Finish a build and open its review/i],
   ['recovery', /Your review comments were saved, but the next iteration could not start/i],
   ['stopped', /Helper execution stopped/i],
   ['capacity', /Another helper is running/i],
@@ -131,7 +131,7 @@ const rules: [PlainCode, RegExp][] = [
   ['input', /^(?:Invalid challenge|Add a title|Use up to|Keep resources|Enter a complete)/i],
   ['plan', /(?:must be an object|has an unknown field|must be .*string of at most|must start with a letter|must contain .* entries|\.schemaVersion|\.action is unsupported|\.kind must|must interact with the application|is a primary journey|acceptance inventory|Journey IDs|Include at least one primary|unknown criterion|Duplicate criterion|\.disposition|\.journeyIds|unknown journey|deferred criterion requires|implemented criterion must|Missing acceptance criteria|At least one acceptance|Every journey must|Screen names)/i],
   ['plan', /^(?:Expected a system design object|Design text|Describe .*components|Component IDs|Unknown component kind|Map each component|Use workspace-relative|Describe up to .*connections|Connections must|Unknown component\.|Provide a valid status)/i],
-  ['plan', /deferral reason must start with/i],
+  ['plan', /deferral reason must start with|cannot use host-owned container export files|Only service runtimes have a delivery port/i],
   ['plan', /syntheticCoverage|named output must quote text|named output .* needs a literal assertion/i],
   ['tool', /^(?:Unknown AppYard tool|Invalid input for|Tool input exceeds|text must|Unknown person|Revision |Missing parent|A revision|createdAt must|asOf must|Document updatedAt|Document approved|At least one target|Unknown dependency|Dependency graph)/i],
   ['tool', /(?:must be an integer between|must be an array of at most|cannot contain duplicates|contains duplicate IDs| end must follow start)/i]

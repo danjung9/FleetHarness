@@ -143,6 +143,8 @@ export class RunProcessSweep {
       this.cleanups = [];
     })();
   }
+  /** Prove this run's processes have ended without closing the scope, so a stage can start again. */
+  quiesce(): Promise<void> { return this.closed ? this.stop() : this.sweep(); }
   private async sweep() {
     if (!this.used) return;
     let empty = 0;

@@ -5,7 +5,7 @@ description: Build and review traceable acceptance evidence for AppYard applicat
 
 # Evidence and verification
 
-Use the criterion IDs and provenance in `.fleet/packet.json`, including requirements, evaluation criteria, deliverables and user criteria. Read `.fleet/quality-contract.md` for the exact acceptance and UX plan formats. In `test-matrix.md`, state input, expected outcome, application test or planned browser journey, result and evidence location for every criterion. Include negative and boundary cases specific to the recipe.
+Use the criterion IDs and provenance in `.fleet/packet.json`, including requirements, evaluation criteria, deliverables and user criteria. Read `.fleet/quality-contract.md` for the exact acceptance and UX plan formats. During planning, in `test-matrix.md`, state input, expected outcome and application test or planned browser journey for every criterion. `test-matrix.md` is frozen after planning, so record actual results and evidence locations in `verification.md`. Include negative and boundary cases specific to the recipe.
 
 Tests must call actual application functions or exercise the real UI workflow. A repeated implementation assertion, a tool self-test, an empty test suite, source-string checks and a model's success statement do not demonstrate that users can complete a browser task. The separate planner defines literal outcomes before building; this reduces implementation drift but is not independent SME ground truth. The host freezes `acceptance-plan.json` and `ux-spec.json` after planning. Build and repair must never edit those contracts or replace a failed expectation with observed output. Record a suspected requirement error for a new planning run.
 
