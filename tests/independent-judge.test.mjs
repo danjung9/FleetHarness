@@ -5,6 +5,7 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { runIndependentJudge } from '../dist-electron/electron/independent-judge.js';
+import { judgeAccepted, reportPassed } from '../dist-electron/shared/verification.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
 import { CodexRpc, codexExecutable } from '../dist-electron/electron/codex-rpc.js';
@@ -98,6 +99,54 @@ test('SATISFACTORY performs no repair and records verify time and actual tokens'
   assert.equal(h.measurements.length, 1);
   assert.deepEqual(h.measurements[0].usage, report.independentJudge.attempts[0].tokens);
   assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 120);
+});
+
+test('human steps do not fail a satisfactory verdict and survive both reports', async t => {
+  const humanSteps = ['Have an operator accept the schedule after a supervised trial.', 'Obtain an expert-reviewed mapping before fielding.'];
+  const h = await fixture(t, [{ ...satisfactory, humanSteps }]);
+  const report = await h.run();
+  assert.equal(judgeAccepted(report), true); assert.equal(reportPassed(report, true), true);
+  assert.equal(h.repairs.length, 0); assert.deepEqual(report.independentJudge.gaps, []);
+  assert.deepEqual(report.independentJudge.humanSteps, humanSteps);
+  assert.deepEqual(report.independentJudge.attempts[0].humanSteps, humanSteps);
+  assert.match(report.output, /Steps for a person/);
+  for (const name of ['judge.json', 'test-report.json']) {
+    const saved = JSON.parse(await fs.readFile(path.join(h.workspace, name), 'utf8'));
+    assert.deepEqual((saved.independentJudge ?? saved).humanSteps, humanSteps);
+  }
+});
+
+for (const humanSteps of [null, 'Review this', [''], ['   '], [12], ['x'.repeat(1001)], Array(21).fill('Review this')]) {
+  test('malformed or excessive human steps remain an evaluation error: ' + JSON.stringify(humanSteps).slice(0, 60), async t => {
+    const h = await fixture(t, [{ ...satisfactory, humanSteps }]);
+    const report = await h.run();
+    assert.match(report.independentJudge.evaluationError, /Invalid judge response/);
+    assert.equal(judgeAccepted(report), false); assert.equal(reportPassed(report, true), true);
+    assert.equal(h.repairs.length, 0); assert.equal(h.verifications, 1);
+  });
+}
+
+test('the judge reads connected snapshots and receives the build versus human calibration', async t => {
+  const h = await fixture(t, [satisfactory], { onPrompt: async ({ config, prompt }) => {
+    const snapshot = await config.customTools[0].execute('snapshot', { path: 'context/source.json' });
+    assert.match(snapshot.content[0].text, /Synthetic connector sample/);
+    for (const text of [prompt, await fs.readFile('skills/fleet-judge/SKILL.md', 'utf8')]) {
+      assert.match(text, /humanSteps/); assert.match(text, /never hold tokens/i);
+      assert.match(text, /publicly documented/); assert.match(text, /synthetic messages/);
+      assert.match(text, /labeled stand-in/); assert.match(text, /missing computations/);
+    }
+  } });
+  await fs.mkdir(path.join(h.workspace, 'context'));
+  await fs.writeFile(path.join(h.workspace, 'context/source.json'), JSON.stringify({ source: 'Synthetic connector sample', records: [{ value: 2 }] }));
+  assert.equal(judgeAccepted(await h.run()), true);
+});
+
+test('unavailable judge input becomes evaluation evidence without changing passing checks', async t => {
+  const h = await fixture(t, [satisfactory]);
+  await fs.rm(path.join(h.workspace, 'index.html'));
+  const report = await h.run();
+  assert.match(report.independentJudge.evaluationError, /Missing judge input/);
+  assert.equal(reportPassed(report, true), true); assert.equal(h.repairs.length, 0);
 });
 
 test('audit regression: a late core mutation during judge evidence publication cannot receive a passing identity', async t => {
@@ -312,8 +361,11 @@ for (const evidence of ['Invented format replaces the named real format.', 'Pres
     const report = await h.run();
     assert.equal(report.quality.requirementsMet, false);
     assert.equal(report.independentJudge.gaps[0].evidence, evidence);
-    assert.equal(report.quality.criteria[0].status, 'unverified');
-    assert.ok(report.quality.criteria[0].detail.includes(evidence));
+    assert.equal(report.quality.criteria[0].status, 'passed', 'Judge advice cannot overwrite automatic evidence');
+    assert.match(report.quality.criteria[0].detail, /Synthetic browser evidence/);
+    assert.ok(report.output.includes(evidence));
+    assert.equal(reportPassed(report, true), true);
+    assert.equal(judgeAccepted(report), false);
     const read = h.sessions[0].config.customTools[0];
     assert.match(JSON.stringify(await read.execute('inventory', { path: 'acceptance-inventory.json' })), /DESCsynthetic-1/);
     assert.match(h.sessions[0].promptText, /every source span/);
@@ -415,7 +467,7 @@ test('judge evidence cannot overwrite application source through a builder-creat
   assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), true);
 });
 
-test('fake-engine production workflow blocks review after two repairs with the final NOT and every gap saved', { timeout: 20000 }, async t => {
+for (const evaluationError of [false, true]) test(`fake-engine production workflow reaches review with ${evaluationError ? 'an evaluation error' : 'final NOT after two repairs and every gap saved'}`, { timeout: 20000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const root = await fs.mkdtemp(path.resolve('.tmp/judge-backend-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -434,6 +486,7 @@ test('fake-engine production workflow blocks review after two repairs with the f
           journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] }, verificationNumber: ++verifications })
     } });
     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
+    const { RunProcessSweep } = await import('./dist-electron/electron/process-sweep.js');
     const { qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
     const { solutionFixture } = await import('./scripts/solution-fixture.mjs');
     const { syntheticDataFiles } = await import('./scripts/data-fixture.mjs');
@@ -441,11 +494,15 @@ test('fake-engine production workflow blocks review after two repairs with the f
     store.state.projects[0] = newProject(qualityFixtureProject);
     store.state.settings = { backend: 'pi', provider: 'fixture', model: 'fixture' };
     const project = store.state.projects[0]; let judgments = 0, repairs = 0;
+    const evaluationError = ${evaluationError};
     const backend = new FleetBackend(store, process.execPath, () => {}, process.cwd(), {
+      // Synthetic orchestration only. Native readiness and process discovery need the overseer's run.
+      preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
+      processSweep: () => new RunProcessSweep({ scan: async () => [] }),
       createSession: async config => {
         assert.deepEqual(config.tools, ['judge_read']); const listeners = new Set();
         return { session: { subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }, abort() {}, dispose() {},
-          async prompt() { judgments++; for (const fn of listeners) fn({ type: 'message_end', message: {
+          async prompt() { judgments++; if (evaluationError) throw new Error('Synthetic evaluator unavailable'); for (const fn of listeners) fn({ type: 'message_end', message: {
             role: 'assistant', stopReason: 'stop', content: [{ type: 'text', text: JSON.stringify({ verdict: 'NOT',
               gaps: [{ requirement: 'Named output ' + judgments, evidence: 'Missing output ' + judgments, fix: 'Implement output ' + judgments }] }) }] } }); }
         } };
@@ -474,18 +531,20 @@ test('fake-engine production workflow blocks review after two repairs with the f
       }
     };
     await backend.start(project.id); await backend.active.get(project.id)?.done;
-    assert.equal(project.status, 'failed', project.error);
-    assert.equal(project.error, 'The app did not pass its checks; review the failed checks in the activity log before trying again.');
-    assert.match(project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\\n'), /Independent judgment did not pass/);
-    assert.equal(project.stages.find(s => s.id === 'verify').status, 'failed');
-    assert.equal(project.stages.find(s => s.id === 'review').status, 'queued');
+    assert.equal(project.status, 'review', project.error);
+    assert.equal(project.error, undefined);
+    assert.equal(project.logs.filter(log => log.kind === 'error').length, 0);
+    assert.equal(project.stages.find(s => s.id === 'verify').status, 'complete');
+    assert.equal(project.stages.find(s => s.id === 'review').status, 'review');
     assert.equal(project.approvedAt, undefined);
-    assert.equal(judgments, 3); assert.equal(repairs, 2); assert.equal(verifications, 3);
+    assert.equal(judgments, evaluationError ? 2 : 3); assert.equal(repairs, evaluationError ? 0 : 2); assert.equal(verifications, evaluationError ? 1 : 3);
     const saved = new Store(store.root); await saved.init();
     const restored = saved.project(project.id);
     assert.equal(restored.report.independentJudge.verdict, 'NOT');
-    assert.equal(restored.report.independentJudge.attempts.length, 3);
-    for (let n = 1; n <= 3; n++) assert.ok(restored.report.output.includes('Missing output ' + n));
+    assert.equal(restored.status, 'review');
+    assert.equal(restored.report.independentJudge.attempts.length, evaluationError ? 2 : 3);
+    if (evaluationError) assert.match(restored.report.independentJudge.evaluationError, /Synthetic evaluator unavailable/);
+    else for (let n = 1; n <= 3; n++) assert.ok(restored.report.output.includes('Missing output ' + n));
     assert.equal(restored.report.sourceHash, await sourceHash(project.workspace));
   `;
   // The full workflow reads the expanded skill packet on each integrity check.

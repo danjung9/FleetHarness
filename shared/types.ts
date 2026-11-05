@@ -57,12 +57,13 @@ export interface RunCheckpoint {
 export interface ReviewRecord {
   id: string; runId: string; decision: 'approved' | 'changes_requested'; feedback: string; createdAt: string;
   sourceHash?: string; nextRunId?: string;
+  judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[];
 }
 export interface Project extends BriefContext {
   reviewHistory?: ReviewRecord[];
   processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };
   verification?: { runId: string; reportHash: string };
-  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string; id?: string; decision?: ReviewRecord['decision']; createdAt?: string; history?: ReviewRecord[] };
+  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string; id?: string; decision?: ReviewRecord['decision']; createdAt?: string; history?: ReviewRecord[]; judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[] };
   runCheckpoint?: RunCheckpoint;
   conversation?: import('./conversation.js').ProjectConversation;
   qualityVersion?: 1 | 2 | 3;
@@ -114,7 +115,7 @@ export interface FleetAPI {
   // Optional for web-only clients that cannot execute backend builds.
   resumeRun(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
-  approve(id: string, feedback: string): Promise<void>;
+  approve(id: string, feedback: string, acceptJudgeGaps?: boolean): Promise<void>;
   requestChanges(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;

@@ -9,13 +9,14 @@ import vm from 'node:vm';
 import { newProject, sourceHash, Store } from '../dist-electron/electron/storage.js';
 import { assertExecutableSource, stageExecutable, executableName, runPackageWorker, saveExecutable } from '../dist-electron/electron/executable.js';
 import { loadQualityContract, verifyApplication } from '../dist-electron/electron/quality.js';
-import { reportPassed } from '../dist-electron/shared/verification.js';
+import { judgeAccepted, judgeGaps, reportPassed } from '../dist-electron/shared/verification.js';
 import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
 import { qualityFixtureHtml } from '../scripts/quality-fixture.mjs';
 
 function bindEvidence(project) {
   project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
-  project.approval = { runId: project.runId, sourceHash: project.report.sourceHash, reportHash: project.verification.reportHash, approvedAt: project.approvedAt, feedback: project.feedback };
+  project.approval = { runId: project.runId, sourceHash: project.report.sourceHash, reportHash: project.verification.reportHash, approvedAt: project.approvedAt, feedback: project.feedback,
+    ...(!judgeAccepted(project.report) ? { judgeGapsAccepted: true, acceptedJudgeGaps: structuredClone(judgeGaps(project.report)) } : {}) };
 }
 
 async function fixture(t) {

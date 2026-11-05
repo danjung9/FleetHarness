@@ -19,7 +19,7 @@ async function fixture(t) {
   await fs.writeFile(path.join(project.workspace, 'index.html'), '<h1>Current build</h1>');
   project.stages.find(stage => stage.id === 'review').status = 'review';
   project.processScope = { runId: project.runId, marker: 'synthetic-review', cleanup: 'confirmed' };
-  project.report = { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(project.workspace) };
+  project.report = { independentJudge: { verdict: 'SATISFACTORY', gaps: [] }, exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(project.workspace) };
   project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
   return { root, store, project };
 }
@@ -27,6 +27,34 @@ async function fixture(t) {
 test('review notes require useful bounded comments', () => {
   for (const value of [undefined, null, '', 'short', ' '.repeat(10), 'a'.repeat(10001)]) assert.throws(() => reviewFeedback(value), /10 to 10,000/);
   assert.equal(reviewFeedback('  Keep entered values after errors.  '), 'Keep entered values after errors.');
+});
+
+test('each approval needs its own gap acceptance and stores a separate gap snapshot', async t => {
+  const { store, project } = await fixture(t);
+  const gaps = [{ requirement: 'Schedule export', evidence: 'Assignments are missing.', fix: 'Include every assignment.' }];
+  project.report.independentJudge = { verdict: 'NOT', gaps };
+  project.verification.reportHash = reportHash(project.report);
+  const message = 'Read and accept the independent check gaps before approving this prototype.';
+  for (const flag of [undefined, false, 'true', 1]) await assert.rejects(recordReview(store, project, 'approved', 'Reviewed the synthetic schedule.', flag), { message });
+  const record = await recordReview(store, project, 'approved', 'Reviewed the synthetic schedule.', true);
+  assert.equal(record.judgeGapsAccepted, true); assert.deepEqual(record.acceptedJudgeGaps, gaps);
+  assert.notEqual(record.acceptedJudgeGaps, gaps);
+  assert.deepEqual(project.approval.acceptedJudgeGaps, gaps);
+  const receipt = JSON.parse(await fs.readFile(path.join(project.workspace, 'review.json'), 'utf8'));
+  assert.equal(receipt.judgeGapsAccepted, true); assert.deepEqual(receipt.acceptedJudgeGaps, gaps);
+  await assert.rejects(recordReview(store, project, 'approved', 'Reviewed the same prototype again.'), { message });
+  assert.equal(project.reviewHistory.length, 1);
+  const request = await recordReview(store, project, 'changes_requested', 'Include the missing assignments.', true);
+  assert.equal(request.judgeGapsAccepted, undefined); assert.equal(request.acceptedJudgeGaps, undefined);
+});
+
+test('a satisfactory judgment needs no gap flag and ignores an unnecessary flag', async t => {
+  const { store, project } = await fixture(t);
+  for (const flag of [undefined, true]) {
+    await recordReview(store, project, 'approved', 'Reviewed the synthetic schedule.', flag);
+    assert.equal(project.approval.judgeGapsAccepted, undefined);
+    assert.equal(project.approval.acceptedJudgeGaps, undefined);
+  }
 });
 
 test('change requests and later approval keep a durable run-scoped review history', async t => {

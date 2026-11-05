@@ -1,5 +1,5 @@
 import type { Project, StageId } from './types.js';
-import { reportPassed } from './verification.js';
+import { judgeAccepted, reportPassed } from './verification.js';
 
 export type Milestone = 'brief' | 'build' | 'review' | 'deliver';
 export interface JourneyState {
@@ -74,7 +74,8 @@ export function getJourneyState(project: Project): JourneyState {
   const passed = reportPassed(project.report, project.qualityVersion ?? false);
   if (project.status === 'review' && project.workspace && passed) {
     return { current: 'review', completed: ['brief', 'build'], activeStage: 'review',
-      message: 'Your review is needed. Try the app and check the evidence.', stale: false };
+      message: judgeAccepted(project.report) ? 'Your review is needed. Try the app and check the evidence.'
+        : 'Your review is needed. Read the independent check gaps, then accept them or request changes.', stale: false };
   }
 
   const buildStages = project.stages.filter(stage => stage.id in buildMessages).reverse();

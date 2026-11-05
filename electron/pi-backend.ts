@@ -58,7 +58,7 @@ interface BackendOptions {
   connectorStore?: ConnectorStore;
   clarifications?: ClarificationBroker;
   // Trusted host/test probes only; renderer settings cannot disable readiness checks.
-  preflight?: Pick<PreflightOptions, 'browser' | 'freeBytes'>;
+  preflight?: Pick<PreflightOptions, 'browser' | 'freeBytes' | 'timeoutMs'>;
   codex?: CodexAccount;
   genAiMil?: () => GenAiMil;
   createCodexSession?: typeof createCodexSession;
@@ -253,7 +253,8 @@ export class FleetBackend {
           return { connected, models };
         },
         browser: this.options.preflight?.browser,
-        freeBytes: this.options.preflight?.freeBytes
+        freeBytes: this.options.preflight?.freeBytes,
+        timeoutMs: this.options.preflight?.timeoutMs
       });
       this.check(run);
       provider = selected.provider; modelId = selected.model;
@@ -1043,7 +1044,6 @@ export class FleetBackend {
           return p.report;
         }
       });
-      if (p.report.independentJudge?.verdict !== 'SATISFACTORY') throw new Error('Independent judgment did not pass. Inspect judge evidence; delivery remains blocked.');
       await this.checkInputs(p, run);
       const verifiedSource = p.report.sourceHash;
       if (await sourceHash(p.workspace!) !== verifiedSource) throw new Error('Source or visual evidence changed after verification. Resume verification before review.');

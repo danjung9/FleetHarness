@@ -2,8 +2,8 @@ import { constants, promises as fs } from 'node:fs';
 import { createRequire } from 'node:module';
 import type { AgentBackend, AgentModel, Settings } from '../shared/types.js';
 
-export const preflightTimeoutMs = 1500;
-// Leave room within the two-second refusal budget for notification and saving.
+export const preflightTimeoutMs = 15000;
+// Bound persistence separately after the readiness check finishes.
 export const refusalSaveTimeoutMs = 250;
 export const minimumFreeBytes = 256 * 1024 ** 2;
 export const preflightMessages = {

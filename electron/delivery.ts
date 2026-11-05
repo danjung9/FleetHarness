@@ -2,7 +2,7 @@ import { assertCredentialFreeManifest } from './delivery-secrets.js';
 import { assertNoCredentials, redactValue } from './secrets.js';
 import { createHash } from 'node:crypto';
 import type { Project, TestReport } from '../shared/types.js';
-import { reportPassed } from '../shared/verification.js';
+import { judgeAccepted, judgeGaps, reportPassed } from '../shared/verification.js';
 import { artifactManifest, manifestHash } from './storage.js';
 
 export const evidenceJson = (value: unknown) => JSON.stringify(redactValue(value), null, 2);
@@ -15,6 +15,8 @@ export function assertReviewState(p: Project, approved = false) {
   if (!p.workspace || !reportPassed(p.report, p.qualityVersion ?? false)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
   if (p.verification?.runId !== p.runId || p.verification.reportHash !== reportHash(p.report!)) throw new Error('Authoritative verification evidence is missing or changed. Run verification again.');
   if (approved && (p.approval?.runId !== p.runId || p.approval.reportHash !== p.verification.reportHash || p.approval.sourceHash !== p.report!.sourceHash || p.approval.approvedAt !== p.approvedAt || p.approval.feedback !== p.feedback)) throw new Error('Approval does not match this run and its verification evidence. Review again.');
+  if (approved && !judgeAccepted(p.report) && (p.approval?.judgeGapsAccepted !== true
+    || evidenceJson(p.approval.acceptedJudgeGaps) !== evidenceJson(judgeGaps(p.report)))) throw new Error('Read and accept the independent check gaps before approving this prototype.');
 }
 
 export async function verifiedManifest(p: Project, approved = false) {
