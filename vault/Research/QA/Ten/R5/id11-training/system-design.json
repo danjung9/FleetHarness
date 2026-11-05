@@ -1,0 +1,104 @@
+{
+  "title": "PB4T synthetic weekly deconfliction",
+  "description": "Local Node service with deterministic departmental agents, bounded shared constraint enforcement and operator review. All integrations and policy data are synthetic; no operational publication.",
+  "components": [
+    {
+      "id": "board",
+      "label": "Weekly board and proposal editor",
+      "description": "Embedded exact fixture inputs; editable drill proposals, visible unsaved state, accessible weekly board and recovery controls.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Departmental negotiation agents",
+      "description": "Engineering, Weapons, Combat Systems, Damage Control and Flight Operations own candidate proposals and accept/reject counteroffers based on computed constraints.",
+      "kind": "logic",
+      "files": [
+        "domain/agents.mjs"
+      ]
+    },
+    {
+      "id": "constraints",
+      "label": "Shared scheduling and validation",
+      "description": "Deterministic bounded search, role selection, operational/resource constraints, qualifications and fatigue. No silent relaxation.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "domain/schedule.mjs",
+        "lib/scheduling.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "periodicity",
+      "label": "Fictional recurrence and personnel loading",
+      "description": "History-anchored due occurrences, deadline coverage, daily and horizon duty arithmetic.",
+      "kind": "logic",
+      "files": [
+        "domain/policy.mjs"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "Local HTTP service",
+      "description": "Foundation loopback service exposes health and raw JSON invocation shared by UI and evaluations.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "package.json"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Local draft, simulated review and export",
+      "description": "Browser persistence, revision checks, explicit save/discard, cancellation and synthetic-only exports. Actual PB4T acceptance and external calendar publication withheld.",
+      "kind": "data",
+      "files": [
+        "public/app.js",
+        "public/index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "board",
+      "to": "service",
+      "label": "POST fictional PB4T package"
+    },
+    {
+      "from": "service",
+      "to": "constraints",
+      "label": "invoke shared compute"
+    },
+    {
+      "from": "constraints",
+      "to": "agents",
+      "label": "candidate requests and constraint objections"
+    },
+    {
+      "from": "agents",
+      "to": "constraints",
+      "label": "ordered counterproposals and responses"
+    },
+    {
+      "from": "constraints",
+      "to": "periodicity",
+      "label": "check deadlines, rest and duty loads"
+    },
+    {
+      "from": "service",
+      "to": "board",
+      "label": "allocations, collisions, negotiation and coverage"
+    },
+    {
+      "from": "board",
+      "to": "review",
+      "label": "save/review exact revision or export labeled draft"
+    }
+  ]
+}

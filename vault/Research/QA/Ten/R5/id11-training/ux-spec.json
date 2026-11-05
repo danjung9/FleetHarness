@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "PB4T coordinators and departmental representatives reviewing a fictional shipboard training week; operational acceptance remains with a designated person.",
+  "primaryTask": "Load a labeled synthetic weekly package, inspect Engineering/Weapons/Combat Systems/DC/Flight proposals, optimize the calendar, inspect conflicts and loading, edit and save inputs, regenerate, then record simulated review and export a draft.",
+  "successOutcome": "All seven due fictional occurrences are allocated, zero final hard constraint violations, seven-day board shows every family and qualified person, negotiations explain alternatives, and heatmap reports 540 baseline training person-minutes. Saved input, current proposal revision and review state are explicit.",
+  "screens": [
+    {
+      "name": "Weekly PB4T board",
+      "purpose": "Primary workspace with week/offset, synthetic notice, scenario selector, editable drill rows, Optimize schedule and Cancel. Seven day columns on desktop; day-grouped cards on narrow widths with no page-wide horizontal overflow.",
+      "primaryAction": "Optimize schedule"
+    },
+    {
+      "name": "Constraints, negotiation and loading",
+      "purpose": "Linked sections on same page show original collisions, computed departmental counteroffers, per-person/day minutes and legend, all due deadlines and next-outside dates. Technical JSON package editor is secondary.",
+      "primaryAction": "Review proposal"
+    },
+    {
+      "name": "Saved draft and simulated review",
+      "purpose": "Save or discard explicit edits, inspect exact saved/proposed revision, acknowledge local-only simulated review and export. Source/context panel retains Requirements and Expected deliverables headings and attribution.",
+      "primaryAction": "Record simulated review"
+    }
+  ],
+  "states": {
+    "empty": "No saved calendar. Explain load a synthetic week, select baseline/shifted/tiny case and Load sample. Sample inputs are embedded in public/index.html; no local fixture fetch or answer keys.",
+    "loading": "Immediately show Generating synthetic proposal; disable conflicting submissions and enable Cancel. Use a cancellable generation phase with a short visible scheduling window before invoking service so immediate Cancel is reliable. Use request/revision tokens to discard late responses. Show attempts when complete; no invented progress percent.",
+    "error": "Preserve current edits and last feasible board. Show field-level invalid duration message, explicit infeasible versus exhausted status, unmet deadlines and constraint reasons. Service unavailable offers Retry after restart; never substitute canned results.",
+    "success": "Show Feasible synthetic proposal, computed allocations, negotiation, coverage and heatmap with numeric minute labels and clear draft revision. One click Optimize schedule means first feasible result over supplied candidates, never global optimum."
+  },
+  "persistence": "Persist saved package, last valid proposal, simulated review revision and unsaved input buffer locally in browser storage; no server database or identity. Reload restores draft plus clear stale/unsaved state. Input Save is deliberate; Discard restores saved values. Sample replacement after a loaded draft requires a visible confirmation (#confirm-load). Storage failure shows local-only unsaved warning and export remains available. Export synthetic-pb4t-draft.json contains notice, policy version, saved package, result and review metadata; stale drafts labeled with their saved input revision.",
+  "recovery": "Invalid import/save leaves saved input and valid board intact. Correct duration and save/regenerate, raise zero budget, restore baseline after proven infeasibility, or restore D7 start before deadline. Editing immediately invalidates review; approval disabled with reason until saved and feasible current result exists. Cancel discards pending generation, retains previous result and says Cancelled; previous valid draft preserved. No policy relaxation control or operational publication; unresolved requests are escalated visibly to coordinator.",
+  "keyboard": "Native labeled inputs/select/buttons, logical Tab order from package to edits to Generate to results/review, visible high-contrast focus. All editing possible without drag/drop; accessible dialogs support Escape and return focus. Status/errors use live regions. Heatmap has text values and legend; tables use headers. Fixed-offset times shown explicitly. Cards and controls remain readable at narrow width with touch targets and no clipped controls."
+}

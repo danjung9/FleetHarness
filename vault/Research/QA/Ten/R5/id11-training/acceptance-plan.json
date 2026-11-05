@@ -1,0 +1,779 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual SFTRM compliance remains unverified. Synthetic Engineering, Weapons, Combat Systems, Damage Control and Flight Operations agents negotiate proposals using qualified role alternatives; baseline has P1/P2/SIM collisions, alternate allocations D2/D4/D5 at 10:00, and all 7 fictional due occurrences covered; shifted operations reassigns D2 to P3 at 08:00 and moves D3 to 10:00.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Applicable actual SFTRM rules, policy revisions and actual completion history are absent within the synthetic-only boundary. Withhold actual SFTRM compliance; demonstrate all named agents, constraints, collisions, alternate allocations and complete fictional recurrence.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional PB4T JSON grammar fictional-pb4t-1, five departmental software agents, invented roster/qualification validity, fixed UTC-05:00 operations, fatigue60/day240/horizon600 and history-anchored recurrence; synthetic, not validated against the real format. Actual policies and records absent.",
+        "journeyIds": [
+          "synthetic-week",
+          "shifted-negotiation"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every feasible full allocation has zero personnel overlaps and aggregate resource usage within capacity, independently checked across all interval endpoints; baseline resolves exactly three original collisions.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": [
+        "qualified-allocation"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Whole execution availability, dated qualifications, distinct role headcounts, fixed-duty/prior-week rest, daily and horizon union budgets enforced. Exact limits pass and below-limit/rest or expired/unavailable candidates cannot be silently relaxed.",
+      "journeyIds": [
+        "invalid-recovery"
+      ],
+      "capabilityIds": [
+        "qualified-allocation"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Malformed input is invalid_input; complete no-solution enumeration is infeasible; zero-budget valid nonempty package is exhausted with zero attempts. UI preserves prior draft and allows successful correction.",
+      "journeyIds": [
+        "search-recovery"
+      ],
+      "capabilityIds": [
+        "qualified-allocation"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual mandatory periodicity compliance is unverified. Synthetic register expands exactly 7 occurrences including 3 DC deadlines, reports next outside-horizon dates and exposes impossible D7 deadline without omission.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual applicable mandatory training register and history are absent. Withhold actual periodicity compliance; demonstrate complete fictional recurrence and impossible-deadline recovery."
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual operator acceptance remains unverified. Simulated local review records only the saved revision, edits clear review, unsaved content must be saved/discarded, and cancelled generation cannot overwrite the prior valid schedule.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: Designated PB4T operator must personally accept the schedule. Withhold real acceptance/publication; demonstrate explicit simulated local review, revision invalidation and cancellation."
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Interactive seven-day board supports edits, computed departmental conflict resolution, one-click Optimize schedule (bounded feasibility), numeric personnel/day heatmap and labeled export. Baseline all seven allocations match fixed fixture; total 540 person-minutes, P2 240. Shifted operations yields P1 60 and P3 120.",
+      "journeyIds": [
+        "synthetic-week",
+        "shifted-negotiation",
+        "review-cancel",
+        "deadline-recovery"
+      ],
+      "capabilityIds": [
+        "pb4t-audit"
+      ]
+    },
+    {
+      "criterionId": "DESC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Real crew/operations validation remains unverified. Synthetic departmental training requirements produce engineering D1 Mon08, Combat Systems D2 Mon10, Damage Control D4 Mon10/Thu08/Sun08 and flight quarters D5 Mon10; every assigned role and operation window passes declared fictional constraints.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual crew availability and ship operations are unavailable and outside the synthetic-only boundary. Withhold validation against real crew and operations; demonstrate all four named drill families against fictional roster and operations.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional PB4T JSON grammar fictional-pb4t-1, five departmental software agents, invented roster/qualification validity, fixed UTC-05:00 operations, fatigue60/day240/horizon600 and history-anchored recurrence; synthetic, not validated against the real format. Actual policies and records absent.",
+        "journeyIds": [
+          "synthetic-week",
+          "shifted-negotiation"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "departmental training requirements"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC11-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Original P1 collision D1/D2 and P2 collision D1/D4 are explicitly shown, and resulting schedule has zero simultaneous personnel bookings.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": [
+        "qualified-allocation"
+      ]
+    },
+    {
+      "criterionId": "DESC11-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Five deterministic departmental software agents contribute owned candidate proposals, computed objections, alternate allocations and accepted counterproposals through shared constraints; changed operations causes genuine CS/Weapons negotiation and a changed weekly calendar.",
+      "journeyIds": [
+        "synthetic-week",
+        "shifted-negotiation"
+      ],
+      "capabilityIds": [
+        "qualified-allocation",
+        "pb4t-audit"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Department proposals respect personnel, resource capacity/availability, ship restrictions and supplied fictional fatigue rules; baseline resolves P1/P2/SIM and OP1 conflicts without policy relaxation.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": [
+        "qualified-allocation",
+        "pb4t-audit"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements heading retained in secondary source/context panel; complete functional scope maps to the canonical requirements and their provenance, with synthetic and operational boundaries visible.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Engineering, Weapons, Combat Systems and supporting agents generate role/time alternatives and exchange constraint objections against ship windows, Fire Party Leader, EOOW, TAO, and supplied synthetic fatigue rules. Shifted operation moves Weapons to 10 and CS to P3 at 08.",
+      "journeyIds": [
+        "synthetic-week",
+        "shifted-negotiation"
+      ],
+      "capabilityIds": [
+        "qualified-allocation",
+        "pb4t-audit"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual SFTRM compliance remains unverified. Synthetic collision lists, alternate allocations and 7/7 fictional periodicities are shown; an impossible D7 finish is infeasible and visible, not omitted.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Applicable actual SFTRM register and completion history are absent. Withhold actual mandated-periodicity certification; demonstrate collisions, alternate allocations and all seven fictional due occurrences.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional PB4T JSON grammar fictional-pb4t-1, five departmental software agents, invented roster/qualification validity, fixed UTC-05:00 operations, fatigue60/day240/horizon600 and history-anchored recurrence; synthetic, not validated against the real format. Actual policies and records absent.",
+        "journeyIds": [
+          "synthetic-week",
+          "shifted-negotiation"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE11-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables heading retained in secondary source/context panel alongside the interactive weekly schedule board, computed conflict resolution, optimization action and heatmap.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Display exact source attribution: Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11; supplied captured packet is source authority, with no claim of live access.",
+      "journeyIds": [
+        "synthetic-week"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "synthetic-week",
+      "title": "Negotiate the complete synthetic weekly calendar and export it",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#synthetic-notice",
+          "text": "Synthetic, not validated against the real format. No operational use or actual SFTRM compliance."
+        },
+        {
+          "action": "expectText",
+          "selector": "#collision-summary",
+          "text": "Original proposals: 3 collisions; final schedule: 0 collisions"
+        },
+        {
+          "action": "expectText",
+          "selector": "#collision-list",
+          "text": "P1: D1 / D2; P2: D1 / D4; SIM: D2 / D3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D1",
+          "text": "D1 | engineering casualty controls | Mon 09 Nov 08:00\u201309:00 | P1, P2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D2",
+          "text": "D2 | Combat Systems exercises | Mon 09 Nov 10:00\u201311:00 | P1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D3",
+          "text": "D3 | weapons safety exercises | Mon 09 Nov 08:00\u201309:00 | P3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D4",
+          "text": "D4 | Damage Control drills | Mon 09 Nov 10:00\u201311:00 | P2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D5",
+          "text": "D5 | flight quarters | Mon 09 Nov 10:00\u201311:00 | P4, P5"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D6",
+          "text": "D6 | Damage Control drills | Thu 12 Nov 08:00\u201309:00 | P2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D7",
+          "text": "D7 | Damage Control drills | Sun 15 Nov 08:00\u201309:00 | P2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#personnel-collisions-result",
+          "text": "Synthetic personnel collisions: P1 between D1 and D2; P2 between D1 and D4 in original proposals; 0 in the final schedule."
+        },
+        {
+          "action": "expectText",
+          "selector": "#alternate-allocations-result",
+          "text": "Synthetic alternate schedule allocations: D2 Mon 09 Nov 10:00 with P1; D4 Mon 09 Nov 10:00 with P2; D5 Mon 09 Nov 10:00 with P4, P5."
+        },
+        {
+          "action": "expectText",
+          "selector": "#departmental-requirements-result",
+          "text": "Synthetic departmental training requirements: engineering casualty controls D1 Mon 09 Nov 08:00; Combat Systems exercises D2 Mon 09 Nov 10:00; Damage Control drills D4 Mon 09 Nov 10:00, D6 Thu 12 Nov 08:00, D7 Sun 15 Nov 08:00; flight quarters D5 Mon 09 Nov 10:00."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "Synthetic SFTRM-mandated training periodicities: 7 of 7 due occurrences covered; actual compliance unverified"
+        },
+        {
+          "action": "expectText",
+          "selector": "#dc-deadlines",
+          "text": "R-DC: 09 Nov 12:00; 12 Nov 12:00; 15 Nov 12:00 \u2014 all covered"
+        },
+        {
+          "action": "expectText",
+          "selector": "#outside-summary",
+          "text": "Outside horizon: R-ENG, R-CS, R-WPN, R-AIR \u2014 16 Nov 12:00; R-DC \u2014 18 Nov 12:00"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-summary",
+          "text": "Training person-minutes: 540"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P2",
+          "text": "P2: 240 min total; Mon 120; Thu 60; Sun 60"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D2",
+          "text": "Combat Systems Agent: P1 collides with Engineering D1 at 08:00; counterproposal D2 at 10:00 with P1 accepted"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D3",
+          "text": "Weapons Agent: original SIM collision with D2 resolved after Combat Systems moves; D3 at 08:00 with P3 accepted"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D4",
+          "text": "Damage Control Agent: P2 collides with Engineering D1 at 08:00; counterproposal D4 at 10:00 with P2 accepted"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D5",
+          "text": "Flight Operations Agent: OP1 prohibits flight quarters at 08:00; counterproposal D5 at 10:00 with P4, P5 accepted"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-pb4t-draft.json",
+          "text": "Synthetic, not validated against the real format. No operational use or actual SFTRM compliance."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "2026-11-15T08:00:00-05:00"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-credit",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11"
+        },
+        {
+          "action": "expectText",
+          "selector": "#requirements-heading",
+          "text": "Requirements"
+        },
+        {
+          "action": "expectText",
+          "selector": "#deliverables-heading",
+          "text": "Expected deliverables"
+        }
+      ]
+    },
+    {
+      "id": "shifted-negotiation",
+      "title": "Changed operations forces departmental personnel and time counteroffers",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "shifted-operations"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D2",
+          "text": "D2 | Combat Systems exercises | Mon 09 Nov 08:00\u201309:00 | P3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D3",
+          "text": "D3 | weapons safety exercises | Mon 09 Nov 10:00\u201311:00 | P3"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D2",
+          "text": "Combat Systems Agent: P1 collides with Engineering D1; counterproposal P3 at 08:00 accepted to release SIM at 10:00"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-D3",
+          "text": "Weapons Agent: OP2 prohibits 08:00; counterproposal D3 at 10:00 with P3 accepted after Combat Systems reassigns D2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P1",
+          "text": "P1: 60 min total; Mon 60"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P3",
+          "text": "P3: 120 min total; Mon 120"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "Synthetic SFTRM-mandated training periodicities: 7 of 7 due occurrences covered; actual compliance unverified"
+        }
+      ]
+    },
+    {
+      "id": "invalid-recovery",
+      "title": "Correct invalid drill duration without losing the saved calendar",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration-D1",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "D1 duration must be a positive integer."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D7",
+          "text": "D7 | Damage Control drills | Sun 15 Nov 08:00\u201309:00 | P2"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration-D1",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-summary",
+          "text": "Training person-minutes: 540"
+        }
+      ]
+    },
+    {
+      "id": "search-recovery",
+      "title": "Distinguish exhausted search from complete infeasibility and recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Search exhausted; infeasibility not established"
+        },
+        {
+          "action": "expectText",
+          "selector": "#attempt-summary",
+          "text": "0 candidate assignments attempted"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D1",
+          "text": "D1 | engineering casualty controls | Mon 09 Nov 08:00\u201309:00 | P1, P2"
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "10000"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic proposal"
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "tiny-impossible"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-load"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible over all supplied candidates"
+        },
+        {
+          "action": "expectText",
+          "selector": "#unmet-summary",
+          "text": "Unmet: R-ENG@2026-11-09T12:00:00-05:00; R-CS@2026-11-09T12:00:00-05:00"
+        },
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-load"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic proposal"
+        }
+      ]
+    },
+    {
+      "id": "review-cancel",
+      "title": "Persist saved input, invalidate simulated review on edit, cancel safely",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-check"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Simulated local review recorded; no operational acceptance"
+        },
+        {
+          "action": "fill",
+          "selector": "#preferred-D5",
+          "value": "2026-11-09T10:00:00-05:00"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unreviewed changes; save or discard before review"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Saved input changed; simulated review cleared"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#preferred-D5",
+          "value": "2026-11-09T10:00:00-05:00"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Cancelled; previous valid draft preserved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D7",
+          "text": "D7 | Damage Control drills | Sun 15 Nov 08:00\u201309:00 | P2"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible synthetic proposal"
+        }
+      ]
+    },
+    {
+      "id": "deadline-recovery",
+      "title": "Expose impossible mandatory deadline and restore occurrence coverage",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#scenario",
+          "value": "baseline-week"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "fill",
+          "selector": "#start-D7",
+          "value": "2026-11-15T12:00:00-05:00"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-single-start-D7"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible over all supplied candidates"
+        },
+        {
+          "action": "expectText",
+          "selector": "#deadline-D7",
+          "text": "R-DC@2026-11-15T12:00:00-05:00: cannot finish by deadline"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-D7",
+          "text": "D7 | Damage Control drills | Sun 15 Nov 08:00\u201309:00 | P2"
+        },
+        {
+          "action": "fill",
+          "selector": "#start-D7",
+          "value": "2026-11-15T08:00:00-05:00"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-single-start-D7"
+        },
+        {
+          "action": "click",
+          "selector": "#save-input"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "Synthetic SFTRM-mandated training periodicities: 7 of 7 due occurrences covered; actual compliance unverified"
+        }
+      ]
+    }
+  ]
+}

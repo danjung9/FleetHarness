@@ -1,0 +1,83 @@
+build tool fleet_visual_review
+{
+  "captureId": "53535787-30d1-438e-9d8f-16e71fd42ef9",
+  "expected": "Repair-session desktop initial review: existing frozen empty state should show synthetic notice, package loading action, native labeled controls and recovery guidance.",
+  "observed": "Desktop empty workspace shows the synthetic notice, Baseline week selector, Load sample action, local storage disclosure an
+build tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"e8808be9-2e8b-49c4-baab-a654aa57e21d\",\"sessionId\":\"f90e688d-f474-40b4-8f89-c64e12ac6633\",\"stage\":\"build\",\"captureId\":\"53535787-30d1-438e-9d8f-16e71fd42ef9\",\"viewport\":\"desktop\",\"round\":\"recheck\",\"expected\":\"Repair-session desktop initial review: existing frozen empty state should show synthetic
+build tool fleet_browser
+{
+  "action": "screenshot",
+  "viewport": "narrow"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"screenshot\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/4621a52af310-a45c2e2c-040e-46d2-8a14-d8f7872b3756.png\",\"captureId\":\"f7d305da-7c0e-488a-b521-eccf36d9f6f7\",\"pageText\":\"LANTERN / TR
+build tool fleet_visual_review
+{
+  "captureId": "f7d305da-7c0e-488a-b521-eccf36d9f6f7",
+  "expected": "Narrow empty state wraps the notice, stacks controls without clipping and explains loading a sample before generation.",
+  "observed": "390px screenshot shows readable synthetic warning, fitting selector/load controls, stacked search/save controls and clear no-calendar guidance. No layout defect observed.",
+build tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"96915f71-18c1-471e-997c-d5b72ccde4c9\",\"sessionId\":\"f90e688d-f474-40b4-8f89-c64e12ac6633\",\"stage\":\"build\",\"captureId\":\"f7d305da-7c0e-488a-b521-eccf36d9f6f7\",\"viewport\":\"narrow\",\"round\":\"recheck\",\"expected\":\"Narrow empty state wraps the notice, stacks controls without clipping and explains loadin
+build tool fleet_browser
+{
+  "action": "select",
+  "selector": "#scenario",
+  "value": "shifted-operations"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"select\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/4b4e678a04e5-ac310c5b-0f03-4670-a28f-65d85544e0af.png\",\"captureId\":\"d7561d85-f0bc-4e9e-af53-089734658346\",\"pageText\":\"LANTERN / TRAINI
+build tool fleet_browser
+{
+  "action": "click",
+  "selector": "#load-sample"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"click\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/97e7ab0fe114-4657482b-9097-484c-ae30-0981dbb607e3.png\",\"captureId\":\"87486ca6-a427-4e77-a9a2-783a94b70abd\",\"pageText\":\"LANTERN / TRAININ
+build tool fleet_browser
+{
+  "action": "click",
+  "selector": "#generate"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"click\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/f0c429a8be49-569414ed-5add-41d0-93a6-256dc3c5f007.png\",\"captureId\":\"806981ac-ce4b-48a7-b715-f4fe7ebf4b54\",\"pageText\":\"LANTERN / TRAININ
+build tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> verification.md <<'EOF'\n\n## Core evaluation repair diagnosis - ordering inconsistency\n\nThe independent host report is failed and remains authoritative failure evidence; it has not been edited. Runtime filesHash: 78b4edbd4cf9af72031d5a119bee59c19dde255fb458d5e13e9eab8aca31a6be, Node v24.22.2. allocation-reference passed all cases (score 1, threshold 1)
+build tool bash completed
+"completed"
+build tool fleet_browser
+{
+  "action": "screenshot",
+  "viewport": "narrow"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"screenshot\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/c1ae90e61169-12acd064-c9cf-4311-925b-ea372b74267c.png\",\"captureId\":\"ab2dd4df-0481-4b28-8e8d-8bf2a04580b8\",\"pageText\":\"LANTERN / TR
+build tool fleet_visual_review
+{
+  "captureId": "ab2dd4df-0481-4b28-8e8d-8bf2a04580b8",
+  "expected": "Fresh narrow recheck after loading shifted operations: saved revision and successful generation are readable with observed rejection explanations, no clipping or misleading optimum claim.",
+  "observed": "Narrow capture shows saved revision1, feasible synthetic proposal,11 attempted candidates and computed 
+build tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"78595c15-c4f1-4203-b6e2-9952d3f7d5de\",\"sessionId\":\"f90e688d-f474-40b4-8f89-c64e12ac6633\",\"stage\":\"build\",\"captureId\":\"ab2dd4df-0481-4b28-8e8d-8bf2a04580b8\",\"viewport\":\"narrow\",\"round\":\"recheck\",\"expected\":\"Fresh narrow recheck after loading shifted operations: saved revision and successful gene
+build tool fleet_browser
+{
+  "action": "screenshot",
+  "viewport": "desktop"
+}
+build tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"screenshot\",\"url\":\"http://127.0.0.1:64020/\",\"viewport\":\"desktop\",\"dimensions\":{\"width\":1280,\"height\":800},\"screenshot\":\".browser-observations/f4a0e213-641a-4b35-a78f-c0f19b10fc75/e0f01f8fe35a-7288c834-5e7b-43fe-b69f-bb9619ab55f6.png\",\"captureId\":\"4cd8e3f3-9cc3-4a8c-bbde-ce6b8d8aed38\",\"pageText\":\"LANTERN / 
+build tool fleet_visual_review
+{
+  "captureId": "4cd8e3f3-9cc3-4a8c-bbde-ce6b8d8aed38",
+  "expected": "Fresh desktop shifted-operation results show actual counterproposals and numeric personnel loading in readable paired panels, without implying operational validation.",
+  "observed": "Desktop screenshot shows computed Weapons/Combat Systems negotiation, changed D2/D3 allocation summaries and a duty heatmap 
+build tool fleet_visual_review completed
+[{"type":"inputText","text":"{\"review\":{\"id\":\"f0a3a840-31b9-4a58-b8e5-3781899c34c3\",\"sessionId\":\"f90e688d-f474-40b4-8f89-c64e12ac6633\",\"stage\":\"build\",\"captureId\":\"4cd8e3f3-9cc3-4a8c-bbde-ce6b8d8aed38\",\"viewport\":\"desktop\",\"round\":\"recheck\",\"expected\":\"Fresh desktop shifted-operation results show actual counterproposals and numeric personn
+build text The failure exposes an ordering conflict: the frozen protocol requires request order (`D3:OP2`, then `D5:OP1`), which the runtime follows. The supplied fixture key reverses them.
+
+I documented this in `verification.md`. Runtime and frozen expectations remain unchanged; all 30 local tests pass. The core gate remains failed and requires protocol/evaluation reconciliation in a new planning run.
+build info Independent core evaluation: failed. Evidence: .quality-evidence/core-report.json
+build error Error: Error: The required computational capabilities failed independent evaluation. Application completion and delivery remain blocked. Inspect .quality-evidence/core-report.json.
+Writer shutdown was not confirmed. Recovery in this workspace is blocked. Stop and clean up the old workers, then start a new run in a fresh workspace.
+    at FleetBackend.trackedAgent (file://~/fhten/app/dis

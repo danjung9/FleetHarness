@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "objective": "Generate a complete feasible synthetic PB4T weekly calendar through deterministic departmental negotiation; enforce all declared hard constraints, expand fictional periodicities, and expose collisions, loading, recovery and review boundaries.",
+  "invocation": {
+    "input": "JSON object with exactly action and package. action is required string allocate or report. package is the complete invented fictional-pb4t-1 solverInput, never a recordId or answer key. All fields required, no nulls or defaults; extra object fields ignored within package. Strings below are nonblank. Interval = {start,end} with explicit fixed -05:00 ISO8601 timestamps YYYY-MM-DDTHH:mm:ss-05:00, start<end. Timestamp arithmetic is elapsed time; output uses same canonical format. package contains metadata:{schemaVersion:\"fictional-pb4t-1\",classification:\"synthetic\",ship:string,horizon:Interval,timezone:\"fixed UTC-05:00\",resolutionMinutes:positive integer,policyVersion:string,notice:string}; departments:[{id,agent,responsibility:string}]; qualificationCatalog:[{id,name:string}]; roster:[{id,name,departmentId:string,qualifications:[{id,validFrom,validUntil:timestamp}],availability:[Interval]}]; resources:[{id:string,capacity:positive integer,availability:[Interval]}]; operationalWindows:[{id:string,interval:Interval,prohibitedFamilies:[string],prohibitedResourceIds:[resource ID]}]; policy:{classification:\"synthetic\",version:string,minRestMinutes:nonnegative integer,maxDutyMinutesPerCalendarDay:nonnegative integer,maxDutyMinutesPerHorizon:nonnegative integer,samePersonMultipleRoles:false,deadlineEqualityAllowed:true,counting,restAppliesTo,recurrence,missingPolicyBehavior,horizonCarryOver:string}; trainingRequirements:[{id,family:string,intervalDays:positive integer,mandatory:boolean}]; completionHistory:[{requirementId:string,completedEnd:timestamp}]; fixedDuties:[{id,personId,dutyClass:string,interval:Interval}]; requests:[{id,departmentId,family,requirementId,occurrenceId:string,durationMinutes:positive integer,priority:integer,preferredStart:timestamp,allowedStartWindows:[Interval],candidateStarts:[timestamp],roles:[{qualificationId:string,count:positive integer,candidatePersonIds:[person ID]}],preferredPersonIds:[person ID],resourceDemands:[{resourceId:string,units:positive integer}]}]; candidateOrder:{requests:\"array order\",starts:\"candidateStarts array order\",persons:\"candidatePersonIds array order\"}; searchBudget:nonnegative integer. Unannotated id/name/agent/responsibility fields are strings. All references must exist; entity IDs unique per collection, demand resource IDs unique per request, candidate IDs/starts unique within arrays. Each training requirement needs at least one completionHistory record; latest completedEnd is used and must precede horizon start. Duplicate occurrence request links are invalid. Missing occurrence requests are well-formed but infeasible. Empty collections allowed except roles per request; empty availability or candidate arrays mean no availability/candidates. Horizon maximum 7 elapsed days; at most 24 requests, 200 roster entries, 100 candidates per list; resolution divides 1440, durations are multiples of resolution and candidate starts align relative to horizon start. Policy budgets need not align. Preferred starts need not belong to candidateStarts. String policy explanations describe the fixed semantics below, not executable instructions; policy.version must equal metadata.policyVersion. Qualification intervals use validFrom<validUntil. No model or external systems involved.",
+    "output": "Both actions return a JSON object directly, HTTP 200 for domain outcomes. Malformed JSON at transport returns HTTP 400 {\"status\":\"invalid_input\",\"error\":\"INVALID_JSON\"}. Bad outer envelope, unknown action, null/missing/malformed field, unsupported metadata/policy switches, duplicate IDs or dangling references return exactly {\"status\":\"invalid_input\",\"error\":\"INVALID_PACKAGE\"}. Valid allocate returns exactly {status,allocations}; status is feasible, infeasible or exhausted; allocations is [{requestId:string,start:timestamp,personIds:[string]}], in request input order, people in role order (within a role candidate order). Nonfeasible allocations always []. Valid report returns exactly {status,allocations,baselineCollisions,baselineOperationalViolations,occurrences,nextOutsideHorizon,trainingMinutesByPerson,dutyMinutesByPersonInHorizon,personDayMinutes,totalTrainingPersonMinutes,coveredCount,unmet,negotiation}. status/allocations as allocate. baselineCollisions:[{kind:\"person\"|\"resource\",id:string,requests:[string,string]}]. baselineOperationalViolations:[string \"requestId:windowId\"]. occurrences:[{occurrenceId:string,deadline:timestamp,requestId:string|null}]. nextOutsideHorizon:[{requirementId:string,deadline:timestamp}]. trainingMinutesByPerson and dutyMinutesByPersonInHorizon are objects with every roster ID and numeric minutes. personDayMinutes is object keyed YYYY-MM-DD, including only days with positive duty for someone, with every roster ID and numeric duty minutes. totalTrainingPersonMinutes and coveredCount are nonnegative integers. unmet:[occurrenceId string]. negotiation:[{departmentId,requestId,proposalStart:string,proposalPersonIds:[string],counterStart:timestamp|null,counterPersonIds:[string],objections:[string],response:\"accept\"|\"unresolved\",disposition:\"retained\"|\"moved\"|\"reassigned\"|\"unresolved\"}]. All arrays have defined order below. No extra result keys. UI revision/save/review/cancel states are local interaction state, not invocation actions.",
+    "rules": [
+      "Validation precedes recurrence, candidate generation and search, even at searchBudget 0. INVALID_JSON precedes INVALID_PACKAGE. All package validation errors share INVALID_PACKAGE so there is no field-error ordering ambiguity. UI may identify an affected field from shared validation diagnostics separately, but wire response remains exact.",
+      "Use half-open intervals. Whole execution must fit horizon, one allowedStartWindows entry, every selected person availability and every demanded resource availability. Operational restrictions apply on any overlap of execution with window when family or demanded resource is prohibited. Qualification must cover the entire execution; validUntil equal execution end passes.",
+      "Generate departmental proposals from each request owner and role candidate lists. Each role needs count distinct people; one person cannot fill multiple roles. Enumerate count-sized combinations in candidate index lexicographic order, then Cartesian product in roles order; flatten in role order. Enumerate starts in supplied order, requests in supplied order, irrespective of priority or candidate counts. Departmental agents own this generation and computed accept/reject/counteroffer responses; constraint enforcement is shared.",
+      "Depth-first bounded search tries every start/person combination, including candidates later rejected by constraints. Budget counts one complete candidate assignment attempt for current request before testing it, not role subcombinations or full joint schedules. Check budget before each attempt; exactly budget attempts allowed. On attempt needing budget+1 return exhausted; complete enumeration without solution is infeasible. Stop at first complete feasible solution. Empty requests can be feasible at zero budget only if no mandatory occurrences. No greedy fixation or automatic hard constraint relaxation.",
+      "Resource units across overlapping assignments must not exceed capacity (sweep all endpoints), and every person has exclusive use. All assigned training and fixed duties obey minimum rest between every pair for same person, including duties outside horizon. Equality passes. Fixed duties overlapping each other make package infeasible, not malformed. Count union of training/fixed duty minutes; split at fixed-offset midnight for daily budgets, clip to horizon for horizon budgets. Check supplied history duties on their actual day. Empty availability is restrictive. Do not count pre-horizon duty toward horizon load.",
+      "For each requirement use latest completion, emit elapsed intervalDays*1440 deadlines from that completion. Emit every deadline before horizon end, including overdue deadlines before horizon start. Occurrence ID = requirement.id + @ + canonical deadline. Order occurrences by deadline ascending then trainingRequirements input index. The first occurrence window begins at latest completion, each subsequent window at previous deadline. Request must link to generated occurrence, same family/requirement; mismatched link or family is invalid input. Missing linked request leaves requestId null and forces infeasible if mandatory. Optional requirements are also reported; missing optional occurrences do not force infeasible. All supplied requests must be scheduled. Deadline completion equality passes. Proposed allocations never update history. nextOutsideHorizon contains first deadline >= horizon end for each requirement, requirement input order.",
+      "Output occurrences ordering: deadline ascending then trainingRequirements input index. For feasible report coveredCount counts due occurrences with an allocated linked request, unmet contains the others in occurrence order. For infeasible/exhausted report no allocations are committed, coveredCount=0 and unmet contains all occurrence IDs. Preserve feasible prior UI draft separately. Nonfeasible load maps still reflect fixed duties only; training totals zero. Outside-horizon deadlines never count covered.",
+      "Baseline uses preferredStart and preferredPersonIds regardless of feasibility. For each request pair in input index order emit shared-person overlaps in roster input order, followed by resource overlaps in resource input order when sum of the pair demand units exceeds capacity. Emit all person collisions first globally, then resource collisions. This is pairwise baseline diagnostics; final capacity validation uses full aggregate demand even when no pair exceeds capacity. Operational violation strings order by request then operationalWindows input order.",
+      "Feasible loads: trainingMinutesByPerson sums assigned durations; dutyMinutesByPersonInHorizon is clipped union of training and fixed duty. personDayMinutes uses duty union on intersecting horizon days only; omit zero-total days. Include zero-valued roster people. Object order immaterial. totalTrainingPersonMinutes is sum of trainingMinutesByPerson. Never use fixture expected keys to produce output.",
+      "negotiation has one entry per request in input order. proposalStart/preferred people come from original proposal. counterStart/people come from allocated result or null/[]. response is accept only when feasible else unresolved. disposition is reassigned if selected personIds differ (order sensitive) from preferredPersonIds, otherwise moved if start differs, otherwise retained; nonfeasible is unresolved. objections lists baseline collisions involving that request as kind:id:request1/request2 in baseline order, then matching baseline operational strings prefixed operation:. Add unscheduled at end only for nonfeasible status. UI additionally shows candidate rejection explanations (qualification, availability, rest, capacity, duty, recurrence) computed by shared constraint checks; never fabricated agent dialogue.",
+      "allocate and report must call same shared solver with same package and yield identical status/allocations. No runtime state or file writes. Search exhaustion must never be translated to infeasibility. UI cancel aborts request and discards late results using generation/revision tokens; it is not an extra wire status. Node tests verify actual solver cancellation signal where supported. UI errors/exhaustion/cancellation preserve last valid draft.",
+      "All values are synthetic, not validated against the real format. No actual SFTRM compliance, crew validation, messaging, calendar writes, publication, approval or global optimum is implied."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "qualified-allocation",
+      "kind": "optimization",
+      "description": "Bounded deterministic role/time allocation with operational, resource, qualification, availability, fatigue and recurrence constraints.",
+      "criterionIds": [
+        "SCH-01",
+        "SCH-02",
+        "SCH-03",
+        "DESC11-2",
+        "DESC11-3",
+        "SUMMARY11-1",
+        "SCOPE11-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "allocation-reference"
+      ]
+    },
+    {
+      "id": "pb4t-audit",
+      "kind": "algorithm",
+      "description": "Compute baseline collisions, all due occurrences, coverage, daily/horizon loading and departmental proposal/counterproposal dispositions.",
+      "criterionIds": [
+        "DELIVERABLE11-1",
+        "DESC11-3",
+        "SUMMARY11-1",
+        "SCOPE11-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "audit-reference"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/scheduling.js",
+      "example-input.json",
+      "domain/agents.mjs",
+      "domain/schedule.mjs",
+      "domain/policy.mjs"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "scheduling",
+  "reason": "Reuse the dependency-free loopback HTTP service, browser client and bounded scheduling pack. Extend its shared backend for role alternatives, dated qualifications, capacities, operations, prior duties, daily fatigue and recurrence. Small finite synthetic domains need no CP-SAT bridge; bounded feasibility is not global optimization."
+}

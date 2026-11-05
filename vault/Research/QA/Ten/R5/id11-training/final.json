@@ -1,0 +1,117 @@
+{
+ "title": "PB4T (Planning Board for Training) Autonomous Deconfliction Agent",
+ "status": "failed",
+ "error": "The app did not pass its checks; review the failed checks in the activity log before trying again.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T07:56:10.061Z",
+    "finishedAt": "2026-11-05T08:01:27.284Z",
+    "durationMs": 317224,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 317145,
+    "usage": {
+     "inputTokens": 437248,
+     "cachedInputTokens": 358869,
+     "uncachedInputTokens": 78379,
+     "outputTokens": 17243,
+     "reasoningOutputTokens": 1335,
+     "totalTokens": 454491,
+     "uncachedPlusOutputTokens": 95622
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:01:27.298Z",
+    "finishedAt": "2026-11-05T08:04:13.781Z",
+    "durationMs": 166484,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 166431,
+    "usage": {
+     "inputTokens": 656766,
+     "cachedInputTokens": 587965,
+     "uncachedInputTokens": 68801,
+     "outputTokens": 6404,
+     "reasoningOutputTokens": 242,
+     "totalTokens": 663170,
+     "uncachedPlusOutputTokens": 75205
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:04:13.802Z",
+    "finishedAt": "2026-11-05T08:10:27.411Z",
+    "durationMs": 373610,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 373339,
+    "usage": {
+     "inputTokens": 1086912,
+     "cachedInputTokens": 998635,
+     "uncachedInputTokens": 88277,
+     "outputTokens": 17978,
+     "reasoningOutputTokens": 1877,
+     "totalTokens": 1104890,
+     "uncachedPlusOutputTokens": 106255
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T08:10:27.463Z",
+    "finishedAt": "2026-11-05T08:20:43.475Z",
+    "durationMs": 616014,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 615689,
+    "usage": {
+     "inputTokens": 7688218,
+     "cachedInputTokens": 7503990,
+     "uncachedInputTokens": 184228,
+     "outputTokens": 34928,
+     "reasoningOutputTokens": 5566,
+     "totalTokens": 7723146,
+     "uncachedPlusOutputTokens": 219156
+    }
+   }
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "queued"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 24.6,
+ "challengeId": "11",
+ "workspace": "~/fhten/ud-r5/workspaces/f2d5c8f8-ede3-4ccb-9903-8b6816a12355/b6db31c5-1d50-442c-a059-e16ac77bfb5a"
+}
