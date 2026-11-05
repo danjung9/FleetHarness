@@ -3,57 +3,47 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Finish the existing planning audit, preserve R6 failures and distinguish missing prerequisites from implementation defects."
+summary: "Supersede the already implemented audit task and diagnose one R7 contract-completion failure."
 ---
 
 # Agentic directive
 
-## One existing implementation task
+## Stop duplicate implementation
 
-[P] [[Research/Agentic/Flow-Goals]] governs. [E, snapshot-194 and current queue] Builder already has the priority-one planning-consistency assignment, seq 1793864960828; code seats are disabled. [R] Keep that one entry. This meeting's task list is empty. Begin only after overseer enablement and exclusive file release. Coalesce equivalent main work; do not create a second audit or integration.
+[P] [[Research/Agentic/Flow-Goals]] governs. [E, ed90894 source read] runPlanningAudit exists in electron/independent-judge.ts:271 and is called through electron/pi-backend.ts:875 before contract loading. Its current policy is advisory: unavailable/corrections remain visible, one correction turn is allowed, and cancellation stops the run. Private checkpoints retain the audit; tests cover continuation, Stop, correction limits and Resume.
 
-[R] Build on 5f4eb39 or its named reviewed successor, only in:
+[R] Builder's unstarted queue 1793864960828 is superseded. Its former blocking-audit/no-correction specification conflicts with landed behavior. Main must retire/coalesce the entry before code enablement; no queue mutation is claimed here. If the stale assignment arrives, return the landed source/test mapping and stop. Do not install another audit or change the advisory policy under that assignment. No new builder task is issued.
 
-- electron/independent-judge.ts
-- electron/pi-backend.ts
-- skills/fleet-judge/SKILL.md
-- tests/independent-judge.test.mjs
-- tests/pi-backend.test.mjs
+[E] R7 ID 11 already exercised an audit: concrete corrections, a failed correction and unavailable recheck remained visible, then final judging repaired the app once and returned internal SATISFACTORY. [R] This is evidence that the flow runs, not proof that audit approval, original-domain readiness or independent acceptance succeeded. Never describe unconfirmed coverage as approved.
 
-[R] Add one bounded read-only audit before sealing newly produced evaluation keys and starting implementation. Reuse existing judge machinery and preserve final judging. Compare original obligations, public invocation rules, prepared inputs/expectations, proposed evaluator inputs/expectations and output projection. Require evidence for ordering, schema and rule agreement. Candidate code/output cannot supply the oracle.
+## One bounded architect assignment
 
-[R] Keep audit inputs immutable, use a read-only tool and bind approval to actual protocol/input/expectation/evaluator identity. Recheck identity before sealing. Keep sealed answers out of later builder context and public diagnostics. Fail with concrete gaps on inconsistency or unavailable evidence. One attempt, no new planning-repair loop. Preserve cancellation, current time limits and known/unknown usage accounting; do not assume the separate budget branch landed.
+[R] Write Research/Agentic/R7-Plan-Completion.md only. Diagnose ID 08's planning-completion failure from retained final.json, log-tail.txt, acceptance-plan.json and solution-contract.json, plus the matching host validators. Source read is permitted; generated code/builds are not to be executed. Build on current named mvp for the source comparison, while retaining R7's distinct 4a57562-plus-scratch identity.
 
-[R] Preserve frozen-plan restoration, test baselines and Resume. Old checkpoints without audit evidence must not be called audited. If audit identity cannot be persisted safely within these five files, report the exact additional-file handoff before changing shared schemas. Main serializes that transfer; no silent loss of identity or claimed Resume coverage.
+[E, R7 tail] The first host rejection is a criterion referencing review-route without its reciprocal criterion mapping. The one completion response repairs four mappings. The next host rejection is an unmapped new-user-report journey. [R] Determine from original/pre-completion evidence whether both defects existed together. If the initial bytes are absent, say that; do not infer a full chronology from only final files.
 
-## Current failure evidence and decisions
+[R] Return one smallest generic factory correction, with exact source/test file candidates and a falsifiable regression design, or a sourced no-change conclusion. Consider whether collecting independent contract diagnostics before the existing completion attempt prevents sequential hidden errors. Preserve strict criterion/capability/journey validation, the existing attempt ceiling and final refusal. Do not normalize away failures, delete journeys, loosen schema, expose sealed answers or add another repair loop.
 
-[E, [[Research/QA/Ten/Scoreboard]] and R6 retained finals/tails] R6 has nine finished failures and zero satisfactory results on 5f4eb39 plus scratch changes. Its three substantive failures are distinct:
+[R] The report must distinguish structural pre-audit completion from semantic audit behavior. Check whether the failed artifact ever reached the new audit before attributing this to audit design. Use a generic invented contract pair for the proposed regression, with multiple independent mapping faults and an unchanged valid control. If any tool execution is unavailable, label the case a design, not a reproduced test.
 
-| Record | Observed boundary | Decision |
-| --- | --- | --- |
-| R6 ID 36 | Core gate fails after a shared repair. The tail claims a lexical-order disagreement between protocol and expected output. Two generated files were withheld from shared evidence by guard timeouts. | [R] Keep this as a consistency-audit lead, not an independently proved bad oracle. Require original protocol, sealed evaluator and exact input/output identities for attribution. No sorting or changed expected answers to obtain a pass. |
-| R6 ID 12 | Final report has 26/26 generated tests, 12/12 journeys and final NOT after two judge repairs. The remaining gap is a substitute grammar instead of the required documented format. | [R] Internal consistency alone cannot establish the original task. Missing releasable specification/review remains a prerequisite, not a license to invent a replacement format or repeat implementation repairs. Preserve the final judgment. |
-| R6 ID 11 | Final report has 40/40 generated tests, 10/10 journeys and final NOT after two judge repairs. Remaining gaps are authoritative periodicity semantics and actual operator acceptance. | [R] Keep synthetic behavior, domain validation and human acceptance distinct. A generated acknowledgment cannot supply a person's acceptance. No code repair can fabricate the missing authority. |
+[R] Add a brief disposition for R7 IDs 36/12: their tails report 300 seconds without model progress at plan/verify, with null final reports. Separate observed idle expiry from unknown provider cause, whole-run budget and unconfirmed cleanup. Main owns execution evidence and any runtime repair. Do not recommend larger timers from summary wording alone. Stop after the report; no implementation or duplicate independent judgment.
 
-[R] The audit must retain original obligations when comparing public rules; it must not certify two mutually consistent substitutes as proof of the requested format or policy. Return the missing prerequisite explicitly. Human acceptance remains a later human decision, never an automatic audit verdict. Do not expand this patch into domain implementation, a new acceptance waiver or another repair policy. Any necessary change beyond the existing allocation comes back with exact files and a generic failing case.
+## Current acceptance and prerequisite decisions
 
-[E] R5's canonical ID 11 NOT and missing sealed historical evaluator remain unchanged. [R] Keep every old failure and frozen key intact. The R6 in-pipeline judges do not replace independent officer review. Main supplies missing artifacts and execution identity through approved sharing, without guard bypass. Quality owns new independent judgments; no duplicate audit of completed R5 reviews.
+[E, [[Research/QA/Ten/Scoreboard]]] R7 has four finished results, one automatic pass, zero independently satisfactory. ID 11 reports 21/21 generated tests, 20/20 journeys, 12 demonstrated and four unverified criteria; requirementsMet=false. Its internal judge returns SATISFACTORY after one repair. The independent Officer row is pending. [R] Request that review through Quality's allocation, preserving this new receipt and all R6 failures.
 
-## Proof required from builder
+[E, [[Research/QA/Officer/Handoff-R6]]] The completed R6 reviews support synthetic scheduling and bounded cached-browser disconnection. They do not establish mandated periodicity, a documented USMTF subset, cold delivered-copy operation or actual human acceptance. SCH-05 originates in a human recipe criterion, not the original card. The ID 12 rejection fixture proves a boundary around a placeholder, not rejection of a known conforming message.
 
-[R] Write failing-first host-path regressions using independently invented generic synthetic examples: request, window and lexical order differ; one item intersects two windows; endpoint contact does not overlap; an unchanged control passes. Window-first expectations and narrative witnesses substituted for structured output must fail consistency. A conformant plan proceeds. Keep ordered equality.
+[R] Preserve those distinctions in prompts and reports. Synthetic values can stand in for sensitive records; fictional governing rules or substitute formats need explicit unresolved status. Product/main obtains permitted authoritative specifications and independently reviewed mappings. Engineering must not invent them. Acknowledgment controls, technical readiness and a person's acceptance are distinct; obtain acceptance after technical readiness on identified bytes.
 
-[R] Prove NOT, malformed/missing verdict, timeout, Stop and changed audit inputs cannot seal or start implementation. Stop starts no repair. Assert actual snapshot/tool inputs and host state transitions, not prompt text or a canned successful verdict. Preserve final judging, shutdown and answer-isolation tests. Report exact before/after commands, outputs and integrated source identity.
+[R] Internal SATISFACTORY plus humanSteps must not silently waive an original card obligation. Quality adjudicates the R7 artifact independently for its declared scope. No challenge IDs or answer keys belong in production prompts/tests, no frozen historical key edits, and no hand repair of generated apps.
 
-[R] These fixtures establish host enforcement only. Main must obtain a new versioned planning/build receipt, and Quality must independently judge the resulting artifact before any semantic, time, token or satisfaction improvement is claimed. No challenge IDs or benchmark answers in production prompts/tests; use generic cases.
+## Evidence and limits
 
-[E, relay and completed QA triage] 5f4eb39 restores live planning notes and uses process evidence after failed stages. [R] Do not restore obsolete unconditional plan-edit rejection. Main owns native failure closure and adapted dual-error controls in [[Ops/Directors/Directive-development]]. Shared backend/tests transfer serially.
+[R] [[Research/Agentic/One-Shot-Gaps]] is completed research. Its first implementation proposal is now present with a different, explicit advisory policy; its broader counterexample/receiver proposals remain backlog. No new dev-4/5 assignment. Main and existing Acceptance owners retain service packaging, actual delivery and judge-NOT branch evidence under [[Ops/Directors/Directive-development]]. Do not author competing checkers.
 
-## Stop duplicate work and answer questions
+[R] For any later code allocation, require a failing-first host-path regression, exact source/test ownership, matching integrated revision and preserved Stop, writer-state, frozen-plan restoration, baseline, Resume, final judging and accounting protections. A fixture verdict is host enforcement evidence; claim semantic/time/token improvement only from a new identified run plus independent review. Do not assume the divergent budget branch landed.
 
-[R] Accept [[Research/Agentic/One-Shot-Gaps]] as completed input. Keep its first proposal bounded to the existing audit. Broader fresh-input coverage and complete receiver/download checks remain backlog. Architect, dev-4 and dev-5 receive no new assignment. Existing native packaging, delivery, baseline and preview owners retain those tasks.
+[E] No new literal team QUESTIONS is recorded in feed-198. [R] Architect's prioritization question is answered by the single completion-diagnosis report. Builder's audit priority is superseded, not expanded. Missing historical evaluator bytes limit causal claims but do not justify another implementation or invented prerequisites.
 
-[R] The prioritization question is resolved above. Missing historical evaluator evidence does not prevent generic regression work, but does prevent claiming causal closure. Missing domain references or actual human acceptance go to Product/main's human decision list; seats must not fetch nonpublic material or invent approvals. No new literal team QUESTIONS appears in feed-194.
-
-[P] Dan's frontend and current full-access build policy remain. A read-only evaluator role does not reduce build-agent access. GenAI.mil remains framework only. [R] Use synthetic/public data, retain monitoring, escalation, Stop and human approval. Main owns real builds and integration. Keep noon freeze and final human artifact/submission acceptance.
+[P] Full-access build policy remains; evaluator read-only tools do not restrict build agents. Dan owns frontend; GenAI.mil remains framework only. [R] Use synthetic/public data, monitor failures and usage, escalate ambiguity or unconfirmed shutdown, and retain Stop and human approval. Main owns real builds/integration. Preserve noon freeze and final human artifact/submission authority.

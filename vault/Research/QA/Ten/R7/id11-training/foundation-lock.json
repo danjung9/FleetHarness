@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "selection": {
+    "schemaVersion": 1,
+    "templateId": "node-service",
+    "version": "1.0.0",
+    "computePack": "scheduling",
+    "reason": "Dependency-free Node service matches local PB4T browser workflow and shares compute.mjs between POST /api/invoke and Node tests. Reuse scheduling search/overlap primitives; extend materialized lib/scheduling.js for distinct qualified personnel selection, negative watch history, daily/weekly fatigue, recurrence and deterministic department order. No Python, model or frontend framework is needed. All starter files are host-copied after planning."
+  },
+  "templateHash": "1d1685a2e57a1499b452495b48b1f44aed8b69a20164af34c07ea6aaa101f83a",
+  "files": {
+    "compute.mjs": "b957c1652ae9475b480c0cd7c8636d814e5b15dc70638ba74449f8de763ad284",
+    "example-input.json": "c2c54236dc6d70d8a40879285873094d4fe8889e40b2b11dd2eaa05ec6c69484",
+    "FOUNDATION.md": "13b1c2b50d713ad36fe0d4a061beb0dccfc212fc0eccb20f0551fb4135c6cf5e",
+    "lib/scheduling.js": "df1516b6be05527c8b4f1a6cbf70df81569e3f57fa69f525ce2144d16bc13ecf",
+    "lib/validation.js": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f",
+    "package.json": "92ed1ff0bbc999477871bb4faf6327c6d8261ab9a57eec87ef874782223cd455",
+    "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+    "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+    "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+    "server.mjs": "2a1a896aedc91a2f5651d30d73bfb186ca2a8d4e7bfafa69f4cf39c6b0ae195b"
+  },
+  "copiedFiles": 10,
+  "copiedBytes": 28958,
+  "scope": "Original starter bytes before agent edits; not application verification or measured token savings."
+}

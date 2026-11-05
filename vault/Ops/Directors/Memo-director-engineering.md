@@ -3,19 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Keep current owners focused on R6 and native failures."
+summary: "Retire duplicate audit work, diagnose R7 completion and finish existing delivery evidence."
 ---
 
 # Engineering decisions
 
-[E, Scoreboard and R6 final records] Nine attempts finished, all failed; none satisfactory. IDs 11/12 pass generated tests and journeys but end with NOT judgments. Missing authoritative requirements and human acceptance cannot be repaired by inventing rules or approval. ID 36's reported ordering conflict remains unverified.
+[E, R7 Scoreboard/finals] Four builds finished: three failures, one automatic pass, zero independently satisfactory. ID 11 records 21/21 tests, 20/20 journeys and an internal SATISFACTORY verdict, with requirementsMet=false. [R] Quality should judge these bytes independently; preserve original obligations and actual human acceptance.
 
-[R] Keep the already queued five-file planning-consistency audit. Preserve original obligations and final judging. No duplicate builder or architect assignment. Fixture success does not establish task acceptance.
+[E, ed90894 source] Planning audit already exists, including one correction, persisted evidence and advisory continuation. [R] Supersede builder queue 1793864960828. Main must retire/coalesce it before enablement; do not install a competing audit or silently change continuation policy.
 
-[E, feed/snapshot-194 and queue] Code seats remain disabled; dev-1/3 retain gate returns. Dev-2 has completed-label evidence and retained claims without a queued task. [R] Main reconciles those returns and releases files explicitly. Preserve Dan's delivery callback and smoke assertions.
+[R] Assign architect one report on R7 ID 08's sequential contract errors and a minimal generic correction. IDs 36/12 show 300-second model-idle failures, not proven inadequate overall budgets. No extra repair loop or timeout increase without causal evidence.
 
-[R] Accept both completed QA triages. Main and existing packaging/backend owners owe exact native failure blocks and targeted closure. Seven listed problems, six reported failures and one unclassified test are unresolved accounting, not seven proved causes. The later 0666861 preview-persistence defect stays with main's existing repair.
+[E, Review-4a57562] Six bounded receipts pass, closing same-run preview reload and saved-baseline reproductions. [R] Stop assigning those repairs. Main/Acceptance retain actual delivered-app, judge-NOT and new service-package proof. Later ed90894 source is not certified by earlier receipts.
 
-[R] Main investigates R6 service-disconnected and Home-navigation failures before relaunching affected cards. Guard-held ID 36 files mean incomplete shared evidence, not absent implementation. Preserve all failed receipts.
-
-[R] Empty new-task list avoids duplicating queued work. Keep full access, human approval, verified shutdown and noon freeze. Main supplies current execution identity and missing receipts; no readiness or satisfactory claim is accepted.
+[R] Accept R6 officer handoff: missing domain specifications remain prerequisites; SCH-05 is a later human decision. Preserve dev-1/3 returns, reconcile dev-2's retained claims, and protect Dan's frontend. Code seats stay disabled. Keep full access, verified shutdown, noon freeze and human final-byte/submission approval.

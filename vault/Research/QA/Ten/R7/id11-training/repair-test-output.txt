@@ -1,0 +1,29 @@
+✔ complete public envelope and independent prepared allocation oracle (5.790375ms)
+✔ impossible and exhausted abstain with exact envelopes (1.354417ms)
+✔ schema precedence and fixed history errors (1.038459ms)
+✔ fatigue, deadline, qualification, unavailable and exact rest boundaries (3.692834ms)
+✔ novel empty week returns complete zero results and immutable input (0.320792ms)
+✔ novel distinct-role matching, midnight split and supplied crew validation (0.696792ms)
+✔ all feasible allocations independently satisfy interval pairs and summed budgets (1.240167ms)
+✔ loading the same sample preserves unfinished input until explicit discard (9.464959ms)
+✔ loading same sample preserves unfinished allocation until explicit discard (12.753166ms)
+✔ agents exchange rejection feedback and retract earlier department reservation before counterproposal (8.520625ms)
+✔ impossible and exhausted exchange traces terminate without a fabricated solution (0.775875ms)
+✔ cadence derives multiple obligations from history and repairs deletion of both obligation and drill (1.880833ms)
+✔ generated deadline boundary, changed candidates and impossible coverage are enforced (0.741292ms)
+✔ real heat mapping gives zero, low and high computed loads distinct ordered intensities (2.156708ms)
+✔ HTTP cadence and exchanges use the shared backend and exact invoke remains unchanged (82.563041ms)
+✔ delivered client cadence workflow regenerates missing input and resets rules when loading sample (8.893292ms)
+✔ applied conflicting record cannot review or export a retained feasible board (12.600208ms)
+✔ rejected allocation draft blocks review until deliberate discard (15.403166ms)
+✔ real HTTP transport and worker use shared computation; syntax errors retain protocol (69.089458ms)
+✔ oversize public request returns exact domain envelope (4.393041ms)
+✔ startup blocks draft editing until delayed sample hydration finishes (18.069583ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 215.761958

@@ -1,0 +1,906 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Operational requirement remains unverified. Complete synthetic workflow: initial P1/ROOM DC-1\u2013ENG-1 collisions resolve by ENG-1 moving 540 to 1980; Engineering counterproposes and Weapons/Combat Systems retain; six of six explicit due occurrences satisfy all declared constraints, zero remaining hard violations. No SFTRM compliance assertion.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual qualified crew availability, duty and training-completion records are unavailable and prohibited by the synthetic-only boundary. Withhold operational SFTRM assurance; demonstrate complete synthetic departmental negotiation, collisions, alternate allocations, fatigue and due occurrence coverage.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional personnel, qualified rosters, availability, duty/training history, departmental preferences, grammar, explicit recurrence and fatigue policies. Synthetic; not validated against real records, real format, or SFTRM. No operational assurance or real approval.",
+        "journeyIds": [
+          "synthetic-pb4t"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "UC11-1",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every allocation pair has no shared-person/resource overlap; base starts are DC-1 540, ENG-1 1980, WPN-1 780, CS-1 2220, AIR-1 3420, DC-2 6300. Conflicting operator edit is rejected while last valid board remains.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "review-edit"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Distinct valid role coverage, whole-interval availability and explicit watches/rest/daily/weekly duty are enforced. Rest 480 accepted/479 rejected; weekly 360 accepted/359 rejected; fixed-history daily 540 accepted/539 invalid; expiry at end accepted/one minute early infeasible.",
+      "journeyIds": [
+        "fatigue-recovery",
+        "new-input"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Known impossible qualified roster returns infeasible; known feasible input with maxNodes=0 returns search-exhausted; neither returns a partial board. Correcting inputs recovers feasible result.",
+      "journeyIds": [
+        "search-recovery"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Expand supplied explicit obligation list into current/history/future IDs without inventing interval rules: base 6 due/6 completed/0 missed, both DC occurrences retained. Deadline 2340 accepted/2339 infeasible; old unmet occurrence reports historical overdue=1 and DC-NEXT remains future. Applies fictional rules only; real SFTRM unverified.",
+      "journeyIds": [
+        "history-future",
+        "deadline-recovery"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "deferred",
+      "expectedOutcome": "Actual operator acceptance remains unverified. Local revision 1 review has realApproval=false; conflicting edit creates revision 2 pending review, preserves valid board and requires save/discard before fresh local review.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "human-authority: An actual PB4T operator must accept the specific proposed schedule. No real operator approval is recorded; demonstrate revision-bound local review with realApproval false, retaining pending approval for owner review."
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Interactive seven-day board, one-click bounded zero-collision optimization, computed departmental negotiation, editable/revalidated allocations and numeric heatmaps: P1/P2 360 training each; P3\u2013P7 120 each; P8/P9 zero; total training 1320, duty 1380. New custom JSON changes results; review/export/reload/reset/cancel work.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "new-input",
+        "review-edit",
+        "export-draft",
+        "cancel-reset"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "DESC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Real crew/operations remain unverified. Synthetic Damage Control DC-1 540\u2013660 and DC-2 6300\u20136420, engineering casualty ENG-1 1980\u20132100, Combat Systems CS-1 2220\u20132340 and flight quarters AIR-1 3420\u20133540 are coordinated with qualified crews and explicit operational windows.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual crew availability and ship operations are unavailable and prohibited. Withhold coordination against real crew/operations; demonstrate all four named fictional training types against explicit synthetic availability and operating windows.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional personnel, qualified rosters, availability, duty/training history, departmental preferences, grammar, explicit recurrence and fatigue policies. Synthetic; not validated against real records, real format, or SFTRM. No operational assurance or real approval.",
+        "journeyIds": [
+          "synthetic-pb4t"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "Damage Control drills"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "Combat Systems exercises"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "engineering casualty controls"
+          },
+          {
+            "sourceCriterionId": "DESC11-1",
+            "name": "flight quarters"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "DESC11-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Initial simultaneous DC-1/ENG-1 P1 collision [540,660) is detected and eliminated; no remaining double booking is hidden by merging duty.",
+      "journeyIds": [
+        "synthetic-pb4t"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "DESC11-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Computed departmental agents submit owned preferences and receive shared-constraint counterproposals; base Engineering moves to Tuesday 1980 while Weapons and Combat Systems retain; complete weekly calendar is deconflicted automatically.",
+      "journeyIds": [
+        "synthetic-pb4t"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "All departmental proposals pass shared person/resource, ship-window, qualification and fictional fatigue constraints; late/conflicting/impossible changes cannot produce a valid complete board.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "fatigue-recovery"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements heading is represented by the complete synthetic planning workflow and explicit operational limitations, with schema errors recoverable without losing the valid board.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "malformed-recovery"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Engineering, Weapons, Combat Systems, Damage Control and Air have distinct computed proposal ownership; EOOW/FPL/TAO role matching, explicit operating windows and invented fatigue are enforced with no model overriding constraints.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "new-input"
+      ],
+      "capabilityIds": [
+        "pb4t-planning"
+      ]
+    },
+    {
+      "criterionId": "SCOPE11-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Operational SFTRM assurance remains unverified; synthetic collision results 2\u21920, alternate ENG-1 1980\u20132100, due 6/scheduled 6/missed 0; late CS deadline 2339 is infeasible; historical overdue is visible separately.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: Actual training-completion records are unavailable and prohibited. Withhold operational SFTRM compliance assurance; demonstrate synthetic collisions, alternate allocations and every supplied fictional due occurrence.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional personnel, qualified rosters, availability, duty/training history, departmental preferences, grammar, explicit recurrence and fatigue policies. Synthetic; not validated against real records, real format, or SFTRM. No operational assurance or real approval.",
+        "journeyIds": [
+          "synthetic-pb4t"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "personnel collisions"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "alternate schedule allocations"
+          },
+          {
+            "sourceCriterionId": "SCOPE11-6",
+            "name": "SFTRM-mandated training periodicities"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "SCOPE11-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables heading is represented by the working weekly board, optimization and loading plus complete labeled local-review export; it adds no independent integration obligation.",
+      "journeyIds": [
+        "synthetic-pb4t",
+        "export-draft"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE11-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Visible source attribution links exactly to https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11 and visible synthetic disclosure accompanies computed outputs. Packet captured 2026-11-04 remains source authority; no remote system access.",
+      "journeyIds": [
+        "synthetic-pb4t"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "synthetic-pb4t",
+      "title": "Negotiate all named departmental drills and inspect numeric loading",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#initial-collisions",
+          "text": "P1: DC-1 / ENG-1 at 540\u2013660; ROOM: DC-1 / ENG-1 at 540\u2013660"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft; pending local review."
+        },
+        {
+          "action": "expectText",
+          "selector": "#collision-summary",
+          "text": "2 initial collisions \u2192 0 remaining; 0 hard violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#personnel-collisions",
+          "text": "personnel collisions: P1 shared by DC-1 and ENG-1 at 540\u2013660; 1 initial personnel collision; 0 remaining."
+        },
+        {
+          "action": "expectText",
+          "selector": "#alternate-allocations",
+          "text": "alternate schedule allocations: ENG-1 moves from 540\u2013660 to 1980\u20132100 with P1/P3 in ROOM; all 6 mandatory drills retained."
+        },
+        {
+          "action": "expectText",
+          "selector": "#periodicity-output",
+          "text": "SFTRM-mandated training periodicities: operational compliance unverified. Synthetic explicit obligations: 6 due; 6 scheduled within deadline; 0 missed; 0 historically overdue."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-DC-1",
+          "text": "Damage Control drills: DC-1 540\u2013660; P1/P2; ROOM"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-DC-2",
+          "text": "Damage Control drills: DC-2 6300\u20136420; P1/P2; ROOM"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-CS-1",
+          "text": "Combat Systems exercises: CS-1 2220\u20132340; P5/P6; ROOM"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-AIR-1",
+          "text": "flight quarters: AIR-1 3420\u20133540; P2/P7; DECK"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-WPN-1",
+          "text": "Weapons handling drill: WPN-1 780\u2013900; P4; RANGE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-ENG-1",
+          "text": "Engineering Agent: ENG-1 540 \u2192 1980; P1/P3 \u2192 P1/P3; counterproposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-WPN-1",
+          "text": "Weapons Agent: WPN-1 780 \u2192 780; P4 \u2192 P4; retain"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-CS-1",
+          "text": "Combat Systems Agent: CS-1 2220 \u2192 2220; P5/P6 \u2192 P5/P6; retain"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage",
+          "text": "Fictional periodicities: 6 due; 6 scheduled within deadline; 0 missed; 0 historically overdue. SFTRM compliance unverified."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P1",
+          "text": "P1: 360 training minutes; 360 weekly duty minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#heat-P1",
+          "text": "120 120 0 0 120 0 0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P5",
+          "text": "P5: 120 training minutes; 180 weekly duty minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#totals",
+          "text": "1320 personnel training minutes; 1380 weekly duty minutes; 1 changed drill."
+        },
+        {
+          "action": "expectText",
+          "selector": "#objective",
+          "text": "Collision objective: 0; lower bound: 0. No global roster optimum claim."
+        },
+        {
+          "action": "expectText",
+          "selector": "#provenance",
+          "text": "Synthetic; not validated against real records, real format, or SFTRM."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/11"
+        }
+      ]
+    },
+    {
+      "id": "new-input",
+      "title": "Submit a new qualified roster and drill proposals through the interface",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"novel-board\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2}],\"personnel\":[{\"id\":\"NX\",\"name\":\"Fictional New Planner\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":0,\"validUntil\":10080}],\"availability\":[[0,10080]]}],\"resources\":[{\"id\":\"HALL\",\"name\":\"Synthetic hall\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[0,1440]],\"fixedDuties\":[],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":30,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":1200,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"ALPHA\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":30,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1}],\"eligiblePersonnelIds\":[\"NX\"],\"resourceIds\":[\"HALL\"],\"allowedStartMinutes\":[100],\"preferredStartMinute\":100,\"proposedPersonnelIds\":[\"NX\"],\"requirementId\":\"R-ALPHA\"},{\"id\":\"BETA\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":30,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1}],\"eligiblePersonnelIds\":[\"NX\"],\"resourceIds\":[\"HALL\"],\"allowedStartMinutes\":[100,160],\"preferredStartMinute\":100,\"proposedPersonnelIds\":[\"NX\"],\"requirementId\":\"R-BETA\"}],\"recurrenceRequirements\":[{\"id\":\"R-ALPHA\",\"lastCompletionMinute\":-100,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ALPHA\",\"releaseMinute\":0,\"deadlineMinute\":500,\"requiredCount\":1}]},{\"id\":\"R-BETA\",\"lastCompletionMinute\":-100,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"BETA\",\"releaseMinute\":0,\"deadlineMinute\":500,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ALPHA",
+          "text": "engineering casualty controls: ALPHA 100\u2013130; NX; HALL"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-BETA",
+          "text": "Weapons handling drill: BETA 160\u2013190; NX; HALL"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-NX",
+          "text": "NX: 60 training minutes; 60 weekly duty minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#objective",
+          "text": "Collision objective: 0; lower bound: 0. No global roster optimum claim."
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"novel-board\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2}],\"personnel\":[{\"id\":\"NX\",\"name\":\"Fictional New Planner\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":0,\"validUntil\":10080}],\"availability\":[[0,10080]]}],\"resources\":[{\"id\":\"HALL\",\"name\":\"Synthetic hall\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[0,1440]],\"fixedDuties\":[],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":30,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":1200,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"ALPHA\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":30,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1}],\"eligiblePersonnelIds\":[\"NX\"],\"resourceIds\":[\"HALL\"],\"allowedStartMinutes\":[100],\"preferredStartMinute\":100,\"proposedPersonnelIds\":[\"NX\"],\"requirementId\":\"R-ALPHA\"},{\"id\":\"BETA\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":30,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1}],\"eligiblePersonnelIds\":[\"NX\"],\"resourceIds\":[\"HALL\"],\"allowedStartMinutes\":[100,200],\"preferredStartMinute\":100,\"proposedPersonnelIds\":[\"NX\"],\"requirementId\":\"R-BETA\"}],\"recurrenceRequirements\":[{\"id\":\"R-ALPHA\",\"lastCompletionMinute\":-100,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ALPHA\",\"releaseMinute\":0,\"deadlineMinute\":500,\"requiredCount\":1}]},{\"id\":\"R-BETA\",\"lastCompletionMinute\":-100,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"BETA\",\"releaseMinute\":0,\"deadlineMinute\":500,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-BETA",
+          "text": "Weapons handling drill: BETA 200\u2013230; NX; HALL"
+        }
+      ]
+    },
+    {
+      "id": "malformed-recovery",
+      "title": "Reject malformed input while retaining the valid board and draft text",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"drills\":["
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "Malformed JSON."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"drills\":["
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        },
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft; pending local review."
+        }
+      ]
+    },
+    {
+      "id": "search-recovery",
+      "title": "Distinguish impossible qualified staffing from exhausted search",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "impossible-expired-eoow"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible: no complete allocation under supplied constraints."
+        },
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "feasible-zero-budget"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Search exhausted; infeasibility is not established."
+        },
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft; pending local review."
+        }
+      ]
+    },
+    {
+      "id": "fatigue-recovery",
+      "title": "Correct a fictional duty limit without relaxing it silently",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"weekly-conflicts\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2},{\"departmentId\":\"CS\",\"name\":\"Combat Systems Agent\",\"priority\":3,\"tieOrder\":3},{\"departmentId\":\"DC\",\"name\":\"Damage Control Agent\",\"priority\":4,\"tieOrder\":4},{\"departmentId\":\"AIR\",\"name\":\"Air Agent\",\"priority\":5,\"tieOrder\":5}],\"personnel\":[{\"id\":\"P1\",\"name\":\"Mira Vale\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Fire Party Leader\",\"validFrom\":-43200,\"validUntil\":10080},{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P2\",\"name\":\"Oren Finch\",\"departmentId\":\"DC\",\"qualifications\":[{\"role\":\"Safety Observer\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P3\",\"name\":\"Tessa Rowan\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Engineering Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P4\",\"name\":\"Ivo Marsh\",\"departmentId\":\"WPN\",\"qualifications\":[{\"role\":\"Weapons Supervisor\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P5\",\"name\":\"Nia Lark\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"TAO\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P6\",\"name\":\"Soren Pike\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"Console Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P7\",\"name\":\"Elin Cove\",\"departmentId\":\"AIR\",\"qualifications\":[{\"role\":\"Flight Director\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P8\",\"name\":\"Dara Quill\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":0}],\"availability\":[[0,10080]]},{\"id\":\"P9\",\"name\":\"Lio Reed\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[1440,10080]]}],\"resources\":[{\"id\":\"ROOM\",\"name\":\"Training room\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"RANGE\",\"name\":\"Synthetic handling space\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"DECK\",\"name\":\"Flight deck\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[480,960],[1920,2400],[3360,3840],[4800,5280],[6240,6720]],\"fixedDuties\":[{\"id\":\"WATCH-P1\",\"personnelId\":\"P1\",\"startMinute\":-600,\"endMinute\":-60},{\"id\":\"WATCH-P5\",\"personnelId\":\"P5\",\"startMinute\":0,\"endMinute\":60}],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":480,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":359,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"DC-1\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"},{\"id\":\"ENG-1\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1},{\"role\":\"Engineering Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P3\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540,1980],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P3\"],\"requirementId\":\"R-ENG\"},{\"id\":\"WPN-1\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Weapons Supervisor\",\"count\":1}],\"eligiblePersonnelIds\":[\"P4\"],\"resourceIds\":[\"RANGE\"],\"allowedStartMinutes\":[780],\"preferredStartMinute\":780,\"proposedPersonnelIds\":[\"P4\"],\"requirementId\":\"R-WPN\"},{\"id\":\"CS-1\",\"title\":\"Combat Systems exercises\",\"departmentId\":\"CS\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"TAO\",\"count\":1},{\"role\":\"Console Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P5\",\"P6\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[2220],\"preferredStartMinute\":2220,\"proposedPersonnelIds\":[\"P5\",\"P6\"],\"requirementId\":\"R-CS\"},{\"id\":\"AIR-1\",\"title\":\"flight quarters\",\"departmentId\":\"AIR\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Safety Observer\",\"count\":1},{\"role\":\"Flight Director\",\"count\":1}],\"eligiblePersonnelIds\":[\"P2\",\"P7\"],\"resourceIds\":[\"DECK\"],\"allowedStartMinutes\":[3420],\"preferredStartMinute\":3420,\"proposedPersonnelIds\":[\"P2\",\"P7\"],\"requirementId\":\"R-AIR\"},{\"id\":\"DC-2\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[6300],\"preferredStartMinute\":6300,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"}],\"recurrenceRequirements\":[{\"id\":\"R-DC\",\"lastCompletionMinute\":-600,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":7200,\"occurrences\":[{\"id\":\"DC-1\",\"releaseMinute\":0,\"deadlineMinute\":720,\"requiredCount\":1},{\"id\":\"DC-2\",\"releaseMinute\":5760,\"deadlineMinute\":6600,\"requiredCount\":1}]},{\"id\":\"R-ENG\",\"lastCompletionMinute\":-7920,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ENG-1\",\"releaseMinute\":0,\"deadlineMinute\":2160,\"requiredCount\":1}]},{\"id\":\"R-WPN\",\"lastCompletionMinute\":-9180,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"WPN-1\",\"releaseMinute\":0,\"deadlineMinute\":900,\"requiredCount\":1}]},{\"id\":\"R-CS\",\"lastCompletionMinute\":-7680,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"CS-1\",\"releaseMinute\":0,\"deadlineMinute\":2400,\"requiredCount\":1}]},{\"id\":\"R-AIR\",\"lastCompletionMinute\":-6480,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"AIR-1\",\"releaseMinute\":0,\"deadlineMinute\":3600,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible: no complete allocation under supplied constraints."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"weekly-conflicts\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2},{\"departmentId\":\"CS\",\"name\":\"Combat Systems Agent\",\"priority\":3,\"tieOrder\":3},{\"departmentId\":\"DC\",\"name\":\"Damage Control Agent\",\"priority\":4,\"tieOrder\":4},{\"departmentId\":\"AIR\",\"name\":\"Air Agent\",\"priority\":5,\"tieOrder\":5}],\"personnel\":[{\"id\":\"P1\",\"name\":\"Mira Vale\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Fire Party Leader\",\"validFrom\":-43200,\"validUntil\":10080},{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P2\",\"name\":\"Oren Finch\",\"departmentId\":\"DC\",\"qualifications\":[{\"role\":\"Safety Observer\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P3\",\"name\":\"Tessa Rowan\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Engineering Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P4\",\"name\":\"Ivo Marsh\",\"departmentId\":\"WPN\",\"qualifications\":[{\"role\":\"Weapons Supervisor\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P5\",\"name\":\"Nia Lark\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"TAO\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P6\",\"name\":\"Soren Pike\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"Console Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P7\",\"name\":\"Elin Cove\",\"departmentId\":\"AIR\",\"qualifications\":[{\"role\":\"Flight Director\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P8\",\"name\":\"Dara Quill\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":0}],\"availability\":[[0,10080]]},{\"id\":\"P9\",\"name\":\"Lio Reed\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[1440,10080]]}],\"resources\":[{\"id\":\"ROOM\",\"name\":\"Training room\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"RANGE\",\"name\":\"Synthetic handling space\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"DECK\",\"name\":\"Flight deck\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[480,960],[1920,2400],[3360,3840],[4800,5280],[6240,6720]],\"fixedDuties\":[{\"id\":\"WATCH-P1\",\"personnelId\":\"P1\",\"startMinute\":-600,\"endMinute\":-60},{\"id\":\"WATCH-P5\",\"personnelId\":\"P5\",\"startMinute\":0,\"endMinute\":60}],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":480,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":360,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"DC-1\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"},{\"id\":\"ENG-1\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1},{\"role\":\"Engineering Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P3\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540,1980],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P3\"],\"requirementId\":\"R-ENG\"},{\"id\":\"WPN-1\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Weapons Supervisor\",\"count\":1}],\"eligiblePersonnelIds\":[\"P4\"],\"resourceIds\":[\"RANGE\"],\"allowedStartMinutes\":[780],\"preferredStartMinute\":780,\"proposedPersonnelIds\":[\"P4\"],\"requirementId\":\"R-WPN\"},{\"id\":\"CS-1\",\"title\":\"Combat Systems exercises\",\"departmentId\":\"CS\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"TAO\",\"count\":1},{\"role\":\"Console Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P5\",\"P6\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[2220],\"preferredStartMinute\":2220,\"proposedPersonnelIds\":[\"P5\",\"P6\"],\"requirementId\":\"R-CS\"},{\"id\":\"AIR-1\",\"title\":\"flight quarters\",\"departmentId\":\"AIR\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Safety Observer\",\"count\":1},{\"role\":\"Flight Director\",\"count\":1}],\"eligiblePersonnelIds\":[\"P2\",\"P7\"],\"resourceIds\":[\"DECK\"],\"allowedStartMinutes\":[3420],\"preferredStartMinute\":3420,\"proposedPersonnelIds\":[\"P2\",\"P7\"],\"requirementId\":\"R-AIR\"},{\"id\":\"DC-2\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[6300],\"preferredStartMinute\":6300,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"}],\"recurrenceRequirements\":[{\"id\":\"R-DC\",\"lastCompletionMinute\":-600,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":7200,\"occurrences\":[{\"id\":\"DC-1\",\"releaseMinute\":0,\"deadlineMinute\":720,\"requiredCount\":1},{\"id\":\"DC-2\",\"releaseMinute\":5760,\"deadlineMinute\":6600,\"requiredCount\":1}]},{\"id\":\"R-ENG\",\"lastCompletionMinute\":-7920,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ENG-1\",\"releaseMinute\":0,\"deadlineMinute\":2160,\"requiredCount\":1}]},{\"id\":\"R-WPN\",\"lastCompletionMinute\":-9180,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"WPN-1\",\"releaseMinute\":0,\"deadlineMinute\":900,\"requiredCount\":1}]},{\"id\":\"R-CS\",\"lastCompletionMinute\":-7680,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"CS-1\",\"releaseMinute\":0,\"deadlineMinute\":2400,\"requiredCount\":1}]},{\"id\":\"R-AIR\",\"lastCompletionMinute\":-6480,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"AIR-1\",\"releaseMinute\":0,\"deadlineMinute\":3600,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft; pending local review."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P1",
+          "text": "P1: 360 training minutes; 360 weekly duty minutes."
+        }
+      ]
+    },
+    {
+      "id": "history-future",
+      "title": "Review explicit historical and future obligations without claiming compliance",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"weekly-conflicts\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2},{\"departmentId\":\"CS\",\"name\":\"Combat Systems Agent\",\"priority\":3,\"tieOrder\":3},{\"departmentId\":\"DC\",\"name\":\"Damage Control Agent\",\"priority\":4,\"tieOrder\":4},{\"departmentId\":\"AIR\",\"name\":\"Air Agent\",\"priority\":5,\"tieOrder\":5}],\"personnel\":[{\"id\":\"P1\",\"name\":\"Mira Vale\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Fire Party Leader\",\"validFrom\":-43200,\"validUntil\":10080},{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P2\",\"name\":\"Oren Finch\",\"departmentId\":\"DC\",\"qualifications\":[{\"role\":\"Safety Observer\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P3\",\"name\":\"Tessa Rowan\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Engineering Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P4\",\"name\":\"Ivo Marsh\",\"departmentId\":\"WPN\",\"qualifications\":[{\"role\":\"Weapons Supervisor\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P5\",\"name\":\"Nia Lark\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"TAO\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P6\",\"name\":\"Soren Pike\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"Console Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P7\",\"name\":\"Elin Cove\",\"departmentId\":\"AIR\",\"qualifications\":[{\"role\":\"Flight Director\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P8\",\"name\":\"Dara Quill\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":0}],\"availability\":[[0,10080]]},{\"id\":\"P9\",\"name\":\"Lio Reed\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[1440,10080]]}],\"resources\":[{\"id\":\"ROOM\",\"name\":\"Training room\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"RANGE\",\"name\":\"Synthetic handling space\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"DECK\",\"name\":\"Flight deck\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[480,960],[1920,2400],[3360,3840],[4800,5280],[6240,6720]],\"fixedDuties\":[{\"id\":\"WATCH-P1\",\"personnelId\":\"P1\",\"startMinute\":-600,\"endMinute\":-60},{\"id\":\"WATCH-P5\",\"personnelId\":\"P5\",\"startMinute\":0,\"endMinute\":60}],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":480,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":1200,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"DC-1\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"},{\"id\":\"ENG-1\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1},{\"role\":\"Engineering Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P3\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540,1980],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P3\"],\"requirementId\":\"R-ENG\"},{\"id\":\"WPN-1\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Weapons Supervisor\",\"count\":1}],\"eligiblePersonnelIds\":[\"P4\"],\"resourceIds\":[\"RANGE\"],\"allowedStartMinutes\":[780],\"preferredStartMinute\":780,\"proposedPersonnelIds\":[\"P4\"],\"requirementId\":\"R-WPN\"},{\"id\":\"CS-1\",\"title\":\"Combat Systems exercises\",\"departmentId\":\"CS\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"TAO\",\"count\":1},{\"role\":\"Console Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P5\",\"P6\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[2220],\"preferredStartMinute\":2220,\"proposedPersonnelIds\":[\"P5\",\"P6\"],\"requirementId\":\"R-CS\"},{\"id\":\"AIR-1\",\"title\":\"flight quarters\",\"departmentId\":\"AIR\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Safety Observer\",\"count\":1},{\"role\":\"Flight Director\",\"count\":1}],\"eligiblePersonnelIds\":[\"P2\",\"P7\"],\"resourceIds\":[\"DECK\"],\"allowedStartMinutes\":[3420],\"preferredStartMinute\":3420,\"proposedPersonnelIds\":[\"P2\",\"P7\"],\"requirementId\":\"R-AIR\"},{\"id\":\"DC-2\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[6300],\"preferredStartMinute\":6300,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"}],\"recurrenceRequirements\":[{\"id\":\"R-DC\",\"lastCompletionMinute\":-2000,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":7200,\"occurrences\":[{\"id\":\"DC-OLD\",\"releaseMinute\":-1440,\"deadlineMinute\":-1,\"requiredCount\":1},{\"id\":\"DC-1\",\"releaseMinute\":0,\"deadlineMinute\":720,\"requiredCount\":1},{\"id\":\"DC-2\",\"releaseMinute\":5760,\"deadlineMinute\":6600,\"requiredCount\":1},{\"id\":\"DC-NEXT\",\"releaseMinute\":10080,\"deadlineMinute\":10800,\"requiredCount\":1}]},{\"id\":\"R-ENG\",\"lastCompletionMinute\":-7920,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ENG-1\",\"releaseMinute\":0,\"deadlineMinute\":2160,\"requiredCount\":1}]},{\"id\":\"R-WPN\",\"lastCompletionMinute\":-9180,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"WPN-1\",\"releaseMinute\":0,\"deadlineMinute\":900,\"requiredCount\":1}]},{\"id\":\"R-CS\",\"lastCompletionMinute\":-7680,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"CS-1\",\"releaseMinute\":0,\"deadlineMinute\":2400,\"requiredCount\":1}]},{\"id\":\"R-AIR\",\"lastCompletionMinute\":-6480,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"AIR-1\",\"releaseMinute\":0,\"deadlineMinute\":3600,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage",
+          "text": "Fictional periodicities: 6 due; 6 scheduled within deadline; 0 missed; 1 historically overdue. SFTRM compliance unverified."
+        },
+        {
+          "action": "expectText",
+          "selector": "#historical",
+          "text": "Historical overdue: DC-OLD; coordinator review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#future",
+          "text": "Future obligations: DC-NEXT."
+        }
+      ]
+    },
+    {
+      "id": "deadline-recovery",
+      "title": "Reject one-minute-late completion and recover at the exact deadline",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"weekly-conflicts\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2},{\"departmentId\":\"CS\",\"name\":\"Combat Systems Agent\",\"priority\":3,\"tieOrder\":3},{\"departmentId\":\"DC\",\"name\":\"Damage Control Agent\",\"priority\":4,\"tieOrder\":4},{\"departmentId\":\"AIR\",\"name\":\"Air Agent\",\"priority\":5,\"tieOrder\":5}],\"personnel\":[{\"id\":\"P1\",\"name\":\"Mira Vale\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Fire Party Leader\",\"validFrom\":-43200,\"validUntil\":10080},{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P2\",\"name\":\"Oren Finch\",\"departmentId\":\"DC\",\"qualifications\":[{\"role\":\"Safety Observer\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P3\",\"name\":\"Tessa Rowan\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Engineering Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P4\",\"name\":\"Ivo Marsh\",\"departmentId\":\"WPN\",\"qualifications\":[{\"role\":\"Weapons Supervisor\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P5\",\"name\":\"Nia Lark\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"TAO\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P6\",\"name\":\"Soren Pike\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"Console Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P7\",\"name\":\"Elin Cove\",\"departmentId\":\"AIR\",\"qualifications\":[{\"role\":\"Flight Director\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P8\",\"name\":\"Dara Quill\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":0}],\"availability\":[[0,10080]]},{\"id\":\"P9\",\"name\":\"Lio Reed\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[1440,10080]]}],\"resources\":[{\"id\":\"ROOM\",\"name\":\"Training room\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"RANGE\",\"name\":\"Synthetic handling space\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"DECK\",\"name\":\"Flight deck\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[480,960],[1920,2400],[3360,3840],[4800,5280],[6240,6720]],\"fixedDuties\":[{\"id\":\"WATCH-P1\",\"personnelId\":\"P1\",\"startMinute\":-600,\"endMinute\":-60},{\"id\":\"WATCH-P5\",\"personnelId\":\"P5\",\"startMinute\":0,\"endMinute\":60}],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":480,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":1200,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"DC-1\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"},{\"id\":\"ENG-1\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1},{\"role\":\"Engineering Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P3\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540,1980],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P3\"],\"requirementId\":\"R-ENG\"},{\"id\":\"WPN-1\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Weapons Supervisor\",\"count\":1}],\"eligiblePersonnelIds\":[\"P4\"],\"resourceIds\":[\"RANGE\"],\"allowedStartMinutes\":[780],\"preferredStartMinute\":780,\"proposedPersonnelIds\":[\"P4\"],\"requirementId\":\"R-WPN\"},{\"id\":\"CS-1\",\"title\":\"Combat Systems exercises\",\"departmentId\":\"CS\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"TAO\",\"count\":1},{\"role\":\"Console Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P5\",\"P6\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[2220],\"preferredStartMinute\":2220,\"proposedPersonnelIds\":[\"P5\",\"P6\"],\"requirementId\":\"R-CS\"},{\"id\":\"AIR-1\",\"title\":\"flight quarters\",\"departmentId\":\"AIR\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Safety Observer\",\"count\":1},{\"role\":\"Flight Director\",\"count\":1}],\"eligiblePersonnelIds\":[\"P2\",\"P7\"],\"resourceIds\":[\"DECK\"],\"allowedStartMinutes\":[3420],\"preferredStartMinute\":3420,\"proposedPersonnelIds\":[\"P2\",\"P7\"],\"requirementId\":\"R-AIR\"},{\"id\":\"DC-2\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[6300],\"preferredStartMinute\":6300,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"}],\"recurrenceRequirements\":[{\"id\":\"R-DC\",\"lastCompletionMinute\":-600,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":7200,\"occurrences\":[{\"id\":\"DC-1\",\"releaseMinute\":0,\"deadlineMinute\":720,\"requiredCount\":1},{\"id\":\"DC-2\",\"releaseMinute\":5760,\"deadlineMinute\":6600,\"requiredCount\":1}]},{\"id\":\"R-ENG\",\"lastCompletionMinute\":-7920,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ENG-1\",\"releaseMinute\":0,\"deadlineMinute\":2160,\"requiredCount\":1}]},{\"id\":\"R-WPN\",\"lastCompletionMinute\":-9180,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"WPN-1\",\"releaseMinute\":0,\"deadlineMinute\":900,\"requiredCount\":1}]},{\"id\":\"R-CS\",\"lastCompletionMinute\":-7680,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"CS-1\",\"releaseMinute\":0,\"deadlineMinute\":2339,\"requiredCount\":1}]},{\"id\":\"R-AIR\",\"lastCompletionMinute\":-6480,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"AIR-1\",\"releaseMinute\":0,\"deadlineMinute\":3600,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage",
+          "text": "Fictional periodicities: 6 due; 5 scheduled within deadline; 1 missed; 0 historically overdue. SFTRM compliance unverified."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible: no complete allocation under supplied constraints."
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "{\"schemaVersion\":1,\"fixtureId\":\"weekly-conflicts\",\"provenance\":\"Synthetic; not validated against real records, real format, or SFTRM.\",\"week\":{\"start\":\"2026-11-09T00:00:00Z\",\"timezone\":\"UTC\",\"horizonMinutes\":10080,\"intervalSemantics\":\"half-open\"},\"departments\":[{\"departmentId\":\"ENG\",\"name\":\"Engineering Agent\",\"priority\":1,\"tieOrder\":1},{\"departmentId\":\"WPN\",\"name\":\"Weapons Agent\",\"priority\":2,\"tieOrder\":2},{\"departmentId\":\"CS\",\"name\":\"Combat Systems Agent\",\"priority\":3,\"tieOrder\":3},{\"departmentId\":\"DC\",\"name\":\"Damage Control Agent\",\"priority\":4,\"tieOrder\":4},{\"departmentId\":\"AIR\",\"name\":\"Air Agent\",\"priority\":5,\"tieOrder\":5}],\"personnel\":[{\"id\":\"P1\",\"name\":\"Mira Vale\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Fire Party Leader\",\"validFrom\":-43200,\"validUntil\":10080},{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P2\",\"name\":\"Oren Finch\",\"departmentId\":\"DC\",\"qualifications\":[{\"role\":\"Safety Observer\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P3\",\"name\":\"Tessa Rowan\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"Engineering Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P4\",\"name\":\"Ivo Marsh\",\"departmentId\":\"WPN\",\"qualifications\":[{\"role\":\"Weapons Supervisor\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P5\",\"name\":\"Nia Lark\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"TAO\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P6\",\"name\":\"Soren Pike\",\"departmentId\":\"CS\",\"qualifications\":[{\"role\":\"Console Operator\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P7\",\"name\":\"Elin Cove\",\"departmentId\":\"AIR\",\"qualifications\":[{\"role\":\"Flight Director\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[0,10080]]},{\"id\":\"P8\",\"name\":\"Dara Quill\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":0}],\"availability\":[[0,10080]]},{\"id\":\"P9\",\"name\":\"Lio Reed\",\"departmentId\":\"ENG\",\"qualifications\":[{\"role\":\"EOOW\",\"validFrom\":-43200,\"validUntil\":10080}],\"availability\":[[1440,10080]]}],\"resources\":[{\"id\":\"ROOM\",\"name\":\"Training room\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"RANGE\",\"name\":\"Synthetic handling space\",\"capacity\":1,\"availability\":[[0,10080]]},{\"id\":\"DECK\",\"name\":\"Flight deck\",\"capacity\":1,\"availability\":[[0,10080]]}],\"operationalWindows\":[[480,960],[1920,2400],[3360,3840],[4800,5280],[6240,6720]],\"fixedDuties\":[{\"id\":\"WATCH-P1\",\"personnelId\":\"P1\",\"startMinute\":-600,\"endMinute\":-60},{\"id\":\"WATCH-P5\",\"personnelId\":\"P5\",\"startMinute\":0,\"endMinute\":60}],\"policy\":{\"synthetic\":true,\"minimumRestMinutes\":480,\"maxDutyMinutesPerUtcDay\":600,\"maxDutyMinutesPerWeek\":1200,\"countTrainingAndWatches\":true,\"restAppliesBetweenEveryDistinctDutyInterval\":true,\"dailyBudgetWindow\":\"UTC midnight; split crossing intervals\",\"weeklyBudgetWindow\":\"[0,10080); clip crossing intervals\",\"qualificationMustCoverEntireDrill\":true},\"drills\":[{\"id\":\"DC-1\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"},{\"id\":\"ENG-1\",\"title\":\"engineering casualty controls\",\"departmentId\":\"ENG\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"EOOW\",\"count\":1},{\"role\":\"Engineering Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P3\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[540,1980],\"preferredStartMinute\":540,\"proposedPersonnelIds\":[\"P1\",\"P3\"],\"requirementId\":\"R-ENG\"},{\"id\":\"WPN-1\",\"title\":\"Weapons handling drill\",\"departmentId\":\"WPN\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Weapons Supervisor\",\"count\":1}],\"eligiblePersonnelIds\":[\"P4\"],\"resourceIds\":[\"RANGE\"],\"allowedStartMinutes\":[780],\"preferredStartMinute\":780,\"proposedPersonnelIds\":[\"P4\"],\"requirementId\":\"R-WPN\"},{\"id\":\"CS-1\",\"title\":\"Combat Systems exercises\",\"departmentId\":\"CS\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"TAO\",\"count\":1},{\"role\":\"Console Operator\",\"count\":1}],\"eligiblePersonnelIds\":[\"P5\",\"P6\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[2220],\"preferredStartMinute\":2220,\"proposedPersonnelIds\":[\"P5\",\"P6\"],\"requirementId\":\"R-CS\"},{\"id\":\"AIR-1\",\"title\":\"flight quarters\",\"departmentId\":\"AIR\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Safety Observer\",\"count\":1},{\"role\":\"Flight Director\",\"count\":1}],\"eligiblePersonnelIds\":[\"P2\",\"P7\"],\"resourceIds\":[\"DECK\"],\"allowedStartMinutes\":[3420],\"preferredStartMinute\":3420,\"proposedPersonnelIds\":[\"P2\",\"P7\"],\"requirementId\":\"R-AIR\"},{\"id\":\"DC-2\",\"title\":\"Damage Control drills\",\"departmentId\":\"DC\",\"durationMinutes\":120,\"mandatory\":true,\"requiredRoles\":[{\"role\":\"Fire Party Leader\",\"count\":1},{\"role\":\"Safety Observer\",\"count\":1}],\"eligiblePersonnelIds\":[\"P1\",\"P2\"],\"resourceIds\":[\"ROOM\"],\"allowedStartMinutes\":[6300],\"preferredStartMinute\":6300,\"proposedPersonnelIds\":[\"P1\",\"P2\"],\"requirementId\":\"R-DC\"}],\"recurrenceRequirements\":[{\"id\":\"R-DC\",\"lastCompletionMinute\":-600,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":7200,\"occurrences\":[{\"id\":\"DC-1\",\"releaseMinute\":0,\"deadlineMinute\":720,\"requiredCount\":1},{\"id\":\"DC-2\",\"releaseMinute\":5760,\"deadlineMinute\":6600,\"requiredCount\":1}]},{\"id\":\"R-ENG\",\"lastCompletionMinute\":-7920,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"ENG-1\",\"releaseMinute\":0,\"deadlineMinute\":2160,\"requiredCount\":1}]},{\"id\":\"R-WPN\",\"lastCompletionMinute\":-9180,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"WPN-1\",\"releaseMinute\":0,\"deadlineMinute\":900,\"requiredCount\":1}]},{\"id\":\"R-CS\",\"lastCompletionMinute\":-7680,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"CS-1\",\"releaseMinute\":0,\"deadlineMinute\":2340,\"requiredCount\":1}]},{\"id\":\"R-AIR\",\"lastCompletionMinute\":-6480,\"ruleKind\":\"explicit-window-obligations\",\"referenceIntervalMinutes\":10080,\"occurrences\":[{\"id\":\"AIR-1\",\"releaseMinute\":0,\"deadlineMinute\":3600,\"requiredCount\":1}]}],\"search\":{\"maxNodes\":10000,\"candidateOrder\":\"department priority, then drill ID; preferred start first then ascending allowed start; personnel IDs ascending\",\"objective\":\"Find a feasible mandatory allocation; preserve preferred starts when feasible; no global optimum claim\"},\"review\":{\"state\":\"pending-review\",\"revision\":1,\"realApproval\":false}}"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-input"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage",
+          "text": "Fictional periodicities: 6 due; 6 scheduled within deadline; 0 missed; 0 historically overdue. SFTRM compliance unverified."
+        }
+      ]
+    },
+    {
+      "id": "review-edit",
+      "title": "Review a saved revision, reject a conflicting edit, and require fresh review",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#review-save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 1 locally reviewed; real approval: false."
+        },
+        {
+          "action": "click",
+          "selector": "#edit-ENG-1"
+        },
+        {
+          "action": "fill",
+          "selector": "#edit-start",
+          "value": "540"
+        },
+        {
+          "action": "click",
+          "selector": "#save-edit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#edit-error",
+          "text": "Edit rejected: P1 and ROOM overlap DC-1. Last valid board retained."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 2 pending local review; real approval: false."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        },
+        {
+          "action": "click",
+          "selector": "#discard-edit"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#review-save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 2 locally reviewed; real approval: false."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 2 locally reviewed; real approval: false."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        }
+      ]
+    },
+    {
+      "id": "cancel-reset",
+      "title": "Cancel a staged computation and deliberately cancel or confirm reset",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "click",
+          "selector": "#prepare-search"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-search"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Cancelled; last valid board retained."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-ENG-1",
+          "text": "engineering casualty controls: ENG-1 1980\u20132100; P1/P3; ROOM"
+        },
+        {
+          "action": "fill",
+          "selector": "#input-json",
+          "value": "unfinished proposal"
+        },
+        {
+          "action": "click",
+          "selector": "#reset"
+        },
+        {
+          "action": "click",
+          "selector": "#reset-cancel"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#input-json",
+          "value": "unfinished proposal"
+        },
+        {
+          "action": "click",
+          "selector": "#reset"
+        },
+        {
+          "action": "click",
+          "selector": "#reset-confirm"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Proposals loaded."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 1 pending local review; real approval: false."
+        },
+        {
+          "action": "expectText",
+          "selector": "#initial-collisions",
+          "text": "P1: DC-1 / ENG-1 at 540\u2013660; ROOM: DC-1 / ENG-1 at 540\u2013660"
+        }
+      ]
+    },
+    {
+      "id": "export-draft",
+      "title": "Export the complete synthetic draft for local review",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "weekly-conflicts"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "pb4t-draft.json",
+          "text": "{\n  \"provenance\": \"Synthetic; not validated against real records, real format, or SFTRM.\",\n  \"fixtureId\": \"weekly-conflicts\",\n  \"revision\": 1,\n  \"reviewState\": \"pending-review\",\n  \"realApproval\": false,\n  \"policy\": {\n    \"synthetic\": true,\n    \"minimumRestMinutes\": 480,\n    \"maxDutyMinutesPerUtcDay\": 600,\n    \"maxDutyMinutesPerWeek\": 1200,\n    \"countTrainingAndWatches\": true,\n    \"restAppliesBetweenEveryDistinctDutyInterval\": true,\n    \"dailyBudgetWindow\": \"UTC midnight; split crossing intervals\",\n    \"weeklyBudgetWindow\": \"[0,10080); clip crossing intervals\",\n    \"qualificationMustCoverEntireDrill\": true\n  },\n  \"result\": {\n    \"allocations\": [\n      {\n        \"drillId\": \"AIR-1\",\n        \"startMinute\": 3420,\n        \"endMinute\": 3540,\n        \"personnelIds\": [\n          \"P2\",\n          \"P7\"\n        ],\n        \"resourceIds\": [\n          \"DECK\"\n        ]\n      },\n      {\n        \"drillId\": \"CS-1\",\n        \"startMinute\": 2220,\n        \"endMinute\": 2340,\n        \"personnelIds\": [\n          \"P5\",\n          \"P6\"\n        ],\n        \"resourceIds\": [\n          \"ROOM\"\n        ]\n      },\n      {\n        \"drillId\": \"DC-1\",\n        \"startMinute\": 540,\n        \"endMinute\": 660,\n        \"personnelIds\": [\n          \"P1\",\n          \"P2\"\n        ],\n        \"resourceIds\": [\n          \"ROOM\"\n        ]\n      },\n      {\n        \"drillId\": \"DC-2\",\n        \"startMinute\": 6300,\n        \"endMinute\": 6420,\n        \"personnelIds\": [\n          \"P1\",\n          \"P2\"\n        ],\n        \"resourceIds\": [\n          \"ROOM\"\n        ]\n      },\n      {\n        \"drillId\": \"ENG-1\",\n        \"startMinute\": 1980,\n        \"endMinute\": 2100,\n        \"personnelIds\": [\n          \"P1\",\n          \"P3\"\n        ],\n        \"resourceIds\": [\n          \"ROOM\"\n        ]\n      },\n      {\n        \"drillId\": \"WPN-1\",\n        \"startMinute\": 780,\n        \"endMinute\": 900,\n        \"personnelIds\": [\n          \"P4\"\n        ],\n        \"resourceIds\": [\n          \"RANGE\"\n        ]\n      }\n    ],\n    \"initialCollisions\": [\n      {\n        \"drillIds\": [\n          \"DC-1\",\n          \"ENG-1\"\n        ],\n        \"kind\": \"personnel\",\n        \"id\": \"P1\",\n        \"overlap\": [\n          540,\n          660\n        ]\n      },\n      {\n        \"drillIds\": [\n          \"DC-1\",\n          \"ENG-1\"\n        ],\n        \"kind\": \"resource\",\n        \"id\": \"ROOM\",\n        \"overlap\": [\n          540,\n          660\n        ]\n      }\n    ],\n    \"collisions\": [],\n    \"violations\": [],\n    \"coverage\": {\n      \"dueInWeek\": 6,\n      \"scheduledWithinDeadline\": 6,\n      \"missed\": 0,\n      \"historicallyOverdue\": 0,\n      \"overdueIds\": [],\n      \"futureIds\": []\n    },\n    \"loads\": [\n      {\n        \"personnelId\": \"P1\",\n        \"trainingMinutes\": 360,\n        \"weeklyDutyMinutes\": 360,\n        \"dailyTrainingMinutes\": [\n          120,\n          120,\n          0,\n          0,\n          120,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          120,\n          120,\n          0,\n          0,\n          120,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P2\",\n        \"trainingMinutes\": 360,\n        \"weeklyDutyMinutes\": 360,\n        \"dailyTrainingMinutes\": [\n          120,\n          0,\n          120,\n          0,\n          120,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          120,\n          0,\n          120,\n          0,\n          120,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P3\",\n        \"trainingMinutes\": 120,\n        \"weeklyDutyMinutes\": 120,\n        \"dailyTrainingMinutes\": [\n          0,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          0,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P4\",\n        \"trainingMinutes\": 120,\n        \"weeklyDutyMinutes\": 120,\n        \"dailyTrainingMinutes\": [\n          120,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          120,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P5\",\n        \"trainingMinutes\": 120,\n        \"weeklyDutyMinutes\": 180,\n        \"dailyTrainingMinutes\": [\n          0,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          60,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P6\",\n        \"trainingMinutes\": 120,\n        \"weeklyDutyMinutes\": 120,\n        \"dailyTrainingMinutes\": [\n          0,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          0,\n          120,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P7\",\n        \"trainingMinutes\": 120,\n        \"weeklyDutyMinutes\": 120,\n        \"dailyTrainingMinutes\": [\n          0,\n          0,\n          120,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          0,\n          0,\n          120,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P8\",\n        \"trainingMinutes\": 0,\n        \"weeklyDutyMinutes\": 0,\n        \"dailyTrainingMinutes\": [\n          0,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          0,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      },\n      {\n        \"personnelId\": \"P9\",\n        \"trainingMinutes\": 0,\n        \"weeklyDutyMinutes\": 0,\n        \"dailyTrainingMinutes\": [\n          0,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ],\n        \"dailyDutyMinutes\": [\n          0,\n          0,\n          0,\n          0,\n          0,\n          0,\n          0\n        ]\n      }\n    ],\n    \"negotiation\": [\n      {\n        \"departmentId\": \"ENG\",\n        \"drillId\": \"ENG-1\",\n        \"proposal\": {\n          \"startMinute\": 540,\n          \"personnelIds\": [\n            \"P1\",\n            \"P3\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 1980,\n          \"personnelIds\": [\n            \"P1\",\n            \"P3\"\n          ]\n        },\n        \"decision\": \"counterproposal\"\n      },\n      {\n        \"departmentId\": \"WPN\",\n        \"drillId\": \"WPN-1\",\n        \"proposal\": {\n          \"startMinute\": 780,\n          \"personnelIds\": [\n            \"P4\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 780,\n          \"personnelIds\": [\n            \"P4\"\n          ]\n        },\n        \"decision\": \"retain\"\n      },\n      {\n        \"departmentId\": \"CS\",\n        \"drillId\": \"CS-1\",\n        \"proposal\": {\n          \"startMinute\": 2220,\n          \"personnelIds\": [\n            \"P5\",\n            \"P6\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 2220,\n          \"personnelIds\": [\n            \"P5\",\n            \"P6\"\n          ]\n        },\n        \"decision\": \"retain\"\n      },\n      {\n        \"departmentId\": \"DC\",\n        \"drillId\": \"DC-1\",\n        \"proposal\": {\n          \"startMinute\": 540,\n          \"personnelIds\": [\n            \"P1\",\n            \"P2\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 540,\n          \"personnelIds\": [\n            \"P1\",\n            \"P2\"\n          ]\n        },\n        \"decision\": \"retain\"\n      },\n      {\n        \"departmentId\": \"DC\",\n        \"drillId\": \"DC-2\",\n        \"proposal\": {\n          \"startMinute\": 6300,\n          \"personnelIds\": [\n            \"P1\",\n            \"P2\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 6300,\n          \"personnelIds\": [\n            \"P1\",\n            \"P2\"\n          ]\n        },\n        \"decision\": \"retain\"\n      },\n      {\n        \"departmentId\": \"AIR\",\n        \"drillId\": \"AIR-1\",\n        \"proposal\": {\n          \"startMinute\": 3420,\n          \"personnelIds\": [\n            \"P2\",\n            \"P7\"\n          ]\n        },\n        \"counterproposal\": {\n          \"startMinute\": 3420,\n          \"personnelIds\": [\n            \"P2\",\n            \"P7\"\n          ]\n        },\n        \"decision\": \"retain\"\n      }\n    ],\n    \"metrics\": {\n      \"initialCollisionCount\": 2,\n      \"remainingCollisionCount\": 0,\n      \"hardViolationCount\": 0,\n      \"movedDrillIds\": [\n        \"ENG-1\"\n      ],\n      \"trainingMinutes\": 1320,\n      \"weeklyDutyMinutes\": 1380,\n      \"objectiveValue\": 0,\n      \"objectiveLowerBound\": 0,\n      \"searchBudget\": 10000\n    },\n    \"realApproval\": false\n  }\n}\n"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-state",
+          "text": "Revision 1 pending local review; real approval: false."
+        }
+      ]
+    }
+  ]
+}

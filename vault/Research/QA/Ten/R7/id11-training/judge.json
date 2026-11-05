@@ -1,0 +1,72 @@
+{
+  "stage": "verify",
+  "verdict": "SATISFACTORY",
+  "gaps": [],
+  "attempts": [
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC11-1, DESC11-3, SCOPE11-5: Collaborative departmental agents negotiating schedules",
+          "evidence": "lib/pb4t.mjs runs centralized boundedSearch and constructs negotiation entries only after finding a solution. Departments supply data and ordering, but no departmental proposal/response behavior participates in negotiation. domain.test.mjs asserts the resulting summary, not agent collaboration.",
+          "fix": "Implement departmental proposal and counterproposal handlers participating in shared-constraint coordination. Test changed departmental preferences, rejected proposals, backtracking and impossible-case termination using actual exchange traces."
+        },
+        {
+          "requirement": "UC11-1, SCH-04, SCOPE11-6: Preserve mandated training periodicities",
+          "evidence": "lib/pb4t.mjs checks only manually enumerated occurrences; referenceIntervalMinutes never determines obligations. Removing both a required occurrence and its drill leaves no mechanism to detect the omission. Deadline tests in domain.test.mjs do not establish recurrence expansion.",
+          "fix": "Implement a clearly labeled synthetic recurrence-rule model that derives required occurrences from cadence and completion history, detects omitted training, and feeds scheduling. Test changed cadence, multiple weekly occurrences, boundary deadlines and impossible coverage; retain authoritative SFTRM mapping as a human review step."
+        },
+        {
+          "requirement": "DELIVERABLE11-1: Personnel loading heatmaps",
+          "evidence": "public/app.js assigns the same background color to every positive daily duty load; .heat in public/styles.css only arranges numeric spans. Different positive loads therefore have identical intensity despite public/index.html stating darker cells mean more minutes.",
+          "fix": "Map computed load magnitudes to a documented color scale with a legend and accessible numeric values. Test zero, low and high loads, including changed synthetic inputs, and assert distinct ordered intensities."
+        }
+      ],
+      "humanSteps": [
+        "Obtain owner-approved fatigue and SFTRM rules and have a domain expert validate their mapping before operational use.",
+        "Have a representative PB4T operator review the proposed schedule and complete a supervised workflow trial.",
+        "Obtain explicit owner approval before operational integration, delivery or deployment."
+      ],
+      "durationMs": 40992,
+      "tokens": {
+        "inputTokens": 468370,
+        "cachedInputTokens": 384078,
+        "uncachedInputTokens": 84292,
+        "outputTokens": 1155,
+        "reasoningOutputTokens": 133,
+        "totalTokens": 469525,
+        "uncachedPlusOutputTokens": 85447
+      },
+      "sourceHash": "1c1c93b79e52c50ace7fa9be0cdf43653dd036751717567140136c38c59ea458"
+    },
+    {
+      "verdict": "SATISFACTORY",
+      "gaps": [],
+      "humanSteps": [
+        "Obtain authoritative SFTRM requirements and have a domain expert validate their mapping and the fatigue policies; the delivered cadence model is explicitly fictional.",
+        "Have a PB4T operator review and accept the specific proposed schedule, including historical overdue warnings and personnel loading.",
+        "Complete a representative supervised workflow trial and obtain security and fielding approval before operational use."
+      ],
+      "durationMs": 47210,
+      "tokens": {
+        "inputTokens": 613904,
+        "cachedInputTokens": 505813,
+        "uncachedInputTokens": 108091,
+        "outputTokens": 1278,
+        "reasoningOutputTokens": 360,
+        "totalTokens": 615182,
+        "uncachedPlusOutputTokens": 109369
+      },
+      "sourceHash": "92c05dd175d29933b18dc25fe0153e7c620c0e794e633d72a785bdff2c412894"
+    }
+  ],
+  "repairs": 1,
+  "repairLimitReached": false,
+  "durationMs": 88202,
+  "evaluatorRetries": 0,
+  "humanSteps": [
+    "Obtain authoritative SFTRM requirements and have a domain expert validate their mapping and the fatigue policies; the delivered cadence model is explicitly fictional.",
+    "Have a PB4T operator review and accept the specific proposed schedule, including historical overdue warnings and personnel loading.",
+    "Complete a representative supervised workflow trial and obtain security and fielding approval before operational use."
+  ]
+}

@@ -3,7 +3,7 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Ten-challenge benchmark, round 7 at 4a57562: 3 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 7 at 4a57562: 4 of 10 finished, 1 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 7
@@ -19,6 +19,7 @@ summary: "Ten-challenge benchmark, round 7 at 4a57562: 3 of 10 finished, 0 passe
 | [[Research/QA/Ten/R7/id36-paperless/final\|id36-paperless]] | failed at plan | 23.9 | - | 0/0 | 0 / 0 / 0 | no | 0 | 357043 | FAIL | pending |
 | [[Research/QA/Ten/R7/id12-optask/final\|id12-optask]] | failed at verify | 31.6 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 717993 | FAIL | pending |
 | [[Research/QA/Ten/R7/id08-casrep/final\|id08-casrep]] | failed at plan | 21.5 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 331865 | FAIL | pending |
+| [[Research/QA/Ten/R7/id11-training/final\|id11-training]] | review | 50.9 | 21/21 | 20/20 | 12 / 4 / 0 | yes | 0 | 1062754 | pass | NOT |
 
 ## What failed
 

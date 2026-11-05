@@ -1,0 +1,91 @@
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"click\",\"url\":\"http://127.0.0.1:51911/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/3c2f6986-a793-4109-bcff-be8b864740e2/3957c6dd535e-50094c6a-c656-4951-9912-0c0e87fdafba.png\",\"captureId\":\"0839b329-67a1-45ad-a92f-9be8c390e405\",\"pageText\":\"PB4T weekly plann
+verify tool fleet_browser
+{
+  "action": "click",
+  "selector": "#optimize"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"click\",\"url\":\"http://127.0.0.1:51911/\",\"viewport\":\"narrow\",\"dimensions\":{\"width\":390,\"height\":844},\"screenshot\":\".browser-observations/3c2f6986-a793-4109-bcff-be8b864740e2/c9e49ff9abce-dd1f9058-3e66-420e-9491-fbd43f9c8ae5.png\",\"captureId\":\"42ce1697-bcfd-45a7-ac84-636bebf7156c\",\"pageText\":\"PB4T weekly plann
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'git status --short; node --version'"
+}
+verify tool bash completed
+"fatal: not a git repository (or any of the parent directories): .git\nv26.0.0\n"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport json,shutil\np=Path('README.md');s=p.read_text();s+='''\n## Synthetic cadence preparation and exchange diagnostics\n\nThe original explicit-obligation protocol is preserved: \"'`referenceIntervalMinutes` alone remains descriptive. To derive obligations independently of the draft, open **Training obligations → Sy
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "board",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Weekly board and local review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "service",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local HTTP and cancellation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "agents",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated departmental agents and coordinator: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "recurrence",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic recurrence expansion: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "constraints",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Shared hard constraints and loading: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "fixtures",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; repair tests pass locally and in clean copy. Synthetic scope and pending final host/owner checks documented in verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Preserved fictional input records: generated. The live diagram has been updated."}]
+verify text Implemented all three repairs: live departmental exchanges, synthetic cadence-derived obligations, and graduated loading heatmaps.
+
+All 21 tests pass locally and in a clean runtime copy. Desktop and narrow visual rechecks have no open findings. README and verification evidence are updated; frozen contracts remain unchanged.
+
+Final host reruns, authoritative SFTRM validation, and owner approval rem
+verify info Post-build test changes (verify). Human review required. Since previous stage: added: evaluator-repair.test.mjs. Since build: added: draft-preservation.test.mjs; added: evaluator-repair.test.mjs; added: startup-readiness.test.mjs.
+verify info TAP version 13
+# Subtest: complete public envelope and independent prepared allocation oracle
+ok 1 - complete public envelope and independent prepared allocation oracle
+  ---
+  duration_ms: 4.102375
+  type: 'test'
+  ...
+# Subtest: impossible and exhausted abstain with exact envelopes
+ok 2 - impossible and exhausted abstain with exact envelopes
+  ---
+  duration_ms: 0.51125
+  type: 'test'
+  ...
+# Su
+verify info Starting fresh independent judge 2 with read-only evidence tools.
+verify info Independent judge: SATISFACTORY; 0 gaps; 47210 ms; tokens 615182.
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

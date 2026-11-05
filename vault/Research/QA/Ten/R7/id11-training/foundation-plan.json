@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "scheduling",
+  "reason": "Dependency-free Node service matches local PB4T browser workflow and shares compute.mjs between POST /api/invoke and Node tests. Reuse scheduling search/overlap primitives; extend materialized lib/scheduling.js for distinct qualified personnel selection, negative watch history, daily/weekly fatigue, recurrence and deterministic department order. No Python, model or frontend framework is needed. All starter files are host-copied after planning."
+}

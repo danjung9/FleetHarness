@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "PB4T coordinator and departmental training planners reviewing fictional weekly drills; no real personnel or operating data.",
+  "primaryTask": "Load or paste qualified roster and departmental proposals, inspect collisions, Optimize schedule once, review the weekly allocation, numeric personnel heatmaps and all explicit due obligations, edit/revalidate and record local demonstration review.",
+  "successOutcome": "Six synthetic mandatory occurrences have a complete zero-collision allocation with valid qualification/availability, fictional fatigue and explicit deadline checks; Engineering counterproposes 1980 while Weapons and Combat Systems retain. Numeric loads and revision review are visible. SFTRM/real approval remain unverified.",
+  "screens": [
+    {
+      "name": "Weekly planning board",
+      "purpose": "Seven UTC day lanes with original-versus-revised drill cards, initial/current collisions, objective and complete personnel daily training/duty heatmap. Lead with visible synthetic provenance and pending local review.",
+      "primaryAction": "Optimize schedule"
+    },
+    {
+      "name": "Proposals and policy",
+      "purpose": "Native labeled controls and an advanced JSON editor accept arbitrary roster, watch, resource, drill, explicit occurrence and fatigue inputs. Embed exact prepared input records in public/index.html; no local data fetch. Fields for selected drill start/personnel support operator edits.",
+      "primaryAction": "Apply input"
+    },
+    {
+      "name": "Review and recovery",
+      "purpose": "Computed departmental proposals/counterproposals, due/history/future obligations, draft changes, review checkbox, complete export and deliberate reset. Review concerns the saved current draft only.",
+      "primaryAction": "Save local review"
+    }
+  ],
+  "states": {
+    "empty": "On first open show loaded weekly-conflicts proposals with two collisions and explain Optimize schedule. If no drills, show zero due/no drills and allow a new custom record; zero people/resources valid when no drill needs them.",
+    "loading": "Show Negotiating with declared node budget, disable duplicate optimize/review/export of unsaved draft, retain visible last valid board, and expose Cancel. Worker computation is abortable; stale replies cannot replace current revision. Prepare negotiation stages a cancellable run without changing the board; Optimize remains one-click immediate.",
+    "error": "Show field-specific parse/schema/history errors near editor; separate conflicts, infeasible and search-exhausted statuses and coordinator escalation. Keep edited text and last valid board; do not relax constraints. Failed edits show competing proposed versus saved start/crew and explicit save/discard controls.",
+    "success": "Show feasible/pending local review, 2\u21920 collision summary, due counts and deadline details, all agent decisions, changed allocations, zero objective/lower bound, numeric daily training and duty loads, and fresh review requirement. Historical overdue stays a warning even when current week is feasible. Render #personnel-collisions, #alternate-allocations and #periodicity-output as computed source-named summaries with the exact expected copy in synthetic-pb4t, while retaining the detailed board and explicit operational compliance caveat."
+  },
+  "persistence": "LocalStorage retains raw draft, committed valid input/result, revision and local review across reload; disclose browser-local unencrypted synthetic storage. Increment revision on changing applied input or saving an allocation edit; clear prior review immediately. Loading a sample deliberately replaces the current draft after save/discard boundary if dirty; fresh sample starts revision 1. Invalid applied input never replaces last valid board. Same base sample can be reloaded as an intentional reset. No service data persistence or operational account. Export/download does not transmit externally.",
+  "recovery": "Preserve draft and committed board separately. Any unsaved edit disables review/export until validated save or deliberate discard. Invalid edit retains entered candidate and shows previous versus candidate values; discard restores previous valid allocation as current pending-review revision. Reset opens inline confirmation with cancel/confirm; cancel preserves exact text, confirm restores unchanged weekly-conflicts proposals and pending revision 1. Abort terminates worker on connection close, retains committed board/review generation and reports cancellation. Restore search budget or fix constraints explicitly; impossible/exhausted results never masquerade as complete.",
+  "keyboard": "Native label/control pairs and logical Tab order: sample/load, draft/apply, optimize/cancel, day cards/edit, load/coverage, review/export/reset. Visible 2px focus outline, Enter activates native buttons and Escape dismisses reset/editor confirmation without loss. Announce status/error through polite/assertive live regions, focus the first error after failed submit. Semantic table headings and numeric text accompany heat colors; no color-only meaning. Desktop 1440px presents seven-day board and adjacent details; 390px stacks day sections, editor controls and review with horizontal scroll confined to labeled heatmap table. System sans, restrained navy accent, distinct amber pending and red error; adequate contrast, >=44px touch targets, no external fonts/assets or decorative motion."
+}

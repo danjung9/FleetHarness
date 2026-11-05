@@ -1,0 +1,105 @@
+{
+  "title": "Synthetic PB4T departmental negotiation and recurrence planning",
+  "description": "Local synthetic-only planning board. Deterministic departmental agents exchange proposals and constraint responses with a shared coordinator; recurrence expands fictional interval rules and cross-week history. No operational integration or SFTRM assurance.",
+  "components": [
+    {
+      "id": "board",
+      "label": "Weekly board and local review",
+      "description": "Editable weekly allocations, negotiation trace, numeric heatmap, recurrence ledger, preserved drafts and local review; synthetic provenance.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "Local HTTP and cancellation",
+      "description": "Foundation health/invoke service and abortable worker; no external calendar or operational connection.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "compute-worker.mjs",
+        "compute.mjs"
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Simulated departmental agents and coordinator",
+      "description": "Department-owned proposal generators respond to conflict feedback, coordinator reserves/retracts shared allocations and backtracks deterministically; exchanges precede search completion.",
+      "kind": "logic",
+      "files": [
+        "lib/pb4t.mjs",
+        "lib/scheduling.js"
+      ]
+    },
+    {
+      "id": "recurrence",
+      "label": "Synthetic recurrence expansion",
+      "description": "Expand editable interval rules from last-completion history into stable occurrence IDs, release windows and deadlines; detect omitted mandatory occurrences before negotiation.",
+      "kind": "logic",
+      "files": [
+        "lib/pb4t.mjs"
+      ]
+    },
+    {
+      "id": "constraints",
+      "label": "Shared hard constraints and loading",
+      "description": "Qualified distinct crews, windows, resources, watch history, rest and duty budgets, coverage and numeric loads; one backend used by UI and tests.",
+      "kind": "logic",
+      "files": [
+        "lib/pb4t.mjs",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "fixtures",
+      "label": "Preserved fictional input records",
+      "description": "Validated synthetic fixtures remain unchanged; input-only samples embedded in HTML. New editable synthetic rule examples supplement rather than replace them.",
+      "kind": "data",
+      "files": [
+        "data/synthetic-data.json",
+        "data/README.md",
+        "public/index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "board",
+      "to": "service",
+      "label": "Raw public protocol requests and cancellation"
+    },
+    {
+      "from": "service",
+      "to": "recurrence",
+      "label": "Validate and expand input rules"
+    },
+    {
+      "from": "recurrence",
+      "to": "agents",
+      "label": "All generated mandatory occurrence requests"
+    },
+    {
+      "from": "agents",
+      "to": "constraints",
+      "label": "Proposals, reservations and rejection feedback"
+    },
+    {
+      "from": "constraints",
+      "to": "agents",
+      "label": "Hard-valid acceptance or reason codes"
+    },
+    {
+      "from": "agents",
+      "to": "board",
+      "label": "Complete allocation or failure plus independent exchange trace"
+    },
+    {
+      "from": "fixtures",
+      "to": "board",
+      "label": "Embedded labeled input samples"
+    }
+  ]
+}
