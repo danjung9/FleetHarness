@@ -61,7 +61,7 @@ summary: "Combined-app function inventory, executable acceptance checks, evidenc
 | `qa-stop-detached.mjs` | Unchanged seven assertions, workers and timing; current UI, no fixed revision/checkout. Records clean HEAD/tree and compiled identity before/after. | Seven checks PASS at clean 3da8ad8, independently reviewed. |
 | `qa-native-resume.mjs` | Real UI/IPC with a local provider proxy: holds implementation after completed phases, Stops, verifies response cancellation, closes/restarts Electron, preserves run/checkpoint/artifact identity, resumes implementation and stops at verification. No full-verification claim. | Five PASS at clean 3da8ad8, including actual full process restart. |
 
-[R] Run individually after landing. The output directory must exist. Substitute the actual clean runtime checkout for the placeholder; do not use changing integration files. Browser recovery uses named options; native scripts use positional arguments.
+[R] For any rerun, use main's clean compiled test target or its selected landed descendant. The output directory must exist. Substitute that runtime checkout for the placeholder; do not use changing integration files. Browser recovery uses named options; native scripts use positional arguments.
 
 ```sh
 node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-desktop-inputs.mjs /absolute/path/to/landed-checkout ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight
@@ -87,7 +87,7 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-native-resume.m
 
 ## Earlier findings from the preparation snapshot
 
-[E] The following numbered findings describe the earlier integration snapshot. Current d6f8750 classifications and repaired scripts are in Review-d6f8750. Repository sign-in smokes now use the tab interface; the owned fixtures have now been adapted too. Browser saved-state failure is measured, not merely a source candidate.
+[E] The following numbered findings describe the earlier integration snapshot. Review-d6f8750 records the first measured classifications and checker repairs; Review-3da8ad8 confirms the corrected reruns and bounded browser defect closure. Repository sign-in smokes and owned fixtures now use the tab interface. Historical statements below do not override those newer receipts.
 
 1. [E, source] `scripts/smoke-chatgpt.mjs` expects `ChatGPT account` and `Codex ChatGPT subscription`; current UI uses `Codex account` and `Codex ChatGPT or API key`. Its saved-settings error regex also expects older wording. These are checker defects preventing later assertions. [R] Repair under the test owner's scope, retain real callback checks and label authenticated UI as a fixture. The new native row supplies current-label start/cancel coverage without changing that repository script.
 2. [E, source] Home smoke reports `resumeBuild: true` for reopening a project. Quality smoke reports `cliExportsRunnablePackage: true` for a mocked call. [R] Name these reopening and export invocation. Use dedicated Resume checks and an actually launched package for stronger claims.

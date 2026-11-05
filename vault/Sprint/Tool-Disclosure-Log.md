@@ -114,6 +114,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Node.js built-in inspector and vm checker probes | QA diagnostic | Reproduced unsupported dynamic import in the OAuth interceptor and validated an import-free replacement with synthetic routing data; no app or network listener | Node.js built-in modules | 2026-11-05 |
 | d6f8750 combined acceptance receipts | Synthetic QA dataset | Reviewed four native/browser receipts and screenshots to separate stale test adapters from a reproduced saved-state startup defect | Main-owned local acceptance execution | 2026-11-05 |
 | Combined acceptance receipts at 3da8ad8 | Synthetic native and browser evidence dataset | Independently reviewed input, OAuth-control, browser recovery, detached Stop and full restart Resume receipts; retained scopes and remaining gaps | Event team runtime owner | 2026-11-05 |
+| Native persisted-baseline Resume checker revision 1 | QA script | Prepared exact token.test.cjs baseline preservation through native Stop, full Electron restart and resumed verification progress; syntax and pure controls only here | Event team QA | 2026-11-05 |
 
 ## Data and sources
 
