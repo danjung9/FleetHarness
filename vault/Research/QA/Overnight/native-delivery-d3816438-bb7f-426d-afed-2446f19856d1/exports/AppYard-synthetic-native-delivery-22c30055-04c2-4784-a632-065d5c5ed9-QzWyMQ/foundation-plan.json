@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "custom",
+  "version": "1.0.0",
+  "computePack": "custom",
+  "reason": "This regression fixture deliberately exercises the existing browser-only runtime and inline evaluator, without a backend service."
+}

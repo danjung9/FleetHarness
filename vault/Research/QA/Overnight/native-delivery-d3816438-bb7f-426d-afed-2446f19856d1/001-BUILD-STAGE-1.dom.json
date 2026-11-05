@@ -1,0 +1,208 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture\nNative delivery fixture\nConnect a provider…\nUsed for new builds. Completed builds keep their recorded model.\nSynthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924\nStart build\n1\nBrief\n2\nBuild\n3\nReview\n4\nDeliver\n\nBrief saved. Start the build when you’re ready.\n\nBuild phases\n0 of 5 complete\n1\nUnderstand brief\nNot started\n2\nResearch\nNot started\n3\nPlan\nNot started\n4\nImplement\nNot started\n5\nTest\nNot started\n\nResearch and planning may ask for your input.\nYour review follows testing.\n\nUnderstand brief\nNot started\n\nDefine the app’s scope and prepare connected inputs or synthetic data for this use case.\n\nResearch starts automatically once the scope and data are ready.\n\nOutputs\n\nOutputs will appear as your build progresses.\n\nEdit brief\nActivity\nPhase details\nBrief saved.\nStart build\n\nPi will research, plan, build, and test Synthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924 automatically using fleet-fixture/fixture-model. You review the result before delivery.\n\nThe agents can edit files and execute shell commands on this Mac. Build agents and generated apps run with host and network access. Stop ends tracked run processes. Your configured model provider receives the brief and tool context; provider usage charges may apply.\n\nPrior run folders are preserved. This starts fresh from the current brief.\n\nCancel\nStart automatic build",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924Operational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "2909d2d3-c2b1-43be-9bdb-31429c8c2d8c"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": true,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": " Start build",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "1Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "2Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "1Understand briefNot started",
+      "type": "button",
+      "ariaLabel": "Understand brief: Not started",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "2ResearchNot started",
+      "type": "button",
+      "ariaLabel": "Research: Not started",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3PlanNot started",
+      "type": "button",
+      "ariaLabel": "Plan: Not started",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4ImplementNot started",
+      "type": "button",
+      "ariaLabel": "Implement: Not started",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "5TestNot started",
+      "type": "button",
+      "ariaLabel": "Test: Not started",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Edit brief ",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Close dialog",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Cancel",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Start automatic build",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

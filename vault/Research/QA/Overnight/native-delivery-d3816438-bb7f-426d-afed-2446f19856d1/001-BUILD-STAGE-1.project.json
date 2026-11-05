@@ -1,0 +1,40 @@
+{
+  "id": "2909d2d3-c2b1-43be-9bdb-31429c8c2d8c",
+  "title": "Synthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924",
+  "runId": "683db108-ded6-419a-b5e2-acd5d6cc6c52",
+  "workspace": "/private/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.378629Y7yL/fleet-native-delivery-u5i7aX/state/workspaces/2909d2d3-c2b1-43be-9bdb-31429c8c2d8c/683db108-ded6-419a-b5e2-acd5d6cc6c52",
+  "status": "running",
+  "stages": [
+    {
+      "id": "intake",
+      "status": "queued"
+    },
+    {
+      "id": "research",
+      "status": "queued"
+    },
+    {
+      "id": "plan",
+      "status": "queued"
+    },
+    {
+      "id": "build",
+      "status": "queued"
+    },
+    {
+      "id": "verify",
+      "status": "queued"
+    },
+    {
+      "id": "review",
+      "status": "queued"
+    },
+    {
+      "id": "deliver",
+      "status": "queued"
+    }
+  ],
+  "feedback": "",
+  "processCleanup": "pending",
+  "processRunId": "683db108-ded6-419a-b5e2-acd5d6cc6c52"
+}

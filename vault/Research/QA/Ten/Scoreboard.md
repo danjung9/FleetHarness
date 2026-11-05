@@ -10,16 +10,16 @@ summary: "Ten-challenge benchmark, round 6 at 5f4eb39: 10 of 10 finished, 0 pass
 
 [P] Mukul's measure of success: real challenges built from the catalog card with no human help, start to finish, until satisfactory.
 
-[E, automatic, code `5f4eb39` plus scratch patch to block list proven, codex-rpc.ts: keep the block list, codex-session.ts: Mac block list, started 03:39, finished 04:36 EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
+[E, automatic, code `5f4eb39` plus scratch patch to block list proven, codex-rpc.ts: keep the block list, codex-session.ts: Mac block list, started 03:39, finished 04:39 EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
 
 **Automatic bar:** reached review alone; generated tests pass with none skipped; every planned browser journey passes; first open offline shows no page errors, no outside requests and a non-blank page. **Satisfactory:** that bar plus an independent judge's verdict, in `Research/QA/Officer/JUDGE-R<round>-<challenge>.md`.
 
 | Challenge | Status | Min | Tests | Journeys | Criteria met / deferred / failed | Repair | Open errors | Tokens, uncached plus output | Bar | Judge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [[Research/QA/Ten/R6/id36-paperless/final\|id36-paperless]] | failed at build | 24.6 | - | 0/0 | 0 / 0 / 0 | yes | 0 | 487786 | FAIL | pending |
-| [[Research/QA/Ten/R6/id12-optask/final\|id12-optask]] | failed at verify | 29.5 | 26/26 | 12/12 | 11 / 2 / 0 | yes | 0 | 779119 | FAIL | pending |
+| [[Research/QA/Ten/R6/id12-optask/final\|id12-optask]] | failed at verify | 29.5 | 26/26 | 12/12 | 11 / 2 / 0 | yes | 0 | 779119 | FAIL | NOT |
 | [[Research/QA/Ten/R6/id20-contact-brief/final\|id20-contact-brief]] | failed | 0.2 | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
-| [[Research/QA/Ten/R6/id11-training/final\|id11-training]] | failed at verify | 30.4 | 40/40 | 10/10 | 11 / 5 / 0 | yes | 0 | 802992 | FAIL | pending |
+| [[Research/QA/Ten/R6/id11-training/final\|id11-training]] | failed at verify | 30.4 | 40/40 | 10/10 | 11 / 5 / 0 | yes | 0 | 802992 | FAIL | NOT |
 | [[Research/QA/Ten/R6/id35-cyber-defender/final\|id35-cyber-defender]] | failed | None | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
 | [[Research/QA/Ten/R6/id32-readiness/final\|id32-readiness]] | failed | 0.5 | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
 | [[Research/QA/Ten/R6/id10-mooring/final\|id10-mooring]] | failed | None | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |

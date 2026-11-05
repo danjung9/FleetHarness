@@ -1,0 +1,168 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture\nNative delivery fixture\nConnect a provider…\nUsed for new builds. Completed builds keep their recorded model.\nSynthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924\nBrief\nBuild\nReview\nDeliver\n\nSource and evidence exported. You can also download the app.\n\nDeliver\n\nSave the approved prototype to your computer.\n\nYour prototype is approved\n\nApproved Nov 5, 04:37 AM\nView review\n\nDownload app\n\nStandalone app for this computer. Unzip the download to open it. No developer tools or AI account needed.\n\nSource and evidence\n\nExport the app source, test results, and your review for inspection or further development.\n\nExport source & evidence\n\nSource and evidence saved to\n/Users/mukul/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/native-delivery-d3816438-bb7f-426d-afed-2446f19856d1/exports/AppYard-synthetic-native-delivery-22c30055-04c2-4784-a632-065d5c5ed9-QzWyMQ\n\nRequest a change\nWhat should change?\n\nUse at least 10 characters. The next iteration needs new checks and approval. Your previously delivered files are kept.\n\nRequest a change\nPrototype approved for delivery.",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 22c30055-04c2-4784-a632-065d5c5ed924Operational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "2909d2d3-c2b1-43be-9bdb-31429c8c2d8c"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": false,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "View review",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Download app",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Export source & evidence",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": "",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Request a change",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

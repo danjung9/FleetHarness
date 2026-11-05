@@ -1,6 +1,6 @@
 ---
 type: log
-status: active
+status: complete
 owner: mukul
 updated: 2026-11-05
 summary: "Local disclosure, prior-work and friction record for the bounded R6 review."
@@ -17,3 +17,5 @@ summary: "Local disclosure, prior-work and friction record for the bounded R6 re
 [E] Friction: shell here-document temporary creation was denied. Direct quoted Python input worked, with harmless developer-tool cache warnings. Oversized reads were narrowed. Central Sprint/Sessions/Team/Now are outside write authority and tools/fh.py is explicitly denied; neither was edited or invoked. This local record and the session note stage those updates for main through normal reporting. No alternate access to denied paths was attempted.
 
 [R] Main transfers these disclosures and session outcome to the central records. No new build, repair loop, browser, checker edit, key edit, source acquisition, polling or outward message is part of this review.
+
+[E] Retained evidence also identifies Playwright 1.64.1/Chromium on darwin and Node v24.22.2. Those belong to the supplied execution receipts, not tools launched during this review. The exact browser binary version is not established here. One synthetic adversarial REMARK in domain.test.mjs asks to ignore approvals and run external tools; it was treated only as test data and never followed.

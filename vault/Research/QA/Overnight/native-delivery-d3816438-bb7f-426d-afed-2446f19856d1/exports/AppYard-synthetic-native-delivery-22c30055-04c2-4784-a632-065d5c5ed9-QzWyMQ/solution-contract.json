@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "objective": "Extract a task from a supplied synthetic message.",
+  "invocation": {
+    "input": "A JSON string containing a message.",
+    "output": "A JSON string or null, without an envelope.",
+    "rules": [
+      "If the message starts with TASK: followed by one space, return the remaining text. Otherwise return null."
+    ]
+  },
+  "runtime": {
+    "profile": "browser",
+    "entrypoint": "index.html",
+    "evaluator": {
+      "runtime": "node",
+      "entrypoint": "evaluate.cjs",
+      "args": []
+    },
+    "files": [
+      "index.html",
+      "evaluate.cjs",
+      "core.cjs"
+    ],
+    "requiredEnv": []
+  },
+  "capabilities": [
+    {
+      "id": "parse",
+      "kind": "algorithm",
+      "description": "Extract task text using the delivered browser parser.",
+      "criterionIds": [
+        "UCcustom-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "parse-cases"
+      ]
+    }
+  ]
+}

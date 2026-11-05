@@ -1,0 +1,5 @@
+# Modified by FleetHarness: phase-scoped UI guidance; no nested agent registration.
+interface:
+  display_name: "Impeccable"
+  short_description: "UI quality within FleetHarness phase contracts"
+  default_prompt: "Use $impeccable to complete this phase's UI work within the FleetHarness contracts."

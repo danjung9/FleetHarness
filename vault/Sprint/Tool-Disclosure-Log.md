@@ -125,6 +125,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Retained R6/native QA records | project evidence | prioritization | project QA. | 2026-11-05 |
 | R6/native QA and meeting-194 records | project evidence | QA allocation | project QA/runner. | 2026-11-05 |
 | R6 and native QA records | project evidence | coordination review | project QA. | 2026-11-05 |
+| Supplied R6 synthetic artifacts | dataset | evidence review | project benchmark. | 2026-11-05 |
 
 ## Data and sources
 

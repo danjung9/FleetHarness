@@ -1,0 +1,560 @@
+[
+  {
+    "name": "fleet_get_challenge",
+    "description": "Read an official Norfolk challenge snapshot and its AppYard recipe. Omit id to list the catalog. No live website request.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_extract_messages",
+    "description": "Parse the documented synthetic EVENT/TASK grammar with exact source spans and ambiguity flags. Not a full USMTF parser.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "sourceId",
+        "text"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 200000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_solve_schedule",
+    "description": "Find a feasible allocation over explicit candidate starts, honoring personnel, qualifications, availability, shared resources, rest and horizon duty budgets. Returns infeasible or budget_exhausted distinctly.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "windows",
+        "people",
+        "requests"
+      ],
+      "properties": {
+        "windows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "start",
+              "end"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        },
+        "people": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "qualifications",
+              "windows",
+              "maxMinutes",
+              "restMinutes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "qualifications": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "windows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "start": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1000000000
+                    },
+                    "end": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1000000000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 100
+              },
+              "maxMinutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "restMinutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 200
+        },
+        "requests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "duration",
+              "starts",
+              "people",
+              "resources",
+              "qualifications"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "duration": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10080
+              },
+              "starts": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000000
+                },
+                "maxItems": 100
+              },
+              "people": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "qualifications": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 24
+        },
+        "maxNodes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_reconcile_records",
+    "description": "Merge supplied immutable revision histories; retain conflicting edit/delete heads, reject ID collisions and missing history. Pure calculation: does not persist or transmit records.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "local",
+        "remote"
+      ],
+      "properties": {
+        "local": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "recordId",
+              "parents",
+              "actor",
+              "value"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "recordId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "parents": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "actor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 50000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 5000
+        },
+        "remote": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "recordId",
+              "parents",
+              "actor",
+              "value"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "recordId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "parents": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "actor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 50000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 5000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_plan_uploads",
+    "description": "Allocate a byte budget by supplied priority and age, resuming from acknowledged offsets. Plans transfers only; does not send data.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "budgetBytes",
+        "items"
+      ],
+      "properties": {
+        "budgetBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "bytes",
+              "uploadedBytes",
+              "priority",
+              "createdAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000000
+              },
+              "uploadedBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5
+              },
+              "createdAt": {
+                "type": "string",
+                "maxLength": 40
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 2000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_search_evidence",
+    "description": "Find lexical matches in a caller-supplied approved corpus with exact excerpts and freshness. Does not infer answers, fetch sources or enforce production access control.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "query",
+        "asOf",
+        "documents"
+      ],
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "asOf": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "maxAgeDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 36500
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "source",
+              "text",
+              "approved",
+              "updatedAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100000
+              },
+              "approved": {
+                "type": "boolean"
+              },
+              "updatedAt": {
+                "type": "string",
+                "maxLength": 40
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 200
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "fleet_analyze_dependencies",
+    "description": "Calculate a supplied dependency DAG, controlling path and deadline margin; unknown durations remain unknown. Not a validated operational readiness model.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "deadline",
+        "targets",
+        "nodes"
+      ],
+      "properties": {
+        "deadline": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "dependencies",
+              "duration",
+              "readyAt",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "duration": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000000000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "readyAt": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 200
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
