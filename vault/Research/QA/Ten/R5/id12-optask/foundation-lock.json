@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "selection": {
+    "schemaVersion": 1,
+    "templateId": "node-service",
+    "version": "1.0.0",
+    "computePack": "messages",
+    "reason": "Reuse the dependency-free Node 22.19+ local HTTP service and messages UTF-16 scanning patterns. Extend the shared backend for the exact intake mock OPTASK grammar, timeline, revision review and decisions; generic EVENT/TASK is insufficient. Local service satisfies internet-disconnected use without duplicating computation in the browser. No OCR, model or external dependencies are needed."
+  },
+  "templateHash": "3c0da3f3b43d49a8518c6f5fb1cde05fc211f9fc1d6bf1d3f0251b5ec9ba1d65",
+  "files": {
+    "compute.mjs": "f6f864d0f27722c0e901951101bd327ed56738bdea2ca8b69ba473f77346e78b",
+    "example-input.json": "955b2faa32ccb4eaf03083afb9fa75f0a36a6965404758aa127e381ba1dd32c3",
+    "FOUNDATION.md": "54478d77b77e1c561e867c2f9058c8e87e7afb5bf13696545f1fbd5d5e88480b",
+    "lib/messages.js": "1f00e4691f3c20f5b15149a258b288268494003dcd18271e4751ef8179e76aad",
+    "lib/validation.js": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f",
+    "package.json": "92ed1ff0bbc999477871bb4faf6327c6d8261ab9a57eec87ef874782223cd455",
+    "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+    "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+    "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+    "server.mjs": "b4ee7c4947312a15dca5e3e81eb34226fbd79238b1fc575632e342e7310e6864"
+  },
+  "copiedFiles": 10,
+  "copiedBytes": 25472,
+  "scope": "Original starter bytes before agent edits; not application verification or measured token savings."
+}

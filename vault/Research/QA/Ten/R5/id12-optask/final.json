@@ -1,0 +1,117 @@
+{
+ "title": "Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+ "status": "failed",
+ "error": "AppYard could not confirm that all build work stopped; use the operator shutdown procedure and ask the app maintainer for help before starting another build.",
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Synthetic data prepared for this use case.",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T07:56:11.320Z",
+    "finishedAt": "2026-11-05T07:59:49.247Z",
+    "durationMs": 217928,
+    "agentAttempts": 2,
+    "inferenceDurationMs": 217786,
+    "usage": {
+     "inputTokens": 311235,
+     "cachedInputTokens": 236406,
+     "uncachedInputTokens": 74829,
+     "outputTokens": 11729,
+     "reasoningOutputTokens": 160,
+     "totalTokens": 322964,
+     "uncachedPlusOutputTokens": 86558
+    }
+   }
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T07:59:49.273Z",
+    "finishedAt": "2026-11-05T08:01:25.836Z",
+    "durationMs": 96563,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 96507,
+    "usage": {
+     "inputTokens": 625341,
+     "cachedInputTokens": 559010,
+     "uncachedInputTokens": 66331,
+     "outputTokens": 5545,
+     "reasoningOutputTokens": 131,
+     "totalTokens": 630886,
+     "uncachedPlusOutputTokens": 71876
+    }
+   }
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete",
+   "metrics": {
+    "startedAt": "2026-11-05T08:01:25.849Z",
+    "finishedAt": "2026-11-05T08:06:18.892Z",
+    "durationMs": 293044,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 292825,
+    "usage": {
+     "inputTokens": 754010,
+     "cachedInputTokens": 669406,
+     "uncachedInputTokens": 84604,
+     "outputTokens": 17264,
+     "reasoningOutputTokens": 1672,
+     "totalTokens": 771274,
+     "uncachedPlusOutputTokens": 101868
+    }
+   }
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "failed",
+   "metrics": {
+    "startedAt": "2026-11-05T08:06:18.915Z",
+    "finishedAt": "2026-11-05T08:13:03.577Z",
+    "durationMs": 404664,
+    "agentAttempts": 1,
+    "inferenceDurationMs": 404332,
+    "usage": {
+     "inputTokens": 4093119,
+     "cachedInputTokens": 3943378,
+     "uncachedInputTokens": 149741,
+     "outputTokens": 24822,
+     "reasoningOutputTokens": 2904,
+     "totalTokens": 4117941,
+     "uncachedPlusOutputTokens": 174563
+    }
+   }
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "queued"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "queued"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": null,
+ "benchMinutes": 17,
+ "challengeId": "12",
+ "workspace": "~/fhten/ud-r5/workspaces/2dc93369-fddb-474b-99d4-e7d1446cc57a/e0c147db-5178-4008-92e5-f8e7684e0f0d"
+}

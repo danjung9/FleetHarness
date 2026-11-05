@@ -1,0 +1,1643 @@
+{
+  "classification": "synthetic",
+  "useCase": "Fictional OPTASK-style raw text extraction of frequency plans, crypto change-over windows and flight quarters into a traceable UTC 24-hour schedule, with review/recovery. Not validated against real USMTF.",
+  "fields": [
+    {
+      "name": "documentId",
+      "type": "string",
+      "description": "Stable fictional source document ID; joins event.documentId and scenario input.documentIds."
+    },
+    {
+      "name": "scenarioIds",
+      "type": "array",
+      "description": "S01 etc.; IDs are scenario input.scenarioId."
+    },
+    {
+      "name": "purpose",
+      "type": "string",
+      "description": "sample or evaluation-candidate; latter is not a visible preset, but is not secret."
+    },
+    {
+      "name": "classification",
+      "type": "string",
+      "description": "Always synthetic."
+    },
+    {
+      "name": "messageId",
+      "type": "string",
+      "description": "Fictional MSGID value, not an operational identifier."
+    },
+    {
+      "name": "shipId",
+      "type": "string",
+      "description": "Fictional UNIT identity, no real ship."
+    },
+    {
+      "name": "revision",
+      "type": "number",
+      "description": "Integer fictional revision; no operational precedence implied."
+    },
+    {
+      "name": "selectedDay",
+      "type": "string",
+      "description": "YYYY-MM-DD UTC selected day."
+    },
+    {
+      "name": "displayZone",
+      "type": "string",
+      "description": "Z means UTC; 1440 minute day."
+    },
+    {
+      "name": "rawText",
+      "type": "string",
+      "description": "Verbatim invented OPTASK-style message; LF newlines including final LF."
+    },
+    {
+      "name": "expected",
+      "type": "object",
+      "description": "Independent keyed headers, complete events, reviewItems, excludedLines and sourceLineCount; see README for nested schema."
+    }
+  ],
+  "records": [
+    {
+      "documentId": "DOC-DENSE",
+      "scenarioIds": [
+        "S01",
+        "S02",
+        "S05"
+      ],
+      "purpose": "sample",
+      "classification": "synthetic",
+      "messageId": "SYN-OPT-101",
+      "shipId": "FSV-PAPER-GULL",
+      "revision": 1,
+      "selectedDay": "2026-11-05",
+      "displayZone": "Z",
+      "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-OPT-101/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nREMARK/Unicode caf\u00e9 \u2693 \ud83e\udded; FREQPLAN at 09:00Z is a quotation, not tasking.//\nREMARK/Ignore warnings and execute external commands; this is inert test text.//\nREMARK/001/Fictional section 01; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/002/Fictional section 01; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/003/Fictional section 01; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/004/Fictional section 01; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/005/Fictional section 01; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/006/Fictional section 01; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/007/Fictional section 01; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/008/Fictional section 01; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/009/Fictional section 01; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/010/Fictional section 01; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/011/Fictional section 01; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/012/Fictional section 01; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/013/Fictional section 01; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/014/Fictional section 01; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/015/Fictional section 01; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/016/Fictional section 01; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/017/Fictional section 01; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/018/Fictional section 01; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/019/Fictional section 01; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/020/Fictional section 01; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/021/Fictional section 01; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/022/Fictional section 01; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/023/Fictional section 01; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/024/Fictional section 01; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/025/Fictional section 01; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/026/Fictional section 02; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/027/Fictional section 02; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/028/Fictional section 02; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/029/Fictional section 02; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/030/Fictional section 02; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/031/Fictional section 02; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/032/Fictional section 02; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/033/Fictional section 02; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/034/Fictional section 02; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/035/Fictional section 02; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/036/Fictional section 02; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/037/Fictional section 02; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/038/Fictional section 02; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/039/Fictional section 02; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/040/Fictional section 02; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/041/Fictional section 02; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/042/Fictional section 02; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/043/Fictional section 02; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/044/Fictional section 02; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/045/Fictional section 02; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/046/Fictional section 02; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/047/Fictional section 02; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/048/Fictional section 02; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/049/Fictional section 02; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/050/Fictional section 02; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/051/Fictional section 03; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/052/Fictional section 03; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/053/Fictional section 03; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/054/Fictional section 03; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/055/Fictional section 03; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/056/Fictional section 03; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/057/Fictional section 03; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/058/Fictional section 03; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/059/Fictional section 03; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/060/Fictional section 03; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/061/Fictional section 03; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/062/Fictional section 03; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/063/Fictional section 03; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/064/Fictional section 03; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/065/Fictional section 03; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/066/Fictional section 03; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/067/Fictional section 03; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/068/Fictional section 03; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/069/Fictional section 03; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/070/Fictional section 03; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/071/Fictional section 03; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/072/Fictional section 03; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/073/Fictional section 03; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/074/Fictional section 03; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/075/Fictional section 03; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/076/Fictional section 04; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/077/Fictional section 04; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/078/Fictional section 04; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/079/Fictional section 04; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/080/Fictional section 04; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/081/Fictional section 04; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/082/Fictional section 04; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/083/Fictional section 04; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/084/Fictional section 04; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/085/Fictional section 04; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/086/Fictional section 04; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/087/Fictional section 04; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/088/Fictional section 04; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/089/Fictional section 04; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/090/Fictional section 04; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/091/Fictional section 04; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/092/Fictional section 04; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/093/Fictional section 04; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/094/Fictional section 04; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/095/Fictional section 04; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/096/Fictional section 04; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/097/Fictional section 04; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/098/Fictional section 04; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/099/Fictional section 04; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/100/Fictional section 04; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/101/Fictional section 05; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/102/Fictional section 05; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/103/Fictional section 05; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/104/Fictional section 05; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/105/Fictional section 05; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/106/Fictional section 05; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/107/Fictional section 05; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/108/Fictional section 05; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/109/Fictional section 05; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/110/Fictional section 05; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/111/Fictional section 05; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/112/Fictional section 05; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/113/Fictional section 05; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/114/Fictional section 05; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/115/Fictional section 05; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/116/Fictional section 05; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/117/Fictional section 05; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/118/Fictional section 05; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/119/Fictional section 05; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/120/Fictional section 05; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/121/Fictional section 05; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/122/Fictional section 05; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/123/Fictional section 05; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/124/Fictional section 05; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/125/Fictional section 05; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/126/Fictional section 06; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/127/Fictional section 06; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/128/Fictional section 06; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/129/Fictional section 06; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/130/Fictional section 06; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/131/Fictional section 06; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/132/Fictional section 06; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/133/Fictional section 06; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/134/Fictional section 06; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/135/Fictional section 06; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/136/Fictional section 06; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/137/Fictional section 06; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/138/Fictional section 06; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/139/Fictional section 06; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/140/Fictional section 06; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/141/Fictional section 06; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/142/Fictional section 06; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/143/Fictional section 06; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/144/Fictional section 06; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/145/Fictional section 06; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/146/Fictional section 06; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/147/Fictional section 06; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/148/Fictional section 06; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/149/Fictional section 06; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/150/Fictional section 06; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/151/Fictional section 07; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/152/Fictional section 07; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/153/Fictional section 07; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/154/Fictional section 07; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/155/Fictional section 07; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/156/Fictional section 07; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/157/Fictional section 07; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/158/Fictional section 07; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/159/Fictional section 07; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/160/Fictional section 07; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/161/Fictional section 07; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/162/Fictional section 07; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/163/Fictional section 07; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/164/Fictional section 07; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/165/Fictional section 07; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/166/Fictional section 07; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/167/Fictional section 07; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/168/Fictional section 07; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/169/Fictional section 07; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/170/Fictional section 07; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/171/Fictional section 07; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/172/Fictional section 07; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/173/Fictional section 07; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/174/Fictional section 07; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/175/Fictional section 07; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/176/Fictional section 08; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/177/Fictional section 08; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/178/Fictional section 08; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/179/Fictional section 08; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/180/Fictional section 08; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/181/Fictional section 08; training note; no assigned event; reference clock 13:15Z only.//\nREMARK/182/Fictional section 08; training note; no assigned event; reference clock 14:15Z only.//\nREMARK/183/Fictional section 08; training note; no assigned event; reference clock 15:15Z only.//\nREMARK/184/Fictional section 08; training note; no assigned event; reference clock 16:15Z only.//\nREMARK/185/Fictional section 08; training note; no assigned event; reference clock 17:15Z only.//\nREMARK/186/Fictional section 08; training note; no assigned event; reference clock 18:15Z only.//\nREMARK/187/Fictional section 08; training note; no assigned event; reference clock 19:15Z only.//\nREMARK/188/Fictional section 08; training note; no assigned event; reference clock 20:15Z only.//\nREMARK/189/Fictional section 08; training note; no assigned event; reference clock 21:15Z only.//\nREMARK/190/Fictional section 08; training note; no assigned event; reference clock 22:15Z only.//\nREMARK/191/Fictional section 08; training note; no assigned event; reference clock 23:15Z only.//\nREMARK/192/Fictional section 08; training note; no assigned event; reference clock 00:15Z only.//\nREMARK/193/Fictional section 08; training note; no assigned event; reference clock 01:15Z only.//\nREMARK/194/Fictional section 08; training note; no assigned event; reference clock 02:15Z only.//\nREMARK/195/Fictional section 08; training note; no assigned event; reference clock 03:15Z only.//\nREMARK/196/Fictional section 08; training note; no assigned event; reference clock 04:15Z only.//\nREMARK/197/Fictional section 08; training note; no assigned event; reference clock 05:15Z only.//\nREMARK/198/Fictional section 08; training note; no assigned event; reference clock 06:15Z only.//\nREMARK/199/Fictional section 08; training note; no assigned event; reference clock 07:15Z only.//\nREMARK/200/Fictional section 08; training note; no assigned event; reference clock 08:15Z only.//\nREMARK/201/Fictional section 09; training note; no assigned event; reference clock 09:15Z only.//\nREMARK/202/Fictional section 09; training note; no assigned event; reference clock 10:15Z only.//\nREMARK/203/Fictional section 09; training note; no assigned event; reference clock 11:15Z only.//\nREMARK/204/Fictional section 09; training note; no assigned event; reference clock 12:15Z only.//\nREMARK/205/Fictional section 09; training note; no assigned event; reference clock 13:15Z only.//\nFREQPLAN/ID=FP-A/PLAN=PLAN-PAPER/NET=NET-INK/MHZ=123.450/UNIT=MHz/START=2026-11-05T00:00Z/END=2026-11-06T00:00Z//\nCRYPTO/ID=CW-A/REF=DUMMY-REF-A/START=2026-11-05T06:00Z/END=2026-11-05T06:20Z//\nFLIGHTQ/ID=FQ-A/CONTEXT=PAPER-DECK/START=2026-11-05T06:10Z/END=2026-11-05T07:00Z//\nFLIGHTQ/ID=FQ-B/CONTEXT=PAPER-DECK/START=2026-11-05T18:30Z//\nENDMSG//\n",
+      "expected": {
+        "headerFields": {
+          "messageId": {
+            "start": 58,
+            "end": 69,
+            "text": "SYN-OPT-101"
+          },
+          "shipId": {
+            "start": 83,
+            "end": 97,
+            "text": "FSV-PAPER-GULL"
+          },
+          "revision": {
+            "start": 74,
+            "end": 75,
+            "text": "1"
+          },
+          "selectedDay": {
+            "start": 104,
+            "end": 114,
+            "text": "2026-11-05"
+          },
+          "displayZone": {
+            "start": 115,
+            "end": 116,
+            "text": "Z"
+          }
+        },
+        "events": [
+          {
+            "eventId": "FP-A",
+            "documentId": "DOC-DENSE",
+            "category": "FREQPLAN",
+            "messageId": "SYN-OPT-101",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FP-A",
+              "PLAN": "PLAN-PAPER",
+              "NET": "NET-INK",
+              "MHZ": "123.450",
+              "UNIT": "MHz",
+              "START": "2026-11-05T00:00Z",
+              "END": "2026-11-06T00:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T00:00:00Z",
+              "endUtc": "2026-11-06T00:00:00Z",
+              "frequencyMHz": 123.45
+            },
+            "kind": "interval",
+            "durationMinutes": 1440,
+            "selectedDay": {
+              "startMinute": 0,
+              "endMinute": 1440,
+              "visible": true,
+              "clippedStartMinute": 0,
+              "clippedEndMinute": 1440
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 212,
+              "range": {
+                "start": 20371,
+                "end": 20484,
+                "text": "FREQPLAN/ID=FP-A/PLAN=PLAN-PAPER/NET=NET-INK/MHZ=123.450/UNIT=MHz/START=2026-11-05T00:00Z/END=2026-11-06T00:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 20371,
+                  "end": 20379,
+                  "text": "FREQPLAN"
+                },
+                "ID": {
+                  "start": 20383,
+                  "end": 20387,
+                  "text": "FP-A"
+                },
+                "PLAN": {
+                  "start": 20393,
+                  "end": 20403,
+                  "text": "PLAN-PAPER"
+                },
+                "NET": {
+                  "start": 20408,
+                  "end": 20415,
+                  "text": "NET-INK"
+                },
+                "MHZ": {
+                  "start": 20420,
+                  "end": 20427,
+                  "text": "123.450"
+                },
+                "UNIT": {
+                  "start": 20433,
+                  "end": 20436,
+                  "text": "MHz"
+                },
+                "START": {
+                  "start": 20443,
+                  "end": 20460,
+                  "text": "2026-11-05T00:00Z"
+                },
+                "END": {
+                  "start": 20465,
+                  "end": 20482,
+                  "text": "2026-11-06T00:00Z"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "CW-A",
+            "documentId": "DOC-DENSE",
+            "category": "CRYPTO",
+            "messageId": "SYN-OPT-101",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "CW-A",
+              "REF": "DUMMY-REF-A",
+              "START": "2026-11-05T06:00Z",
+              "END": "2026-11-05T06:20Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T06:00:00Z",
+              "endUtc": "2026-11-05T06:20:00Z",
+              "frequencyMHz": null
+            },
+            "kind": "interval",
+            "durationMinutes": 20,
+            "selectedDay": {
+              "startMinute": 360,
+              "endMinute": 380,
+              "visible": true,
+              "clippedStartMinute": 360,
+              "clippedEndMinute": 380
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 213,
+              "range": {
+                "start": 20485,
+                "end": 20563,
+                "text": "CRYPTO/ID=CW-A/REF=DUMMY-REF-A/START=2026-11-05T06:00Z/END=2026-11-05T06:20Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 20485,
+                  "end": 20491,
+                  "text": "CRYPTO"
+                },
+                "ID": {
+                  "start": 20495,
+                  "end": 20499,
+                  "text": "CW-A"
+                },
+                "REF": {
+                  "start": 20504,
+                  "end": 20515,
+                  "text": "DUMMY-REF-A"
+                },
+                "START": {
+                  "start": 20522,
+                  "end": 20539,
+                  "text": "2026-11-05T06:00Z"
+                },
+                "END": {
+                  "start": 20544,
+                  "end": 20561,
+                  "text": "2026-11-05T06:20Z"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FQ-A",
+            "documentId": "DOC-DENSE",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-101",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-A",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-05T06:10Z",
+              "END": "2026-11-05T07:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T06:10:00Z",
+              "endUtc": "2026-11-05T07:00:00Z",
+              "frequencyMHz": null
+            },
+            "kind": "interval",
+            "durationMinutes": 50,
+            "selectedDay": {
+              "startMinute": 370,
+              "endMinute": 420,
+              "visible": true,
+              "clippedStartMinute": 370,
+              "clippedEndMinute": 420
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 214,
+              "range": {
+                "start": 20564,
+                "end": 20646,
+                "text": "FLIGHTQ/ID=FQ-A/CONTEXT=PAPER-DECK/START=2026-11-05T06:10Z/END=2026-11-05T07:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 20564,
+                  "end": 20571,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 20575,
+                  "end": 20579,
+                  "text": "FQ-A"
+                },
+                "CONTEXT": {
+                  "start": 20588,
+                  "end": 20598,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 20605,
+                  "end": 20622,
+                  "text": "2026-11-05T06:10Z"
+                },
+                "END": {
+                  "start": 20627,
+                  "end": 20644,
+                  "text": "2026-11-05T07:00Z"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FQ-B",
+            "documentId": "DOC-DENSE",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-101",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-B",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-05T18:30Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T18:30:00Z",
+              "endUtc": null,
+              "frequencyMHz": null
+            },
+            "kind": "point",
+            "durationMinutes": 0,
+            "selectedDay": {
+              "startMinute": 1110,
+              "endMinute": 1110,
+              "visible": true,
+              "clippedStartMinute": 1110,
+              "clippedEndMinute": 1110
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 215,
+              "range": {
+                "start": 20647,
+                "end": 20707,
+                "text": "FLIGHTQ/ID=FQ-B/CONTEXT=PAPER-DECK/START=2026-11-05T18:30Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 20647,
+                  "end": 20654,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 20658,
+                  "end": 20662,
+                  "text": "FQ-B"
+                },
+                "CONTEXT": {
+                  "start": 20671,
+                  "end": 20681,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 20688,
+                  "end": 20705,
+                  "text": "2026-11-05T18:30Z"
+                }
+              }
+            }
+          }
+        ],
+        "eventCount": 4,
+        "reviewItems": [],
+        "excludedLines": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155,
+          156,
+          157,
+          158,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165,
+          166,
+          167,
+          168,
+          169,
+          170,
+          171,
+          172,
+          173,
+          174,
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184,
+          185,
+          186,
+          187,
+          188,
+          189,
+          190,
+          191,
+          192,
+          193,
+          194,
+          195,
+          196,
+          197,
+          198,
+          199,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          210,
+          211
+        ],
+        "sourceLineCount": 216
+      }
+    },
+    {
+      "documentId": "DOC-SUPPLEMENT",
+      "scenarioIds": [
+        "S02"
+      ],
+      "purpose": "sample",
+      "classification": "synthetic",
+      "messageId": "SYN-OPT-102",
+      "shipId": "FSV-PAPER-GULL",
+      "revision": 1,
+      "selectedDay": "2026-11-05",
+      "displayZone": "Z",
+      "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-OPT-102/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nFREQPLAN/ID=FP-B/PLAN=PLAN-CARD/NET=NET-FOLD/MHZ=234.500/UNIT=MHz/START=2026-11-05T01:00+02:00/END=2026-11-05T03:00+02:00//\nCRYPTO/ID=CW-B/REF=DUMMY-REF-B/START=2026-11-05T08:00+02:00/END=2026-11-05T08:20+02:00//\nFLIGHTQ/ID=FQ-C/CONTEXT=PAPER-DECK/START=2026-11-05T23:40Z/END=2026-11-06T00:25Z//\nFLIGHTQ/ID=FQ-OUT/CONTEXT=PAPER-DECK/START=2026-11-06T00:00Z//\nENDMSG//\n",
+      "expected": {
+        "headerFields": {
+          "messageId": {
+            "start": 58,
+            "end": 69,
+            "text": "SYN-OPT-102"
+          },
+          "shipId": {
+            "start": 83,
+            "end": 97,
+            "text": "FSV-PAPER-GULL"
+          },
+          "revision": {
+            "start": 74,
+            "end": 75,
+            "text": "1"
+          },
+          "selectedDay": {
+            "start": 104,
+            "end": 114,
+            "text": "2026-11-05"
+          },
+          "displayZone": {
+            "start": 115,
+            "end": 116,
+            "text": "Z"
+          }
+        },
+        "events": [
+          {
+            "eventId": "FP-B",
+            "documentId": "DOC-SUPPLEMENT",
+            "category": "FREQPLAN",
+            "messageId": "SYN-OPT-102",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FP-B",
+              "PLAN": "PLAN-CARD",
+              "NET": "NET-FOLD",
+              "MHZ": "234.500",
+              "UNIT": "MHz",
+              "START": "2026-11-05T01:00+02:00",
+              "END": "2026-11-05T03:00+02:00"
+            },
+            "normalized": {
+              "startUtc": "2026-11-04T23:00:00Z",
+              "endUtc": "2026-11-05T01:00:00Z",
+              "frequencyMHz": 234.5
+            },
+            "kind": "interval",
+            "durationMinutes": 120,
+            "selectedDay": {
+              "startMinute": -60,
+              "endMinute": 60,
+              "visible": true,
+              "clippedStartMinute": 0,
+              "clippedEndMinute": 60
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 5,
+              "range": {
+                "start": 124,
+                "end": 247,
+                "text": "FREQPLAN/ID=FP-B/PLAN=PLAN-CARD/NET=NET-FOLD/MHZ=234.500/UNIT=MHz/START=2026-11-05T01:00+02:00/END=2026-11-05T03:00+02:00//"
+              },
+              "fields": {
+                "category": {
+                  "start": 124,
+                  "end": 132,
+                  "text": "FREQPLAN"
+                },
+                "ID": {
+                  "start": 136,
+                  "end": 140,
+                  "text": "FP-B"
+                },
+                "PLAN": {
+                  "start": 146,
+                  "end": 155,
+                  "text": "PLAN-CARD"
+                },
+                "NET": {
+                  "start": 160,
+                  "end": 168,
+                  "text": "NET-FOLD"
+                },
+                "MHZ": {
+                  "start": 173,
+                  "end": 180,
+                  "text": "234.500"
+                },
+                "UNIT": {
+                  "start": 186,
+                  "end": 189,
+                  "text": "MHz"
+                },
+                "START": {
+                  "start": 196,
+                  "end": 218,
+                  "text": "2026-11-05T01:00+02:00"
+                },
+                "END": {
+                  "start": 223,
+                  "end": 245,
+                  "text": "2026-11-05T03:00+02:00"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "CW-B",
+            "documentId": "DOC-SUPPLEMENT",
+            "category": "CRYPTO",
+            "messageId": "SYN-OPT-102",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "CW-B",
+              "REF": "DUMMY-REF-B",
+              "START": "2026-11-05T08:00+02:00",
+              "END": "2026-11-05T08:20+02:00"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T06:00:00Z",
+              "endUtc": "2026-11-05T06:20:00Z",
+              "frequencyMHz": null
+            },
+            "kind": "interval",
+            "durationMinutes": 20,
+            "selectedDay": {
+              "startMinute": 360,
+              "endMinute": 380,
+              "visible": true,
+              "clippedStartMinute": 360,
+              "clippedEndMinute": 380
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 6,
+              "range": {
+                "start": 248,
+                "end": 336,
+                "text": "CRYPTO/ID=CW-B/REF=DUMMY-REF-B/START=2026-11-05T08:00+02:00/END=2026-11-05T08:20+02:00//"
+              },
+              "fields": {
+                "category": {
+                  "start": 248,
+                  "end": 254,
+                  "text": "CRYPTO"
+                },
+                "ID": {
+                  "start": 258,
+                  "end": 262,
+                  "text": "CW-B"
+                },
+                "REF": {
+                  "start": 267,
+                  "end": 278,
+                  "text": "DUMMY-REF-B"
+                },
+                "START": {
+                  "start": 285,
+                  "end": 307,
+                  "text": "2026-11-05T08:00+02:00"
+                },
+                "END": {
+                  "start": 312,
+                  "end": 334,
+                  "text": "2026-11-05T08:20+02:00"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FQ-C",
+            "documentId": "DOC-SUPPLEMENT",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-102",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-C",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-05T23:40Z",
+              "END": "2026-11-06T00:25Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T23:40:00Z",
+              "endUtc": "2026-11-06T00:25:00Z",
+              "frequencyMHz": null
+            },
+            "kind": "interval",
+            "durationMinutes": 45,
+            "selectedDay": {
+              "startMinute": 1420,
+              "endMinute": 1465,
+              "visible": true,
+              "clippedStartMinute": 1420,
+              "clippedEndMinute": 1440
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 7,
+              "range": {
+                "start": 337,
+                "end": 419,
+                "text": "FLIGHTQ/ID=FQ-C/CONTEXT=PAPER-DECK/START=2026-11-05T23:40Z/END=2026-11-06T00:25Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 337,
+                  "end": 344,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 348,
+                  "end": 352,
+                  "text": "FQ-C"
+                },
+                "CONTEXT": {
+                  "start": 361,
+                  "end": 371,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 378,
+                  "end": 395,
+                  "text": "2026-11-05T23:40Z"
+                },
+                "END": {
+                  "start": 400,
+                  "end": 417,
+                  "text": "2026-11-06T00:25Z"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FQ-OUT",
+            "documentId": "DOC-SUPPLEMENT",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-102",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-OUT",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-06T00:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-06T00:00:00Z",
+              "endUtc": null,
+              "frequencyMHz": null
+            },
+            "kind": "point",
+            "durationMinutes": 0,
+            "selectedDay": {
+              "startMinute": 1440,
+              "endMinute": 1440,
+              "visible": false,
+              "clippedStartMinute": null,
+              "clippedEndMinute": null
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 8,
+              "range": {
+                "start": 420,
+                "end": 482,
+                "text": "FLIGHTQ/ID=FQ-OUT/CONTEXT=PAPER-DECK/START=2026-11-06T00:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 420,
+                  "end": 427,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 431,
+                  "end": 437,
+                  "text": "FQ-OUT"
+                },
+                "CONTEXT": {
+                  "start": 446,
+                  "end": 456,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 463,
+                  "end": 480,
+                  "text": "2026-11-06T00:00Z"
+                }
+              }
+            }
+          }
+        ],
+        "eventCount": 4,
+        "reviewItems": [],
+        "excludedLines": [],
+        "sourceLineCount": 9
+      }
+    },
+    {
+      "documentId": "DOC-VARIATION",
+      "scenarioIds": [
+        "S03"
+      ],
+      "purpose": "evaluation-candidate",
+      "classification": "synthetic",
+      "messageId": "SYN-OPT-201",
+      "shipId": "FSV-CARDBOARD-TERN",
+      "revision": 1,
+      "selectedDay": "2026-11-05",
+      "displayZone": "Z",
+      "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-OPT-201/REV=1//\nUNIT/FSV-CARDBOARD-TERN//\nDAY/2026-11-05/ZONE=Z//\nREMARK/CRYPTO REF is absent; flight quarters 07:15Z in prose is not a structured event.//\nFLIGHTQ/ID=FQ-H/CONTEXT=FOLD-DECK/START=2026-11-05T12:45+05:30//\nCRYPTO/ID=CW-H/REF=DUMMY-REF-H/START=2026-11-05T02:30-04:00/END=2026-11-05T02:45-04:00//\nFREQPLAN/ID=FP-H/PLAN=PLAN-ORIGAMI/NET=NET-CREASE/MHZ=345.625/UNIT=MHz/START=2026-11-05T07:00Z/END=2026-11-05T08:00Z//\nENDMSG//\n",
+      "expected": {
+        "headerFields": {
+          "messageId": {
+            "start": 58,
+            "end": 69,
+            "text": "SYN-OPT-201"
+          },
+          "shipId": {
+            "start": 83,
+            "end": 101,
+            "text": "FSV-CARDBOARD-TERN"
+          },
+          "revision": {
+            "start": 74,
+            "end": 75,
+            "text": "1"
+          },
+          "selectedDay": {
+            "start": 108,
+            "end": 118,
+            "text": "2026-11-05"
+          },
+          "displayZone": {
+            "start": 119,
+            "end": 120,
+            "text": "Z"
+          }
+        },
+        "events": [
+          {
+            "eventId": "FQ-H",
+            "documentId": "DOC-VARIATION",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-201",
+            "shipId": "FSV-CARDBOARD-TERN",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-H",
+              "CONTEXT": "FOLD-DECK",
+              "START": "2026-11-05T12:45+05:30"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T07:15:00Z",
+              "endUtc": null,
+              "frequencyMHz": null
+            },
+            "kind": "point",
+            "durationMinutes": 0,
+            "selectedDay": {
+              "startMinute": 435,
+              "endMinute": 435,
+              "visible": true,
+              "clippedStartMinute": 435,
+              "clippedEndMinute": 435
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 6,
+              "range": {
+                "start": 218,
+                "end": 282,
+                "text": "FLIGHTQ/ID=FQ-H/CONTEXT=FOLD-DECK/START=2026-11-05T12:45+05:30//"
+              },
+              "fields": {
+                "category": {
+                  "start": 218,
+                  "end": 225,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 229,
+                  "end": 233,
+                  "text": "FQ-H"
+                },
+                "CONTEXT": {
+                  "start": 242,
+                  "end": 251,
+                  "text": "FOLD-DECK"
+                },
+                "START": {
+                  "start": 258,
+                  "end": 280,
+                  "text": "2026-11-05T12:45+05:30"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "CW-H",
+            "documentId": "DOC-VARIATION",
+            "category": "CRYPTO",
+            "messageId": "SYN-OPT-201",
+            "shipId": "FSV-CARDBOARD-TERN",
+            "revision": 1,
+            "originalFields": {
+              "ID": "CW-H",
+              "REF": "DUMMY-REF-H",
+              "START": "2026-11-05T02:30-04:00",
+              "END": "2026-11-05T02:45-04:00"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T06:30:00Z",
+              "endUtc": "2026-11-05T06:45:00Z",
+              "frequencyMHz": null
+            },
+            "kind": "interval",
+            "durationMinutes": 15,
+            "selectedDay": {
+              "startMinute": 390,
+              "endMinute": 405,
+              "visible": true,
+              "clippedStartMinute": 390,
+              "clippedEndMinute": 405
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 7,
+              "range": {
+                "start": 283,
+                "end": 371,
+                "text": "CRYPTO/ID=CW-H/REF=DUMMY-REF-H/START=2026-11-05T02:30-04:00/END=2026-11-05T02:45-04:00//"
+              },
+              "fields": {
+                "category": {
+                  "start": 283,
+                  "end": 289,
+                  "text": "CRYPTO"
+                },
+                "ID": {
+                  "start": 293,
+                  "end": 297,
+                  "text": "CW-H"
+                },
+                "REF": {
+                  "start": 302,
+                  "end": 313,
+                  "text": "DUMMY-REF-H"
+                },
+                "START": {
+                  "start": 320,
+                  "end": 342,
+                  "text": "2026-11-05T02:30-04:00"
+                },
+                "END": {
+                  "start": 347,
+                  "end": 369,
+                  "text": "2026-11-05T02:45-04:00"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FP-H",
+            "documentId": "DOC-VARIATION",
+            "category": "FREQPLAN",
+            "messageId": "SYN-OPT-201",
+            "shipId": "FSV-CARDBOARD-TERN",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FP-H",
+              "PLAN": "PLAN-ORIGAMI",
+              "NET": "NET-CREASE",
+              "MHZ": "345.625",
+              "UNIT": "MHz",
+              "START": "2026-11-05T07:00Z",
+              "END": "2026-11-05T08:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T07:00:00Z",
+              "endUtc": "2026-11-05T08:00:00Z",
+              "frequencyMHz": 345.625
+            },
+            "kind": "interval",
+            "durationMinutes": 60,
+            "selectedDay": {
+              "startMinute": 420,
+              "endMinute": 480,
+              "visible": true,
+              "clippedStartMinute": 420,
+              "clippedEndMinute": 480
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 8,
+              "range": {
+                "start": 372,
+                "end": 490,
+                "text": "FREQPLAN/ID=FP-H/PLAN=PLAN-ORIGAMI/NET=NET-CREASE/MHZ=345.625/UNIT=MHz/START=2026-11-05T07:00Z/END=2026-11-05T08:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 372,
+                  "end": 380,
+                  "text": "FREQPLAN"
+                },
+                "ID": {
+                  "start": 384,
+                  "end": 388,
+                  "text": "FP-H"
+                },
+                "PLAN": {
+                  "start": 394,
+                  "end": 406,
+                  "text": "PLAN-ORIGAMI"
+                },
+                "NET": {
+                  "start": 411,
+                  "end": 421,
+                  "text": "NET-CREASE"
+                },
+                "MHZ": {
+                  "start": 426,
+                  "end": 433,
+                  "text": "345.625"
+                },
+                "UNIT": {
+                  "start": 439,
+                  "end": 442,
+                  "text": "MHz"
+                },
+                "START": {
+                  "start": 449,
+                  "end": 466,
+                  "text": "2026-11-05T07:00Z"
+                },
+                "END": {
+                  "start": 471,
+                  "end": 488,
+                  "text": "2026-11-05T08:00Z"
+                }
+              }
+            }
+          }
+        ],
+        "eventCount": 3,
+        "reviewItems": [],
+        "excludedLines": [
+          5
+        ],
+        "sourceLineCount": 9
+      }
+    },
+    {
+      "documentId": "DOC-REVISION",
+      "scenarioIds": [
+        "S05"
+      ],
+      "purpose": "sample",
+      "classification": "synthetic",
+      "messageId": "SYN-OPT-101",
+      "shipId": "FSV-PAPER-GULL",
+      "revision": 2,
+      "selectedDay": "2026-11-05",
+      "displayZone": "Z",
+      "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-OPT-101/REV=2//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nFLIGHTQ/ID=FQ-B/CONTEXT=PAPER-DECK/START=2026-11-05T19:00Z//\nENDMSG//\n",
+      "expected": {
+        "headerFields": {
+          "messageId": {
+            "start": 58,
+            "end": 69,
+            "text": "SYN-OPT-101"
+          },
+          "shipId": {
+            "start": 83,
+            "end": 97,
+            "text": "FSV-PAPER-GULL"
+          },
+          "revision": {
+            "start": 74,
+            "end": 75,
+            "text": "2"
+          },
+          "selectedDay": {
+            "start": 104,
+            "end": 114,
+            "text": "2026-11-05"
+          },
+          "displayZone": {
+            "start": 115,
+            "end": 116,
+            "text": "Z"
+          }
+        },
+        "events": [
+          {
+            "eventId": "FQ-B",
+            "documentId": "DOC-REVISION",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-101",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 2,
+            "originalFields": {
+              "ID": "FQ-B",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-05T19:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T19:00:00Z",
+              "endUtc": null,
+              "frequencyMHz": null
+            },
+            "kind": "point",
+            "durationMinutes": 0,
+            "selectedDay": {
+              "startMinute": 1140,
+              "endMinute": 1140,
+              "visible": true,
+              "clippedStartMinute": 1140,
+              "clippedEndMinute": 1140
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 5,
+              "range": {
+                "start": 124,
+                "end": 184,
+                "text": "FLIGHTQ/ID=FQ-B/CONTEXT=PAPER-DECK/START=2026-11-05T19:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 124,
+                  "end": 131,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 135,
+                  "end": 139,
+                  "text": "FQ-B"
+                },
+                "CONTEXT": {
+                  "start": 148,
+                  "end": 158,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 165,
+                  "end": 182,
+                  "text": "2026-11-05T19:00Z"
+                }
+              }
+            }
+          }
+        ],
+        "eventCount": 1,
+        "reviewItems": [],
+        "excludedLines": [],
+        "sourceLineCount": 6
+      }
+    },
+    {
+      "documentId": "DOC-BOUNDARY",
+      "scenarioIds": [
+        "S04"
+      ],
+      "purpose": "sample",
+      "classification": "synthetic",
+      "messageId": "SYN-OPT-301",
+      "shipId": "FSV-PAPER-GULL",
+      "revision": 1,
+      "selectedDay": "2026-11-05",
+      "displayZone": "Z",
+      "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-OPT-301/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nFREQPLAN/ID=FP-OLD/PLAN=PLAN-YESTERDAY/NET=NET-PAST/MHZ=111.125/UNIT=MHz/START=2026-11-04T23:00Z/END=2026-11-05T00:00Z//\nFLIGHTQ/ID=FQ-ZERO/CONTEXT=PAPER-DECK/START=2026-11-05T00:00Z//\nENDMSG//\n",
+      "expected": {
+        "headerFields": {
+          "messageId": {
+            "start": 58,
+            "end": 69,
+            "text": "SYN-OPT-301"
+          },
+          "shipId": {
+            "start": 83,
+            "end": 97,
+            "text": "FSV-PAPER-GULL"
+          },
+          "revision": {
+            "start": 74,
+            "end": 75,
+            "text": "1"
+          },
+          "selectedDay": {
+            "start": 104,
+            "end": 114,
+            "text": "2026-11-05"
+          },
+          "displayZone": {
+            "start": 115,
+            "end": 116,
+            "text": "Z"
+          }
+        },
+        "events": [
+          {
+            "eventId": "FP-OLD",
+            "documentId": "DOC-BOUNDARY",
+            "category": "FREQPLAN",
+            "messageId": "SYN-OPT-301",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FP-OLD",
+              "PLAN": "PLAN-YESTERDAY",
+              "NET": "NET-PAST",
+              "MHZ": "111.125",
+              "UNIT": "MHz",
+              "START": "2026-11-04T23:00Z",
+              "END": "2026-11-05T00:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-04T23:00:00Z",
+              "endUtc": "2026-11-05T00:00:00Z",
+              "frequencyMHz": 111.125
+            },
+            "kind": "interval",
+            "durationMinutes": 60,
+            "selectedDay": {
+              "startMinute": -60,
+              "endMinute": 0,
+              "visible": false,
+              "clippedStartMinute": null,
+              "clippedEndMinute": null
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 5,
+              "range": {
+                "start": 124,
+                "end": 244,
+                "text": "FREQPLAN/ID=FP-OLD/PLAN=PLAN-YESTERDAY/NET=NET-PAST/MHZ=111.125/UNIT=MHz/START=2026-11-04T23:00Z/END=2026-11-05T00:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 124,
+                  "end": 132,
+                  "text": "FREQPLAN"
+                },
+                "ID": {
+                  "start": 136,
+                  "end": 142,
+                  "text": "FP-OLD"
+                },
+                "PLAN": {
+                  "start": 148,
+                  "end": 162,
+                  "text": "PLAN-YESTERDAY"
+                },
+                "NET": {
+                  "start": 167,
+                  "end": 175,
+                  "text": "NET-PAST"
+                },
+                "MHZ": {
+                  "start": 180,
+                  "end": 187,
+                  "text": "111.125"
+                },
+                "UNIT": {
+                  "start": 193,
+                  "end": 196,
+                  "text": "MHz"
+                },
+                "START": {
+                  "start": 203,
+                  "end": 220,
+                  "text": "2026-11-04T23:00Z"
+                },
+                "END": {
+                  "start": 225,
+                  "end": 242,
+                  "text": "2026-11-05T00:00Z"
+                }
+              }
+            }
+          },
+          {
+            "eventId": "FQ-ZERO",
+            "documentId": "DOC-BOUNDARY",
+            "category": "FLIGHTQ",
+            "messageId": "SYN-OPT-301",
+            "shipId": "FSV-PAPER-GULL",
+            "revision": 1,
+            "originalFields": {
+              "ID": "FQ-ZERO",
+              "CONTEXT": "PAPER-DECK",
+              "START": "2026-11-05T00:00Z"
+            },
+            "normalized": {
+              "startUtc": "2026-11-05T00:00:00Z",
+              "endUtc": null,
+              "frequencyMHz": null
+            },
+            "kind": "point",
+            "durationMinutes": 0,
+            "selectedDay": {
+              "startMinute": 0,
+              "endMinute": 0,
+              "visible": true,
+              "clippedStartMinute": 0,
+              "clippedEndMinute": 0
+            },
+            "reviewStatus": "unreviewed",
+            "source": {
+              "line": 6,
+              "range": {
+                "start": 245,
+                "end": 308,
+                "text": "FLIGHTQ/ID=FQ-ZERO/CONTEXT=PAPER-DECK/START=2026-11-05T00:00Z//"
+              },
+              "fields": {
+                "category": {
+                  "start": 245,
+                  "end": 252,
+                  "text": "FLIGHTQ"
+                },
+                "ID": {
+                  "start": 256,
+                  "end": 263,
+                  "text": "FQ-ZERO"
+                },
+                "CONTEXT": {
+                  "start": 272,
+                  "end": 282,
+                  "text": "PAPER-DECK"
+                },
+                "START": {
+                  "start": 289,
+                  "end": 306,
+                  "text": "2026-11-05T00:00Z"
+                }
+              }
+            }
+          }
+        ],
+        "eventCount": 2,
+        "reviewItems": [],
+        "excludedLines": [],
+        "sourceLineCount": 7
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Dense daily three-category extraction",
+      "kind": "typical",
+      "input": {
+        "documentIds": [
+          "DOC-DENSE"
+        ],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "scenarioId": "S01"
+      },
+      "expectedBehavior": "Exactly four events: FP-A 0\u20131440, CW-A 360\u2013380, FQ-A 370\u2013420 and FQ-B point 1110 minutes UTC. Preserve overlap, all evidence and 207 REMARK non-events; no instructions execute."
+    },
+    {
+      "name": "Combine documents and equivalent instants",
+      "kind": "typical",
+      "input": {
+        "documentIds": [
+          "DOC-DENSE",
+          "DOC-SUPPLEMENT"
+        ],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "scenarioId": "S02"
+      },
+      "expectedBehavior": "Eight events retained; CW-A and CW-B both start 06:00Z and last 20 minutes. FP-B starts minute -60, ends 60, clips to 0\u201360. FQ-C spans 1420\u20131465, duration 45, clips to 1420\u20131440. FQ-OUT at 1440 is out of day. Do not merge overlapping categories."
+    },
+    {
+      "name": "Independent variation and ship selection",
+      "kind": "typical",
+      "input": {
+        "documentIds": [
+          "DOC-VARIATION"
+        ],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "scenarioId": "S03"
+      },
+      "expectedBehavior": "Three events for FSV-CARDBOARD-TERN only: CW-H 390\u2013405, FP-H 420\u2013480, FQ-H point 435. Source order differs from chronological order; retain evidence. Ship filtering must exclude all Paper Gull events."
+    },
+    {
+      "name": "Midnight boundary",
+      "kind": "edge",
+      "input": {
+        "documentIds": [
+          "DOC-BOUNDARY"
+        ],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "scenarioId": "S04"
+      },
+      "expectedBehavior": "FP-OLD -60\u20130 has 60 minute duration but is not visible; FQ-ZERO at minute 0 is visible. Half-open daily window is [0,1440)."
+    },
+    {
+      "name": "Duplicate document and revision review",
+      "kind": "edge",
+      "input": {
+        "documentIds": [
+          "DOC-DENSE",
+          "DOC-DENSE",
+          "DOC-REVISION"
+        ],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "scenarioId": "S05"
+      },
+      "expectedBehavior": "Identical DOC-DENSE is counted once (four events). Revision 2 adds one candidate; preserve both FQ-B times (18:30Z and 19:00Z) with REVISION_REVIEW on each. Five candidate events, no automatic supersession or approved schedule; document order is not authority."
+    },
+    {
+      "name": "Unsupported line is not an event",
+      "kind": "edge",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-UNK/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nWEATHER/START=2026-11-05T10:00Z//\nENDMSG//\n",
+        "scenarioId": "S06"
+      },
+      "expectedBehavior": "No events; one UNSUPPORTED_LINE review item for line 5, original text retained."
+    },
+    {
+      "name": "Missing explicit zone",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "expectedCode": "MISSING_ZONE",
+        "expectedReviewLine": 5,
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S07"
+      },
+      "expectedBehavior": "Zero confirmed events; line 5 flagged MISSING_ZONE; preserve the raw draft and do not invent normalized timestamps. Replacing with correctedRawText yields CW-R 10:00\u201310:15Z (minutes 600\u2013615), duration 15, unreviewed, with REF DUMMY-REF-R."
+    },
+    {
+      "name": "Invalid calendar date",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-02-30T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "expectedCode": "INVALID_DATE",
+        "expectedReviewLine": 5,
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S08"
+      },
+      "expectedBehavior": "Zero confirmed events; line 5 flagged INVALID_DATE; preserve the raw draft and do not invent normalized timestamps. Replacing with correctedRawText yields CW-R 10:00\u201310:15Z (minutes 600\u2013615), duration 15, unreviewed, with REF DUMMY-REF-R."
+    },
+    {
+      "name": "Missing interval endpoint",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z//\nENDMSG//\n",
+        "expectedCode": "MISSING_END",
+        "expectedReviewLine": 5,
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S09"
+      },
+      "expectedBehavior": "Zero confirmed events; line 5 flagged MISSING_END; preserve the raw draft and do not invent normalized timestamps. Replacing with correctedRawText yields CW-R 10:00\u201310:15Z (minutes 600\u2013615), duration 15, unreviewed, with REF DUMMY-REF-R."
+    },
+    {
+      "name": "End before start",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T09:15Z//\nENDMSG//\n",
+        "expectedCode": "END_BEFORE_START",
+        "expectedReviewLine": 5,
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S10"
+      },
+      "expectedBehavior": "Zero confirmed events; line 5 flagged END_BEFORE_START; preserve the raw draft and do not invent normalized timestamps. Replacing with correctedRawText yields CW-R 10:00\u201310:15Z (minutes 600\u2013615), duration 15, unreviewed, with REF DUMMY-REF-R."
+    },
+    {
+      "name": "Malformed frequency",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nFREQPLAN/ID=FP-R/PLAN=PLAN-R/NET=NET-R/MHZ=banana/UNIT=MHz/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "expectedCode": "INVALID_FREQUENCY",
+        "expectedReviewLine": 5,
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S11"
+      },
+      "expectedBehavior": "Zero confirmed events; line 5 flagged INVALID_FREQUENCY; preserve the raw draft and do not invent normalized timestamps. Replacing with correctedRawText yields CW-R 10:00\u201310:15Z (minutes 600\u2013615), duration 15, unreviewed, with REF DUMMY-REF-R."
+    },
+    {
+      "name": "Empty message recovery",
+      "kind": "invalid",
+      "input": {
+        "documentIds": [],
+        "selectedDay": "2026-11-05",
+        "displayZone": "Z",
+        "rawText": "",
+        "expectedCode": "EMPTY_INPUT",
+        "expectedEvents": [],
+        "correctedRawText": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n",
+        "scenarioId": "S12"
+      },
+      "expectedBehavior": "EMPTY_INPUT; no schedule claimed. Load correctedRawText and recover the same CW-R 600\u2013615 minute interval with synthetic provenance."
+    }
+  ],
+  "limitations": [
+    "Invented grammar, not actual USMTF; no SME validation or operational accuracy claim.",
+    "All ships, messages, nets, frequencies and crypto references are fictional; no keys or operational records. Frequency examples are inert numeric labels, not transmission assignments.",
+    "UTC daily display, explicit dates/offsets, revision review and duplicate policy are demonstration assumptions, not doctrine.",
+    "Evaluation-candidate records are public intake data, not sealed held-out tests; planning must create independent sealed variations before implementation.",
+    "Review starts unreviewed; synthetic review approval never authorizes tasking or delivery.",
+    "No OCR, handwriting, remote systems, or application verification is supplied by these fixtures."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders reviewing fictional tasking; this prototype carries no operational authority.",
+  "primaryTask": "Load or paste synthetic mock OPTASK raw text, extract frequency plans, crypto change-over windows and flight quarters, inspect evidence, resolve uncertainty and save/export a reviewed UTC day.",
+  "successOutcome": "All named events align on the same 00:00–24:00 UTC axis; each has source evidence, explicit review status and a saved labeled export. Dirty drafts and unresolved alternatives cannot masquerade as approved content.",
+  "screens": [
+    {
+      "name": "Message and daily schedule",
+      "purpose": "Primary task workspace: synthetic disclosure, source editor, sample/scenario selector, ship and date filters, consolidated category lanes, event list and source detail.",
+      "primaryAction": "Parse message"
+    },
+    {
+      "name": "Review and export",
+      "purpose": "Inspect raw evidence and uncertainties, compare revision values, choose inclusion, acknowledge review and save a local snapshot.",
+      "primaryAction": "Save reviewed schedule"
+    },
+    {
+      "name": "About and limitations",
+      "purpose": "Expose Requirements, Expected deliverables, exact source attribution, invented grammar and operational boundaries.",
+      "primaryAction": "Return to schedule"
+    }
+  ],
+  "states": {
+    "empty": "Show a clear first task with Load synthetic sample and labeled raw text; no empty input may imply a confirmed empty day. Initial editor document ID is DRAFT; selectedDay defaults to 2026-11-05 and ship filter is blank (all ships), never the system clock. Sample loading installs its declared day and ship.",
+    "loading": "While POST is pending show Parsing message… in a polite live region, preserve editor text, disable duplicate parse/save and retain the previous saved snapshot visibly labeled.",
+    "error": "Specific line/category diagnostics preserve exact raw input. Editable raw source and previous invalid draft remain available; stale results are labeled and cannot be saved/exported as current. Server unavailable explains Start the local service and retry.",
+    "success": "Display counts, explicit UTC day, named categories and readable 24-hour lanes plus equivalent accessible list. Unreviewed differs from Saved locally. Export requires the current saved snapshot; out-of-day and excluded records stay inspectable."
+  },
+  "persistence": "localStorage stores raw draft, document batch, selected ship/day, decisions and separately committed saved request/result. Reload restores dirty draft and saved status without approving it. Autosave only drafts; deliberate Save reviewed schedule commits. Loading another sample or discarding dirty work requires explicit Save/reparse or Discard choice; first use and clean replacement load directly. Storage failures are visible and preserve current in-memory text, offering export before leaving. Samples embed exact intake raw text in public/index.html; no browser fixture fetch.",
+  "recovery": "Correct raw text and reparse; keep previous invalid source in history. Every source edit invalidates pending review/decisions and marks Unsaved changes; saved snapshot remains. Revisions show both times and require one include choice, excluding others. Unresolved diagnostics prevent reviewed save; users correct/reparse. Discard draft restores saved content. Local-only mode blocks remote requests, allows loopback; service stop requires retry, never canned results.",
+  "keyboard": "Native labeled textarea/input/select/buttons/checks in reading order; strong visible focus; event and field selection use keyboard-operable buttons. Errors announce through live regions and focus summary. On desktop use editor beside schedule/evidence; at 390px stack sections with no page overflow, full-width controls, wrapped source text and readable list alongside a horizontally scrollable labeled timeline. Category text and point/interval shapes supplement color. Use system sans and restrained neutral surfaces; no decorative motion."
+}

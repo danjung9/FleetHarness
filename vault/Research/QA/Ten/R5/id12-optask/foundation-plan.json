@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "messages",
+  "reason": "Reuse the dependency-free Node 22.19+ local HTTP service and messages UTF-16 scanning patterns. Extend the shared backend for the exact intake mock OPTASK grammar, timeline, revision review and decisions; generic EVENT/TASK is insufficient. Local service satisfies internet-disconnected use without duplicating computation in the browser. No OCR, model or external dependencies are needed."
+}

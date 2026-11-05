@@ -1,0 +1,651 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Real USMTF raw text extraction of every named category into a consolidated timeline remains unverified. The complete synthetic three-category transformation is demonstrated, not counted as real-format validation.",
+      "journeyIds": [],
+      "capabilityIds": [],
+      "reason": "real-data: No authorized authentic USMTF records with validated field/event answers are supplied and the data boundary prohibits real records. Withhold any claim of real-USMTF extraction accuracy; demonstrate all named outputs from the preserved invented mock OPTASK fixtures.",
+      "syntheticCoverage": {
+        "assumptions": "Fictional intake mock USMTF/OPTASK grammar v1, synthetic ship identities, dummy crypto references, fixed explicit timezones and UTC display; synthetic, not validated against the real format. No actual messages, cryptographic actions or operational authority.",
+        "journeyIds": [
+          "dense-day",
+          "combined-day"
+        ],
+        "outputs": [
+          {
+            "sourceCriterionId": "UC12-1",
+            "name": "frequency plans"
+          },
+          {
+            "sourceCriterionId": "UC12-1",
+            "name": "crypto change-over windows"
+          },
+          {
+            "sourceCriterionId": "UC12-1",
+            "name": "flight quarters event times"
+          },
+          {
+            "sourceCriterionId": "UC12-1",
+            "name": "consolidated visual timeline"
+          }
+        ]
+      }
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "All event values and header values have original UTF-16 source slices. FP-A MHZ evidence is 123.450 at [20420,20427) in DOC-DENSE; evidence selection exposes it.",
+      "journeyIds": [
+        "dense-day"
+      ],
+      "capabilityIds": [
+        "extract"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "S06–S12 retain input and emit the keyed diagnostic; no missing zone, impossible date, missing end or reversed interval becomes a timestamp. Correcting S07 yields CW-R at 10:00–10:15Z. Dirty drafts cannot be saved as reviewed.",
+      "journeyIds": [
+        "recover-zone",
+        "recover-empty",
+        "revision-choice"
+      ],
+      "capabilityIds": [
+        "extract",
+        "review"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "S02 retains eight events, seven visible: FP-B clips 0–60 with duration 120, FQ-C clips 1420–1440 with duration 45; equivalent offsets retain the same instants. Midnight point is visible; interval ending at midnight is not.",
+      "journeyIds": [
+        "combined-day"
+      ],
+      "capabilityIds": [
+        "timeline"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Host exact comparison of independently fixed synthetic cases has score 1, with event/field precision and recall 1 on the declared case denominator, including REMARK negatives. Public data is not a secret holdout or SME validation.",
+      "journeyIds": [
+        "dense-day",
+        "combined-day"
+      ],
+      "capabilityIds": [
+        "extract"
+      ]
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "implemented",
+      "expectedOutcome": "With external requests blocked and the loopback service available, a new raw message parses to CW-R and exports its saved reviewed schedule with original sources and disclosure. Service shutdown explicitly prevents new parsing.",
+      "journeyIds": [
+        "local-only"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Mock OPTASK raw text becomes a synchronized 00:00–24:00 UTC visual schedule with all three named categories; review, evidence and labeled export work at both widths. S01 has four events and S02 eight (seven visible).",
+      "journeyIds": [
+        "dense-day",
+        "combined-day",
+        "revision-choice"
+      ],
+      "capabilityIds": [
+        "extract",
+        "timeline",
+        "review"
+      ]
+    },
+    {
+      "criterionId": "DESC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Dense fictional commander-style formatted tasking is accepted as preserved raw text, with inert narrative lines and source evidence; no actual dissemination is claimed.",
+      "journeyIds": [
+        "dense-day"
+      ],
+      "capabilityIds": [
+        "extract"
+      ]
+    },
+    {
+      "criterionId": "DESC12-2",
+      "disposition": "implemented",
+      "expectedOutcome": "The exact 216-line DOC-DENSE yields four keyed events; all 207 REMARK lines are excluded. The fictional ship and explicit UTC day are visible.",
+      "journeyIds": [
+        "dense-day"
+      ],
+      "capabilityIds": [
+        "extract"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic raw formatted messages transform into traceable category events and a single daily timeline, then a deliberately saved review/export with provenance.",
+      "journeyIds": [
+        "dense-day",
+        "recover-zone"
+      ],
+      "capabilityIds": [
+        "extract",
+        "timeline",
+        "review"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-3",
+      "disposition": "implemented",
+      "expectedOutcome": "The Requirements section remains associated with UC12-1 and its complete synthetic three-category workflow; it creates no extra invented behavior.",
+      "journeyIds": [
+        "source-info",
+        "dense-day"
+      ],
+      "capabilityIds": [
+        "extract"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables remains associated with DELIVERABLE12-1 and its synchronized 24-hour schedule.",
+      "journeyIds": [
+        "source-info",
+        "dense-day"
+      ],
+      "capabilityIds": [
+        "timeline"
+      ]
+    },
+    {
+      "criterionId": "SCOPE12-7",
+      "disposition": "implemented",
+      "expectedOutcome": "The exact source attribution is visible in About and preserved in documentation.",
+      "journeyIds": [
+        "source-info"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "dense-day",
+      "title": "Extract and review the dense three-category UTC day",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "S01"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#disclosure",
+          "text": "Synthetic, not validated against the real USMTF format."
+        },
+        {
+          "action": "expectText",
+          "selector": "#summary",
+          "text": "4 events; 4 on 2026-11-05 UTC; 0 review issues."
+        },
+        {
+          "action": "expectText",
+          "selector": "#frequency-plans",
+          "text": "Frequency plans: FP-A — 123.45 MHz — 00:00–24:00 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-windows",
+          "text": "Crypto change-over windows: CW-A — 06:00–06:20 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-quarters",
+          "text": "Flight quarters event times: FQ-A — 06:10–07:00 UTC; FQ-B — 18:30 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timeline-caption",
+          "text": "Consolidated visual timeline — 2026-11-05 — 00:00–24:00 UTC"
+        },
+        {
+          "action": "click",
+          "selector": "[data-event=\"DOC-DENSE:FP-A\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-field=\"MHZ\"]"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-value",
+          "text": "123.450"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-range",
+          "text": "DOC-DENSE · UTF-16 [20420, 20427)"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally: 4 included, 0 excluded."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally: 4 included, 0 excluded."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-schedule.json",
+          "text": "Synthetic, not validated against the real USMTF format."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "2026-11-05T06:10:00Z"
+        }
+      ]
+    },
+    {
+      "id": "combined-day",
+      "title": "Combine messages, clip midnight and change ship",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "S02"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#summary",
+          "text": "8 events; 7 on 2026-11-05 UTC; 0 review issues."
+        },
+        {
+          "action": "click",
+          "selector": "[data-event=\"DOC-SUPPLEMENT:FP-B\"]"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-time",
+          "text": "2026-11-04T23:00:00Z → 2026-11-05T01:00:00Z · 120 minutes · displayed 00:00–01:00 UTC"
+        },
+        {
+          "action": "click",
+          "selector": "[data-event=\"DOC-SUPPLEMENT:FQ-C\"]"
+        },
+        {
+          "action": "expectText",
+          "selector": "#event-time",
+          "text": "2026-11-05T23:40:00Z → 2026-11-06T00:25:00Z · 45 minutes · displayed 23:40–24:00 UTC"
+        },
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "S03"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#summary",
+          "text": "3 events; 3 on 2026-11-05 UTC; 0 review issues."
+        },
+        {
+          "action": "expectText",
+          "selector": "#flight-quarters",
+          "text": "Flight quarters event times: FQ-H — 07:15 UTC"
+        },
+        {
+          "action": "fill",
+          "selector": "#ship",
+          "value": "FSV-PAPER-GULL"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#summary",
+          "text": "0 events; 0 on 2026-11-05 UTC; 0 review issues."
+        }
+      ]
+    },
+    {
+      "id": "recover-zone",
+      "title": "Correct a missing timestamp zone without losing evidence",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#document-id",
+          "value": "RECOVERY"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#first-issue",
+          "text": "RECOVERY · line 5 · MISSING_ZONE"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-windows",
+          "text": "Crypto change-over windows: CW-R — 10:00–10:15 UTC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Parsed draft; review required."
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally: 1 included, 0 excluded."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "DUMMY-REF-R"
+        }
+      ]
+    },
+    {
+      "id": "recover-empty",
+      "title": "Recover an empty message and preserve a dirty draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "EMPTY_INPUT: Enter a synthetic message."
+        },
+        {
+          "action": "fill",
+          "selector": "#document-id",
+          "value": "RECOVERY"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "Reparse changed text before saving review."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved changes; saved schedule retained."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-draft"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally: 1 included, 0 excluded."
+        }
+      ]
+    },
+    {
+      "id": "revision-choice",
+      "title": "Resolve revision alternatives by explicit human choice",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample",
+          "value": "S05"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#summary",
+          "text": "5 events; 5 on 2026-11-05 UTC; 2 review issues."
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-values",
+          "text": "FQ-B: revision 1 — 18:30 UTC; revision 2 — 19:00 UTC. Choose which to include."
+        },
+        {
+          "action": "select",
+          "selector": "#revision-choice",
+          "value": "DOC-DENSE:FQ-B"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally: 4 included, 1 excluded."
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-status",
+          "text": "Included revision 1 at 18:30 UTC; excluded revision 2 at 19:00 UTC."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "excluded"
+        }
+      ]
+    },
+    {
+      "id": "local-only",
+      "title": "Parse and export a new message in local-only mode",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "check",
+          "selector": "#local-only"
+        },
+        {
+          "action": "expectText",
+          "selector": "#network-status",
+          "text": "Local-only mode: external requests blocked; local service required."
+        },
+        {
+          "action": "fill",
+          "selector": "#document-id",
+          "value": "LOCAL"
+        },
+        {
+          "action": "fill",
+          "selector": "#raw-text",
+          "value": "SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF\nMSGID/OPTASK/SYN-RECOVER/REV=1//\nUNIT/FSV-PAPER-GULL//\nDAY/2026-11-05/ZONE=Z//\nCRYPTO/ID=CW-R/REF=DUMMY-REF-R/START=2026-11-05T10:00Z/END=2026-11-05T10:15Z//\nENDMSG//\n"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#crypto-windows",
+          "text": "Crypto change-over windows: CW-R — 10:00–10:15 UTC"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#save-review"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-schedule.json",
+          "text": "2026-11-05T10:15:00Z"
+        }
+      ]
+    },
+    {
+      "id": "source-info",
+      "title": "Inspect source attribution and the synthetic boundary",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#about"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-attribution",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/12"
+        },
+        {
+          "action": "expectText",
+          "selector": "#format-boundary",
+          "text": "Invented mock OPTASK grammar; no real USMTF validation or operational approval."
+        },
+        {
+          "action": "expectText",
+          "selector": "#section-requirements",
+          "text": "Requirements"
+        },
+        {
+          "action": "expectText",
+          "selector": "#section-deliverables",
+          "text": "Expected deliverables"
+        }
+      ]
+    }
+  ]
+}

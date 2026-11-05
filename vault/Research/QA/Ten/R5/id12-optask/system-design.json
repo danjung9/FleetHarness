@@ -1,0 +1,110 @@
+{
+  "title": "Synthetic OPTASK extraction and daily watch timeline",
+  "description": "Local-only synthetic OPTASK-style raw message extraction with original evidence, human review and a synchronized UTC day; no operational integration or dissemination.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "Message workspace",
+      "description": "Embedded exact intake samples; original raw drafts, batch documents, ship/day controls and local draft recovery.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "transport",
+      "label": "Local HTTP service",
+      "description": "Loopback health and invoke endpoints; no remote services or model calls.",
+      "kind": "integration",
+      "files": [
+        "server.mjs",
+        "package.json"
+      ]
+    },
+    {
+      "id": "extraction",
+      "label": "Mock OPTASK parser and evidence",
+      "description": "Extend messages pack for FREQPLAN, CRYPTO and FLIGHTQ; UTF-16 field spans, strict timestamps and review diagnostics.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "lib/messages.js",
+        "lib/validation.js"
+      ]
+    },
+    {
+      "id": "schedule",
+      "label": "Daily schedule and revision review",
+      "description": "Shared deterministic normalization, day clipping, ship filtering, duplicate handling and explicit revision choices.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Timeline and evidence review",
+      "description": "24-hour category lanes with accessible event list, original field evidence, editable raw text and competing revision values.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Reviewed snapshot and export",
+      "description": "Local saved snapshot and labeled JSON export containing source evidence, decisions and unresolved diagnostics; no operational approval.",
+      "kind": "data",
+      "files": [
+        "compute.mjs",
+        "public/app.js"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "workspace",
+      "to": "transport",
+      "label": "POST raw documents and explicit review decisions"
+    },
+    {
+      "from": "transport",
+      "to": "extraction",
+      "label": "Invoke shared compute(input)"
+    },
+    {
+      "from": "extraction",
+      "to": "schedule",
+      "label": "Candidates, exact source spans and diagnostics"
+    },
+    {
+      "from": "schedule",
+      "to": "review",
+      "label": "Chronological UTC events and review conflicts"
+    },
+    {
+      "from": "review",
+      "to": "workspace",
+      "label": "Source-linked correction and reparse"
+    },
+    {
+      "from": "review",
+      "to": "transport",
+      "label": "Deliberate review and revision choices"
+    },
+    {
+      "from": "schedule",
+      "to": "export",
+      "label": "Recomputed selected candidates and review state"
+    },
+    {
+      "from": "export",
+      "to": "review",
+      "label": "Saved snapshot and labeled downloadable schedule"
+    }
+  ]
+}

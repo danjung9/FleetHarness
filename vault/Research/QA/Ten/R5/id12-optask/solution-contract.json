@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "objective": "Transform labeled synthetic OPTASK-style raw messages into source-traceable frequency plans, crypto change-over windows and flight quarters on a reviewable consolidated 24-hour UTC schedule.",
+  "invocation": {
+    "input": "Object with exactly documents: array of {documentId:string,rawText:string}, selectedDay:string; optional shipId:string|null (default null), decisions:array of {documentId:string,eventId:string,decision:string} (default []). All fields and validation precedence are specified in rules. No model environment is required.",
+    "output": "Object with exactly status:\"ok\"|\"review\"|\"error\", error:null|string, disclosure:string, events:array, reviewItems:array, headers:array. Event, span, diagnostic and header structures, ordering, error vocabulary and status derivation are specified in rules. No extra response fields.",
+    "rules": [
+      "Only the object input described here is supported; there is no action discriminator. Unknown object keys are rejected at every request level. Envelope checks occur before parsing. Validation precedence: INVALID_REQUEST for shape/type/unknown keys/limits, then EMPTY_INPUT for documents.length=0 or any rawText consisting only of whitespace, then INVALID_DAY, INVALID_SHIP, INVALID_DECISIONS. Return the error envelope with no partial results. Optional fields omitted use defaults; null is invalid everywhere except shipId, which means no filter. IDs match ^[A-Z0-9-]+$; shipId uses the same grammar. selectedDay is a real Gregorian YYYY-MM-DD in years 1900..9999. No implicit clock dates.",
+      "Accept 0..32 documents, each rawText at most 500000 UTF-16 units; documentId nonempty at most 80 characters. decisions defaults to []; shipId defaults to null. Decision shape is {documentId:string,eventId:string,decision:\"include\"|\"exclude\"}. References must resolve to exactly one parsed candidate and each pair may occur only once, else INVALID_DECISIONS. A duplicate local event ID in one document is not eligible for decisions. Selected day is explicit; header DAY is source metadata and need not equal it. All display is UTC (Z).",
+      "The exact invented grammar is documented in data/README.md and repeated here. Four headers in order: SYNTHETIC / NOT VALIDATED AGAINST REAL USMTF ; MSGID/OPTASK/<id>/REV=<positive integer>// ; UNIT/<id>// ; DAY/<valid date>/ZONE=Z//. Each occupies one line; ENDMSG// must be the last nonempty line. Accept LF and CRLF mixed; optional final newline, ignore empty body lines. Header/terminator defects produce one INVALID_HEADER diagnostic at the first offending line and no candidates for that document. Empty source is an envelope EMPTY_INPUT. REMARK/ through // is inert prose including extra slashes, Unicode or apparent instructions; never extract from it. All other unsupported body lines yield UNSUPPORTED_LINE.",
+      "Body records in exact key order: FREQPLAN/ID=<id>/PLAN=<nonempty>/NET=<nonempty>/MHZ=<decimal>/UNIT=MHz/START=<timestamp>/END=<timestamp>// ; CRYPTO/ID=<id>/REF=<nonempty>/START=<timestamp>/END=<timestamp>// ; FLIGHTQ/ID=<id>/CONTEXT=<nonempty>/START=<timestamp>[/END=<timestamp>]//. No field value contains slash, CR or LF. Category/keys are case-sensitive, no padding. ID uses the ID grammar. Decimal MHZ matches digits with optional dot and digits and must be finite >0. Other category structural defects are MALFORMED_RECORD. Missing END for FREQPLAN/CRYPTO is MISSING_END (before generic structural error). Duplicated local ID: emit DUPLICATE_ID on every occurrence and suppress all candidates with that ID.",
+      "Timestamps strictly match YYYY-MM-DDTHH:mmZ or YYYY-MM-DDTHH:mm±HH:mm, years 1900..9999, real Gregorian dates, hours 00..23, minutes 00..59, offsets at most 14:00. No seconds or DST inference. A syntactically zone-free YYYY-MM-DDTHH:mm gives MISSING_ZONE; all other invalid timestamps give INVALID_DATE. END must be strictly later than START; equality or earlier yields END_BEFORE_START. No rollover or header-zone fallback. One diagnostic per invalid event line with precedence DUPLICATE_ID, MISSING_END, MALFORMED_RECORD, INVALID_FREQUENCY, START timestamp error, END timestamp error, END_BEFORE_START. Invalid lines emit no event; valid siblings survive.",
+      "Output event shape exactly matches the documented intake event schema: eventId,documentId,category (FREQPLAN|CRYPTO|FLIGHTQ),messageId,shipId,revision (integer),originalFields (every event key exactly as raw strings),normalized {startUtc,endUtc,frequencyMHz},kind (interval|point),durationMinutes,selectedDay {startMinute,endMinute,visible,clippedStartMinute,clippedEndMinute},reviewStatus,source {line,range,fields}. UTC strings are YYYY-MM-DDTHH:mm:ssZ without milliseconds. Missing END means null endUtc only for FLIGHTQ point, duration 0. frequencyMHz numeric only for FREQPLAN, otherwise null. Spans are {start,end,text}, half-open UTF-16 indices into unchanged rawText; line is one-based; range excludes CR/LF. source.fields maps category and every originalFields key to its value span (category span is the category keyword). Derived values inherit original evidence, never invented literal spans.",
+      "Durations are elapsed minutes. Relative startMinute and endMinute are signed minutes from selected UTC midnight; points have equal values. Interval visible iff startMinute<1440 and endMinute>0. Point visible iff 0<=startMinute<1440. For visible entries clip start/end to [0,1440]; invisible entries have both clipped fields null. Keep out-of-day entries in events and do not merge overlaps. Filter events by exact shipId if supplied; headers and diagnostics retain all documents. Sort events by UTC start, documentId in Unicode code-unit order, then source.line. No category priorities or operational conflict doctrine.",
+      "Deduplicate equal documentId plus byte-for-byte equal decoded rawText, retaining the first. Different rawText under the same documentId suppresses all versions of that identity and emits DOCUMENT_ID_CONFLICT at line 1 for its first occurrence. Headers array follows first-document order, one per successfully parsed unique document: {documentId,fields}, fields maps messageId,shipId,revision,selectedDay,displayZone to spans. displayZone span points to the Z after ZONE=, not the first matching Z. Header identity spans refer to literal values. Header spans remain available regardless of ship filter.",
+      "Candidates sharing messageId,shipId,eventId across distinct documents with different revisions are revision alternatives. Preserve all and set reviewStatus=revision_review, with REVISION_REVIEW diagnostics on each event line until every alternative has a decision and exactly one is include. Never auto-supersede by revision number. Decisions apply before ship filtering; selected include becomes included and exclude becomes excluded (retain excluded events/evidence). Other candidates start unreviewed, becoming included/excluded only by decision. Incomplete or conflicting revision decisions leave all alternatives revision_review and all group diagnostics. No textual edits are accepted as decisions: corrected raw text must be reparsed with new spans and decisions reset by UI.",
+      "Diagnostic shape exactly {documentId,line,code,source}; line is one-based and source is a whole-line span excluding CR/LF. Codes are INVALID_HEADER,UNSUPPORTED_LINE,MISSING_END,MALFORMED_RECORD,DUPLICATE_ID,INVALID_FREQUENCY,MISSING_ZONE,INVALID_DATE,END_BEFORE_START,DOCUMENT_ID_CONFLICT,REVISION_REVIEW. Sort diagnostics by first-document order, line, then code lexicographically. For duplicate document identity conflicts use the first text only for diagnostic evidence. Headers omitted for invalid/conflicted documents. Error envelope is {status:\"error\",error:<envelope error code>,disclosure:<fixed disclosure>,events:[],reviewItems:[],headers:[]}. Success envelope has same six keys, error:null. status=\"review\" if any diagnostic exists or any retained filtered event is unreviewed/revision_review, otherwise \"ok\". Valid zero-event messages yield ok, never human approval. No hidden state between invocations.",
+      "UI and host evaluator POST this exact JSON to /api/invoke and receive the raw computed envelope; application tests import the same backend compute entrypoint. No model explanation, OCR, remote API, operational transmission or actual crypto material exists. Disclosure is exactly: Synthetic, not validated against the real USMTF format. All exports include this disclosure, originals, normalized values, header/field evidence and explicit decisions. JSON export is a browser-created wrapper {disclosure,selectedDay,shipId,documents,decisions,result} of the current saved successful response and its exact request; it must not export stale drafts as reviewed."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "extract",
+      "kind": "algorithm",
+      "description": "Extract all three mock OPTASK categories and exact evidence; abstain on malformed records and inert prose.",
+      "criterionIds": [
+        "MSG-01",
+        "MSG-02",
+        "MSG-04",
+        "DELIVERABLE12-1",
+        "DESC12-1",
+        "DESC12-2",
+        "SUMMARY12-1",
+        "SCOPE12-3"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "extract-cases"
+      ]
+    },
+    {
+      "id": "timeline",
+      "kind": "algorithm",
+      "description": "Normalize explicit zones, compute durations, ship filtering and half-open UTC-day clipping without changing instants.",
+      "criterionIds": [
+        "MSG-03",
+        "DELIVERABLE12-1",
+        "SUMMARY12-1",
+        "SCOPE12-5"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "timeline-cases"
+      ]
+    },
+    {
+      "id": "review",
+      "kind": "workflow",
+      "description": "Deduplicate identical documents, retain revision alternatives, apply explicit per-event decisions and expose review state.",
+      "criterionIds": [
+        "DELIVERABLE12-1",
+        "MSG-02",
+        "SUMMARY12-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "review-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/messages.js",
+      "example-input.json",
+      "data/synthetic-data.json",
+      "data/README.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}
