@@ -8,7 +8,7 @@ import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash }
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { applicationTestFiles, portableTestCommand } from './verification.js';
-import { CodexGoalService, openCodexGoalTerminal } from './codex-goal.js';
+import { CodexGoalService } from './codex-goal.js';
 import { applicationTestRerunCommand, reportPassed } from './verification.js';
 import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
@@ -38,12 +38,16 @@ import { storageMethodNames } from '../shared/data-storage.js';
 import { readPlanningContinuation } from './planning-continuation.js';
 import { briefFingerprint } from './run-checkpoint.js';
 import { savedReasoningEffort } from '../shared/reasoning.js';
+import { readMailMcpDemoBundle, seedMailMcpDemo, MailMcpDemoPreview } from './mailmcp-demo.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
+const demoBundle = readMailMcpDemoBundle(app.isPackaged ? path.join(process.resourcesPath, 'mailmcp-demo') : process.env.APPYARD_DEMO_BUNDLE);
+const appName = demoBundle ? 'AppYard Demo' : 'AppYard';
+const demoPreview = demoBundle ? new MailMcpDemoPreview(demoBundle) : undefined;
 // Preserve existing workspaces and credentials when the display name changes.
-app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), 'fleetharness'));
-app.setName('AppYard');
+app.setPath('userData', process.env.FLEET_USER_DATA ? path.resolve(process.env.FLEET_USER_DATA) : path.join(app.getPath('appData'), demoBundle ? 'fleetharness-mailmcp-demo' : 'fleetharness'));
+app.setName(appName);
 app.commandLine.appendSwitch('disable-quic');
 app.commandLine.appendSwitch('dns-prefetch-disable');
 const ownsInstance = app.requestSingleInstanceLock();
@@ -108,6 +112,7 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 }
 const bootstrap = () => ({
   state: redactValue(store.state), models: backend.models(), storagePath: store.root,
+  ...(demoBundle ? { demo: { projectId: demoBundle.projectId, label: demoBundle.label, repository: demoBundle.repository, commit: demoBundle.commit } } : {}),
   capabilities: { projectConversation: true, experiments: true, planningContinuation: true },
   chatgpt: codex.account,
   genAiMil: genAiMil.view(),
@@ -115,7 +120,7 @@ const bootstrap = () => ({
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
-  if (codexGoals?.isLaunching(id)) throw new Error('Wait for Codex to open before changing this project.');
+  if (codexGoals?.isActive(id)) throw new Error('Stop this Codex build before changing this project.');
   if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this project.');
   if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before changing this project.');
   if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
@@ -127,10 +132,11 @@ function requireIdle(id: string, fromConversation = false) {
   return p;
 }
 function requireRunCapacity() {
-  const projects = new Set([...backend.active.keys(), ...startingRuns.keys(), ...experimentReservations.keys()]);
+  const projects = new Set([...backend.active.keys(), ...startingRuns.keys(), ...experimentReservations.keys(), ...(codexGoals?.activeIds() ?? [])]);
   if (projects.size >= 3) throw new Error('Three builds or comparisons are already active. Stop one before starting another.');
 }
 async function stopRun(id: string) {
+  if (codexGoals?.isActive(id)) { await codexGoals.stop(id); return; }
   const experiment = experiments?.activeExperiment(id);
   if (experiment) await experiments.stopExperiment(experiment); else await backend.stop(id);
 }
@@ -207,6 +213,7 @@ async function stopPreview(id: string) {
   previewStarts.get(id)?.abort();
   const p = store.project(id);
   try {
+    if (demoPreview && p.demo?.kind === 'mailmcp') await demoPreview.stop();
     await previews.stop(p.workspace!);
     await new RunProcessSweep({ marker: p.processScope!.marker }).stop();
     p.processScope!.cleanup = 'confirmed'; previewing.delete(id);
@@ -244,8 +251,8 @@ function registerIPC() {
     const p = store.project(id), action = p.conversation?.actions.find(item => item.id === actionId);
     if (!action || action.status !== 'proposed') throw new Error('This proposal is no longer available.');
     if (action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal belongs to an older brief or build. Ask the project lead for an updated proposal.');
-    if (action.type === 'start' && (backend.active.has(id) || experiments.isActive(id))) throw new Error('This build is already running.');
-    if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id)) throw new Error('That build is no longer running.');
+    if (action.type === 'start' && (backend.active.has(id) || experiments.isActive(id) || codexGoals?.isActive(id))) throw new Error('This build is already running.');
+    if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id) && !codexGoals?.isActive(id)) throw new Error('That build is no longer running.');
     if (quitting) throw new Error('AppYard is closing. Reopen it to apply this proposal.');
     let resolve!: () => void;
     const done = new Promise<void>(r => { resolve = r; }); conversationActions.set(id, done);
@@ -255,7 +262,7 @@ function registerIPC() {
       if (quitting) throw new Error('AppYard is closing. This proposal was not applied.');
       if (p.conversation?.actions.find(item => item.id === actionId) !== action || action.status !== 'proposed'
         || action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal changed while the reply was finishing. Ask for an updated proposal.');
-      if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id)) throw new Error('That build finished before the stop action was applied.');
+      if (action.type === 'stop' && !backend.active.has(id) && !experiments.isActive(id) && !codexGoals?.isActive(id)) throw new Error('That build finished before the stop action was applied.');
       if (action.type === 'stop') { await stopRun(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
       else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
       else if (action.type === 'request_changes') {
@@ -266,7 +273,7 @@ function registerIPC() {
       }
       else if (action.type === 'revise' && action.brief) {
         const revised = validateInput({ ...projectBrief(p), ...action.brief }, p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog());
-        if (backend.active.has(id) || experiments.isActive(id)) await stopRun(id);
+        if (backend.active.has(id) || experiments.isActive(id) || codexGoals?.isActive(id)) await stopRun(id);
         const saved = await updateProject(id, revised, true); action.status = 'applied';
         record('Brief updated. Previous test results and approval were reset.');
         if (saved.resumeStage === 'plan') {
@@ -298,8 +305,10 @@ function registerIPC() {
   handle('fleet:codex-goal:launch', (id: string) => {
     if (quitting) throw new Error('AppYard is closing. Reopen it to start a Codex goal.');
     requireIdle(id);
+    requireRunCapacity();
     return codexGoals.launch(id);
   });
+  handle('fleet:codex-goal:stop', (id: string) => codexGoals.stop(id));
   handle('fleet:codex-goal:open', async (id: string) => {
     const error = await shell.openPath(await codexGoals.workspace(id));
     if (error) throw new Error('Could not open the Codex workspace: ' + error);
@@ -366,7 +375,8 @@ function registerIPC() {
       try {
         await store.save();
         if (starting.signal.aborted || previewStarts.get(id) !== starting || quitting) return null;
-        const url = await scope.run(() => previews.url(p.workspace!));
+        const url = await scope.run(() => demoPreview && p.demo?.kind === 'mailmcp'
+          ? demoPreview.url(p.workspace!, starting.signal) : previews.url(p.workspace!));
         if (request !== previewRequestGeneration || storageMutations.size) { await stopPreview(id); return null; }
         previewBoundary.setPreview(url); return url;
       }
@@ -511,7 +521,7 @@ function registerIPC() {
     }
     return Reflect.apply(dataStorage[method], dataStorage, args);
   });
-  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing model settings or accounts.'); };
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || codexGoals?.activeIds().length || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing model settings or accounts.'); };
   for (const method of experimentMethodNames) handle('fleet:experiment:' + method, async (...args: unknown[]) => {
     if (quitting) throw new Error('AppYard is closing.');
     if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
@@ -593,7 +603,7 @@ function registerIPC() {
 }
 async function createWindow() {
   window = new BrowserWindow({
-    width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: 'AppYard',
+    width: 1512, height: 982, minWidth: 1120, minHeight: 720, title: appName,
     icon: iconPath,
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 }, backgroundColor: '#ebe9e2',
     webPreferences: { preload: path.join(dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: false, webviewTag: false }
@@ -625,6 +635,7 @@ async function createWindow() {
 if (ownsInstance) app.whenReady().then(async () => {
   try {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
+    if (demoBundle) await seedMailMcpDemo(app.getPath('userData'), demoBundle);
     store = new Store(app.getPath('userData'));
     await store.init();
     const connectorConfig = connectorConfiguration(app.isPackaged, process.env);
@@ -646,10 +657,8 @@ if (ownsInstance) app.whenReady().then(async () => {
     });
     await connectors.registerInstalledAdapters(connectorConfig);
     await connectors.init();
-    codexGoals = new CodexGoalService(store, { connectorStore: connectors.store, changed: notify, openTerminal: async file => {
-      if (quitting) throw new Error('AppYard is closing. Your prepared workspace is saved.');
-      await openCodexGoalTerminal(file);
-    } });
+    codexGoals = new CodexGoalService(store, { connectorStore: connectors.store, changed: notify });
+    await codexGoals.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
     clarifications = new ClarificationBroker(store, notify);
     backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
@@ -662,7 +671,7 @@ if (ownsInstance) app.whenReady().then(async () => {
         if (quitting) throw new Error('AppYard is closing.');
         // These synchronous checks and reservation form one admission transaction.
         if (store.project(projectId).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
-        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId) || codexGoals.isLaunching(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
+        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId) || codexGoals.isActive(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
         requireRunCapacity(); experimentReservations.set(projectId, experimentId);
         return () => { if (experimentReservations.get(projectId) === experimentId) experimentReservations.delete(projectId); };
       } });
@@ -670,7 +679,7 @@ if (ownsInstance) app.whenReady().then(async () => {
     lead = new ProjectLead(store, backend.runtime, notify, { codex });
     dataStorage = new DataStorageService({
       store, changed: notify,
-      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || codexGoals.isLaunching(id)
+      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || codexGoals.isActive(id)
         || deliveries.has(id) || storageMutations.has(id) || approvals.has(id) || conversationActions.has(id) || lead.active.has(id) || experiments.isActive(id),
       beforeMutation: async id => {
         if (quitting) throw new Error('AppYard is closing.');
@@ -703,7 +712,7 @@ if (ownsInstance) app.whenReady().then(async () => {
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.error('Saved credential could not be loaded. Reconnect in Model settings.'); }
     registerIPC();
     Menu.setApplicationMenu(Menu.buildFromTemplate([
-      { label: 'AppYard', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'quit' }] },
+      { label: appName, submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'quit' }] },
       { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' }
     ]));
     await createWindow();
@@ -712,10 +721,10 @@ if (ownsInstance) app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && (experiments || connectors?.busy || previewing.size || backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
+  if (!quitting && (experiments || connectors?.busy || previewing.size || backend?.active.size || codexGoals?.activeIds().length || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...(codexGoals?.pending() ?? []), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), codexGoals?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });

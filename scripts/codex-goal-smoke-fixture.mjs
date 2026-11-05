@@ -1,4 +1,4 @@
-/** Test-only handoff: pipeline UI smoke tests must never open a real Terminal or model session. */
+/** Test-only goal runner: pipeline UI smoke tests must never start a real Codex or model session. */
 export async function stubCodexGoalLaunch(app) {
   await app.evaluate(({ ipcMain }) => {
     const calls = [];
@@ -9,8 +9,10 @@ export async function stubCodexGoalLaunch(app) {
       // Deliberately leave project state unchanged: these tests exercise the
       // original pipeline, including its journey, evidence and resume behavior.
       return { id: `fixture-${calls.length}`, workspace: `/fixture/codex-goals/${id}`,
-        createdAt: new Date().toISOString(), status: 'opened' };
+        createdAt: new Date().toISOString(), status: 'prepared' };
     });
+    ipcMain.removeHandler('fleet:codex-goal:stop');
+    ipcMain.handle('fleet:codex-goal:stop', (_event, id) => { calls.push({ action: 'stop', projectId: id }); });
     ipcMain.removeHandler('fleet:codex-goal:open');
     ipcMain.handle('fleet:codex-goal:open', (_event, id) => { calls.push({ action: 'open', projectId: id }); });
   });

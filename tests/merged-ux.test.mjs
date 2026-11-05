@@ -61,6 +61,7 @@ async function renderer(t, { projects = [project()], view = 'requirements', api:
           export const useState = initial => globalThis.${key}.useState(initial);
           export const useRef = initial => globalThis.${key}.useRef(initial);
           export const useEffect = (work, deps) => globalThis.${key}.useEffect(work, deps);
+          export const useLayoutEffect = useEffect;
           export const useCallback = callback => callback; export const useMemo = work => work(); export const useId = () => 'synthetic-id';`) };
         if (specifier === './api') return { shortCircuit: true, url: 'data:text/javascript,' + encodeURIComponent(`export const isDesktop = true; export const api = globalThis.${key}.api;`) };
         if (specifier.startsWith('.')) return next(/\.[a-z]+$/i.test(specifier) ? specifier : specifier + '.js', context);
@@ -251,7 +252,7 @@ for (const runtimeProfile of ['cli', 'browser', 'service']) test(`${runtimeProfi
     preview: async () => 'http://127.0.0.1/synthetic-preview'
   } });
   const before = structuredClone(p);
-  assert.equal(ui.button('Approve prototype').props.disabled, true);
+  assert.equal(ui.button('Approve app').props.disabled, true);
   if (runtimeProfile === 'cli') {
     assert.equal(ui.button('Open preview'), undefined);
     assert.match(text(ui.component('ReviewContent')), /follow its commands in a terminal/);
@@ -260,7 +261,7 @@ for (const runtimeProfile of ['cli', 'browser', 'service']) test(`${runtimeProfi
     assert.match(text(ui.component('Artifacts')), /Synthetic usage instructions/);
   } else { await ui.click('Open preview'); assert.ok(ui.node(n => n.type === 'iframe')); }
   await ui.click('Review');
-  assert.equal(ui.button('Approve prototype').props.disabled, true);
+  assert.equal(ui.button('Approve app').props.disabled, true);
   assert.deepEqual(p, before, 'Opening instructions or preview cannot change build evidence or approval');
 });
 

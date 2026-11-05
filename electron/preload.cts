@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),
   updateProject: (id: string, input: NewProject) => ipcRenderer.invoke('fleet:update', id, input),
   launchCodexGoal: (id: string) => ipcRenderer.invoke('fleet:codex-goal:launch', id),
+  stopCodexGoal: (id: string) => ipcRenderer.invoke('fleet:codex-goal:stop', id),
   openCodexGoalWorkspace: (id: string) => ipcRenderer.invoke('fleet:codex-goal:open', id),
   startRun: (id: string) => ipcRenderer.invoke('fleet:start', id),
   resumeRun: (id: string) => ipcRenderer.invoke('fleet:resume', id),

@@ -1,48 +1,47 @@
 # Codex goal experiment
 
-This branch tests whether handing the initial brief directly to Codex produces a better application than the staged AppYard pipeline.
+This experiment sends the saved brief directly to Codex to build an application in one goal, alongside AppYard's staged pipeline.
 
 ## Try it
 
-1. Run `npm run dev` on macOS, or rebuild the desktop app. Restart an already-running app so it loads the new Electron bridge.
-2. Choose **New challenge**, fill out the brief and attach any input data.
-3. Click **Save challenge**. AppYard saves the challenge and shows Build without launching Codex.
-4. Click **Open new Codex goal** when ready. AppYard prepares a fresh workspace and opens a visible Terminal session with an active Codex goal and full access: filesystem and network access without command approval prompts.
-5. Follow progress in Terminal. Codex may ask you to sign in or trust the new workspace. Its goal covers implementation, meaningful tests, repairs and a runnable local handoff.
-6. Use **Open goal folder** in AppYard to inspect the generated files, `README.md` startup commands and `verification.md` evidence.
+1. Run `npm run dev` or rebuild the desktop app. Restart an already-running app to load the updated Electron bridge.
+2. Create a challenge, fill out its brief, and attach input data. Saving alone does not launch Codex.
+3. Choose **Start Codex build** on Build. AppYard prepares a fresh workspace and starts bundled Codex in the background with filesystem and network access, without command approval prompts.
+4. Follow messages, commands, file changes, and status directly in Build or Activity. Use **Stop Codex build** to end the worker and preserve its files.
+5. Open the goal folder to inspect the generated application, `README.md` startup commands, and `verification.md` evidence.
 
-For a saved challenge, edit its brief and select **Save brief**, then use **Open new Codex goal** on Build. Saving or starting the original pipeline never launches the external CLI; only the goal panel's launch or retry button does. Each new launch starts from the current saved brief in a separate folder. Existing pipeline build files remain intact. The original pipeline controls remain available for comparison and still use AppYard's configured model.
+Each launch uses the current saved brief and creates a separate folder. Earlier goal folders and existing pipeline results are preserved. An active goal blocks changes to the brief and competing builds for that project. Goals share AppYard's three-build capacity limit. Closing the app stops its headless workers; reopening reconciles interrupted runs before allowing new work.
 
 ## What is passed to Codex
 
-- `brief.json`: the full normalized initial input, including title, problem, input/output descriptions, criteria, resources, links and attached text.
-- `requirements.md`: a readable rendering of the same brief.
+- `brief.json`: the complete normalized input, including title, problem, input/output descriptions, criteria, resources, links, and attached text.
+- `requirements.md`: a readable version of the brief.
 - `inputs/manifest.json` and copied input files: original content and provenance, including whitespace and line endings.
 - `source-challenge.json`: saved Norfolk source metadata when present.
-- `GOAL.md`: completion criteria, verification expectations, scope and handoff instructions.
+- `GOAL.md`: completion criteria, verification expectations, scope, and handoff instructions.
 
-No `.fleet` phase contract, pipeline plan, foundation or factory tools are injected. Codex chooses its implementation from the brief and its own configured tools. The goal requires a working application, actual checks, startup instructions and explicit remaining limitations.
+Codex chooses the implementation using its configured tools. The goal calls for working workflows, meaningful checks, startup instructions, and explicit limitations. It does not receive a `.fleet` phase contract or AppYard pipeline tools.
 
-## CLI and goal behavior
+## Headless execution and authentication
 
-The launcher uses the app's bundled Codex 0.166.0 binary, so it does not depend on a working global `codex` installation. It uses the native CLI's existing Codex home, authentication and model selection. An explicit choice in AppYard's **Reasoning** bar overrides effort for the new goal, after checking support against the CLI's actual model. Without a choice, the CLI keeps its own default. The same home and effort are used to create and resume the session. AppYard does not copy its account credentials into the launcher.
+AppYard launches the bundled Codex 0.166.0 `app-server` over standard input/output. It creates a persistent thread, then sets an active native goal. The connection remains open to receive thread, turn, item, and goal notifications, which AppYard converts into bounded activity history and pushes through its existing desktop state channel. No Terminal window or `.command` launcher is created. The protocol follows the official [Codex app-server documentation](https://learn.chatgpt.com/docs/app-server).
 
-The local app-server creates a persistent thread with full access and a goal without making a model request. It saves the goal paused, unloads the empty thread, and activates the unloaded goal. Terminal then runs `codex --no-daemon --enable goals --sandbox danger-full-access --ask-for-approval never --cd <workspace> resume <threadId>`. Resuming starts goal pursuit automatically. These explicit launch settings apply full access to this goal session without changing the user's global CLI configuration; see the official [CLI flags reference](https://learn.chatgpt.com/docs/developer-commands?surface=cli).
+The goal uses the user's existing Codex home (`CODEX_HOME`, or `~/.codex`), sign-in, and model selection. AppYard does not copy its separate model-account credentials into this session. Sign in to Codex before starting a goal. An explicit AppYard reasoning selection is captured at launch and checked against Codex's actual configured model; otherwise Codex keeps its default. Full access applies to this thread without changing global Codex settings.
 
-Passing `/goal ...` as a positional CLI startup prompt is insufficient: in the bundled version it is treated as message text. The launcher instead uses `thread/goal/set` and checks the persisted objective/status. The contract is covered by an offline test against the bundled binary and a loopback provider. See the official [Goals guide](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) for the user-facing lifecycle.
+A completed model turn does not by itself complete a goal. AppYard waits for the native goal completion status and the final turn, so progress and the final answer can stream across continued turns. Provider errors and unexpected process exits fail the build. Goals that need input or reach a usage limit show that they need attention. Interactive client requests end with a visible blocked state instead of waiting for a hidden prompt.
 
-Use `/goal` inside Terminal to inspect the goal or `/goal pause` to pause it. Terminal owns execution; closing AppYard does not stop the CLI.
+Stop pauses the goal, interrupts its active turn, and shuts down the worker. AppYard tracks run-owned child processes and confirms cleanup before releasing the project. If cleanup cannot be confirmed, further builds remain blocked until Stop or startup recovery succeeds.
 
 ## Files and results
 
-Workspaces live at `<AppYard data directory>/codex-goals/<projectId>/<launchId>`. Every attempt preserves its files, including failed handoffs. The latest folder is linked from the project; previous folders remain alongside it. `Open Codex.command` resumes the saved session if Terminal must be reopened. These folders are separate from the pipeline's Data & storage cleanup.
+Workspaces live at `<AppYard data directory>/codex-goals/<projectId>/<launchId>`. Every attempt preserves its files. The latest folder is linked from the project, and previous folders remain alongside it. These folders are separate from the pipeline's Data & storage cleanup.
 
-**Opened in Terminal** means the OS accepted the handoff. It does not establish that Codex is authenticated, running successfully, or finished. AppYard does not stream CLI activity, count its tokens, collect its result, run independent review gates, or enable verified delivery for this experiment. Inspect the application and its evidence in the goal folder when comparing results.
+AppYard saves recent activity and the latest status. **Completed** means Codex reported its goal complete. This experiment does not run AppYard's independent review gates or enable verified delivery; inspect the application and its recorded evidence when comparing results. Old **Opened in Terminal** records remain identified as legacy handoffs and are not claimed as tracked builds.
 
-The branch currently supports macOS Terminal. The browser preview cannot launch the CLI. Failed launch preparation or opening is reported without discarding the saved challenge, and the project offers a retry.
+The desktop app is required. Browser preview can save a brief but cannot start the local worker.
 
 ## Validation
 
-`npm run check` runs the repository validation in a private source snapshot. Focused coverage is in `tests/codex-goal.test.mjs`, `tests/codex-goal-thread.test.mjs`, and `tests/codex-goal-compatibility.test.mjs` for input preservation, shell quoting, recovery, duplicate launches, bridge compatibility and real persistent goal activation.
+Focused tests cover workspace/input preservation, pushed progress, bounded/redacted streaming, cancellation during startup and execution, duplicate starts, process recovery, bridge compatibility, shared capacity, and app shutdown. Native tests use the bundled Codex executable with a local fake provider; they do not consume an account or claim application quality.
 
-After `npm run build`, run `node scripts/smoke-codex-goal.mjs` for the Electron intake, explicit-launch boundary, failed-handoff recovery, retry and folder controls. It verifies that saving new and edited briefs does not launch Codex. It replaces only the external handoff with a fixture and never opens a real Terminal or calls a model. Existing pipeline UI smokes use the same test-only handoff boundary when submitting briefs.
+Run `npm run build`, followed by `node --test tests/codex-goal*.test.mjs` and `node scripts/smoke-codex-goal.mjs`. The Electron smoke uses a synthetic execution boundary to check live pushed activity, completion, failures, Stop, folder access, and responsive layout. `npm run check` provides the full repository validation in a private source snapshot.

@@ -19,6 +19,7 @@ import { GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilUnlockUrl } from '../../
 import { PreviewBoundary } from '../../dist-electron/electron/preview-boundary.js';
 import { experimentMethodNames } from '../../dist-electron/shared/experiments.js';
 import { storageMethodNames } from '../../dist-electron/shared/data-storage.js';
+import * as mailMcpDemo from '../../dist-electron/electron/mailmcp-demo.js';
 
 // Exercise the actual IPC handlers. Only Electron's window/IPC transport and
 // unrelated startup services are replaced. Filesystem and delivery gates are real.
@@ -33,6 +34,7 @@ export async function mainHarness(store, backend = { active: new Map() }, source
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
+    ...mailMcpDemo,
     PreviewBoundary, experimentMethodNames, storageMethodNames, redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
@@ -42,11 +44,12 @@ export async function mainHarness(store, backend = { active: new Map() }, source
     hostStore: store, hostBackend: backend,
     hostExperiments: { activeCount: 0, activeExperiment: () => undefined, isActive: () => false, learning: { getSettings: () => ({ mode: 'off' }) }, refreshProjectSummaries() {}, async assertSelectedVerified() {}, async exportReference() {}, async closeCandidatePreview() {} },
     hostCodex: { account: { status: 'disconnected' } }, hostLead: { active: new Map() }, hostConnectors: undefined,
+    hostCodexGoals: { isActive: () => false, activeIds: () => [], pending: () => [], async stop() {}, async stopAll() {} },
     hostGenAiMil: { view: () => ({ address: GENAI_MIL_ADDRESS, hasKey: false, connected: false, models: [] }) },
     hostWindow: { webContents, isDestroyed: () => false },
     ...overrides,
   };
-  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; experiments = hostExperiments; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; genAiMil = hostGenAiMil; registerIPC();', scope);
+  vm.runInNewContext(script + '\nstore = hostStore; backend = hostBackend; experiments = hostExperiments; window = hostWindow; codex = hostCodex; lead = hostLead; connectors = hostConnectors; codexGoals = hostCodexGoals; genAiMil = hostGenAiMil; registerIPC();', scope);
   return {
     handlers, events,
     invoke: (channel, ...args) => handlers.get(channel)({ sender: webContents, senderFrame: webContents.mainFrame }, ...args),

@@ -21,6 +21,8 @@
     "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
+    "demo:mailmcp": "npm run build && node scripts/prepare-mailmcp-demo.mjs && node scripts/package-mailmcp-demo.mjs",
+    "test:mailmcp-demo": "npm run build && node --test tests/mailmcp-demo.test.mjs && node scripts/smoke-mailmcp-demo.mjs",
     "sync:norfolk": "node scripts/sync-norfolk.mjs",
     "test:norfolk": "npm run build && node --test tests/norfolk.test.mjs && node scripts/smoke-norfolk.mjs",
     "harness:build": "tsc -p harness/tsconfig.json",

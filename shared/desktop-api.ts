@@ -5,8 +5,8 @@ import { defaultLearningSettings } from './learning.js';
 import { storageMethodNames, type DataStorageAPI } from './data-storage.js';
 
 export const storageRestartMessage = 'Data & storage needs a full app restart. Let active builds finish, then quit and reopen AppYard. Your files are preserved.';
-export const codexGoalRestartMessage = 'Opening Codex goals needs a full app restart. Let active builds finish, then quit and reopen AppYard. Your brief is saved.';
-const codexGoalMethods = ['launchCodexGoal', 'openCodexGoalWorkspace'] as const;
+export const codexGoalRestartMessage = 'Codex builds need a full app restart to load this update. Let active builds finish, then quit and reopen AppYard. Your brief is saved.';
+const codexGoalMethods = ['launchCodexGoal', 'stopCodexGoal', 'openCodexGoalWorkspace'] as const;
 
 const conversationMethods = ['sendMessage', 'cancelMessage', 'answerClarification', 'applyConversationAction', 'dismissConversationAction'] as const;
 type ConversationMethod = typeof conversationMethods[number];

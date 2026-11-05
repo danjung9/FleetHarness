@@ -1,3 +1,4 @@
+import { codexGoalActive } from '../shared/codex-goal';
 import { useId } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { AgentModel, Bootstrap, FleetAPI } from '../shared/types';
@@ -21,7 +22,7 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
   const connected = models.filter(model => model.configured);
   const providers = [...new Set(connected.map(model => model.provider))];
   const value = settings.model ? modelValue({ provider: settings.provider, id: settings.model }) : '';
-  const running = data.state.projects.some(project => project.status === 'running' || experimentRunning(project.experiment) || project.conversation?.status === 'responding');
+  const running = data.state.projects.some(project => project.status === 'running' || codexGoalActive(project.codexGoal) || experimentRunning(project.experiment) || project.conversation?.status === 'responding');
   const levels = supportedReasoningEfforts(selected);
   const effort = resolveReasoningEffort(selected, settings.reasoningEffort);
   const reasoningHint = running ? 'Wait for active work to finish before changing reasoning effort.'

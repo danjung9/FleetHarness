@@ -2,17 +2,20 @@ import { ArrowRight, Check, ClipboardCheck, Download, Play, Settings2, Square } 
 import type { Project, View } from '../shared/types';
 import { canContinuePlanning, experimentRunning, getJourneyState, journeySteps, pendingExperiment, resumeLabel, type Milestone } from '../shared/journey';
 import { isDesktop } from './api';
+import { codexGoalActive } from '../shared/codex-goal';
 import './journey.css';
 
 export const milestoneViews: Record<Milestone, View> = {
   brief: 'requirements', build: 'factory', review: 'evidence', deliver: 'delivery'
 };
 
-export function JourneyHeader({ project, view, busy, configured, resuming, navigate, start, resume, stop }: {
+export function JourneyHeader({ project, view, busy, configured, resuming, navigate, start, resume, stop, stopCodex }: {
   project: Project; view: View; busy: boolean; configured: boolean; resuming: boolean;
-  navigate: (view: View) => void; start: () => void; resume: () => void; stop: () => void;
+  navigate: (view: View) => void; start: () => void; resume: () => void; stop: () => void; stopCodex: () => void;
 }) {
   const journey = getJourneyState(project);
+  const goalActive = codexGoalActive(project.codexGoal);
+  const currentStep = goalActive ? 'build' : journey.current;
   const continuingPlan = canContinuePlanning(project);
   const experiment = pendingExperiment(project);
   const pendingQuestion = project.status === 'running' && project.conversation?.questions.find(question => question.status === 'pending' && question.runId === project.runId);
@@ -20,7 +23,9 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
     ? !configured ? 'Connect pipeline model' : project.runId ? 'Start new pipeline' : 'Start pipeline'
     : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
   let nextAction = null;
-  if (project.status === 'running' || experimentRunning(experiment)) {
+  if (goalActive) {
+    nextAction = view === 'factory' || view === 'agents' ? null : <button className="secondary" disabled={!isDesktop || project.codexGoal?.status === 'stopping'} onClick={stopCodex}><Square size={14}/>{project.codexGoal?.status === 'stopping' ? 'Stopping…' : 'Stop Codex build'}</button>;
+  } else if (project.status === 'running' || experimentRunning(experiment)) {
     nextAction = <button className="secondary" disabled={busy} onClick={stop}><Square size={14}/>Stop build</button>;
   } else if (experiment) {
     nextAction = view !== 'evidence' ? <button className="primary" onClick={() => navigate('evidence')}><ClipboardCheck size={16}/>Review candidates</button> : null;
@@ -41,7 +46,11 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
       {isDesktop && configured ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
     </button>;
   }
-  const message = experiment ? journey.message : pendingQuestion ? `${pendingQuestion.phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer in Project lead.` : journey.resumeStage && !isDesktop
+  const goalMessage = project.codexGoal?.status === 'stopping' ? 'Stopping Codex. Files and activity will be kept.'
+    : project.codexGoal?.status === 'failed' || project.codexGoal?.status === 'blocked' ? 'Codex needs attention. Open Build or Activity to inspect the problem and stop any remaining commands.'
+    : project.codexGoal?.status === 'prepared' ? 'Preparing Codex. Progress will appear in Build and Activity.'
+    : 'Codex is building in the background. Follow its live updates in Build or Activity.';
+  const message = goalActive ? goalMessage : experiment ? journey.message : pendingQuestion ? `${pendingQuestion.phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer in Project lead.` : journey.resumeStage && !isDesktop
     ? 'Your work is saved. Open the desktop app to resume this phase.' : journey.resumeStage && !configured
       ? 'Your work is saved. Connect a model in Settings to resume this phase.' : project.status === 'draft' && !isDesktop
     ? 'Brief saved in this browser. Open the desktop app to build.'
@@ -53,15 +62,15 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
       <nav className="journey-steps" aria-label="Challenge progress">
         {journeySteps.map((step, index) => <div className="journey-step" key={step.id}>
           {index > 0 && <ArrowRight className="journey-connector" size={13} aria-hidden="true"/>}
-          <button type="button" aria-current={journey.current === step.id ? 'step' : undefined}
+          <button type="button" aria-current={currentStep === step.id ? 'step' : undefined}
             aria-pressed={view === milestoneViews[step.id]} className={view === milestoneViews[step.id] ? 'is-viewed' : ''}
-            title={`${step.label}${journey.current === step.id ? ' · Current step' : journey.completed.includes(step.id) ? ' · Complete' : ''}`}
+            title={`${step.label}${currentStep === step.id ? ' · Current step' : journey.completed.includes(step.id) ? ' · Complete' : ''}`}
             onClick={() => navigate(milestoneViews[step.id])}>
             <span className="journey-index" aria-hidden="true">{journey.completed.includes(step.id) ? <Check size={12}/> : index + 1}</span>{step.label}
           </button>
         </div>)}
       </nav>
-      <p className="journey-message" role="status" aria-live="polite" aria-atomic="true">{project.codexGoal ? 'Pipeline comparison: ' : ''}{message}</p>
+      <p className="journey-message" role="status" aria-live="polite" aria-atomic="true">{project.codexGoal && !goalActive ? 'Pipeline comparison: ' : ''}{message}</p>
     </div>
   </section>;
 }

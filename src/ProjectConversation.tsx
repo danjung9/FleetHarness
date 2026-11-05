@@ -1,3 +1,4 @@
+import { codexGoalActive } from '../shared/codex-goal';
 import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { ArrowDown, ArrowUp, Check, ChevronRight, MessageSquare, Pause, Square, X } from 'lucide-react';
 import type { FleetAPI, NewProject, Project } from '../shared/types';
@@ -122,9 +123,10 @@ function ProposedAction({ action, project, api, desktop, configured, onApplied, 
   const [pending, setPending] = useState<'apply' | 'dismiss' | null>(null);
   const [error, setError] = useState('');
   const running = project.status === 'running';
+  const goalActive = codexGoalActive(project.codexGoal);
   const changes = action.brief ? briefFields.filter(field => Object.hasOwn(action.brief!, field.key)).map(field => ({ ...field, before: fieldText(project[field.key]), after: fieldText(action.brief![field.key]) })).filter(field => field.before !== field.after) : [];
   async function act(kind: 'apply' | 'dismiss') {
-    if (pending || busy) return;
+    if (pending || busy || (kind === 'apply' && goalActive)) return;
     setPending(kind); onBusy(true); setError('');
     try {
       if (kind === 'dismiss') await api.dismissConversationAction(project.id, action.id);
@@ -141,7 +143,8 @@ function ProposedAction({ action, project, api, desktop, configured, onApplied, 
     <p className="conversation-action-impact">{action.type === 'request_changes' ? 'Starts an iteration using the previous source. The new build needs verification and your approval. Earlier approval history and delivered files are kept.' : action.type === 'stop' ? 'Stops the current build and keeps its saved files.' : action.type === 'start' ? 'Starts a fresh build from the saved brief. Earlier run folders are kept.' : `${running ? 'Stops the current build, updates the brief, and starts fresh.' : 'Updates the brief and starts a fresh build.'} Applying this clears the current test results and delivery approval. Earlier run folders are kept.`}</p>
     {action.type !== 'stop' && <p className="conversation-action-disclosure">Build agents can edit files and run shell commands on this Mac. Your configured model provider receives the brief and tool context.</p>}
     {error && <p className="conversation-error" role="alert">{error}</p>}
-    <div className="conversation-action-buttons"><button className="secondary" type="button" disabled={!desktop || !!pending || busy} onClick={() => void act('dismiss')}>{pending === 'dismiss' ? 'Dismissing…' : 'Dismiss'}</button><button className="primary" type="button" disabled={!desktop || !!pending || busy || (action.type !== 'stop' && !configured)} onClick={() => void act('apply')}>{pending === 'apply' ? 'Applying…' : label}</button></div>
+    <div className="conversation-action-buttons"><button className="secondary" type="button" disabled={!desktop || !!pending || busy} onClick={() => void act('dismiss')}>{pending === 'dismiss' ? 'Dismissing…' : 'Dismiss'}</button><button className="primary" type="button" disabled={!desktop || !!pending || busy || goalActive || (action.type !== 'stop' && !configured)} onClick={() => void act('apply')}>{pending === 'apply' ? 'Applying…' : label}</button></div>
+    {goalActive && <p className="conversation-answer-note">Stop the Codex build before applying a pipeline action.</p>}
     {!configured && action.type !== 'stop' && desktop && <p className="conversation-answer-note">Connect a model in Settings to apply this action.</p>}
   </section>;
 }
