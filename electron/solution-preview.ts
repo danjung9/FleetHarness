@@ -13,6 +13,8 @@ export class ApplicationPreviews {
   private controllers = new Map<string, AbortController>();
   private closed = false;
   private origins = new Map<string, string>();
+  // A reload in the same run keeps its port, so the app's browser storage survives.
+  private servicePorts = new Map<string, number>();
   allows(address: string) {
     try { return [...this.origins.values()].includes(new URL(address).origin); } catch { return false; }
   }
@@ -52,9 +54,10 @@ export class ApplicationPreviews {
     }
     await existing?.runtime.close();
     this.services.delete(root);
-    const runtime = await prepareSolutionRuntime(root, solution.runtime, this.executable, signal, { totalTimeoutMs: 3_600_000 });
+    const runtime = await prepareSolutionRuntime(root, solution.runtime, this.executable, signal, { totalTimeoutMs: 3_600_000, preferredPort: this.servicePorts.get(root) });
     if (this.closed || signal.aborted) { await runtime.close(); return null; }
     this.services.set(root, { hash, runtime });
+    if (runtime.url) this.servicePorts.set(root, Number(new URL(runtime.url).port));
     return runtime.url ?? null;
   }
   async stop(root: string) {

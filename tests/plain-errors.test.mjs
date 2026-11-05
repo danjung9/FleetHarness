@@ -32,7 +32,7 @@ const errorInventory = {
   "harness/solution-contract.ts": "4b11e8c746d973b2073a4b90578ff429060ed1d1f0fe6cb8a7c7fe88aa1ec039",
   "electron/browser-verification.ts": "f4b4688364370ada03a7ba31fc23fb04c6acdee99896eb62b023c36ce998801d",
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
-  "electron/solution-runtime.ts": "4f6657ffd75fb576423b1d48c0a7b28e6f401fa3bb535e058d033ebef4d6165b",
+  "electron/solution-runtime.ts": "6b1fd16810a8b2cbdb0cf57bc1a89b0caecaddb85ffeb0dfdc1ef039e6e3894a",
   "electron/visual-review.ts": "4f3f4aade42b2032aa0bf27774110cf9c2393c04b8a85f927c1b2367ee64eac9",
   "electron/agent-runner.ts": "cd2dda17f8cef33368a53bf9aa2f7430d76c12318760dc846089db0bfd476025",
   "harness/integration.ts": "dcf498a183b90defa591068b54ee13485230a5359ded4d030cd0cd023b00cf34",
