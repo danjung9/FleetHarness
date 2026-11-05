@@ -1,0 +1,5 @@
+#!/bin/sh
+# Modified by FleetHarness: offline, phase-safe launcher; no installer or caches.
+set -eu
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec node "$dir/fleet-launcher.mjs" "$@"

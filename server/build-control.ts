@@ -102,7 +102,8 @@ async function saveCheckpoint(run: HostedRun, sandbox: Sandbox, pointer: Checkpo
 
 function progressPatch(progress: WorkerProgress): Partial<Project> {
   return { stages: progress.project.stages, logs: progress.project.logs.slice(-600),
-    systemDesign: progress.project.systemDesign, qualityVersion: progress.project.qualityVersion, phasePlan: progress.project.phasePlan, globalTools: progress.project.globalTools };
+    systemDesign: progress.project.systemDesign, qualityVersion: progress.project.qualityVersion, visualReview: progress.project.visualReview,
+    runtimeProfile: progress.project.runtimeProfile, phasePlan: progress.project.phasePlan, globalTools: progress.project.globalTools };
 }
 async function finishPaused(run: HostedRun): Promise<void> {
   const resumable = !!metadata(run).checkpoint;
@@ -186,11 +187,12 @@ export async function pollVerification(runId: string, epoch: number): Promise<bo
   const report = await readControl<TestReport>(sandbox, 'verified-report.json', 8 * 1024 * 1024);
   const bundle = await readControl<ArtifactBundle>(sandbox, 'verified-artifacts.json', 32 * 1024 * 1024);
   const checkpoint = await readControl<PipelineCheckpoint>(sandbox, 'verified-checkpoint.json', 16 * 1024 * 1024);
-  if (output.version !== 1 || output.status !== 'passed' || output.runId !== runId || output.epoch !== epoch || !report || !bundle || !checkpoint || sha256(report.bytes) !== output.reportSha256 || sha256(bundle.bytes) !== output.artifactsSha256 || sha256(checkpoint.bytes) !== output.checkpointSha256 || bundle.value.epoch !== epoch || checkpoint.value.project.id !== run.projectId || checkpoint.value.project.runId !== runId || checkpoint.value.sourceHash !== output.sourceHash || checkpoint.value.qualityHash !== metadata(run).qualityHash || checkpoint.value.packetHash !== metadata(run).packetHash || !reportPassed(report.value, true)) throw new Error('Independent verification evidence failed integrity checks.');
+  const project = await db().getProject(run.userId, run.projectId);
+  const requiredQuality = project.qualityVersion ?? 1;
+  if (output.version !== 1 || output.status !== 'passed' || output.runId !== runId || output.epoch !== epoch || !report || !bundle || !checkpoint || sha256(report.bytes) !== output.reportSha256 || sha256(bundle.bytes) !== output.artifactsSha256 || sha256(checkpoint.bytes) !== output.checkpointSha256 || bundle.value.epoch !== epoch || checkpoint.value.project.id !== run.projectId || checkpoint.value.project.runId !== runId || checkpoint.value.sourceHash !== output.sourceHash || checkpoint.value.qualityHash !== metadata(run).qualityHash || checkpoint.value.packetHash !== metadata(run).packetHash || checkpoint.value.project.qualityVersion !== requiredQuality || !reportPassed(report.value, requiredQuality)) throw new Error('Independent verification evidence failed integrity checks.');
   validateBundle(bundle.value, runId);
   const manifest = await db().putArtifacts(run, randomUUID(), bundle.value.files.map(file => ({ path: file.path, content: Buffer.from(file.base64, 'base64') })));
   if (manifest.sourceHash !== output.sourceHash || report.value.sourceHash !== manifest.sourceHash) throw new Error('Verified source hash does not match.');
-  const project = await db().getProject(run.userId, run.projectId);
   const latest = await db().getRun(runId);
   if (!active(latest, epoch) || latest.status === 'pausing') { await sandbox.stop(); if (active(latest, epoch)) await finishPaused(latest); return true; }
   await db().patchRun(runId, epoch, { status: 'review', manifest, artifactPrefix: manifest.prefix }, { status: 'review', report: report.value, error: undefined, canResume: false,

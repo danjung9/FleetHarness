@@ -48,6 +48,7 @@ export async function runAgentStage(options: {
   };
   const limits = { ...defaultAgentLimits, ...options.limits };
   for (const [key, value] of Object.entries(limits)) {
+    if (key === 'maxTurns' && value === undefined) continue;
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
   }
   if (options.signal.aborted) throw new Error(stoppedMessage);
@@ -110,7 +111,7 @@ export async function runAgentStage(options: {
         case 'tool_execution_start':
           lastActivity = `running ${event.toolName}`; heartbeat(); break;
         case 'turn_start':
-          if (++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. Inspect its artifacts before retrying.`); return; }
+          if (limits.maxTurns !== undefined && ++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. Inspect its artifacts before retrying.`); return; }
           lastActivity = 'waiting for the model'; heartbeat(); break;
       }
       // A transient provider error can be followed by a successful SDK retry or compaction.

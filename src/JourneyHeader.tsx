@@ -1,6 +1,6 @@
 import { ArrowRight, Check, ClipboardCheck, Download, Pause, Play, Settings2, ShieldCheck, Square } from 'lucide-react';
 import type { Project, View } from '../shared/types';
-import { getJourneyState, journeySteps, type Milestone } from '../shared/journey';
+import { getJourneyState, journeySteps, resumeLabel, type Milestone } from '../shared/journey';
 import { isDesktop, isHosted } from './api';
 import './journey.css';
 
@@ -8,9 +8,9 @@ export const milestoneViews: Record<Milestone, View> = {
   brief: 'requirements', build: 'factory', review: 'evidence', deliver: 'delivery'
 };
 
-export function JourneyHeader({ project, view, busy, configured, navigate, start, stop, resume }: {
-  project: Project; view: View; busy: boolean; configured: boolean;
-  navigate: (view: View) => void; start: () => void; stop: () => void; resume?: () => void;
+export function JourneyHeader({ project, view, busy, configured, resuming, navigate, start, resume, stop }: {
+  project: Project; view: View; busy: boolean; configured: boolean; resuming: boolean;
+  navigate: (view: View) => void; start: () => void; resume?: () => void; stop: () => void;
 }) {
   const journey = getJourneyState(project, { hosted: isHosted });
   const canBuild = isDesktop || isHosted;
@@ -22,10 +22,15 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
   } else if (project.status === 'pausing') {
     nextAction = <button className="secondary" disabled><Pause size={14}/>Saving checkpoint…</button>;
   } else if (isHosted && project.canResume && resume && ['paused', 'failed', 'stopped'].includes(project.status)) {
-    nextAction = <button className="primary" disabled={busy} onClick={() => configured ? resume() : navigate('settings')}><Play size={15}/>{configured ? 'Resume build' : 'Connect model'}</button>;
+    nextAction = <button className="primary" disabled={busy} onClick={() => configured ? resume() : navigate('settings')}><Play size={15}/>{resuming ? 'Resuming…' : configured ? 'Resume build' : 'Connect model'}</button>;
   } else if (view === 'requirements') {
     // The form saves its edits before offering the next build.
     nextAction = null;
+  } else if (journey.resumeStage) {
+    nextAction = <>
+      <button className="secondary" disabled={busy} onClick={() => isDesktop && configured ? start() : navigate('settings')}>{startLabel}</button>
+      <button className="primary" disabled={busy || !isDesktop || !configured || !resume} onClick={resume}><Play size={15}/>{resuming ? 'Resuming…' : resumeLabel(journey.resumeStage)}</button>
+    </>;
   } else if (journey.current === 'review' && view !== 'evidence') {
     nextAction = <button className="primary" onClick={() => navigate('evidence')}><ClipboardCheck size={16}/>Review build</button>;
   } else if (journey.current === 'deliver' && view !== 'delivery') {
@@ -35,7 +40,9 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
       {canBuild && configured ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
     </button>;
   }
-  const message = pendingQuestion ? 'Waiting for your answer. Open Project lead to continue this build.' : project.status === 'draft' && !canBuild
+  const message = pendingQuestion ? `${pendingQuestion.phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer in Project lead.` : journey.resumeStage && !canBuild
+    ? 'Your work is saved. Open the desktop app to resume this phase.' : journey.resumeStage && !configured
+      ? 'Your work is saved. Connect a model in Settings to resume this phase.' : project.status === 'draft' && !canBuild
     ? 'Brief saved in this browser. Open the desktop app to build.'
     : project.status === 'draft' && !configured
       ? 'Brief saved. Connect a model when you’re ready to build.' : journey.message;

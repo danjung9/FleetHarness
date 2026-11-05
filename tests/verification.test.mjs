@@ -404,8 +404,10 @@ test('spawn errors settle with a useful failure', async t => {
   await assert.rejects(verifyPlain(root, path.join(root, 'missing-node'), () => {}), /ENOENT/);
 });
 
-test('toolkit checks and empty files cannot replace application tests', async t => {
+test('toolkit checks, browser observations and empty files cannot replace application tests', async t => {
   const root = await workspace(t, 'require("node:test")("toolkit only", () => {});', '.fleet/toolkit/reference.test.cjs');
+  await fs.mkdir(path.join(root, '.browser-observations', 'session'), { recursive: true });
+  await fs.writeFile(path.join(root, '.browser-observations', 'session', 'snapshot.test.mjs'), 'throw new Error("This is not an application test");');
   await fs.writeFile(path.join(root, 'empty.test.cjs'), '');
   await assert.rejects(verifyPlain(root, process.execPath, () => {}), /did not produce/);
 });

@@ -18,7 +18,7 @@ try {
   process.env.PI_CODING_AGENT_DIR = piDir;
   await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: {
     'fleet-fixture': { baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models: [
-      { id: 'fixture-model', name: 'Local phase fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
+      { id: 'fixture-model', name: 'Local phase fixture', reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
     ] }
   } }));
   const { Store, newProject } = await import('../dist-electron/electron/storage.js');

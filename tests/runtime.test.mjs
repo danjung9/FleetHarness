@@ -61,6 +61,60 @@ test('saved challenges survive reload and interrupted runs without markers remai
     assert.equal(restored.state.projects[1].outputs,undefined);
   } finally { await fs.rm(dir,{recursive:true,force:true}); }
 });
+test('interrupted checkpointed builds keep their recovery stage, saved work and completed phases on reload', async t => {
+  const dir = await temp(); t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const store = new Store(dir); await store.init();
+  const project = store.state.projects[0];
+  project.status = 'running'; project.runId = 'saved-run'; project.resumeStage = 'build';
+  project.processScope = { runId: project.runId, marker: 'saved-run-marker', cleanup: 'pending' };
+  project.runCheckpoint = { version: 1, writerState: 'active' };
+  project.workspace = path.join(dir, 'workspaces', project.id, project.runId);
+  await fs.mkdir(project.workspace, { recursive: true });
+  await fs.writeFile(path.join(project.workspace, 'app.mjs'), 'export const draft = "saved implementation";');
+  for (const stage of project.stages) stage.status = ['intake', 'research', 'plan'].includes(stage.id) ? 'complete' : stage.id === 'build' ? 'active' : 'queued';
+  project.logs.push({ id: 'saved-log', stage: 'build', kind: 'info', time: '2026-01-01T00:00:00.000Z', text: 'Implementation was in progress.' });
+  await store.save();
+  const recoveredMarkers = [];
+  const restored = new Store(dir, async marker => { recoveredMarkers.push(marker); }); await restored.init();
+  const recovered = restored.project(project.id);
+  assert.deepEqual(recoveredMarkers, ['saved-run-marker']);
+  assert.equal(recovered.processScope.cleanup, 'confirmed');
+  assert.equal(recovered.status, 'stopped');
+  assert.equal(recovered.resumeStage, 'build');
+  assert.equal(recovered.runId, project.runId); assert.equal(recovered.workspace, project.workspace);
+  assert.deepEqual(recovered.stages.map(stage => stage.status), ['complete', 'complete', 'complete', 'failed', 'queued', 'queued', 'queued']);
+  assert.match(recovered.error, /Resume the phase/);
+  assert.doesNotMatch(recovered.error, /older run|start a new build/);
+  assert.deepEqual(recovered.logs, project.logs);
+  assert.match(await fs.readFile(path.join(recovered.workspace, 'app.mjs'), 'utf8'), /saved implementation/);
+  const saved = JSON.parse(await fs.readFile(path.join(dir, 'state.json'), 'utf8')).projects.find(item => item.id === project.id);
+  assert.equal(saved.status, 'stopped'); assert.equal(saved.resumeStage, 'build');
+});
+
+test('interrupted legacy builds without a checkpoint keep their artifacts and explain the new-build fallback', async t => {
+  const dir = await temp(); t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const store = new Store(dir); await store.init();
+  const project = store.state.projects[0];
+  project.status = 'running'; project.runId = 'legacy-run';
+  project.processScope = { runId: project.runId, marker: 'legacy-run-marker', cleanup: 'pending' };
+  project.workspace = path.join(dir, 'workspaces', project.id, project.runId);
+  await fs.mkdir(project.workspace, { recursive: true });
+  await fs.writeFile(path.join(project.workspace, 'plan.md'), 'Preserved older planning output.');
+  project.stages.find(stage => stage.id === 'intake').status = 'complete';
+  project.stages.find(stage => stage.id === 'research').status = 'active';
+  await store.save();
+  const recoveredMarkers = [];
+  const restored = new Store(dir, async marker => { recoveredMarkers.push(marker); }); await restored.init();
+  const recovered = restored.project(project.id);
+  assert.deepEqual(recoveredMarkers, ['legacy-run-marker']);
+  assert.equal(recovered.processScope.cleanup, 'confirmed');
+  assert.equal(recovered.status, 'stopped'); assert.equal(recovered.resumeStage, undefined);
+  assert.equal(recovered.runId, project.runId); assert.equal(recovered.workspace, project.workspace);
+  assert.equal(recovered.stages.find(stage => stage.id === 'intake').status, 'complete');
+  assert.equal(recovered.stages.find(stage => stage.id === 'research').status, 'failed');
+  assert.match(recovered.error, /no recovery checkpoint; start a new build/);
+  assert.equal(await fs.readFile(path.join(recovered.workspace, 'plan.md'), 'utf8'), 'Preserved older planning output.');
+});
 test('corrupt state is preserved and reported instead of reset', async () => {
   const dir=await temp();try {
     await fs.writeFile(path.join(dir,'state.json'),'{broken');

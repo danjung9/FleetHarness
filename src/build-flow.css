@@ -31,7 +31,9 @@
 .build-phase-problem{padding:14px 0;margin-bottom:18px;color:var(--danger);font-size:12px;line-height:1.7;overflow-wrap:anywhere}
 .build-phase-problem strong{font-weight:600}
 .build-phase-problem p{margin:7px 0 0;max-width:72ch}
-.build-phase-problem p:last-child{color:var(--muted)}
+.build-phase-problem .build-recovery-note,.build-phase-recovery p{color:var(--muted)}
+.build-phase-recovery{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-top:14px}
+.build-phase-recovery p{margin:0}
 .build-phase-output{margin-bottom:23px}
 .build-output-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .build-output-heading h3{font:600 12px/1.5 'DM Sans',sans-serif;letter-spacing:0;margin:0}

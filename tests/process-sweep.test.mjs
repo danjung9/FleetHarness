@@ -58,13 +58,17 @@ test('native discovery sweeps a marked job and leaves an unmarked job alive', { 
   const scope = new RunProcessSweep();
   const owned = await worker(t, scope.run(() => runProcessEnvironment({ ...process.env }))),
     unrelated = await worker(t, { ...process.env }),
-    spoofed = await worker(t, { ...process.env }, false, ['APPYARD_RUN_PROCESS=' + scope.marker]);
+    spoofed = await worker(t, { ...process.env }, false, ['APPYARD_RUN_PROCESS=' + scope.marker]),
+    nearMarker = await worker(t, { ...process.env, APPYARD_RUN_PROCESS: scope.marker + '-other' }),
+    otherValue = await worker(t, { ...process.env, OTHER: 'APPYARD_RUN_PROCESS=' + scope.marker });
   const before = unrelated.ticks;
   await scope.stop();
   await delay(80);
   assert.equal(owned.exited, true, 'native discovery missed the marked job');
   assert.equal(unrelated.exited, false, 'native discovery ended an unmarked job');
   assert.equal(spoofed.exited, false, 'a command-line marker must not establish environment ownership');
+  assert.equal(nearMarker.exited, false, 'a marker prefix must not establish environment ownership');
+  assert.equal(otherValue.exited, false, 'a marker inside another environment value must not establish ownership');
   assert.ok(unrelated.ticks > before, 'unrelated process heartbeat must keep advancing');
 });
 

@@ -1,21 +1,25 @@
 import type { TestReport } from './types.js';
+import { visualReviewPassed } from './visual-review.js';
 
 /** A legacy Node-only report is never enough for a run using the quality contract. */
-export function reportPassed(report?: TestReport, requireQuality = false): boolean {
+export function reportPassed(report?: TestReport, requireQuality: boolean | 1 | 2 | 3 = false): boolean {
   if (!report || report.exitCode !== 0 || report.total <= 0 || report.passed <= 0 || report.failed !== 0 || report.skipped !== 0 || report.passed !== report.total) return false;
   if (!report.quality) return !requireQuality;
   const quality = report.quality;
+  if (typeof requireQuality === 'number' && quality.schemaVersion !== requireQuality) return false;
   if (quality.status !== 'passed' || quality.errors.length !== 0
     || !quality.journeys.every(journey => journey.status === 'passed')
     || !quality.criteria.some(criterion => criterion.status === 'passed')
     || !quality.criteria.every(criterion => criterion.status === 'passed' || criterion.status === 'unverified')) return false;
   if (quality.schemaVersion === 1) return quality.journeys.length > 0;
-  if (quality.schemaVersion !== 2) return false;
+  if (quality.schemaVersion !== 2 && quality.schemaVersion !== 3) return false;
   const evaluation = quality.solutionEvaluation, delivery = quality.package, capabilities = quality.capabilities;
   if (!evaluation || evaluation.schemaVersion !== 1 || evaluation.status !== 'passed' || evaluation.errors.length !== 0
     || !delivery || delivery.status !== 'passed' || !delivery.cleanCopy || !delivery.filesHash
     || delivery.filesHash !== evaluation.runtime.filesHash || delivery.profile !== evaluation.runtime.profile
     || !capabilities?.length || !capabilities.some(capability => capability.required)) return false;
+  if (quality.schemaVersion === 3 && delivery.profile !== 'cli'
+    && (quality.visualReview?.contractHash !== quality.contractHash || !visualReviewPassed(quality.visualReview, delivery.filesHash, 'verify'))) return false;
   if (!Number.isSafeInteger(quality.expectedJourneys) || quality.expectedJourneys !== quality.journeys.length) return false;
   if (delivery.profile === 'cli' ? quality.expectedJourneys !== 0 : quality.expectedJourneys! < 4) return false;
   if (new Set(quality.journeys.map(journey => journey.id + '/' + journey.viewport)).size !== quality.journeys.length

@@ -71,11 +71,17 @@ export async function verifyHosted(inputPath: string, resourcesRoot: string) {
   await assertFleetPacketIntegrity(workspace, input.packetHash);
   const quality = await loadQualityContract(workspace, packet.acceptance);
   if (quality.hash !== input.qualityHash) throw new Error('Submitted acceptance contract does not match the saved plan.');
-  const report = await verifyApplication(workspace, executable, quality);
-  if (!reportPassed(report, true)) throw new Error('Independent Node tests or browser journeys did not pass.\n' + report.output.slice(-6000));
+  const requiredQuality = project.qualityVersion ?? 1;
+  const report = await verifyApplication(workspace, executable, quality, undefined, {
+    requireVisualReview: requiredQuality === 3,
+    // The server obtained this ledger from the private worker control channel.
+    // validateVisualReview rechecks captured PNGs and the exact runtime digest.
+    visualReview: project.visualReview,
+  });
+  if (!reportPassed(report, requiredQuality)) throw new Error('Independent Node tests or browser journeys did not pass.\n' + report.output.slice(-6000));
   await assertFleetPacketIntegrity(workspace, input.packetHash);
   await fs.writeFile(path.join(workspace, 'test-report.json'), JSON.stringify(report, null, 2));
-  project.runId = input.runId; project.workspace = workspace; project.report = report; project.qualityVersion = 1;
+  project.runId = input.runId; project.workspace = workspace; project.report = report; project.qualityVersion = requiredQuality;
   project.status = 'review'; project.error = undefined; project.approvedAt = undefined;
   project.stages = structuredClone(stageDefinitions).map(stage => ({ ...stage, status: stage.id === 'review' ? 'review' : stage.id === 'deliver' ? 'queued' : 'complete' }));
   project.updatedAt = new Date().toISOString();

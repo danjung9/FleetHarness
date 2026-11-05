@@ -22,7 +22,7 @@ export class VerificationShutdownError extends Error {
   }
 }
 export async function applicationTestFiles(root: string, includeEmpty = false) {
-  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.(?:fleet|review-source|agent-tools|agent-output)(?:\/|\\)/.test(f.path) && /(?:^|[/\\])[^/\\]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.(?:fleet|review-source|agent-tools|agent-output|browser-observations)(?:\/|\\)/.test(f.path) && /(?:^|[/\\])[^/\\]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 const shellArgument = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 export function portableTestCommand(files: string[]) {

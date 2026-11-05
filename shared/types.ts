@@ -57,7 +57,8 @@ export interface Project extends BriefContext {
   runCheckpoint?: RunCheckpoint;
   reviewHistory?: ReviewRecord[];
   conversation?: import('./conversation.js').ProjectConversation;
-  qualityVersion?: 1 | 2;
+  qualityVersion?: 1 | 2 | 3;
+  visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
@@ -69,6 +70,8 @@ export interface Project extends BriefContext {
   id: string; title: string; description: string; criteria: string[]; createdAt: string; updatedAt: string;
   status: RunStatus; stages: Stage[]; logs: LogEntry[]; runId?: string; workspace?: string;
   checkpointStage?: StageId; canResume?: boolean;
+  /** Stage backed by a private host recovery checkpoint; offers resume after failure or Stop. */
+  resumeStage?: StageId;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
 export type AgentBackend = 'pi' | 'codex';
@@ -110,6 +113,7 @@ export interface FleetAPI {
   downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;
   readArtifact(id: string, file: string): Promise<string>;
+  visualReviewImage(id: string, captureId: string): Promise<string>;
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode?(enabled: boolean): Promise<Bootstrap>;

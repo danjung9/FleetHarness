@@ -2,14 +2,14 @@ import { randomUUID } from 'node:crypto';
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
 import { emptyConversation, type ClarificationAnswer, type ClarificationAnswerType, type ClarificationQuestion } from '../shared/conversation.js';
-import { stageDefinitions, type Project } from '../shared/types.js';
+import { stageDefinitions, type Project, type StageId } from '../shared/types.js';
 import { stoppedMessage } from './agent-runner.js';
 import type { Store } from './storage.js';
 
 type Phase = 'research' | 'plan';
 type QuestionInput = Pick<ClarificationQuestion, 'question' | 'context' | 'answerType' | 'options' | 'recommendation'>;
 type Waiter = { update: () => void; reject: (error: Error) => void };
-const cancelledMessage = 'The clarification request was cancelled. Start a new run to continue.';
+const cancelledMessage = 'The clarification request was cancelled. Resume the stopped phase or start a new run to continue.';
 const string = (value: unknown, label: string, max: number) => {
   if (typeof value !== 'string' || !value.trim() || value.length > max) throw new Error(`${label} must contain 1–${max} characters.`);
   return value.trim();
@@ -48,6 +48,7 @@ function normalizeAnswer(question: ClarificationQuestion, value: string | Clarif
 export class ClarificationBroker {
   private waiters = new Map<string, Set<Waiter>>();
   private cancelled = new Set<string>();
+  private resuming = new Map<string, symbol>();
   private savingAnswers = new Set<string>();
   constructor(private store: Store, private notify: () => void) {}
   private key(project: Project, runId: string, phase: Phase) { return `${project.id}:${runId}:${phase}`; }
@@ -153,7 +154,8 @@ export class ClarificationBroker {
     this.update(project, question.runId, question.phase);
   }
   async cancel(project: Project, runId: string): Promise<void> {
-    this.cancelled.add(`${project.id}:${runId}`);
+    const key = `${project.id}:${runId}`;
+    this.cancelled.add(key); this.resuming.delete(key);
     const questions = project.conversation?.questions.filter(question => question.runId === runId && question.status === 'pending') ?? [];
     questions.forEach(question => { question.status = 'cancelled'; });
     if (questions.length) {
@@ -164,6 +166,42 @@ export class ClarificationBroker {
       for (const waiter of this.waiters.get(this.key(project, runId, phase)) ?? []) waiter.reject(new Error(cancelledMessage));
     }
     if (questions.length) await this.changed(project);
+  }
+  /** Only a host-validated resume can reopen questions cancelled when this run stopped. */
+  async resume(project: Project, runId: string, phase?: StageId): Promise<void> {
+    if (!runId || this.store.project(project.id) !== project || project.runId !== runId || project.status !== 'running') {
+      throw new Error('Clarifications can resume only with the current running build.');
+    }
+    const key = `${project.id}:${runId}`;
+    if (this.resuming.has(key)) throw new Error('Clarification questions are already resuming.');
+    const attempt = Symbol(); this.resuming.set(key, attempt);
+    const questions = phase === 'research' || phase === 'plan'
+      ? this.questions(project, runId, phase).filter(question => question.status === 'cancelled' && question.answer === undefined)
+      : [];
+    const stage = phase && project.stages.find(stage => stage.id === phase);
+    const previousDetail = stage?.detail;
+    // Keep answers blocked until reopened questions have been durably saved.
+    this.cancelled.add(key);
+    questions.forEach(question => { question.status = 'pending'; });
+    if (questions.length && stage) stage.detail = 'Waiting for your clarification answers. The agent is paused.';
+    try {
+      if (questions.length) {
+        project.updatedAt = new Date().toISOString();
+        await this.store.save();
+      }
+      if (this.resuming.get(key) !== attempt || this.store.project(project.id) !== project || project.runId !== runId || project.status !== 'running') {
+        throw new Error('This build stopped before its clarification questions could resume.');
+      }
+      this.cancelled.delete(key);
+      this.notify();
+    } catch (error) {
+      questions.forEach(question => { question.status = 'cancelled'; });
+      if (stage && previousDetail !== undefined) stage.detail = previousDetail;
+      this.notify();
+      throw error;
+    } finally {
+      if (this.resuming.get(key) === attempt) this.resuming.delete(key);
+    }
   }
 }
 

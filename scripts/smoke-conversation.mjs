@@ -13,7 +13,7 @@ const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
 const fixture = await startConversationFixture();
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': {
   baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
-  models: [{ id: 'fixture-model', name: 'Local conversation fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
+  models: [{ id: 'fixture-model', name: 'Local conversation fixture', reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
 } } }));
 const title = 'Conversation smoke fixture';
 const planningDetails = 'Keep the source text readable next to every extracted task.';

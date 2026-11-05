@@ -8,7 +8,7 @@ export function QualityEvidence({ report }: { report?: QualityReport }) {
   return <section className="quality-evidence" aria-label="Requirement and browser evidence">
     <h2>Requirement coverage</h2>
     <p>{count('passed')} demonstrated · {count('failed')} failed · {count('unverified')} unverified. {report.requirementsMet ? 'Every recorded requirement has its required evidence.' : 'Prototype approval does not accept or complete the unverified requirements.'}</p>
-    {report.schemaVersion === 2 && <>
+    {report.schemaVersion >= 2 && <>
       <h3>Computational capabilities</h3>
       <p>{report.package?.status === 'passed' ? 'The declared package ran in a fresh environment.' : 'The delivered runtime has not passed its clean-start check.'} {report.package?.detail}</p>
       {report.solutionEvaluation && <ul className="quality-criteria">{report.solutionEvaluation.evaluations.map(result => <li key={result.id}>

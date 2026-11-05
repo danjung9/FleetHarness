@@ -1,11 +1,12 @@
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
+import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
+import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import childProcess, { spawn } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
 import { promises as fs, readFileSync } from 'node:fs';
-import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
-import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { createServer } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
@@ -43,7 +44,7 @@ async function temp(t) { const root = await fs.mkdtemp(path.join(os.tmpdir(), 'f
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 const fixtureCredentials = () => Promise.resolve({ accessToken: 'fixture-subscription-token', expiresAt: Date.now() + 3600_000 });
-const screenshotPng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';
+const screenshotPng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==';
 
 test('ChatGPT login uses an isolated home, waits for completion and exposes only safe account fields', async t => {
   const root = await temp(t), rpc = new FakeRpc(), opened = [];
@@ -444,6 +445,73 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
   }
 });
 
+for (const rejectImages of [false, true]) test(rejectImages ? 'bundled Codex surfaces model image rejection as a failed turn' : 'bundled Codex forwards browser screenshot pixels and console errors into the next model request', { timeout: 15000 }, async () => {
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-browser-transport-'));
+  const processClosures = [], requests = [], toolCalls = [];
+  const server = createServer(async (request, response) => {
+    let body = ''; for await (const part of request) body += part;
+    if (request.url !== '/v1/responses') { response.writeHead(404); response.end(); return; }
+    requests.push(JSON.parse(body));
+    if (rejectImages && requests.length > 1) {
+      response.writeHead(400, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: { type: 'invalid_request_error', message: 'Image inputs are not supported by this fixture model.' } }));
+      return;
+    }
+    const toolRequest = requests.length === 1;
+    const item = toolRequest
+      ? { id: 'fc_browser_fixture', type: 'function_call', call_id: 'call_browser_fixture', name: 'fleet_browser', arguments: '{"action":"screenshot"}', status: 'completed' }
+      : { id: 'msg_browser_fixture', type: 'message', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: 'Screenshot received.', annotations: [] }] };
+    response.writeHead(200, { 'Content-Type': 'text/event-stream' });
+    const events = [
+      { type: 'response.created', response: { id: 'resp_browser_fixture', status: 'in_progress', output: [] } },
+      { type: 'response.output_item.added', output_index: 0, item: { ...item, status: 'in_progress', ...(toolRequest ? { arguments: '' } : { content: [] }) } },
+      toolRequest
+        ? { type: 'response.function_call_arguments.delta', item_id: item.id, output_index: 0, delta: item.arguments }
+        : { type: 'response.output_text.delta', item_id: item.id, output_index: 0, content_index: 0, delta: 'Screenshot received.' },
+      { type: 'response.output_item.done', output_index: 0, item },
+      { type: 'response.completed', response: { id: 'resp_browser_fixture', status: 'completed', output: [item], usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 } } }
+    ];
+    for (const data of events) response.write(`event: ${data.type}\ndata: ${JSON.stringify(data)}\n\n`);
+    response.end();
+  });
+  let value;
+  try {
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    value = await createCodexSession({ home, cwd: home, model: 'gpt-6.1-sol', signal: new AbortController().signal, getCredentials: fixtureCredentials,
+      tools: [{ name: 'fleet_browser', description: 'Capture local app screenshot', parameters: { type: 'object', properties: { action: { type: 'string' } } },
+        async execute(_id, args) {
+          toolCalls.push(args);
+          return { content: [{ type: 'text', text: 'Console error: synthetic fixture failure.' }, { type: 'image', mimeType: 'image/png', data: screenshotPng }] };
+        }
+      }],
+      launch: (directory, credentials) => {
+        const { args, env } = codexProcessConfig(directory, credentials);
+        // Synthetic credentials and a loopback endpoint ensure this test never calls hosted inference.
+        args.push('-c', `model_providers.${CHATGPT_MODEL_PROVIDER}.base_url="http://127.0.0.1:${server.address().port}/v1"`);
+        const child = spawn(codexExecutable(), args, { cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
+        processClosures.push(new Promise(resolve => child.once('close', resolve)));
+        return new CodexRpc(child);
+      }
+    });
+    const prompt = value.prompt('Inspect the local browser screenshot and console.');
+    if (rejectImages) await assert.rejects(prompt, /Image inputs are not supported/);
+    else await prompt;
+    assert.deepEqual(toolCalls, [{ action: 'screenshot' }]);
+    assert.equal(requests.length, 2);
+    const output = requests[1].input.find(item => item.type === 'function_call_output' && item.call_id === 'call_browser_fixture');
+    assert.ok(output, 'the next request must contain the browser tool response');
+    assert.deepEqual(output.output, [
+      { type: 'input_text', text: 'Console error: synthetic fixture failure.' },
+      { type: 'input_image', image_url: `data:image/png;base64,${screenshotPng}` }
+    ]);
+  } finally {
+    value?.dispose(); server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+    await Promise.all(processClosures);
+    await fs.rm(home, { recursive: true, force: true });
+  }
+});
+
 test('factory admission rejects stale model catalogs without an active ChatGPT plan grant', async t => {
   const root = await temp(t), store = new Store(root); await store.init();
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
@@ -457,11 +525,14 @@ test('factory admission rejects stale model catalogs without an active ChatGPT p
   }
 });
 
-test('the Codex engine runs every factory phase, domain tools and independent verification without a Pi session', { timeout: 60_000 }, async t => {
+for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes ${runtimeProfile} phase skills and runs independent verification without a Pi session`, { timeout: 60_000 }, async t => {
   const root = await temp(t), store = new Store(root); await store.init();
-  store.state.projects[0] = newProject(qualityFixtureProject);
+  store.state.projects[0] = newProject(runtimeProfile === 'browser' ? qualityFixtureProject : {
+    title: 'Synthetic task parser CLI fixture', description: 'Extract task text from a synthetic TASK: prefix.',
+    criteria: ['Parse a synthetic task and recover from empty input.']
+  });
   store.state.settings = { backend: 'codex', provider: 'chatgpt', model: 'fixture-codex', rememberKey: false };
-  const project = store.state.projects[0], phases = [];
+  const project = store.state.projects[0], phases = [], sessions = [];
   const codex = { home: path.join(root, 'codex'), account: { status: 'connected', planUsageEnabled: true }, models: [{ id: 'fixture-codex', configured: true }], async refresh() {}, credentials: fixtureCredentials };
   // The judge has its own read-only RPC session, separate from the builder adapter below.
   t.mock.method(CodexRpc, 'launch', () => {
@@ -484,39 +555,77 @@ test('the Codex engine runs every factory phase, domain tools and independent ve
     createSession: () => { throw new Error('Pi must not run'); },
     createCodexSession: async options => {
       const rpc = new FakeRpc();
+      const session = { skills: options.skillPaths.map(skillPath => path.basename(skillPath)) };
+      sessions.push(session);
       let phase;
       rpc.handler = async (method, params) => {
         if (method !== 'turn/start') return;
         const text = params.input[0].text;
         phase ??= text.includes('You are the synthetic data agent') ? 'synthetic-data' : /Current phase: (\w+)/.exec(text)?.[1] || 'plan'; phases.push(phase);
+        session.phase = phase;
         const guide = text.startsWith('Implementation is complete.');
         if (guide) {
-          await fs.access(path.join(options.cwd, 'index.html'));
+          await fs.access(path.join(options.cwd, runtimeProfile === 'browser' ? 'index.html' : 'evaluate.cjs'));
           await assert.rejects(fs.access(path.join(options.cwd, 'README.md')), /ENOENT/);
         }
-        const files = guide ? { 'README.md': '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' }
+        const files = guide ? { 'README.md': runtimeProfile === 'browser' ? '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' : '# Fixture guide\nWith Node installed, pipe a JSON message into `node evaluate.cjs`. The input `"TASK: inspect pump"` returns `"inspect pump"`; an empty JSON string returns null. Run `node --test app.test.cjs` for developer tests.' }
           : phase === 'synthetic-data' ? syntheticDataFiles
           : phase === 'intake' ? { 'scope.md': 'Scope' } : phase === 'research' ? { 'research.md': 'Research' } : phase === 'plan' ? { 'scope.md': 'Scope', 'research.md': 'Research', 'plan.md': 'Plan', 'test-matrix.md': 'Test mapping' }
           : phase === 'build' ? { 'index.html': qualityFixtureHtml, 'evaluate.cjs': solutionFixtureEvaluator, 'core.cjs': 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'path-to-fleet.md': 'Domain review required', 'app.test.cjs': 'require("node:test")("sum",()=>require("node:assert/strict").equal(2+2,4));' }
           : { 'verification.md': 'Verified by the independent runner' };
         if (phase === 'plan') Object.assign(files, solutionFixture(JSON.parse(await fs.readFile(path.join(options.cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
+        if (runtimeProfile === 'cli' && phase === 'plan') {
+          const solution = JSON.parse(files['solution-contract.json']);
+          solution.runtime = { profile: 'cli', files: ['evaluate.cjs', 'core.cjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'evaluate.cjs', args: [] } };
+          const plan = JSON.parse(files['acceptance-plan.json']);
+          plan.journeys = [];
+          for (const criterion of plan.criteria) {
+            criterion.journeyIds = [];
+            criterion.capabilityIds = criterion.disposition === 'implemented' ? ['parse'] : [];
+          }
+          solution.capabilities[0].criterionIds = plan.criteria.filter(criterion => criterion.disposition === 'implemented').map(criterion => criterion.criterionId);
+          files['solution-contract.json'] = JSON.stringify(solution);
+          files['acceptance-plan.json'] = JSON.stringify(plan);
+        }
+        if (runtimeProfile === 'cli' && phase === 'build' && !guide) {
+          delete files['index.html'];
+          files['evaluate.cjs'] = 'const {readFileSync} = require("node:fs"), {parse} = require("./core.cjs"); process.stdout.write(JSON.stringify(parse(JSON.parse(readFileSync(0, "utf8")))));';
+        }
         for (const [file, content] of Object.entries(files)) {
           await fs.mkdir(path.dirname(path.join(options.cwd, file)), { recursive: true });
           await fs.writeFile(path.join(options.cwd, file), content);
         }
         const tool = options.tools.find(t => t.name === (phase === 'plan' ? 'fleet_system_design' : 'fleet_component_progress'));
-        const args = phase === 'plan' ? { title: 'Fixture', description: 'Application architecture', components: [{ id: 'app', label: 'App', description: 'Browser app', kind: 'interface', files: ['index.html'] }], connections: [] } : { componentId: 'app', status: 'generated', detail: 'Source written' };
+        const args = phase === 'plan' ? { title: 'Fixture', description: 'Application architecture', components: [{ id: 'app', label: 'App', description: 'Task parser', kind: runtimeProfile === 'browser' ? 'interface' : 'logic', files: [runtimeProfile === 'browser' ? 'index.html' : 'core.cjs'] }], connections: [] } : { componentId: 'app', status: 'generated', detail: 'Source written' };
         if (tool) await tool.execute('architecture', args);
+        if (runtimeProfile === 'browser' && (guide || phase === 'verify')) await completeFixtureVisualReview(options.tools);
         setImmediate(() => rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }));
         return { turn: { id: 'turn-1' } };
       };
-      return createCodexSession({ ...options, launch: () => rpc });
+      const value = await createCodexSession({ ...options, launch: () => rpc });
+      const instructions = rpc.calls.find(call => call.method === 'thread/start').params.developerInstructions;
+      for (const skillPath of options.skillPaths) {
+        assert.ok(instructions.includes(await fs.readFile(path.join(skillPath, 'SKILL.md'), 'utf8')), `${path.basename(skillPath)} is delivered to Codex`);
+      }
+      return value;
     }
   });
   backend.runtime = { getModel() { throw new Error('Pi model lookup must not run'); } };
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
-  assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, 4);
+  assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, runtimeProfile === 'browser' ? 4 : 0);
+  assert.equal(project.runtimeProfile, runtimeProfile);
   assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
   assert.equal(project.report.independentJudge.verdict, 'SATISFACTORY');
+  for (const session of sessions) {
+    assert.equal(session.skills.includes('ponytail'), ['research', 'plan', 'build', 'verify'].includes(session.phase), `${session.phase} Ponytail access`);
+    assert.equal(session.skills.includes('impeccable'), session.phase === 'plan' || runtimeProfile === 'browser' && ['build', 'verify'].includes(session.phase), `${session.phase} Impeccable access`);
+    const phase = project.phasePlan.find(phase => phase.id === session.phase);
+    assert.deepEqual(session.skills, phase?.skills ?? ['fleet-data']);
+  }
+  const packet = JSON.parse(await fs.readFile(path.join(project.workspace, '.fleet/packet.json'), 'utf8'));
+  assert.deepEqual(project.phasePlan, packet.stages.map(phase => runtimeProfile === 'cli' && ['build', 'verify'].includes(phase.id)
+    ? { ...phase, tools: phase.tools.filter(tool => tool !== 'fleet_visual_review'), skills: phase.skills.filter(skill => skill !== 'impeccable') } : phase));
+  const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(savedProject => savedProject.id === project.id);
+  assert.deepEqual(saved.phasePlan, project.phasePlan);
   assert.match(await fs.readFile(path.join(project.workspace, 'README.md'), 'utf8'), /Fixture guide/);
 });

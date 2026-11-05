@@ -170,7 +170,7 @@ function Artifacts({ project, action, requested }: { project: Project; action: A
     {!files.length ? <Empty icon={<Archive size={30}/>} title="No generated artifacts">Files appear after the first build.</Empty> : <div className="artifact-browser"><div className="file-list">{files.map(f => <button key={f.path} className={selected === f.path ? 'selected' : ''} onClick={() => setSelected(f.path)}><FileCode2 size={15}/><span>{f.path}</span><small>{Math.ceil(f.size / 1024)} KB</small></button>)}</div><div className="file-content"><h3>{selected || 'Select a file'}</h3><pre>{selected ? content || 'This file is empty.' : 'Choose an artifact to inspect its saved contents.'}</pre></div></div>}
   </div>;
 }
-function AgentSessions({ project }: { project: Project }) {
+function AgentSessions({ project, onReview }: { project: Project; onReview: () => void }) {
   const [filter, setFilter] = useState<StageId | 'all'>('all');
   const [kind, setKind] = useState<'all' | 'message' | 'tool' | 'error'>('all');
   const all = buildActivity(project.logs, project.status === 'paused' ? 'stopped' : project.status === 'pausing' ? 'running' : project.status, project.stages.find(s => s.status === 'active')?.id);
@@ -179,7 +179,7 @@ function AgentSessions({ project }: { project: Project }) {
   const items = staged.filter(item => kind === 'all' || (kind === 'error' ? isIssue(item) : item.kind === kind));
   const completed = staged.filter(item => item.kind === 'tool' && item.status === 'complete').length;
   const filters = [{ id: 'all', label: 'All activity', count: staged.length }, { id: 'message', label: 'Messages', count: staged.filter(item => item.kind === 'message').length }, { id: 'tool', label: 'Tools', count: staged.filter(item => item.kind === 'tool').length }, { id: 'error', label: 'Issues', count: staged.filter(isIssue).length }] as const;
-  return <div className="page agents-page"><div className="page-heading"><div><h1>Activity</h1><p>Follow the work, inspect results, and see what needs attention.</p></div></div>
+  return <div className="page agents-page"><div className="page-heading"><div><h1>Activity</h1><p>Follow the work, inspect results, and see what needs attention.</p></div>{project.visualReview && <button type="button" className="secondary" onClick={onReview}>Visual review <ArrowRight size={15}/></button>}</div>
     <div className="agent-roles" aria-label="Filter by agent">{(['intake', 'research', 'plan', 'build', 'verify'] as StageId[]).map(id => { const stage = project.stages.find(s => s.id === id)!; const Icon = id === 'intake' ? Inbox : id === 'research' ? Search : id === 'plan' ? GitBranch : id === 'build' ? Code2 : FlaskConical; return <button key={id} onClick={() => { setFilter(filter === id ? 'all' : id); }} aria-pressed={filter === id} className={filter === id ? 'selected' : ''}><Icon size={21}/><div><h2>{stageNames[id]} agent</h2><p>{stage.detail}</p></div><Badge status={stage.status}/></button>; })}</div>
     <div className="activity-toolbar"><div className="activity-toolbar-heading"><h2>{filter === 'all' ? 'Run activity' : stageNames[filter] + ' activity'}</h2><span className="activity-count">{completed} tool{completed === 1 ? '' : 's'} completed</span></div><label className="activity-stage-filter">Stage<select aria-label="Filter activity by stage" value={filter} onChange={e => setFilter(e.target.value as StageId | 'all')}><option value="all">All stages</option>{project.stages.map(stage => <option key={stage.id} value={stage.id}>{stageNames[stage.id]}</option>)}</select></label>
       <div className="activity-filters" aria-label="Filter activity type">{filters.map(option => <button key={option.id} type="button" aria-label={`${option.label} ${option.count}`} aria-pressed={kind === option.id} onClick={() => setKind(option.id)}>{option.label}<span>{option.count}</span></button>)}</div>
@@ -221,6 +221,8 @@ export default function App({ accountEmail, signOut }: { accountEmail?: string; 
   const [intakeCatalogId, setIntakeCatalogId] = useState('');
   const [intake, setIntake] = useState(false), [search, setSearch] = useState(false), [start, setStart] = useState(false);
   const [query, setQuery] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
+  const [resuming, setResuming] = useState(false);
+  const resumeInFlight = useRef(false);
   const [conversationOpen, setConversationOpen] = useState(false), [conversationFocus, setConversationFocus] = useState(0);
   const conversationTrigger = useRef<HTMLButtonElement>(null);
   function openConversation() { setConversationOpen(true); setConversationFocus(value => value + 1); }
@@ -264,6 +266,18 @@ export default function App({ accountEmail, signOut }: { accountEmail?: string; 
     }
   }
   function createChallenge(challengeId = '') { setIntakeCatalogId(challengeId); setIntake(true); }
+  async function resumeRun() {
+    const resume = api.resumeRun;
+    if (!p || !resume || busy || resumeInFlight.current || (!isDesktop && !isHosted) || !configured) return;
+    if (isHosted && !p.canResume) return;
+    if (isHosted && p.model && p.model !== state?.settings.model) {
+      navigate('settings'); setMessage(`Select ${p.model} to resume this build with its original model.`); return;
+    }
+    resumeInFlight.current = true;
+    setResuming(true);
+    try { await action(async () => { await resume(p.id); setActive('factory'); }, isHosted ? 'Build resumed from its saved checkpoint.' : 'Phase resumed. Saved work is kept.'); }
+    finally { resumeInFlight.current = false; setResuming(false); }
+  }
   function openProject(id: string) {
     const project = state?.projects.find(item => item.id === id);
     setCurrent(id); setRequestedArtifact('');
@@ -279,13 +293,6 @@ export default function App({ accountEmail, signOut }: { accountEmail?: string; 
   const results = useMemo(() => state?.projects.filter(p => (p.title + ' ' + p.description).toLowerCase().includes(query.toLowerCase())) || [], [state, query]);
   if (!state || !data) return <div className="loading-screen"><div className="mark"><Mark/></div><h1>AppYard</h1><p>{error || (isHosted ? 'Opening your private workspace…' : 'Opening your local workspace…')}</p>{error && <button className="secondary" onClick={() => location.reload()}>Retry</button>}{signOut && <button className="text-button" onClick={() => void signOut()}>Sign out</button>}</div>;
   const showHome = active === 'portfolio' || (!p && active !== 'settings');
-  const resumeBuild = () => {
-    if (!p || !api.resumeRun) return;
-    if (isHosted && p.model && p.model !== state.settings.model) {
-      navigate('settings'); setMessage(`Select ${p.model} to resume this build with its original model.`); return;
-    }
-    void action(() => api.resumeRun!(p.id), 'Build resumed from its saved checkpoint.');
-  };
   const journey = p ? getJourneyState(p, { hosted: isHosted }) : null;
   return <div className="app-shell">
     {error && <div className="error-banner" role="alert"><XCircle size={17}/><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
@@ -307,13 +314,13 @@ export default function App({ accountEmail, signOut }: { accountEmail?: string; 
       </header>
       {connectionMessage && <div className="connection-banner" role="status"><RefreshCw size={15}/>{connectionMessage}</div>}
       {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
-      {p && !showHome && active !== 'settings' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} navigate={navigate} start={() => setStart(true)} resume={api.resumeRun ? resumeBuild : undefined} stop={() => void action(() => api.stopRun(p.id), isHosted ? 'Pause requested. Stopping the active phase and keeping the latest checkpoint.' : 'Stop requested. Current artifacts will be kept.')}/>}
+      {p && !showHome && active !== 'settings' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={api.resumeRun ? () => void resumeRun() : undefined} stop={() => void action(() => api.stopRun(p.id), isHosted ? 'Pause requested. Stopping the active phase and keeping the latest checkpoint.' : 'Stop requested. Current artifacts will be kept.')}/>}
       {p && !showHome && active !== 'settings' && !isHosted && <ClarificationNotice project={p} onOpen={openConversation}/>}
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
-      {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
+      {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
       {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}
       {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')} onFiles={() => navigate('artifacts')}/>}
-      {p && active === 'agents' && <AgentSessions key={p.id} project={p}/>}
+      {p && active === 'agents' && <AgentSessions key={p.id} project={p} onReview={() => navigate('evidence')}/>}
       {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onApproved={() => navigate('delivery')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact}/>}

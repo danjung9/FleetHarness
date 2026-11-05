@@ -64,12 +64,14 @@ flowchart LR
 | Intake | Original requirements, `.fleet/packet.json`, derived `scope.md`, `inputs/manifest.json`; synthetic data and documentation when no inputs were supplied | Scope and data boundaries are explicit; supplied inputs are copied or a dedicated data agent produces validated use-case fixtures |
 | Research | `research.md` | Primary-source leads and adopt/adapt/reject decisions; untested integrations labeled |
 | Plan | `plan.md`, `test-matrix.md`, `system-design.json`, `acceptance-plan.json`, `ux-spec.json`, `solution-contract.json`, `evaluation-plan.json` | Architecture and intended user behavior are defined; every criterion maps to capability checks and/or applicable browser journeys, or is explicitly deferred with a reason; required core capabilities cannot be deferred; host freezes all contracts and seals the answer key |
-| Build | Declared runtime files, core modules, tests, `README.md`, core evaluation evidence | Core capability evaluation passes before application completion; user tasks and runtime instructions follow the frozen contracts |
-| Verify | `verification.md`, host-owned test report, screenshots and traces | Node tests and every implemented browser check pass on desktop and narrow viewports; deferred criteria remain unverified and the guide matches the application |
+| Build | Declared runtime files, core modules, tests, `README.md`, core evaluation evidence, recorded visual reviews | Core capability evaluation passes before application completion; browser/service apps have initial reviews and fresh rechecks at both widths with all findings resolved against final runtime files |
+| Verify | `verification.md`, host-owned test report, `visual-review.json`, screenshots and traces | Node tests and every implemented browser check pass on desktop and narrow viewports; the verifier completes its own visual review loop; deferred criteria remain unverified and the guide matches the application. CLI apps do not require visual review |
 | Review | Host-recorded decision | Human inspects the exact verified prototype revision, task evidence and remaining requirements |
 | Deliver | Source/evidence bundle, `path-to-fleet.md` | Source still matches verification and approval; setup and remaining dependencies documented |
 
-The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the architecture and quality plans before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has process and browser timeouts; failed verification remains visible.
+The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the architecture and quality plans before building begins. A fresh run preserves prior work by using a new directory. Worker sessions have no turn-count limit; their time and inactivity limits still apply. Verification has process and browser timeouts, and failed verification remains visible.
+
+Failed and stopped runs with a persisted checkpoint can resume from the interrupted phase. The phase panel and journey header show a **Resume** action. Resuming keeps the run ID, workspace, saved files and completed phases, validates protected inputs and frozen contracts, and creates a fresh agent session for the interrupted phase. It does not restore the old model conversation. Each explicit resume grants one new repair attempt; it never skips independent verification. **Start new build** creates a separate run from the current brief. Older runs without a trusted checkpoint use that new-build path; their saved outputs stay available.
 
 Briefs can include attached UTF-8 text files or named pasted inputs. The host copies these to `inputs/` before agent work and records their provenance in `inputs/manifest.json`. When the brief has no actual inputs, intake launches a separate synthetic-data session after `scope.md` exists. Resource notes and reference URLs alone do not suppress this fallback. The session writes `data/synthetic-data.json` and `data/README.md`, describing the use case, field types, representative records, typical/edge/invalid scenarios and limitations. The host validates the schema and scenarios, then freezes the data for research, planning, application examples and tests. Both supplied input copies and generated fixtures receive integrity checks at subsequent handoffs. The selected engine, cancellation and session budgets apply to the data agent too; invalid output can receive one completion attempt before the build fails.
 
@@ -83,7 +85,7 @@ The host writes `.fleet/quality-contract.md` with the exact JSON formats. The pl
 
 The host validates and freezes all four JSON contracts immediately after planning. It retains the evaluation plan outside the builder workspace until successful verification. Builder and repair agents can fix implementation and application tests, but cannot rewrite frozen solution or acceptance contracts, recreate sealed evaluation keys, or rewrite expected results, turn a failure into a deferral or weaken the UX contract. These expectations come from a separate planning agent; their protection reduces implementation drift, but does not make them independently validated SME ground truth. Domain facts and operational acceptance still need appropriate evidence.
 
-The browser runner exercises the shipped application at desktop and narrow widths and records per-journey results. It captures screenshots and traces under `.quality-evidence/<contract hash>-<run>/<journey>-<viewport>.png` and `.zip`, referenced by the host's `test-report.json`. Agents initially have no dedicated browser tool and must not claim visual inspection they did not perform. They can use returned failure evidence for the one bounded repair; the host reruns both Node and browser checks afterward.
+The browser runner exercises the shipped application at desktop and narrow widths and records per-journey results. It captures screenshots and traces under `.quality-evidence/<contract hash>-<run>/<journey>-<viewport>.png` and `.zip`, referenced by the host's `test-report.json`. Build and verification agents also have [an interactive browser tool](agent-browser.md) that returns actual screenshots and console errors for development. Its observations under `.browser-observations/` are separate from acceptance evidence. Agents can use failure evidence for the one bounded repair; the host reruns both Node and browser checks afterward.
 
 Every implemented check must pass before prototype review. The report tracks criterion and journey status and reports `requirementsMet` separately: deferred requirements stay unverified even if all scoped prototype checks pass. Human review evaluates whether the task flow is understandable and useful; browser automation does not establish complete usability, accessibility or operational readiness.
 
@@ -108,7 +110,11 @@ Related IDs are retained rather than collapsed: an umbrella challenge and a narr
 
 ## Included skills and tools
 
-Sixteen skills live under `skills/`: intake, data preparation, research, planning, UX, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills, including `fleet-data` for the conditional synthetic-data session; each agent session loads only its assigned skills. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+Eighteen skills live under `skills/`: sixteen Fleet skills plus bundled Ponytail and Impeccable. The workspace contains the union of assigned skills, including `fleet-data` for the conditional synthetic-data session; each Pi or Codex agent session loads only its assigned skills. Skill folders include their references, scripts and assets, with file bytes and executable permissions covered by packet integrity checks. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+
+Ponytail guides reuse and simple, complete implementations during research, planning, build and verification. Impeccable guides UI planning, implementation and review alongside `fleet-ux`. Planning has Impeccable available while deciding the runtime; once a CLI contract is frozen, the host removes it from build and verification sessions and their saved phase assignments. Browser and service profiles retain it. The immutable packet records the initial allocation; the project's saved phase plan records the runtime-specific allocation.
+
+The bundled entrypoints adapt upstream guidance to the current phase: no extra agents, approval loops, installation, global hooks or changes to frozen contracts. The existing host gates and shared repair budget remain authoritative. Impeccable's optional engine commands use an offline launcher; when no compatible engine is supplied, agents read the packaged guidance and project context directly and report unavailable checks. Upstream versions, licenses and adaptations are recorded in [third-party skill provenance](../skills/THIRD_PARTY.md).
 
 ### Tool hierarchy
 
@@ -119,14 +125,14 @@ Sixteen skills live under `skills/`: intake, data preparation, research, plannin
 | Phase | Assigned skills | Additional phase tools |
 |---|---|---|
 | Intake | Intake | `fleet_get_challenge` |
-| Research | Research, evidence, recipe domain skills | `fleet_search_evidence` |
-| Plan | Planning, UX, evidence, recipe domain skills | `fleet_system_design` |
-| Build | Recipe domain skills, UX, evidence, delivery | Recipe domain tools, `fleet_component_progress` |
-| Verify / repair | Evidence, UX, recipe domain skills | Recipe domain tools, `fleet_component_progress` |
+| Research | Research, evidence, recipe domain skills, Ponytail | `fleet_search_evidence` |
+| Plan | Planning, UX, evidence, recipe domain skills, Ponytail, Impeccable for UI planning | `fleet_system_design` |
+| Build | Recipe domain skills, UX, evidence, delivery, Ponytail, Impeccable for browser/service | Recipe domain tools, `fleet_component_progress`, `fleet_browser` |
+| Verify / repair | Evidence, UX, recipe domain skills, Ponytail, Impeccable for browser/service | Recipe domain tools, `fleet_component_progress`, `fleet_browser` |
 | Human review | Evidence guidance | No agent tools; preview, evidence and approval controls |
 | Deliver | Delivery guidance | No agent tools; host integrity check and export |
 
-For example, a scheduling build adds `fleet_solve_schedule`; a message build adds `fleet_extract_messages` and `fleet_search_evidence`. The host runs Node and browser tests during verification. There is no dedicated browser tool in the initial agent allocation. A repair stays within verification's allocation and is limited to one shared attempt across both gates.
+For example, a scheduling build adds `fleet_solve_schedule`; a message build adds `fleet_extract_messages` and `fleet_search_evidence`. Build and verification agents use `fleet_browser` to open the declared app, click/type, inspect screenshots and console errors, and reopen after source edits. The host runs independent Node and browser tests during verification. A repair stays within verification's allocation and is limited to one shared attempt across both gates.
 
 The build flow in both interfaces exposes global tools, phase-specific tools, skills, inputs, outputs and the completion gate. Each run persists its assignments with the source packet. Older runs without saved assignments show the proposed assignments for the next run explicitly.
 
@@ -140,7 +146,7 @@ The build flow in both interfaces exposes global tools, phase-specific tools, sk
 | `fleet_search_evidence` | Filter and rank supplied approved documents lexically | No live source connector or semantic answer generation |
 | `fleet_analyze_dependencies` | Calculate a DAG's timing, path and deadline margin | No validated mission-capability model or shared-resource solver |
 
-All tools are local, deterministic transformations of supplied data. Input schemas reject extra properties, payload size is bounded, and outputs identify their scope. The matching dependency-free calculation modules are copied into `.fleet/toolkit/` for generated applications to reuse. They do not impose a common runtime on delivered apps.
+These domain tools are local, deterministic transformations of supplied data. Input schemas reject extra properties, payload size is bounded, and outputs identify their scope. The matching dependency-free calculation modules are copied into `.fleet/toolkit/` for generated applications to reuse. They do not impose a common runtime on delivered apps.
 
 ## Integration points
 

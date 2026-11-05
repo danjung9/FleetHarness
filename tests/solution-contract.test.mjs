@@ -127,7 +127,7 @@ test('contracts reject unknown fields and arbitrary executable evaluators', () =
 });
 
 test('runtime file allowlists reject traversal, host answer keys, secret files and case collisions', () => {
-  for (const file of ['/tmp/engine.mjs', '../engine.mjs', 'nested/../engine.mjs', './engine.mjs', 'nested//engine.mjs', 'C:\\engine.mjs', 'engine;rm.mjs', '.fleet/packet.json', 'inputs/manifest.json', 'evaluation-plan.json', 'EVALUATION-PLAN.JSON', 'data/solution-contract.json', 'node_modules/lib.mjs', '.env', '.env.local', 'a\0b']) {
+  for (const file of ['/tmp/engine.mjs', '../engine.mjs', 'nested/../engine.mjs', './engine.mjs', 'nested//engine.mjs', 'C:\\engine.mjs', 'engine;rm.mjs', '.fleet/packet.json', '.browser-observations/capture.png', 'inputs/manifest.json', 'evaluation-plan.json', 'EVALUATION-PLAN.JSON', 'data/solution-contract.json', 'node_modules/lib.mjs', '.env', '.env.local', 'a\0b']) {
     invalidSolution(value => { value.runtime.files.push(file); }, /relative portable|NUL/);
   }
   invalidSolution(value => { value.runtime.files.push('ENGINE.MJS'); }, /case-insensitive/);

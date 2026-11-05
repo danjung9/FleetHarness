@@ -226,7 +226,7 @@ export class HostedDatabase {
   }
   async approve(userId: string, projectId: string, feedback: string): Promise<Project> {
     const project = await this.getProject(userId, projectId), run = await this.getOwnedRun(userId, projectId);
-    if (!run.manifest || !reportPassed(project.report, project.qualityVersion === 1) || project.report?.sourceHash !== run.manifest.sourceHash) throw new HttpError(409, 'The saved version needs passing verification before approval.');
+    if (!run.manifest || !reportPassed(project.report, project.qualityVersion ?? false) || project.report?.sourceHash !== run.manifest.sourceHash) throw new HttpError(409, 'The saved version needs passing verification before approval.');
     await this.readManifestFiles(run);
     return projectFromRow(await this.rpc<ProjectRow>('fleet_approve_project', { p_user: userId, p_project: projectId, p_run: run.id, p_hash: run.manifest.sourceHash, p_feedback: feedback.slice(0, 8000) }));
   }

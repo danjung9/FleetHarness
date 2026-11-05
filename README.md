@@ -10,6 +10,8 @@ The Electron app now runs **Pi coding agents** for intake, research, planning, i
 
 Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities through a separate sandbox, with no network and output confined to `.agent-output/`.
 
+Build and verification agents can [open and interact with their app](docs/agent-browser.md) in a host-managed browser. They receive actual screenshots, page controls and console errors, then can edit the source and reopen the app to inspect the changes. Pi and Codex both support this loop with image-capable models.
+
 **Windows x64:** use the [latest successful Windows release](https://github.com/danjung9/FleetHarness/releases/latest) once publishing is enabled, or build locally with `npm run dist:win`. This repository is private; sign in to GitHub with repository access to download. See [Windows downloads and team releases](docs/windows-releases.md) for activation status, installation, checksums, and manual upgrades.
 
 **Apple Silicon:** open `release/mac-arm64/AppYard.app` or install the DMG in `release/`. The existing `npm run dist` command still builds macOS ARM64 packages. In either app, connect an engine in **Model settings**, choose a challenge, and start a build.

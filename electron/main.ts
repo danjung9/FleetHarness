@@ -20,6 +20,7 @@ import { ClarificationBroker } from './clarifications.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
 import { randomUUID } from 'node:crypto';
 import { recordReview, reviewFeedback } from './review.js';
+import { readVisualCapture } from './visual-review.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -76,11 +77,11 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
   const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
   const normalized = validateInput(input, catalog);
   const previous = structuredClone({ ...projectBrief(p), sourceChallenge: p.sourceChallenge, status: p.status, runtimeProfile: p.runtimeProfile,
-    report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error,
+    report: p.report, visualReview: p.visualReview, resumeStage: p.resumeStage, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error,
     systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt,
     runCheckpoint: p.runCheckpoint, verification: p.verification, approval: p.approval });
   Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
-  p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+  p.status = 'draft'; p.resumeStage = undefined; p.runtimeProfile = undefined; p.report = undefined; p.visualReview = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
   p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
   p.runCheckpoint = undefined; p.verification = undefined; p.approval = undefined;
   p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
@@ -95,6 +96,14 @@ async function startRun(id: string, fromConversation = false, feedback?: string)
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
   try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
+  finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
+}
+async function resumeRun(id: string) {
+  if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
+  requireIdle(id);
+  let resolve!: () => void;
+  const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+  try { await backend.resume(id); }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
@@ -166,16 +175,9 @@ function registerIPC() {
   });
   handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
   handle('fleet:start', (id: string) => startRun(id));
+  handle('fleet:resume', (id: string) => resumeRun(id));
   handle('fleet:request-changes', (id: string, feedback: string) => {
     reviewFeedback(feedback); return startRun(id, false, feedback);
-  });
-  handle('fleet:resume', async (id: string) => {
-    if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
-    requireIdle(id);
-    let resolve!: () => void;
-    const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
-    try { await backend.resume(id); }
-    finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
   });
   handle('fleet:stop', async (id: string) => {
     const delivery = deliveries.get(id);
@@ -184,6 +186,17 @@ function registerIPC() {
   });
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
+  handle('fleet:visual-review-image', async (id: string, captureId: string) => {
+    if (typeof captureId !== 'string' || !captureId || captureId.length > 200) throw new Error('Choose a recorded screenshot.');
+    const p = store.project(id);
+    if (!p.workspace) throw new Error('This build has no saved screenshots.');
+    const evidence = p.visualReview ?? p.report?.quality?.visualReview;
+    if (!evidence || evidence.runId !== p.runId) throw new Error('Screenshot evidence does not belong to this build.');
+    const capture = evidence.captures.find(item => item.id === captureId);
+    if (!capture) throw new Error('This screenshot was not recorded by the host for this build.');
+    const bytes = await readVisualCapture(p.workspace, capture);
+    return 'data:image/png;base64,' + bytes.toString('base64');
+  });
   handle('fleet:preview', async (id: string) => {
     try { const p = store.project(id); return p.workspace ? await previews.url(p.workspace) : null; }
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || !store.project(id).workspace) return null; throw error; }
@@ -237,7 +250,7 @@ function registerIPC() {
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
-            ...(p.report!.quality.schemaVersion === 2 ? [
+            ...(p.report!.quality.schemaVersion >= 2 ? [
               'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
               'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
             ] : []),

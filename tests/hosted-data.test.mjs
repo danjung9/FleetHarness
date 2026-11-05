@@ -68,6 +68,27 @@ test('artifact reads reject corrupted content and unlisted objects', async () =>
   assert.equal(calls, 1);
 });
 
+test('hosted approval preserves legacy compatibility but rejects declared evidence-version downgrades before publishing', async () => {
+  const report = { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, sourceHash: manifest.sourceHash,
+    quality: { schemaVersion: 1, status: 'passed', errors: [],
+      criteria: [{ criterionId: 'fixture', status: 'passed' }], journeys: [{ id: 'fixture', status: 'passed' }] } };
+  for (const qualityVersion of [undefined, 1, 2, 3]) {
+    let reads = 0, approvals = 0;
+    const database = new HostedDatabase('https://fixture.supabase.co', 'fixture-service', async () => { throw Error('Unexpected network access'); });
+    database.getProject = async () => ({ id: projectId, qualityVersion, report });
+    database.getOwnedRun = async () => ({ ...run, manifest });
+    database.readManifestFiles = async () => { reads++; return [{ path: 'index.html', content }]; };
+    database.rpc = async name => { approvals++; assert.equal(name, 'fleet_approve_project'); return { id: projectId, data: {} }; };
+    if (qualityVersion === 2 || qualityVersion === 3) {
+      await assert.rejects(database.approve(userId, projectId, 'Fixture review'), error => error.status === 409);
+      assert.equal(reads, 0); assert.equal(approvals, 0);
+    } else {
+      await database.approve(userId, projectId, 'Fixture review');
+      assert.equal(reads, 1); assert.equal(approvals, 1);
+    }
+  }
+});
+
 test('source hash is deterministic and binds evidence except approval/report documents', () => {
   const files = [{ path: 'b.js', content: Buffer.from('b') }, { path: 'a.js', content: Buffer.from('a') }];
   assert.equal(hashSourceFiles(files), hashSourceFiles([...files].reverse()));

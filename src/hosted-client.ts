@@ -98,6 +98,7 @@ export function createHostedClient(options: HostedClientOptions) {
     sendMessage: unavailable, cancelMessage: unavailable, answerClarification: unavailable,
     applyConversationAction: unavailable, dismissConversationAction: unavailable, requestChanges: unavailable,
     selectChatGPTAccount: unavailable, reopenChatGPTLogin: unavailable, manageChatGPTUsage: unavailable,
+    visualReviewImage: unavailable,
     refreshNorfolkCatalog: () => mutate('/catalog/refresh'),
     createProject: input => mutate('/projects', input),
     updateProject: (id, input) => mutate(projectPath(id), input, 'PATCH'),

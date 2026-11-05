@@ -49,9 +49,9 @@ test('failed cleanup cannot be approved, exported, or packaged', async t => {
   }
 });
 
-test('a version 2 project cannot deliver with downgraded browser-only verification', async t => {
+for (const version of [2, 3]) test(`a version ${version} project cannot deliver with downgraded browser-only verification`, async t => {
   const { p } = await fixture(t);
-  p.qualityVersion = 2;
+  p.qualityVersion = version;
   assert.throws(() => assertReviewState(p), /required capability and browser evidence/);
 });
 

@@ -14,6 +14,8 @@ import { applicationTestFiles, verifyWorkspace, type VerificationOptions } from 
 import { verifyBrowserJourneys } from './browser-verification.js';
 import { prepareSolutionRuntime, type SolutionRuntime } from './solution-runtime.js';
 import { runSolutionEvaluation } from './solution-evaluation.js';
+import { validateVisualReview } from './visual-review.js';
+import { visualReviewPassed, type VisualReviewReport } from '../shared/visual-review.js';
 
 export interface QualityContract {
   plan: QualityPlan;
@@ -27,6 +29,11 @@ export interface QualityContract {
   sealedEvaluation?: boolean;
 }
 export interface ApplicationVerificationLimits extends VerificationOptions { browserTimeoutMs: number; browserStepTimeoutMs: number }
+export interface ApplicationVerificationOptions extends Partial<ApplicationVerificationLimits> {
+  requireVisualReview?: boolean;
+  /** Supplied from private host state, never loaded from an agent-authored artifact. */
+  visualReview?: VisualReviewReport;
+}
 const legacyFiles = ['acceptance-plan.json', 'ux-spec.json'];
 const solutionFiles = ['solution-contract.json', 'evaluation-plan.json'];
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 4000);
@@ -130,9 +137,9 @@ async function copyApplicationTests(source: string, runtimeRoot: string) {
 }
 
 export async function verifyApplication(root: string, executable: string, contract: QualityContract,
-  signal?: AbortSignal, options: Partial<ApplicationVerificationLimits> = {}, onProcess: (child: ChildProcess) => void = () => {}) {
+  signal?: AbortSignal, options: ApplicationVerificationOptions = {}, onProcess: (child: ChildProcess) => void = () => {}) {
   const started = performance.now();
-  const { browserTimeoutMs, browserStepTimeoutMs, ...nodeLimits } = options;
+  const { browserTimeoutMs, browserStepTimeoutMs, requireVisualReview, visualReview, ...nodeLimits } = options;
   await artifactManifest(root, { requireEntryPoint: !contract.solution || contract.solution.runtime.profile === 'browser' });
   await assertQualityContract(root, contract);
   const before = await sourceHash(root, { excludeEvidence: true });
@@ -183,6 +190,15 @@ export async function verifyApplication(root: string, executable: string, contra
       timeoutMs: browserTimeoutMs, stepTimeoutMs: browserStepTimeoutMs });
   }
   errors.push(...browser.errors);
+  if (requireVisualReview && contract.solution?.runtime.profile !== 'cli') {
+    if (!contract.solution) errors.push('Visual review requires a frozen application runtime.');
+    else {
+      errors.push(...(await validateVisualReview(root, contract.solution.runtime, visualReview, 'verify')).map(error => 'Visual review: ' + error));
+      if (visualReview?.contractHash !== contract.hash) errors.push('Visual review does not match the frozen requirements.');
+      if (!packageEvidence?.filesHash || visualReview?.filesHash !== packageEvidence.filesHash) errors.push('Visual review does not match the independently verified application files.');
+      else if (!visualReviewPassed(visualReview, packageEvidence.filesHash, 'verify')) errors.push('Visual review session did not complete successfully.');
+    }
+  }
   signal?.throwIfAborted();
   await assertQualityContract(root, contract);
   if (before !== await sourceHash(root, { excludeEvidence: true })) throw new Error('Source files changed during application verification. Run verification again before review.');
@@ -205,9 +221,10 @@ export async function verifyApplication(root: string, executable: string, contra
     && browser.journeys.every(journey => journey.status === 'passed') && !criteria.some(criterion => criterion.status === 'failed')
     && (!contract.solution || (packageEvidence?.status === 'passed' && solutionEvaluation?.status === 'passed'
       && capabilities.some(capability => capability.required) && capabilities.filter(capability => capability.required).every(capability => capability.status === 'passed')));
-  const quality: QualityReport = { schemaVersion: contract.solution ? 2 : 1, contractHash: contract.hash,
+  const quality: QualityReport = { schemaVersion: requireVisualReview ? 3 : contract.solution ? 2 : 1, contractHash: contract.hash,
     status: passed ? 'passed' : 'failed', requirementsMet: criteria.length > 0 && criteria.every(criterion => criterion.status === 'passed'),
     criteria, journeys: browser.journeys, errors,
+    ...(requireVisualReview && visualReview ? { visualReview: structuredClone(visualReview) } : {}),
     ...(contract.solution ? { expectedJourneys: contract.plan.journeys.length * 2, capabilities, solutionEvaluation, package: packageEvidence } : {}) };
   const summary = [
     ...(contract.solution ? [`Clean package: ${packageEvidence?.status ?? 'failed'}.`,
@@ -215,6 +232,8 @@ export async function verifyApplication(root: string, executable: string, contra
       ...capabilities.filter(capability => capability.status !== 'passed').map(capability => `${capability.id}: ${capability.detail}`),
       ...(solutionEvaluation?.evaluations ?? []).filter(evaluation => evaluation.status !== 'passed').map(evaluation => `${evaluation.id}: score ${evaluation.actual}, threshold ${evaluation.threshold}; ${evaluation.cases.filter(item => !item.passed).map(item => `${item.id}: ${item.detail}`).join(' ')}`)] : []),
     `Browser journeys: ${quality.journeys.filter(journey => journey.status === 'passed').length}/${contract.plan.journeys.length * 2} passed.`,
+    ...(requireVisualReview ? [contract.solution?.runtime.profile === 'cli' ? 'Visual review: not applicable to a command-line application.'
+      : `Visual review: ${errors.some(error => error.startsWith('Visual review')) ? 'failed' : 'passed'}; initial captures and rechecks required at desktop and narrow sizes.`] : []),
     ...quality.journeys.filter(journey => journey.status === 'failed').map(journey => `${journey.id} (${journey.viewport}): ${journey.detail}`),
     ...quality.errors,
     `Requirements: ${criteria.filter(criterion => criterion.status === 'passed').length} demonstrated, ${criteria.filter(criterion => criterion.status === 'failed').length} failed, ${criteria.filter(criterion => criterion.status === 'unverified').length} unverified.`

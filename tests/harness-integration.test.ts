@@ -11,7 +11,7 @@ import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/in
 import { createFleetTools } from '../harness/pi-tools.js';
 import { toolRegistry } from '../harness/tool-registry.js';
 import { fixtures } from '../harness/fixtures.js';
-import { globalAgentTools, toolsForPhase } from '../harness/phases.js';
+import { globalAgentTools, toolsForPhase, phasesForRecipe, resolvePhaseForRuntime, syntheticDataPhase } from '../harness/phases.js';
 import { normalizeProjectInput } from '../shared/project-input.js';
 import { norfolkSnapshot } from '../harness/norfolk-snapshot.js';
 
@@ -105,15 +105,34 @@ test('global workspace tools are inherited while phase tools remain scoped to th
     assert.deepEqual(byId('intake').tools, ['fleet_get_challenge']);
     assert.deepEqual(byId('research').tools, ['fleet_search_evidence']);
     assert.deepEqual(byId('plan').tools, ['fleet_system_design']);
-    assert.deepEqual(byId('build').tools, [...packet.recipe.tools, 'fleet_component_progress']);
-    assert.deepEqual(byId('verify').tools, [...packet.recipe.tools, 'fleet_component_progress']);
+    assert.deepEqual(byId('build').tools, [...packet.recipe.tools, 'fleet_component_progress', 'fleet_browser', 'fleet_visual_review']);
+    assert.deepEqual(byId('verify').tools, [...packet.recipe.tools, 'fleet_component_progress', 'fleet_browser', 'fleet_visual_review']);
     assert.ok(!byId('plan').skills.includes('fleet-delivery'));
   }
   const packet = createPacket('11'), build = packet.stages.find(s => s.id === 'build')!;
   assert.deepEqual(createFleetTools(toolsForPhase(build)).map(t => t.name), ['fleet_solve_schedule']);
   assert.deepEqual(createFleetTools([]), []);
   // Adding a tool at the global level is inherited; overlapping assignments are deduplicated.
-  assert.deepEqual(toolsForPhase(build, ['read', 'fleet_solve_schedule']), ['read', 'fleet_solve_schedule', 'fleet_component_progress']);
+  assert.deepEqual(toolsForPhase(build, ['read', 'fleet_solve_schedule']), ['read', 'fleet_solve_schedule', 'fleet_component_progress', 'fleet_browser', 'fleet_visual_review']);
+});
+test('craft skills follow agent roles across recipes and the frozen CLI runtime', () => {
+  assert.deepEqual(syntheticDataPhase.skills, ['fleet-data']);
+  for (const recipe of Object.values(recipes)) {
+    const phases = phasesForRecipe(recipe);
+    for (const phase of phases) {
+      assert.equal(phase.skills.includes('ponytail'), ['research', 'plan', 'build', 'verify'].includes(phase.id));
+      assert.equal(phase.skills.includes('impeccable'), ['plan', 'build', 'verify'].includes(phase.id));
+      for (const profile of ['browser', 'service', undefined] as const) {
+        assert.deepEqual(resolvePhaseForRuntime(phase, profile), phase);
+      }
+      const cli = resolvePhaseForRuntime(phase, 'cli');
+      assert.equal(cli.skills.includes('impeccable'), phase.id === 'plan');
+      assert.equal(cli.tools.includes('fleet_visual_review'), false);
+      assert.deepEqual(cli.skills.filter(skill => skill !== 'impeccable'), phase.skills.filter(skill => skill !== 'impeccable'));
+      assert.deepEqual(resolvePhaseForRuntime(cli, 'cli'), cli);
+      assert.equal(phase.skills.includes('impeccable'), ['plan', 'build', 'verify'].includes(phase.id), 'Runtime resolution must preserve the original packet');
+    }
+  }
 });
 test('workspace handoff materializes executable primitives, selected skills and immutable source context', async t => {
   const workspace=await temporary(t);
