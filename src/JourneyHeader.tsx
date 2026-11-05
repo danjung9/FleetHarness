@@ -13,6 +13,7 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
   navigate: (view: View) => void; start: () => void; stop: () => void;
 }) {
   const journey = getJourneyState(project);
+  const pendingQuestion = project.status === 'running' && project.conversation?.questions.find(question => question.status === 'pending' && question.runId === project.runId);
   const startLabel = !isDesktop ? 'Desktop setup' : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
   let nextAction = null;
   if (project.status === 'running') {
@@ -29,7 +30,7 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
       {isDesktop && configured ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
     </button>;
   }
-  const message = project.status === 'draft' && !isDesktop
+  const message = pendingQuestion ? `${pendingQuestion.phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer in Project lead.` : project.status === 'draft' && !isDesktop
     ? 'Brief saved in this browser. Open the desktop app to build.'
     : project.status === 'draft' && !configured
       ? 'Brief saved. Connect a model when you’re ready to build.' : journey.message;

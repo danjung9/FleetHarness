@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "computation": {
+    "version": "1.0.0",
+    "files": {
+      "validation.js": "af583a5bd565d77b9b1dfdfa50d17344c2518c5d196aa249139fb552c98b778f",
+      "messages.js": "1f00e4691f3c20f5b15149a258b288268494003dcd18271e4751ef8179e76aad",
+      "scheduling.js": "df1516b6be05527c8b4f1a6cbf70df81569e3f57fa69f525ce2144d16bc13ecf",
+      "offline.js": "a993ac55e386c64d7be1b7883873e8976ffb9bb71c5e3afea1d3cc77b814a756",
+      "evidence.js": "1444be76f46c0dc5d74934e2898441e1a533bb284953aaa53bc11912633d9617",
+      "readiness.js": "b1178292545082d2f2521987563386153465211e958ab8541a9e6e17f4ef80c8"
+    }
+  },
+  "templates": [
+    {
+      "id": "node-service",
+      "version": "1.0.0",
+      "files": {
+        "server.mjs": "b4ee7c4947312a15dca5e3e81eb34226fbd79238b1fc575632e342e7310e6864",
+        "compute.mjs": "05e10a90405c7c8f638d6746aea44f6272407115b61691f553412c8fa6a7aa02",
+        "package.json": "92ed1ff0bbc999477871bb4faf6327c6d8261ab9a57eec87ef874782223cd455",
+        "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+        "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+        "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+        "FOUNDATION.md": "54478d77b77e1c561e867c2f9058c8e87e7afb5bf13696545f1fbd5d5e88480b"
+      }
+    },
+    {
+      "id": "python-service",
+      "version": "1.0.0",
+      "files": {
+        "server.py": "63066bce62eb88bd77d63d98373a77e6f8a3246821000e105482e2f191889a5d",
+        "compute.py": "22861322daa13269f3587d2e8652701bdcb169c6cb73fffec15efc918c0011e8",
+        "public/index.html": "90f0140cf3a920bda60fc482fb0a86a6f94d03506ff8938f02208759f4f877e1",
+        "public/app.js": "c8ba2c5dee7948af10fd2f73f6e06f0ec93dc3f0f1fb26fd48506e5400bb707a",
+        "public/styles.css": "bac3cc6e345654b7af3148136e72bda35acc41276a47287555f6b7204f917764",
+        "FOUNDATION.md": "1dbed05cc02f1fa9ac645475ae4f6b95957ab61c26ea40c77275ae25cb58704b"
+      }
+    }
+  ]
+}

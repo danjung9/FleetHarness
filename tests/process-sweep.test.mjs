@@ -258,7 +258,7 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
     const backend = new FleetBackend(store, process.execPath, () => {
       if (['stopped', 'review'].includes(project.status) && owned && !owned.exited) prematureStatus = true;
     }, path.resolve('.'), {
-      codex: { home: root, models: [{ id: 'fixture', configured: true }], async refresh() {} },
+      codex: { home: root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), models: [{ id: 'fixture', configured: true }], async refresh() {} },
       processSweep: () => new RunProcessSweep({ graceMs: 1, killMs: outcome === 'cleanup-failure' ? 20 : 500,
         scan: async marker => jobs.filter(j => !j.exited && j.env.APPYARD_RUN_PROCESS === marker)
           .map(j => ({ pid: j.child.pid, started: 'fixture' })),

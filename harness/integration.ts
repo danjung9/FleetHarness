@@ -9,6 +9,9 @@ import { toolRegistry } from './tool-registry.js';
 import { compareText } from './tools/validation.js';
 import type { BriefContext } from '../shared/types.js';
 import { qualityContractGuide } from './quality-contract.js';
+import { solutionContractGuide } from './solution-contract.js';
+import { syntheticDataPhase } from './phases.js';
+import { prepareFoundationPacket } from './foundations.js';
 export { fleetStagePrompt } from './planner.js';
 
 export interface PrepareFleetWorkspaceInput extends BriefContext {
@@ -22,17 +25,23 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   const target = path.join(workspace,'.fleet');
   const files = new Map<string,string>();
   const json = (data:unknown) => JSON.stringify(data,null,2)+'\n';
-  files.set('packet.json',json({...packet,userScope:{title:input.title,description:input.description,criteria:input.criteria,resources:input.resources ?? '',links:input.links ?? []}}));
+  const hasInputs = !!input.dataInputs?.length;
+  files.set('packet.json',json({...packet, dataPolicy: hasInputs ? 'user-provided-or-synthetic' : packet.dataPolicy,
+    userScope:{title:input.title,description:input.description,criteria:input.criteria,inputs:input.inputs ?? '',outputs:input.outputs ?? '',resources:input.resources ?? '',links:input.links ?? [],
+      dataInputs:(input.dataInputs ?? []).map(({name,kind,content}) => ({name,kind,bytes:Buffer.byteLength(content,'utf8')})),
+      inputManifest:'inputs/manifest.json'}}));
   files.set('fixtures.json',json({classification:'synthetic',scope:'toolkit-reference-inputs',fixtures}));
   files.set('tool-schemas.json',json(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters}))));
   files.set('quality-contract.md',qualityContractGuide);
+  files.set('solution-contract.md',solutionContractGuide);
+  for (const [name, body] of await prepareFoundationPacket(packet.recipe.id, input.resourcesRoot)) files.set(name, body);
   files.set('README.md',`# AppYard challenge packet\n\nSource: ${packet.challenge.sourceUrl || 'User-supplied problem'}\nRecipe: ${packet.recipe.title}\n\nAll fixture data is synthetic. Source requirements and prototype scope are separate in packet.json.\n\nRead the selected skills before implementation. toolkit/ contains dependency-free JavaScript calculation primitives; these do not supply production persistence, transport, identity or complete applications. Do not edit this directory during the run.\n\nToolkit tests are not evidence that the generated application works. Write application tests against its actual code.\n`);
   files.set('toolkit/package.json',json({type:'module',private:true}));
   for (const name of ['validation','messages','scheduling','offline','evidence','readiness']) {
     const source = fileURLToPath(new URL(`./tools/${name}.js`,import.meta.url));
     files.set(`toolkit/${name}.js`,await fs.readFile(source,'utf8'));
   }
-  const skills = [...new Set(packet.stages.flatMap(phase => phase.skills))];
+  const skills = [...new Set([...packet.stages.flatMap(phase => phase.skills), ...syntheticDataPhase.skills])];
   for (const skill of skills) {
     const content = await fs.readFile(path.join(input.resourcesRoot,'skills',skill,'SKILL.md'),'utf8');
     files.set(`skills/${skill}/SKILL.md`,content);
@@ -66,7 +75,7 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
     } finally { await fs.rm(temporary,{recursive:true,force:true}); }
   }
   return {challengeId:input.challengeId,packetHash:hash,acceptance:packet.acceptance,phases:packet.stages,globalTools:packet.globalTools,skillPaths:skills.map(skill => path.join(target,'skills',skill)),
-    context:`AppYard packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md and .fleet/quality-contract.md. Use only the skills and tools assigned to the current phase.\nData boundary: synthetic-only. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}`};
+    context:`AppYard packet: .fleet/packet.json\nRecipe: ${packet.recipe.title}\nSource: ${packet.challenge.sourceUrl || 'User-defined'}\nRead .fleet/README.md and .fleet/quality-contract.md. Use only the skills and tools assigned to the current phase.\nReusable foundations: .fleet/foundation-catalog.json and .fleet/foundation-guide.md. The host copies the chosen versioned foundation before implementation; extend its shared backend instead of rebuilding setup.\nData boundary: ${hasInputs ? 'the inputs explicitly attached to this brief and clearly labeled synthetic examples' : 'synthetic-only; a dedicated data agent prepares use-case fixtures during intake'}. Read inputs/manifest.json; preserve supplied files and validated data artifacts. Respect any stricter source requirement. Toolkit calculations and reference fixtures are not application verification.\nKnown gaps: ${packet.unknowns.join('; ')}`};
 }
 
 /** Compare against a hash retained by the host, not a hash chosen by generated code. */

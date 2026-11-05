@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import type { AgentBackend, Bootstrap, FleetAPI } from '../shared/types';
 import './model-settings.css';
 
@@ -17,6 +17,9 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
   const account = data.chatgpt;
   const connecting = account?.status === 'connecting';
   const connected = account?.status === 'connected';
+  const planReady = connected && account.planUsageEnabled === true;
+  const accounts = account?.accounts ?? [];
+  const activeAccountId = account?.activeAccountId;
   const running = data.state.projects.some(p => p.status === 'running');
   const disabled = busy || !desktop || running;
   const updateRef = useRef(updated); updateRef.current = updated;
@@ -48,28 +51,38 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     </fieldset>
     {backend === 'codex' ? <div className="chatgpt-connection">
       <h3>ChatGPT account</h3>
-      <p>Use the Codex allowance included with your ChatGPT plan. Availability and usage limits depend on your account.</p>
+      <p>Use your ChatGPT plan for builds. Availability and usage limits depend on your account.</p>
+      {accounts.length > 0 && <label className="saved-chatgpt-account">Saved account<select aria-label="Saved ChatGPT account" value={activeAccountId ?? ''} disabled={disabled || connecting} onChange={e => void action(async () => { updated(await api.selectChatGPTAccount(e.target.value)); setModel(''); })}>
+        {!activeAccountId && <option value="" disabled>Choose an account</option>}
+        {accounts.map(saved => <option key={saved.id} value={saved.id}>{saved.label}{saved.email && saved.email !== saved.label ? ` · ${saved.email}` : ''}{saved.connected ? '' : ' · signed out'}</option>)}
+      </select></label>}
       <div role="status" aria-live="polite">
         {connected ? <p className="account-identity"><CheckCircle2 size={17}/><span>{account.email || 'ChatGPT connected'}{account.plan && <small>{account.plan} plan</small>}</span></p>
-          : connecting ? <p className="account-identity"><Loader2 size={17}/><span>Finish signing in in your browser. This screen updates automatically.</span></p> : <p>Sign in to connect your subscription.</p>}
+          : connecting ? <p className="account-identity"><Loader2 size={17}/><span>Finish signing in in your browser. This screen updates automatically.</span></p> : <p>{activeAccountId ? 'Reconnect this account to use your ChatGPT plan.' : 'Sign in and allow ChatGPT plan usage to connect your account.'}</p>}
+        {connected && <p>{planReady ? 'You’re using your ChatGPT plan' : 'Your account is signed in. Enable ChatGPT plan usage to choose a model and run builds.'}</p>}
       </div>
       {account?.error && <p className="connection-error" role="alert">{account.error}</p>}
       <div className="connection-actions">
-        {connecting ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.cancelChatGPTLogin()))}>Cancel sign-in</button>
-          : connected ? <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'ChatGPT signed out of AppYard.')}>Sign out</button>
-          : <button className="button primary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT()))}>Continue with ChatGPT <ArrowRight size={16}/></button>}
-        {!connecting && <button className="button secondary" type="button" disabled={busy || !desktop} onClick={() => void action(async () => updated(await api.refreshChatGPT()))}><RefreshCw size={14}/>Refresh connection</button>}
+        {connecting ? <>
+          <button className="button primary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.reopenChatGPTLogin()))}>Reopen browser <ExternalLink size={14}/></button>
+          <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.cancelChatGPTLogin()))}>Cancel sign-in</button>
+        </> : <>
+          {!planReady && <button className="button primary" type="button" data-oai-siwc-button="" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT(activeAccountId)))}>{connected ? 'Enable ChatGPT plan usage' : activeAccountId ? 'Reconnect account' : 'Continue with ChatGPT'} <ArrowRight size={16}/></button>}
+          {connected && <button className="button secondary" type="button" disabled={busy || !desktop} onClick={() => void action(() => api.manageChatGPTUsage())}>Manage ChatGPT usage <ExternalLink size={14}/></button>}
+          {connected && <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), 'ChatGPT signed out of AppYard.')}>Sign out</button>}
+          {accounts.length > 0 && <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT()))}>Add account</button>}
+          <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.refreshChatGPT()))}><RefreshCw size={14}/>Refresh connection</button>
+        </>}
       </div>
-      {connected && <div className="subscription-usage">{account.limits?.length ? account.limits.map((limit, i) => <div key={i}><span>{limit.label}</span><strong>{Math.round(limit.usedPercent)}% used</strong>{limit.resetsAt && <small>Resets {new Date(limit.resetsAt * 1000).toLocaleString()}</small>}</div>) : <p>Usage details are currently unavailable.</p>}</div>}
-      <p className="connection-note">Sign-in opens OpenAI in your browser. AppYard keeps its Codex login locally, separate from your other Codex apps. No API key is needed.</p>
+      <p className="connection-note">Sign-in opens OpenAI in your browser. AppYard stores its own login locally, separate from your other apps. No API key is needed.</p>
     </div> : <>
       <label>Provider<select aria-label="Provider" value={provider} disabled={disabled} onChange={e => { setProvider(e.target.value); setModel(''); }}><option value="">Select a provider</option>{providers.map(p => <option key={p} value={p}>{p}{allModels.find(m => m.provider === p)?.configured ? ' · connected' : ''}</option>)}</select></label>
       <label>API key <span className="field-hint">Leave blank to use existing Pi credentials.</span><input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>
       <label className="checkbox checkbox-label"><input type="checkbox" checked={remember} disabled={disabled} onChange={e => setRemember(e.target.checked)}/>Remember this key using operating-system encryption</label>
     </>}
-    <label>Model<select aria-label="Model" value={backend === 'codex' && !connected ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !connected)} onChange={e => setModel(e.target.value)}><option value="" disabled>{backend === 'codex' && !connected ? 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
-    {backend === 'codex' && connected && <p className="connection-note">Model access depends on your plan and workspace.</p>}
+    <label>Model<select aria-label="Model" value={backend === 'codex' && !planReady ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !planReady)} onChange={e => setModel(e.target.value)}><option value="" disabled>{backend === 'codex' && !planReady ? connected ? 'Enable plan usage to choose a model' : 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
+    {backend === 'codex' && planReady && <p className="connection-note">Model access depends on your plan and workspace.</p>}
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
-    <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !connected)} type="submit">Save model settings <ArrowRight size={16}/></button>
+    <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !planReady)} type="submit">Save model settings <ArrowRight size={16}/></button>
   </form>;
 }

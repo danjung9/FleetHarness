@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
+import type { ClarificationAnswer } from '../shared/conversation.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
+  sendMessage: (id: string, text: string) => ipcRenderer.invoke('fleet:conversation:send', id, text),
+  cancelMessage: (id: string) => ipcRenderer.invoke('fleet:conversation:cancel', id),
+  answerClarification: (id: string, questionId: string, answer: string | ClarificationAnswer) => ipcRenderer.invoke('fleet:conversation:answer', id, questionId, answer),
+  applyConversationAction: (id: string, actionId: string) => ipcRenderer.invoke('fleet:conversation:apply', id, actionId),
+  dismissConversationAction: (id: string, actionId: string) => ipcRenderer.invoke('fleet:conversation:dismiss', id, actionId),
   bootstrap: () => ipcRenderer.invoke('fleet:bootstrap'),
   refreshNorfolkCatalog: () => ipcRenderer.invoke('fleet:norfolk:refresh'),
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),
@@ -17,7 +23,10 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
   setDeveloperMode: (enabled: boolean) => ipcRenderer.invoke('fleet:developer-mode', enabled),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),
-  connectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:connect'),
+  connectChatGPT: (accountId?: string) => ipcRenderer.invoke('fleet:chatgpt:connect', accountId),
+  selectChatGPTAccount: (accountId: string) => ipcRenderer.invoke('fleet:chatgpt:select', accountId),
+  reopenChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:reopen'),
+  manageChatGPTUsage: () => ipcRenderer.invoke('fleet:chatgpt:usage'),
   cancelChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:cancel'),
   disconnectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:disconnect'),
   refreshChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:refresh'),

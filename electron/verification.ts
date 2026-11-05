@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { listArtifacts, sourceHash } from './storage.js';
-import { codexExecutable } from './codex-rpc.js';
+import { generatedSandboxCommand } from './generated-sandbox.js';
 import type { TestReport } from '../shared/types.js';
 import { runProcessEnvironment } from './process-sweep.js';
 export { reportPassed } from '../shared/verification.js';
@@ -92,26 +92,14 @@ function sandboxStartupFailure(output: string) {
 }
 
 async function sandboxCommand(root: string, executable: string, testArgs: string[]) {
-  const runner = codexExecutable(), runtime = await fs.realpath(executable);
-  // Electron is the shipped Node runtime. On macOS it also needs its sibling Frameworks directory.
-  const bundle = runtime.match(/^(.*\.app)[/\\]Contents[/\\]/)?.[1];
-  const runtimeRoot = bundle ?? (runtime.startsWith('/opt/homebrew/') ? '/opt/homebrew' : path.dirname(runtime));
-  // Match the agents' fleet-build policy, using a fresh scratch home with no credentials.
-  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
-  const filesystem = { ':root': 'deny', ':minimal': 'read', ':workspace_roots': 'write',
-    ...Object.fromEntries(toolchains.map(folder => [folder, 'read'])) };
-  const toml = '{' + Object.entries(filesystem).map(([key, value]) => JSON.stringify(key) + '=' + JSON.stringify(value)).join(',') + '}';
   const ready = 'appyard-verification-ready-' + randomUUID() + '\n';
   // The bootstrap runs INSIDE the sandbox, before any generated code. Its marker distinguishes
   // sandbox/runtime startup failure from an ordinary failing application test.
   const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(testArgs)},{stdio:'inherit'});child.once('error',e=>{console.error('Could not start Node tests: '+e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
-  return { runner, ready, command: 'codex sandbox -P fleet-build -- node ' + testArgs.map(arg => JSON.stringify(arg)).join(' '), args: ['sandbox', '-P', 'fleet-build',
-    '-c', 'permissions.fleet-build.filesystem=' + toml,
-    '-c', 'permissions.fleet-build.network.enabled=false',
-    '-c', 'projects={' + JSON.stringify(await fs.realpath(root)) + '={trust_level="untrusted"}}',
-    '--', runtime, '--input-type=commonjs', '-e', bootstrap] };
+  const command = await generatedSandboxCommand(root, executable, ['--input-type=commonjs', '-e', bootstrap]);
+  return { ...command, ready, command: 'codex sandbox -P fleet-build -- node ' + testArgs.map(arg => JSON.stringify(arg)).join(' ') };
 }
-export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}): Promise<TestReport> {
+export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}, runtimeEnvironment?: NodeJS.ProcessEnv): Promise<TestReport> {
   const { launcher = sandboxCommand, ...overrides } = options;
   const limits = { timeoutMs: 120_000, maxOutputBytes: 2_000_000, ...overrides };
   for (const [key, value] of Object.entries(limits)) {
@@ -123,7 +111,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = ['--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
+  const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
   let command: VerificationCommand, home: string;
   try {
     command = await launcher(root, executable, args);
@@ -133,7 +121,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
-    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
       CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
       cwd: root, env: environment,
@@ -207,7 +195,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     if (signal?.aborted) throw new Error('Run stopped.');
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
-      portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment },
+      portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment: Object.fromEntries(Object.entries(environment).map(([key, value]) => [key, runtimeEnvironment?.[key] && !['PATH', 'HOME', 'TMPDIR', 'TEMP', 'TMP', 'ELECTRON_RUN_AS_NODE', 'LANG', 'PYTHONDONTWRITEBYTECODE', 'VIRTUAL_ENV'].includes(key) ? '[redacted]' : value])) },
       exitCode: timedOut || overflow ? null : evidence.problem ? 1 : exitCode,
       total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
       registeredTests: evidence.registeredTests, output, durationMs: Math.round(performance.now() - started), sourceHash: hash };

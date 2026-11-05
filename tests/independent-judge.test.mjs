@@ -335,7 +335,7 @@ test('judge evidence cannot overwrite application source through a builder-creat
   assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), true);
 });
 
-test('fake-engine production workflow reaches review after two repairs with the final NOT and every gap saved', { timeout: 10000 }, async t => {
+test('fake-engine production workflow blocks review after two repairs with the final NOT and every gap saved', { timeout: 10000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const root = await fs.mkdtemp(path.resolve('.tmp/judge-backend-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -354,7 +354,9 @@ test('fake-engine production workflow reaches review after two repairs with the 
           journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] }, verificationNumber: ++verifications })
     } });
     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
-    const { qualityFixture, qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
+    const { qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
+    const { solutionFixture } = await import('./scripts/solution-fixture.mjs');
+    const { syntheticDataFiles } = await import('./scripts/data-fixture.mjs');
     const store = new Store(process.env.JUDGE_TEST_ROOT); await store.init();
     store.state.projects[0] = newProject(qualityFixtureProject);
     store.state.settings = { backend: 'pi', provider: 'fixture', model: 'fixture' };
@@ -371,8 +373,14 @@ test('fake-engine production workflow reaches review after two repairs with the 
     });
     backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
     backend.agent = async (p, run, stage, provider, model, instruction) => {
+      if (instruction.includes('You are the synthetic data agent')) {
+        for (const [name, body] of Object.entries(syntheticDataFiles)) {
+          await fs.mkdir(path.dirname(path.join(p.workspace, name)), { recursive: true });
+          await fs.writeFile(path.join(p.workspace, name), body);
+        }
+      }
       if (stage === 'plan') {
-        for (const [name, body] of Object.entries(qualityFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
+        for (const [name, body] of Object.entries(solutionFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
         await fs.writeFile(path.join(p.workspace, 'plan.md'), 'Synthetic implementation plan');
         await fs.writeFile(path.join(p.workspace, 'test-matrix.md'), 'Synthetic acceptance mapping');
       }
@@ -386,9 +394,10 @@ test('fake-engine production workflow reaches review after two repairs with the 
       }
     };
     await backend.start(project.id); await backend.active.get(project.id)?.done;
-    assert.equal(project.status, 'review', project.error);
-    assert.equal(project.stages.find(s => s.id === 'verify').status, 'complete');
-    assert.equal(project.stages.find(s => s.id === 'review').status, 'review');
+    assert.equal(project.status, 'failed', project.error);
+    assert.match(project.error, /Independent judgment did not pass/);
+    assert.equal(project.stages.find(s => s.id === 'verify').status, 'failed');
+    assert.equal(project.stages.find(s => s.id === 'review').status, 'queued');
     assert.equal(project.approvedAt, undefined);
     assert.equal(judgments, 3); assert.equal(repairs, 2); assert.equal(verifications, 3);
     const saved = new Store(store.root); await saved.init();

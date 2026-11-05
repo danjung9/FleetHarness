@@ -27,7 +27,7 @@ export async function mainHarness(store, backend = { active: new Map() }, source
     ...storage, ...delivery, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
-    PreviewServers: class { close() {} }, shell: { showItemInFolder() {} },
+    PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },
     dialog: {}, safeStorage: {}, Menu: {}, BrowserWindow: class {},
     setTimeout, clearTimeout, AbortController, structuredClone, console,
     hostStore: store, hostBackend: backend,

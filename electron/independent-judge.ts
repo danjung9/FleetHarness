@@ -8,7 +8,7 @@ import type { AgentBackend, TestReport, StageTokenUsage } from '../shared/types.
 import { runAgentStage, tokenUsage, type AgentLimits, type StageEvent, type StageSession } from './agent-runner.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
 import { listArtifacts, safeFile, sourceHash } from './storage.js';
-import { CodexRpc } from './codex-rpc.js';
+import { CodexRpc, CHATGPT_MODEL_PROVIDER, CHATGPT_ACCESS_TOKEN_ENV, type CodexCredentials } from './codex-rpc.js';
 
 export interface JudgeGap { requirement: string; evidence: string; fix: string }
 interface Verdict { verdict: 'SATISFACTORY' | 'NOT'; gaps: JudgeGap[]; evaluationError?: string }
@@ -22,6 +22,7 @@ type JudgedReport = TestReport & { independentJudge: IndependentJudgment };
 interface JudgeEngine {
   backend: AgentBackend; model: string; provider: string; runtime: ModelRuntime; agentDir: string; codexHome?: string;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
+  getCodexCredentials?: () => Promise<CodexCredentials>;
   launchCodex?: (home: string) => CodexRpc;
 }
 interface Options {
@@ -56,11 +57,11 @@ async function judgeSnapshot(workspace: string, report: TestReport) {
   const files = new Map<string, string>();
   const tests = new Set(await applicationTestFiles(workspace));
   const named = new Set(['requirements.md', 'index.html', 'README.md', 'verification.md', 'path-to-fleet.md',
-    'acceptance-plan.json', 'ux-spec.json', 'test-matrix.md']);
+    'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'foundation-plan.json', 'clarifications.json', 'test-matrix.md']);
   for (const file of await listArtifacts(workspace)) {
     const name = file.path.replaceAll(path.sep, '/');
     if (!named.has(name) && !tests.has(file.path) && !/^\.quality-evidence\/.*\.(?:json|txt|md)$/.test(name)
-      && !/^(?!\.).*\.(?:js|cjs|mjs|css)$/.test(name)) continue;
+      && !/^(?!\.).*\.(?:js|cjs|mjs|css|py|html)$/.test(name)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('Judge input exceeds the 10 MB artifact limit: ' + name);
     files.set(name, await fs.readFile(await safeFile(workspace, file.path), 'utf8'));
   }
@@ -71,7 +72,7 @@ async function judgeSnapshot(workspace: string, report: TestReport) {
     files.set('acceptance-inventory.json', JSON.stringify(packet.acceptance, null, 2));
   } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   files.set('test-report.json', JSON.stringify(report, null, 2));
-  for (const required of ['requirements.md', 'index.html']) if (!files.has(required)) throw new Error('Missing judge input: ' + required);
+  for (const required of ['requirements.md', ...(report.quality?.schemaVersion === 2 ? ['solution-contract.json'] : ['index.html'])]) if (!files.has(required)) throw new Error('Missing judge input: ' + required);
   return files;
 }
 
@@ -94,7 +95,7 @@ function readTool(files: Map<string, string>): ToolDefinition {
 async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortSignal, instructions: string,
   tool: ToolDefinition, answer: (text: string) => void): Promise<StageSession> {
   if (!engine.codexHome) throw new Error('The judge requires the configured Codex home.');
-  const rpc = (engine.launchCodex ?? CodexRpc.launch)(engine.codexHome);
+  const rpc = engine.launchCodex ? engine.launchCodex(engine.codexHome) : CodexRpc.launch(engine.codexHome, await engine.getCodexCredentials!());
   const listeners = new Set<(event: StageEvent) => void>();
   const emit = (event: object) => { for (const fn of listeners) fn(event as StageEvent); };
   let thread = '', turn = '', finalText = '', explicitFinal = false;
@@ -158,8 +159,8 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
   try {
     signal.throwIfAborted(); await rpc.initialize(); signal.throwIfAborted();
     const result = await rpc.request('thread/start', {
-      cwd: workspace, model: engine.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
-      config: { web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
+      cwd: workspace, model: engine.model, modelProvider: CHATGPT_MODEL_PROVIDER, approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
+      config: { 'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV], web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
         'features.multi_agent': false, 'features.goals': false, 'features.view_image': false, 'features.apps': false, 'features.plugins': false },
       baseInstructions: instructions, developerInstructions: instructions,
       dynamicTools: [{ type: 'function', name: tool.name, description: tool.description, inputSchema: tool.parameters }]

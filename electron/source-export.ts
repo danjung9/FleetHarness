@@ -23,7 +23,8 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
     if (await sourceHash(workspace) !== input.verifiedHash) throw new Error('Artifacts changed after verification or during export. Start a new run before exporting.');
     signal?.throwIfAborted();
   };
-  const manifest = await artifactManifest(workspace, { requireEntryPoint: true });
+  const manifest = await artifactManifest(workspace);
+  if (!manifest.some(file => file.path === 'solution-contract.json')) await artifactManifest(workspace, { requireEntryPoint: true });
   if (manifestHash(manifest) !== input.verifiedHash) throw new Error('Artifacts changed after verification or during export. Start a new run before exporting.');
   if (!input.evidence?.report || !input.evidence.review) throw new Error('Authoritative delivery evidence is required.');
   const slug = input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'challenge';

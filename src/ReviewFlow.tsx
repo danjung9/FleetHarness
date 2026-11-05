@@ -40,7 +40,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved }: ReviewP
   const noteId = useId();
   const gateId = useId();
   const report = project.report;
-  const passed = reportPassed(report, project.qualityVersion === 1);
+  const passed = reportPassed(report, project.qualityVersion !== undefined);
   const unverified = report?.quality?.criteria.filter(criterion => criterion.status === 'unverified').length || 0;
   const approved = !!project.approvedAt;
 
@@ -137,7 +137,7 @@ function DeliveryContent({ project, busy, action, onReview }: DeliveryProps) {
       <section className="delivery-app" aria-labelledby="delivery-app-heading">
         <h2 id="delivery-app-heading">{savedApp ? 'Your app is saved' : 'Your prototype is approved'}</h2>
         <p className="delivery-approved">Approved {date(project.approvedAt!)}<button className="text-button" onClick={onReview}>View review</button></p>
-        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to download it.</p>}
+        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, project.runtimeProfile && project.runtimeProfile !== 'browser' ? 'export' : 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to save it.</p>}
       </section>
       <section className="delivery-source" aria-labelledby="delivery-source-heading">
         <div><h2 id="delivery-source-heading">Source and evidence</h2><p>Export the app source, test results, and your review for inspection or further development.</p></div>

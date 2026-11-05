@@ -12,7 +12,7 @@ Deliver runnable source, fixtures, install/run instructions, test commands and r
 After implementation, write `README.md` as a user guide based on the actual application. The build agent receives a dedicated follow-up prompt for this before verification. Include:
 
 - Purpose and intended users.
-- Prerequisites and quick start: open the self-contained `index.html` in a browser without an install or server.
+- Prerequisites and quick start: follow the declared browser, CLI or service runtime. Include exact dependency installation, startup commands, required model/environment configuration and offline limitations. Browser modules may require the documented local server; do not promise file:// startup for module-based applications.
 - Numbered steps for the main workflows using the real screen, field and button names.
 - A synthetic example with expected results that a first-time user can reproduce.
 - Supported input formats, validation, storage/persistence behavior, and save/export/reset steps where implemented.

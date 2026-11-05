@@ -12,6 +12,9 @@ export interface BrowserVerificationOptions {
   root: string;
   plan: QualityPlan;
   contractHash: string;
+  /** Host-started service URL or static runtime preview, never supplied by generated browser steps. */
+  url?: string;
+  allowSameOrigin?: boolean;
   /** Optional Chromium-compatible browser binary; never the Node/Electron runtime. */
   executable?: string;
   signal?: AbortSignal;
@@ -149,13 +152,15 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
   try {
     if (!plan.journeys.length) throw new Error('No browser journeys were supplied for verification.');
     const evidence = await deadline.run(artifactPath(root, contractHash));
-    const url = await deadline.run(previews.url(root));
+    const url = options.url ?? await deadline.run(previews.url(root));
+    if (!/^http:\/\/127\.0\.0\.1:\d+\//.test(url)) throw new Error('Verification requires a host-started loopback runtime.');
     const failures: string[] = [];
     const candidates = executable ? [{ executablePath: executable }] : [{}, { channel: 'chrome' }];
     for (const candidate of candidates) {
       deadline.check();
       try {
-        launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: true, host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
+        launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: true,
+          args: ['--force-webrtc-ip-handling-policy=disable_non_proxied_udp'], host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
         server = await deadline.run(launching);
         browser = await deadline.run(chromium.connect(server.wsEndpoint(), { timeout: Math.min(5_000, deadline.remaining()) }));
         break;
@@ -177,10 +182,11 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
       try {
         context = await deadline.run(browser.newContext({ viewport: dimensions, acceptDownloads: true, serviceWorkers: 'block' }));
         context.setDefaultTimeout(Math.min(stepTimeoutMs, deadline.remaining()));
+        await deadline.run(context.routeWebSocket('**/*', socket => { record('Application attempted a WebSocket connection.'); socket.close(); }));
         await deadline.run(context.route('**/*', route => {
           const address = route.request().url();
           if (address === new URL('/favicon.ico', url).href) return route.fulfill({ status: 204 });
-          if (address === url || address.startsWith('data:') || address.startsWith('blob:')) return route.continue();
+          if (address === url || (options.allowSameOrigin && new URL(address).origin === new URL(url).origin) || address.startsWith('data:') || address.startsWith('blob:')) return route.continue();
           record('Application requested a blocked resource: ' + address.slice(0, 300));
           return route.abort('blockedbyclient');
         }));

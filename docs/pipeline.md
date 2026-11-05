@@ -6,6 +6,8 @@ The bundled catalog contains all **39 challenge IDs** returned by the [official 
 
 Choose **Refresh from Norfolk** in the desktop catalog picker to import the current index and every detail record. The complete import is validated before replacing the saved catalog; offline or invalid responses leave the previous copy available. Saved projects retain their source snapshot, and refresh does not rewrite existing briefs. To update the bundled fallback for a release, run `npm run sync:norfolk` and `npm run test:norfolk`.
 
+The planning agent selects a versioned [application foundation](application-foundations.md) and computation pack based on its domain recipe. After validating the runtime contract, the host copies the starter into the workspace before implementation, records its original file hashes in `foundation-lock.json`, and lets the builder extend the shared backend. Both Pi and Codex use this path. See [starter research](application-foundations-research.md) for upstream candidates and adoption decisions.
+
 ## Run it
 
 Use Node 22.19 or later for the complete Pi development environment. The packaged desktop application includes its own runtime. From the repository:
@@ -29,7 +31,13 @@ npm run --silent harness -- tool fleet_extract_messages --input /tmp/fleet-messa
 
 Browser verification requires a browser runtime in addition to Node. From a source checkout, run `npm run setup:browser` once to install Playwright Chromium. The runner tries installed Playwright Chromium first, then installed Google Chrome. Packaged users need Google Chrome installed. Builds do not download a browser; a missing runtime produces an actionable verification failure.
 
-In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Separate intake, research and planning sessions write the scope, reuse decisions, architecture, implementation plan and acceptance journeys. The host validates and freezes the acceptance and UX plans before implementation produces a working browser application and testable core. Verification runs Node tests and the planned browser journeys on desktop and narrow viewports. Either gate failing uses the same one-repair budget. The operator reviews the result and remaining requirements before exporting a package.
+In the desktop app, create a challenge from the catalog, review its scope, connect a Pi model in settings, and start the run. Each run gets a separate workspace. Separate intake, research and planning sessions write the scope, reuse decisions, architecture, implementation plan and acceptance journeys. The host validates and freezes solution, evaluation, acceptance and UX contracts. It evaluates the declared computational core before application completion, then runs developer tests and capability checks in a clean package plus applicable browser journeys. Core or final verification failures share one repair budget. The operator reviews the result and remaining requirements before exporting a package.
+
+## Computational solution contracts
+
+New builds use acceptance schema version 2 and produce `solution-contract.json` and `evaluation-plan.json` during planning. Capabilities can combine algorithms, optimization, prediction, retrieval, generation and stateful workflows. Required capabilities cannot be deferred. The host seals evaluation answers outside the builder workspace, scores the actual runtime in a fresh copy, and uses the same single repair budget for core and final verification. It restores the frozen evaluation plan to successful exports for reproducibility. Legacy version 1 reports remain readable.
+
+Browser, CLI and loopback service profiles declare entrypoints, delivery files, locked dependencies and required environment names. CLI/service solutions export as runnable source packages with startup instructions. Browser solutions retain standalone app packaging. Missing models, dependencies or configuration fail explicitly. See [solution evaluation](solution-evaluation.md) for exact schemas, scorer boundaries and `npm run benchmark:factory`.
 
 ## Pipeline contracts
 
@@ -53,15 +61,17 @@ flowchart LR
 
 | Stage | Required output | Exit condition |
 |---|---|---|
-| Intake | Original requirements, `.fleet/packet.json`, derived `scope.md` | Audience, primary task, source requirements, evaluation criteria, deliverables, user criteria, data boundary and unknowns are explicit |
+| Intake | Original requirements, `.fleet/packet.json`, derived `scope.md`, `inputs/manifest.json`; synthetic data and documentation when no inputs were supplied | Scope and data boundaries are explicit; supplied inputs are copied or a dedicated data agent produces validated use-case fixtures |
 | Research | `research.md` | Primary-source leads and adopt/adapt/reject decisions; untested integrations labeled |
-| Plan | `plan.md`, `test-matrix.md`, `system-design.json`, `acceptance-plan.json`, `ux-spec.json` | Architecture and intended user behavior are defined; every criterion is implemented with browser journeys or explicitly deferred with a reason; host validates and freezes both JSON plans |
-| Build | `index.html`, core modules, tests, `README.md` user guide | Working task flows implement the frozen selectors and outcomes, followed by a guide to the actual application; plans remain unchanged |
+| Plan | `plan.md`, `test-matrix.md`, `system-design.json`, `acceptance-plan.json`, `ux-spec.json`, `solution-contract.json`, `evaluation-plan.json` | Architecture and intended user behavior are defined; every criterion maps to capability checks and/or applicable browser journeys, or is explicitly deferred with a reason; required core capabilities cannot be deferred; host freezes all contracts and seals the answer key |
+| Build | Declared runtime files, core modules, tests, `README.md`, core evaluation evidence | Core capability evaluation passes before application completion; user tasks and runtime instructions follow the frozen contracts |
 | Verify | `verification.md`, host-owned test report, screenshots and traces | Node tests and every implemented browser check pass on desktop and narrow viewports; deferred criteria remain unverified and the guide matches the application |
 | Review | Host-recorded decision | Human inspects the exact verified prototype revision, task evidence and remaining requirements |
 | Deliver | Source/evidence bundle, `path-to-fleet.md` | Source still matches verification and approval; setup and remaining dependencies documented |
 
 The runtime runs intake, research, planning, implementation and verification as separate, sequential agent sessions. Only one phase is active per run. Required artifacts and immutable inputs are checked before advancing. Planning must publish the architecture and quality plans before building begins. A fresh run preserves prior work by using a new directory. Sessions have bounded turns/time and verification has process and browser timeouts; failed verification remains visible.
+
+Briefs can include attached UTF-8 text files or named pasted inputs. The host copies these to `inputs/` before agent work and records their provenance in `inputs/manifest.json`. When the brief has no actual inputs, intake launches a separate synthetic-data session after `scope.md` exists. Resource notes and reference URLs alone do not suppress this fallback. The session writes `data/synthetic-data.json` and `data/README.md`, describing the use case, field types, representative records, typical/edge/invalid scenarios and limitations. The host validates the schema and scenarios, then freezes the data for research, planning, application examples and tests. Both supplied input copies and generated fixtures receive integrity checks at subsequent handoffs. The selected engine, cancellation and session budgets apply to the data agent too; invalid output can receive one completion attempt before the build fails.
 
 Once implementation artifacts exist, the build session receives a dedicated prompt to write the application's `README.md` user guide. The guide must exist before verification starts, and missing/empty output gets one completion attempt within the build session's original budget. Verification and repair update the guide to match the actual application before independent tests bind the final source revision. The guide is available with the run's artifacts and is included in delivery exports.
 
@@ -71,7 +81,7 @@ Acceptance criteria retain IDs and provenance from challenge requirements, evalu
 
 The host writes `.fleet/quality-contract.md` with the exact JSON formats. The planner writes `acceptance-plan.json` with each criterion's implemented/deferred disposition, expected outcome and journey references; a deferral requires a reason. Journeys contain declarative CSS-selector steps and literal expected results, with intentional primary and recovery tasks. The accompanying `ux-spec.json` records the audience, primary task, recognizable success outcome, screens and their primary actions, empty/loading/error/success states, persistence, recovery and keyboard behavior. Selectors and expected behavior form a build contract, rather than being derived from whatever the application happens to do.
 
-The host validates and freezes both JSON files immediately after planning. Builder and repair agents can fix implementation and application tests, but cannot rewrite expected results, turn a failure into a deferral or weaken the UX contract. These expectations come from a separate planning agent; their protection reduces implementation drift, but does not make them independently validated SME ground truth. Domain facts and operational acceptance still need appropriate evidence.
+The host validates and freezes all four JSON contracts immediately after planning. It retains the evaluation plan outside the builder workspace until successful verification. Builder and repair agents can fix implementation and application tests, but cannot rewrite frozen solution or acceptance contracts, recreate sealed evaluation keys, or rewrite expected results, turn a failure into a deferral or weaken the UX contract. These expectations come from a separate planning agent; their protection reduces implementation drift, but does not make them independently validated SME ground truth. Domain facts and operational acceptance still need appropriate evidence.
 
 The browser runner exercises the shipped application at desktop and narrow widths and records per-journey results. It captures screenshots and traces under `.quality-evidence/<contract hash>-<run>/<journey>-<viewport>.png` and `.zip`, referenced by the host's `test-report.json`. Agents initially have no dedicated browser tool and must not claim visual inspection they did not perform. They can use returned failure evidence for the one bounded repair; the host reruns both Node and browser checks afterward.
 
@@ -98,7 +108,7 @@ Related IDs are retained rather than collapsed: an umbrella challenge and a narr
 
 ## Included skills and tools
 
-Fifteen skills live under `skills/`: intake, research, planning, UX, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills; each agent session loads only the skills allotted to its phase. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
+Sixteen skills live under `skills/`: intake, data preparation, research, planning, UX, evidence, messages, scheduling, offline, knowledge, readiness, cyber, governance, workflows, physics and delivery. The workspace contains the union of assigned skills, including `fleet-data` for the conditional synthetic-data session; each agent session loads only its assigned skills. Human review and delivery list reference guidance but do not launch agent sessions. Skills describe decision boundaries and domain invariants; TypeBox schemas and the code enforce tool inputs.
 
 ### Tool hierarchy
 

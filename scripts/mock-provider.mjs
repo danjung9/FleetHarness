@@ -1,4 +1,6 @@
-import { qualityFixture, qualityFixtureHtml } from './quality-fixture.mjs';
+import { qualityFixtureHtml } from './quality-fixture.mjs';
+import { solutionFixture, solutionFixtureEvaluator } from './solution-fixture.mjs';
+import { syntheticDataFiles } from './data-fixture.mjs';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
@@ -36,17 +38,18 @@ export async function startFixtureProvider() {
       ];
       else if (prompt.includes('You are the verification agent')) files = [['verification.md', '# Verification\nOne source behavior is covered. Operational readiness is unverified.\n']];
       else if (prompt.includes('You are the implementation agent')) files = [
-        ['index.html', html], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
+        ['index.html', html], ['evaluate.cjs', solutionFixtureEvaluator], ['path-to-fleet.md', '# Field validation\nThis fixture is not operational software.\n'],
         ['core.cjs', 'exports.parse = text => ({task:"intentional defect"});\n'],
         ['parser.test.cjs', 'const {test}=require("node:test");const assert=require("node:assert/strict");const {parse}=require("./core.cjs");test("extracts a task",()=>assert.deepEqual(parse("TASK: inspect pump"),{task:"inspect pump"}));\n']
       ];
+      else if (prompt.includes('You are the synthetic data agent')) files = Object.entries(syntheticDataFiles);
       else if (prompt.includes('You are the intake agent')) files = [['scope.md', '# Scope assessment\nSynthetic browser prototype only.\n']];
       else if (prompt.includes('You are the research agent')) files = [['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n']];
       else files = [['test-matrix.md', '# Test matrix\nTask extraction requires an application test.\n'], ['research.md', '# Research\nThis is an explicit local test fixture. No external research performed.\n'], ['plan.md', '# Plan\nCreate a parser and one meaningful behavior test.\n']];
     }
     if (last?.role === 'user' && prompt.includes('You are the planning agent')) {
       const ids = /Acceptance IDs: ([^\n]+)/.exec(prompt)?.[1].split(', ').filter(Boolean) ?? [];
-      try { files.push(...Object.entries(qualityFixture(ids))); }
+      try { files.push(...Object.entries(solutionFixture(ids))); }
       catch (error) {
         res.writeHead(422, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: { message: error.message, type: 'invalid_request_error' } }));
         return;

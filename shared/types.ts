@@ -19,14 +19,19 @@ export interface TestReport {
   time: string; command: string; exitCode: number | null; passed: number; failed: number;
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
   stageMetrics?: (StageMetrics & { stage: StageId })[];
+  independentJudge?: import('../electron/independent-judge.js').IndependentJudgment;
   quality?: import('./quality.js').QualityReport;
   registeredTests?: { file: string; tests: number }[];
   portableCommand?: string;
   provenance?: { runner: string; args: string[]; cwd: string; environment: Record<string, string | undefined> };
   testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
-export interface BriefContext { resources?: string; links?: string[] }
+export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
+export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
 export interface RunCheckpoint {
+  data?: import('../electron/brief-data.js').BriefDataSnapshot;
+  foundation?: import('../harness/foundations.js').FoundationSnapshot;
+  clarifications?: string;
   version: 1;
   briefHash: string;
   requirementsHash: string;
@@ -50,7 +55,9 @@ export interface Project extends BriefContext {
   verification?: { runId: string; reportHash: string };
   approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string };
   runCheckpoint?: RunCheckpoint;
-  qualityVersion?: 1;
+  conversation?: import('./conversation.js').ProjectConversation;
+  qualityVersion?: 1 | 2;
+  runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
@@ -68,6 +75,9 @@ export interface Settings { backend?: AgentBackend; provider: string; model: str
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;
+  activeAccountId?: string;
+  accounts?: { id: string; label: string; email?: string; connected: boolean }[];
+  planUsageEnabled?: boolean;
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
@@ -75,6 +85,11 @@ export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath:
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
+  sendMessage(id: string, text: string): Promise<void>;
+  cancelMessage(id: string): Promise<void>;
+  answerClarification(id: string, questionId: string, answer: string | import('./conversation.js').ClarificationAnswer): Promise<void>;
+  applyConversationAction(id: string, actionId: string): Promise<void>;
+  dismissConversationAction(id: string, actionId: string): Promise<void>;
   bootstrap(): Promise<Bootstrap>;
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;
@@ -92,7 +107,10 @@ export interface FleetAPI {
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
-  connectChatGPT(): Promise<Bootstrap>;
+  connectChatGPT(accountId?: string): Promise<Bootstrap>;
+  selectChatGPTAccount(accountId: string): Promise<Bootstrap>;
+  reopenChatGPTLogin(): Promise<Bootstrap>;
+  manageChatGPTUsage(): Promise<void>;
   cancelChatGPTLogin(): Promise<Bootstrap>;
   disconnectChatGPT(): Promise<Bootstrap>;
   refreshChatGPT(): Promise<Bootstrap>;
