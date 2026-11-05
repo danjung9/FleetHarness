@@ -11,7 +11,7 @@ import type { SolutionContract, EvaluationPlan, SolutionEvaluationReport } from 
 import type { TestReport } from '../shared/types.js';
 import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
 import { safeFile, sourceHash, artifactManifest } from './storage.js';
-import { verifyWorkspace, type VerificationOptions } from './verification.js';
+import { verifyWorkspace, VerificationShutdownError, type VerificationOptions } from './verification.js';
 import { parseSolutionContract, parseEvaluationPlan } from '../harness/solution-contract.js';
 import { applicationTestFiles } from './verification.js';
 import { verifyBrowserJourneys } from './browser-verification.js';
@@ -182,6 +182,7 @@ export async function verifyApplication(root: string, executable: string, contra
       await runtime.assertIntegrity();
     } catch (error) {
       signal?.throwIfAborted();
+      if (error instanceof VerificationShutdownError) throw error;
       const detail = 'Clean package verification: ' + (runtime ? runtime.redactMessage(message(error)) : message(error));
       errors.push(detail);
       packageEvidence = { ...packageEvidence, status: 'failed', detail };

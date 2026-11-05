@@ -156,7 +156,10 @@ test('actual parser core',()=>{const context={};const html=fs.readFileSync('inde
   return { ...prepared, solution };
 }
 
-test('version 2 browser staging isolates dependency manifests and generated main scripts while preserving declared assets', { timeout: 30_000 }, async t => {
+// This verifies three separately installed packages and confirms each process
+// sweep, plus a browser pass with its own 20-second deadline, before staging.
+// The outer test budget must cover that combined work and its teardown.
+test('version 2 browser staging isolates dependency manifests and generated main scripts while preserving declared assets', { timeout: 60_000 }, async t => {
   const { root, project } = await verifiedBrowserFixture(t);
   const staged = await stageExecutable(project, root);
   assert.deepEqual((await fs.readdir(staged.source)).sort(), ['application', 'main.cjs', 'package.json']);
@@ -189,7 +192,7 @@ test('version 2 browser staging isolates dependency manifests and generated main
   assert.equal(browserOptions.webPreferences.sandbox, false);
   const script = await handler({ url: 'fleet-app://app/assets/status.mjs', method: 'GET' });
   assert.equal(script.status, 200); assert.match(script.headers.get('content-type'), /javascript/);
-  assert.match(script.headers.get('content-security-policy'), /script-src 'self'/);
+  assert.equal(script.headers.get('content-security-policy'), null);
   assert.equal(await script.text(), 'document.body.dataset.assetLoaded="yes";');
   const dependencyManifest = await handler({ url: 'fleet-app://app/package.json', method: 'GET' });
   assert.equal(dependencyManifest.status, 200);

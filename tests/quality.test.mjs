@@ -243,7 +243,7 @@ export const sum = values => existsSync(path.join(process.env.TMPDIR, 'developer
 test('development setup initializes state', () => { writeFileSync(path.join(process.env.TMPDIR, 'developer-initialized'), 'ready'); assert.equal(sum([2, 3]), 5); });`);
   const contract = await loadQualityContract(root, acceptance, true);
   const report = await verifyApplication(root, process.execPath, contract);
-  assert.equal(report.exitCode, 0); assert.equal(report.passed, 1);
+  assert.equal(report.exitCode, 0, JSON.stringify(report)); assert.equal(report.passed, 1);
   assert.equal(report.quality.solutionEvaluation.evaluations[0].actual, 0);
   assert.equal(report.quality.solutionEvaluation.evaluations[0].status, 'failed');
   assert.equal(reportPassed(report, true), false);

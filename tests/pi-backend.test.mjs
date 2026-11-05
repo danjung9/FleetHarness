@@ -99,7 +99,10 @@ async function harness(t, options = {}) {
         const listeners = new Set();
         const judge = { disposed: false, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
           async prompt() {
-            for (const name of ['requirements.md', 'index.html', 'test-report.json']) await customTools[0].execute('judge', { path: name });
+            for (const name of ['requirements.md', 'test-report.json']) await customTools[0].execute('judge', { path: name });
+            const contractRead = await customTools[0].execute('judge', { path: 'solution-contract.json' });
+            const solution = JSON.parse(JSON.parse(contractRead.content[0].text).text);
+            for (const name of solution.runtime.files) await customTools[0].execute('judge', { path: name });
             const evidence = JSON.parse((await customTools[0].execute('baseline', { path: 'test-report.json' })).content[0].text);
             const baseline = JSON.parse(evidence.text).testBaseline;
             assert.ok(Object.keys(baseline.hashes).length);

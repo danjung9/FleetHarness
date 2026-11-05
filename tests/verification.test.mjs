@@ -28,6 +28,19 @@ function verifyPlain(root, executable, onProcess, signal, options = {}) {
   return verifyWorkspace(root, executable, onProcess, signal, { ...options, launcher: plainLauncher });
 }
 
+test('clean package tests retain runtime scratch directories without changing delivered source', async t => {
+  const root = await workspace(t, `const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+test('temporary initialization',()=>{for(const key of ['HOME','USERPROFILE','TMPDIR','TEMP','TMP']){assert.notEqual(process.env[key],process.cwd());fs.writeFileSync(path.join(process.env[key],'developer-initialized'),'ready');}});`);
+  const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-test-scratch-'));
+  t.after(() => fs.rm(scratch, { recursive: true, force: true }));
+  const runtimeEnvironment = { HOME: scratch, TMPDIR: scratch, TEMP: scratch, TMP: scratch };
+  const report = await verifyWorkspace(root, process.execPath, () => {}, undefined, {}, runtimeEnvironment);
+  assert.equal(report.exitCode, 0, report.output);
+  assert.equal(report.passed, 1);
+  assert.deepEqual(await fs.readdir(root), ['app.test.cjs']);
+  assert.equal(await fs.readFile(path.join(scratch, 'developer-initialized'), 'utf8'), 'ready');
+});
+
 for (const mixed of [false, true]) test(`combined prerequisite: comment-only tests cannot pass ${mixed ? 'beside real cases' : 'alone'}`, async t => {
   const root = await workspace(t, '// Synthetic comment-only test file');
   if (mixed) await fs.writeFile(path.join(root, 'real.test.cjs'), 'require("node:test")("actual case", () => {});');

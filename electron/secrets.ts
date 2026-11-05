@@ -11,26 +11,35 @@ export function configuredCredentialValues(): string[] {
   for (const [name, value] of Object.entries(process.env)) if (environmentCredentialName.test(name)) registerCredential(value);
   return [...credentials].sort((a, b) => b.length - a.length);
 }
-export function redactSecrets(text: string): string {
+function textRedactor() {
+  const forms = new Set<string>();
   for (const value of configuredCredentialValues()) {
     let encoded = value;
     try { encoded = encodeURIComponent(value); } catch { /* Malformed Unicode still has literal and JSON forms. */ }
-    for (const form of new Set([value, JSON.stringify(value).slice(1, -1), encoded])) {
-      text = text.split(form).join(replacement);
-    }
+    for (const form of [value, JSON.stringify(value).slice(1, -1), encoded]) forms.add(form);
   }
-  // JSON fields, quoted headers, and plain HTTP diagnostic lines.
-  return text.replace(/(\\+"(?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|cookie|set-cookie)\\+"\s*:\s*\\+")[\s\S]*?(\\+")/gi, '$1[REDACTED]$2')
-    .replace(/(["'](?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|cookie|set-cookie)["']\s*:\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gi, '$1"[REDACTED]"')
-    .replace(/(\b(?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret)\s*[:=]\s*)[^\r\n,}]+/gi, '$1[REDACTED]')
-    .replace(/(\b(?:cookie|set-cookie)\s*:\s*)[^\r\n]+/gi, '$1[REDACTED]');
+  return (text: string): string => {
+    for (const form of forms) text = text.split(form).join(replacement);
+    // JSON fields, quoted headers, and plain HTTP diagnostic lines.
+    return text.replace(/(\\+"(?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|cookie|set-cookie)\\+"\s*:\s*\\+")[\s\S]*?(\\+")/gi, '$1[REDACTED]$2')
+      .replace(/(["'](?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|cookie|set-cookie)["']\s*:\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gi, '$1"[REDACTED]"')
+      .replace(/(\b(?:authorization|proxy-authorization|x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret)\s*[:=]\s*)[^\r\n,}]+/gi, '$1[REDACTED]')
+      .replace(/(\b(?:cookie|set-cookie)\s*:\s*)[^\r\n]+/gi, '$1[REDACTED]');
+  };
 }
+export function redactSecrets(text: string): string { return textRedactor()(text); }
 export function redactValue<T>(value: T): T {
-  if (typeof value === 'string') return redactSecrets(value) as T;
-  if (Array.isArray(value)) return value.map(item => redactValue(item)) as T;
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) =>
-    [redactSecrets(key), sensitiveName.test(key) && typeof item === 'string' ? replacement : redactValue(item)])) as T;
-  return value;
+  // Capture credential forms once per synchronous document traversal, not once
+  // per key and leaf in every saved project, test report and session message.
+  const redact = textRedactor();
+  const visit = (item: unknown): unknown => {
+    if (typeof item === 'string') return redact(item);
+    if (Array.isArray(item)) return item.map(visit);
+    if (item && typeof item === 'object') return Object.fromEntries(Object.entries(item).map(([key, entry]) =>
+      [redact(key), sensitiveName.test(key) && typeof entry === 'string' ? replacement : visit(entry)]));
+    return item;
+  };
+  return visit(value) as T;
 }
 export function assertNoCredentials(contents: string | Buffer): void {
   if (configuredCredentialValues().some(value => typeof contents === 'string' ? contents.includes(value) : contents.includes(Buffer.from(value)))) {

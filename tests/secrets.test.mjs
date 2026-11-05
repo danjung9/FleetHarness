@@ -51,6 +51,19 @@ test('runtime key registration and resolved auth are covered without a provider 
   assert.equal(redactSecrets('synthetic-resolved-header'), '[REDACTED]');
 });
 
+test('document redaction picks up newly configured credentials on each save', () => {
+  const name = 'FLEET_REDACTION_TEST_API_KEY';
+  const previous = process.env[name];
+  try {
+    for (const value of ['synthetic-first-save-key', 'synthetic-next-save-key']) {
+      process.env[name] = value;
+      assert.deepEqual(redactValue({ rows: [{ detail: value }, { [value]: value }] }),
+        { rows: [{ detail: '[REDACTED]' }, { '[REDACTED]': '[REDACTED]' }] });
+    }
+    assert.equal(redactValue({ previous: 'synthetic-first-save-key' }).previous, '[REDACTED]');
+  } finally { if (previous === undefined) delete process.env[name]; else process.env[name] = previous; }
+});
+
 test('streamed text is redacted across every possible credential and header split', () => {
   const credential = 'synthetic-split-credential'; registerCredential(credential);
   for (const input of [credential, 'Authorization: Bearer synthetic-split-header']) for (let split = 1; split < input.length; split++) {

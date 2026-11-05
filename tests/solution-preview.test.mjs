@@ -69,7 +69,7 @@ test('service previews start one clean runtime, deduplicate concurrent requests,
   assert.equal(updated.version, 'updated'); assert.notEqual(updated.pid, first.pid); assert.notEqual(updated.cwd, first.cwd);
   await waitUntil(() => exited(first.pid), 'Old preview process must exit after a source change.');
   await waitUntil(() => removed(first.cwd), 'Old clean package must be removed after replacement.');
-  previews.close();
+  await previews.close();
   assert.equal(await previews.url(root), null);
   await waitUntil(() => exited(updated.pid), 'Closing previews must kill the live service.');
   await waitUntil(() => removed(updated.cwd), 'Closing previews must remove the clean package.');
@@ -90,7 +90,7 @@ test('cached service previews restart after an unhealthy response or a stopped p
   assert.notEqual(restarted.pid, healthy.pid);
   assert.equal((await fetch(new URL('/health', restartedUrl))).status, 200);
   await waitUntil(() => removed(healthy.cwd), 'Stopped runtime package must be removed before replacement.');
-  previews.close();
+  await previews.close();
   await waitUntil(() => exited(restarted.pid), 'Recovered preview must close cleanly.');
   await waitUntil(() => removed(restarted.cwd), 'Recovered runtime package must be removed.');
 });
@@ -98,12 +98,13 @@ test('cached service previews restart after an unhealthy response or a stopped p
 test('closing during service startup resolves to no preview and never reopens; CLI preview never starts its command', { timeout: 15_000 }, async t => {
   const { root, previews } = await fixture(t);
   const starting = previews.url(root);
-  previews.close();
+  const closing = previews.close();
   assert.equal(await starting, null);
+  await closing;
   assert.equal(await previews.url(root), null);
   const cli = await fixture(t, 'cli');
   assert.equal(await cli.previews.url(cli.root), null);
   assert.equal(await cli.previews.url(cli.root), null);
-  cli.previews.close();
+  await cli.previews.close();
   assert.equal(await cli.previews.url(cli.root), null);
 });

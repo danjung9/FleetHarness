@@ -111,7 +111,9 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   catch (error) { throw new Error(runtimeFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
-    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH,
+      HOME: runtimeEnvironment?.HOME ?? root, USERPROFILE: runtimeEnvironment?.HOME ?? root,
+      TMPDIR: runtimeEnvironment?.TMPDIR ?? root, TEMP: runtimeEnvironment?.TEMP ?? root, TMP: runtimeEnvironment?.TMP ?? root,
       CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
       cwd: root, env: environment,
