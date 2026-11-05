@@ -159,8 +159,9 @@ async function appRecovery(page, item) {
   }
   return { status: 'FAIL', path: 'no-usable-application-recovery', shellVisible: await visible(page.locator('.app-shell')), loadingVisible: await visible(page.locator('.loading-screen')), recoveryControl: item.recoveryControl ?? null };
 }
-async function runCase(browser, origin, output, specification, aborted) {
+async function runCase(browser, origin, output, specification, aborted, started) {
   const item = { id: specification.id, status: 'FAIL', seed: specification.seed, expected: 'Interactive AppYard Home, directly or through an application recovery control.', pageerrors: [], blockedRequests: [], dialogs: [] };
+  started(item); // Retain partial evidence even if screenshot or infrastructure capture fails.
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   try {
     await context.route('**/*', async route => {
@@ -169,23 +170,29 @@ async function runCase(browser, origin, output, specification, aborted) {
       item.blockedRequests.push({ method: request.method(), origin: url?.origin ?? 'invalid', pathname: url?.pathname ?? '' });
       await route.abort('blockedbyclient');
     });
+    await context.routeWebSocket('**/*', route => {
+      const url = new URL(route.url());
+      item.blockedRequests.push({ method: 'WEBSOCKET', origin: url.origin, pathname: url.pathname });
+      route.close({ code: 1008, reason: 'Static local preview fixture permits no WebSocket connections.' });
+    });
     await context.addInitScript(seedPreviewState, { key: KEY, seed: specification.seed, marker: 'qa-browser-seeded-' + specification.id, origin });
     const page = await context.newPage(); page.setDefaultTimeout(UI_MS); page.setDefaultNavigationTimeout(15000);
     let phase = 'initial';
     page.on('pageerror', error => item.pageerrors.push({ phase, message: error.message, stack: error.stack }));
     page.on('dialog', dialog => { item.dialogs.push({ phase, type: dialog.type(), message: dialog.message().slice(0, 500) }); void (dialog.type() === 'confirm' ? dialog.accept() : dialog.dismiss()).catch(() => {}); });
-    await page.goto(origin + '/', { waitUntil: 'load' });
+    try { await page.goto(origin + '/', { waitUntil: 'load' }); Object.assign(item, await appRecovery(page, item)); }
+    catch (error) { item.status = 'FAIL'; item.uiFailure = String(error.message); }
     if (aborted()) throw Error('Run deadline exceeded.');
-    try { Object.assign(item, await appRecovery(page, item)); } catch (error) { item.status = 'FAIL'; item.uiFailure = String(error.message); }
     await page.screenshot({ path: path.join(output, specification.id + '-initial.png'), fullPage: true, timeout: UI_MS });
     item.initialScreenshot = specification.id + '-initial.png';
     if (specification.seed !== null) {
       // Diagnostic positive control, never application recovery. The init marker remains set.
       phase = 'manual-clear-control';
-      await page.evaluate(key => localStorage.removeItem(key), KEY); await page.reload({ waitUntil: 'load' });
-      let usable = await waitForMounted(page);
-      if (usable) { try { await exerciseHome(page); } catch { usable = false; } }
-      item.manualClearControl = { status: usable ? 'PASS' : 'FAIL', mechanism: 'QA removeItem then reload, without reseeding. Not application recovery.' };
+      item.manualClearControl = { status: 'FAIL', mechanism: 'QA removeItem then reload, without reseeding. Not application recovery.' };
+      try {
+        await page.evaluate(key => localStorage.removeItem(key), KEY); await page.reload({ waitUntil: 'load' });
+        if (await waitForMounted(page)) { await exerciseHome(page); item.manualClearControl.status = 'PASS'; }
+      } catch (error) { item.manualClearControl.uiFailure = String(error.message); }
       await page.screenshot({ path: path.join(output, specification.id + '-manual-clear-control.png'), fullPage: true, timeout: UI_MS });
       item.manualClearControl.screenshot = specification.id + '-manual-clear-control.png';
     }
@@ -194,10 +201,15 @@ async function runCase(browser, origin, output, specification, aborted) {
 }
 async function main(options) {
   const report = { schemaVersion: 1, startedAt: new Date().toISOString(), status: 'ERROR', storageKey: KEY, cases: [], errors: [], artifactDrift: false,
-    execution: 'Existing dist only; loopback Chrome with browser sandbox enabled; synthetic inputs; no model calls.' };
+    execution: 'Existing dist only; loopback Chrome with browser sandbox enabled; synthetic inputs; no model calls.',
+    buildProvenance: 'HEAD, source and served dist bytes are recorded independently. Main supplies the already built checkout; this fixture does not rebuild or establish source-to-dist equivalence.' };
   let browser, browserServer, server, output, deadline, repo, dist; let timedOut = false;
   const checkDeadline = () => { if (timedOut) throw Error('Run deadline exceeded.'); };
-  const expired = new Promise((_, reject) => { deadline = setTimeout(() => { timedOut = true; reject(Error('Overall 180-second deadline exceeded.')); }, LIMIT_MS); });
+  let rejectRun;
+  const expired = new Promise((_, reject) => { rejectRun = reject; deadline = setTimeout(() => { timedOut = true; reject(Error('Overall 180-second deadline exceeded.')); }, LIMIT_MS); });
+  const interrupt = signal => { timedOut = true; rejectRun(Error('Interrupted by ' + signal + '.')); };
+  const onInt = () => interrupt('SIGINT'), onTerm = () => interrupt('SIGTERM'), onHup = () => interrupt('SIGHUP');
+  process.once('SIGINT', onInt); process.once('SIGTERM', onTerm); process.once('SIGHUP', onHup);
   try {
     await Promise.race([(async () => {
       repo = await fs.realpath(options.repo); dist = path.join(repo, 'dist');
@@ -222,11 +234,12 @@ async function main(options) {
       const serving = await startServer(dist, report.before.dist, report.errors); server = serving.server; report.origin = serving.origin;
       checkDeadline();
       // launchServer exposes an owned browser process for bounded close/kill cleanup.
-      const launched = await chromium.launchServer({ channel: 'chrome', headless: true, chromiumSandbox: true, timeout: 30000 });
+      const launched = await chromium.launchServer({ channel: 'chrome', host: '127.0.0.1', headless: true, chromiumSandbox: true,
+        handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, timeout: 30000 });
       if (timedOut) { await launched.kill(); throw Error('Deadline during browser launch.'); }
       browserServer = launched; report.browserPID = launched.process().pid;
       browser = await chromium.connect(launched.wsEndpoint(), { timeout: 10000 }); checkDeadline();
-      for (const specification of CASES) { checkDeadline(); report.cases.push(await runCase(browser, serving.origin, output, specification, () => timedOut)); }
+      for (const specification of CASES) { checkDeadline(); await runCase(browser, serving.origin, output, specification, () => timedOut, item => report.cases.push(item)); }
     })(), expired]);
   } catch (error) { report.errors.push(String(error.stack || error)); }
   finally {
@@ -250,6 +263,7 @@ async function main(options) {
     report.status = summarize(report.cases, report.errors, report.artifactDrift); report.finishedAt = new Date().toISOString();
     if (output) { try { await fs.writeFile(path.join(output, 'receipt.json'), JSON.stringify(report, null, 2) + '\n', { flag: 'wx' }); } catch (error) { report.status = 'ERROR'; report.errors.push('Receipt write failed: ' + error.message); } }
     console.log(JSON.stringify(report, null, 2)); process.exitCode = report.status === 'PASS' ? 0 : report.status === 'FAIL' ? 1 : 2;
+    process.removeListener('SIGINT', onInt); process.removeListener('SIGTERM', onTerm); process.removeListener('SIGHUP', onHup);
   }
 }
 try { const options = parseArgs(process.argv.slice(2)); if (options.validateOnly) validateOnly(); else await main(options); }

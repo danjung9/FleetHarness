@@ -48,7 +48,7 @@ await fs.mkdir(output);
 const resultPath = path.join(output, 'result.json');
 const result = { schemaVersion: 1, suite: 'combined-desktop-inputs', startedAt: new Date().toISOString(), repo,
   revisionPolicy: 'Record supplied clean HEAD and compiled artifacts, with no fixed commit.',
-  scope: 'Real Electron renderer and brief IPC persistence. Key rejection uses a replaced IPC handler, proving UI behavior only, not authentication.',
+  scope: 'Real Electron renderer, brief IPC persistence, and OAuth start/reopen/cancel with external opening intercepted. Key rejection uses a replaced IPC handler, proving UI behavior only, not authentication. No completed login or model access.',
   rows: [], pageErrors: [], result: 'ERROR' };
 let app, page, root, watchdog;
 const git = args => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -158,6 +158,50 @@ try {
     await page.getByRole('radio', { name: 'Codex ChatGPT or API key' }).check();
     assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).inputValue(), '');
     return { bothFieldsCleared: true, noSettingsSaved: true };
+  });
+  await row('OAUTH-START-REOPEN-CANCEL', async () => {
+    await app.evaluate(({ shell }) => {
+      globalThis.__qaOAuth = { openings: [], loopbackOrigin: null };
+      shell.openExternal = async value => {
+        const url = new URL(value);
+        // Keep only noncredential routing metadata, never authorization queries.
+        globalThis.__qaOAuth.openings.push({ protocol: url.protocol, host: url.hostname, path: url.pathname });
+        if (url.searchParams.has('redirect_uri')) {
+          const callback = new URL(url.searchParams.get('redirect_uri'));
+          if (callback.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(callback.hostname)) throw new Error('Expected owned loopback callback.');
+          callback.hostname = '127.0.0.1'; globalThis.__qaOAuth.loopbackOrigin = callback.origin;
+        }
+      };
+    });
+    const cancel = page.getByRole('button', { name: 'Cancel sign-in', exact: true });
+    try {
+      await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).click();
+      await cancel.waitFor({ timeout: 20000 });
+      const opening = await app.evaluate(() => globalThis.__qaOAuth.openings[0]);
+      assert.equal(opening.protocol, 'https:'); assert.equal(opening.host, 'auth.openai.com');
+      const callback = await app.evaluate(() => globalThis.__qaOAuth.loopbackOrigin);
+      assert.ok(callback, 'Login must establish its loopback callback.');
+      const probe = callback + '/__qa_unknown_path__';
+      assert.equal((await fetch(probe, { signal: AbortSignal.timeout(3000) })).status, 404);
+      const state = await page.evaluate(async () => {
+        const account = (await window.fleetHarness.bootstrap()).chatgpt;
+        return { status: account.status, containsCredentialFields: /authUrl|access_token|refresh_token|code_verifier|code_challenge/.test(JSON.stringify(account)) };
+      });
+      assert.deepEqual(state, { status: 'connecting', containsCredentialFields: false });
+      assert.equal(await page.getByRole('radio', { name: 'Codex ChatGPT or API key' }).isDisabled(), true);
+      assert.equal(await page.getByRole('radio', { name: 'Pi Model providers' }).isDisabled(), true);
+      await page.getByRole('button', { name: 'Reopen browser', exact: true }).click();
+      assert.equal(await app.evaluate(() => globalThis.__qaOAuth.openings.length), 2);
+      await cancel.click(); await cancel.waitFor({ state: 'hidden' });
+      assert.equal(await page.evaluate(async () => (await window.fleetHarness.bootstrap()).chatgpt.status), 'disconnected');
+      // A timeout is not evidence of a closed listener. Require connection refusal.
+      let probeError;
+      try { await fetch(probe, { signal: AbortSignal.timeout(3000) }); } catch (error) { probeError = error; }
+      assert.equal(probeError?.cause?.code, 'ECONNREFUSED', 'Cancelled login must close the owned callback listener.');
+      return { realLoopbackStartAndCancel: true, externalOpeningIntercepted: true, reopenCount: 2, listenerClosed: true, completedLogin: false };
+    } finally {
+      if (await cancel.isVisible()) { await cancel.click(); await cancel.waitFor({ state: 'hidden' }); }
+    }
   });
   for (const test of cases) await row(test.id, async () => {
     const { section, chooser } = await freshIntake(); await attach(section, chooser, test.files);
