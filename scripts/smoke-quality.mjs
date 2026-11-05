@@ -91,7 +91,7 @@ try {
   const changeNotes = 'Fix task extraction so it displays the entered task instead of the placeholder.';
   await page.getByLabel('Review notes').fill(changeNotes);
   assert.equal(await page.getByLabel('I inspected the application, test evidence, and limitations.').isChecked(), false);
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'Failed checks and an unchecked acknowledgment do not block requesting changes');
   await page.evaluate(() => document.fonts.ready);
   for (const viewport of [{ name: 'desktop', width: 1512, height: 982 }, { name: 'minimum', width: 1120, height: 720 }]) {
@@ -134,7 +134,7 @@ try {
   await page.getByText('Verification needs attention', { exact: true }).waitFor();
   await page.getByLabel('Review notes').fill('Reviewed the synthetic fixture, including the explicit integration gap.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false);
   await page.locator('.page').evaluate(element => { element.scrollTop = 0; });
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: path.join(output, 'failed-desktop.png'), animations: 'disabled' });
@@ -145,7 +145,7 @@ try {
   project.report.quality.journeys[0].status = 'passed'; project.report.quality.journeys[0].detail = 'Task completed.';
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Automated checks passed', { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
   const evidence = page.locator('.review-evidence');
   if (await evidence.getAttribute('open') === null) await evidence.locator(':scope > summary').click();
   assert.equal(await page.getByText('Unverified', { exact: true }).count(), 1);
@@ -155,7 +155,7 @@ try {
   delete project.report.quality;
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('This older report contains Node test results only.', { exact: false }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'Quality-enabled runs cannot approve Node-only reports');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'Quality-enabled runs cannot approve Node-only reports');
 
   project.title = 'Scheduling engine · computational evidence';
   project.runId = 'computational-ui-fixture'; project.qualityVersion = 2; project.runtimeProfile = 'browser';
@@ -171,7 +171,7 @@ try {
   await page.getByText('Browser journeys · 4 / 4 passed', { exact: true }).waitFor();
   await page.getByText('Failed cases', { exact: true }).click();
   await page.getByText('overlap, trial 2: Technician Lee is assigned to two overlapping jobs.', { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'Green Node and browser checks cannot conceal a required computational failure');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'Green Node and browser checks cannot conceal a required computational failure');
   await page.getByRole('heading', { name: 'Computational capabilities', exact: true }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: path.join(output, 'computational-failed-desktop.png'), animations: 'disabled' });
   await page.setViewportSize({ width: 1120, height: 720 });
@@ -187,15 +187,15 @@ try {
   evaluation.status = 'passed'; evaluation.actual = 1;
   evaluation.cases.forEach(result => { result.passed = true; result.score = 1; result.detail = 'All assignment constraints satisfied.'; });
   await page.evaluate(value => window.setQualityFixture(value), state);
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'A required capability must pass even when aggregate evaluation labels say passed');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'A required capability must pass even when aggregate evaluation labels say passed');
   quality.capabilities[0].status = 'passed'; quality.capabilities[0].detail = 'All required host evaluations passed.';
   quality.criteria[0].status = 'unverified';
   await page.evaluate(value => window.setQualityFixture(value), state);
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'A core requirement cannot be deferred');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'A core requirement cannot be deferred');
   quality.criteria[0].status = 'passed';
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Automated checks passed', { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
   if (await evidence.getAttribute('open') === null) await evidence.locator(':scope > summary').click();
   await page.getByText('Constraint satisfaction: 1.000 · required 1.000 · baseline 0.500', { exact: true }).waitFor();
   await page.setViewportSize({ width: 1512, height: 982 });
@@ -205,17 +205,17 @@ try {
   quality.solutionEvaluation.evaluations = [];
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Verification needs attention', { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'Missing required evaluation results cannot pass');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'Missing required evaluation results cannot pass');
   quality.solutionEvaluation.evaluations = [evaluation]; quality.package.cleanCopy = false;
   await page.evaluate(value => window.setQualityFixture(value), state);
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), false, 'An unverified clean runtime cannot pass');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), false, 'An unverified clean runtime cannot pass');
   quality.package.cleanCopy = true;
   project.runtimeProfile = 'cli'; quality.package.profile = 'cli'; quality.solutionEvaluation.runtime.profile = 'cli';
   quality.journeys = []; quality.expectedJourneys = 0;
   await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByText('Automated checks passed', { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true, 'A CLI with required computational evidence needs no browser journeys');
-  await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true, 'A CLI with required computational evidence needs no browser journeys');
+  await page.getByRole('button', { name: 'Approve app', exact: true }).click();
   const exportButton = page.getByRole('button', { name: 'Export runnable package', exact: true });
   await exportButton.waitFor();
   assert.equal(await exportButton.isEnabled(), true);

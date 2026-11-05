@@ -6,6 +6,7 @@ import { prepareSolutionRuntime } from './solution-runtime.js';
 import { runtimeFilesHash } from './visual-review.js';
 import { ClassifiedExecutionFailure } from './execution-failure.js';
 import type { RepairObservation } from './functional-repair.js';
+import type { AgentBrowserSession } from './agent-browser.js';
 
 /** Development feedback only; final verification reruns the entire frozen plan. */
 export interface WorkflowCheckpointReport {
@@ -16,6 +17,8 @@ export interface WorkflowCheckpointReport {
   status: 'passed' | 'failed';
   journeys: JourneyResult[];
   errors: string[];
+  /** Host-recorded Playwright exploration, separate from frozen acceptance replay. */
+  uiFlow?: { errors: string[]; report?: ReturnType<AgentBrowserSession['flowReport']> };
 }
 
 export async function verifyPrimaryWorkflow(root: string, executable: string, contract: QualityContract,
@@ -57,5 +60,9 @@ export function workflowRepairObservation(report: WorkflowCheckpointReport): Rep
     metrics[id] = journey?.completedSteps ?? (journey?.status === 'passed' ? 1 : 0);
   }
   if (report.errors.length) failures.push('workflow:execution');
+  if (report.uiFlow) {
+    if (report.uiFlow.errors.length) failures.push('workflow:ui-flow');
+    metrics['workflow:ui-flow'] = -report.uiFlow.errors.length;
+  }
   return { failures, metrics };
 }

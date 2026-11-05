@@ -11,12 +11,13 @@ import { structuredSolutionFixture as solutionFixture, solutionFixtureEvaluator 
 import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
 import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
-import { completeFixtureVisualReview, fixtureVisualReviewInput } from '../scripts/visual-review-fixture.mjs';
+import { completeFixtureUiFlow, completeFixtureVisualReview, fixtureVisualReviewInput } from '../scripts/visual-review-fixture.mjs';
 import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
 import { createHash } from 'node:crypto';
 import { qualityContractGuide } from '../dist-electron/harness/quality-contract.js';
 import { readRunCheckpoint, writeRunCheckpoint } from '../dist-electron/electron/run-checkpoint.js';
 import { assertFleetPacketIntegrity } from '../dist-electron/harness/integration.js';
+import { generatedApplicationContract } from '../dist-electron/harness/application-policy.js';
 
 const resourcesRoot = path.resolve('.');
 // Each workflow prepares independent packages and launches real browser contexts.
@@ -82,6 +83,10 @@ async function harness(t, options = {}) {
           const handled = await options.scenario?.({ cwd, stage: step, session: this, sessions, project, store });
           if (!handled) await artifacts(cwd, step, options.brokenBuild && (this.stage === 'build' || options.brokenRepair));
           if (['build', 'verify', 'repair'].includes(this.stage) && !(options.deferComponentProgress && this.stage === 'build' && !this.writingGuide)) await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
+          if (project.runtimeProfile !== 'cli' && (text.startsWith('Implement the first complete user workflow now:')
+            || text.startsWith('The primary user workflow checkpoint failed.'))) {
+            await completeFixtureUiFlow(customTools, { emit: event => this.emit(event) });
+          }
           if (['guide', 'verify', 'repair'].includes(step) && project.runtimeProfile !== 'cli') {
             const skipReview = await options.visualReview?.({ cwd, stage: step, session: this, project });
             if (!skipReview) await completeFixtureVisualReview(customTools, { emit: event => this.emit(event) });
@@ -479,7 +484,7 @@ test('build agents interact with their declared app, see images, reopen changed 
     assert.equal(session.customTools.some(tool => tool.name === 'fleet_browser'), ['build', 'verify'].includes(session.stage));
   }
   const logs = h.project.logs.filter(log => log.tool?.name === 'fleet_browser' && log.tool?.phase === 'complete');
-  assert.equal(logs.length, 20, 'Core and primary-workflow construction both exercise manual interactions; every frozen journey also delivers its screenshots.');
+  assert.ok(logs.length >= 20, 'Manual interactions, discovered flows and every frozen journey deliver their screenshots to the agent.');
   assert.ok(logs.every(log => log.text.includes('Image delivered to the agent')));
   assert.ok(logs.every(log => !log.text.includes('iVBORw0KGgo')));
   const stale = await browserTool.execute('late-screenshot', { action: 'screenshot' });
@@ -578,7 +583,8 @@ test('changed runtime files cannot extend visual completion beyond three retries
   assert.equal(edits, 4, 'Three useful but still incomplete visual iterations are the bounded maximum.');
   assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 3);
   assert.equal(h.sessions.find(session => session.stage === 'build').prompts.filter(prompt => prompt.startsWith('The stage is incomplete.')).length, 3);
-  assert.deepEqual(h.project.visualReview.captures, []);
+  assert.ok(h.project.visualReview.captures.every(capture => capture.filesHash !== h.project.visualReview.filesHash),
+    'Primary workflow discovery does not provide current visual evidence for later source edits.');
   assert.deepEqual(h.project.visualReview.reviews, []);
   assert.match(h.project.error, /after 3 visual review iterations/);
   assert.doesNotMatch(h.project.error, /exceeded|no progress/i);
@@ -604,7 +610,8 @@ test('editing runtime source after visual rechecks rejects stale screenshots and
   assert.equal(edits, 1);
   assert.equal(h.project.logs.filter(log => log.text.includes('Starting visual review iteration')).length, 1);
   const visual = h.project.visualReview;
-  assert.equal(visual.captures.length, 6, 'Only the first attempt obtains real host browser captures.');
+  const reviewedCaptures = visual.captures.filter(capture => visual.reviews.some(review => review.captureId === capture.id));
+  assert.equal(reviewedCaptures.length, 6, 'Only the first attempt compares host browser captures; discovery captures remain separate evidence.');
   assert.equal(visual.reviews.length, 6);
   assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 2);
   assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 4);
@@ -792,7 +799,13 @@ test('connected file and pasted inputs reach agents unchanged and skip the synth
   assert.equal(packet.dataPolicy, 'user-provided-or-synthetic');
   const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
   assert.match(requirements, /messages\.csv/);
+  assert.ok(requirements.includes(generatedApplicationContract));
   assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /inputs\/manifest\.json/);
+  for (const stage of ['plan', 'build', 'verify']) {
+    const prompt = h.sessions.find(session => session.stage === stage).prompts[0];
+    assert.ok(prompt.includes(generatedApplicationContract), `${stage} receives the real-app contract with supplied data`);
+    assert.doesNotMatch(prompt, /Embed any needed example data|Keep synthetic provenance visible in the application/);
+  }
   await assert.rejects(fs.access(path.join(h.project.workspace, 'data/synthetic-data.json')), /ENOENT/);
 });
 
@@ -813,6 +826,12 @@ test('the no-data specialist finishes within intake before downstream agents rec
   assert.match(specialist.prompts[0], /requirements\.md/);
   assert.match(specialist.prompts[0], /scope\.md/);
   assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /data\/synthetic-data\.json/);
+  for (const stage of ['plan', 'build', 'verify']) {
+    const prompt = h.sessions.find(session => session.stage === stage).prompts[0];
+    assert.ok(prompt.includes(generatedApplicationContract), `${stage} receives the real-app contract without supplied data`);
+    assert.match(prompt, /Never embed or preload these records as default runtime data/);
+    assert.doesNotMatch(prompt, /Embed needed fixture data|Keep synthetic provenance visible in the application/);
+  }
   assert.equal(specialist.disposed, true);
   assert.deepEqual(specialist.tools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
   assert.deepEqual(specialist.customTools.map(tool => tool.name), ['fleet_helpers', 'fleet_run_helper']);
@@ -886,7 +905,8 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the complete ${runtimePro
   assert.equal(h.project.report.quality.visualReview?.status, runtimeProfile === 'browser' ? 'passed' : undefined);
   if (runtimeProfile === 'browser') {
     const visual = h.project.report.quality.visualReview;
-    assert.equal(visual.captures.length, 12);
+    assert.ok(visual.captures.length >= 12, 'The host retains visual-review captures plus manual UI discovery evidence.');
+    assert.ok(visual.reviews.every(review => visual.captures.some(capture => capture.id === review.captureId)), 'Every visual comparison refers to a host capture.');
     assert.equal(visual.reviews.filter(review => review.round === 'initial').length, 4);
     assert.equal(visual.reviews.filter(review => review.round === 'recheck').length, 8);
     assert.equal(visual.captures.filter(capture => capture.journey?.status === 'passed').length, 8, 'Every frozen journey is exercised in both viewports by both agents.');
@@ -1378,8 +1398,19 @@ test('the user guide is requested after implementation and checked before verifi
       await fs.access(path.join(cwd, 'index.html'));
       await fs.access(path.join(cwd, 'app.test.cjs'));
       await assert.rejects(fs.access(path.join(cwd, 'README.md')), /ENOENT/);
+      const checkpoint = JSON.parse(await fs.readFile(path.join(cwd, '.quality-evidence/workflow-report.json'), 'utf8'));
+      assert.equal(checkpoint.status, 'passed');
+      assert.deepEqual(checkpoint.uiFlow.errors, []);
+      for (const viewport of ['desktop', 'narrow']) {
+        const flow = checkpoint.uiFlow.report;
+        assert.ok(flow.transitions.some(edge => edge.grounded && edge.status === 'changed'
+          && flow.observations.some(node => node.id === edge.to && node.viewport === viewport)),
+        `The builder manually discovers a working UI transition at ${viewport} before its guide`);
+      }
       assert.match(session.prompts.at(-1), /actual screen, field and button names/);
-      assert.match(session.prompts.at(-1), /prepared input or synthetic sample data and the expected output, with accurate provenance/);
+      assert.match(session.prompts.at(-1), /walkthrough starting from the empty\/setup state, entering or importing input through real controls/);
+      assert.match(session.prompts.at(-1), /steps for the user to implement\/configure and verify each integration after the build/);
+      assert.match(session.prompts.at(-1), /development fixture examples and their provenance in a separate developer-testing section/);
     }
     if (stage === 'verify') {
       assert.match(await fs.readFile(path.join(cwd, 'README.md'), 'utf8'), /Task parser/);
@@ -1388,7 +1419,7 @@ test('the user guide is requested after implementation and checked before verifi
     return false;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.deepEqual(steps, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'guide', 'verify']);
+  assert.deepEqual(steps, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'guide', 'verify']);
 });
 
 for (const recover of [true, false]) {
@@ -1401,7 +1432,7 @@ for (const recover of [true, false]) {
     } });
     await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
     assert.equal(attempts, 2);
-    assert.match(h.sessions.find(s => s.stage === 'build').prompts[2], /README.md/);
+    assert.equal(h.sessions.find(s => s.stage === 'build').prompts.filter(prompt => prompt.startsWith('The stage is incomplete.') && prompt.includes('README.md')).length, 1);
     if (!recover) {
       assert.match(h.project.error, /after one completion attempt.*README.md/);
       assert.equal(h.project.report, undefined);

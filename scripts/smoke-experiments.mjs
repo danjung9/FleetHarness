@@ -53,7 +53,7 @@ try {
   await page.getByRole('button', { name: 'Review', exact: true }).click();
   await page.getByRole('heading', { name: 'Compare approaches', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Use candidate A', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).count(), 0, 'Retained previous evidence cannot approve an unselected candidate');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).count(), 0, 'Retained previous evidence cannot approve an unselected candidate');
   await page.getByText('Your previous build remains saved', { exact: false }).waitFor();
   assert.equal(await page.getByText('1m 15s', { exact: true }).count(), 1, 'Presentation A is Python despite generation order');
   await page.getByRole('button', { name: 'Open candidate preview', exact: true }).click();
@@ -80,10 +80,10 @@ try {
   const preference = await page.evaluate(() => window.experimentCalls.find(call => call.name === 'submitExperimentPreference'));
   assert.equal(preference.args[1].choice, 'a'); assert.deepEqual(preference.args[1].reasonTags, ['Ease of use']);
   assert.equal(await page.evaluate(() => window.experimentCalls.some(call => call.name === 'selectCandidate')), false, 'Preference never selects the build');
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).count(), 0, 'Preference alone cannot unlock approval of retained evidence');
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).count(), 0, 'Preference alone cannot unlock approval of retained evidence');
   await page.getByRole('button', { name: 'Use candidate A', exact: true }).click();
   await page.getByRole('button', { name: 'Selected for review', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Approve prototype', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Approve app', exact: true }).waitFor();
   assert.deepEqual(await page.evaluate(() => window.experimentCalls.find(call => call.name === 'selectCandidate').args), ['comparison-1', 'python-candidate', 'python-hash']);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByText('Comparisons & learning', { exact: true }).click();

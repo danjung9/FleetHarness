@@ -44,6 +44,49 @@ function planningReviewCalls(messages, contentText, tools) {
   return pending.length ? pending : [{ name: 'fleet_submit_planning_review', arguments: JSON.stringify(fixturePlanningReviewInput(documents)) }];
 }
 
+function browserFixtureCalls(messages, contentText, review) {
+  const calls = messages.flatMap(message => message.tool_calls ?? []);
+  const browserCalls = calls.filter(call => call.function?.name === 'fleet_browser');
+  const args = call => JSON.parse(call.function.arguments);
+  const result = call => JSON.parse(contentText(messages.find(message => message.role === 'tool' && message.tool_call_id === call.id)));
+  const comparisons = [];
+  // Reviewing an existing capture is independent of the next browser action.
+  const browser = input => [...comparisons, { name: 'fleet_browser', arguments: JSON.stringify(input) }];
+  const compare = observation => calls.some(call => call.function?.name === 'fleet_visual_review' && args(call).captureId === observation.captureId)
+    ? [] : [{ name: 'fleet_visual_review', arguments: JSON.stringify(fixtureVisualReviewInput(observation)) }];
+  for (const viewport of ['desktop', 'narrow']) {
+    const openIndex = browserCalls.findIndex(call => args(call).action === 'open' && args(call).viewport === viewport);
+    if (openIndex < 0) return browser({ action: 'open', viewport });
+    const nextOpen = browserCalls.findIndex((call, index) => index > openIndex && args(call).action === 'open');
+    const viewportCalls = browserCalls.slice(openIndex, nextOpen < 0 ? undefined : nextOpen);
+    const opened = viewportCalls[0];
+    const initial = result(opened);
+    if (review) comparisons.push(...compare(initial));
+    if (!viewportCalls.some(call => args(call).action === 'click')) {
+      // Select each action from the latest observation delivered through the SDK.
+      const observed = result(viewportCalls.at(-1));
+      const input = observed.controls.find(control => ['Message', 'Input JSON', 'JSON input'].includes(control.name));
+      if (!input) throw new Error('Fixture browser did not expose its labeled task input.');
+      const text = input.name === 'Message' ? 'TASK: inspect pump' : '"TASK: inspect pump"';
+      if (input.value !== text) return browser({ action: 'type', selector: input.selector, text });
+      const submit = observed.controls.find(control => ['Parse message', 'Run computation'].includes(control.name));
+      if (!submit) throw new Error('Fixture browser did not expose its task action.');
+      return browser({ action: 'click', selector: submit.selector });
+    }
+    if (review) {
+      const observations = initial.journeys?.length
+        ? initial.journeys.map(journey => ({ action: 'journey', journeyId: journey.id, viewport }))
+        : [{ action: 'screenshot', viewport }];
+      for (const observation of observations) {
+        const captured = viewportCalls.find(call => args(call).action === observation.action && args(call).journeyId === observation.journeyId);
+        if (!captured) return browser(observation);
+        comparisons.push(...compare(result(captured)));
+      }
+    }
+  }
+  return comparisons;
+}
+
 // An explicit local test fixture, never registered by production code.
 export async function startFixtureProvider() {
   const requests = [];
@@ -67,6 +110,7 @@ export async function startFixtureProvider() {
     const guide = prompt.includes('Implementation is complete.');
     const implementation = prompt.includes('You are the implementation agent') && !guide;
     const verification = prompt.includes('You are the verification agent') || prompt.includes('The independent test run failed');
+    const workflow = /^Implement the first complete user workflow now:|^The primary user workflow checkpoint failed\./.test(contentText(body.messages[lastPromptIndex]));
     if (startingTurn) {
       if (guide) files = [['README.md', '# Fixture parser user guide\n\nOpen index.html in a browser; no install or server is required.\n\n## Walkthrough\n1. Enter the synthetic input `TASK: inspect pump` in Message.\n2. Select Parse message.\n3. The result is `inspect pump`.\n\n## Data and limitations\nThe fixture strips the TASK prefix; empty input asks you to enter a message. A successful result is retained after reload in browser storage. No export or reset control is provided.\n\n## Troubleshooting\nIf no result appears, select Parse message and check that browser scripts are enabled.\n\n## Developer tests\nWith Node installed, run `node --test parser.test.cjs`. See [verification notes](verification.md) and [field validation](path-to-fleet.md). This is a synthetic integration-test fixture.\n']];
       else if (prompt.includes('The independent test run failed')) files = [
@@ -95,25 +139,7 @@ export async function startFixtureProvider() {
     } else if ((implementation || verification) && !turnMessages.some(m => m.tool_calls?.some(c => c.function?.name === 'fleet_component_progress' && JSON.parse(c.function.arguments).status === 'generated'))) {
       extraCalls = (implementation ? fixtureSystemDesign.components : [fixtureSystemDesign.components[1]]).map(c => progress(c.id, 'generated'));
     }
-    if (!startingTurn && !extraCalls.length && (guide || verification)) {
-      const visualCalls = turnMessages.flatMap(message => message.tool_calls ?? []).filter(call => ['fleet_browser', 'fleet_visual_review'].includes(call.function?.name));
-      const firstCapture = visualCalls.find(call => call.function?.name === 'fleet_browser');
-      const firstResult = firstCapture && turnMessages.find(message => message.role === 'tool' && message.tool_call_id === firstCapture.id);
-      const journeys = firstResult ? JSON.parse(contentText(firstResult)).journeys ?? [] : [];
-      const observations = ['desktop', 'narrow'].flatMap(viewport => [
-        { action: viewport === 'desktop' ? 'open' : 'screenshot', viewport },
-        ...(journeys.length ? journeys.map(journey => ({ action: 'journey', journeyId: journey.id, viewport })) : [{ action: 'screenshot', viewport }]),
-      ]);
-      if (visualCalls.length < observations.length * 2) {
-        const step = visualCalls.length;
-        if (step % 2 === 0) extraCalls = [{ name: 'fleet_browser', arguments: JSON.stringify(observations[step / 2]) }];
-        else {
-          const captureCall = visualCalls.at(-1);
-          const result = turnMessages.find(message => message.role === 'tool' && message.tool_call_id === captureCall.id);
-          extraCalls = [{ name: 'fleet_visual_review', arguments: JSON.stringify(fixtureVisualReviewInput(JSON.parse(contentText(result)))) }];
-        }
-      }
-    }
+    if (!startingTurn && !extraCalls.length && (workflow || guide || verification)) extraCalls = browserFixtureCalls(turnMessages, contentText, guide || verification);
     const reviewingPlan = body.tools?.some(tool => tool.function?.name === 'fleet_submit_planning_review');
     const calls = reviewingPlan ? planningReviewCalls(turnMessages, contentText, body.tools)
       : [...extraCalls, ...files.map(([path, content]) => ({ name: 'write', arguments: JSON.stringify({ path, content }) }))];

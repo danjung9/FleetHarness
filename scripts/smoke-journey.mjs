@@ -117,7 +117,7 @@ try {
   assert.equal(await progress.getByRole('button', { name: 'Review', exact: true }).getAttribute('aria-current'), 'step');
   await page.getByRole('button', { name: 'Review build', exact: true }).click();
   await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true, 'Sending a build back requires review comments');
 
   const reviewNotes = 'Tried the synthetic parser and checked the test evidence. This is a local integration fixture only.';
@@ -135,7 +135,7 @@ try {
   await page.getByRole('button', { name: 'Review build', exact: true }).click();
   assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), reviewNotes, 'Review notes survive a trip to preview');
   assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), true, 'The review acknowledgment survives a trip to preview');
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
 
   await page.getByRole('button', { name: 'Activity — agent work', exact: true }).click();
   await page.getByRole('heading', { name: 'Activity', exact: true }).waitFor();
@@ -152,7 +152,7 @@ try {
   const changeNotes = 'Improve the empty-message guidance so reviewers know to enter a TASK: message before trying again.';
   await page.getByLabel('Review notes', { exact: true }).fill(changeNotes);
   await page.getByLabel(acknowledgment, { exact: true }).uncheck();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'Changes can be requested without the approval acknowledgment');
   const iterationRequestStart = fixture.requests.length;
   await page.getByRole('button', { name: 'Request changes', exact: true }).click();
@@ -185,12 +185,12 @@ try {
   await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), '', 'The previous build’s notes do not become the new review draft');
   assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), false, 'The new build needs a fresh inspection acknowledgment');
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isDisabled(), true);
   assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true);
   await page.getByLabel('Review notes', { exact: true }).fill('Inspected the new iteration and its fresh test evidence. Ready for local prototype delivery.');
   await page.getByLabel(acknowledgment, { exact: true }).check();
   await captureCompact(page, 'journey-review-after-iteration-minimum.png');
-  await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
+  await page.getByRole('button', { name: 'Approve app', exact: true }).click();
   await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
   assert.equal(await progress.getByRole('button', { name: 'Deliver', exact: true }).getAttribute('aria-current'), 'step');
   assert.equal(await page.getByRole('button', { name: 'Download app', exact: true }).isEnabled(), true);
@@ -234,7 +234,7 @@ try {
   assert.match(await page.locator('.previous-build-note').innerText(), /do not reflect your updated brief/);
   await progress.getByRole('button', { name: 'Review', exact: true }).click();
   await page.getByRole('heading', { name: 'No test evidence yet', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).count(), 0);
   await progress.getByRole('button', { name: 'Deliver', exact: true }).click();
   await page.getByRole('heading', { name: 'Nothing to deliver yet', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Download app', exact: true }).count(), 0);

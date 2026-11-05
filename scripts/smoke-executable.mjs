@@ -30,8 +30,8 @@ try {
   await assert.rejects(page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), /approve/);
   await page.getByLabel('Review notes').fill('Verified the counter changes and persists locally. Tested for prototype use only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
-  await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
-  await page.getByText('Prototype approved for delivery.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Approve app', exact: true }).click();
+  await page.getByText('App approved for delivery.', { exact: true }).waitFor();
   await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
   await app.evaluate(({ dialog, shell }) => { dialog.showSaveDialog = async () => ({ canceled: true }); shell.showItemInFolder = () => {}; });
   assert.equal(await page.evaluate(id => window.fleetHarness.downloadExecutable(id), project.id), null);

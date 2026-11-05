@@ -10,6 +10,7 @@ import type { BrowserJourney, UxSpec } from '../shared/quality.js';
 import { performBrowserStep, type BrowserRuntimeHooks } from './browser-actions.js';
 import { BrowserHttpEvidence } from './browser-http-evidence.js';
 import type { VisualCaptureInput } from './visual-review.js';
+import { BrowserFlowLedger, observeBrowserFlow, type BrowserFlowAttempt, type BrowserFlowDom, type BrowserFlowReport } from './browser-flow.js';
 
 export interface AgentBrowserOptions {
   root: string;
@@ -18,6 +19,8 @@ export interface AgentBrowserOptions {
   prepare: (signal: AbortSignal) => Promise<BrowserRuntimeHooks & { url: string; routeBase?: string; close: () => Promise<void>; redactMessage?: (message: string) => string; filesHash?: string; assertIntegrity?: () => Promise<void> }>;
   /** Record a saved, successful screenshot against the runtime that was actually rendered. */
   onCapture?: (capture: VisualCaptureInput) => Promise<string>;
+  /** Optional trusted persistence; editable workspace reports are never imported. */
+  onFlow?: (report: BrowserFlowReport) => void | Promise<void>;
   /** Frozen host acceptance journeys; callers may select an ID, never supply steps. */
   journeys?: BrowserJourney[];
   /** Frozen screen structure used by host-authored expectScreen steps. */
@@ -29,7 +32,7 @@ export interface AgentBrowserOptions {
 
 const viewports = { desktop: { width: 1280, height: 800 }, narrow: { width: 390, height: 844 } } as const;
 const schema = Type.Object({
-  action: Type.Union(['open', 'journey', 'click', 'type', 'press', 'select', 'scroll', 'screenshot', 'close'].map(action => Type.Literal(action))),
+  action: Type.Union(['open', 'journey', 'click', 'type', 'press', 'select', 'scroll', 'screenshot', 'flow', 'close'].map(action => Type.Literal(action))),
   journeyId: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
   viewport: Type.Optional(Type.Union([Type.Literal('desktop'), Type.Literal('narrow')])),
   selector: Type.Optional(Type.String({ minLength: 1, maxLength: 1000 })),
@@ -53,6 +56,8 @@ type Generation = {
   downloadRequestSteps: WeakMap<object, number>;
   verifiedDownloads: Array<{ url: string; step: number }>;
   navigationAborts: Array<{ url: string; step: number; message: string }>;
+  /** Only a deliberate open starts exploration; frozen replay never earns flow credit. */
+  flow?: { id: string; viewport: keyof typeof viewports };
 };
 type Result = { content: ({ type: 'text'; text: string } | { type: 'image'; data: string; mimeType: 'image/png' })[]; details: Record<string, unknown>; isError: boolean };
 const maxImageBytes = 8_000_000, maxImages = 100, maxTotalImageBytes = 128_000_000;
@@ -95,6 +100,8 @@ export class AgentBrowserSession {
   private readonly stepTimeout: number;
   private readonly journeys: BrowserJourney[];
   private readonly ux?: UxSpec;
+  private readonly flow: BrowserFlowLedger;
+  private flowPersistenceFailure?: string;
   private active?: Generation;
   private closing?: Promise<void>;
   private busy = false;
@@ -114,6 +121,7 @@ export class AgentBrowserSession {
     }
     this.journeys = structuredClone(options.journeys ?? []);
     this.ux = options.ux === undefined ? undefined : structuredClone(options.ux);
+    this.flow = new BrowserFlowLedger(options.root, this.journeys);
     if (new Set(this.journeys.map(journey => journey.id)).size !== this.journeys.length) throw new Error('Browser journey IDs must be unique.');
     options.signal.addEventListener('abort', this.aborted, { once: true });
     if (options.signal.aborted) this.aborted();
@@ -122,7 +130,7 @@ export class AgentBrowserSession {
   tools(): ToolDefinition[] {
     return [{
       name: 'fleet_browser', label: 'Inspect and interact with the application', parameters: schema,
-      description: 'Use open to prepare and open the latest application files in a host-managed browser; returned journeys list the frozen host acceptance journeys. Use journey with journeyId and viewport (desktop or narrow) to run every frozen step, including planned screen routes/visibility, assertions, persistence and expected exports, in a fresh runtime/browser. Journey returns its host result and final actual PNG, including failures. After a failure, edit source and run journey again at both widths. Open also resets runtime/browser state; call it after edits. Use returned CSS selectors to click, type (replace a field), press a key, or select an option; scroll uses deltaY (default 600). Each observation returns an actual PNG, visible page text/controls, and console/errors. Screenshot can switch viewport. Review captureId with fleet_visual_review; failed journey captures preserve diagnostics but cannot pass acceptance. Only the application origin is accessible; WebSockets, popups, arbitrary JavaScript and unexpected downloads are unavailable. Downloads are bounded and allowed only during a frozen expectDownload step. Observations do not replace independent verification. Close releases the preview.',
+      description: 'Use open to prepare and open the latest application files in a host-managed Playwright browser; returned journeys list frozen host acceptance journeys. First explore the actual UI manually at desktop and narrow: open each width, inspect screenshot and controls, then use returned selectors to discover navigation, disclosures and the main task result. Use flow for the read-only observed screen/transition graph and untried controls. Frozen journey replay never counts as manual UI flow discovery. Use journey with journeyId and viewport to run every frozen step in a fresh runtime/browser, including screen routes, assertions, persistence and exports. Journey returns its host result and final PNG, including failures. After edits, open again and repeat affected exploration and frozen journeys at both widths. Use returned CSS selectors to click, type (replace a field), press a key, or select an option; scroll uses deltaY (default 600). Each observation returns an actual PNG, visible text/controls, and console/errors. Screenshot can switch viewport, but flow evidence requires a fresh open at each width. For asynchronous results, screenshot again after activation. Review captureId with fleet_visual_review. Only the application origin is accessible; WebSockets, popups, arbitrary JavaScript and unexpected downloads are unavailable. Downloads are bounded and allowed only during a frozen expectDownload step. Observations do not replace independent verification. Close releases the preview.',
       execute: async (_id, raw, signal) => this.execute(raw, signal),
     }];
   }
@@ -161,6 +169,12 @@ export class AgentBrowserSession {
 
   private availableJourneys() { return this.journeys.map(({ id, title }) => ({ id, title })); }
 
+  flowReport(): BrowserFlowReport { return this.flow.report(); }
+  flowProgress() { return this.flow.progress(); }
+  async flowProblems(filesHash: string, journeyIds?: readonly string[]) {
+    return [...(this.flowPersistenceFailure ? [this.flowPersistenceFailure] : []), ...await this.flow.problems(filesHash, journeyIds)];
+  }
+
   private result(details: Record<string, unknown>, png?: Buffer): Result {
     return { content: [{ type: 'text', text: JSON.stringify(details) }, ...(png ? [{ type: 'image' as const, data: png.toString('base64'), mimeType: 'image/png' as const }] : [])],
       details, isError: Boolean(details.error) };
@@ -170,7 +184,7 @@ export class AgentBrowserSession {
     if (!Check(schema, raw)) throw new Error('Invalid fleet_browser input. Use the documented action fields; arbitrary URLs, file paths and scripts are not accepted.');
     const input = raw as Input;
     const fields: Record<string, readonly string[]> = { open: ['viewport'], journey: ['journeyId', 'viewport'], screenshot: ['viewport'], click: ['selector'], type: ['selector', 'text'],
-      press: ['selector', 'key'], select: ['selector', 'value'], scroll: ['deltaY'], close: [] };
+      press: ['selector', 'key'], select: ['selector', 'value'], scroll: ['deltaY'], flow: [], close: [] };
     if (Object.keys(input).some(field => field !== 'action' && !fields[input.action]?.includes(field))) throw new Error('Unsupported field for browser action ' + input.action + '.');
     if (['click', 'type', 'press', 'select'].includes(input.action) && !input.selector) throw new Error('This browser action requires a CSS selector from the latest observation.');
     if (input.selector?.includes('>>')) throw new Error('Use a single CSS selector, without Playwright selector-engine chains.');
@@ -199,7 +213,19 @@ export class AgentBrowserSession {
     signal.addEventListener('abort', cancelled, { once: true });
     const definition = input.action === 'journey' ? this.journeys.find(journey => journey.id === input.journeyId)! : undefined;
     let journey: JourneyCapture | undefined = definition ? { id: definition.id, status: 'failed', completedSteps: 0, totalSteps: definition.steps.length, detail: '' } : undefined;
+    let flowAttempt: BrowserFlowAttempt | undefined;
     try {
+      if (input.action === 'flow') {
+        const filesHash = this.active?.runtime?.filesHash;
+        const report = this.flowReport();
+        const compact = { ...report, observations: report.observations.map(({ id, generationId, parentId, viewport, action, route, headings, screenIds, screenshot, reachable, errors }) =>
+          ({ id, generationId, parentId, viewport, action, route, headings, screenIds, screenshot, reachable, errors })) };
+        const manual = this.active?.flow && !this.active.closed;
+        return this.result({ action: 'flow', report: compact, progress: this.flowProgress(), frontier: manual ? this.flow.frontier() : [], requiresManualOpen: !manual,
+          ...(filesHash ? { remaining: await this.flowProblems(filesHash) } : {}),
+          ...(this.artifacts ? { artifact: this.artifacts.relative.replaceAll(path.sep, '/') + '/flow.json' } : {}),
+          scope: 'Host-observed manual UI exploration; frozen journeys independently verify acceptance.' });
+      }
       if (input.action === 'close') {
         if (this.active) await this.dispose(this.active);
         this.active = undefined;
@@ -210,6 +236,7 @@ export class AgentBrowserSession {
       try {
         if (input.action === 'open' || definition) {
           await this.open(input.viewport ?? 'desktop', signal, Boolean(definition?.steps.some(step => step.action === 'expectDownload')));
+          if (!definition) this.active!.flow = { id: randomUUID(), viewport: this.viewport };
           if (definition && journey) {
             const generation = this.active!, page = generation.page!;
             for (const step of definition.steps) {
@@ -230,6 +257,11 @@ export class AgentBrowserSession {
         } else {
           const page = this.active?.page;
           if (!page || page.isClosed() || this.active?.closed) throw new Error('Open the application with fleet_browser before interacting with it.');
+          if (this.active?.flow && ['click', 'type', 'press', 'select'].includes(input.action)) {
+            const before = this.cleanValue(await within(observeBrowserFlow(page, this.ux, this.active.runtime?.routeBase), this.stepTimeout, signal)) as BrowserFlowDom;
+            flowAttempt = this.flow.begin(this.active.flow.id, this.viewport, input, before);
+          }
+          if (input.action === 'screenshot' && input.viewport && input.viewport !== this.viewport) this.flow.clearPending();
           const target = input.selector ? page.locator('css=' + input.selector) : undefined;
           let action: Promise<unknown>;
           switch (input.action) {
@@ -263,8 +295,9 @@ export class AgentBrowserSession {
         if (this.active) await this.dispose(this.active);
         return this.result({ action: input.action, ...(journey ? { journey } : {}), error: failure ?? 'The application browser is closed.', errors: this.errors() });
       }
-      return await this.observe(page, input.action, signal, failure, journey);
+      return await this.observe(page, input.action, signal, failure, journey, flowAttempt);
     } catch (error) {
+      this.flow.clearPending();
       if (signal.aborted && this.active) await this.dispose(this.active);
       const failure = this.clean(errorText(error));
       if (journey) journey = { ...journey, status: 'failed', detail: failure };
@@ -275,6 +308,7 @@ export class AgentBrowserSession {
   }
 
   private async open(viewport: keyof typeof viewports, signal: AbortSignal, expectedDownloads = false) {
+    this.flow.clearPending();
     if (this.active) await this.dispose(this.active);
     signal.throwIfAborted();
     this.events = [];
@@ -421,44 +455,52 @@ export class AgentBrowserSession {
     return path.join(relative, name).replaceAll(path.sep, '/');
   }
 
-  private async observe(page: Page, action: string, signal: AbortSignal, failure?: string, journey?: JourneyCapture) {
-    let summary: { pageText: string; controls: unknown[] } = { pageText: '', controls: [] };
+  private async saveFlow(signal: AbortSignal) {
+    const { base, relative } = await this.artifactDirectory();
+    const report = this.flowReport(), bytes = Buffer.from(JSON.stringify(report));
+    if (bytes.length > 4_000_000) throw new Error('UI flow evidence reached its 4 MB limit.');
+    const target = path.join(base, relative, 'flow.json'), temporary = target + '.' + randomUUID() + '.tmp';
+    const handle = await fs.open(temporary, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+    try {
+      await handle.writeFile(bytes, { signal }); await handle.close();
+      await this.artifactDirectory(); signal.throwIfAborted();
+      await fs.rename(temporary, target);
+      signal.throwIfAborted();
+      await this.options.onFlow?.(report);
+    } finally { await handle.close().catch(() => {}); await fs.rm(temporary, { force: true }).catch(() => {}); }
+  }
+
+  private async observe(page: Page, action: string, signal: AbortSignal, failure?: string, journey?: JourneyCapture, flowAttempt?: BrowserFlowAttempt) {
+    let summary: BrowserFlowDom = { route: '', pageText: '', controls: [], headings: [], screens: [], screenIds: [], content: [] };
     let png: Buffer | undefined, screenshot: string | undefined;
     const observationErrors: string[] = [];
-    try {
-      // Fixed host-authored DOM extraction; no model-provided JavaScript executes.
-      summary = await within(page.evaluate(() => {
-        const compact = (value: string | null | undefined, size = 180) => (value ?? '').replace(/\s+/g, ' ').trim().slice(0, size);
-        const selectorFor = (element: Element) => {
-          if (element.id) return '#' + CSS.escape(element.id);
-          const parts: string[] = [];
-          let node: Element | null = element;
-          for (let depth = 0; node && depth < 12; depth++, node = node.parentElement) {
-            if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }
-            const tag = node.localName;
-            const index = Array.from(node.parentElement?.children ?? []).filter(sibling => sibling.localName === tag).indexOf(node) + 1;
-            parts.unshift(tag + (index ? ':nth-of-type(' + index + ')' : ''));
-          }
-          return parts.join(' > ');
-        };
-        const controls = Array.from(document.querySelectorAll('button,input,textarea,select,a[href],[role],[contenteditable="true"]')).slice(0, 400)
-          .filter(element => element.getClientRects().length > 0).slice(0, 80).map(element => {
-            const input = element as HTMLInputElement;
-            const labels = input.labels ? Array.from(input.labels).map(label => label.textContent ?? '').join(' ') : '';
-            const labelledBy = (element.getAttribute('aria-labelledby') ?? '').split(/\s+/).slice(0, 8).map(id => document.getElementById(id)?.textContent ?? '').join(' ');
-            const name = compact(element.getAttribute('aria-label') || labelledBy.trim() || labels || element.getAttribute('placeholder') || element.textContent || element.getAttribute('title'));
-            return { selector: selectorFor(element).slice(0, 1000), tag: element.localName, role: compact(element.getAttribute('role')), name,
-              ...(input.value !== undefined && input.type !== 'password' ? { value: compact(input.value, 300) } : {}),
-              ...(input.disabled ? { disabled: true } : {}), ...(input.type === 'checkbox' || input.type === 'radio' ? { checked: input.checked } : {}),
-              ...(element.localName === 'select' ? { options: Array.from((element as HTMLSelectElement).options).slice(0, 30).map(option => ({ value: compact(option.value), label: compact(option.label) })) } : {}) };
-          });
-        return { pageText: compact(document.body?.innerText, 12_000), controls };
-      }), Math.min(this.stepTimeout, 2000), signal);
-    } catch (error) { observationErrors.push('Page summary: ' + errorText(error)); }
-    try {
-      png = await within(page.screenshot({ animations: 'disabled', fullPage: false, type: 'png', timeout: Math.min(this.stepTimeout, 3000) }), Math.min(this.stepTimeout, 3000), signal);
-      screenshot = await within(this.saveImage(png, signal), this.stepTimeout, signal);
-    } catch (error) { png = undefined; observationErrors.push('Screenshot: ' + errorText(error)); }
+    const snapshot = () => within(observeBrowserFlow(page, this.ux, this.active?.runtime?.routeBase), Math.min(this.stepTimeout, 2000), signal);
+    // Route/root/control alignment must be stable across the PNG. Live text such
+    // as a clock need not freeze to inspect a screen; action evidence separately
+    // excludes text that was already changing before activation.
+    const fingerprint = ({ route, controls, screens }: BrowserFlowDom) => JSON.stringify({ route, controls, screens });
+    // A navigation or async update can land between DOM extraction and the PNG.
+    // Retry once so graph nodes cannot pair one screen's DOM with another image.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        summary = await snapshot();
+        png = await within(page.screenshot({ animations: 'disabled', fullPage: false, type: 'png', timeout: Math.min(this.stepTimeout, 3000) }), Math.min(this.stepTimeout, 3000), signal);
+        const after = await snapshot();
+        if (fingerprint(summary) !== fingerprint(after)) {
+          summary = after;
+          if (attempt === 0) continue;
+          throw new Error('The screen changed while capturing its screenshot. Take a new observation once the result is visible.');
+        }
+        break;
+      } catch (error) {
+        if (attempt === 0 && /Execution context was destroyed|Cannot find context with specified id/.test(errorText(error))) continue;
+        observationErrors.push('Page observation: ' + errorText(error)); break;
+      }
+    }
+    if (png) {
+      try { screenshot = await within(this.saveImage(png, signal), this.stepTimeout, signal); }
+      catch (error) { png = undefined; observationErrors.push('Screenshot: ' + errorText(error)); }
+    }
     try { if (this.active?.httpEvidence) await within(this.active.httpEvidence.flush(), this.stepTimeout, signal); }
     catch (error) { observationErrors.push('HTTP response evidence: ' + errorText(error)); }
     signal.throwIfAborted();
@@ -483,12 +525,35 @@ export class AgentBrowserSession {
     }
     signal.throwIfAborted();
     updateJourney();
+    if (!journey && this.active?.flow && !this.active.runtime?.filesHash) {
+      // Generic inspection runtimes can omit a source digest. They still render,
+      // but can never supply evidence for the host's source-bound flow gate.
+      this.flowPersistenceFailure = 'UI flow evidence requires the prepared runtime files digest.';
+    } else if (!journey && this.active?.flow && screenshot && png) {
+      try {
+        const filesHash = this.active.runtime?.filesHash;
+        if (!filesHash || !/^[a-f0-9]{64}$/.test(filesHash)) throw new Error('UI flow evidence requires the prepared runtime files digest.');
+        await within(Promise.resolve().then(() => this.active?.runtime?.assertIntegrity?.()), this.stepTimeout, signal);
+        signal.throwIfAborted();
+        this.flow.record({ ...this.cleanValue(summary) as BrowserFlowDom, id: randomUUID(), generationId: this.active.flow.id,
+          openedViewport: this.active.flow.viewport, viewport: this.viewport, action, filesHash, screenshot,
+          screenshotHash: createHash('sha256').update(png).digest('hex'), capturedAt: new Date().toISOString(), errors: hostErrors() }, flowAttempt);
+        await within(this.saveFlow(signal), this.stepTimeout, signal);
+        this.flowPersistenceFailure = undefined;
+      } catch (error) {
+        this.flow.clearPending();
+        this.flowPersistenceFailure = 'UI flow evidence: ' + errorText(error);
+        observationErrors.push(this.flowPersistenceFailure);
+      }
+    }
     const details = {
       action, url: this.clean(page.url()), viewport: this.viewport, dimensions: viewports[this.viewport], ...(screenshot ? { screenshot } : {}),
       ...(['open', 'journey'].includes(action) ? { journeys: this.availableJourneys() } : {}),
       ...(journey ? { journey } : {}),
       ...(captureId ? { captureId } : {}),
       pageText: this.clean(summary.pageText), controls: this.cleanValue(summary.controls),
+      route: this.clean(summary.route), screenIds: summary.screenIds, flow: this.flowProgress(),
+      ...(this.flowPersistenceFailure ? { flowEvidenceError: this.flowPersistenceFailure } : {}),
       console: this.events.filter(event => event.type === 'console').map(({ level, message }) => ({ level, message })),
       errors: hostErrors(),
       ...((failure || observationErrors.length || journey?.status === 'failed') ? { error: failure ?? (observationErrors.length ? 'The browser observation could not be fully captured.' : journey!.detail) } : {}),
@@ -500,6 +565,7 @@ export class AgentBrowserSession {
   private dispose(generation: Generation) {
     if (generation.closing) return generation.closing;
     generation.closed = true;
+    this.flow.clearPending();
     generation.controller.abort(new Error('Browser runtime closed.'));
     generation.closing = (async () => {
       // Kill the process before context cleanup: a page can run an infinite loop.

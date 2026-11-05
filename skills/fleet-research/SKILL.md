@@ -9,4 +9,6 @@ Read requirements.md, scope.md and .fleet/packet.json. Write research.md with an
 
 This phase inherits the global read, write, edit and bash tools for local workspace inspection and adds lexical search over supplied documents. No web browser is provided. Candidate URLs are leads, not inspected sources. Attribute only evidence actually available in the workspace; mark licenses, versions, compatibility and operational integrations unverified when they cannot be checked. Do not fabricate research or claim a dependency was tested.
 
+Research a functional application whose external plugins and data connectors the user can implement or configure after the build. Identify the adapter interfaces, input/output contracts, configuration and error behavior that make those extensions possible. Prepared fictional records are development and test inputs only; their availability is not a reason to seed the delivered app or describe it as a mock, demo or prototype. Record fixture provenance and unverified integration claims in research/evidence artifacts, and recommend honest empty/setup/disconnected states for the application.
+
 Hand concrete options, risks and open questions to the planning phase. Do not implement the application or write the implementation plan during research.

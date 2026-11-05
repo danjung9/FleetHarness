@@ -31,7 +31,7 @@ export async function recordReview(store: Pick<Store, 'save'>, project: Project,
   let published = false;
   try {
     await fs.writeFile(temporary, JSON.stringify({ ...record, approvedAt: project.approvedAt,
-      scope: 'Prototype delivery only. Operational readiness is unverified.', history: project.reviewHistory }, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+      scope: 'Application delivery. Operational readiness is unverified.', history: project.reviewHistory }, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
     await fs.rename(temporary, reviewPath); published = true;
     await store.save();
   } catch (error) {

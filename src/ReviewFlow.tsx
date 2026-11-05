@@ -84,7 +84,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
   async function approve() {
     if (busy || submitting || approved || unmetCondition) return;
     setApproving(true);
-    const success = await action(() => api.approve(project.id, draft.feedback), 'Prototype approved for delivery.');
+    const success = await action(() => api.approve(project.id, draft.feedback), 'App approved for delivery.');
     if (success) setApprovalSubmitted(true);
     else setApproving(false);
   }
@@ -102,7 +102,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
 
   return <div className="page review-workspace">
     <div className="review-content">
-      <div className="page-heading"><div><h1>Review</h1><p>{choosingCandidate ? 'Compare the candidate evidence and choose a build to review.' : approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      <div className="page-heading"><div><h1>Review</h1><p>{choosingCandidate ? 'Compare the candidate evidence and choose a build to review.' : approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the app or request changes.'}</p></div></div>
       <ExperimentReview project={project} busy={busy} action={action}/>
       {choosingCandidate ? <p className="review-pending" role="status">Choose a passing candidate above before approving or requesting changes.{report && ' Your previous build remains saved until you select a candidate.'}</p> : <>
       {pendingRequest && !submitting && <p className="review-pending" role="status">Your change request is saved. The next iteration has not started; you can retry below.</p>}
@@ -127,17 +127,17 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
               <p className="review-report-time">Verified {date(report.time)} · {(report.durationMs / 1000).toFixed(2)}s</p>
             </div>
           </details>
-          <p className="review-limitations"><strong>Operational readiness is unverified.</strong> Synthetic tests and prototype review do not validate production integrations, security accreditation, or field performance.</p>
+          <p className="review-limitations"><strong>Operational readiness is unverified.</strong> Automated checks and app review do not validate production integrations, security accreditation, or field performance.</p>
         </li>
         <li>
           <h2>{approved ? 'Review recorded' : 'Record your review'}</h2>
-          {approved ? <><p className="review-recorded-notes">{project.feedback}</p><p className="approval-note"><ShieldCheck size={17}/>Approved for prototype delivery · {date(project.approvedAt!)}</p></> : <>
+          {approved ? <><p className="review-recorded-notes">{project.feedback}</p><p className="approval-note"><ShieldCheck size={17}/>Approved for app delivery · {date(project.approvedAt!)}</p></> : <>
             <label htmlFor={noteId}>Review notes</label>
             <textarea id={noteId} rows={3} maxLength={10000} value={draft.feedback} disabled={submitting} aria-describedby={noteHintId} onChange={event => setDraft(current => ({ ...current, feedback: event.target.value }))} placeholder="What did you try? What should change before you can approve? Include steps to reproduce any issues."/>
             <p className="review-notes-hint" id={noteHintId}>Use at least 10 characters. Request changes sends these notes back for another build and test cycle.</p>
             <label className="checkbox"><input type="checkbox" checked={draft.reviewed} disabled={submitting} onChange={event => setDraft(current => ({ ...current, reviewed: event.target.checked }))}/>I inspected the application, test evidence, and limitations.</label>
             <div className="review-decision">
-              <button className="primary" disabled={busy || submitting || !!unmetCondition} aria-describedby={unmetCondition ? gateId : undefined} onClick={() => void approve()}><ShieldCheck size={16}/>{approving ? 'Approving…' : 'Approve prototype'}</button>
+              <button className="primary" disabled={busy || submitting || !!unmetCondition} aria-describedby={unmetCondition ? gateId : undefined} onClick={() => void approve()}><ShieldCheck size={16}/>{approving ? 'Approving…' : 'Approve app'}</button>
               <button className="secondary" disabled={busy || submitting || !!changesUnmetCondition} aria-describedby={changesUnmetCondition ? changesGateId : noteHintId} onClick={() => void requestChanges()}><RotateCcw size={16}/>{requestingChanges ? 'Sending back…' : 'Request changes'}</button>
             </div>
             {unmetCondition && <p className="review-decision-hint" id={gateId}>To approve: {unmetCondition}</p>}
@@ -172,10 +172,10 @@ function DeliveryContent({ project, busy, action, onReview }: DeliveryProps) {
   }
 
   return <div className="page delivery-workspace"><div className="delivery-content">
-    <div className="page-heading"><div><h1>Deliver</h1><p>{approved ? 'Save the approved prototype to your computer.' : 'Approve your prototype before downloading it.'}</p></div></div>
+    <div className="page-heading"><div><h1>Deliver</h1><p>{approved ? 'Save the approved app to your computer.' : 'Approve your app before downloading it.'}</p></div></div>
     {!approved ? <div className="review-empty"><ShieldCheck size={26}/><h2>{project.report ? 'Review comes first' : 'Nothing to deliver yet'}</h2><p>{project.report ? 'Try the app and record your review to make this build available for download.' : 'Build and review an app before downloading it.'}</p><button className="secondary" onClick={onReview}>Go to review</button></div> : <>
       <section className="delivery-app" aria-labelledby="delivery-app-heading">
-        <h2 id="delivery-app-heading">{savedApp ? 'Your app is saved' : 'Your prototype is approved'}</h2>
+        <h2 id="delivery-app-heading">{savedApp ? 'Your app is saved' : 'Your app is approved'}</h2>
         <p className="delivery-approved">Approved {date(project.approvedAt!)}<button className="text-button" onClick={onReview}>View review</button></p>
         {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, project.runtimeProfile && project.runtimeProfile !== 'browser' ? 'export' : 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to save it.</p>}
       </section>

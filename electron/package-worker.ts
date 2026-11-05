@@ -45,8 +45,8 @@ async function main(job: PackageJob) {
     'AppYard, Node.js, and an AI account are not needed to use this app.',
     'This app runs offline. Its local data stays on this computer.',
     `Built for ${process.platform} ${process.arch}.`, '',
-    process.platform === 'darwin' ? 'This prototype is ad-hoc signed, not Apple Developer ID signed or notarized. macOS may require approval in System Settings > Privacy & Security.'
-      : 'This prototype is not signed by a verified publisher. Your operating system may ask you to approve it.',
+    process.platform === 'darwin' ? 'This app is ad-hoc signed, not Apple Developer ID signed or notarized. macOS may require approval in System Settings > Privacy & Security.'
+      : 'This app is not signed by a verified publisher. Your operating system may ask you to approve it.',
     'Operational readiness has not been verified.'
   ].join('\n'));
   await zipDirectory(output, job.archive);

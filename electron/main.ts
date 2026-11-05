@@ -291,7 +291,7 @@ function registerIPC() {
     deliveries.set(id, { controller, done });
     let destination: string | undefined, committed = false;
     try {
-      if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this prototype before export.');
+      if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this app before export.');
       if (!p.workspace || !reportPassed(p.report, p.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
       if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before exporting.');
       await experiments.assertSelectedVerified(p);
@@ -313,7 +313,7 @@ function registerIPC() {
               'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
               'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
             ] : []),
-            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
+            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; approval does not complete them.'),
             ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
           'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',

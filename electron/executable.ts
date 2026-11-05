@@ -16,7 +16,7 @@ export function executableFileName(project: Pick<Project, 'title'>) {
   return `${executableName(project)}-${process.platform}-${process.arch}.zip`;
 }
 export async function assertExecutableSource(project: Project) {
-  if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this prototype before downloading the app.');
+  if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this app before downloading it.');
   if (!project.workspace || !reportPassed(project.report, project.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
   if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
   const solution = await deliveredSolution(project.workspace);

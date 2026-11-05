@@ -62,8 +62,8 @@ try {
   await page.getByRole('navigation',{name:'Challenge progress',exact:true}).getByRole('button',{name:'Review',exact:true}).click();
   await page.getByLabel('Review notes').fill('Inspected the fixture preview and test output. This is an integration test only.');
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
-  await page.getByRole('button',{name:'Approve prototype',exact:true}).click();
-  await page.getByText('Prototype approved for delivery.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Approve app',exact:true}).click();
+  await page.getByText('App approved for delivery.',{exact:true}).waitFor();
   await page.getByRole('heading',{name:'Deliver',exact:true}).waitFor();
   const destination=path.join(root,'delivery');await fs.mkdir(destination);
   await app.evaluate(({dialog},dir)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[dir]});},destination);

@@ -3,11 +3,16 @@ import { normalizeTokenTotals, piTokenTotals, type TokenTotals } from '../shared
 
 export type StageSession = Pick<AgentSession, 'prompt' | 'subscribe' | 'abort' | 'dispose'>
   & Partial<Pick<AgentSession, 'getSessionStats'>> & { getTokenUsage?(): TokenTotals | undefined };
-export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns?: number }
-export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000 };
+export interface AgentLimits {
+  /** Optional total deadline; productive worker phases have no elapsed-time cap by default. */
+  timeoutMs?: number;
+  idleMs: number;
+  maxTurns?: number;
+}
+export const defaultAgentLimits: AgentLimits = { idleMs: 5 * 60_000 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
 
-/** Bound setup, model/tool work and artifact recovery even when the SDK ignores abort. */
+/** Enforce inactivity, cancellation and optional budgets even when the SDK ignores abort. */
 export async function runAgentStage(options: {
   label: string;
   signal: AbortSignal;
@@ -24,7 +29,7 @@ export async function runAgentStage(options: {
 }) {
   const limits = { ...defaultAgentLimits, ...options.limits };
   for (const [key, value] of Object.entries(limits)) {
-    if (key === 'maxTurns' && value === undefined) continue;
+    if ((key === 'timeoutMs' || key === 'maxTurns') && value === undefined) continue;
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
   }
   if (options.signal.aborted) throw new Error(stoppedMessage);
@@ -80,7 +85,8 @@ export async function runAgentStage(options: {
     try { target.dispose(); } catch {}
   };
   options.signal.addEventListener('abort', abort, { once: true });
-  const deadline = setTimeout(() => fail(`${options.label} exceeded the ${limits.timeoutMs / 60_000}-minute limit. ${options.recoveryHint ?? 'Inspect the saved artifacts before retrying.'}`), limits.timeoutMs);
+  const timeoutMs = limits.timeoutMs;
+  const deadline = timeoutMs === undefined ? undefined : setTimeout(() => fail(`${options.label} exceeded the ${timeoutMs / 60_000}-minute limit. ${options.recoveryHint ?? 'Inspect the saved artifacts before retrying.'}`), timeoutMs);
   heartbeat();
   const work = (async () => {
     let created: StageSession;
