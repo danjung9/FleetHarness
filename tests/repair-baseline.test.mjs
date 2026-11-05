@@ -6,9 +6,9 @@ import { captureTestBaseline, restoreTestBaseline, assertTestBaseline } from '..
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { verifyWorkspace, reportPassed } from '../dist-electron/electron/verification.js';
 
-// Only the unavailable OS sandbox launch is replaced. The real Node coordinator,
+// Only the launcher is replaced. The real Node coordinator,
 // registered-case reporter and verifier execute the synthetic application tests.
-// This fixture makes no claim about production sandbox or process-scanner behavior.
+// This fixture makes no claim about production launcher or process-scanner behavior.
 const nodeLauncher = (_root, executable, args) => {
   const ready = 'synthetic-baseline-runtime-ready\n';
   return { runner: executable, ready, command: 'synthetic direct Node launcher',

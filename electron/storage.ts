@@ -1,3 +1,4 @@
+import { redactValue } from './secrets.js';
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -37,6 +38,17 @@ export class Store {
     }
     this.state.settings.developerMode = this.state.settings.developerMode === true;
     for (const p of this.state.projects) {
+      if (p.conversation) {
+        p.conversation.status = 'idle';
+        for (const message of p.conversation.messages) {
+          if (message.status === 'streaming') {
+            message.status = 'error';
+            message.text ||= 'This reply was interrupted. Send a new message to continue.';
+            p.conversation.error = 'The previous reply was interrupted. Send a new message to continue.';
+          }
+        }
+        for (const question of p.conversation.questions) if (question.status === 'pending') question.status = 'cancelled';
+      }
       if (p.executable?.status === 'packaging') {
         p.executable.status = 'failed';
         p.executable.error = 'Packaging was interrupted. Download the app again to retry.';
@@ -62,19 +74,21 @@ export class Store {
       await this.recoverProcesses(scope.marker);
       p.processScope.cleanup = 'confirmed'; p.status = 'stopped';
       if (p.runCheckpoint) p.runCheckpoint.writerState = 'idle';
-      p.error = 'The previous run was interrupted. Its processes have been stopped. Resume or start a new run.';
+      p.error = 'The previous run was interrupted. Its processes have been stopped. ' + (p.resumeStage
+        ? 'Resume the phase to continue with your saved work.'
+        : p.runCheckpoint ? 'Resume or start a new run.' : 'This older run has no recovery checkpoint; start a new build from the saved requirements.');
     } catch { /* Keep the unresolved marker for a later Stop or restart retry. */ }
     await this.save();
   }
   save() {
-    this.writes = this.writes.catch(() => {}).then(() => atomicHostWrite(this.root, 'state.json', JSON.stringify(this.state, null, 2)));
+    this.writes = this.writes.catch(() => {}).then(() => atomicHostWrite(this.root, 'state.json', JSON.stringify(redactValue(this.state), null, 2)));
     return this.writes;
   }
   saveProject(next: Project) {
     this.writes = this.writes.catch(() => {}).then(async () => {
       const current = this.project(next.id);
       const state = { ...this.state, projects: this.state.projects.map(p => p.id === next.id ? next : p) };
-      await atomicHostWrite(this.root, 'state.json', JSON.stringify(state, null, 2));
+      await atomicHostWrite(this.root, 'state.json', JSON.stringify(redactValue(state), null, 2));
       Object.assign(current, next);
     });
     return this.writes;
@@ -109,11 +123,12 @@ export async function safeFile(root: string, relative: string) {
   return resolved;
 }
 export type ArtifactManifest = { path: string; contents: Buffer }[];
-export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
+export const isDevelopmentEvidence = (name: string) => /^\.(?:quality-evidence|browser-observations)(?:\/|\\)/.test(name) || name === 'visual-review.json';
+export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
   const files: ArtifactManifest = [];
-  for (const file of await listArtifacts(root)) {
-    if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
+  const artifacts = (await listArtifacts(root)).filter(file => !['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)
+    && !(options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') && !(options.excludeEvidence && isDevelopmentEvidence(file.path)));
+  const read = async (file: Artifact) => {
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     const handle = await fs.open(await safeFile(root, file.path), constants.O_RDONLY | constants.O_NOFOLLOW);
     let contents: Buffer;
@@ -122,8 +137,11 @@ export async function artifactManifest(root: string, options: { excludeEvidence?
       contents = await handle.readFile();
     } finally { await handle.close(); }
     if (contents.length > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-    files.push({ path: file.path, contents });
-  }
+    return { path: file.path, contents };
+  };
+  // Large skill packets otherwise serialize thousands of independent metadata
+  // and read operations on every identity check. Keep every validation and order.
+  for (let offset = 0; offset < artifacts.length; offset += 16) files.push(...await Promise.all(artifacts.slice(offset, offset + 16).map(read)));
   if (options.requireEntryPoint && !files.some(file => file.path === 'index.html' && file.contents.length)) throw new Error('A regular, nonempty index.html entry point is required.');
   return files;
 }
@@ -132,6 +150,19 @@ export function manifestHash(files: ArtifactManifest) {
   for (const file of files) hash.update(file.path, file.contents);
   return hash.digest();
 }
-export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
+export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean } = {}) {
   return manifestHash(await artifactManifest(root, options));
+}
+
+/** Advance a verified identity only by the exact host-owned bytes being published. */
+export async function writeVerifiedArtifact(root: string, verifiedHash: string, name: 'judge.json' | 'evaluation-plan.json', contents: string) {
+  const before = await artifactManifest(root);
+  if (manifestHash(before) !== verifiedHash) throw new Error('Source changed after verification. Run verification again before review.');
+  const expected = before.filter(file => file.path !== name);
+  expected.push({ path: name, contents: Buffer.from(contents) });
+  expected.sort((a, b) => a.path.localeCompare(b.path));
+  const hash = manifestHash(expected);
+  await atomicHostWrite(root, name, contents, { exclusive: name === 'evaluation-plan.json' });
+  if (await sourceHash(root) !== hash) throw new Error('Source changed while publishing verification evidence. Run verification again before review.');
+  return hash;
 }

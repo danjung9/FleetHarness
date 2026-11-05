@@ -3,7 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 /** Host writes never open an existing destination, including links and hard links. */
-export async function atomicHostWrite(root: string, relative: string, contents: string | Uint8Array) {
+export async function atomicHostWrite(root: string, relative: string, contents: string | Uint8Array, options: { exclusive?: boolean } = {}) {
   const base = await fs.realpath(root);
   if ((await fs.lstat(root)).isSymbolicLink()) throw new Error('Host write requires a real directory.');
   const target = path.resolve(base, relative);
@@ -19,6 +19,7 @@ export async function atomicHostWrite(root: string, relative: string, contents: 
   try {
     const file = await fs.open(temporary, 'wx', 0o600); created = true;
     try { await file.writeFile(contents); await file.sync(); } finally { await file.close(); }
-    await fs.rename(temporary, target);
+    if (options.exclusive) await fs.link(temporary, target);
+    else await fs.rename(temporary, target);
   } finally { if (created) await fs.rm(temporary, { force: true }); }
 }

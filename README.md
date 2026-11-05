@@ -8,11 +8,19 @@ AppYard has one interface: the original desktop app and its browser preview. The
 
 The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
+Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities with full access, including self-hosted browsers and servers. Helpers inherit the run process marker for Stop and final cleanup.
+
+Build and verification agents can [open and interact with their app](docs/agent-browser.md) in a host-managed browser. They receive actual screenshots, page controls and console errors, then can edit the source and reopen the app to inspect the changes. Pi and Codex both support this loop with image-capable models.
+
 **Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
-Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). The packaged app targets self-contained browser prototypes; operational integrations and field readiness remain unverified. The product vision below describes the broader goal.
+Use **Project lead** inside a saved project to discuss the brief, inspect progress and apply proposed build changes. Research and planning can ask focused questions there, closing their model sessions while waiting for your answer. Read [project conversations and clarification](docs/project-conversation.md) for behavior and validation.
+
+Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). New builds declare computational capabilities and a browser, CLI, or local-service runtime. Host-owned evaluations, clean package execution and applicable browser checks gate delivery. Operational integrations and field readiness remain unverified. Read [solution contracts and evaluation](docs/solution-evaluation.md) for supported scorers, runtime profiles and factory benchmarks. The product vision below describes the broader goal.
+
+Application agents start from [versioned foundations](docs/application-foundations.md): the host copies a Node or Python service with a browser client, then agents extend its shared backend computation. Recipe-selected modules reuse message parsing, scheduling, evidence search, dependency analysis and record reconciliation. See [foundation research](docs/application-foundations-research.md) for the starter alternatives and selection rationale.
 
 ## Overview
 

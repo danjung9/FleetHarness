@@ -6,6 +6,7 @@ export interface JourneyState {
   current: Milestone;
   completed: Milestone[];
   activeStage?: StageId;
+  resumeStage?: StageId;
   message: string;
   stale: boolean;
 }
@@ -25,7 +26,23 @@ const buildMessages: Partial<Record<StageId, string>> = {
   verify: 'Testing the app. Your review comes next when checks pass.'
 };
 
+const resumeNames: Partial<Record<StageId, string>> = {
+  intake: 'intake', research: 'research', plan: 'planning', build: 'implementation', verify: 'testing'
+};
+
+export function getResumeStage(project: Project): StageId | undefined {
+  if (!['failed', 'stopped'].includes(project.status) || !project.runId || !project.workspace) return undefined;
+  return project.resumeStage && project.resumeStage in resumeNames ? project.resumeStage : undefined;
+}
+
+export function resumeLabel(stage: StageId): string {
+  return `Resume ${resumeNames[stage] ?? 'phase'}`;
+}
+
 function deliveryMessage(project: Project, appSaved: boolean): string {
+  if (project.runtimeProfile && project.runtimeProfile !== 'browser') return project.exportedTo
+    ? 'Runnable package and evidence exported. Follow README.md to start the solution.'
+    : 'Build approved. Export the runnable package when you’re ready.';
   if (project.executable?.status === 'packaging') return project.exportedTo
     ? 'Source and evidence exported. Packaging your app…'
     : 'Packaging your app. The download will be saved automatically.';
@@ -54,22 +71,27 @@ export function getJourneyState(project: Project): JourneyState {
     activeStage: 'deliver', message: deliveryMessage(project, appSaved), stale: false };
   }
 
-  const passed = reportPassed(project.report, project.qualityVersion === 1);
+  const passed = reportPassed(project.report, project.qualityVersion ?? false);
   if (project.status === 'review' && project.workspace && passed) {
     return { current: 'review', completed: ['brief', 'build'], activeStage: 'review',
       message: 'Your review is needed. Try the app and check the evidence.', stale: false };
   }
 
   const buildStages = project.stages.filter(stage => stage.id in buildMessages).reverse();
-  const activeStage = (project.status === 'running'
+  const resumeStage = getResumeStage(project);
+  const activeStage = resumeStage ?? (project.status === 'running'
     ? buildStages.find(stage => stage.status === 'active')
     : buildStages.find(stage => stage.status === 'failed')
       ?? buildStages.find(stage => stage.status === 'active'))?.id;
   let message: string;
   if (project.status === 'stopped') {
-    message = 'Build stopped. Your files are kept; start a new build when ready.';
+    message = resumeStage
+      ? `Build stopped. ${resumeLabel(resumeStage)} to continue with your saved work.`
+      : 'Build stopped. Your files are kept; start a new build when ready.';
   } else if (project.status === 'failed') {
-    message = 'Build needs attention. Inspect the details, then start a new build.';
+    message = resumeStage
+      ? `Build needs attention. ${resumeLabel(resumeStage)} to retry this phase with your saved work.`
+      : 'Build needs attention. Inspect the details, then start a new build.';
   } else if (project.status === 'review') {
     message = 'Verification needs attention. Start a new build before review.';
   } else if (activeStage === 'verify' && project.report && !passed) {
@@ -81,5 +103,5 @@ export function getJourneyState(project: Project): JourneyState {
   } else {
     message = 'The build is progressing automatically. Your review comes after testing.';
   }
-  return { current: 'build', completed: ['brief'], activeStage, message, stale: false };
+  return { current: 'build', completed: ['brief'], activeStage, resumeStage, message, stale: false };
 }

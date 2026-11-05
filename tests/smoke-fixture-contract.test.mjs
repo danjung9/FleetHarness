@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { qualityFixture, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
+import { qualityFixture, qualityFixtureProject, briefDataFixtureProject } from '../scripts/quality-fixture.mjs';
 import { customPacket, packetFor } from '../dist-electron/harness/planner.js';
 import { challenges } from '../dist-electron/harness/catalog.js';
 import { newProject } from '../dist-electron/electron/storage.js';
 import { starters } from '../dist-electron/shared/types.js';
 import { parseQualityPlan } from '../dist-electron/harness/quality-contract.js';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { loadQualityContract } from '../dist-electron/electron/quality.js';
+import { assertFixturePhaseRequests } from '../scripts/phase-fixture-checks.mjs';
+import { phasePrompt, syntheticDataPhase, toolsForPhase } from '../dist-electron/harness/phases.js';
 
 test('parser lifecycle fixture refuses starter and catalog acceptance inventories', () => {
   const starter = newProject(starters[0]);
@@ -51,4 +57,73 @@ test('local provider returns a bounded rejection for an unsupported catalog plan
   });
   assert.equal(response.status, 422);
   assert.match(await response.text(), /only supports.*synthetic task parser/i);
+});
+
+for (const input of [qualityFixtureProject, briefDataFixtureProject]) test(`the actual smoke provider supplies acceptance v2, the required solution and an evaluator connected to the delivered app: ${input.title}`, async t => {
+  const parent = path.resolve('output/connectors-unit'); await fs.mkdir(parent, { recursive: true });
+  const workspace = await fs.mkdtemp(path.join(parent, 'smoke-contract-'));
+  t.after(() => fs.rm(workspace, { recursive: true, force: true }));
+  const fixture = await startFixtureProvider();
+  t.after(async () => { fixture.server.closeAllConnections(); await fixture.close(); });
+  const acceptance = customPacket(input).acceptance;
+  async function turn(prompt) {
+    const response = await fetch(fixture.baseUrl + '/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(2000), body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }) });
+    assert.equal(response.status, 200);
+    const chunks = (await response.text()).split('\n').filter(line => line.startsWith('data: {')).map(line => JSON.parse(line.slice(6)));
+    const writes = chunks.flatMap(chunk => chunk.choices[0].delta.tool_calls ?? []).filter(call => call.function.name === 'write');
+    assert.ok(writes.length > 0);
+    for (const call of writes) {
+      const input = JSON.parse(call.function.arguments);
+      assert.equal(path.basename(input.path), input.path);
+      await fs.writeFile(path.join(workspace, input.path), input.content);
+    }
+  }
+  await turn('You are the planning agent.\nAcceptance IDs: ' + acceptance.map(item => item.id).join(', '));
+  const contract = await loadQualityContract(workspace, acceptance, true);
+  assert.equal(contract.plan.schemaVersion, 2); assert.equal(contract.solution.runtime.profile, 'browser');
+  assert.equal(contract.solution.capabilities[0].required, true);
+  assert.equal(contract.evaluation.evaluations[0].cases.length, 4);
+  for (const id of contract.solution.capabilities[0].criterionIds) {
+    const criterion = contract.plan.criteria.find(item => item.criterionId === id);
+    assert.equal(criterion.disposition, 'implemented');
+    assert.ok(criterion.capabilityIds.includes('parse'));
+  }
+  if (!input.criteria.length) assert.deepEqual(contract.solution.capabilities[0].criterionIds, ['SUMMARYcustom-1'], 'The prose task owns parsing when the optional criteria field is empty');
+  for (const criterion of acceptance.filter(item => item.provenance.every(source => source.kind === 'recipe'))) {
+    assert.equal(contract.plan.criteria.find(item => item.criterionId === criterion.id).disposition, 'deferred');
+  }
+  await turn('You are the implementation agent.');
+  for (const example of contract.evaluation.evaluations[0].cases) {
+    const result = spawnSync(process.execPath, [contract.solution.runtime.evaluator.entrypoint], { cwd: workspace, input: JSON.stringify(example.input), encoding: 'utf8', timeout: 2000 });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), example.expected);
+  }
+  // Removing the delivered implementation must break evaluation, rather than
+  // silently running a second implementation kept only in the test harness.
+  await fs.writeFile(path.join(workspace, 'index.html'), '<h1>Missing parser</h1>');
+  const missing = spawnSync(process.execPath, [contract.solution.runtime.evaluator.entrypoint], { cwd: workspace, input: JSON.stringify('TASK: inspect pump'), encoding: 'utf8', timeout: 2000 });
+  assert.notEqual(missing.status, 0); assert.match(missing.stderr, /Delivered parser core missing/);
+});
+
+test('phase smoke checks the synthetic specialist and judge separately without permitting extra or missing tools', () => {
+  const packet = customPacket(qualityFixtureProject, 'messages');
+  const project = { phasePlan: packet.stages, globalTools: packet.globalTools };
+  const request = (prompt, names) => ({ messages: [{ role: 'user', content: prompt }], tools: names.map(name => ({ function: { name } })) });
+  const phaseRequest = phase => request(phasePrompt(phase, project.globalTools), toolsForPhase(phase, project.globalTools));
+  const requests = packet.stages.filter(phase => phase.owner === 'agent').map(phaseRequest);
+  requests.splice(1, 0, request(phasePrompt(syntheticDataPhase, project.globalTools) + '\nYou are the synthetic data agent.', toolsForPhase(syntheticDataPhase, project.globalTools)));
+  requests.push(request('You are a fresh independent judge.', ['judge_read']));
+  assert.equal(assertFixturePhaseRequests(project, requests).sessions.length, 7);
+  for (const mutate of [
+    rows => rows[1].tools.push({ function: { name: 'fleet_get_challenge' } }),
+    rows => { rows[0].tools = rows[0].tools.filter(tool => tool.function.name !== 'fleet_get_challenge'); },
+    rows => { rows[4].tools = rows[4].tools.filter(tool => tool.function.name !== 'fleet_extract_messages'); },
+    rows => rows.at(-1).tools.push({ function: { name: 'write' } }),
+    rows => rows.splice(1, 1),
+    rows => rows.pop()
+  ]) {
+    const invalid = structuredClone(requests); mutate(invalid);
+    assert.throws(() => assertFixturePhaseRequests(project, invalid), { name: 'AssertionError' });
+  }
 });

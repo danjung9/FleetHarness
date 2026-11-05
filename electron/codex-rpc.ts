@@ -2,11 +2,55 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { atomicHostWrite } from '../shared/host-files.js';
+import { registerCredential } from './secrets.js';
 import path from 'node:path';
 import { runProcessEnvironment } from './process-sweep.js';
 
 export interface RpcMessage { id?: number | string; method?: string; params?: any; result?: any; error?: { code: number; message: string } }
+export const CHATGPT_MODEL_PROVIDER = 'openai_chatgpt_plan';
+export const CHATGPT_ACCESS_TOKEN_ENV = 'FLEET_CHATGPT_ACCESS_TOKEN';
+export const CHATGPT_AGENT_NAME = 'AppYard';
+export interface CodexCredentials { accessToken: string; expiresAt: number; authType?: 'chatgpt' | 'apiKey' }
+
+/** Keep the subscription bearer token out of command-line arguments and RPC messages. */
+export function codexProcessConfig(home: string, credentials: Pick<CodexCredentials, 'accessToken' | 'authType'>, inheritedEnv: NodeJS.ProcessEnv = process.env) {
+  if (credentials?.authType === 'apiKey') {
+    const env: NodeJS.ProcessEnv = { ...inheritedEnv, CODEX_HOME: home };
+    for (const name of ['OPENAI_API_KEY', 'CODEX_API_KEY', 'OPENAI_BASE_URL', CHATGPT_ACCESS_TOKEN_ENV]) delete env[name];
+    return { args: ['app-server', '--listen', 'stdio://', '-c', 'cli_auth_credentials_store="file"'], env };
+  }
+  if (!credentials?.accessToken?.trim()) throw new Error('Sign in with ChatGPT in Model settings before running Codex.');
+  registerCredential(credentials.accessToken);
+  const env: NodeJS.ProcessEnv = { ...inheritedEnv, CODEX_HOME: home, [CHATGPT_ACCESS_TOKEN_ENV]: credentials.accessToken };
+  delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
+  const provider = 'model_providers.' + CHATGPT_MODEL_PROVIDER;
+  const config = [
+    `model_provider="${CHATGPT_MODEL_PROVIDER}"`,
+    `${provider}.name="ChatGPT plan"`,
+    `${provider}.base_url="https://api.openai.com/v1"`,
+    `${provider}.env_key="${CHATGPT_ACCESS_TOKEN_ENV}"`,
+    `${provider}.wire_api="responses"`,
+    `${provider}.requires_openai_auth=false`,
+    `${provider}.supports_websockets=false`,
+    `shell_environment_policy.exclude=["${CHATGPT_ACCESS_TOKEN_ENV}"]`
+  ];
+  return { args: ['app-server', '--listen', 'stdio://', ...config.flatMap(value => ['-c', value])], env };
+}
+// Retain entered values only in process memory to redact even late account/build
+// diagnostics. Never put these values in project state, config or activity logs.
+const enteredKeys = new Set<string>();
+export function protectCodexKey(key: string) { enteredKeys.add(key); registerCredential(key); }
+export function redactCodexText(text: string) {
+  for (const key of enteredKeys) text = text.replaceAll(key, '[redacted]');
+  return text;
+}
+function redactResponse(value: any): any {
+  if (typeof value === 'string') return redactCodexText(value);
+  if (Array.isArray(value)) return value.map(redactResponse);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [redactCodexText(key), redactResponse(item)]));
+  return value;
+}
 export function codexExecutable() {
   const platform = process.platform, arch = process.arch;
   const triple = `${arch === 'arm64' ? 'aarch64' : 'x86_64'}-${platform === 'darwin' ? 'apple-darwin' : platform === 'win32' ? 'pc-windows-msvc' : 'unknown-linux-musl'}`;
@@ -16,42 +60,27 @@ export function codexExecutable() {
   return path.join(root, 'vendor', triple, 'bin', platform === 'win32' ? 'codex.exe' : 'codex');
 }
 
-/** App-owned policy. Workspace roots resolve per thread, so concurrent builds stay separate. */
+/** Replace the former app-owned restrictions, including on existing installations. */
 export async function prepareCodexHome(home: string) {
   home = path.resolve(home);
   const temporary = path.join(home, 'tmp');
   await fs.mkdir(temporary, { recursive: true, mode: 0o700 });
-  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(codexExecutable())])];
-  const config = [
-    'default_permissions = "fleet-build"',
-    'web_search = "disabled"', '',
-    '[permissions.fleet-build.filesystem]',
-    '":root" = "deny"',
-    '":minimal" = "read"',
-    ...toolchains.map(folder => `${JSON.stringify(folder)} = "read"`),
-    '":workspace_roots" = "write"',
-    `${JSON.stringify(temporary)} = "write"`, '',
-    '[permissions.fleet-build.network]',
-    'enabled = false', ''
-  ].join('\n');
-  // Atomic replacement prevents another phase from loading a partially written policy.
-  const staging = path.join(home, `config-${randomUUID()}.toml`);
-  try {
-    await fs.writeFile(staging, config, { mode: 0o600, flag: 'wx' });
-    await fs.rename(staging, path.join(home, 'config.toml'));
-  } finally { await fs.rm(staging, { force: true }); }
+  await atomicHostWrite(home, 'config.toml', 'sandbox_mode = "danger-full-access"\napproval_policy = "never"\nweb_search = "live"\n');
 }
 export class CodexRpc {
+  readonly whenClosed: Promise<void>;
+  private disposing?: Promise<void>;
   private nextId = 0;
   private closed = false;
   private pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   private listeners = new Set<(message: RpcMessage) => void>();
   private closeListeners = new Set<(error: Error) => void>();
   constructor(private child: ChildProcessWithoutNullStreams, private timeoutMs = 30_000) {
+    this.whenClosed = new Promise(resolve => child.once('close', () => resolve()));
     const lines = createInterface({ input: child.stdout });
     lines.on('line', line => {
       let message: RpcMessage;
-      try { message = JSON.parse(line); } catch { this.fail(new Error('Codex returned an invalid protocol message.')); this.dispose(); return; }
+      try { message = redactResponse(JSON.parse(line)); } catch { this.fail(new Error('Codex returned an invalid protocol message.')); this.dispose(); return; }
       if (message.id !== undefined && !message.method) {
         const pending = this.pending.get(Number(message.id)); if (!pending) return;
         this.pending.delete(Number(message.id)); clearTimeout(pending.timer);
@@ -64,15 +93,15 @@ export class CodexRpc {
     child.stdin.on('error', () => this.fail(new Error('The Codex connection closed. Reconnect in Settings.')));
     child.on('exit', () => { lines.close(); this.fail(new Error('Codex stopped unexpectedly. Reconnect in Settings and retry.')); });
   }
-  static launch(home: string) {
-    const env: NodeJS.ProcessEnv = runProcessEnvironment({ ...process.env, CODEX_HOME: home });
-    delete env.OPENAI_API_KEY; delete env.CODEX_API_KEY; delete env.OPENAI_BASE_URL;
-    return new CodexRpc(spawn(codexExecutable(), ['app-server', '--listen', 'stdio://', '-c', 'cli_auth_credentials_store="file"'], {
+  static launch(home: string, credentials: Pick<CodexCredentials, 'accessToken' | 'authType'> = { authType: 'apiKey', accessToken: '' }) {
+    const { args, env: inherited } = codexProcessConfig(home, credentials);
+    const env = runProcessEnvironment(inherited);
+    return new CodexRpc(spawn(codexExecutable(), args, {
       cwd: home, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true
     }));
   }
   async initialize() {
-    await this.request('initialize', { clientInfo: { name: 'fleetharness', title: 'AppYard', version: '0.1.0' }, capabilities: { experimentalApi: true } });
+    await this.request('initialize', { clientInfo: { name: CHATGPT_AGENT_NAME, title: 'AppYard', version: '0.1.0' }, capabilities: { experimentalApi: true } });
     this.send({ method: 'initialized', params: {} });
   }
   request(method: string, params: unknown = {}): Promise<any> {
@@ -95,11 +124,15 @@ export class CodexRpc {
     this.listeners.clear(); this.closeListeners.clear();
   }
   dispose() {
+    if (this.disposing) return this.disposing;
     this.fail(new Error('Codex session closed.'));
     const pid = this.child.pid;
     const kill = (signal: NodeJS.Signals) => { try { if (pid && process.platform !== 'win32') process.kill(-pid, signal); else this.child.kill(signal); } catch {} };
+    if (this.child.exitCode !== null || this.child.signalCode !== null) return this.whenClosed;
     kill('SIGTERM');
     const timer = setTimeout(() => kill('SIGKILL'), 1000); timer.unref();
     this.child.once('exit', () => clearTimeout(timer));
+    this.disposing = this.whenClosed;
+    return this.disposing;
   }
 }

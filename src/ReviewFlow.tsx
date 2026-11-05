@@ -1,19 +1,21 @@
 import { useEffect, useId, useState } from 'react';
-import { CheckCircle2, ClipboardCheck, Code2, Download, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, Code2, Download, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
 import type { Project } from '../shared/types';
 import { reportPassed } from '../shared/verification';
 import { api, isDesktop } from './api';
 import { ExecutableDownload } from './ExecutableDownload';
 import { QualityEvidence } from './QualityEvidence';
+import { VisualReview } from './VisualReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
-type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onApproved: () => void };
+type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onApproved: () => void; onChangesRequested: () => void };
 type DeliveryProps = { project: Project; busy: boolean; action: Action; onReview: () => void };
 type ReviewDraft = { feedback: string; reviewed: boolean };
 const reviewDrafts = new Map<string, ReviewDraft>();
 const draftKey = (project: Project) => `appyard-review:${project.id}:${project.runId || 'unstarted'}`;
 const date = (value: string) => new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const pendingChangeRequest = (project: Project) => project.reviewHistory?.filter(review => review.decision === 'changes_requested' && review.runId === project.runId && !review.nextRunId).at(-1);
 
 function readDraft(key: string, project: Project): ReviewDraft {
   const inMemory = reviewDrafts.get(key);
@@ -25,24 +27,30 @@ function readDraft(key: string, project: Project): ReviewDraft {
       return { feedback: saved.feedback, reviewed: saved.reviewed };
     }
   } catch { /* Keep the in-memory draft if session storage is unavailable. */ }
-  return { feedback: project.approvedAt ? project.feedback : '', reviewed: false };
+  return { feedback: project.approvedAt ? project.feedback : pendingChangeRequest(project)?.feedback ?? '', reviewed: false };
 }
 
 export function ReviewWorkspace(props: ReviewProps) {
   return <ReviewContent key={draftKey(props.project)} {...props}/>;
 }
 
-function ReviewContent({ project, busy, action, onPreview, onApproved }: ReviewProps) {
+function ReviewContent({ project, busy, action, onPreview, onApproved, onChangesRequested }: ReviewProps) {
   const key = draftKey(project);
   const [draft, setDraft] = useState(() => readDraft(key, project));
   const [approving, setApproving] = useState(false);
+  const [requestingChanges, setRequestingChanges] = useState(false);
   const [approvalSubmitted, setApprovalSubmitted] = useState(false);
   const noteId = useId();
+  const noteHintId = useId();
   const gateId = useId();
+  const changesGateId = useId();
   const report = project.report;
-  const passed = reportPassed(report, project.qualityVersion === 1);
+  const passed = reportPassed(report, project.qualityVersion ?? false);
   const unverified = report?.quality?.criteria.filter(criterion => criterion.status === 'unverified').length || 0;
   const approved = !!project.approvedAt;
+  const submitting = approving || requestingChanges;
+  const pendingRequest = !approved ? pendingChangeRequest(project) : undefined;
+  const changeRequest = project.reviewHistory?.filter(review => review.decision === 'changes_requested' && review.nextRunId === project.runId).at(-1);
 
   useEffect(() => {
     if (approved) {
@@ -63,18 +71,36 @@ function ReviewContent({ project, busy, action, onPreview, onApproved }: ReviewP
       : !passed || !project.workspace ? 'Resolve failed or missing checks with a new build before approval.'
         : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what you checked and any limitations.'
           : !draft.reviewed ? 'Confirm that you inspected the app, test evidence, and limitations.' : '';
+  const changesUnmetCondition = project.status === 'running' ? 'Wait for this build to finish before requesting changes.'
+    : !isDesktop ? 'Open this challenge in the AppYard desktop app to request changes.'
+      : !project.workspace || !report || !['review', 'failed'].includes(project.status) ? 'Finish a build before requesting changes.'
+        : draft.feedback.trim().length < 10 ? 'Add at least 10 characters describing what needs to change.' : '';
 
   async function approve() {
-    if (busy || approving || approved || unmetCondition) return;
+    if (busy || submitting || approved || unmetCondition) return;
     setApproving(true);
     const success = await action(() => api.approve(project.id, draft.feedback), 'Prototype approved for delivery.');
     if (success) setApprovalSubmitted(true);
     else setApproving(false);
   }
 
+  async function requestChanges() {
+    if (busy || submitting || approved || changesUnmetCondition) return;
+    setRequestingChanges(true);
+    const success = await action(() => api.requestChanges(project.id, draft.feedback), 'Changes requested. A new iteration has started.');
+    if (success) {
+      reviewDrafts.delete(key);
+      try { sessionStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
+      onChangesRequested();
+    } else setRequestingChanges(false);
+  }
+
   return <div className="page review-workspace">
     <div className="review-content">
-      <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app and inspect its evidence before approving the prototype.'}</p></div></div>
+      <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
+      {pendingRequest && !submitting && <p className="review-pending" role="status">Your change request is saved. The next iteration has not started; you can retry below.</p>}
+      {changeRequest && <details className="review-request"><summary>Changes requested for this iteration</summary><p className="review-recorded-notes">{changeRequest.feedback}</p><p className="review-report-time">Requested {date(changeRequest.createdAt)}</p></details>}
+      <VisualReview projectId={project.id} report={project.visualReview ?? report?.quality?.visualReview} runtimeProfile={project.runtimeProfile} runStatus={project.status}/>
       {!report ? <div className="review-empty"><ClipboardCheck size={26}/><h2>No test evidence yet</h2><p>{project.status === 'running' ? 'The build is still running. Review will be ready after verification.' : 'Test results appear after a build reaches verification.'}</p></div> : <ol className="review-steps">
         <li>
           <div className="review-step-heading"><div><h2>Try the app</h2><p>Use the main workflow and check the result against your brief.</p></div><button className="secondary" onClick={onPreview}><Code2 size={16}/>Open preview</button></div>
@@ -100,9 +126,15 @@ function ReviewContent({ project, busy, action, onPreview, onApproved }: ReviewP
           <h2>{approved ? 'Review recorded' : 'Record your review'}</h2>
           {approved ? <><p className="review-recorded-notes">{project.feedback}</p><p className="approval-note"><ShieldCheck size={17}/>Approved for prototype delivery · {date(project.approvedAt!)}</p></> : <>
             <label htmlFor={noteId}>Review notes</label>
-            <textarea id={noteId} rows={3} maxLength={10000} value={draft.feedback} disabled={approving} onChange={event => setDraft(current => ({ ...current, feedback: event.target.value }))} placeholder="What did you try? What worked, and what still needs domain validation?"/>
-            <label className="checkbox"><input type="checkbox" checked={draft.reviewed} disabled={approving} onChange={event => setDraft(current => ({ ...current, reviewed: event.target.checked }))}/>I inspected the application, test evidence, and limitations.</label>
-            <div className="review-decision"><button className="primary" disabled={busy || approving || !!unmetCondition} aria-describedby={unmetCondition ? gateId : undefined} onClick={() => void approve()}><ShieldCheck size={16}/>{approving ? 'Approving…' : 'Approve prototype'}</button>{unmetCondition && <p id={gateId}>{unmetCondition}</p>}</div>
+            <textarea id={noteId} rows={3} maxLength={10000} value={draft.feedback} disabled={submitting} aria-describedby={noteHintId} onChange={event => setDraft(current => ({ ...current, feedback: event.target.value }))} placeholder="What did you try? What should change before you can approve? Include steps to reproduce any issues."/>
+            <p className="review-notes-hint" id={noteHintId}>Use at least 10 characters. Request changes sends these notes back for another build and test cycle.</p>
+            <label className="checkbox"><input type="checkbox" checked={draft.reviewed} disabled={submitting} onChange={event => setDraft(current => ({ ...current, reviewed: event.target.checked }))}/>I inspected the application, test evidence, and limitations.</label>
+            <div className="review-decision">
+              <button className="primary" disabled={busy || submitting || !!unmetCondition} aria-describedby={unmetCondition ? gateId : undefined} onClick={() => void approve()}><ShieldCheck size={16}/>{approving ? 'Approving…' : 'Approve prototype'}</button>
+              <button className="secondary" disabled={busy || submitting || !!changesUnmetCondition} aria-describedby={changesUnmetCondition ? changesGateId : noteHintId} onClick={() => void requestChanges()}><RotateCcw size={16}/>{requestingChanges ? 'Sending back…' : 'Request changes'}</button>
+            </div>
+            {unmetCondition && <p className="review-decision-hint" id={gateId}>To approve: {unmetCondition}</p>}
+            {changesUnmetCondition && <p className="review-decision-hint" id={changesGateId}>To request changes: {changesUnmetCondition}</p>}
           </>}
         </li>
       </ol>}
@@ -137,7 +169,7 @@ function DeliveryContent({ project, busy, action, onReview }: DeliveryProps) {
       <section className="delivery-app" aria-labelledby="delivery-app-heading">
         <h2 id="delivery-app-heading">{savedApp ? 'Your app is saved' : 'Your prototype is approved'}</h2>
         <p className="delivery-approved">Approved {date(project.approvedAt!)}<button className="text-button" onClick={onReview}>View review</button></p>
-        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to download it.</p>}
+        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, project.runtimeProfile && project.runtimeProfile !== 'browser' ? 'export' : 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to save it.</p>}
       </section>
       <section className="delivery-source" aria-labelledby="delivery-source-heading">
         <div><h2 id="delivery-source-heading">Source and evidence</h2><p>Export the app source, test results, and your review for inspection or further development.</p></div>

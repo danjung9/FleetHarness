@@ -17,7 +17,7 @@ fixture.setDelay(200);
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: {
   'fleet-fixture': {
     baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
-    models: [{ id: 'fixture-model', name: 'Local journey fixture', reasoning: false, input: ['text'],
+    models: [{ id: 'fixture-model', name: 'Local journey fixture', reasoning: false, input: ['text', 'image'],
       contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
   }
 } }));
@@ -29,10 +29,11 @@ async function assertCompactNavigation(page) {
     assert.equal(await progress.getByRole('button', { name, exact: true }).count(), 1);
   }
   const utilities = page.getByRole('navigation', { name: 'Primary', exact: true });
-  assert.equal(await utilities.getByRole('button').count(), 4, 'The default utility rail excludes developer-only system design');
-  for (const name of ['Home — challenge portfolio', 'Preview — generated app', 'Activity — agent work', 'Files — artifacts']) {
+  assert.equal(await utilities.getByRole('button').count(), 5, 'The default utility rail includes Connectors and excludes developer-only system design');
+  for (const name of ['Connectors', 'Home — challenge portfolio', 'Preview — generated app', 'Activity — agent work', 'Files — artifacts']) {
     assert.equal(await utilities.getByRole('button', { name, exact: true }).count(), 1);
   }
+  assert.equal(await utilities.getByRole('button', { name: /^System design/ }).count(), 0, 'System design has no utility control outside developer mode');
   assert.equal(await page.locator('.system-design').count(), 0, 'System design stays hidden throughout the non-developer journey');
 }
 
@@ -71,7 +72,7 @@ try {
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   assert.equal(await page.getByRole('switch', { name: 'Developer mode', exact: true }).isChecked(), false, 'Developer mode is off by default');
-  await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();
@@ -119,6 +120,7 @@ try {
   await page.getByRole('button', { name: 'Review build', exact: true }).click();
   await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true, 'Sending a build back requires review comments');
 
   const reviewNotes = 'Tried the synthetic parser and checked the test evidence. This is a local integration fixture only.';
   const acknowledgment = 'I inspected the application, test evidence, and limitations.';
@@ -149,6 +151,47 @@ try {
   assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), reviewNotes, 'Review notes survive a renderer reload');
   assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), true, 'The review acknowledgment survives a renderer reload');
 
+  const changeNotes = 'Improve the empty-message guidance so reviewers know to enter a TASK: message before trying again.';
+  await page.getByLabel('Review notes', { exact: true }).fill(changeNotes);
+  await page.getByLabel(acknowledgment, { exact: true }).uncheck();
+  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'Changes can be requested without the approval acknowledgment');
+  const iterationRequestStart = fixture.requests.length;
+  await page.getByRole('button', { name: 'Request changes', exact: true }).click();
+  await page.getByRole('button', { name: 'Stop build', exact: true }).waitFor();
+  assert.equal(await progress.getByRole('button', { name: 'Build', exact: true }).getAttribute('aria-current'), 'step');
+  assert.equal(await progress.getByRole('button', { name: 'Build', exact: true }).getAttribute('aria-pressed'), 'true', 'Sending comments returns the reviewer to Build');
+  const rebuilding = await page.evaluate(async projectId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === projectId), id);
+  assert.notEqual(rebuilding.runId, built.runId, 'A requested iteration starts a distinct build');
+  assert.equal(rebuilding.approvedAt, undefined);
+  assert.equal(rebuilding.report, undefined, 'The previous report is not current verification evidence');
+  const changeRecord = rebuilding.reviewHistory.find(review => review.decision === 'changes_requested' && review.runId === built.runId);
+  assert.equal(changeRecord?.feedback, changeNotes, 'The requested changes are saved against the reviewed build');
+  assert.equal(changeRecord.nextRunId, rebuilding.runId, 'The review record identifies the resulting iteration');
+  await captureCompact(page, 'journey-requested-iteration-minimum.png');
+
+  await page.locator('.journey-steps button[aria-current="step"][title^="Review"]')
+    .or(page.locator('.journey-message').filter({ hasText: /^Build (?:stopped|needs attention)\./ }))
+    .waitFor({ state: 'visible', timeout: 90000 });
+  const iterated = await page.evaluate(async projectId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === projectId), id);
+  assert.equal(iterated.status, 'review', iterated.error);
+  assert.equal(iterated.report.quality.status, 'passed');
+  assert.equal(iterated.reviewHistory.find(review => review.id === changeRecord.id)?.feedback, changeNotes, 'Review history survives the completed iteration');
+  assert.equal(iterated.description, built.description, 'Requesting changes preserves the original challenge brief');
+  assert.ok((await fs.readFile(path.join(iterated.workspace, 'requirements.md'), 'utf8')).includes(changeNotes), 'The iteration saves review comments with its requirements');
+  const iterationPrompts = fixture.requests.slice(iterationRequestStart).flatMap(request => request.messages
+    .filter(message => message.role === 'user').map(message => typeof message.content === 'string' ? message.content
+      : Array.isArray(message.content) ? message.content.map(part => part.text ?? '').join('\n') : JSON.stringify(message.content)));
+  assert.ok(iterationPrompts.some(prompt => prompt.includes('You are the implementation agent') && prompt.includes(changeNotes)), 'The implementation agent receives the reviewer’s comments');
+  await page.getByRole('button', { name: 'Review build', exact: true }).click();
+  await page.getByRole('heading', { name: 'Review', exact: true }).waitFor();
+  assert.equal(await page.getByLabel('Review notes', { exact: true }).inputValue(), '', 'The previous build’s notes do not become the new review draft');
+  assert.equal(await page.getByLabel(acknowledgment, { exact: true }).isChecked(), false, 'The new build needs a fresh inspection acknowledgment');
+  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true);
+  await page.getByLabel('Review notes', { exact: true }).fill('Inspected the new iteration and its fresh test evidence. Ready for local prototype delivery.');
+  await page.getByLabel(acknowledgment, { exact: true }).check();
+  await captureCompact(page, 'journey-review-after-iteration-minimum.png');
   await page.getByRole('button', { name: 'Approve prototype', exact: true }).click();
   await page.getByRole('heading', { name: 'Deliver', exact: true }).waitFor();
   assert.equal(await progress.getByRole('button', { name: 'Deliver', exact: true }).getAttribute('aria-current'), 'step');
@@ -165,6 +208,8 @@ try {
   await page.getByRole('status').filter({ hasText: 'Source and evidence saved to' }).waitFor();
   const delivered = await page.evaluate(async projectId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === projectId), id);
   assert.equal(delivered.status, 'delivered');
+  assert.equal(delivered.reviewHistory.at(-1).decision, 'approved', 'Fresh approval is recorded after the change request');
+  assert.equal(delivered.reviewHistory.at(-1).runId, iterated.runId);
   assert.ok(delivered.exportedTo.startsWith(await fs.realpath(destination) + path.sep));
   assert.equal(delivered.executable, undefined, 'Exporting source does not claim a packaged app was downloaded');
   assert.match(await fs.readFile(path.join(delivered.exportedTo, 'DELIVERY.md'), 'utf8'), /1\/1 passed/);
@@ -180,7 +225,7 @@ try {
   await page.locator('.journey-steps button[aria-current="step"][title^="Brief"]').waitFor();
   const revised = await page.evaluate(async challengeId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === challengeId), id);
   assert.equal(revised.status, 'draft');
-  assert.equal(revised.runId, built.runId, 'Editing preserves the previous workspace for inspection');
+  assert.equal(revised.runId, iterated.runId, 'Editing preserves the previous workspace for inspection');
   assert.equal(revised.report, undefined);
   assert.equal(revised.approvedAt, undefined);
   assert.equal(revised.exportedTo, undefined);
@@ -200,7 +245,8 @@ try {
 
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: true, automaticBuildAndRepair: true, reviewDraftRetained: true,
-    reviewDraftSurvivesReload: true, revisedBriefClearsApproval: true,
+    reviewDraftSurvivesReload: true, requestedChangesStartIteration: true, reviewerCommentsReachAgent: true,
+    iterationRequiresFreshReview: true, revisedBriefClearsApproval: true,
     approvalToDelivery: true, truthfulSourceExport: true, milestones: 4, utilityEntries: 4, developerModeOff: true,
     minimumWindow: '1120x720', rendererErrors: errors.length, providerRequests: fixture.requests.length, screenshots: output }, null, 2));
 } catch (error) {

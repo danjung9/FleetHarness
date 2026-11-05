@@ -8,6 +8,7 @@ import { runIndependentJudge } from '../dist-electron/electron/independent-judge
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
 import { CodexRpc, codexExecutable } from '../dist-electron/electron/codex-rpc.js';
+import { foundationRuntime, materializeFoundation } from '../dist-electron/harness/foundations.js';
 
 const gap = { requirement: 'Weekly schedule', evidence: 'Only preset alternatives exist.', fix: 'Generate alternatives for an independently changed synthetic roster.' };
 const not = { verdict: 'NOT', gaps: [gap] };
@@ -37,7 +38,7 @@ async function fixture(t, answers = [not, satisfactory], options = {}) {
     const failed = options.failVerification === true || options.failVerification === verifications;
     return { time: new Date().toISOString(), command: 'fake verifier', passed: 1, failed: failed ? 1 : 0,
       skipped: 0, total: 1, exitCode: failed ? 1 : 0, output: 'Verifier evidence', durationMs: 1, sourceHash: await sourceHash(workspace),
-      quality: { schemaVersion: 1, status: 'passed', requirementsMet: true, journeys: [{ status: 'passed' }], criteria: [{ criterionId: 'DESCsynthetic-1', status: 'passed', detail: 'Synthetic browser evidence' }], errors: [] } };
+      quality: options.quality ?? { schemaVersion: 1, status: 'passed', requirementsMet: true, journeys: [{ status: 'passed' }], criteria: [{ criterionId: 'DESCsynthetic-1', status: 'passed', detail: 'Synthetic browser evidence' }], errors: [] } };
   };
   const engine = {
     backend: 'pi', provider: 'fixture', model: 'fixture', runtime: { getModel: () => ({}) }, agentDir: workspace,
@@ -98,6 +99,85 @@ test('SATISFACTORY performs no repair and records verify time and actual tokens'
   assert.deepEqual(h.measurements[0].usage, report.independentJudge.attempts[0].tokens);
   assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 120);
 });
+
+test('audit regression: a late core mutation during judge evidence publication cannot receive a passing identity', async t => {
+  const h = await fixture(t, [satisfactory]);
+  await fs.writeFile(path.join(h.workspace, 'core.cjs'), 'exports.value = "verified synthetic implementation";');
+  const rename = fs.rename;
+  let edited = false;
+  t.mock.method(fs, 'rename', async (from, to) => {
+    await rename(from, to);
+    if (to === path.join(h.workspace, 'judge.json')) {
+      edited = true;
+      await fs.writeFile(path.join(h.workspace, 'core.cjs'), 'exports.value = "untested late mutation";');
+    }
+  });
+  await assert.rejects(h.run(), /Source changed while publishing verification evidence/);
+  assert.equal(edited, true);
+  assert.equal(h.verifications, 1, 'No reverification occurred in this audit interleaving');
+  assert.equal(h.reports.length, 0, 'Never publish SATISFACTORY with the untested bytes');
+  assert.equal(h.repairs.length, 0);
+});
+
+for (const schemaVersion of [2, 3]) for (const profile of ['node-service', 'python-service', 'cli']) {
+  test(`judge reads the complete ${profile} delivery without a root browser entrypoint (quality ${schemaVersion})`, async t => {
+    const runtimeProfile = profile === 'cli' ? 'cli' : 'service';
+    const journeys = profile === 'cli' ? [] : ['primary', 'recovery'].flatMap(id => ['desktop', 'narrow'].map(viewport => ({ id, viewport, status: 'passed' })));
+    const filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64);
+    const quality = { schemaVersion, contractHash, status: 'passed', requirementsMet: true, errors: [], journeys, expectedJourneys: journeys.length,
+      criteria: [{ criterionId: 'R1', status: 'passed', capabilityIds: ['compute'] }],
+      capabilities: [{ id: 'compute', required: true, status: 'passed', criterionIds: ['R1'], evaluationIds: ['examples'] }],
+      package: { status: 'passed', cleanCopy: true, profile: runtimeProfile, filesHash },
+      solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime: { profile: runtimeProfile, filesHash },
+        capabilities: [{ id: 'compute', required: true, status: 'passed' }],
+        evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', actual: 1, threshold: 1, trials: 1, cases: [{ passed: true }, { passed: true }] }] } };
+    if (schemaVersion === 3 && runtimeProfile !== 'cli') {
+      const sessionId = 'synthetic-verifier', time = '2026-11-05T12:00:00.000Z';
+      const captures = [], reviews = [];
+      for (const [index, viewport] of ['desktop', 'narrow', 'desktop', 'narrow'].entries()) {
+        const captureId = 'capture-' + index;
+        captures.push({ id: captureId, sessionId, stage: 'verify', viewport, screenshot: '.browser-observations/' + captureId + '.png',
+          screenshotHash: 'c'.repeat(64), filesHash, capturedAt: time, sequence: index * 2 + 1 });
+        reviews.push({ id: 'review-' + index, sessionId, stage: 'verify', viewport, captureId, round: index < 2 ? 'initial' : 'recheck',
+          expected: 'Synthetic fixture layout.', observed: 'Synthetic fixture comparison.', findings: [], resolutions: [], reviewedAt: time, sequence: index * 2 + 2 });
+      }
+      quality.visualReview = { schemaVersion: 1, runId: 'synthetic-run', contractHash, status: 'passed', filesHash, activeSessionId: sessionId,
+        sessions: [{ id: sessionId, stage: 'verify', startedAt: time, status: 'passed', filesHash, errors: [] }], captures, reviews };
+    }
+    let runtime;
+    const h = await fixture(t, [satisfactory], { quality, onPrompt: async ({ config, prompt }) => {
+      const read = config.customTools[0];
+      assert.match(prompt, /declared entrypoints and every delivered runtime file/);
+      for (const name of runtime.files) {
+        const result = JSON.parse((await read.execute('delivery', { path: name })).content[0].text);
+        assert.equal(result.text, await fs.readFile(path.join(h.workspace, name), 'utf8'), name);
+      }
+      await assert.rejects(read.execute('absent-root', { path: 'index.html' }), /not in the judge snapshot/);
+      await assert.rejects(read.execute('builder', { path: '.fleet/packet.json' }), /not in the judge snapshot/);
+      await assert.rejects(read.execute('answers', { path: 'evaluation-plan.json' }), /not in the judge snapshot/);
+    } });
+    await fs.rm(path.join(h.workspace, 'index.html'));
+    if (profile === 'cli') {
+      runtime = { profile: 'cli', files: ['engine.mjs', 'data.csv'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+      await fs.writeFile(path.join(h.workspace, 'engine.mjs'), 'console.log(JSON.stringify(2));');
+      await fs.writeFile(path.join(h.workspace, 'data.csv'), 'synthetic,value\nexample,2\n');
+    } else {
+      const selection = { schemaVersion: 1, templateId: profile, version: '1.0.0', computePack: profile === 'node-service' ? 'messages' : 'custom', reason: 'Synthetic judge snapshot regression.' };
+      await fs.writeFile(path.join(h.workspace, 'foundation-plan.json'), JSON.stringify(selection));
+      await materializeFoundation({ workspace: h.workspace, resourcesRoot: path.resolve('.'), selection });
+      runtime = foundationRuntime(selection);
+    }
+    await fs.mkdir(path.join(h.workspace, '.fleet'));
+    await fs.writeFile(path.join(h.workspace, '.fleet/packet.json'), JSON.stringify({ challenge: { title: 'Synthetic' }, acceptance: [{ id: 'R1' }] }));
+    await fs.writeFile(path.join(h.workspace, 'evaluation-plan.json'), '{"private":"host answers"}');
+    await fs.writeFile(path.join(h.workspace, 'solution-contract.json'), JSON.stringify({ schemaVersion: 1, objective: 'Synthetic computation.', runtime,
+      capabilities: [{ id: 'compute', kind: 'algorithm', description: 'Compute synthetic results.', criterionIds: ['R1'], required: true, evaluationIds: ['examples'] }] }));
+    const result = await h.run();
+    assert.equal(result.independentJudge.verdict, 'SATISFACTORY', result.output);
+    assert.equal(result.independentJudge.attempts.length, 1);
+    assert.equal(h.repairs.length, 0);
+  });
+}
 
 test('missing usage on any judge response leaves the token total unknown', async t => {
   const h = await fixture(t, [satisfactory], { onPrompt: ({ session }) => session.emit({
@@ -335,7 +415,7 @@ test('judge evidence cannot overwrite application source through a builder-creat
   assert.equal((await fs.lstat(path.join(h.workspace, 'judge.json'))).isSymbolicLink(), true);
 });
 
-test('fake-engine production workflow reaches review after two repairs with the final NOT and every gap saved', { timeout: 10000 }, async t => {
+test('fake-engine production workflow blocks review after two repairs with the final NOT and every gap saved', { timeout: 20000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const root = await fs.mkdtemp(path.resolve('.tmp/judge-backend-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -354,7 +434,9 @@ test('fake-engine production workflow reaches review after two repairs with the 
           journeys: [{ status: 'passed' }], criteria: [{ status: 'passed' }] }, verificationNumber: ++verifications })
     } });
     const { FleetBackend } = await import('./dist-electron/electron/pi-backend.js');
-    const { qualityFixture, qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
+    const { qualityFixtureProject } = await import('./scripts/quality-fixture.mjs');
+    const { solutionFixture } = await import('./scripts/solution-fixture.mjs');
+    const { syntheticDataFiles } = await import('./scripts/data-fixture.mjs');
     const store = new Store(process.env.JUDGE_TEST_ROOT); await store.init();
     store.state.projects[0] = newProject(qualityFixtureProject);
     store.state.settings = { backend: 'pi', provider: 'fixture', model: 'fixture' };
@@ -371,8 +453,14 @@ test('fake-engine production workflow reaches review after two repairs with the 
     });
     backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
     backend.agent = async (p, run, stage, provider, model, instruction) => {
+      if (instruction.includes('You are the synthetic data agent')) {
+        for (const [name, body] of Object.entries(syntheticDataFiles)) {
+          await fs.mkdir(path.dirname(path.join(p.workspace, name)), { recursive: true });
+          await fs.writeFile(path.join(p.workspace, name), body);
+        }
+      }
       if (stage === 'plan') {
-        for (const [name, body] of Object.entries(qualityFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
+        for (const [name, body] of Object.entries(solutionFixture(run.acceptance.map(a => a.id)))) await fs.writeFile(path.join(p.workspace, name), body);
         await fs.writeFile(path.join(p.workspace, 'plan.md'), 'Synthetic implementation plan');
         await fs.writeFile(path.join(p.workspace, 'test-matrix.md'), 'Synthetic acceptance mapping');
       }
@@ -386,9 +474,11 @@ test('fake-engine production workflow reaches review after two repairs with the 
       }
     };
     await backend.start(project.id); await backend.active.get(project.id)?.done;
-    assert.equal(project.status, 'review', project.error);
-    assert.equal(project.stages.find(s => s.id === 'verify').status, 'complete');
-    assert.equal(project.stages.find(s => s.id === 'review').status, 'review');
+    assert.equal(project.status, 'failed', project.error);
+    assert.equal(project.error, 'The app did not pass its checks; review the failed checks in the activity log before trying again.');
+    assert.match(project.logs.filter(log => log.kind === 'error').map(log => log.text).join('\\n'), /Independent judgment did not pass/);
+    assert.equal(project.stages.find(s => s.id === 'verify').status, 'failed');
+    assert.equal(project.stages.find(s => s.id === 'review').status, 'queued');
     assert.equal(project.approvedAt, undefined);
     assert.equal(judgments, 3); assert.equal(repairs, 2); assert.equal(verifications, 3);
     const saved = new Store(store.root); await saved.init();
@@ -398,10 +488,17 @@ test('fake-engine production workflow reaches review after two repairs with the 
     for (let n = 1; n <= 3; n++) assert.ok(restored.report.output.includes('Missing output ' + n));
     assert.equal(restored.report.sourceHash, await sourceHash(project.workspace));
   `;
-  const child = spawnSync(process.execPath, ['--experimental-test-module-mocks', '--input-type=module', '-e', script], {
-    encoding: 'utf8', timeout: 8000, env: { ...process.env, JUDGE_TEST_ROOT: root, TMPDIR: path.resolve('.tmp') }
+  // The full workflow reads the expanded skill packet on each integrity check.
+  // Use the test's cancellable deadline, not a hidden synchronous eight-second kill.
+  const child = spawn(process.execPath, ['--experimental-test-module-mocks', '--input-type=module', '-e', script], {
+    signal: t.signal, env: { ...process.env, JUDGE_TEST_ROOT: root, TMPDIR: path.resolve('.tmp') }
   });
-  assert.equal(child.status, 0, child.stdout + child.stderr);
+  let stdout = '', stderr = '';
+  child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.on('data', chunk => { stderr += chunk; });
+  const closed = new Promise((resolve, reject) => { child.once('error', reject); child.once('close', (status, signal) => resolve({ status, signal })); });
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL'); await closed.catch(() => {}); });
+  const result = await closed;
+  assert.equal(result.status, 0, stdout + stderr + (result.signal ? '\nTerminated by ' + result.signal : ''));
 });
 
 test('backend runs the judge inside verify before opening human review', async () => {
@@ -425,7 +522,7 @@ test('local provider fixture returns a judge verdict without requesting a source
 test('native Codex judge advertises no shell, source-writing or delegation tools to a local fake provider', { timeout: 20000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const nativeRoot = await fs.mkdtemp(path.resolve('.tmp/native-judge-test-'));
-  t.after(() => fs.rm(nativeRoot, { recursive: true, force: true }));
+  t.after(() => fs.rm(nativeRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
   const home = path.join(nativeRoot, 'home'); await fs.mkdir(home);
   let receive, nativeController;
   const inventory = new Promise(resolve => { receive = resolve; });

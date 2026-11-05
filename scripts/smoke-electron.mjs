@@ -11,7 +11,7 @@ const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-electron-'));
 const piDir=path.join(root,'pi');await fs.mkdir(piDir);
 const output=path.resolve('output/playwright');await fs.mkdir(output,{recursive:true});
 const fixture=await startFixtureProvider();
-await fs.writeFile(path.join(piDir,'models.json'),JSON.stringify({providers:{'fleet-fixture':{baseUrl:fixture.baseUrl,api:'openai-completions',apiKey:'local-fixture-only',models:[{id:'fixture-model',name:'Local test fixture',reasoning:false,input:['text'],contextWindow:64000,maxTokens:8000,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]}}}));
+await fs.writeFile(path.join(piDir,'models.json'),JSON.stringify({providers:{'fleet-fixture':{baseUrl:fixture.baseUrl,api:'openai-completions',apiKey:'local-fixture-only',models:[{id:'fixture-model',name:'Local test fixture',reasoning:false,input:['text','image'],contextWindow:64000,maxTokens:8000,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]}}}));
 const executablePath=process.env.FLEET_EXECUTABLE;
 let app;
 try {
@@ -21,24 +21,26 @@ try {
   assert.equal(await page.evaluate(()=>typeof window.fleetHarness?.startRun),'function');
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
   const firstId=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
-  await assert.rejects(page.evaluate(id=>window.fleetHarness.startRun(id),firstId),/Choose a model/);
+  await assert.rejects(page.evaluate(id=>window.fleetHarness.startRun(id),firstId),/The build service is not connected; connect it in Model settings and try again\./);
   await page.screenshot({path:path.join(output,'factory-desktop.png'),scale:'css'});
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1120,720));
   await page.screenshot({path:path.join(output,'factory-minimum.png'),scale:'css'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1512,982));
   await page.getByRole('button',{name:'Settings',exact:true}).click();
-  await page.getByRole('radio',{name:'Pi Model providers'}).check();
+  await page.getByRole('tab',{name:'Other providers',exact:true}).click();
   await page.getByLabel('Provider',{exact:true}).selectOption('fleet-fixture');
   await page.getByRole('button',{name:'Save model settings'}).click();
   await page.getByText('Model settings saved.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'New challenge',exact:true}).click();
+  const intake=page.getByRole('dialog',{name:'New challenge',exact:true});
   const catalogCount=await page.evaluate(async fallback=>(await window.fleetHarness.bootstrap()).state.norfolkCatalog?.challenges.length??fallback,challenges.length);
-  await page.getByRole('dialog',{name:'New challenge',exact:true}).getByRole('button',{name:`Norfolk catalog · ${catalogCount}`,exact:true}).click();
-  await page.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');
-  await page.locator('.catalog-results button').click();
-  assert.match(await page.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
-  await page.getByRole('button',{name:'Save challenge',exact:true}).click();
+  await intake.getByRole('group',{name:'Challenge source',exact:true}).getByRole('button',{name:/^Norfolk catalog\b/}).click();
+  await intake.getByText(`${catalogCount} of ${catalogCount} challenges`,{exact:true}).waitFor();
+  await intake.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');
+  await intake.locator('.catalog-results button').click();
+  assert.match(await intake.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
+  await intake.getByRole('button',{name:'Save challenge',exact:true}).click();
   await page.getByText('Challenge saved.',{exact:true}).waitFor();
   const saved=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0]);
   assert.equal(saved.challengeId,'12');
@@ -54,12 +56,19 @@ try {
   await synthetic.getByRole('button',{name:'Save challenge',exact:true}).click();
   await page.getByText('Challenge saved.',{exact:true}).waitFor();
   const id=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
-  await page.getByRole('button',{name:'Start build',exact:true}).click();
+  await page.getByRole('navigation',{name:'Challenge progress',exact:true}).getByRole('button',{name:'Brief',exact:true}).click();
+  await page.getByRole('heading',{name:'Brief',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save & start build',exact:true}).click();
   await page.getByRole('dialog',{name:'Start build',exact:true}).getByRole('button',{name:'Start automatic build',exact:true}).click();
-  await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, {timeout:90000});
-  const final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
+  // Poll from here: an async predicate given to waitForFunction resolves at once.
+  let final;
+  for(const deadline=Date.now()+90000;;await new Promise(resolve=>setTimeout(resolve,250))){
+    final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
+    if(['review','failed','stopped'].includes(final?.status))break;
+    assert.ok(Date.now()<deadline,'The fixture build did not settle within 90 seconds: '+final?.status);
+  }
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
-  assert.equal(final.status,'review',final.error);
+  assert.equal(final.status,'review',final.error||'no error recorded');
   assert.equal(final.report.passed,1);
   assert.ok(final.logs.some(l=>l.text.includes('Starting one Pi repair attempt')));
   assert.ok(final.logs.some(l=>l.kind==='tool'&&l.text.includes('write')));

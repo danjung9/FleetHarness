@@ -1,3 +1,4 @@
+import { redactSecrets } from './secrets.js';
 import { execFile, spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { promises as fs } from 'node:fs';
@@ -5,14 +6,13 @@ import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { listArtifacts, sourceHash } from './storage.js';
-import { codexExecutable } from './codex-rpc.js';
 import type { TestReport } from '../shared/types.js';
 import { runProcessEnvironment } from './process-sweep.js';
 export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
 export interface VerificationCommand { runner: string; args: string[]; ready: string; command: string }
-// Trusted host/test dependency only. Production callers omit this and always use the sandbox.
+// Trusted host/test dependency only. Production callers omit this and launch the runtime directly.
 export type VerificationLauncher = (root: string, executable: string, testArgs: string[]) => VerificationCommand | Promise<VerificationCommand>;
 export interface VerificationOptions extends Partial<VerificationLimits> { launcher?: VerificationLauncher }
 export class VerificationShutdownError extends Error {
@@ -22,7 +22,7 @@ export class VerificationShutdownError extends Error {
   }
 }
 export async function applicationTestFiles(root: string, includeEmpty = false) {
-  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.(?:fleet|review-source|agent-tools|agent-output|browser-observations|quality-evidence)(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 const shellArgument = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 export function portableTestCommand(files: string[]) {
@@ -81,38 +81,16 @@ async function registeredEvidence(root: string, files: string[], wire: string) {
   if (problem) { counts.total = 0; counts.passed = 0; counts.failed = 0; counts.skipped = 0; output += '\n' + problem; }
   return { ...counts, output, registeredTests, problem };
 }
-const sandboxFailure = 'Could not start verification sandbox. Reinstall AppYard or ask your administrator to enable its bundled sandbox. Tests will never run unsandboxed.';
-function sandboxStartupFailure(output: string) {
-  // Applying Seatbelt can be forbidden by the enclosing development sandbox. Reinstallation
-  // cannot fix that host restriction, and running generated tests directly is not a fallback.
-  const message = /sandbox_apply: Operation not permitted/.test(output)
-    ? 'Could not start verification sandbox. An enclosing sandbox may prevent startup. Ask your operator to run verification on a host that permits the verification sandbox. Keep the verification sandbox enabled. Tests will never run unsandboxed.'
-    : sandboxFailure;
-  return message + '\n' + output;
-}
+const runtimeFailure = 'Could not start the verification runtime.';
 
-async function sandboxCommand(root: string, executable: string, testArgs: string[]) {
-  const runner = codexExecutable(), runtime = await fs.realpath(executable);
-  // Electron is the shipped Node runtime. On macOS it also needs its sibling Frameworks directory.
-  const bundle = runtime.match(/^(.*\.app)[/\\]Contents[/\\]/)?.[1];
-  const runtimeRoot = bundle ?? (runtime.startsWith('/opt/homebrew/') ? '/opt/homebrew' : path.dirname(runtime));
-  // Match the agents' fleet-build policy, using a fresh scratch home with no credentials.
-  const toolchains = [...new Set(['/Library/Developer', '/opt/homebrew', '/usr/local', path.dirname(process.execPath), path.dirname(runner), runtimeRoot])];
-  const filesystem = { ':root': 'deny', ':minimal': 'read', ':workspace_roots': 'write',
-    ...Object.fromEntries(toolchains.map(folder => [folder, 'read'])) };
-  const toml = '{' + Object.entries(filesystem).map(([key, value]) => JSON.stringify(key) + '=' + JSON.stringify(value)).join(',') + '}';
+async function runtimeCommand(root: string, executable: string, testArgs: string[]) {
   const ready = 'appyard-verification-ready-' + randomUUID() + '\n';
-  // The bootstrap runs INSIDE the sandbox, before any generated code. Its marker distinguishes
-  // sandbox/runtime startup failure from an ordinary failing application test.
+  // The host bootstrap distinguishes runtime startup from application test failure.
   const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(testArgs)},{stdio:'inherit'});child.once('error',e=>{console.error('Could not start Node tests: '+e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
-  return { runner, ready, command: 'codex sandbox -P fleet-build -- node ' + testArgs.map(arg => JSON.stringify(arg)).join(' '), args: ['sandbox', '-P', 'fleet-build',
-    '-c', 'permissions.fleet-build.filesystem=' + toml,
-    '-c', 'permissions.fleet-build.network.enabled=false',
-    '-c', 'projects={' + JSON.stringify(await fs.realpath(root)) + '={trust_level="untrusted"}}',
-    '--', runtime, '--input-type=commonjs', '-e', bootstrap] };
+  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: 'node ' + testArgs.map(arg => JSON.stringify(arg)).join(' ') };
 }
-export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}): Promise<TestReport> {
-  const { launcher = sandboxCommand, ...overrides } = options;
+export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}, runtimeEnvironment?: NodeJS.ProcessEnv): Promise<TestReport> {
+  const { launcher = runtimeCommand, ...overrides } = options;
   const limits = { timeoutMs: 120_000, maxOutputBytes: 2_000_000, ...overrides };
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid verification limit: ${key}`);
@@ -123,17 +101,19 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = ['--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
+  const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
   let command: VerificationCommand, home: string;
   try {
     command = await launcher(root, executable, args);
-    // Never load a user's credentials/config or let workspace .codex settings replace this profile.
+    // Use a disposable home without account credentials.
     home = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-verification-'));
   }
-  catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
+  catch (error) { throw new Error(runtimeFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
-    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH,
+      HOME: runtimeEnvironment?.HOME ?? root, USERPROFILE: runtimeEnvironment?.HOME ?? root,
+      TMPDIR: runtimeEnvironment?.TMPDIR ?? root, TEMP: runtimeEnvironment?.TEMP ?? root, TMP: runtimeEnvironment?.TMP ?? root,
       CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
       cwd: root, env: environment,
@@ -169,7 +149,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     const interrupted = new Promise<null>(resolve => { interrupt = () => resolve(null); });
     // Register completion and cancellation before exposing the child to a caller.
     const completed = new Promise<{ code: number | null; error?: Error }>(resolve => {
-      child.once('error', error => resolve({ code: null, error: new Error(sandboxFailure + ' ' + error.message, { cause: error }) }));
+      child.once('error', error => resolve({ code: null, error: new Error(runtimeFailure + ' ' + error.message, { cause: error }) }));
       child.once('close', code => resolve({ code }));
     });
     const collect = (chunk: Buffer) => {
@@ -197,9 +177,8 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     if (signal?.aborted) throw new Error('Run stopped.');
     if (timedOut) output += `\nVerification exceeded the ${limits.timeoutMs / 1000}-second limit.`;
     if (overflow) output += '\nVerification exceeded the output limit.';
-    // Limits before the trusted bootstrap starts are sandbox startup failures, not test results.
-    // Keep their bounded diagnostics and never attempt another, unsandboxed launch.
-    if (!output.includes(command.ready)) throw new Error(sandboxStartupFailure(output));
+    // A missing bootstrap marker cannot count as a completed test run.
+    if (!output.includes(command.ready)) throw new Error(runtimeFailure + '\n' + output);
     output = output.replace(command.ready, '');
     const evidence = await registeredEvidence(root, files, output);
     output = evidence.output;
@@ -207,9 +186,9 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     if (signal?.aborted) throw new Error('Run stopped.');
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
-      portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment },
+      portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment: Object.fromEntries(Object.entries(environment).map(([key, value]) => [key, runtimeEnvironment?.[key] && !['PATH', 'HOME', 'TMPDIR', 'TEMP', 'TMP', 'ELECTRON_RUN_AS_NODE', 'LANG', 'PYTHONDONTWRITEBYTECODE', 'VIRTUAL_ENV'].includes(key) ? '[redacted]' : value])) },
       exitCode: timedOut || overflow ? null : evidence.problem ? 1 : exitCode,
       total: evidence.total, passed: evidence.passed, failed: evidence.failed, skipped: evidence.skipped,
-      registeredTests: evidence.registeredTests, output, durationMs: Math.round(performance.now() - started), sourceHash: hash };
+      registeredTests: evidence.registeredTests, output: redactSecrets(output), durationMs: Math.round(performance.now() - started), sourceHash: hash };
   } finally { await fs.rm(home, { recursive: true, force: true }); }
 }

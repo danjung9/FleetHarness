@@ -12,6 +12,8 @@ import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
 import { reportHash, deliveryEvidence } from '../dist-electron/electron/delivery.js';
 import { atomicHostWrite } from '../dist-electron/shared/host-files.js';
 import { mainHarness } from './helpers/main-harness.mjs';
+import { briefHash as conversationBriefHash } from '../dist-electron/electron/conversation.js';
+import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 async function fixture(t) {
@@ -46,6 +48,65 @@ test('failed cleanup cannot be approved, exported, or packaged', async t => {
   for (const channel of ['fleet:approve', 'fleet:export', 'fleet:download-executable']) {
     await assert.rejects(main.invoke(channel, p.id, 'Synthetic review note'), /cleanup|review/i);
   }
+});
+
+test('late helper writes during cleanup cannot acquire authoritative passing evidence', async t => {
+  const { store, p } = await fixture(t), verifiedHash = p.report.sourceHash;
+  const backend = new FleetBackend(store, process.execPath, () => {}, process.cwd());
+  await backend.finish(p, { controller: new AbortController(), outcome: 'review', checkpointStage: 'verify', resolve() {},
+    processes: { marker: p.processScope.marker, async stop() {
+      await fs.appendFile(path.join(p.workspace, 'index.html'), '<p>Untested late helper write</p>');
+    } } });
+  assert.equal(p.processScope.cleanup, 'confirmed');
+  assert.equal(p.status, 'failed'); assert.equal(p.resumeStage, 'verify');
+  assert.equal(p.verification, undefined); assert.equal(p.approval, undefined);
+  assert.equal(p.report.sourceHash, verifiedHash); assert.notEqual(await sourceHash(p.workspace), verifiedHash);
+  assert.ok(p.logs.some(log => log.text.includes('Source changed during final process cleanup')));
+  const main = await mainHarness(store, backend);
+  await assert.rejects(main.invoke('fleet:approve', p.id, 'Synthetic approval'), /review|verification/i);
+});
+
+test('a Stop proposal is recorded as applied only after the backend Stop promise settles', async t => {
+  const { store, p } = await fixture(t), entered = deferred(), release = deferred();
+  t.after(() => release.resolve());
+  p.status = 'running';
+  const action = { id: 'synthetic-stop', type: 'stop', title: 'Stop build', reason: 'Synthetic lifecycle check',
+    status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
+  p.conversation = { status: 'idle', messages: [], actions: [action], questions: [] };
+  const backend = { active: new Map([[p.id, {}]]), async stop(id) {
+    assert.equal(id, p.id);
+    p.status = 'stopped'; await store.save(); entered.resolve();
+    await release.promise; this.active.delete(id);
+  } };
+  const main = await mainHarness(store, backend, 'electron/main.ts', {
+    briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} }
+  });
+  const applying = main.invoke('fleet:conversation:apply', p.id, action.id);
+  await entered.promise;
+  assert.equal(p.status, 'stopped'); assert.equal(action.status, 'proposed');
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /current project operation/);
+  release.resolve(); await applying;
+  assert.equal(action.status, 'applied');
+  assert.equal(p.conversation.messages.at(-1).text, 'Build stopped. Saved outputs remain available.');
+  const persisted = JSON.parse(await fs.readFile(path.join(store.root, 'state.json'), 'utf8')).projects.find(project => project.id === p.id);
+  assert.equal(persisted.status, 'stopped'); assert.equal(persisted.conversation.actions[0].status, 'applied');
+});
+
+test('Stop cancels a preview reserved before its first state save resumes', async t => {
+  const { store, p } = await fixture(t), entered = deferred(), release = deferred();
+  const save = store.save.bind(store); let first = true, starts = 0, sweeps = 0;
+  store.save = async () => { if (first) { first = false; entered.resolve(); await release.promise; } return save(); };
+  const main = await mainHarness(store, { active: new Map(), async stop() {} }, 'electron/main.ts', {
+    ApplicationPreviews: class { async url() { starts++; return 'http://127.0.0.1:1'; } async stop() {} },
+    RunProcessSweep: class { run(work) { return work(); } async stop() { sweeps++; } }
+  });
+  const opening = main.invoke('fleet:preview', p.id);
+  await entered.promise;
+  await main.invoke('fleet:stop', p.id);
+  assert.equal(p.processScope.cleanup, 'confirmed'); assert.equal(sweeps, 1);
+  release.resolve();
+  assert.equal(await opening, null); assert.equal(starts, 0, 'No generated runtime may start after Stop settled');
+  await main.invoke('fleet:stop', p.id); assert.equal(starts, 0);
 });
 
 for (const mismatch of ['run', 'cleanup', 'report']) test('approval rejects mismatched ' + mismatch + ' evidence', async t => {
@@ -259,7 +320,9 @@ test('a run marker is durable before the first engine session launches', async t
   });
   backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
   await backend.start(p.id); await backend.active.get(p.id)?.done;
-  assert.equal(launched, true); assert.match(p.error, /Synthetic session launch boundary/);
+  assert.equal(launched, true);
+  assert.match(p.logs.filter(log => log.kind === 'error').map(log => log.text).join('\n'), /Synthetic session launch boundary/);
+  assert.match(p.error, /could not confirm that all build work stopped/);
 });
 
 test('startup and repeated Stop never relabel another run marker as the current run', async t => {
