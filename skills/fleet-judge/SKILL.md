@@ -27,6 +27,8 @@ Connected account data reaches the build as snapshot files in context/, and agen
 
 A format or rule named by the card, where its general structure is publicly documented, must be implemented in that structure with synthetic messages. Replacing it with invented grammar is a gap. Requiring an authorized or expert-reviewed mapping is not a gap; put it in humanSteps. Where an authoritative source truly cannot be obtained, a labeled stand-in that exercises the complete workflow is acceptable, and the missing source goes in humanSteps.
 
+AppYard packages browser and Node service apps as a double-click app, so their start command is not a gap. Inside the app, these are gaps: a primary workflow that needs JSON editing, a terminal command or manual time or unit conversion; results shown as minute offsets, epoch numbers or internal IDs instead of the way the person would say them; and an output available only as JSON when the person needs to read or send it.
+
 Fake or canned results, preset-only alternatives, missing named outputs, missing computations, simulated capture or delivery that the build could have implemented locally, and untested assertions remain gaps.
 
 Review human approval points, prohibited actions, monitoring, escalation and shutdown. Never infer operational authorization or replace a human decision. Do not request secrets, real personnel data, nonpublic government data or unsafe operational examples. State exact limits and distinguish repairable build gaps from steps for a person.

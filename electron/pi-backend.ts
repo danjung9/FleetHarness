@@ -694,14 +694,16 @@ export class FleetBackend {
             check(); await this.checkInputs(p, run); check();
             if (awaitingClarification() || singleTurn) return;
             let missing = await validateOutputs(required, requireComponents); check();
-            if (missing.length) {
+            // Plan contract errors are mechanical and often come one at a time, so planning gets more attempts.
+            const attempts = stage === 'plan' ? 3 : 1;
+            for (let attempt = 0; missing.length && attempt < attempts; attempt++) {
               this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
               await prompt('The stage is incomplete. Complete these required outputs and checks before finishing: ' + missing.join(', ') + '. For visual review, use fleet_browser and fleet_visual_review to record initial desktop/narrow observations, resolve findings after fixing the source, then capture and review both sizes again. Reopen after source edits; previous captures cannot verify changed files. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
               check(); await this.checkInputs(p, run); check();
               if (awaitingClarification()) return;
               missing = await validateOutputs(required, requireComponents); check();
             }
-            if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
+            if (missing.length) throw new Error(engine + ' did not produce the required artifacts after ' + (attempts === 1 ? 'one completion attempt: ' : 'its completion attempts: ') + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
           };
           await complete([run.context, run.resumedStage === stage ? 'This phase is resuming in the same workspace after an interrupted or failed attempt. Inspect and continue the existing artifacts; preserve completed work and all frozen inputs/contracts. The previous phase error was: ' + (run.previousError ?? 'The previous run was interrupted.') : '', run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, processPolicy, tests ? testBaselinePolicy : undefined, variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);
