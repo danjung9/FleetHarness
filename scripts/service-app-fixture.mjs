@@ -39,7 +39,7 @@ server.listen(Number(process.env.PORT),'0.0.0.0',()=>fs.writeFileSync('bound-add
   const project = { ...newProject({ title: 'Synthetic service notebook', description: 'An offline synthetic service packaging check.', criteria: ['Save a note.'] }),
     workspace, runtimeProfile: 'service', status: 'approved', approvedAt: new Date().toISOString(), runId: 'synthetic-delivery-fixture' };
   project.processScope = { runId: project.runId, marker: 'synthetic-delivery-fixture', cleanup: 'confirmed' };
-  project.report = { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(workspace) };
+  project.report = { exitCode: 0, passed: 1, total: 1, failed: 0, skipped: 0, sourceHash: await sourceHash(workspace), independentJudge: { stage: 'verify', verdict: 'SATISFACTORY', gaps: [], attempts: [], repairs: 0, repairLimitReached: false, durationMs: 0, evaluatorRetries: 0 } };
   project.stages.find(stage => stage.id === 'review').status = 'complete';
   project.verification = { runId: project.runId, reportHash: reportHash(project.report) };
   project.approval = { runId: project.runId, sourceHash: project.report.sourceHash, reportHash: project.verification.reportHash, approvedAt: project.approvedAt, feedback: project.feedback };
