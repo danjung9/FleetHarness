@@ -120,6 +120,8 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | R5 synthetic benchmark records | evidence dataset | QA prioritization | project benchmark. | 2026-11-05 |
 | Local patch interface, version unavailable | document editing | amended local records | session runtime. | 2026-11-05 |
 | Auto/5f4eb39 | synthetic QA evidence | current-failure triage | project QA. | 2026-11-05 |
+| Combined acceptance receipts at 0666861 | Synthetic native and browser evidence dataset | Classified verification Resume selector ERROR and native preview reload persistence FAIL using raw receipts, screenshots and pinned source | Event team runtime owner | 2026-11-05 |
+| Overnight native checker compatibility revision 3 | QA scripts | Support old and new provider-tab labels, correct Resume testing selector and explicitly reset owned input drafts between cases; native execution remains with main | Event team QA | 2026-11-05 |
 
 ## Data and sources
 
