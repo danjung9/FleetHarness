@@ -25,7 +25,12 @@ export interface TestReport {
   provenance?: { runner: string; args: string[]; cwd: string; environment: Record<string, string | undefined> };
   testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
-export interface BriefContext { resources?: string; links?: string[] }
+export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
+export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
+export interface ReviewRecord {
+  id: string; runId: string; decision: 'approved' | 'changes_requested'; feedback: string; createdAt: string;
+  sourceHash?: string; nextRunId?: string;
+}
 export interface RunCheckpoint {
   version: 1;
   briefHash: string;
@@ -50,7 +55,10 @@ export interface Project extends BriefContext {
   verification?: { runId: string; reportHash: string };
   approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string };
   runCheckpoint?: RunCheckpoint;
-  qualityVersion?: 1;
+  reviewHistory?: ReviewRecord[];
+  conversation?: import('./conversation.js').ProjectConversation;
+  qualityVersion?: 1 | 2;
+  runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
@@ -69,6 +77,9 @@ export interface Settings { backend?: AgentBackend; provider: string; model: str
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;
+  activeAccountId?: string;
+  accounts?: { id: string; label: string; email?: string; connected: boolean }[];
+  planUsageEnabled?: boolean;
   limits?: { label: string; usedPercent: number; resetsAt: number | null }[];
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
@@ -76,10 +87,15 @@ export interface AppBuildInfo {
   schemaVersion: 1; version: string; revision: string; sourceUrl?: string; buildId: string;
   runId?: string | null; runNumber?: number | null; runAttempt?: number | null; builtAt?: string;
 }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; buildInfo?: AppBuildInfo }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; buildInfo?: AppBuildInfo; capabilities?: { projectConversation: boolean } }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI {
+  sendMessage(id: string, text: string): Promise<void>;
+  cancelMessage(id: string): Promise<void>;
+  answerClarification(id: string, questionId: string, answer: string | import('./conversation.js').ClarificationAnswer): Promise<void>;
+  applyConversationAction(id: string, actionId: string): Promise<void>;
+  dismissConversationAction(id: string, actionId: string): Promise<void>;
   bootstrap(): Promise<Bootstrap>;
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;
@@ -89,6 +105,7 @@ export interface FleetAPI {
   resumeRun?(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
+  requestChanges(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;
@@ -99,7 +116,10 @@ export interface FleetAPI {
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
   removeKey?(): Promise<Bootstrap>;
   shareProject?(id: string): Promise<string>;
-  connectChatGPT(): Promise<Bootstrap>;
+  connectChatGPT(accountId?: string): Promise<Bootstrap>;
+  selectChatGPTAccount(accountId: string): Promise<Bootstrap>;
+  reopenChatGPTLogin(): Promise<Bootstrap>;
+  manageChatGPTUsage(): Promise<void>;
   cancelChatGPTLogin(): Promise<Bootstrap>;
   disconnectChatGPT(): Promise<Bootstrap>;
   refreshChatGPT(): Promise<Bootstrap>;

@@ -12,7 +12,7 @@ import { RunProcessSweep, runProcessEnvironment, markedPsProcesses } from '../di
 
 // Real detached processes and OS signals; discovery is injected because the seat
 // sandbox prohibits ps. Native discovery and the GUI fixture belong to the overseer.
-async function worker(t, env, ignoreTerm = false) {
+async function worker(t, env, ignoreTerm = false, commandLine = []) {
   const child = spawn(process.execPath, ['-e', `
     if (${ignoreTerm}) process.on('SIGTERM', () => {});
     process.chdir('/');
@@ -20,7 +20,7 @@ async function worker(t, env, ignoreTerm = false) {
     const timer = setInterval(() => process.send({ tick: ++tick }), 20);
     process.on('disconnect', () => { clearInterval(timer); process.exit(); });
     setTimeout(() => process.exit(), 15000).unref();
-  `], { detached: true, env, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
+  `, ...commandLine], { detached: true, env, windowsHide: true, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
   let ticks = 0, exited = false;
   child.on('message', message => { ticks = message.tick; });
   const exit = once(child, 'exit').then(() => { exited = true; });
@@ -47,22 +47,24 @@ test('a fake run sweeps its detached job after cwd changes and leaves an unrelat
   assert.throws(() => scope.run(() => runProcessEnvironment()), /closed/);
 });
 
-// The fixtures above inject discovery. This one uses the real ps or /proc path, which every
+// The fixtures above inject discovery. This one uses the native process environment, which every
 // actual run depends on, and only stands aside where the host forbids running ps at all.
 test('native discovery sweeps a marked job and leaves an unmarked job alive', { timeout: 20000 }, async t => {
-  if (!['darwin', 'linux'].includes(process.platform)) return t.skip('Native discovery covers macOS and Linux.');
+  if (!['darwin', 'linux', 'win32'].includes(process.platform)) return t.skip('Native discovery requires macOS, Linux, or Windows.');
   if (process.platform === 'darwin') {
     const allowed = await new Promise(resolve => execFile('/bin/ps', ['-p', String(process.pid)], error => resolve(!error)));
     if (!allowed) return t.skip('This host forbids running ps.');
   }
   const scope = new RunProcessSweep();
   const owned = await worker(t, scope.run(() => runProcessEnvironment({ ...process.env }))),
-    unrelated = await worker(t, { ...process.env });
+    unrelated = await worker(t, { ...process.env }),
+    spoofed = await worker(t, { ...process.env }, false, ['APPYARD_RUN_PROCESS=' + scope.marker]);
   const before = unrelated.ticks;
   await scope.stop();
   await delay(80);
   assert.equal(owned.exited, true, 'native discovery missed the marked job');
   assert.equal(unrelated.exited, false, 'native discovery ended an unmarked job');
+  assert.equal(spoofed.exited, false, 'a command-line marker must not establish environment ownership');
   assert.ok(unrelated.ticks > before, 'unrelated process heartbeat must keep advancing');
 });
 
@@ -156,7 +158,12 @@ test('a detached job that ignores TERM is killed and repeated Stop shares cleanu
   const signals = [];
   const scope = new RunProcessSweep({ graceMs: 60, killMs: 800,
     scan: async () => job && !job.exited ? [{ pid: job.child.pid, started: 'fixture' }] : [],
-    signal: (pid, signal) => { signals.push(signal); process.kill(pid, signal); },
+      signal: (pid, signal) => {
+        signals.push(signal);
+        // Windows terminates even with a JS SIGTERM handler. Model refusal at
+        // this injected signal boundary so escalation still kills a real worker.
+        if (process.platform !== 'win32' || signal !== 'SIGTERM') process.kill(pid, signal);
+      },
   });
   job = await worker(t, scope.run(() => runProcessEnvironment()), true);
   const stopping = scope.stop();

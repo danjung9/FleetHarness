@@ -15,6 +15,7 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
   const journey = getJourneyState(project, { hosted: isHosted });
   const canBuild = isDesktop || isHosted;
   const startLabel = !canBuild ? 'Desktop setup' : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
+  const pendingQuestion = project.status === 'running' && project.conversation?.questions.find(question => question.status === 'pending' && question.runId === project.runId);
   let nextAction = null;
   if (project.status === 'running') {
     nextAction = <button className="secondary" disabled={busy} onClick={stop}>{isHosted ? <Pause size={14}/> : <Square size={14}/>} {isHosted ? 'Pause build' : 'Stop build'}</button>;
@@ -34,7 +35,7 @@ export function JourneyHeader({ project, view, busy, configured, navigate, start
       {canBuild && configured ? <Play size={15}/> : <Settings2 size={16}/>} {startLabel}
     </button>;
   }
-  const message = project.status === 'draft' && !canBuild
+  const message = pendingQuestion ? 'Waiting for your answer. Open Project lead to continue this build.' : project.status === 'draft' && !canBuild
     ? 'Brief saved in this browser. Open the desktop app to build.'
     : project.status === 'draft' && !configured
       ? 'Brief saved. Connect a model when you’re ready to build.' : journey.message;

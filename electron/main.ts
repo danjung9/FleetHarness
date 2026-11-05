@@ -7,7 +7,7 @@ import { Store, newProject, validateInput, listArtifacts, safeFile } from './sto
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
 import { applicationTestFiles, portableTestCommand } from './verification.js';
-import { PreviewServers } from './preview.js';
+import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
@@ -15,6 +15,11 @@ import { exportVerifiedBundle } from './source-export.js';
 import { readBuildInfo } from './build-info.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
+import { ProjectLead, briefHash, projectBrief } from './conversation.js';
+import { ClarificationBroker } from './clarifications.js';
+import type { ClarificationAnswer } from '../shared/conversation.js';
+import { randomUUID } from 'node:crypto';
+import { recordReview, reviewFeedback } from './review.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -30,9 +35,11 @@ app.on('second-instance', () => {
   window.show(); window.focus();
 });
 let store: Store, backend: FleetBackend, codex: CodexAccount;
-const previews = new PreviewServers();
+let lead: ProjectLead, clarifications: ClarificationBroker;
+const conversationActions = new Map<string, Promise<void>>();
+const previews = new ApplicationPreviews(process.execPath);
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
-const startingRuns = new Set<string>();
+const startingRuns = new Map<string, Promise<void>>();
 const approvals = new Set<string>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
 const currentCatalog = () => store.state.norfolkCatalog?.challenges ?? challenges;
@@ -50,17 +57,45 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 const bootstrap = () => ({
   state: store.state, models: backend.models(), storagePath: store.root,
   buildInfo: readBuildInfo(app.getVersion(), process.resourcesPath, app.isPackaged),
+  capabilities: { projectConversation: true },
   chatgpt: codex.account,
-  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? 'ChatGPT connected' : 'Sign in with ChatGPT to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
+  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' && (!codex.sessionCredentials || codex.account.planUsageEnabled) ? 'Using ' + codex.route.label : 'Connect your ChatGPT plan to run Codex') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
-function requireIdle(id: string) {
+function requireIdle(id: string, fromConversation = false) {
+  if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
   if (approvals.has(id)) throw new Error('Wait for the review to be saved before changing this build.');
   if (deliveries.has(id)) throw new Error('Wait for the app download to finish before changing this build.');
   if (backend.active.has(id) || startingRuns.has(id)) throw new Error('Stop this run before changing its requirements or delivery state.');
   const p = store.project(id);
   if (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed. Use Stop before changing this build.');
   return p;
+}
+async function updateProject(id: string, input: NewProject, fromConversation = false) {
+  const p = requireIdle(id, fromConversation);
+  const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
+  const normalized = validateInput(input, catalog);
+  const previous = structuredClone({ ...projectBrief(p), sourceChallenge: p.sourceChallenge, status: p.status, runtimeProfile: p.runtimeProfile,
+    report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error,
+    systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt,
+    runCheckpoint: p.runCheckpoint, verification: p.verification, approval: p.approval });
+  Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
+  p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+  p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+  p.runCheckpoint = undefined; p.verification = undefined; p.approval = undefined;
+  p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
+  p.updatedAt = new Date().toISOString();
+  try { await store.save(); }
+  catch (error) { Object.assign(p, previous); notify(); throw error; }
+  notify(); return p;
+}
+async function startRun(id: string, fromConversation = false, feedback?: string) {
+  if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
+  requireIdle(id, fromConversation);
+  let resolve!: () => void;
+  const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+  try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
+  finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
   const p = store.project(id);
@@ -70,6 +105,51 @@ async function readArtifact(id: string, file: string) {
   return fs.readFile(target, 'utf8');
 }
 function registerIPC() {
+  handle('fleet:conversation:send', (id: string, text: string) => {
+    if (quitting) throw new Error('AppYard is closing. Reopen it to continue the conversation.');
+    if (conversationActions.has(id)) throw new Error('Wait for the project action to finish before sending a message.');
+    return lead.send(id, text);
+  });
+  handle('fleet:conversation:cancel', (id: string) => lead.cancel(id));
+  handle('fleet:conversation:answer', (id: string, questionId: string, answer: string | ClarificationAnswer) => {
+    if (conversationActions.has(id)) throw new Error('The project is changing. Wait for the action to finish.');
+    return clarifications.answer(id, questionId, answer);
+  });
+  handle('fleet:conversation:dismiss', (id: string, actionId: string) => {
+    if (conversationActions.has(id)) throw new Error('This action is already being applied.');
+    return lead.dismiss(id, actionId);
+  });
+  handle('fleet:conversation:apply', async (id: string, actionId: string) => {
+    if (conversationActions.has(id) || deliveries.has(id) || startingRuns.has(id)) throw new Error('Wait for the current project operation to finish.');
+    const p = store.project(id), action = p.conversation?.actions.find(item => item.id === actionId);
+    if (!action || action.status !== 'proposed') throw new Error('This proposal is no longer available.');
+    if (action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal belongs to an older brief or build. Ask the project lead for an updated proposal.');
+    if (action.type === 'start' && backend.active.has(id)) throw new Error('This build is already running.');
+    if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build is no longer running.');
+    if (quitting) throw new Error('AppYard is closing. Reopen it to apply this proposal.');
+    let resolve!: () => void;
+    const done = new Promise<void>(r => { resolve = r; }); conversationActions.set(id, done);
+    const record = (text: string) => p.conversation!.messages.push({ id: randomUUID(), role: 'system', text, createdAt: new Date().toISOString(), runId: p.runId });
+    try {
+      await lead.cancel(id);
+      if (quitting) throw new Error('AppYard is closing. This proposal was not applied.');
+      if (p.conversation?.actions.find(item => item.id === actionId) !== action || action.status !== 'proposed'
+        || action.baseBriefHash !== briefHash(p) || action.runId !== p.runId) throw new Error('This proposal changed while the reply was finishing. Ask for an updated proposal.');
+      if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build finished before the stop action was applied.');
+      if (action.type === 'stop') { await backend.stop(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
+      else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
+      else if (action.type === 'revise' && action.brief) {
+        const revised = validateInput({ ...projectBrief(p), ...action.brief }, p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog());
+        if (backend.active.has(id)) await backend.stop(id);
+        await updateProject(id, revised, true); action.status = 'applied';
+        record('Brief updated. Previous test results and approval were reset.');
+        await startRun(id, true); record('Started a fresh build with the revised brief. Previous run files are preserved.');
+      } else throw new Error('Invalid project action.');
+    } catch (error) {
+      if (action.status === 'applied') record('The brief was updated, but the fresh build could not start: ' + (error instanceof Error ? error.message : String(error)));
+      throw error;
+    } finally { try { await store.save(); } finally { conversationActions.delete(id); resolve(); notify(); } }
+  });
   handle('fleet:bootstrap', bootstrap);
   handle('fleet:norfolk:refresh', () => {
     if (!norfolkRefresh) norfolkRefresh = (async () => {
@@ -84,25 +164,18 @@ function registerIPC() {
   handle('fleet:create', async (input: NewProject) => {
     const p = newProject(input, currentCatalog()); store.state.projects.unshift(p); await store.save(); notify(); return p;
   });
-  handle('fleet:update', async (id: string, input: NewProject) => {
-    const p = requireIdle(id);
-    const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
-    const normalized = validateInput(input, catalog);
-    Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
-    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
-    p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
-    p.runCheckpoint = undefined;
-    p.verification = undefined; p.approval = undefined;
-    p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
-    p.updatedAt = new Date().toISOString(); await store.save(); notify(); return p;
-  });
-  handle('fleet:start', async (id: string) => {
-    requireIdle(id); startingRuns.add(id);
-    try { await backend.start(id); } finally { startingRuns.delete(id); }
+  handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
+  handle('fleet:start', (id: string) => startRun(id));
+  handle('fleet:request-changes', (id: string, feedback: string) => {
+    reviewFeedback(feedback); return startRun(id, false, feedback);
   });
   handle('fleet:resume', async (id: string) => {
-    requireIdle(id); startingRuns.add(id);
-    try { await backend.resume(id); } finally { startingRuns.delete(id); }
+    if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
+    requireIdle(id);
+    let resolve!: () => void;
+    const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+    try { await backend.resume(id); }
+    finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
   });
   handle('fleet:stop', async (id: string) => {
     const delivery = deliveries.get(id);
@@ -128,6 +201,8 @@ function registerIPC() {
       await verifiedManifest(p);
       const next = structuredClone(p);
       next.feedback = feedback.trim(); next.approvedAt = new Date().toISOString(); next.status = 'approved';
+      next.reviewHistory = [...(next.reviewHistory ?? []), { id: randomUUID(), runId: next.runId!, decision: 'approved',
+        feedback: next.feedback, createdAt: next.approvedAt, sourceHash: next.report!.sourceHash }];
       next.stages.find(s => s.id === 'review')!.status = 'complete';
       next.approval = { runId: next.runId!, approvedAt: next.approvedAt, feedback: next.feedback,
         scope: 'Prototype delivery only. Operational readiness is unverified.', sourceHash: next.report!.sourceHash, reportHash: next.verification!.reportHash };
@@ -155,15 +230,19 @@ function registerIPC() {
       if (result.canceled) return null;
       controller.signal.throwIfAborted();
       destination = await exportVerifiedBundle({ workspace: p.workspace!, parent: result.filePaths[0], title: p.title,
-        verifiedHash: p.report!.sourceHash, evidence: deliveryEvidence(p), deliveryMarkdown: [
-          '# ' + p.title, '', 'Open index.html in a browser to run the application.', '',
-          'Tests: install Node.js 22.19 or newer, open a terminal in this folder, then run: ' + (p.report!.portableCommand ?? portableTestCommand(await applicationTestFiles(p.workspace!))), '',
+        verifiedHash: p.report!.sourceHash, runtimeProfile: p.runtimeProfile, evidence: deliveryEvidence(p), deliveryMarkdown: [
+          '# ' + p.title, '', 'Follow README.md for the declared runtime, dependency installation, required environment settings and startup command.', '',
+          'Tests: follow the prerequisites in README.md, then run: ' + (p.report!.portableCommand ?? portableTestCommand(await applicationTestFiles(p.workspace!))), '',
           'Original sandbox execution provenance is recorded separately in test-report.json (provenance).', '',
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
-            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have planned browser evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
-            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' - ' + criterion.detail)
+            ...(p.report!.quality.schemaVersion === 2 ? [
+              'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
+              'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
+            ] : []),
+            'Requirement coverage: ' + (p.report!.quality.requirementsMet ? 'all recorded requirements have their required evidence.' : 'unverified requirements remain; prototype approval does not complete them.'),
+            ...p.report!.quality.criteria.filter(criterion => criterion.status !== 'passed').map(criterion => '- ' + criterion.criterionId + ' (' + criterion.status + '): ' + criterion.requirement + ' — ' + criterion.detail)
           ] : ['Browser journeys and requirement coverage were not recorded for this legacy run.']),
           'Reviewed: ' + p.approvedAt, p.feedback, '', 'Operational readiness has not been verified.',
           'Run ' + p.runId
@@ -230,11 +309,18 @@ function registerIPC() {
       finally { deliveries.delete(id); finish(); }
     }
   });
-  const requireNoRuns = () => { if (backend.active.size) throw new Error('Stop active runs before changing accounts or providers.'); };
-  handle('fleet:chatgpt:connect', async () => { requireNoRuns(); await codex.login(); return bootstrap(); });
+  const requireNoRuns = () => { if (backend.active.size || startingRuns.size || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing accounts or providers.'); };
+  const chatGPTAccountId = (value: unknown) => {
+    if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Choose a valid saved ChatGPT account.');
+    return value;
+  };
+  handle('fleet:chatgpt:connect', async (accountId?: unknown) => { requireNoRuns(); await codex.login(accountId === undefined ? undefined : chatGPTAccountId(accountId)); return bootstrap(); });
+  handle('fleet:chatgpt:select', async (accountId: unknown) => { requireNoRuns(); await codex.selectAccount(chatGPTAccountId(accountId)); return bootstrap(); });
+  handle('fleet:chatgpt:reopen', async () => { requireNoRuns(); await codex.reopenLogin(); return bootstrap(); });
+  handle('fleet:chatgpt:usage', async () => { await codex.manageUsage(); });
   handle('fleet:chatgpt:cancel', async () => { requireNoRuns(); await codex.cancel(); return bootstrap(); });
   handle('fleet:chatgpt:disconnect', async () => { requireNoRuns(); await codex.logout(); return bootstrap(); });
-  handle('fleet:chatgpt:refresh', async () => { await codex.refresh(); return bootstrap(); });
+  handle('fleet:chatgpt:refresh', async () => { requireNoRuns(); await codex.refresh(); return bootstrap(); });
   handle('fleet:developer-mode', async (enabled: boolean) => {
     if (typeof enabled !== 'boolean') throw new Error('Choose whether developer mode is enabled.');
     const previous = store.state.settings.developerMode;
@@ -244,13 +330,13 @@ function registerIPC() {
     notify(); return bootstrap();
   });
   handle('fleet:settings', async (settings: Settings, key?: string) => {
-    if (backend.active.size) throw new Error('Stop active runs before changing providers.');
+    requireNoRuns();
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
-      if (codex.account.status !== 'connected' || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT and select a Codex model first.');
+      if (codex.account.status !== 'connected' || (codex.sessionCredentials && !codex.account.planUsageEnabled) || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT, allow plan usage, and select a Codex model first.');
       store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
       await store.save(); notify(); return bootstrap();
     }
@@ -288,8 +374,10 @@ if (ownsInstance) app.whenReady().then(async () => {
     store = new Store(app.getPath('userData'));
     await store.init();
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
-    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex });
+    clarifications = new ClarificationBroker(store, notify);
+    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications });
     await backend.init(); await codex.refresh();
+    lead = new ProjectLead(store, backend.runtime, notify, { codex });
     try {
       const encrypted = await fs.readFile(path.join(store.root, 'credentials.enc'));
       const { provider, key } = JSON.parse(safeStorage.decryptString(encrypted));
@@ -306,10 +394,13 @@ if (ownsInstance) app.whenReady().then(async () => {
 });
 let quitting = false;
 app.on('before-quit', event => {
-  if (!quitting && (backend?.active.size || deliveries.size)) {
+  if (!quitting && (backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.all([backend.stopAll(), ...[...deliveries.values()].map(d => d.done)]).finally(async () => { await store.save(); app.quit(); });
+    void Promise.allSettled([backend.stopAll(), lead.stopAll(), ...startingRuns.values(), ...conversationActions.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+      try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
+      app.quit();
+    });
   }
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

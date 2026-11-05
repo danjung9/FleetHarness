@@ -201,6 +201,9 @@ label{font-size:12px;font-weight:600;display:block;margin-bottom:20px}input:not(
 .intake-dialog .requirements-fields{flex:1;min-height:0;overflow:auto;padding:4px 10px 8px 4px;margin-left:-4px;scroll-padding-block:12px}
 .requirements-form label{font-size:13px;margin-bottom:18px}
 .requirements-form textarea[rows="2"]{min-height:64px}
+.brief-io-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px}
+.brief-io-fields label{min-width:0}
+@media(max-width:600px){.brief-io-fields{grid-template-columns:minmax(0,1fr)}}
 @supports(field-sizing:content){
   .requirements-form textarea{field-sizing:content;min-height:calc(3lh + 24px);max-height:none;resize:none}
   .requirements-form textarea[rows="2"]{min-height:max(64px,calc(2lh + 24px))}

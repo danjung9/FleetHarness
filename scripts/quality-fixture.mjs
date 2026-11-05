@@ -53,6 +53,7 @@ export function qualityFixture(criterionIds) {
 }
 
 export const qualityFixtureHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fixture parser</title><style>body{font:16px sans-serif;margin:24px}textarea{display:block;box-sizing:border-box;width:100%;max-width:500px}button{margin:12px 0;padding:10px}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body><h1>Fixture parser</h1><p>Local synthetic integration-test fixture. No publication or operational approval.</p><label for="message">Message</label><textarea id="message">TASK: inspect pump</textarea><button id="parse">Parse message</button><pre id="result" aria-live="polite"></pre><button id="review">Prepare synthetic review draft</button><pre id="review-result" aria-live="polite"></pre><script>
+/* CORE_START */function parseTask(text){return text.startsWith('TASK: ')?text.slice(6):null;}/* CORE_END */
 const result=document.getElementById('result'), review=document.getElementById('review-result');
 let task=localStorage.getItem('lastTask')||'';
 result.textContent=task;review.textContent=localStorage.getItem('lastReview')||'';
@@ -60,7 +61,7 @@ document.getElementById('parse').onclick=()=>{
   review.textContent='';localStorage.setItem('lastReview','');
   const message=document.getElementById('message').value;
   if(!message.trim()){task='';result.textContent='Enter a message.';return;}
-  task=message.replace(/^TASK: /,'');result.textContent=task;
+  task=parseTask(message);result.textContent=task;
   localStorage.setItem('lastTask',task);localStorage.setItem('lastParse','saved');
 };
 document.getElementById('review').onclick=()=>{

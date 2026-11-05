@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { Project } from '../shared/types.js';
 import { verifiedManifest } from './delivery.js';
 import { atomicHostWrite } from '../shared/host-files.js';
+import { parseSolutionContract } from '../harness/solution-contract.js';
 
 export function executableName(project: Pick<Project, 'title'>) {
   // Prefix also avoids Windows reserved device names.
@@ -15,11 +16,23 @@ export function executableFileName(project: Pick<Project, 'title'>) {
   return `${executableName(project)}-${process.platform}-${process.arch}.zip`;
 }
 export async function assertExecutableSource(project: Project) {
-  return verifiedManifest(project, true);
+  const manifest = await verifiedManifest(project, true);
+  const solution = deliveredSolution(manifest);
+  if (solution && solution.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');
+  return manifest;
+}
+
+function deliveredSolution(manifest: Awaited<ReturnType<typeof verifiedManifest>>) {
+  const body = manifest.find(file => file.path === 'solution-contract.json');
+  if (!body) return undefined;
+  const packetFile = manifest.find(file => file.path.replaceAll('\\', '/') === '.fleet/packet.json');
+  if (!packetFile) throw new Error('The verified challenge packet is missing.');
+  const packet = JSON.parse(packetFile.contents.toString('utf8'));
+  return parseSolutionContract(JSON.parse(body.contents.toString('utf8')), packet.acceptance);
 }
 
 // This is host-owned code. Generated code only runs inside the sandboxed renderer.
-export function standaloneMain(title: string, appId: string) {
+export function standaloneMain(title: string, appId: string, files: string[] = ['index.html'], payloadDirectory: '' | 'application' = '') {
   return `const { app, BrowserWindow, protocol, Menu } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -27,6 +40,9 @@ app.setName(${JSON.stringify(title)});
 app.setPath('userData', path.join(app.getPath('appData'), ${JSON.stringify(appId)}));
 protocol.registerSchemesAsPrivileged([{ scheme: 'fleet-app', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 let window;
+const allowedFiles = new Set(${JSON.stringify(files)});
+const payloadRoot = path.join(__dirname, ${JSON.stringify(payloadDirectory)});
+const contentTypes = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.wasm':'application/wasm'};
 function openWindow() {
   window = new BrowserWindow({ title: ${JSON.stringify(title)}, width: 1200, height: 800,
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webviewTag: false } });
@@ -41,10 +57,12 @@ function openWindow() {
 app.whenReady().then(() => {
   protocol.handle('fleet-app', async request => {
     const url = new URL(request.url);
-    if (url.host !== 'app' || url.pathname !== '/index.html' || request.method !== 'GET') return new Response('', { status: 404 });
-    return new Response(await fs.readFile(path.join(__dirname, 'index.html')), { headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
+    const relative = decodeURIComponent(url.pathname).slice(1);
+    const type = contentTypes[path.extname(relative)];
+    if (url.host !== 'app' || !allowedFiles.has(relative) || !type || request.method !== 'GET') return new Response('', { status: 404 });
+    return new Response(await fs.readFile(path.join(payloadRoot, relative)), { headers: {
+      'Content-Type': type,
+      'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
     } });
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -64,13 +82,22 @@ export async function stageExecutable(project: Project, root: string) {
   const manifest = await assertExecutableSource(project);
   const source = path.join(root, 'source');
   await fs.mkdir(source);
-  const html = manifest.find(file => file.path === 'index.html')!.contents;
-  if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs a self-contained index.html between 1 byte and 2 MB, matching the app preview.');
+  const html = manifest.find(file => file.path === 'index.html')?.contents;
+  if (!html?.length || html.length > 2_000_000) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
   const name = executableName(project);
   const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
-  // An allowlist deliberately leaves out agent code, dependencies, sessions and credentials.
-  await atomicHostWrite(source, 'index.html', html);
-  await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId));
+  const solution = deliveredSolution(manifest);
+  const declared = solution?.runtime.files ?? ['index.html'];
+  const payloadDirectory = solution ? 'application' : '';
+  const payloadRoot = path.join(source, payloadDirectory);
+  if (payloadDirectory) await fs.mkdir(payloadRoot);
+  // Only verified allowlisted bytes enter the payload; generated main scripts stay data.
+  for (const relative of declared) {
+    const entry = manifest.find(file => file.path.replaceAll('\\', '/') === relative);
+    if (!entry) throw new Error('A declared runtime file is absent from verified source: ' + relative);
+    await atomicHostWrite(payloadRoot, relative, entry.contents);
+  }
+  await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId, declared, payloadDirectory));
   await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);
   return { source, name, appId };

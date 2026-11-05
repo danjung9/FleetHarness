@@ -28,11 +28,16 @@
 .review-limitations strong{font-weight:500;color:var(--ink)}
 .review-steps label{font-size:13px;margin-top:16px;margin-bottom:16px}
 .review-steps label[for]{margin-bottom:6px}
-.review-steps textarea{margin-bottom:16px}
+.review-steps textarea{margin-bottom:8px}
 .review-steps .checkbox{margin-top:0}
 .review-steps textarea{max-width:100%}
-.review-decision{display:flex;align-items:center;gap:16px}
-.review-decision p{font-size:12px;line-height:1.6;color:var(--muted);margin:0;max-width:54ch}
+.review-notes-hint,.review-decision-hint{font-size:12px;line-height:1.6;color:var(--muted);margin:0;max-width:72ch}
+.review-notes-hint{margin-bottom:16px}
+.review-decision{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.review-decision-hint{margin-top:8px}
+.review-request{border-top:1px solid var(--line);padding:18px 0;font-size:13px}
+.review-request>summary{cursor:pointer;font-weight:500;width:fit-content}
+.review-pending{font-size:13px;line-height:1.65;margin:0 0 18px;max-width:72ch}
 .review-recorded-notes{font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:16px 0}
 .review-steps .approval-note{font-size:12px;margin:12px 0 0}
 .review-empty{padding:28px 0;border-top:1px solid var(--line)}

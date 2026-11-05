@@ -36,7 +36,7 @@ test('project import retains source identity and yields inputs accepted by deskt
     const input=toProjectInput(c.id);
     assert.equal(input.challengeId,c.id);assert.ok(input.title.length<=120);
     assert.ok(input.description.includes(c.sourceUrl));assert.deepEqual(input.criteria,c.evaluationCriteria);
-    assert.deepEqual(normalizeProjectInput(input),input);
+    assert.deepEqual(normalizeProjectInput(input),{...input,inputs:'',outputs:'',dataInputs:[]});
     assert.equal(input.resources,c.resources);assert.deepEqual(input.links,c.links);
   }
   const clone=getChallenge('11');clone.title='altered';assert.notEqual(getChallenge('11').title,'altered');
@@ -91,7 +91,7 @@ test('custom packets explicitly preserve user origin instead of claiming an offi
 test('global workspace tools are inherited while phase tools remain scoped to the task and recipe', async () => {
   for (const challenge of challenges) {
     const packet = createPacket(challenge.id);
-    assert.deepEqual(packet.globalTools, ['read', 'write', 'edit', 'bash']);
+    assert.deepEqual(packet.globalTools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
     assert.deepEqual(packet.stages.map(s => s.id), ['intake', 'research', 'plan', 'build', 'verify', 'review', 'deliver']);
     for (const phase of packet.stages) {
       const effective = toolsForPhase(phase, packet.globalTools);

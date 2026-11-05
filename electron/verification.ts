@@ -22,7 +22,7 @@ export class VerificationShutdownError extends Error {
   }
 }
 export async function applicationTestFiles(root: string, includeEmpty = false) {
-  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+  return (await listArtifacts(root)).filter(f => (includeEmpty || f.size > 0) && !/^\.(?:fleet|review-source|agent-tools|agent-output)(?:\/|\\)/.test(f.path) && /(?:^|[/\\])[^/\\]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 const shellArgument = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 export function portableTestCommand(files: string[]) {
@@ -111,7 +111,7 @@ async function sandboxCommand(root: string, executable: string, testArgs: string
     '-c', 'projects={' + JSON.stringify(await fs.realpath(root)) + '={trust_level="untrusted"}}',
     '--', runtime, '--input-type=commonjs', '-e', bootstrap] };
 }
-export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}): Promise<TestReport> {
+export async function verifyWorkspace(root: string, executable: string, onProcess: (child: ChildProcess) => void, signal?: AbortSignal, options: VerificationOptions = {}, runtimeEnvironment?: NodeJS.ProcessEnv): Promise<TestReport> {
   const { launcher = sandboxCommand, ...overrides } = options;
   const limits = { timeoutMs: 120_000, maxOutputBytes: 2_000_000, ...overrides };
   for (const [key, value] of Object.entries(limits)) {
@@ -123,7 +123,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   const started = performance.now();
   const beforeHash = await sourceHash(root);
   if (signal?.aborted) throw new Error('Run stopped.');
-  const args = ['--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
+  const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
   let command: VerificationCommand, home: string;
   try {
     command = await launcher(root, executable, args);
@@ -133,7 +133,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
     if (signal?.aborted) throw new Error('Run stopped.');
-    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ PATH: process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
+    const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
       CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
       cwd: root, env: environment,

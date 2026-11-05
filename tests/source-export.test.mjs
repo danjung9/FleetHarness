@@ -34,6 +34,17 @@ test('source export preserves the verified revision and browser evidence in a ne
   assert.equal(await fs.readFile(path.join(input.parent, 'existing', 'keep.txt'), 'utf8'), 'Keep this earlier export.');
 });
 
+test('a verified CLI revision exports its declared source without a browser entry point', async t => {
+  const input = await fixture(t);
+  await fs.rm(path.join(input.workspace, 'index.html'));
+  await fs.writeFile(path.join(input.workspace, 'engine.mjs'), 'console.log("synthetic CLI");');
+  input.runtimeProfile = 'cli'; input.verifiedHash = await sourceHash(input.workspace);
+  const destination = await exportVerifiedBundle(input);
+  assert.equal(await sourceHash(destination), input.verifiedHash);
+  assert.equal(await fs.readFile(path.join(destination, 'engine.mjs'), 'utf8'), 'console.log("synthetic CLI");');
+  await assert.rejects(fs.access(path.join(destination, 'index.html')), { code: 'ENOENT' });
+});
+
 test('an edit made while choosing an export folder is rejected before creating a bundle', async t => {
   const input = await fixture(t);
   await fs.appendFile(path.join(input.workspace, 'index.html'), 'Unverified change');

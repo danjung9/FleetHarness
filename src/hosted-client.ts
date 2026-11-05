@@ -95,6 +95,9 @@ export function createHostedClient(options: HostedClientOptions) {
   const unavailable = async (): Promise<never> => { throw new Error('This action is available in the desktop app.'); };
   const api: FleetAPI = {
     bootstrap,
+    sendMessage: unavailable, cancelMessage: unavailable, answerClarification: unavailable,
+    applyConversationAction: unavailable, dismissConversationAction: unavailable, requestChanges: unavailable,
+    selectChatGPTAccount: unavailable, reopenChatGPTLogin: unavailable, manageChatGPTUsage: unavailable,
     refreshNorfolkCatalog: () => mutate('/catalog/refresh'),
     createProject: input => mutate('/projects', input),
     updateProject: (id, input) => mutate(projectPath(id), input, 'PATCH'),

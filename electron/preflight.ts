@@ -121,11 +121,12 @@ export async function findVerificationBrowser(signal: AbortSignal, candidates?: 
 /** Starts the existing app-owned permission profile and thread, never a model turn. */
 export async function probeCodexSandbox(options: {
   home: string; cwd: string; model: string; signal: AbortSignal;
+  getCredentials?: Parameters<typeof createCodexSession>[0]['getCredentials'];
   create?: (options: Parameters<typeof createCodexSession>[0]) => Promise<Pick<Awaited<ReturnType<typeof createCodexSession>>, 'dispose'>>;
 }) {
   options.signal.throwIfAborted();
   const session = await (options.create ?? createCodexSession)({
-    home: options.home, cwd: options.cwd, model: options.model, signal: options.signal, tools: []
+    home: options.home, cwd: options.cwd, model: options.model, signal: options.signal, tools: [], getCredentials: options.getCredentials
   });
   try { options.signal.throwIfAborted(); } finally { session.dispose(); }
 }

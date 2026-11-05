@@ -65,6 +65,7 @@ async function ps(environment: boolean) {
 }
 
 async function scan(marker: string): Promise<Identity[]> {
+  if (process.platform === 'win32') return (await import('./windows-process-scan.js')).windowsRunProcesses(marker);
   if (process.platform === 'darwin') {
     return markedPsProcesses(await ps(false), await ps(true), marker, await ps(false));
   }
@@ -101,9 +102,9 @@ export class RunProcessSweep {
     this.used = options.marker !== undefined;
   }
   run<T>(work: () => T): T { return current.run(this, work); }
-  environment(base: NodeJS.ProcessEnv) {
+  environment(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     if (this.closed) throw new Error('Run process scope is closed; no further processes may start.');
-    if (!this.options.scan && !['darwin', 'linux'].includes(process.platform)) throw new Error('Run process inspection is unavailable on this platform; process launch refused.');
+    if (!this.options.scan && !['darwin', 'linux', 'win32'].includes(process.platform)) throw new Error('Run process inspection is unavailable on this platform; process launch refused.');
     this.used = true;
     return { ...base, [markerKey]: this.marker };
   }
@@ -120,6 +121,8 @@ export class RunProcessSweep {
       // deadline, and never count snapshots across an inspection failure.
       catch { empty = 0; return undefined; }
     };
+    const windows = process.platform === 'win32' && !this.options.signal && !this.options.scan
+      ? await import('./windows-process-scan.js') : undefined;
     const signal = this.options.signal ?? ((pid, signal) => { process.kill(pid, signal); });
     const started = performance.now(), grace = this.options.graceMs ?? 400, deadline = grace + (this.options.killMs ?? 5000);
     do {
@@ -134,7 +137,10 @@ export class RunProcessSweep {
           const fresh = await inspect();
           if (!fresh) break;
           if (!fresh.some(p => p.pid === target.pid && p.started === target.started)) continue;
-          try { signal(target.pid, performance.now() - started < grace ? 'SIGTERM' : 'SIGKILL'); }
+          try {
+            if (windows) windows.windowsSignalRunProcess(this.marker, target);
+            else signal(target.pid, performance.now() - started < grace ? 'SIGTERM' : 'SIGKILL');
+          }
           catch (error) { if (!vanished(error)) { /* Verify again and report survivors below. */ } }
         }
       }
@@ -148,6 +154,6 @@ export class RunProcessSweep {
     throw new Error('Process cleanup could not be confirmed' + (remaining.length ? ': run PIDs ' + remaining.map(p => p.pid).join(', ') + ' remain.' : ': processes did not settle before the deadline.') + ' Use the operator shutdown procedure.');
   }
 }
-export function runProcessEnvironment(base: NodeJS.ProcessEnv = process.env) {
+export function runProcessEnvironment(base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   return current.getStore()?.environment(base) ?? base;
 }

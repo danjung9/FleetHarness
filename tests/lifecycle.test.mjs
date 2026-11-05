@@ -9,7 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { Store, sourceHash } from '../dist-electron/electron/storage.js';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
-import { reportHash, deliveryEvidence } from '../dist-electron/electron/delivery.js';
+import { reportHash, deliveryEvidence, assertReviewState } from '../dist-electron/electron/delivery.js';
 import { atomicHostWrite } from '../dist-electron/shared/host-files.js';
 import { mainHarness } from './helpers/main-harness.mjs';
 
@@ -47,6 +47,12 @@ test('failed cleanup cannot be approved, exported, or packaged', async t => {
   for (const channel of ['fleet:approve', 'fleet:export', 'fleet:download-executable']) {
     await assert.rejects(main.invoke(channel, p.id, 'Synthetic review note'), /cleanup|review/i);
   }
+});
+
+test('a version 2 project cannot deliver with downgraded browser-only verification', async t => {
+  const { p } = await fixture(t);
+  p.qualityVersion = 2;
+  assert.throws(() => assertReviewState(p), /required capability and browser evidence/);
 });
 
 for (const mismatch of ['run', 'cleanup', 'report']) test('approval rejects mismatched ' + mismatch + ' evidence', async t => {
@@ -283,7 +289,7 @@ test('startup and repeated Stop never relabel another run marker as the current 
 });
 
 test('production startup discovers and stops a persisted orphan before reporting stopped', { timeout: 15000 }, async t => {
-  if (!['darwin', 'linux'].includes(process.platform)) return t.skip('Native discovery requires macOS or Linux.');
+  if (!['darwin', 'linux', 'win32'].includes(process.platform)) return t.skip('Native discovery requires macOS, Linux, or Windows.');
   if (process.platform === 'darwin') {
     const allowed = await new Promise((resolve, reject) => {
       try { execFile('/bin/ps', ['-p', String(process.pid)], error => resolve(!error)); }

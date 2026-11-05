@@ -8,7 +8,7 @@ import type { AgentBackend, TestReport, StageTokenUsage } from '../shared/types.
 import { runAgentStage, tokenUsage, type AgentLimits, type StageEvent, type StageSession } from './agent-runner.js';
 import { applicationTestFiles, reportPassed } from './verification.js';
 import { listArtifacts, safeFile, sourceHash } from './storage.js';
-import { CodexRpc } from './codex-rpc.js';
+import { CodexRpc, CHATGPT_MODEL_PROVIDER, CHATGPT_ACCESS_TOKEN_ENV, prepareCodexHome, type CodexCredentials } from './codex-rpc.js';
 
 export interface JudgeGap { requirement: string; evidence: string; fix: string }
 interface Verdict { verdict: 'SATISFACTORY' | 'NOT'; gaps: JudgeGap[]; evaluationError?: string }
@@ -22,7 +22,8 @@ type JudgedReport = TestReport & { independentJudge: IndependentJudgment };
 interface JudgeEngine {
   backend: AgentBackend; model: string; provider: string; runtime: ModelRuntime; agentDir: string; codexHome?: string;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
-  launchCodex?: (home: string) => CodexRpc;
+  launchCodex?: (home: string, credentials?: Pick<CodexCredentials, 'accessToken'>) => CodexRpc;
+  getCredentials?: () => Promise<CodexCredentials>;
 }
 interface Options {
   workspace: string; resourcesRoot: string; report: TestReport; engine: JudgeEngine; signal: AbortSignal;
@@ -94,7 +95,11 @@ function readTool(files: Map<string, string>): ToolDefinition {
 async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortSignal, instructions: string,
   tool: ToolDefinition, answer: (text: string) => void): Promise<StageSession> {
   if (!engine.codexHome) throw new Error('The judge requires the configured Codex home.');
-  const rpc = (engine.launchCodex ?? CodexRpc.launch)(engine.codexHome);
+  await prepareCodexHome(engine.codexHome);
+  signal.throwIfAborted();
+  const credentials = await engine.getCredentials?.();
+  signal.throwIfAborted();
+  const rpc = (engine.launchCodex ?? CodexRpc.launch)(engine.codexHome, credentials && { accessToken: credentials.accessToken });
   const listeners = new Set<(event: StageEvent) => void>();
   const emit = (event: object) => { for (const fn of listeners) fn(event as StageEvent); };
   let thread = '', turn = '', finalText = '', explicitFinal = false;
@@ -158,8 +163,9 @@ async function codexJudge(engine: JudgeEngine, workspace: string, signal: AbortS
   try {
     signal.throwIfAborted(); await rpc.initialize(); signal.throwIfAborted();
     const result = await rpc.request('thread/start', {
-      cwd: workspace, model: engine.model, modelProvider: 'openai', approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
+      cwd: workspace, model: engine.model, modelProvider: credentials ? CHATGPT_MODEL_PROVIDER : 'openai', approvalPolicy: 'never', sandbox: 'read-only', ephemeral: true,
       config: { web_search: 'disabled', project_doc_max_bytes: 0, 'features.shell_tool': false, 'features.apply_patch_freeform': false,
+        'shell_environment_policy.exclude': [CHATGPT_ACCESS_TOKEN_ENV],
         'features.multi_agent': false, 'features.goals': false, 'features.view_image': false, 'features.apps': false, 'features.plugins': false },
       baseInstructions: instructions, developerInstructions: instructions,
       dynamicTools: [{ type: 'function', name: tool.name, description: tool.description, inputSchema: tool.parameters }]

@@ -11,13 +11,20 @@ import { reportPassed, verifyWorkspace } from '../dist-electron/electron/verific
 import { qualityFixture, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 import { RunProcessSweep, runProcessEnvironment } from '../dist-electron/electron/process-sweep.js';
 
+import { solutionFixture, solutionFixtureEvaluator } from '../scripts/solution-fixture.mjs';
+import { syntheticDataFiles } from '../scripts/data-fixture.mjs';
+import { foundationRuntime } from '../dist-electron/harness/foundations.js';
+import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
+
 const resourcesRoot = path.resolve('.');
 // Full functional workflows launch real Node tests and Chromium. Keep their
 // scheduling allowance separate from deliberately short timeout/cancel limits.
 const functionalTimeout = 60_000;
+const workflowTimeout = functionalTimeout;
 const never = () => new Promise(() => {});
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') ? 'repair'
+  : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
   : prompt.includes('You are the intake agent') ? 'intake'
   : prompt.includes('You are the research agent') ? 'research'
   : prompt.includes('You are the implementation agent') ? 'build'
@@ -30,17 +37,21 @@ function plainLauncher(_root, executable, args) {
 }
 async function artifacts(cwd, stage, broken = false) {
   const files = stage === 'intake' ? { 'scope.md': 'Synthetic scope' }
+    : stage === 'synthetic-data' ? syntheticDataFiles
     : stage === 'research' ? { 'research.md': 'Local fixture research' }
     : stage === 'plan' ? { 'scope.md': 'Synthetic scope', 'research.md': 'Local fixture research', 'plan.md': 'Implement task extraction', 'test-matrix.md': 'Exact task extraction and empty input' }
-    : stage === 'build' ? { 'index.html': qualityFixtureHtml,
+    : stage === 'build' ? { 'index.html': qualityFixtureHtml, 'evaluate.cjs': solutionFixtureEvaluator,
       'path-to-fleet.md': 'Domain review required',
       'core.cjs': broken ? 'exports.parse = () => "defect";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;',
       'app.test.cjs': 'const test = require("node:test"), assert = require("node:assert/strict"), {parse} = require("./core.cjs"); test("extract task", () => assert.equal(parse("TASK: inspect pump"), "inspect pump")); test("empty input", () => assert.equal(parse(""), null));' }
     : stage === 'guide' ? { 'README.md': '# Task parser\n\nOpen index.html in a browser. No installation is required. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input shows Enter a message; replace it with a task to recover.\n\nFor developers: install Node and run `node --test app.test.cjs`. The core parses `TASK: inspect pump` into `inspect pump` and returns null for empty input.\n\nSee [verification notes](verification.md) and [field validation](path-to-fleet.md).' }
     : stage === 'repair' ? { 'core.cjs': broken ? 'exports.parse = () => "still broken";' : 'exports.parse = text => text.startsWith("TASK: ") ? text.slice(6) : null;', 'verification.md': 'Repair completed; domain review still required' }
     : { 'verification.md': 'Task extraction and empty input are tested; domain review required' };
-  if (stage === 'plan') Object.assign(files, qualityFixture(JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
-  for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(cwd, name), content);
+  if (stage === 'plan') Object.assign(files, solutionFixture(JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8')).acceptance.map(criterion => criterion.id)));
+  for (const [name, content] of Object.entries(files)) {
+    await fs.mkdir(path.dirname(path.join(cwd, name)), { recursive: true });
+    await fs.writeFile(path.join(cwd, name), content);
+  }
 }
 
 async function harness(t, options = {}) {
@@ -49,7 +60,9 @@ async function harness(t, options = {}) {
   store.state.projects[0] = newProject(qualityFixtureProject);
   store.state.settings = { provider: 'fixture', model: 'fixture', rememberKey: false };
   const project = store.state.projects[0], sessions = [], judgeSessions = [], snapshots = [];
+  const broker = options.clarifications ? new ClarificationBroker(store, () => snapshots.push(structuredClone(project))) : undefined;
   const backend = new PiBackend(store, process.execPath, () => snapshots.push(structuredClone(project)), options.resourcesRoot ?? resourcesRoot, {
+    clarifications: broker,
     // Discovery is injected for synthetic orchestration. Native discovery and
     // detached-worker shutdown require the separate permitted-host receipt.
     processSweep: options.processSweep ?? (() => new RunProcessSweep({ scan: async () => [] })),
@@ -77,25 +90,26 @@ async function harness(t, options = {}) {
       }
       if (options.createSession) return options.createSession({ cwd, sessions });
       const listeners = new Set();
-      const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false,
+      const disposal = deferred();
+      const s = { tools, customTools, skills: resourceLoader.getSkills().skills.map(skill => skill.name), stage: undefined, prompts: [], aborts: 0, disposed: false, whenDisposed: disposal.promise,
         subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
         emit(event) { for (const listener of listeners) listener(event); },
         async prompt(text) {
           this.stage ??= stageOf(text); this.prompts.push(text); this.emit({ type: 'turn_start' });
           if (this.stage === 'plan' && !project.systemDesign) await customTools.find(tool => tool.name === 'fleet_system_design').execute('design', {
             title: 'Task parser', description: 'Local fixture application',
-            components: [{ id: 'parser', label: 'Parser', description: 'Extract task text', kind: 'logic', files: ['core.cjs'] }], connections: []
+            components: [{ id: 'parser', label: 'Parser', description: 'Extract task text', kind: 'logic', files: [options.componentFile ?? 'core.cjs'] }], connections: []
           });
           if (text.startsWith('Implementation is complete.')) this.writingGuide = true;
           const step = this.writingGuide ? 'guide' : this.stage;
           const handled = await options.scenario?.({ cwd, stage: step, session: this, sessions, project, store });
           if (!handled) await artifacts(cwd, step, options.brokenBuild && (this.stage === 'build' || options.brokenRepair));
-          if (['build', 'verify', 'repair'].includes(this.stage)) await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
+          if (['build', 'verify', 'repair'].includes(this.stage) && !(options.deferComponentProgress && this.stage === 'build' && !this.writingGuide)) await customTools.find(tool => tool.name === 'fleet_component_progress').execute('progress', { componentId: 'parser', status: 'generated', detail: 'Source written; harness tests follow.' });
           this.emit({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop', usage: options.usage } });
           this.emit({ type: 'turn_end' });
         },
         abort() { this.aborts++; return options.abort ? options.abort(this) : Promise.resolve(); },
-        dispose() { this.disposed = true; }
+        dispose() { this.disposed = true; disposal.resolve(); }
       };
       sessions.push(s); return { session: s };
     }
@@ -114,7 +128,7 @@ async function harness(t, options = {}) {
     const saved = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(p => p.id === project.id);
     assert.equal(saved.status, status); assert.equal(saved.error, project.error);
   };
-  return { root, store, project, backend, sessions, judgeSessions, snapshots, run, settle, assertSettled };
+  return { root, store, project, backend, broker, sessions, judgeSessions, snapshots, run, settle, assertSettled };
 }
 
 async function syntheticReport(p, run, failed = false, detail = 'step 3: expected inspect pump, received wrong result') {
@@ -584,6 +598,188 @@ test('failed initialization without a session handle cannot confirm writer shutd
   await assert.rejects(h.backend.resume(h.project.id), /shutdown.*not confirmed/i);
 });
 
+test('review changes start another verified iteration with the comments and previous source', { timeout: workflowTimeout * 2 }, async t => {
+  const h = await harness(t);
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.run(); await h.assertSettled('review');
+  const oldRunId = h.project.runId, oldWorkspace = h.project.workspace, oldSource = await fs.readFile(path.join(oldWorkspace, 'core.cjs'), 'utf8');
+  const oldSessionCount = h.sessions.length;
+  const comments = 'Keep the entered message visible when validation fails.';
+  await h.backend.requestChanges(h.project.id, comments); await h.settle(); await h.assertSettled('review');
+  assert.notEqual(h.project.runId, oldRunId); assert.notEqual(h.project.workspace, oldWorkspace);
+  assert.equal(h.project.reviewHistory[0].decision, 'changes_requested');
+  assert.equal(h.project.reviewHistory[0].runId, oldRunId);
+  assert.equal(h.project.reviewHistory[0].nextRunId, h.project.runId);
+  assert.equal(h.project.approvedAt, undefined); assert.equal(h.project.exportedTo, undefined); assert.equal(h.project.executable, undefined);
+  assert.equal(await fs.readFile(path.join(oldWorkspace, 'core.cjs'), 'utf8'), oldSource);
+  assert.equal(await fs.readFile(path.join(h.project.workspace, '.review-source', 'core.cjs'), 'utf8'), oldSource);
+  assert.ok((await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8')).includes(comments));
+  for (const session of h.sessions.slice(oldSessionCount)) assert.ok(session.prompts[0].includes(comments), session.stage + ' received reviewer comments');
+  assert.equal(h.project.report.command.includes('.review-source'), false);
+  const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects.find(project => project.id === h.project.id);
+  assert.equal(saved.reviewHistory[0].feedback, comments);
+});
+
+test('a review change request preserves the current build and saved comments when startup fails', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t);
+  await h.run(); await h.assertSettled('review');
+  const current = { runId: h.project.runId, workspace: h.project.workspace, report: structuredClone(h.project.report) };
+  h.backend.runtime.hasConfiguredAuth = () => false;
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Keep the entered message visible.'), /comments were saved.*could not start.*connect its provider/);
+  assert.equal(h.project.status, 'review'); assert.equal(h.project.runId, current.runId); assert.equal(h.project.workspace, current.workspace); assert.deepEqual(h.project.report, current.report);
+  assert.equal(h.project.feedback, 'Keep the entered message visible.');
+  assert.equal(h.project.reviewHistory[0].nextRunId, undefined);
+  assert.equal(h.backend.active.has(h.project.id), false);
+  h.backend.runtime.hasConfiguredAuth = () => true;
+  h.backend.resourcesRoot = path.join(h.root, 'missing-resources');
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Also explain how to correct invalid messages.'), /comments were saved.*could not start/);
+  assert.equal(h.project.status, 'review'); assert.equal(h.project.runId, current.runId); assert.equal(h.project.workspace, current.workspace); assert.deepEqual(h.project.report, current.report);
+  assert.equal(h.project.reviewHistory.length, 2); assert.equal(h.project.reviewHistory[1].nextRunId, undefined);
+  assert.equal(h.backend.active.has(h.project.id), false);
+});
+
+test('failed verification can request changes, while incomplete or approved builds cannot', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t);
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+  await h.run(); await h.assertSettled('review');
+  for (const status of ['draft', 'running', 'approved', 'delivered']) {
+    h.project.status = status;
+    await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+  }
+  h.project.status = 'failed'; h.project.report.failed = 1;
+  h.backend.runtime.hasConfiguredAuth = () => false;
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /comments were saved/);
+  assert.equal(h.project.status, 'failed'); assert.equal(h.project.reviewHistory.length, 1);
+});
+
+test('iteration agents cannot change preserved review source', { timeout: workflowTimeout }, async t => {
+  let changeSource = false;
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (changeSource && stage === 'research') await fs.writeFile(path.join(cwd, '.review-source', 'core.cjs'), 'Altered reference source');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  changeSource = true;
+  await h.backend.requestChanges(h.project.id, 'Keep the entered message visible.'); await h.settle(); await h.assertSettled('failed');
+  assert.match(h.project.error, /previous build source changed/);
+});
+
+test('clarification-enabled automatic builds do not create extra model sessions or prompts', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { clarifications: true });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  assert.deepEqual(h.sessions.map(session => session.prompts.length), [1, 1, 1, 2, 1]);
+  for (const session of h.sessions) {
+    const enabled = ['research', 'plan'].includes(session.stage);
+    assert.equal(session.customTools.some(tool => tool.name === 'fleet_request_clarification'), enabled);
+    assert.equal(session.tools.includes('fleet_request_clarification'), enabled, 'The Pi active tool allowlist includes the registered clarification tool');
+  }
+  assert.equal(h.project.conversation?.questions.length ?? 0, 0);
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'clarifications.json')), /ENOENT/);
+});
+
+test('research and planning resume with recorded answers before contracts freeze, including an immediate answer', { timeout: workflowTimeout }, async t => {
+  const question = { question: 'Which audience comes first?', context: 'This determines workflow detail.', options: ['Operator', 'Analyst'], recommendation: 'Operator' };
+  const waiting = deferred();
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ stage, session, sessions, project }) => {
+    if (['research', 'plan'].includes(stage) && sessions.filter(item => item.stage === stage).length === 1) {
+      await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [question] });
+      const q = project.conversation.questions.at(-1);
+      if (stage === 'research') waiting.resolve();
+      // Planning exercises an answer arriving before disposal and wait() registration.
+      else await h.broker.answer(project.id, q.id, 'Keep the existing task list workflow');
+      return true;
+    }
+    if (['research', 'plan', 'build', 'verify'].includes(stage)) {
+      assert.match(session.prompts[0], /User clarification answers for this run/);
+      assert.match(session.prompts[0], /Operator/);
+    }
+    if (stage === 'build') assert.match(session.prompts[0], /Keep the existing task list workflow/);
+    return false;
+  } });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.backend.start(h.project.id); await waiting.promise;
+  await h.sessions.at(-1).whenDisposed;
+  assert.equal(h.sessions.at(-1).disposed, true);
+  assert.equal(h.project.status, 'running');
+  await h.broker.answer(h.project.id, h.project.conversation.questions[0].id, 'Operator');
+  await h.settle(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'research', 'plan', 'plan', 'build', 'verify']);
+  assert.ok(h.sessions.every(session => session.disposed));
+  assert.equal(h.sessions.filter(session => ['research', 'plan'].includes(session.stage)).every(session => session.prompts.length === 1), true, 'Asking does not invoke an artifact completion retry');
+  const recorded = JSON.parse(await fs.readFile(path.join(h.project.workspace, 'clarifications.json'), 'utf8'));
+  assert.equal(recorded.questions.length, 2);
+  assert.ok(recorded.questions.every(question => question.status === 'answered'));
+  assert.equal(h.project.conversation.messages.filter(message => message.role === 'user').length, 2);
+  const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
+  assert.equal(requirements.includes('Which audience comes first?'), false);
+});
+
+test('human clarification waits outlive agent idle and total deadlines; Stop cancels and releases the run', { timeout: workflowTimeout }, async t => {
+  const entered = deferred();
+  const h = await harness(t, { clarifications: true, agentLimits: { idleMs: 200, timeoutMs: 300 }, scenario: async ({ stage, session }) => {
+    if (stage !== 'research') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+    entered.resolve(); return true;
+  } });
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.backend.start(h.project.id); await entered.promise;
+  await new Promise(resolve => setTimeout(resolve, 450));
+  assert.equal(h.project.status, 'running');
+  assert.equal(h.sessions.at(-1).disposed, true);
+  assert.equal(h.sessions.at(-1).prompts.length, 1);
+  assert.equal(h.project.stages.find(stage => stage.id === 'plan').status, 'queued');
+  const q = h.project.conversation.questions[0];
+  await h.backend.stop(h.project.id); await h.assertSettled('stopped');
+  assert.equal(q.status, 'cancelled');
+  await assert.rejects(h.broker.answer(h.project.id, q.id, 'Operator'), /no longer waiting/);
+});
+
+test('a model failure after requesting clarification cancels pending questions', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { clarifications: true, scenario: async ({ stage, session }) => {
+    if (stage !== 'research') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+    throw new Error('Provider disconnected after asking');
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /Provider disconnected/);
+  assert.equal(h.project.conversation.questions[0].status, 'cancelled');
+  assert.equal(h.sessions.some(session => session.stage === 'plan'), false);
+});
+
+test('clarification rounds are bounded and never freeze unanswered planning contracts', { timeout: workflowTimeout }, async t => {
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ stage, session, project }) => {
+    if (stage !== 'plan') return false;
+    await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Which workflow is primary?', context: 'A required planning decision.' }] });
+    await h.broker.answer(project.id, project.conversation.questions.at(-1).id, 'The existing task list');
+    return true;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /two clarification rounds/);
+  assert.equal(h.sessions.filter(session => session.stage === 'plan').length, 3);
+  assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+  assert.deepEqual(h.project.conversation.questions.map(question => question.round), [1, 2]);
+  await assert.rejects(fs.access(path.join(h.root, 'evaluations', h.project.runId + '.json')), /ENOENT/);
+});
+
+test('downstream agents cannot overwrite the recorded user answers', { timeout: workflowTimeout }, async t => {
+  let h;
+  h = await harness(t, { clarifications: true, scenario: async ({ cwd, stage, session, sessions, project }) => {
+    if (stage === 'research' && sessions.filter(item => item.stage === 'research').length === 1) {
+      await session.customTools.find(tool => tool.name === 'fleet_request_clarification').execute('question', { questions: [{ question: 'Who is this for?', context: 'The audience is missing.' }] });
+      await h.broker.answer(project.id, project.conversation.questions.at(-1).id, 'Operator'); return true;
+    }
+    if (stage === 'build') await fs.writeFile(path.join(cwd, 'clarifications.json'), '{"answer":"invented"}');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  assert.match(h.project.error, /clarification answers changed/);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), false);
+});
+
 test('a Codex abort acknowledgement cannot authorize recovery without worker exit evidence', { timeout: 10000 }, async t => {
   let creations = 0;
   const h = await harness(t);
@@ -616,7 +812,7 @@ for (const failure of ['Provider error: 503 service unavailable', 'Connection lo
     } });
     await h.run(); await h.assertSettled('review');
     assert.equal(attempts, 2);
-    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'build', 'verify']);
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'verify']);
     assert.ok(h.sessions.every(s => s.disposed));
   });
 }
@@ -811,34 +1007,123 @@ test('builds accept optional criteria and hand resources and links to agents', {
     plan.criteria = plan.criteria.map(criterion => criterion.criterionId === 'WFL-03'
       ? { criterionId: 'WFL-03', disposition: 'implemented',
         expectedOutcome: 'Parse a synthetic task, recover from empty input, and retain its review draft across reload. Publication still requires owner approval.',
-        journeyIds: ['parse-task', 'recover-empty'] } : criterion);
+        journeyIds: ['parse-task', 'recover-empty'], capabilityIds: ['parse'] } : { ...criterion, capabilityIds: [] });
     await fs.writeFile(filename, JSON.stringify(plan));
+    const solutionFile = path.join(cwd, 'solution-contract.json');
+    const solution = JSON.parse(await fs.readFile(solutionFile, 'utf8'));
+    solution.capabilities[0].criterionIds = ['WFL-03'];
+    await fs.writeFile(solutionFile, JSON.stringify(solution));
     return true;
   } });
   h.project.criteria = [];
+  h.project.inputs = 'Synthetic operational messages';
+  h.project.outputs = 'Structured tasks, events and deadlines';
   h.project.resources = 'Synthetic task messages and a blank report template.';
   h.project.links = ['https://example.com/reference'];
   await h.run(); await h.assertSettled('review');
   const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
   assert.match(requirements, /No evaluation criteria supplied/);
+  assert.ok(requirements.includes('## Inputs\n\n' + h.project.inputs));
+  assert.ok(requirements.includes('## Outputs\n\n' + h.project.outputs));
   assert.ok(requirements.includes(h.project.resources));
   assert.ok(requirements.includes(h.project.links[0]));
   const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
   assert.deepEqual(packet.userScope.criteria, []);
+  assert.equal(packet.userScope.inputs, h.project.inputs);
+  assert.equal(packet.userScope.outputs, h.project.outputs);
   assert.equal(packet.userScope.resources, h.project.resources);
   assert.deepEqual(packet.userScope.links, h.project.links);
+  assert.equal(h.sessions.filter(session => session.stage === 'synthetic-data').length, 1, 'Input/output descriptions, resource notes and reference links do not count as connected data');
   assert.equal(reportPassed(h.project.report), true);
 });
 
-test('the complete workflow advances in order and persists real test evidence before human review', { timeout: functionalTimeout }, async t => {
+test('connected file and pasted inputs reach agents unchanged and skip the synthetic-data specialist', { timeout: functionalTimeout }, async t => {
+  const h = await harness(t);
+  h.project.dataInputs = [
+    { name: 'messages.csv', kind: 'file', content: 'message\r\nTASK: inspect pump\r\n' },
+    { name: 'message-notes.txt', kind: 'text', content: '  TASK: check valve\n' }
+  ];
+  await h.run(); await h.assertSettled('review');
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
+  for (const [index, input] of h.project.dataInputs.entries()) {
+    assert.equal(await fs.readFile(path.join(h.project.workspace, 'inputs', `${String(index + 1).padStart(3, '0')}-${input.name}`), 'utf8'), input.content);
+  }
+  const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
+  assert.deepEqual(packet.userScope.dataInputs, h.project.dataInputs.map(({ name, kind, content }) => ({ name, kind, bytes: Buffer.byteLength(content, 'utf8') })));
+  assert.equal(packet.dataPolicy, 'user-provided-or-synthetic');
+  const requirements = await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8');
+  assert.match(requirements, /messages\.csv/);
+  assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /inputs\/manifest\.json/);
+  await assert.rejects(fs.access(path.join(h.project.workspace, 'data/synthetic-data.json')), /ENOENT/);
+});
+
+test('the no-data specialist finishes within intake before downstream agents receive its dataset', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage, project }) => {
+    if (stage === 'synthetic-data') {
+      assert.equal(project.stages.find(item => item.id === 'intake').status, 'active');
+      assert.equal(project.stages.find(item => item.id === 'research').status, 'queued');
+      await fs.access(path.join(cwd, 'scope.md'));
+    }
+    if (stage === 'research') assert.equal(JSON.parse(await fs.readFile(path.join(cwd, 'data/synthetic-data.json'), 'utf8')).classification, 'synthetic');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  const specialist = h.sessions.find(session => session.stage === 'synthetic-data');
+  assert.ok(specialist);
+  assert.notEqual(specialist, h.sessions[0], 'Data generation gets its own agent session');
+  assert.match(specialist.prompts[0], /requirements\.md/);
+  assert.match(specialist.prompts[0], /scope\.md/);
+  assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /data\/synthetic-data\.json/);
+  assert.equal(specialist.disposed, true);
+  assert.deepEqual(specialist.tools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
+  assert.deepEqual(specialist.customTools.map(tool => tool.name), ['fleet_helpers', 'fleet_run_helper']);
+  assert.deepEqual(specialist.skills, ['fleet-data']);
+  assert.equal(h.project.stages.length, 7, 'The specialist does not add a user-facing build phase');
+});
+
+for (const recover of [true, false]) {
+  test(`invalid synthetic data ${recover ? 'gets one completion attempt' : 'blocks research after one completion attempt'}`, { timeout: workflowTimeout }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+      if (stage !== 'synthetic-data') return false;
+      if (recover && session.prompts.length === 2) return false;
+      await fs.mkdir(path.join(cwd, 'data'), { recursive: true });
+      await fs.writeFile(path.join(cwd, 'data/synthetic-data.json'), JSON.stringify({ classification: 'synthetic', records: [] }));
+      await fs.writeFile(path.join(cwd, 'data/README.md'), 'Invented examples.');
+      return true;
+    } });
+    await h.run(); await h.assertSettled(recover ? 'review' : 'failed');
+    assert.equal(h.sessions.find(session => session.stage === 'synthetic-data').prompts.length, 2);
+    if (!recover) {
+      assert.equal(h.sessions.some(session => session.stage === 'research'), false);
+      assert.equal(h.project.stages.find(item => item.id === 'intake').status, 'failed');
+      assert.equal(h.project.report, undefined);
+    }
+  });
+}
+
+for (const supplied of [false, true]) {
+  test(`downstream agents cannot change ${supplied ? 'connected inputs' : 'the generated synthetic dataset'}`, { timeout: workflowTimeout }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+      if (stage === 'plan') await fs.appendFile(path.join(cwd, supplied ? 'inputs/001-messages.csv' : 'data/synthetic-data.json'), '\nChanged by the planner');
+      return false;
+    } });
+    if (supplied) h.project.dataInputs = [{ name: 'messages.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' }];
+    await h.run(); await h.assertSettled('failed');
+    assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+    assert.equal(h.project.report, undefined);
+    assert.match(h.project.error, /input|data|integrity|changed/i);
+  });
+}
+
+test('the complete workflow advances in order and persists real test evidence before human review', { timeout: workflowTimeout }, async t => {
   const h = await harness(t); await h.run(); await h.assertSettled('review');
-  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
+  assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify'], h.project.logs.filter(log => log.stage === 'verify').map(log => log.text).join('\n'));
   for (const id of ['intake', 'research', 'plan', 'build', 'verify']) {
     const changes = h.snapshots.map(p => p.stages.find(s => s.id === id).status).filter((s, i, all) => !i || s !== all[i - 1]);
     assert.deepEqual(changes, ['queued', 'active', 'complete'], id);
   }
   assert.equal(reportPassed(h.project.report), true); assert.equal(h.project.report.passed, 2);
-  assert.equal(h.project.qualityVersion, 1);
+  assert.equal(h.project.qualityVersion, 2);
   assert.equal(h.project.report.quality.status, 'passed');
   assert.equal(h.project.report.quality.journeys.length, 4);
   assert.equal(h.project.report.quality.requirementsMet, false);
@@ -853,24 +1138,151 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2);
   assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /No installation is required/);
   assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
-  assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash']);
+  assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
   const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
   assert.deepEqual(h.project.phasePlan, packet.stages);
   assert.deepEqual(h.project.globalTools, packet.globalTools);
   for (const session of h.sessions) {
+    if (session.stage === 'synthetic-data') continue;
     const phase = packet.stages.find(phase => phase.id === session.stage);
     assert.deepEqual(session.tools, [...packet.globalTools, ...phase.tools]);
     assert.deepEqual(session.skills.sort(), [...phase.skills].sort());
-    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools, ...(packet.globalTools.includes('bash') ? ['bash'] : [])].sort());
+    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools, 'fleet_helpers', 'fleet_run_helper', ...(packet.globalTools.includes('bash') ? ['bash'] : [])].sort());
     assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
   }
+});
+
+for (const recover of [true, false]) {
+  test(`new planning ${recover ? 'repairs' : 'rejects'} a missing public invocation protocol before sealing answers`, { timeout: workflowTimeout }, async t => {
+    const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+      if (stage === 'plan') {
+        await artifacts(cwd, stage);
+        if (!recover || session.prompts.length === 1) {
+          const file = path.join(cwd, 'solution-contract.json');
+          const contract = JSON.parse(await fs.readFile(file, 'utf8'));
+          delete contract.invocation;
+          await fs.writeFile(file, JSON.stringify(contract));
+        }
+        return true;
+      }
+      if (stage === 'build') {
+        const contract = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
+        assert.match(contract.invocation.rules[0], /TASK:/);
+        await assert.rejects(fs.access(path.join(cwd, 'evaluation-plan.json')), /ENOENT/);
+      }
+      return false;
+    } });
+    await h.run();
+    await h.assertSettled(recover ? 'review' : 'failed');
+    const planner = h.sessions.find(session => session.stage === 'plan');
+    assert.equal(planner.prompts.length, 2);
+    assert.match(planner.prompts[1], /requires invocation/);
+    if (!recover) {
+      assert.equal(h.sessions.some(session => session.stage === 'build'), false);
+      await fs.access(path.join(h.project.workspace, 'evaluation-plan.json'));
+      await assert.rejects(fs.access(path.join(h.root, 'evaluations', h.project.runId + '.json')), /ENOENT/);
+    }
+  });
+}
+
+test('the host materializes a service foundation before implementation and verifies its shared backend', { timeout: 45000 }, async t => {
+  let sawFoundation = false;
+  const selection = { schemaVersion: 1, templateId: 'node-service', version: '1.0.0', computePack: 'custom', reason: 'Use a real backend task parser with the bundled service and browser client.' };
+  const h = await harness(t, { componentFile: 'compute.mjs', scenario: async ({ cwd, stage }) => {
+    if (stage === 'plan') {
+      await artifacts(cwd, stage);
+      const solution = JSON.parse(await fs.readFile(path.join(cwd, 'solution-contract.json'), 'utf8'));
+      solution.runtime = foundationRuntime(selection);
+      const plan = JSON.parse(await fs.readFile(path.join(cwd, 'acceptance-plan.json'), 'utf8'));
+      plan.journeys = [
+        { id: 'parse-task', title: 'Parse using the backend', kind: 'primary', steps: [
+          { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
+          { action: 'expectText', selector: '#result', text: '"inspect pump"' }
+        ] },
+        { id: 'recover-empty', title: 'Recover from invalid JSON', kind: 'recovery', steps: [
+          { action: 'fill', selector: '#input', value: '{ invalid' }, { action: 'click', selector: '#run' },
+          { action: 'expectVisible', selector: '#error' },
+          { action: 'fill', selector: '#input', value: '"TASK: inspect pump"' }, { action: 'click', selector: '#run' },
+          { action: 'expectText', selector: '#result', text: '"inspect pump"' }
+        ] }
+      ];
+      for (const [name, value] of Object.entries({ 'solution-contract.json': solution, 'acceptance-plan.json': plan, 'foundation-plan.json': selection })) {
+        await fs.writeFile(path.join(cwd, name), JSON.stringify(value));
+      }
+      return true;
+    }
+    if (stage === 'build') {
+      assert.ok((await fs.stat(path.join(cwd, 'server.mjs'))).size > 0);
+      const lock = JSON.parse(await fs.readFile(path.join(cwd, 'foundation-lock.json'), 'utf8'));
+      assert.equal(lock.selection.templateId, 'node-service');
+      assert.ok(lock.copiedFiles >= 7);
+      sawFoundation = true;
+      await fs.writeFile(path.join(cwd, 'compute.mjs'), 'export async function compute(text) { return text.startsWith("TASK: ") ? text.slice(6) : null; }');
+      await fs.writeFile(path.join(cwd, 'app.test.mjs'), 'import test from "node:test"; import assert from "node:assert/strict"; import {compute} from "./compute.mjs"; test("actual backend parser", async()=>{assert.equal(await compute("TASK: inspect pump"),"inspect pump");assert.equal(await compute("TASK: close valve"),"close valve");assert.equal(await compute(""),null);});');
+      await fs.writeFile(path.join(cwd, 'path-to-fleet.md'), 'Synthetic grammar only; domain validation required.');
+      return true;
+    }
+    if (stage === 'guide') {
+      await fs.writeFile(path.join(cwd, 'README.md'), '# Task parser\nRun node server.mjs and open the printed loopback URL. Paste a JSON task string and select Run computation. The actual backend parser returns the task. Developer checks: node --test app.test.mjs.');
+      return true;
+    }
+    return false;
+  } });
+  await h.run();
+  assert.equal(h.project.status, 'review', JSON.stringify({ error: h.project.error, report: h.project.report }, null, 2));
+  await h.assertSettled('review');
+  assert.equal(sawFoundation, true);
+  assert.equal(h.project.runtimeProfile, 'service');
+  assert.equal(reportPassed(h.project.report, true), true);
+  assert.ok(h.project.logs.some(log => log.text.includes('Foundation node-service@1.0.0')));
+});
+
+test('core evaluation precedes completed application component tracking', { timeout: 20000 }, async t => {
+  let completedApplication = false;
+  const h = await harness(t, { deferComponentProgress: true, scenario: async ({ cwd, stage, project }) => {
+    if (stage === 'guide') {
+      const core = JSON.parse(await fs.readFile(path.join(cwd, '.quality-evidence/core-report.json'), 'utf8'));
+      assert.equal(core.status, 'passed');
+      assert.equal(project.systemDesign.progress.parser.status, 'planned');
+      completedApplication = true;
+    }
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(completedApplication, true);
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2, 'Incomplete UI components must not trigger artifact repair before the core gate');
+  assert.equal(reportPassed(h.project.report, true), true);
+});
+
+for (const repair of [true, false]) test(`required core evaluation ${repair ? 'repairs the engine' : 'blocks application completion'}`, { timeout: 20000 }, async t => {
+  let coreAttempts = 0;
+  const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+    if (stage !== 'build') return false;
+    coreAttempts++;
+    await assert.rejects(fs.access(path.join(cwd, 'evaluation-plan.json')), /ENOENT/, 'The builder must not receive the answer key');
+    await artifacts(cwd, stage);
+    if (coreAttempts === 1 || !repair) await fs.writeFile(path.join(cwd, 'evaluate.cjs'), 'process.stdin.resume();process.stdin.on("end",()=>process.stdout.write(JSON.stringify("constant answer")));');
+    else assert.match(session.prompts.at(-1), /independent core evaluation failed/);
+    return true;
+  } });
+  await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
+  assert.equal(coreAttempts, 2);
+  assert.equal(h.sessions.some(session => session.stage === 'verify'), repair);
+  assert.equal(h.sessions.some(session => session.stage === 'repair'), false);
+  const evidence = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'));
+  assert.equal(evidence.status, repair ? 'passed' : 'failed');
+  if (repair) {
+    assert.equal(reportPassed(h.project.report, true), true);
+    await fs.access(path.join(h.project.workspace, 'evaluation-plan.json'));
+    assert.equal(await sourceHash(h.project.workspace), h.project.report.sourceHash);
+  } else assert.ok(!h.sessions.find(session => session.stage === 'build').writingGuide);
 });
 
 for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: functionalTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage === 'build') {
       await artifacts(cwd, stage);
-      await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main>');
+      await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main><script>' + qualityFixtureHtml.match(/\/\* CORE_START \*\/[\s\S]*?\/\* CORE_END \*\//)[0] + '</script>');
       return true;
     }
     if (stage === 'repair' && repair) await fs.writeFile(path.join(cwd, 'index.html'), qualityFixtureHtml);
@@ -885,7 +1297,7 @@ for (const repair of [true, false]) test(`passing Node tests cannot hide a stati
   assert.ok(h.project.logs.some(log => log.text.includes('Browser journeys: 0/4 passed')));
 });
 
-test('builder cannot weaken a planned browser expectation', { timeout: 10000 }, async t => {
+test('builder cannot weaken a planned browser expectation', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage !== 'build') return false;
     await artifacts(cwd, stage);
@@ -901,7 +1313,7 @@ test('builder cannot weaken a planned browser expectation', { timeout: 10000 }, 
   assert.ok(!h.sessions.some(session => session.stage === 'verify'));
 });
 
-test('invalid acceptance coverage gets one planning completion attempt before build is blocked', { timeout: 10000 }, async t => {
+test('invalid acceptance coverage gets one planning completion attempt before build is blocked', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage !== 'plan') return false;
     await artifacts(cwd, stage);
@@ -921,22 +1333,22 @@ for (const brokenRepair of [false, true]) {
   test(`independent test failure ${brokenRepair ? 'stops after a second unchanged repair' : 'gets exactly one repair and advances after re-verification'}`, { timeout: functionalTimeout }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
-    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'research', 'plan', 'build', 'verify', 'repair', ...(brokenRepair ? ['repair'] : [])], JSON.stringify(h.project.logs));
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', 'repair', ...(brokenRepair ? ['repair'] : [])], JSON.stringify(h.project.logs));
     assert.equal(reportPassed(h.project.report), !brokenRepair, JSON.stringify(h.project.report));
     assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
     if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
-for (const blockedStage of ['intake', 'research', 'plan', 'build', 'verify']) {
-  test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: 10000 }, async t => {
+for (const blockedStage of ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify']) {
+  test(`a stalled ${blockedStage} stage fails, clears active stages and frees its run slot`, { timeout: workflowTimeout }, async t => {
     const h = await harness(t, { agentLimits: { idleMs: 200, timeoutMs: 3000 }, scenario: ({ stage }) => stage === blockedStage ? never() : false });
     await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /no progress/);
     assert.equal(h.sessions.at(-1).stage, blockedStage); assert.equal(h.sessions.at(-1).aborts, 1);
     assert.equal(h.project.report, undefined);
   });
 
-  test(`stopping during ${blockedStage} waits for persisted stopped state, not SDK abort`, { timeout: 10000 }, async t => {
+  test(`stopping during ${blockedStage} waits for persisted stopped state, not SDK abort`, { timeout: workflowTimeout }, async t => {
     const entered = deferred();
     const h = await harness(t, { scenario: ({ stage }) => { if (stage === blockedStage) { entered.resolve(); return never(); } return false; } });
     await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
@@ -955,14 +1367,14 @@ test('missing artifacts get one targeted completion prompt within the same stage
   assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2); assert.match(h.sessions.find(s => s.stage === 'plan').prompts[1], /plan\.md/);
 });
 
-test('an agent that keeps omitting artifacts cannot advance or loop forever', { timeout: 10000 }, async t => {
+test('an agent that keeps omitting artifacts cannot advance or loop forever', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.length, 3); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
+  assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
   assert.match(h.project.error, /after one completion attempt.*plan\.md/);
 });
 
-test('empty files and directories cannot satisfy stage outputs', { timeout: 10000 }, async t => {
+test('empty files and directories cannot satisfy stage outputs', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage !== 'plan') return false;
     await fs.writeFile(path.join(cwd, 'plan.md'), ''); await fs.mkdir(path.join(cwd, 'test-matrix.md'), { recursive: true }); return true;
@@ -990,7 +1402,7 @@ test('the user guide is requested after implementation and checked before verifi
       await fs.access(path.join(cwd, 'app.test.cjs'));
       await assert.rejects(fs.access(path.join(cwd, 'README.md')), /ENOENT/);
       assert.match(session.prompts.at(-1), /actual screen, field and button names/);
-      assert.match(session.prompts.at(-1), /synthetic sample input and the expected output/);
+      assert.match(session.prompts.at(-1), /prepared input or synthetic sample data and the expected output, with accurate provenance/);
     }
     if (stage === 'verify') {
       assert.match(await fs.readFile(path.join(cwd, 'README.md'), 'utf8'), /Task parser/);
@@ -999,7 +1411,7 @@ test('the user guide is requested after implementation and checked before verifi
     return false;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.deepEqual(steps, ['intake', 'research', 'plan', 'build', 'guide', 'verify']);
+  assert.deepEqual(steps, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'guide', 'verify']);
 });
 
 for (const recover of [true, false]) {
@@ -1021,7 +1433,7 @@ for (const recover of [true, false]) {
   });
 }
 
-test('stopping while writing the user guide aborts the build and never starts verification', { timeout: 10000 }, async t => {
+test('stopping while writing the user guide aborts the build and never starts verification', { timeout: workflowTimeout }, async t => {
   const entered = deferred();
   const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'guide') { entered.resolve(); return never(); } return false; } });
   await h.backend.start(h.project.id); await entered.promise; await h.backend.stop(h.project.id);
@@ -1046,16 +1458,16 @@ test('repair updates the user guide before independent verification fingerprints
 });
 
 for (const target of ['requirements.md', '.fleet/README.md']) {
-  test(`changes to ${target} stop the workflow at the stage boundary`, { timeout: 10000 }, async t => {
+  test(`changes to ${target} stop the workflow at the stage boundary`, { timeout: workflowTimeout }, async t => {
     const h = await harness(t, { scenario: async ({ cwd, stage }) => {
       if (stage === 'plan') await fs.appendFile(path.join(cwd, target), '\nChanged by agent'); return false;
     } });
-    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 3);
+    await h.run(); await h.assertSettled('failed'); assert.equal(h.sessions.length, 4);
     assert.match(h.project.error, /requirements changed|integrity failed/);
   });
 }
 
-test('session initialization errors and preparation errors release capacity', { timeout: 10000 }, async t => {
+test('session initialization errors and preparation errors release capacity', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { createSession: () => { throw new Error('Cannot initialize session'); } });
   await h.run(); await h.assertSettled('failed'); assert.match(h.project.error, /Cannot initialize/);
   const bad = await harness(t, { resourcesRoot: path.join(h.root, 'missing-resources') });
@@ -1075,7 +1487,7 @@ test('stopped runs can restart in fresh workspaces and late old events cannot co
   assert.ok((await fs.readFile(path.join(oldWorkspace, 'requirements.md'), 'utf8')).includes(h.project.title));
 });
 
-test('Stop during workspace preparation clears prior approval and test evidence', { timeout: 10000 }, async t => {
+test('Stop during workspace preparation clears prior approval and test evidence', { timeout: workflowTimeout }, async t => {
   const h = await harness(t);
   h.project.status = 'approved'; h.project.approvedAt = 'previous approval';
   h.project.report = { passed: 5 }; h.project.exportedTo = 'previous export';
@@ -1085,7 +1497,7 @@ test('Stop during workspace preparation clears prior approval and test evidence'
   assert.equal(h.project.exportedTo, undefined); assert.equal(h.sessions.length, 0);
 });
 
-test('duplicate starts and the concurrency limit are enforced; stopAll drains and persists every run', { timeout: 10000 }, async t => {
+test('duplicate starts and the concurrency limit are enforced; stopAll drains and persists every run', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: never });
   h.store.state.projects.push(newProject({ title: 'Fourth run', description: 'Exercise the concurrent agent capacity limit.', criteria: ['Bound active runs'] }));
   for (const p of h.store.state.projects.slice(0, 3)) await h.backend.start(p.id);

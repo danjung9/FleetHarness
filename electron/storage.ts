@@ -37,6 +37,17 @@ export class Store {
     }
     this.state.settings.developerMode = this.state.settings.developerMode === true;
     for (const p of this.state.projects) {
+      if (p.conversation) {
+        p.conversation.status = 'idle';
+        for (const message of p.conversation.messages) {
+          if (message.status === 'streaming') {
+            message.status = 'error';
+            message.text ||= 'This reply was interrupted. Send a new message to continue.';
+            p.conversation.error = 'The previous reply was interrupted. Send a new message to continue.';
+          }
+        }
+        for (const question of p.conversation.questions) if (question.status === 'pending') question.status = 'cancelled';
+      }
       if (p.executable?.status === 'packaging') {
         p.executable.status = 'failed';
         p.executable.error = 'Packaging was interrupted. Download the app again to retry.';
