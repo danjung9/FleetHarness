@@ -61,3 +61,22 @@ New skills add approximately 11.6k tokens across the initial Codex phase prompts
 [Handoff with exact results and test reconciliations](~/Documents/CDAO/fh-org/astra-merge/docs/skills-merge-handoff.md)
 
 COMMIT: Merge skills and visual review with guarded resume
+
+## 02:02 report
+
+Implemented fixes for cleanup tracking, late-write evidence binding, preview cancellation, baseline redaction and invalid CLI fixtures. Browser startup now has a separate 30-second production budget; interactions and observations default to 10 seconds.
+
+All three type checks and **196 selected tests passed**. No assertions were weakened, frontend files changed or git writes run.
+
+Test changes:
+- Corrected CLI briefs and capability mappings.
+- Isolated the real verifier-shutdown test from unrelated browser/core work.
+- Increased full-workflow deadlines and removed the judge fixture’s hidden eight-second subprocess kill.
+- Allowed normal JSON cases more startup time; retained the hung-process deadline.
+- Added audit regressions and refreshed plain-error coverage.
+
+[Exact changes, limits and receipts](~/Documents/CDAO/fh-org/astra-merge/docs/26f8fae-followup.md).
+
+Could not run native ps, Chrome/Electron or clean-runtime workflows here. Those fixes still need the overseer’s native rerun. The standalone audit probe was unreadable; its documented interleaving is now a repository regression.
+
+COMMIT: Fix process cleanup and preserve verified evidence through finalization
