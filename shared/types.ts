@@ -20,6 +20,7 @@ export interface ReviewRecord {
   sourceHash?: string; nextRunId?: string;
 }
 export interface Project extends BriefContext {
+  codexGoal?: import('./codex-goal.js').CodexGoalLaunch;
   tokenUsage?: import('./token-usage.js').ProjectTokenUsage;
   archivedAt?: string;
   reviewHistory?: ReviewRecord[];
@@ -67,6 +68,8 @@ export interface FleetAPI extends ExperimentAPI, DataStorageAPI {
   refreshNorfolkCatalog(): Promise<import('../harness/norfolk.js').NorfolkCatalog>;
   createProject(input: NewProject): Promise<Project>;
   updateProject(id: string, input: NewProject): Promise<Project>;
+  launchCodexGoal(id: string): Promise<import('./codex-goal.js').CodexGoalLaunch>;
+  openCodexGoalWorkspace(id: string): Promise<void>;
   startRun(id: string): Promise<void>;
   resumeRun(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;

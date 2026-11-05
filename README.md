@@ -18,6 +18,8 @@ Build and verification agents can [open and interact with their app](docs/agent-
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
+On the **`codex/one-shot-goal` experiment**, submitting a new brief uses **Save & open Codex** to open a real Codex CLI goal in macOS Terminal. The complete brief and attached data go into a fresh folder; Codex owns implementation, testing and repair in one session. The existing pipeline remains available for comparison. See [the Codex goal experiment](docs/codex-goal-experiment.md) for usage, authentication and result boundaries.
+
 Use **Data & storage** to browse current and previous builds, inspect and export files, archive projects, and clean up through recoverable Trash. See [storage and recovery](docs/data-storage.md) for scope and verification behavior.
 
 The **tokens** counter in the toolbar shows recorded workspace usage. Open it for each project's share, input/output counts, and cached input. Counts update during agent work and persist across builds; see [token usage](docs/token-usage.md) for coverage and limitations.

@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -13,6 +14,7 @@ let app;
 try {
   app=await electron.launch({args:['.'],env:{...process.env,FLEET_USER_DATA:path.join(root,'state'),PI_CODING_AGENT_DIR:path.join(root,'pi')}});
   const page=await app.firstWindow();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await stubCodexGoalLaunch(app);
   await page.getByRole('region',{name:'Home workspace',exact:true}).getByRole('button',{name:'New challenge',exact:true}).click();
   await page.getByRole('button',{name:`Norfolk catalog · ${norfolkSnapshot.useCases.length}`,exact:true}).click();
   await app.evaluate(()=>{globalThis.fetch=async()=>{throw new Error('Offline test');};});
@@ -41,8 +43,8 @@ try {
   await page.getByLabel(/^Links \(optional\)/).scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'norfolk-fields-minimum.png'),scale:'css'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  await page.getByRole('button',{name:'Save challenge',exact:true}).click();
-  await page.getByRole('heading',{name:'Build flow',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save & open Codex',exact:true}).click();
+  await page.getByRole('heading',{name:'Build phases',exact:true}).waitFor();
   const saved=(await page.evaluate(()=>window.fleetHarness.bootstrap())).state.projects[0];
   assert.equal(saved.challengeId,'37');assert.deepEqual(saved.criteria,expected.criteria);assert.equal(saved.resources,expected.resources);assert.deepEqual(saved.links,expected.links);
   assert.equal(saved.sourceChallenge.id,'37');

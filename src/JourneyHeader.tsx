@@ -16,7 +16,9 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
   const continuingPlan = canContinuePlanning(project);
   const experiment = pendingExperiment(project);
   const pendingQuestion = project.status === 'running' && project.conversation?.questions.find(question => question.status === 'pending' && question.runId === project.runId);
-  const startLabel = !isDesktop ? 'Desktop setup' : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
+  const startLabel = !isDesktop ? 'Desktop setup' : project.codexGoal
+    ? !configured ? 'Connect pipeline model' : project.runId ? 'Start new pipeline' : 'Start pipeline'
+    : !configured ? 'Connect model' : project.runId ? 'Start new build' : 'Start build';
   let nextAction = null;
   if (project.status === 'running' || experimentRunning(experiment)) {
     nextAction = <button className="secondary" disabled={busy} onClick={stop}><Square size={14}/>Stop build</button>;
@@ -59,7 +61,7 @@ export function JourneyHeader({ project, view, busy, configured, resuming, navig
           </button>
         </div>)}
       </nav>
-      <p className="journey-message" role="status" aria-live="polite" aria-atomic="true">{message}</p>
+      <p className="journey-message" role="status" aria-live="polite" aria-atomic="true">{project.codexGoal ? 'Pipeline comparison: ' : ''}{message}</p>
     </div>
   </section>;
 }

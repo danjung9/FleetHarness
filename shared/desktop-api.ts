@@ -5,6 +5,8 @@ import { defaultLearningSettings } from './learning.js';
 import { storageMethodNames, type DataStorageAPI } from './data-storage.js';
 
 export const storageRestartMessage = 'Data & storage needs a full app restart. Let active builds finish, then quit and reopen AppYard. Your files are preserved.';
+export const codexGoalRestartMessage = 'Opening Codex goals needs a full app restart. Let active builds finish, then quit and reopen AppYard. Your brief is saved.';
+const codexGoalMethods = ['launchCodexGoal', 'openCodexGoalWorkspace'] as const;
 
 const conversationMethods = ['sendMessage', 'cancelMessage', 'answerClarification', 'applyConversationAction', 'dismissConversationAction'] as const;
 type ConversationMethod = typeof conversationMethods[number];
@@ -23,6 +25,14 @@ export function hasConversationBridge(bridge: Partial<FleetAPI> | undefined): bo
 
 /** Renderer hot reload does not replace Electron's preload or main process. */
 export function withDesktopCompatibility(bridge: FleetAPI): FleetAPI {
+  const goalMethods = Object.fromEntries(codexGoalMethods.map(name => [name, async (id: string) => {
+    if (typeof bridge[name] !== 'function') throw new Error(codexGoalRestartMessage);
+    try { return await bridge[name](id); }
+    catch (error) {
+      if (error instanceof Error && /No handler registered for ['"]fleet:codex-goal:/.test(error.message)) throw new Error(codexGoalRestartMessage);
+      throw error;
+    }
+  }])) as Pick<FleetAPI, typeof codexGoalMethods[number]>;
   const storageMethods = Object.fromEntries(storageMethodNames.map(name => [name, async (...args: unknown[]) => {
     if (typeof bridge[name] !== 'function') throw new Error(storageRestartMessage);
     try { return await (bridge[name] as (...args: unknown[]) => Promise<unknown>)(...args); }
@@ -59,7 +69,7 @@ export function withDesktopCompatibility(bridge: FleetAPI): FleetAPI {
     }
   }])) as unknown as ExperimentAPI;
   return {
-    ...bridge, ...methods, ...experimentMethods, ...storageMethods,
+    ...bridge, ...methods, ...experimentMethods, ...storageMethods, ...goalMethods,
     async visualReviewImage(id, captureId) {
       if (typeof bridge.visualReviewImage !== 'function') throw new Error(visualReviewRestartMessage);
       try { return await bridge.visualReviewImage(id, captureId); }

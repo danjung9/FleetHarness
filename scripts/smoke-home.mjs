@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -12,6 +13,7 @@ let app;
 try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: path.join(root, 'pi') } });
   const page = await app.firstWindow();
+  await stubCodexGoalLaunch(app);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.getByRole('heading', { name: 'AppYard', exact: true }).waitFor();
@@ -33,7 +35,7 @@ try {
   assert.equal(await page.getByLabel('Challenge title', { exact: true }).inputValue(), 'Paperless Underway');
   assert.match(await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?').inputValue(), /offline/i);
   assert.equal(await page.locator('.catalog-results').count(), 0);
-  await page.getByRole('button', { name: 'Save challenge', exact: true }).click();
+  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
   await page.getByRole('heading', { name: 'Build phases', exact: true }).waitFor();
   assert.equal(await page.locator('.run-title h1').textContent(), 'Paperless Underway');
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.projects[0].challengeId, '36');

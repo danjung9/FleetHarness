@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -39,6 +40,7 @@ try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'),
     PI_CODING_AGENT_DIR: piDir, VITE_DEV_SERVER_URL: '' }, timeout: 45000 });
   page = await app.firstWindow();
+  await stubCodexGoalLaunch(app);
   await app.evaluate(({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.setBackgroundThrottling(false); window.hide(); window.setSize(1120, 720);
@@ -75,8 +77,8 @@ try {
   await screenshot(page, 'intake-connected-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
   // Saving the brief also saves the visibly pending paste, without a separate Add click.
-  await dialog.getByRole('button', { name: 'Save challenge', exact: true }).click();
-  await page.getByText('Challenge saved.', { exact: true }).waitFor();
+  await dialog.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
   const expected = [
     { name: 'messages.csv', kind: 'file', content: fileContent },
@@ -97,7 +99,9 @@ try {
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
   await screenshot(page, 'brief-connected-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
-  await page.getByRole('button', { name: 'Save & start build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
   const provided = await waitBuild(page, id);
   await assert.rejects(fs.access(path.join(provided.workspace, 'data/synthetic-data.json')), /ENOENT/);
@@ -116,7 +120,9 @@ try {
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1512, 982));
   await screenshot(page, 'brief-synthetic-desktop.png');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1120, 720));
-  await page.getByRole('button', { name: 'Save & start new build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start new build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Start automatic build', exact: true }).click();
   const synthetic = await waitBuild(page, id);
   assert.deepEqual(synthetic.dataInputs, []);

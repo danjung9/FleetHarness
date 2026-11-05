@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -55,6 +56,7 @@ try {
   app = await electron.launch({ ...(executablePath ? { executablePath, args: [] } : { args: ['.'] }),
     env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDir, VITE_DEV_SERVER_URL: '' }, timeout: 45000 });
   page = await app.firstWindow();
+  await stubCodexGoalLaunch(app);
   await app.evaluate(({ BrowserWindow, shell }) => {
     const testWindow = BrowserWindow.getAllWindows()[0];
     // Keep this isolated fixture out of the user's foreground workspace while
@@ -80,8 +82,8 @@ try {
   await intake.getByLabel('Challenge title', { exact: true }).fill('Journey regression fixture');
   await intake.getByLabel(/^Problem statement(?:\s|$)/).fill('Create a local synthetic message parser so a reviewer can inspect extracted tasks.');
   await intake.getByLabel('Evaluation criteria (optional)', { exact: false }).fill('Parse a synthetic task and recover from empty input.');
-  await intake.getByRole('button', { name: 'Save challenge', exact: true }).click();
-  await page.getByText('Challenge saved.', { exact: true }).waitFor();
+  await intake.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
   projectId = id;
   const progress = page.getByRole('navigation', { name: 'Challenge progress', exact: true });
@@ -90,7 +92,9 @@ try {
   await progress.getByRole('button', { name: 'Brief', exact: true }).click();
   await page.getByRole('heading', { name: 'Brief', exact: true }).waitFor();
   await captureCompact(page, 'journey-brief-minimum.png');
-  await page.getByRole('button', { name: 'Save & start build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start build', exact: true }).click();
   const start = page.getByRole('dialog', { name: 'Start build', exact: true });
   await start.waitFor();
   assert.match(await start.innerText(), /automatically.*You review the result before delivery/s);
@@ -218,7 +222,9 @@ try {
 
   await progress.getByRole('button', { name: 'Brief', exact: true }).click();
   await page.getByPlaceholder('Who is affected? What happens today? What outcome would count as success?', { exact: true }).fill('Revise the synthetic message parser to recognize additional task formats and preserve source excerpts.');
-  await page.getByRole('button', { name: 'Save & start new build', exact: true }).click();
+  await page.getByRole('button', { name: 'Save & open Codex', exact: true }).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Start new build', exact: true }).click();
   await page.getByRole('dialog', { name: 'Start build', exact: true }).getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.locator('.journey-steps button[aria-current="step"][title^="Brief"]').waitFor();
   const revised = await page.evaluate(async challengeId => (await window.fleetHarness.bootstrap()).state.projects.find(item => item.id === challengeId), id);

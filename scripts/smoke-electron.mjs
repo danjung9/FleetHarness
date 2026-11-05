@@ -1,3 +1,4 @@
+import { stubCodexGoalLaunch } from './codex-goal-smoke-fixture.mjs';
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -15,6 +16,7 @@ let app;
 try {
   app=await electron.launch({ ...(executablePath?{executablePath,args:[]}:{args:['.']}), env:{...process.env,FLEET_USER_DATA:path.join(root,'state'),PI_CODING_AGENT_DIR:piDir},timeout:45000});
   const page=await app.firstWindow();await page.locator('.app-shell').waitFor({timeout:45000});
+  await stubCodexGoalLaunch(app);
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   assert.equal(await page.evaluate(()=>typeof window.fleetHarness?.startRun),'function');
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
@@ -31,18 +33,24 @@ try {
   await page.getByRole('button',{name:'Save model settings'}).click();
   await page.getByText('Model settings saved.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'New challenge',exact:true}).click();
-  await page.getByRole('button',{name:'Norfolk catalog · 34'}).click();
+  await page.getByRole('button',{name:/^Norfolk catalog · /}).click();
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('OPTASK');
   await page.locator('.catalog-results button').click();
   assert.match(await page.getByLabel('Challenge title',{exact:true}).inputValue(),/OPTASK/);
-  await page.getByRole('button',{name:'Save challenge',exact:true}).click();
-  await page.getByText('Challenge saved.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save & open Codex',exact:true}).click();
+  await page.getByText('Brief saved. Codex opened in Terminal.',{exact:true}).waitFor();
   const id=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0].id);
   const saved=await page.evaluate(async()=> (await window.fleetHarness.bootstrap()).state.projects[0]);
   assert.equal(saved.challengeId,'12');
   await page.getByRole('button',{name:'Start build',exact:true}).click();
   await page.getByRole('dialog',{name:'Start build',exact:true}).getByRole('button',{name:'Start automatic build',exact:true}).click();
-  await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, {timeout:90000});
+  const deadline=Date.now()+90000;
+  while(true){
+    const status=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(project=>project.id===id)?.status,id);
+    if(['review','failed','stopped'].includes(status))break;
+    if(Date.now()>deadline)throw new Error('The fixture pipeline did not finish within 90 seconds.');
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
   const final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
   assert.equal(final.status,'review',final.error);

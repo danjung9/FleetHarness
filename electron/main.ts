@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash } from './storage.js';
 import { FleetBackend } from './pi-backend.js';
 import { CodexAccount } from './codex-account.js';
+import { CodexGoalService, openCodexGoalTerminal } from './codex-goal.js';
 import { applicationTestRerunCommand, reportPassed } from './verification.js';
 import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
@@ -39,6 +40,7 @@ if (!app.requestSingleInstanceLock()) app.exit(0);
 let window: BrowserWindow | null = null;
 app.on('second-instance', () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } });
 let store: Store, backend: FleetBackend, codex: CodexAccount;
+let codexGoals: CodexGoalService;
 let experiments: ExperimentService;
 let dataStorage: DataStorageService;
 const storageMutations = new Map<string, Promise<void>>();
@@ -82,6 +84,7 @@ const bootstrap = () => ({
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
+  if (codexGoals?.isLaunching(id)) throw new Error('Wait for Codex to open before changing this project.');
   if (approvals.has(id)) throw new Error('Wait for approval to finish before changing this project.');
   if (storageMutations.has(id)) throw new Error('Wait for the storage action to finish before changing this project.');
   if (!fromConversation && conversationActions.has(id)) throw new Error('Wait for the project lead action to finish.');
@@ -235,6 +238,15 @@ function registerIPC() {
     const p = newProject(input, currentCatalog()); store.state.projects.unshift(p); await store.save(); notify(); return p;
   });
   handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
+  handle('fleet:codex-goal:launch', (id: string) => {
+    if (quitting) throw new Error('AppYard is closing. Reopen it to start a Codex goal.');
+    requireIdle(id);
+    return codexGoals.launch(id);
+  });
+  handle('fleet:codex-goal:open', async (id: string) => {
+    const error = await shell.openPath(await codexGoals.workspace(id));
+    if (error) throw new Error('Could not open the Codex workspace: ' + error);
+  });
   handle('fleet:start', (id: string) => startRun(id));
   handle('fleet:resume', (id: string) => resumeRun(id));
   handle('fleet:request-changes', (id: string, feedback: string) => {
@@ -482,6 +494,10 @@ app.whenReady().then(async () => {
     if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconPath);
     store = new Store(app.getPath('userData'));
     await store.init();
+    codexGoals = new CodexGoalService(store, { changed: notify, openTerminal: async file => {
+      if (quitting) throw new Error('AppYard is closing. Your prepared workspace is saved.');
+      await openCodexGoalTerminal(file);
+    } });
     codex = new CodexAccount(store.root, url => shell.openExternal(url));
     clarifications = new ClarificationBroker(store, notify);
     backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications });
@@ -492,7 +508,7 @@ app.whenReady().then(async () => {
         if (quitting) throw new Error('AppYard is closing.');
         // These synchronous checks and reservation form one admission transaction.
         if (store.project(projectId).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
-        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
+        if (backend.active.has(projectId) || startingRuns.has(projectId) || experimentReservations.has(projectId) || deliveries.has(projectId) || storageMutations.has(projectId) || approvals.has(projectId) || codexGoals.isLaunching(projectId)) throw new Error('This project already has an active build, delivery or storage action.');
         requireRunCapacity(); experimentReservations.set(projectId, experimentId);
         return () => { if (experimentReservations.get(projectId) === experimentId) experimentReservations.delete(projectId); };
       } });
@@ -500,7 +516,7 @@ app.whenReady().then(async () => {
     lead = new ProjectLead(store, backend.runtime, notify, { codex });
     dataStorage = new DataStorageService({
       store, changed: notify,
-      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id)
+      isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || codexGoals.isLaunching(id)
         || deliveries.has(id) || storageMutations.has(id) || approvals.has(id) || conversationActions.has(id) || lead.active.has(id) || experiments.isActive(id),
       beforeMutation: async id => {
         if (quitting) throw new Error('AppYard is closing.');
@@ -544,7 +560,7 @@ app.on('before-quit', event => {
   if (!quitting && (experiments || backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
     event.preventDefault(); quitting = true;
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...codexGoals?.pending() ?? [], ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });
