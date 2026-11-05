@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 const KEY = 'fleet-browser-preview';
@@ -230,7 +230,7 @@ async function main(options) {
       const require = createRequire(path.join(repo, 'package.json')), playwrightFile = require.resolve('playwright');
       if (!inside(path.join(repo, 'node_modules'), await fs.realpath(playwrightFile))) throw Error('Playwright must be installed inside the supplied repository.');
       report.playwright = JSON.parse(await fs.readFile(require.resolve('playwright/package.json'), 'utf8')).version;
-      const { chromium } = await import(pathToFileURL(playwrightFile).href); checkDeadline();
+      const { chromium } = require('playwright'); checkDeadline();
       const serving = await startServer(dist, report.before.dist, report.errors); server = serving.server; report.origin = serving.origin;
       checkDeadline();
       // launchServer exposes an owned browser process for bounded close/kill cleanup.

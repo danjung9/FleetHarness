@@ -71,10 +71,12 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-stop-detached.m
 | File | SHA256 |
 | --- | --- |
 | `qa-desktop-inputs.mjs` | `d55941bed70130e7d53223e069fcac49ec3c1c05a8e4b038bcdc77ffcbef23ea` |
-| `qa-browser-recovery.mjs` | `0f8b67af23fe34151fa144517a455218505cfeb31f4ef9df8aef420fd2f1429f` |
+| `qa-browser-recovery.mjs` | `0230ed2faf8e3ab463d653bfc626a95a72b614f7387ffaa9fc95a9ad90295333` |
 | `qa-stop-detached.mjs` | `b0300c6c12ed41c901cc8aa51ec339d30af9b63bb46c436bcf8de1095db615d6` |
 
 [E] Stop child and parent hashes remain `55542fe28668e0d865f4e8abfb54db4b74941ab6d2ae746ef5158cd9b1565fe8` and `545e9e52c6a3a20cc1bd5cc2b1251c532892996395af61d73f56c9a4ae84b788`, matching the prior measured workers. The later checker hash differs from the initial status message because only two comments/error-description lines were clarified after unpinning; no Stop expectation changed.
+
+[E] Browser checker module loading was clarified after handoff: it uses the repository's CommonJS `require('playwright')` rather than relying on inferred named exports from the resolved CommonJS file. The table carries the revised hash. Syntax and pure controls still pass; runtime expectations are unchanged.
 
 ## Findings to act on
 
@@ -94,6 +96,8 @@ node ~/Documents/CDAO/Fleethacker-Vault/Research/QA/Overnight/qa-stop-detached.m
 3. **Review and delivery.** Inspect changed-input results, evaluation gaps and desktop/narrow comparisons, record human review, save app and source/evidence, launch the delivered copy from a fresh location and repeat the input test. For service/CLI, use its documented package and startup command. An export invocation, archive existence or self-authored test count is insufficient.
 
 [R] Preserve actual setup errors when a required model/browser/runtime is missing, and leave later checks unexecuted. Fix observed blockers and rerun affected journeys. Windows release and hosted deployment require separate platform/branch receipts; this desktop/local-preview inventory does not certify them.
+
+[E, native Resume fixture assessment] The current mock provider exposes request records, a global delay, a base URL and close. Changing its delay does not release an already delayed request. A reliable future native Resume fixture needs an acknowledged, bounded hold during implementation after at least one completed phase, then Stop, Electron exit and restart using the same owned profile. Compare project/run/workspace identity and completed-stage artifact hashes before clicking Resume; require a new implementation request and stage advancement without restarting completed phases. Checkpoint contracts alone do not establish phase completion. This proves orderly Stop/restart/resume, not abrupt-crash recovery. No native result is claimed from the existing bridge-fixture smoke.
 
 ## Receipt review log
 
