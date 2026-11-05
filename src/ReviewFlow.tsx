@@ -9,7 +9,7 @@ import { VisualReview } from './VisualReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
-type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onApproved: () => void; onChangesRequested: () => void };
+type ReviewProps = { project: Project; busy: boolean; action: Action; onPreview: () => void; onGuide: () => void; onApproved: () => void; onChangesRequested: () => void };
 type DeliveryProps = { project: Project; busy: boolean; action: Action; onReview: () => void; onChangesRequested: () => void };
 type ReviewDraft = { feedback: string; reviewed: boolean };
 const reviewDrafts = new Map<string, ReviewDraft>();
@@ -34,7 +34,7 @@ export function ReviewWorkspace(props: ReviewProps) {
   return <ReviewContent key={draftKey(props.project)} {...props}/>;
 }
 
-function ReviewContent({ project, busy, action, onPreview, onApproved, onChangesRequested }: ReviewProps) {
+function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, onChangesRequested }: ReviewProps) {
   const key = draftKey(project);
   const [draft, setDraft] = useState(() => readDraft(key, project));
   const [approving, setApproving] = useState(false);
@@ -103,7 +103,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
       <VisualReview projectId={project.id} report={project.visualReview ?? report?.quality?.visualReview} runtimeProfile={project.runtimeProfile} runStatus={project.status}/>
       {!report ? <div className="review-empty"><ClipboardCheck size={26}/><h2>No test evidence yet</h2><p>{project.status === 'running' ? 'The build is still running. Review will be ready after verification.' : 'Test results appear after a build reaches verification.'}</p></div> : <ol className="review-steps">
         <li>
-          <div className="review-step-heading"><div><h2>Try the app</h2><p>Use the main workflow and check the result against your brief.</p></div><button className="secondary" onClick={onPreview}><Code2 size={16}/>Open preview</button></div>
+          <div className="review-step-heading"><div><h2>Try the app</h2><p>{project.runtimeProfile === 'cli' ? 'Open the usage guide, then follow its commands in a terminal to run the app and check the result against your brief.' : 'Use the main workflow and check the result against your brief.'}</p></div><button className="secondary" onClick={project.runtimeProfile === 'cli' ? onGuide : onPreview}><Code2 size={16}/>{project.runtimeProfile === 'cli' ? 'Open usage guide' : 'Open preview'}</button></div>
         </li>
         <li>
           <h2>Check evidence and limitations</h2>

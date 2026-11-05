@@ -15,7 +15,7 @@ import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type React
 import {
   Activity, Archive, ArrowRight, Bot, Check, CheckCircle2, CircleDot,
   Code2, FileCode2, FolderOpen, GitBranch, Inbox, LayoutDashboard,
-  Play, Plus, RefreshCw, Search, Settings2, ShieldCheck, TerminalSquare, X, XCircle, Info, FlaskConical
+  Play, Plus, RefreshCw, Search, Settings2, ShieldCheck, Square, TerminalSquare, X, XCircle, Info, FlaskConical
 } from 'lucide-react';
 import type { AppState, Artifact, Bootstrap, BriefDataInput, NewProject, Project, StageId, View } from '../shared/types';
 import { starters } from '../shared/types';
@@ -54,6 +54,7 @@ function Modal({ title, close, children, wide = false, className = '' }: { title
   </dialog>;
 }
 type BriefDraft = NewProject & { dataInputEditor?: DataInputEditor };
+type IntakeDraft = { template?: number; catalogId?: string; catalogInput?: NewProject; forms: Record<string, BriefDraft> };
 function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, onReadingChange }: { initial: BriefDraft; submit: (p: NewProject) => Promise<void>; busy: boolean; submitLabel: string; onDraftChange?: (draft: BriefDraft) => void; onReadingChange?: (reading: boolean) => void }) {
   const [title, setTitle] = useState(initial.title), [description, setDescription] = useState(initial.description), [criteria, setCriteria] = useState(initial.criteria.join('\n'));
   const [inputs, setInputs] = useState(initial.inputs ?? ''), [outputs, setOutputs] = useState(initial.outputs ?? '');
@@ -95,20 +96,20 @@ function RequirementsForm({ initial, submit, busy, submitLabel, onDraftChange, o
     </div>
     <div className="requirements-footer">
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : 'Saved locally. Build when ready.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
+    <div className="form-actions"><span className="small-note">{readingInputs ? 'Reading data files…' : 'Edits are unsaved until you save.'}</span><button className="primary" disabled={busy || readingInputs} type="submit"><Check size={16}/>{submitLabel}</button></div>
     </div>
   </form>;
 }
-function Intake({ close, action, created, busy, initialCatalogId, catalog }: { catalog: NorfolkCatalog; initialCatalogId: string; close: () => void; action: Action; created: (project: Project) => void; busy: boolean }) {
+function Intake({ close, action, created, busy, initialCatalogId, catalog, draft }: { catalog: NorfolkCatalog; initialCatalogId: string; draft: IntakeDraft; close: () => void; action: Action; created: (project: Project) => void; busy: boolean }) {
   const challenges = catalog.challenges;
   const availableInitialId = challenges.some(c => c.id === initialCatalogId) ? initialCatalogId : '';
-  const [template, setTemplate] = useState(initialCatalogId ? -2 : -1);
-  const [catalogId, setCatalogId] = useState(availableInitialId);
-  const [catalogInput, setCatalogInput] = useState(() => availableInitialId ? toProjectInput(availableInitialId, challenges) : undefined);
-  const drafts = useRef<Record<string, BriefDraft>>({});
+  const [template, setTemplate] = useState(draft.template ?? (initialCatalogId ? -2 : -1));
+  const [catalogId, setCatalogId] = useState(draft.catalogId ?? availableInitialId);
+  const [catalogInput, setCatalogInput] = useState(() => draft.catalogInput ?? (availableInitialId ? toProjectInput(availableInitialId, challenges) : undefined));
+  useEffect(() => { Object.assign(draft, { template, catalogId, catalogInput }); }, [draft, template, catalogId, catalogInput]);
   const [readingInputs, setReadingInputs] = useState(false);
   const draftKey = template === -2 ? `catalog:${catalogId}` : `custom:${template}`;
-  const [catalogExpanded, setCatalogExpanded] = useState(!availableInitialId);
+  const [catalogExpanded, setCatalogExpanded] = useState(!catalogId);
   const [catalogQuery, setCatalogQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false), [refreshError, setRefreshError] = useState('');
   async function refresh() {
@@ -123,16 +124,18 @@ function Intake({ close, action, created, busy, initialCatalogId, catalog }: { c
     {template !== -2 && <details className="starter-choices"><summary>Use a starter brief</summary><div className="template-picker" role="group" aria-label="Starter brief">{starters.map((p, i) => <button key={p.title} disabled={readingInputs} aria-pressed={template === i} className={template === i ? 'selected' : ''} onClick={() => setTemplate(i)}>{['Message parsing', 'Scheduling', 'Offline workflow'][i]}</button>)}</div></details>}
     {template === -2 && catalogExpanded && <><div className="intake-source"><span role="status">{refreshing ? 'Refreshing Norfolk challenges…' : `Norfolk source saved ${date(catalog.fetchedAt)}`}</span><button className="text-button" disabled={refreshing || !isDesktop} title={isDesktop ? undefined : 'Refresh is available in the desktop app.'} onClick={() => void refresh()}><RefreshCw size={14}/>Refresh from Norfolk</button></div>{refreshError && <p className="form-error" role="alert">{refreshError}</p>}</>}
     {template === -2 && (catalogExpanded ? <div className="catalog-picker"><label>Find a published challenge<input value={catalogQuery} onChange={e => setCatalogQuery(e.target.value)} placeholder="Search title, category, or challenge ID"/></label><p className="catalog-count" role="status">{matches.length} of {challenges.length} challenges</p><div className="catalog-results">{matches.map(c => <button aria-pressed={catalogId === c.id} className={catalogId === c.id ? 'selected' : ''} key={c.id} disabled={refreshing || readingInputs} onClick={() => { setCatalogId(c.id); setCatalogInput(toProjectInput(c.id, challenges)); setCatalogExpanded(false); }}><span className="catalog-id">#{c.id}</span><span>{c.title}<small>{c.category || 'Uncategorized'} · {c.recipe}</small></span>{catalogId === c.id && <Check size={16}/>}</button>)}{!matches.length && <div className="catalog-empty"><p>No challenges match “{catalogQuery}”.</p><button className="text-button" onClick={() => setCatalogQuery('')}>Clear search</button></div>}</div></div> : <div className="intake-source"><span>Starting from Norfolk challenge #{catalogId}</span><button className="text-button" disabled={readingInputs} onClick={() => setCatalogExpanded(true)}>Change challenge</button></div>)}
-    {(template !== -2 || catalogInput) && <div className="intake-form" hidden={template === -2 && catalogExpanded}><RequirementsForm key={draftKey} initial={drafts.current[draftKey] ?? (template === -2 ? catalogInput! : template < 0 ? { title: '', description: '', criteria: [] } : starters[template])} onDraftChange={draft => { drafts.current[draftKey] = draft; }} onReadingChange={setReadingInputs} busy={busy} submitLabel="Save challenge" submit={async input => {
+    {(template !== -2 || catalogInput) && <div className="intake-form" hidden={template === -2 && catalogExpanded}><RequirementsForm key={draftKey} initial={draft.forms[draftKey] ?? (template === -2 ? catalogInput! : template < 0 ? { title: '', description: '', criteria: [] } : starters[template])} onDraftChange={value => { draft.forms[draftKey] = value; }} onReadingChange={setReadingInputs} busy={busy} submitLabel="Save challenge" submit={async input => {
       await action(async () => { const p = await api.createProject(input); close(); created(p); }, 'Challenge saved.');
     }}/></div>}
   </Modal>;
 }
-function Development({ project, action, onBuild }: { project: Project; action: Action; onBuild: () => void }) {
+function Development({ project, action, onBuild, onReview }: { project: Project; action: Action; onBuild: () => void; onReview: () => void }) {
   const [preview, setPreview] = useState<string | null>(null), [revision, setRevision] = useState(0), [loading, setLoading] = useState(true);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const completed = ['review', 'approved', 'delivered'].includes(project.status);
   useEffect(() => {
-    let current = true; setLoading(true);
-    api.preview(project.id).then(value => { if (current) setPreview(value); }).catch(() => { if (current) setPreview(null); }).finally(() => { if (current) setLoading(false); });
+    let current = true; setLoading(true); setPreviewFailed(false);
+    api.preview(project.id).then(value => { if (current) setPreview(value); }).catch(() => { if (current) { setPreview(null); setPreviewFailed(true); } }).finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
   }, [project.id, project.runId, project.status, revision]);
   return <div className="development"><section className="preview-panel">
@@ -141,7 +144,7 @@ function Development({ project, action, onBuild }: { project: Project; action: A
       <IconButton label="Open source folder" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
       <IconButton label="Reload preview" onClick={() => setRevision(r => r + 1)}><RefreshCw size={17}/></IconButton>
     </div></div>
-    {loading ? <div className="preview-placeholder"><p className="muted" role="status">Opening the latest preview…</p></div> : preview ? <iframe key={revision} title="Generated application preview" src={preview}/> : <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'} action={<button className="secondary" onClick={onBuild}>Back to build <ArrowRight size={15}/></button>}>{project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? 'AppYard is working automatically. Follow the build while your preview is prepared.' : 'Start a build from your brief to try the app here.'}</Empty></div>}
+    {loading ? <div className="preview-placeholder"><p className="muted" role="status">Opening the latest preview…</p></div> : preview ? <iframe key={revision} title="Generated application preview" src={preview}/> : project.runtimeProfile !== 'cli' && (previewFailed || completed) ? <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<><button className="secondary" onClick={() => setRevision(r => r + 1)}>Retry preview</button><button className="text-button" onClick={completed ? onReview : onBuild}>{completed ? 'Back to review' : 'Back to build'} <ArrowRight size={15}/></button></>}>Could not open the preview. Your build and its evidence are kept.</Empty></div> : <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'} action={<button className="secondary" onClick={onBuild}>Back to build <ArrowRight size={15}/></button>}>{project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? 'AppYard is working automatically. Follow the build while your preview is prepared.' : 'Start a build from your brief to try the app here.'}</Empty></div>}
     <div className="preview-footer"><ShieldCheck size={13}/> App preview</div>
   </section></div>;
 }
@@ -198,10 +201,10 @@ function Settings({ data, action, updated, busy, onBack, onSaved }: { data: Boot
         void action(async () => updated(await api.setDeveloperMode(enabled)), enabled ? 'Developer mode enabled.' : 'Developer mode disabled.');
       }}/><span aria-hidden="true">{developerMode ? 'On' : 'Off'}</span></label>
     </section>
-    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">Connect ChatGPT or choose a Pi provider.</p>
+    <div className="settings-grid"><section><h2>Model & credentials</h2><p className="muted">Connect ChatGPT or choose another model provider.</p>
       <ModelSettings key={JSON.stringify([backend, provider, model, rememberKey])} data={data} api={api} busy={busy} action={action} updated={updated} desktop={isDesktop} onSaved={onSaved}/>
     </section><aside><details className="inline-details"><summary>How builds work</summary><ol className="settings-steps"><li><strong>Plan the work</strong><p>Your selected engine reads your brief and creates research and implementation plans.</p></li><li><strong>Build & verify</strong><p>The agent writes the app and tests. AppYard executes tests and sends failures back for one repair attempt.</p></li><li><strong>Review & deliver</strong><p>You inspect the live preview, verify coverage, and export source with evidence.</p></li></ol></details>
-      <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this Mac. AppYard independently runs the generated tests locally. Codex uses your connected ChatGPT plan; Pi uses your configured provider account.</p></div>
+      <div className="readiness-note"><TerminalSquare size={20}/><p>Agents can read and write files and execute shell commands on this Mac. AppYard independently runs the generated tests locally. Builds use your connected ChatGPT plan or configured API account.</p></div>
       <h3 className="section-label">Workspace storage</h3><p className="path-note">{data.storagePath}</p><p className="small-note">Credentials stay in the desktop backend. The interface shows your account, models, and usage status.</p>
     </aside></div>
   </div>;
@@ -214,6 +217,8 @@ export default function App() {
   const [requestedArtifact, setRequestedArtifact] = useState('');
   const settingsReturn = useRef<View | null>(null);
   const [intakeCatalogId, setIntakeCatalogId] = useState('');
+  const intakeDrafts = useRef<Record<string, IntakeDraft>>({});
+  const briefDrafts = useRef<Record<string, BriefDraft>>({});
   const [intake, setIntake] = useState(false), [search, setSearch] = useState(false), [start, setStart] = useState(false);
   const [query, setQuery] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
   const [resuming, setResuming] = useState(false);
@@ -295,6 +300,7 @@ export default function App() {
           {showHome ? <button className="primary" onClick={() => createChallenge()}><Plus size={16}/>New challenge</button> : <IconButton label="New challenge" onClick={() => createChallenge()}><Plus size={20}/></IconButton>}
         </div>
       </header>
+      {state.projects.filter(project => project.status === 'running' && (showHome || active === 'settings' || active === 'connectors' || project.id !== p?.id)).map(project => <header className="run-header" aria-label="Running build" key={project.id}><div className="run-title"><p title={project.title}>Building: {project.title}</p></div><button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(project.id), 'Stop requested. Current artifacts will be kept.')}><Square size={14}/>Stop build</button></header>)}
       {showHome && <Home projects={state.projects} open={openProject} create={createChallenge}/>}
       {active === 'connectors' && <Connectors/>}
       {p && !showHome && active !== 'settings' && active !== 'connectors' && <JourneyHeader project={p} view={active} busy={busy} configured={!!configured} resuming={resuming} navigate={navigate} start={() => setStart(true)} resume={() => void resumeRun()} stop={() => void action(() => api.stopRun(p.id), 'Stop requested. Current artifacts will be kept.')}/>}
@@ -302,14 +308,15 @@ export default function App() {
       {p && journey?.stale && ['workspace', 'artifacts'].includes(active) && <div className="previous-build-note"><Info size={16}/>Previous build — these files do not reflect your updated brief.</div>}
       {p && active === 'factory' && <BuildFlow key={p.id + (p.runId || '')} project={p} developerMode={developerMode} busy={busy} configured={!!configured} resuming={resuming} onResume={() => void resumeRun()} onPreview={() => navigate('workspace')} onReview={() => navigate('evidence')} onEditBrief={() => navigate('requirements')} onArtifact={file => { setRequestedArtifact(file); setActive('artifacts'); }}/>}
       {p && developerMode && active === 'design' && <div className="design-workspace"><SystemDesign key={p.id + (p.runId || '')} project={p}/></div>}
-      {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')}/>}
+      {p && active === 'workspace' && <Development key={p.id} project={p} action={action} onBuild={() => navigate('factory')} onReview={() => navigate('evidence')}/>}
       {p && active === 'agents' && <AgentSessions key={p.id} project={p} onReview={() => navigate('evidence')}/>}
-      {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onApproved={() => navigate('delivery')} onChangesRequested={() => navigate('factory')}/>}
+      {p && active === 'evidence' && <ReviewWorkspace key={p.id + (p.runId || '')} project={p} busy={busy} action={action} onPreview={() => navigate('workspace')} onGuide={() => { setRequestedArtifact('README.md'); setActive('artifacts'); }} onApproved={() => navigate('delivery')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'delivery' && <DeliveryWorkspace project={p} busy={busy} action={action} onReview={() => navigate('evidence')} onChangesRequested={() => navigate('factory')}/>}
       {p && active === 'artifacts' && <Artifacts key={p.id} project={p} action={action} requested={requestedArtifact}/>}
-      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{p.runId ? 'Saving changes resets test results and approval. A new build starts fresh.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={p} busy={busy || p.status === 'running'} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
+      {p && active === 'requirements' && <div className="page requirements-page"><div className="page-heading"><div><h1>Brief</h1><p>{p.runId ? 'Saving changes resets test results and approval. A new build starts fresh.' : 'Describe the problem and what a successful app should do.'}</p></div></div><RequirementsForm key={p.id} initial={briefDrafts.current[p.id] ?? p} onDraftChange={draft => { briefDrafts.current[p.id] = draft; }} busy={busy || p.status === 'running'} submitLabel={!isDesktop ? 'Save brief' : !configured ? 'Save & connect model' : p.runId ? 'Save & start new build' : 'Save & start build'} submit={async input => {
         const saved = await action(() => api.updateProject(p.id, input), 'Brief saved.');
         if (!saved) return;
+        delete briefDrafts.current[p.id];
         setActive('factory');
         if (isDesktop && configured) setStart(true);
         else if (isDesktop) { settingsReturn.current = 'factory'; setActive('settings'); }
@@ -322,7 +329,7 @@ export default function App() {
       onApplied={proposal => { if (proposal.type !== 'stop') setActive('factory'); }}
     />}
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}
-    {intake && <Intake catalog={state.norfolkCatalog ?? bundledNorfolkCatalog} initialCatalogId={intakeCatalogId} close={() => setIntake(false)} action={action} created={project => { setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); setCurrent(project.id); setRequestedArtifact(''); setActive('factory'); }} busy={busy}/>}
+    {intake && <Intake catalog={state.norfolkCatalog ?? bundledNorfolkCatalog} initialCatalogId={intakeCatalogId} draft={intakeDrafts.current[intakeCatalogId] ??= { forms: {} }} close={() => setIntake(false)} action={action} created={project => { delete intakeDrafts.current[intakeCatalogId]; setState(previous => previous ? { ...previous, projects: [project, ...previous.projects.filter(p => p.id !== project.id)] } : previous); setCurrent(project.id); setRequestedArtifact(''); setActive('factory'); }} busy={busy}/>}
     {search && <Modal title="Find a challenge" close={() => setSearch(false)}><label className="search-field"><Search size={18}/><input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder="Search saved challenges"/></label><div className="search-results">{results.map(project => <button key={project.id} onClick={() => openProject(project.id)}><span>{project.title}<small>{labels[project.status]}</small></span><ArrowRight size={16}/></button>)}{!results.length && <p className="muted">No matching challenges.</p>}</div></Modal>}
     {start && p && <Modal title="Start build" close={() => setStart(false)}><p className="muted">{state.settings.backend === 'codex' ? 'Codex' : 'Pi'} will research, plan, build, and test <strong>{p.title}</strong> automatically using <strong>{state.settings.provider}/{state.settings.model || 'automatic selection'}</strong>. You review the result before delivery.</p><div className="run-disclosure"><TerminalSquare size={20}/><p>The agents can edit files and execute shell commands on this Mac. Build agents and generated apps run with host and network access. Stop ends tracked run processes. {state.settings.backend === 'codex' ? 'OpenAI receives the brief and tool context. This build uses your connected ChatGPT plan or API-key account; the corresponding usage limits and charges apply.' : 'Your configured model provider receives the brief and tool context; provider usage charges may apply.'}</p></div><p className="small-note">Prior run folders are preserved. This starts fresh from the current brief.</p><div className="dialog-actions"><button className="secondary" onClick={() => setStart(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void action(async () => { await api.startRun(p.id); setStart(false); setActive('factory'); }, 'Build started.')}><Play size={16}/>Start automatic build</button></div></Modal>}
   </div>;

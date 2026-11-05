@@ -5,7 +5,7 @@ import { GenAiMilTab } from './GenAiMilTab';
 import './model-settings.css';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
-const tabs = [{ id: 'chatgpt', name: 'ChatGPT' }, { id: 'api-key', name: 'API key' }, { id: 'genai-mil', name: 'GenAI.mil' }, { id: 'other', name: 'Other providers' }] as const;
+const tabs = [{ id: 'chatgpt', name: 'ChatGPT' }, { id: 'api-key', name: 'API key' }, { id: 'genai-mil', name: 'GenAI.mil' }, { id: 'other', name: 'Other model providers' }] as const;
 type Tab = typeof tabs[number]['id'];
 export function ModelSettings({ data, api, busy, action, updated, desktop, onSaved }: { data: Bootstrap; api: FleetAPI; busy: boolean; action: Action; updated: (value: Bootstrap) => void; desktop: boolean; onSaved?: (value: Bootstrap) => void }) {
   const [backend, setBackend] = useState<AgentBackend>(data.state.settings.backend ?? (data.state.settings.provider ? 'pi' : 'codex'));
@@ -23,6 +23,8 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
   const connected = account?.status === 'connected';
   const keyConnected = connected && account.authType === 'apiKey';
   const planReady = connected && (keyConnected || account.planUsageEnabled === true);
+  const switchingToKey = tab === 'api-key' && connected && !keyConnected;
+  const accountReady = planReady && (tab !== 'api-key' || keyConnected);
   const accounts = account?.accounts ?? [];
   const activeAccountId = account?.activeAccountId;
   const running = data.state.projects.some(p => p.status === 'running');
@@ -40,7 +42,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     return () => { cancelled = true; clearTimeout(timer); };
   }, [api, connecting]);
   return <form className="model-settings-form" onSubmit={e => {
-    e.preventDefault(); if (tab === 'genai-mil') return; void action(async () => {
+    e.preventDefault(); if (tab === 'genai-mil' || disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !accountReady)) return; void action(async () => {
       const saved = await api.saveSettings({ backend, provider: selectedProvider, model: selectedModel, rememberKey: backend === 'pi' && remember }, backend === 'pi' ? key || undefined : undefined);
       updated(saved); setKey(''); onSaved?.(saved);
     }, 'Model settings saved.');
@@ -55,7 +57,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
     <div id="model-settings-panel" role="tabpanel" aria-labelledby={'model-tab-' + tab}>
     {tab === 'genai-mil' ? <GenAiMilTab data={data} api={api} disabled={disabled} action={action} updated={updated} onSaved={onSaved}/> : <>
     {backend === 'codex' ? <div className="chatgpt-connection">
-      <h3>Codex account</h3>
+      <h3>Model account</h3>
       <p>Connect with ChatGPT or an API key. ChatGPT uses your plan; API-key usage is billed to the key's account.</p>
       {tab === 'chatgpt' && accounts.length > 0 && <label className="saved-chatgpt-account">Saved account<select aria-label="Saved ChatGPT account" value={activeAccountId ?? ''} disabled={disabled || connecting} onChange={e => void action(async () => { updated(await api.selectChatGPTAccount(e.target.value)); setModel(''); })}>
         {!activeAccountId && <option value="" disabled>Choose an account</option>}
@@ -65,6 +67,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
         {connected ? <p className="account-identity"><CheckCircle2 size={17}/><span>{account.email || 'ChatGPT connected'}{account.plan && <small>{account.plan} plan</small>}</span></p>
           : connecting ? <p className="account-identity"><Loader2 size={17}/><span>{account.authType === 'apiKey' ? 'Connecting your API key.' : 'Finish signing in in your browser. This screen updates automatically.'}</span></p> : <p>{tab === 'api-key' ? 'Enter an API key to connect your account.' : activeAccountId ? 'Reconnect this account to use your ChatGPT plan.' : 'Sign in and allow ChatGPT plan usage to connect your account.'}</p>}
         {connected && <p>{keyConnected ? 'You’re using an API key' : planReady ? 'You’re using your ChatGPT plan' : 'Your account is signed in. Enable ChatGPT plan usage to choose a model and run builds.'}</p>}
+        {switchingToKey && <p>ChatGPT is still connected; choose Switch to API key to disconnect it and enter your key.</p>}
       </div>
       {account?.error && <p className="connection-error" role="alert">{account.error}</p>}
       <div className="connection-actions">
@@ -74,7 +77,7 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
         </> : <>
           {tab === 'chatgpt' && (!planReady || keyConnected) && <button className="button primary" type="button" data-oai-siwc-button="" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT(activeAccountId)))}>{keyConnected ? 'Continue with ChatGPT' : connected ? 'Enable ChatGPT plan usage' : activeAccountId ? 'Reconnect account' : 'Continue with ChatGPT'} <ArrowRight size={16}/></button>}
           {tab === 'chatgpt' && connected && !keyConnected && <button className="button secondary" type="button" disabled={busy || !desktop} onClick={() => void action(() => api.manageChatGPTUsage())}>Manage ChatGPT usage <ExternalLink size={14}/></button>}
-          {connected && <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), keyConnected ? 'API key signed out of AppYard.' : 'ChatGPT signed out of AppYard.')}>Sign out</button>}
+          {connected && <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.disconnectChatGPT()), keyConnected ? 'API key signed out of AppYard.' : 'ChatGPT signed out of AppYard.')}>{switchingToKey ? 'Switch to API key' : 'Sign out'}</button>}
           {tab === 'chatgpt' && accounts.length > 0 && <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.connectChatGPT()))}>Add account</button>}
           <button className="button secondary" type="button" disabled={disabled} onClick={() => void action(async () => updated(await api.refreshChatGPT()))}><RefreshCw size={14}/>Refresh connection</button>
         </>}
@@ -83,12 +86,12 @@ export function ModelSettings({ data, api, busy, action, updated, desktop, onSav
       <p className="connection-note">ChatGPT sign-in opens your browser. AppYard keeps its login locally, separate from your other apps. API keys stay out of project files and exports.</p>
     </div> : <>
       <label>Provider<select aria-label="Provider" value={provider} disabled={disabled} onChange={e => { setProvider(e.target.value); setModel(''); }}><option value="">Select a provider</option>{providers.map(p => <option key={p} value={p}>{p}{allModels.find(m => m.provider === p)?.configured ? ' · connected' : ''}</option>)}</select></label>
-      <label>API key <span className="field-hint">Leave blank to use existing Pi credentials.</span><input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>
+      <label>API key <span className="field-hint">Leave blank to use your existing provider credentials.</span><input type="password" value={key} disabled={disabled} autoComplete="off" spellCheck={false} onChange={e => setKey(e.target.value)} placeholder="Provider API key"/></label>
       <label className="checkbox checkbox-label"><input type="checkbox" checked={remember} disabled={disabled} onChange={e => setRemember(e.target.checked)}/>Remember this key using operating-system encryption</label>
     </>}
-    <label>Model<select aria-label="Model" value={backend === 'codex' && !planReady ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !planReady)} onChange={e => setModel(e.target.value)}><option value="" disabled>{backend === 'codex' && !planReady ? connected ? 'Enable plan usage to choose a model' : 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
+    <label>Model<select aria-label="Model" value={backend === 'codex' && !accountReady ? '' : selectedModel} disabled={disabled || connecting || (backend === 'codex' && !accountReady)} onChange={e => setModel(e.target.value)}><option value="" disabled>{switchingToKey ? 'Switch to API key to choose a model' : backend === 'codex' && !planReady ? connected ? 'Enable plan usage to choose a model' : 'Sign in to choose a model' : 'Select a model'}</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} · {m.id}</option>)}</select></label>
     {backend === 'codex' && planReady && <p className="connection-note">Model access depends on your connected account.</p>}
-    <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !planReady)} type="submit">Save model settings <ArrowRight size={16}/></button>
+    <button className="button primary" disabled={disabled || connecting || !selectedProvider || !selectedModel || (backend === 'codex' && !accountReady)} type="submit">Save model settings <ArrowRight size={16}/></button>
     </>}
     {running && <p className="connection-note">Stop active builds before changing engines or accounts.</p>}
     </div>

@@ -95,7 +95,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
     <p className="connector-readonly">AppYard can only read. It cannot send, change or delete anything.</p>
     {!card.available && <p>Sign-in is not set up for this source. Ask your administrator to turn it on.</p>}
     {card.signedIn && <p role="status">Connected. Choose what to include below.</p>}
-    {card.connection && <p className="connector-saved" role="status">{card.connection.sample ? 'Sample data ready' : 'Data ready'}: {card.connection.count} items.</p>}
+    {card.connection && <p className="connector-saved" role="status">{card.connection.sample ? 'Sample data ready' : 'Preview saved'}: {card.connection.count} items.</p>}
     {card.kind === 'custom-api' && <label className="connector-address">Service address or documentation link<input type="url" maxLength={2000} value={address} disabled={busy} placeholder="https://example.org/data" onChange={event => setAddress(event.target.value)}/></label>}
     <div className="connector-actions"><button className="secondary" type="button" disabled={busy || !card.available} onClick={() => void connect()}>Connect</button>
       <button className="primary" type="button" disabled={busy} onClick={() => void check()}>Try sample data</button>
@@ -125,13 +125,14 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
       <p>{preview.sample ? `This goes to ${model} only when you select it in a brief and start a build.` : 'You can save this preview on this computer. Builds for this event use sample data only.'}</p>
       <ul>{preview.items.map(item => <li key={item.id}><strong>{item.title}</strong>{item.kind === 'record' ? <RecordPreview body={item.body}/> : <p>{item.body}</p>}</li>)}</ul>
       <p>Words inside an email or file are treated as data. They do not authorize any action.</p>
-      <div className="connector-actions"><button className="primary" type="button" disabled={busy || !preview.items.length} onClick={() => void save()}>Use this</button>{!busy && <button className="secondary" type="button" onClick={() => void cancel()}>Cancel</button>}</div>
+      <div className="connector-actions"><button className="primary" type="button" disabled={busy || !preview.items.length} onClick={() => void save()}>{preview.sample ? 'Use this' : 'Save preview'}</button>{!busy && <button className="secondary" type="button" onClick={() => void cancel()}>Cancel</button>}</div>
     </section>}
   </article>;
 }
 export function Connectors() {
   const { cards, error, refresh, model } = useSources();
   return <div className="page connectors-page"><div className="page-heading"><div><h1>Connectors</h1><p>Choose data to help build your app. Start with samples, with no sign-in or setup.</p></div></div>
+    <p>Event builds use sample data; live connections support local preview only.</p>
     <p>All samples are invented Navy training examples. Check each sample, choose Use this, then select it in your brief.</p>
     {error && <p role="alert" className="form-error">{error} {api.connectors && <button className="text-button" onClick={() => void refresh()}>Try again</button>}</p>}
     <div className="connector-grid">{cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
