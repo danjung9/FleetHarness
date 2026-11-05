@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
+    "newLine": "lf",
     "types": ["node"]
   },
   "include": ["*.ts", "*.cts", "../shared/*.ts", "../harness/*.ts"]

@@ -11,6 +11,16 @@ if (process.argv.slice(2).some(arg => arg !== '--update')) throw new Error('Usag
 if (registry.schemaVersion !== 1 || !Array.isArray(registry.templates)) throw new Error('Invalid foundation registry.');
 let checked = 0;
 const changed = [];
+const lineEndingChanges = [];
+function inspectBytes(name, bytes, expected) {
+  const actual = createHash('sha256').update(bytes).digest('hex');
+  if (actual !== expected) {
+    changed.push(name);
+    const canonical = Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+    if (createHash('sha256').update(canonical).digest('hex') === expected) lineEndingChanges.push(name);
+  }
+  return actual;
+}
 for (const template of registry.templates) {
   if (!/^[a-z][a-z0-9-]*$/.test(template.id) || !/^\d+\.\d+\.\d+$/.test(template.version)) throw new Error('Invalid template identity.');
   for (const [name, digest] of Object.entries(template.files)) {
@@ -22,8 +32,7 @@ for (const template of registry.templates) {
       const stat = await fs.lstat(current);
       if (stat.isSymbolicLink() || (index === parts.length - 1 ? !stat.isFile() : !stat.isDirectory())) throw new Error('Template paths must be ordinary files/directories: ' + current);
     }
-    const actual = createHash('sha256').update(await fs.readFile(current)).digest('hex');
-    if (actual !== digest) changed.push(template.id + '/' + name);
+    const actual = inspectBytes(template.id + '/' + name, await fs.readFile(current), digest);
     template.files[name] = actual;
     checked++;
   }
@@ -32,12 +41,13 @@ if (registry.computation?.version !== '1.0.0' || !registry.computation.files) th
 for (const [name, digest] of Object.entries(registry.computation.files)) {
   if (!/^[a-z]+\.js$/.test(name)) throw new Error('Invalid computation filename.');
   const source = fileURLToPath(new URL('../dist-electron/harness/tools/' + name, import.meta.url));
-  const actual = createHash('sha256').update(await fs.readFile(source)).digest('hex');
-  if (actual !== digest) changed.push('computation/' + name);
+  const actual = inspectBytes('computation/' + name, await fs.readFile(source), digest);
   registry.computation.files[name] = actual;
   checked++;
 }
-if (update) {
+if (lineEndingChanges.length) {
+  throw new Error('Foundation line endings changed: ' + lineEndingChanges.join(', ') + '. Restore the pinned LF bytes before building; do not update checksums to accept Windows CRLF conversion.');
+} else if (update) {
   await fs.writeFile(registryPath, JSON.stringify(registry, null, 2) + '\n');
   console.log(`Updated ${changed.length} hashes across ${checked} starter files. Review template versions with the change.`);
 } else if (changed.length) {
