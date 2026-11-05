@@ -322,7 +322,8 @@ function registerIPC() {
       temporary = await fs.mkdtemp(path.join(app.getPath('temp'), 'fleet-executable-'));
       const staged = await stageExecutable(p, temporary);
       const archive = path.join(temporary, fileName);
-      await runPackageWorker({ ...staged, archive, output: path.join(temporary, 'output'), electronVersion: process.versions.electron }, process.execPath, controller.signal);
+      await runPackageWorker({ ...staged, archive, output: path.join(temporary, 'output'), electronVersion: process.versions.electron,
+        runtimeDirectory: app.isPackaged ? path.join(process.resourcesPath, 'electron-runtime') : undefined }, process.execPath, controller.signal);
       await assertExecutableSource(p);
       controller.signal.throwIfAborted();
       const savedTo = await saveExecutable(archive, result.filePath, p.workspace!, controller.signal, async target => {

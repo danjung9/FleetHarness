@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { artifactManifest, manifestHash, sourceHash } from './storage.js';
 import { atomicHostWrite } from '../shared/host-files.js';
+import { containerExport } from './container-export.js';
 
 export interface SourceExport {
   workspace: string;
@@ -32,6 +33,7 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
   assertCredentialFreeManifest(manifest);
   assertNoCredentials(input.deliveryMarkdown); assertNoCredentials(input.title);
   assertNoCredentials(input.evidence.report); assertNoCredentials(input.evidence.review);
+  const container = containerExport(manifest);
   const slug = input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'challenge';
   const destination = await fs.mkdtemp(path.join(parent, 'AppYard-' + slug + '-'));
   try {
@@ -44,7 +46,11 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
     }
     await atomicHostWrite(destination, 'test-report.json', input.evidence.report);
     await atomicHostWrite(destination, 'review.json', input.evidence.review);
-    await atomicHostWrite(destination, 'DELIVERY.md', input.deliveryMarkdown);
+    if (container) {
+      await atomicHostWrite(destination, 'Dockerfile', container.dockerfile);
+      await atomicHostWrite(destination, 'compose.yaml', container.compose);
+    }
+    await atomicHostWrite(destination, 'DELIVERY.md', input.deliveryMarkdown + (container ? '\n\n' + container.instructions + '\n' : ''));
     await checkSource();
     if (await sourceHash(destination) !== input.verifiedHash) throw new Error('The copied bundle does not match the verified source. Export again before delivering.');
     signal?.throwIfAborted();

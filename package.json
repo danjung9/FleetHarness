@@ -92,9 +92,13 @@
     },
     "artifactName": "AppYard-${version}-${arch}.${ext}",
     "npmRebuild": false,
+    "extraResources": [
+      { "from": "node_modules/electron/dist", "to": "electron-runtime" }
+    ],
     "asarUnpack": [
       "node_modules/**/*",
       "dist-electron/electron/package-worker.js",
+      "dist-electron/electron/package-runtime.js",
       "package.json"
     ]
   },
