@@ -17,6 +17,10 @@ async function fixture(t) {
   project.workspace = path.join(root, 'workspaces', project.id, 'current-run'); project.runId = 'current-run';
   project.status = 'approved'; project.approvedAt = new Date().toISOString(); project.exportedTo = '/previous/export';
   project.report = { sourceHash: 'old', passed: 1, failed: 0 };
+  project.verification = { runId: project.runId, reportHash: 'old-report' };
+  project.approval = { runId: project.runId, sourceHash: 'old', reportHash: 'old-report', approvedAt: project.approvedAt, feedback: 'Approved build', scope: 'app' };
+  project.processScope = { runId: project.runId, marker: 'completed-run', cleanup: 'confirmed' };
+  project.runCheckpoint = { version: 1, briefHash: 'brief', requirementsHash: 'requirements', packetHash: 'packet', context: 'saved build', repairAttempts: 0, writerState: 'idle' };
   project.visualReview = { verdict: 'passed' }; project.resumeStage = 'build';
   project.executable = { status: 'ready', platform: 'darwin', arch: 'arm64', fileName: 'app.zip' };
   store.state.projects = [project]; await store.save();
@@ -69,7 +73,7 @@ test('file trash invalidates saved verification and restores bytes without reviv
   const entry = await f.service.storageTrash(item.id, 'app.js');
   assert.equal(entry.kind, 'file');
   await assert.rejects(fs.stat(path.join(f.root, f.current, 'app.js')), { code: 'ENOENT' });
-  for (const field of ['report', 'approvedAt', 'exportedTo', 'executable', 'resumeStage', 'visualReview']) assert.equal(f.project[field], undefined, field);
+  for (const field of ['report', 'verification', 'approval', 'approvedAt', 'exportedTo', 'executable', 'resumeStage', 'visualReview']) assert.equal(f.project[field], undefined, field);
   assert.equal(f.project.status, 'stopped'); assert.equal(f.project.runId, 'current-run');
   const persisted = JSON.parse(await fs.readFile(path.join(f.root, 'state.json'), 'utf8')).projects[0];
   assert.equal(persisted.report, undefined); assert.equal(persisted.workspace, f.project.workspace);
@@ -85,11 +89,36 @@ test('file trash invalidates saved verification and restores bytes without reviv
 test('whole current build removal resets run references and recovery keeps it as a historical build', async t => {
   const f = await fixture(t), item = await f.find('current-run');
   const entry = await f.service.storageTrash(item.id);
-  assert.equal(f.project.workspace, undefined); assert.equal(f.project.runId, undefined);
+  assert.equal(entry.kind, 'build');
+  for (const field of ['workspace', 'runId', 'processScope', 'runCheckpoint', 'verification', 'approval']) assert.equal(f.project[field], undefined, field);
   assert.equal(f.project.status, 'draft'); assert.ok(f.project.stages.every(stage => stage.status === 'queued'));
+  assert.equal(await f.find('current-run'), undefined);
+  const reopenedStore = new Store(f.root, () => { throw new Error('A removed build must not trigger process recovery.'); });
+  await reopenedStore.init();
+  const reopenedProject = reopenedStore.project(f.project.id);
+  assert.equal(reopenedProject.status, 'draft');
+  assert.equal(reopenedProject.error, undefined);
+  const reopened = new DataStorageService({ ...f.options, store: reopenedStore }); await reopened.init();
+  assert.equal((await reopened.storageOverview()).trash[0].id, entry.id);
+  await reopened.storageRestore(entry.id);
+  assert.equal((await reopened.storageOverview()).items.find(item => item.runId === 'current-run').current, false);
+  assert.equal(await fs.readFile(path.join(f.root, f.current, 'app.js'), 'utf8'), 'console.log("hello");');
+  assert.equal(reopenedProject.status, 'draft');
+  assert.equal(reopenedProject.report, undefined);
+  assert.equal(reopenedProject.approval, undefined);
+});
+
+test('deleting and restoring a historical build preserves the current project and its approval', async t => {
+  const f = await fixture(t), item = await f.find('old-run');
+  const before = structuredClone(f.project);
+  const entry = await f.service.storageTrash(item.id);
+  assert.equal(await f.find('old-run'), undefined);
+  assert.deepEqual(f.project, before);
+  assert.equal(await fs.readFile(path.join(f.root, f.current, 'app.js'), 'utf8'), 'console.log("hello");');
   await f.service.storageRestore(entry.id);
-  assert.equal((await f.find('current-run')).current, false);
-  assert.equal(f.project.report, undefined);
+  assert.equal((await f.find('old-run')).current, false);
+  assert.equal(await fs.readFile(path.join(f.root, f.old, 'README.md'), 'utf8'), '# Previous build');
+  assert.deepEqual(f.project, before);
 });
 
 test('restoration refuses collisions and restores a parent build before an individually trashed file', async t => {

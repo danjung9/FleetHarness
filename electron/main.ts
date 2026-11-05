@@ -386,7 +386,7 @@ function registerIPC() {
         const url = await scope.run(() => p.demo?.kind === 'mailmcp'
           ? mailMcpPreview().url(p.workspace!, starting.signal) : previews.url(p.workspace!));
         if (request !== previewRequestGeneration || storageMutations.size) { await stopPreview(id); return null; }
-        previewBoundary.setPreview(url); return url;
+        previewBoundary.setPreview(url, { allowShellEmbedding: p.demo?.kind === 'mailmcp' }); return url;
       }
       catch (error) { await stopPreview(id); throw error; }
       finally { if (previewStarts.get(id) === starting) previewStarts.delete(id); }

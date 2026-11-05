@@ -332,7 +332,7 @@ try {
   const sessions = initial.items.filter(item => item.kind === 'sessions');
   assert.equal(sessions.length, 2);
   for (const session of sessions) {
-    for (const name of [browseLabel(session), `Open ${session.name} folder in ${session.projectTitle}`, `Move ${session.name} from ${session.projectTitle} to Trash`]) {
+    for (const name of [browseLabel(session), `Open ${session.name} folder in ${session.projectTitle}`, `Delete ${session.name} from ${session.projectTitle}`]) {
       assert.equal(await page.getByRole('button', { name, exact: true }).count(), 1, 'Repeated folder names include their project in the accessible label.');
     }
   }
@@ -389,7 +389,7 @@ try {
   await page.getByLabel('Filter files by type', { exact: true }).selectOption('all');
 
   await tab('Builds');
-  await row(old).getByRole('button', { name: `Move ${old.name} from ${old.projectTitle} to Trash`, exact: true }).click();
+  await row(old).getByRole('button', { name: `Delete ${old.name} from ${old.projectTitle}`, exact: true }).click();
   await confirmTrash();
   await assert.rejects(fs.access(oldWorkspace), /ENOENT/);
   let trashed = (await overview()).trash.find(item => item.kind === 'build');
@@ -412,7 +412,7 @@ try {
   await confirmTrash();
   trashed = (await overview()).trash.find(item => item.kind === 'file');
   await tab('Trash');
-  await page.getByRole('button', { name: `Delete ${trashed.name} from ${trashed.projectTitle} permanently`, exact: true }).click();
+  await page.getByRole('button', { name: `Delete permanently: ${trashed.name} from ${trashed.projectTitle}`, exact: true }).click();
   const deleteDialog = page.getByRole('dialog', { name: 'Delete permanently?', exact: true });
   await deleteDialog.getByRole('button', { name: 'Delete permanently', exact: true }).click();
   await deleteDialog.waitFor({ state: 'hidden' });

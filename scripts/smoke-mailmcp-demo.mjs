@@ -10,6 +10,7 @@ const bundle = path.resolve(process.env.APPYARD_DEMO_BUNDLE || path.join(reposit
 const imported = process.env.APPYARD_DEMO_IMPORT === '1';
 const evidence = path.resolve(process.env.APPYARD_DEMO_EVIDENCE || path.join(repository, imported ? 'output/playwright/mailmcp-import' : 'output/mailmcp-demo/evidence'));
 const executablePath = process.env.FLEET_EXECUTABLE;
+const developmentURL = !executablePath ? process.env.VITE_DEV_SERVER_URL : undefined;
 const root = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-mailmcp-smoke-'));
 const profile = path.join(root, 'profile');
 const piDirectory = path.join(root, 'pi');
@@ -72,6 +73,7 @@ try {
     observeWindow(page);
     page.setDefaultTimeout(15_000);
     await page.locator('.app-shell').waitFor({ timeout: 60_000 });
+    if (developmentURL) assert.equal(new URL(page.url()).origin, new URL(developmentURL).origin);
     bootstrap = await page.evaluate(() => window.fleetHarness.bootstrap());
     project = bootstrap.state.projects.find(item => item.id === (imported ? 'mailmcp-demo' : bootstrap.demo?.projectId));
     assert.ok(project, 'The saved state must include the demo project.');
@@ -88,6 +90,7 @@ try {
     assert.equal(await app.evaluate(({ app: application }) => application.getName()), imported ? 'AppYard' : 'AppYard Demo');
     notes.push(`Repository commit: ${project.demo.commit}`);
     notes.push(executablePath ? `Installed executable: ${executablePath}` : 'Executable: repository Electron development build');
+    notes.push(`AppYard shell: ${page.url()}`);
   });
 
   await check(imported ? 'My builds opens MailMCP with its demo provenance intact' : 'Startup selects Build and clearly labels the preloaded demonstration', async () => {
@@ -252,7 +255,7 @@ try {
   const passed = checks.filter(result => result.status === 'passed').length;
   const failed = checks.filter(result => result.status === 'failed').length;
   const report = {
-    time: new Date().toISOString(), command: (imported ? 'APPYARD_DEMO_IMPORT=1 ' : '') + 'node scripts/smoke-mailmcp-demo.mjs',
+    time: new Date().toISOString(), command: (imported ? 'APPYARD_DEMO_IMPORT=1 ' : '') + (developmentURL ? `VITE_DEV_SERVER_URL=${developmentURL} ` : '') + 'node scripts/smoke-mailmcp-demo.mjs',
     exitCode: failed ? 1 : 0, passed, failed, skipped: 0, total: checks.length,
     output: [
       'Real Electron end-to-end validation of the MailMCP demonstration.',

@@ -590,11 +590,13 @@ export class DataStorageService {
     if (kind === 'sessions') delete project.resumeStage;
     else {
       delete project.report; delete project.visualReview; delete project.approvedAt; delete project.exportedTo;
+      delete project.verification; delete project.approval;
       delete project.executable; delete project.resumeStage; delete project.executionFailure;
       project.status = whole ? 'draft' : 'stopped';
       project.error = whole ? undefined : 'Build files changed in Data & storage. Start a new build to create fresh verification evidence.';
       if (whole) {
         delete project.workspace; delete project.runId; delete project.runtimeProfile; delete project.systemDesign;
+        delete project.processScope; delete project.runCheckpoint;
         delete project.phasePlan; delete project.globalTools; delete project.qualityVersion;
         project.stages = structuredClone(stageDefinitions); project.logs = [];
       } else for (const stage of project.stages) if (['verify', 'review', 'deliver'].includes(stage.id)) stage.status = 'queued';
