@@ -279,5 +279,5 @@ test('shared support preserves regular snapshot and ledger approval semantics', 
 test('shared review instructions assess common outcomes without presupposing an implementation', () => {
   for (const expected of [/ORIGINAL requirements/, /For EVERY canonical criterion/, /For EVERY evaluation/,
     /available-operations\.json/, /legitimately constant task/, /without choosing or assuming an architecture/,
-    /same cases and answers/, /Only a shared CLI surface/, /one bounded planner revision/]) assert.match(sharedPlanningReviewInstructions, expected);
+    /same cases and answers/, /Only a shared CLI surface/, /fresh independent review after each revision/]) assert.match(sharedPlanningReviewInstructions, expected);
 });

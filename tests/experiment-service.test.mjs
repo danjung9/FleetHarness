@@ -6,6 +6,7 @@ import os from 'node:os';
 import { ExperimentService, probeExperimentIsolation } from '../dist-electron/electron/experiment-service.js';
 import { Store, newProject, sourceHash } from '../dist-electron/electron/storage.js';
 import { runExperimentRegressionChecks } from '../dist-electron/electron/experiment-regression.js';
+import { summarizeTokenUsage } from '../dist-electron/shared/token-usage.js';
 
 const hash = value => value.repeat(64);
 const profiles = ['node-cli', 'python-cli'].map(id => ({ id, version: '1', label: id, instructions: 'Fixture architecture', budget: { timeoutMs: 1000 } }));
@@ -66,6 +67,44 @@ test('ordinary Run keeps Off legacy and paired learning uses quota while explici
   assert.equal(service.learning.listCandidates(explicit.id).length, 2);
   const summary = JSON.stringify(await service.experimentState(project.id));
   assert.ok(!summary.includes('host-only-answers')); assert.ok(!summary.includes('executionState')); assert.ok(!summary.includes('workspace'));
+});
+
+test('usage includes shared planning and both candidates once, survives selection, and recovers from worker projections', async t => {
+  const h = await fixture(t);
+  const ledger = (id, runId, totalTokens) => ({ version: 1, startedAt: '2026-11-05T12:00:00Z', sessions: [{ id, runId, source: 'build', model: 'fixture',
+    startedAt: '2026-11-05T12:00:00Z', updatedAt: '2026-11-05T12:00:00Z', totals: { inputTokens: totalTokens - 2, outputTokens: 2, cachedInputTokens: 0, totalTokens } }] });
+  const previous = ledger('earlier', 'earlier-run', 17); h.project.tokenUsage = previous;
+  const sharedPlanner = h.workers.sharedPlanner, candidateWorker = h.workers.candidateWorker;
+  h.workers.sharedPlanner = async context => {
+    assert.equal(context.project.tokenUsage, undefined, 'A worker must not inherit the parent usage ledger');
+    const original = await sharedPlanner(context);
+    return worker(async () => {
+      await context.saveProjection({ ...context.project, tokenUsage: ledger('shared-session', 'shared-run', 13) });
+      await original.start(); return original.result();
+    });
+  };
+  h.workers.candidateWorker = async context => {
+    assert.equal(context.project.tokenUsage, undefined);
+    return candidateWorker({ ...context, saveProjection: async projection => {
+      projection.tokenUsage = ledger(context.candidate.id + '-session', projection.runId, 20);
+      await context.saveProjection(projection); await context.saveProjection(projection);
+    } });
+  };
+  const summary = await h.compare('token-accounting');
+  assert.equal(summarizeTokenUsage([h.project.tokenUsage]).totalTokens, 70);
+  for (const candidate of summary.candidates) {
+    const detail = await h.service.inspectCandidate(summary.id, candidate.id);
+    assert.equal(summarizeTokenUsage([detail.project.tokenUsage]).totalTokens, 20);
+  }
+  h.service.refreshProjectSummaries(); h.service.refreshProjectSummaries();
+  assert.equal(summarizeTokenUsage([h.project.tokenUsage]).totalTokens, 70);
+  const selected = summary.candidates[0]; await h.service.selectCandidate(summary.id, selected.id, selected.sourceHash);
+  assert.equal(summarizeTokenUsage([h.project.tokenUsage]).totalTokens, 70);
+  assert.equal(summarizeTokenUsage([JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects[0].tokenUsage]).totalTokens, 70);
+  // Simulate a crash after worker projections were saved but before parent accounting.
+  h.project.tokenUsage = previous; await h.store.save(); await h.service.close();
+  await h.create();
+  assert.equal(summarizeTokenUsage([h.project.tokenUsage]).totalTokens, 70);
 });
 
 test('selection preserves project identity and history, requires reviewed hashes, and resets approval only when selection changes', async t => {

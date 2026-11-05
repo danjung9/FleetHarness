@@ -11,6 +11,7 @@ import { parseSolutionContract, parseEvaluationPlan } from '../dist-electron/har
 import { runSolutionEvaluation } from '../dist-electron/electron/solution-evaluation.js';
 import { prepareSolutionRuntime } from '../dist-electron/electron/solution-runtime.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
+import { beginFunctionalRepair, createFunctionalRepairState, finishFunctionalRepair } from '../dist-electron/electron/functional-repair.js';
 
 const unavailable = { repairAttempts: null, repairEvidence: 'unavailable' };
 const repairMessage = 'Core evaluation failed. Using the shared repair attempt before completing the application.';
@@ -42,7 +43,7 @@ async function readEvidence(root, project) {
   return benchmark.readLiveRepairEvidence(root, project);
 }
 
-test('fresh-run repair evidence reads the persisted shared slot without consulting log prose', async t => {
+test('legacy repair evidence reads the persisted shared slot without consulting log prose', async t => {
   for (const [label, fields, expected] of [
     ['used', { repairUsed: true }, 1], ['unused', { repairUsed: false }, 0], ['not-yet-used', {}, 0]
   ]) await t.test(label, async t => {
@@ -56,6 +57,29 @@ test('fresh-run repair evidence reads the persisted shared slot without consulti
     assert.deepEqual(project, before, 'Reading telemetry must not rewrite project state.');
     assert.equal(await fs.readFile(file, 'utf8'), body, 'Reading telemetry must not rewrite recovery state.');
   });
+});
+
+test('new repair evidence sums all gate reservations, preserves pending attempts and ignores legacy flags', async t => {
+  const { root, project, checkpoint, file } = await projectFixture(t);
+  const functionalRepair = createFunctionalRepairState();
+  for (const gate of ['core', 'workflow', 'final']) {
+    beginFunctionalRepair(functionalRepair, gate, { failures: ['private-case-id'], metrics: { privateScore: 0.2 } });
+    if (gate !== 'final') finishFunctionalRepair(functionalRepair, 10);
+  }
+  await writeRunCheckpoint(root, project, { ...checkpoint, functionalRepair, repairUsed: false });
+  const body = await fs.readFile(file, 'utf8'), before = structuredClone(project);
+  assert.deepEqual(await readEvidence(root, project), { repairAttempts: 3, repairEvidence: 'checkpoint' });
+  assert.deepEqual(project, before);
+  assert.equal(await fs.readFile(file, 'utf8'), body, 'Telemetry must not settle a pending repair or mutate its budget.');
+});
+
+test('malformed new repair state cannot silently fall back to a legacy flag', async t => {
+  for (const functionalRepair of [null, {}, { version: 2, gates: {} },
+    { ...createFunctionalRepairState(), active: { gate: 'core', attempt: 1, allowanceMs: 900_000, elapsedMs: 0 } }]) {
+    const { root, project, checkpoint } = await projectFixture(t);
+    await writeRunCheckpoint(root, project, { ...checkpoint, functionalRepair, repairUsed: false });
+    assert.deepEqual(await readEvidence(root, project), unavailable);
+  }
 });
 
 test('malformed repair flags are unknown even when the recovery reader accepts their surrounding checkpoint', async t => {

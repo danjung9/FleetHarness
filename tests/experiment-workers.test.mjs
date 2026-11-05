@@ -10,6 +10,7 @@ import { ExperimentWorkers, ExperimentWorkerFailure, experimentProfiles } from '
 import { experimentContractHash } from '../dist-electron/harness/experiment-contract.js';
 import { IntegrationBroker } from '../dist-electron/electron/integration-broker.js';
 import { ExecutionBudgetExceeded } from '../dist-electron/electron/execution-budget.js';
+import { beginFunctionalRepair, finishFunctionalRepair } from '../dist-electron/electron/functional-repair.js';
 import { LearningStore } from '../dist-electron/electron/learning-store.js';
 import { LessonMemory } from '../dist-electron/electron/lesson-memory.js';
 import { ExperimentService } from '../dist-electron/electron/experiment-service.js';
@@ -41,10 +42,11 @@ async function fixture(t, options = {}) {
   const source = newProject({ title: 'Sum supplied durations', description: 'Build a local command-line tool to sum finite numbers.', criteria: ['Calculate the sum of all supplied values.'] });
   source.dataInputs = [{ name: 'sample.json', kind: 'text', content: '{"values":[1,2]}' }];
   const experiment = { id: 'experiment-fixture', projectId: source.id, lineageId: 'fixture', partition: 'development', cohortKey: 'pending', mode: 'paired', status: 'planning', baselineProfileId: 'node-cli', candidateIds: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  const createSession = async ({ cwd, customTools }) => {
-    const listeners = new Set(); const session = { stage: undefined, disposed: false,
+  const createSession = async ({ cwd, customTools, tools }) => {
+    const listeners = new Set(); const session = { stage: undefined, disposed: false, tools, customTools, prompts: [],
       subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
       async prompt(prompt) {
+        this.prompts.push(prompt);
         const emit = event => { for (const listener of listeners) listener(event); };
         this.stage ??= customTools.some(tool => tool.name === 'fleet_submit_planning_review') ? 'planning-review' : prompt.includes('You are the intake agent') ? 'intake' : prompt.includes('You are the research agent') ? 'research'
           : prompt.includes('You are the implementation agent') ? 'build' : prompt.includes('You are the verification agent') || prompt.includes('The independent test run failed.') ? 'verify' : 'plan';
@@ -122,6 +124,12 @@ test('candidate fake sessions retain compiled identity, private answers, isolate
   const h = await fixture(t), shared = await h.plan(), { worker, record } = await h.candidate(shared);
   await worker.start(); await worker.wait(); const outcome = await worker.result(), projection = h.snapshots.get(record.id);
   assert.equal(projection.status, 'review', projection.error ?? projection.report?.output);
+  for (const session of h.sessions.filter(session => session.stage === 'plan')) {
+    assert.equal(session.tools.includes('fleet_validate_plan'), false, 'Scoped plans use their own contract validator.');
+    assert.equal(session.customTools.some(tool => tool.name === 'fleet_validate_plan'), false);
+    assert.ok(session.prompts.every(prompt => !prompt.includes('fleet_validate_plan')));
+    assert.ok(session.prompts.every(prompt => !prompt.includes('Current host planning contract:')));
+  }
   assert.equal(outcome.mandatoryPassed, true, projection.report?.output); assert.equal(outcome.requiredScopePassed, true); assert.equal(outcome.withinBudget, true);
   const candidate = { ...record, workspace: projection.workspace, outcome };
   await h.workers.verifyCandidate(candidate);
@@ -241,15 +249,18 @@ test('one shared plan drives independent Node and Python workers through their a
   assert.equal(h.sessions.filter(session => session.stage === 'intake').length, 1);
 });
 
-test('a broken computational core consumes the shared repair then records implementation failure rather than infrastructure censoring', { timeout: 30_000 }, async t => {
+test('an unchanged broken computational core stops after two repairs and records implementation failure rather than infrastructure censoring', { timeout: 30_000 }, async t => {
   const h = await fixture(t, { brokenCore: true }), shared = await h.plan(), { worker, record } = await h.candidate(shared);
   await worker.start(); await worker.wait(); const outcome = await worker.result(), projection = h.snapshots.get(record.id);
   assert.equal(projection.executionFailure, 'implementation', projection.error); assert.equal(outcome.mandatoryPassed, false);
-  assert.equal(outcome.terminalReason, 'build-failed'); assert.equal(outcome.repairCount, 1); assert.equal(outcome.withinBudget, true);
+  assert.equal(outcome.terminalReason, 'build-failed'); assert.equal(outcome.repairCount, 2); assert.equal(outcome.withinBudget, true);
   assert.equal(projection.report, undefined, 'This failure precedes final application verification');
   const evidence = await h.workers.failureEvidence(record), checkpoint = JSON.parse(await fs.readFile(path.join(h.root, 'run-checkpoints', projection.runId + '.json'), 'utf8'));
   assert.equal(experimentContractHash(evidence), outcome.evidenceHash); assert.equal(evidence.sourceHash, outcome.sourceHash);
   assert.equal(evidence.failure.classification, 'implementation'); assert.equal(evidence.coreReportHash, checkpoint.coreReportHash);
+  assert.equal(evidence.repairCount, 2); assert.equal(checkpoint.functionalRepair.gates.core.attempts, 2);
+  assert.equal(checkpoint.functionalRepair.gates.core.noProgress, 2);
+  assert.equal(checkpoint.functionalRepair.gates.final.attempts, 0);
   assert.match(evidence.coreReportHash, /^[a-f0-9]{64}$/); assert.equal(evidence.budget.consumedMs, outcome.durationMs);
   assert.equal(evidence.identity.qualityContractHash, outcome.contractHash);
   assert.equal(JSON.stringify(evidence).includes('expected'), false); assert.equal(JSON.stringify(evidence).includes(projection.error), false);
@@ -277,6 +288,25 @@ test('a broken computational core consumes the shared repair then records implem
   const contradiction = store.listObservations().find(item => item.outcome === 'contradicted');
   assert.equal(contradiction.evidenceHash, outcome.evidenceHash);
   assert.ok(store.listEdges().some(edge => edge.fromId === lesson.id && edge.toId === contradiction.id && edge.relation === 'contradicts'));
+});
+
+test('candidate failure telemetry includes every gate reservation without exposing private repair observations', { timeout: 30_000 }, async t => {
+  const h = await fixture(t, { brokenCore: true }), shared = await h.plan(), { worker, record } = await h.candidate(shared);
+  await worker.start(); await worker.wait();
+  const projection = h.snapshots.get(record.id), file = path.join(h.root, 'run-checkpoints', projection.runId + '.json');
+  const checkpoint = JSON.parse(await fs.readFile(file, 'utf8'));
+  const observed = { failures: ['private-repair-identity'], metrics: { 'private-repair-score': 0.5 } };
+  beginFunctionalRepair(checkpoint.functionalRepair, 'workflow', observed); finishFunctionalRepair(checkpoint.functionalRepair, 10);
+  beginFunctionalRepair(checkpoint.functionalRepair, 'final', observed);
+  // Model-independent fixture: the pending reservation itself is countable,
+  // whether or not its interrupted repair completed before result collection.
+  checkpoint.repairUsed = false;
+  await fs.writeFile(file, JSON.stringify(checkpoint));
+  const body = await fs.readFile(file, 'utf8'), outcome = await worker.result(), evidence = await h.workers.failureEvidence(record);
+  assert.equal(outcome.repairCount, 4); assert.equal(evidence.repairCount, 4);
+  assert.equal(await fs.readFile(file, 'utf8'), body);
+  assert.equal(JSON.stringify(outcome).includes('private-repair'), false);
+  assert.equal(JSON.stringify(evidence).includes('private-repair'), false);
 });
 
 test('budget failure before verification retains sanitized negative evidence without creating passing proof', { timeout: 30_000 }, async t => {
@@ -343,14 +373,14 @@ test('fresh coordinator finalizes a SQLite-restored core failure without spendin
     assert.equal(before.status, 'stopped'); assert.equal(before.outcome, undefined);
     assert.equal(before.executionState.status, 'failed'); assert.equal(before.executionState.executionFailure, 'implementation');
     assert.equal(before.executionState.resumeStage, 'build');
-    assert.equal(collected[0].terminalReason, 'build-failed'); assert.equal(collected[0].repairCount, 1);
+    assert.equal(collected[0].terminalReason, 'build-failed'); assert.equal(collected[0].repairCount, 2);
     assert.deepEqual(actions, ['start', 'result']); assert.deepEqual(commits, []);
     assert.equal(store.listObservations().length, 0, 'An interrupted outcome must not train the lesson memory.');
     const checkpointPath = path.join(h.root, 'run-checkpoints', before.executionState.runId + '.json');
     const failurePath = path.join(h.root, 'experiments', run.id, before.id + '-failure.json');
     const checkpointBefore = await fs.readFile(checkpointPath, 'utf8'), failureBefore = await fs.readFile(failurePath, 'utf8');
     const checkpoint = JSON.parse(checkpointBefore), failure = JSON.parse(failureBefore), sessionCount = h.sessions.length;
-    assert.equal(checkpoint.repairUsed, true); assert.ok(checkpoint.executionBudget.consumedMs > 0);
+    assert.equal(checkpoint.repairUsed, true); assert.equal(checkpoint.functionalRepair.gates.core.attempts, 2); assert.ok(checkpoint.executionBudget.consumedMs > 0);
     assert.equal(failure.coreReportHash, checkpoint.coreReportHash);
     assert.equal(experimentContractHash(failure), collected[0].evidenceHash);
 
@@ -369,7 +399,7 @@ test('fresh coordinator finalizes a SQLite-restored core failure without spendin
     assert.equal(after.outcome.terminalReason, 'build-failed'); assert.equal(after.outcome.withinBudget, true);
     assert.equal(after.outcome.mandatoryPassed, false); assert.equal(after.outcome.requiredScopePassed, false);
     assert.equal(after.outcome.evidenceHash, collected[0].evidenceHash); assert.equal(after.outcome.sourceHash, collected[0].sourceHash);
-    assert.equal(after.outcome.durationMs, checkpoint.executionBudget.consumedMs); assert.equal(after.outcome.repairCount, 1);
+    assert.equal(after.outcome.durationMs, checkpoint.executionBudget.consumedMs); assert.equal(after.outcome.repairCount, 2);
     assert.equal(await fs.readFile(checkpointPath, 'utf8'), checkpointBefore, 'Recovery cannot spend or reset the original execution budget.');
     assert.equal(await fs.readFile(failurePath, 'utf8'), failureBefore, 'Recovery must retain the original immutable failure proof.');
     assert.deepEqual(commits, [before.id]);

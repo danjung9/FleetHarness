@@ -64,6 +64,7 @@ export interface ReviewRecord {
   judgeGapsAccepted?: boolean; acceptedJudgeGaps?: import('../electron/independent-judge.js').JudgeGap[];
 }
 export interface Project extends BriefContext {
+  tokenUsage?: import('./token-usage.js').ProjectTokenUsage;
   archivedAt?: string;
   reviewHistory?: ReviewRecord[];
   processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };

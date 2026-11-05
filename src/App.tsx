@@ -11,6 +11,7 @@ import { SystemDesign } from './SystemDesign';
 import { ReviewWorkspace, DeliveryWorkspace } from './ReviewFlow';
 import { ModelSettings } from './ModelSettings';
 import { ModelSelector } from './ModelSelector';
+import { TokenUsage } from './TokenUsage';
 import { ClarificationNotice, ConversationToggle, ProjectConversation } from './ProjectConversation';
 import { BriefDataInputs, emptyDataInputEditor, includePastedInput, type DataInputEditor } from './BriefDataInputs';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -312,6 +313,7 @@ export default function App() {
         <div className="top-actions">
           {!isDesktop && <span className="preview-mode" title="Use the desktop app to run agents">Browser preview</span>}
           {p && !showHome && !globalView && <ConversationToggle project={p} open={conversationOpen} onClick={conversationOpen ? closeConversation : openConversation} buttonRef={conversationTrigger}/>}
+          <TokenUsage projects={state.projects}/>
           <ModelSelector data={{ ...data, state }} api={api} busy={busy} action={action} updated={updateBootstrap} desktop={isDesktop} openSettings={() => navigate('settings')}/>
           <IconButton label="Find challenge (⌘K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
           {showHome ? <button className="primary" onClick={() => createChallenge()}><Plus size={16}/>New challenge</button> : <IconButton label="New challenge" onClick={() => createChallenge()}><Plus size={20}/></IconButton>}

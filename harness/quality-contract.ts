@@ -1,6 +1,7 @@
 import type { AcceptanceCriterion } from './types.js';
 import type { BrowserJourney, BrowserStep, QualityPlan, UxScreen, UxSpec, UxSpecCommon, UxStructure } from '../shared/quality.js';
 import type { SolutionContract } from '../shared/solution.js';
+import { parseContractJson } from './solution-contract.js';
 
 const limits = { criteria: 512, journeys: 12, steps: 40, screens: 12, description: 4_000, selector: 512, value: 10_000 };
 
@@ -10,13 +11,20 @@ function object(value: unknown, name: string, keys: readonly string[]): Record<s
   if (!value || typeof value !== 'object' || Array.isArray(value) || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) {
     throw new Error(`${name} must be an object.`);
   }
-  for (const key of Object.keys(value)) if (!keys.includes(key)) throw new Error(`${name} has an unknown field: ${key}.`);
+  for (const key of Object.keys(value)) if (!keys.includes(key)) throw new Error(`${name} has an unknown field: ${key}. Allowed fields: ${keys.join(', ')}.`);
   return value as Record<string, unknown>;
 }
 
 function text(value: unknown, name: string, max = limits.description, allowEmpty = false): string {
   if (typeof value !== 'string' || value.length > max || (!allowEmpty && !value.trim())) {
-    throw new Error(`${name} must be ${allowEmpty ? 'a' : 'a nonempty'} string of at most ${max} characters.`);
+    const received = value === undefined ? 'a missing value' : value === null ? 'null' : Array.isArray(value) ? 'an array'
+      : typeof value === 'string' ? value.length > max ? `a ${value.length}-character string` : 'an empty or whitespace-only string'
+        : `a value of type ${typeof value}`;
+    const correction = typeof value === 'string' && value.length > max ? `Shorten this value to at most ${max} characters.`
+      : value === undefined ? 'Add this field with a JSON string value.'
+        : Array.isArray(value) ? 'Write one JSON string describing every intended list item; do not omit any requirements.'
+          : 'Write this value as a JSON string with the intended content.';
+    throw new Error(`${name} must be ${allowEmpty ? 'a' : 'a nonempty'} string of at most ${max} characters. Received ${received}. ${correction}`);
   }
   return value;
 }
@@ -33,7 +41,7 @@ function array(value: unknown, name: string, min: number, max: number): unknown[
 }
 
 function step(value: unknown, name: string): BrowserStep {
-  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName', 'path', 'method', 'status', 'screenId', 'fresh']);
+  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName', 'path', 'method', 'status', 'screenId', 'fresh', 'input', 'expected']);
   const action = text(entry.action, `${name}.action`, 32);
   const selector = () => text(entry.selector, `${name}.selector`, limits.selector).trim();
   const fields = (...keys: string[]) => object(value, name, ['action', ...keys]);
@@ -53,9 +61,12 @@ function step(value: unknown, name: string): BrowserStep {
     case 'press':
       fields('selector', 'key');
       return { action, selector: selector(), key: text(entry.key, `${name}.key`, 80) };
-    case 'reload':
+    case 'reload': case 'restartRuntime':
       fields();
       return { action };
+    case 'expectServiceState':
+      fields('input', 'expected');
+      return { action, input: parseContractJson(entry.input, `${name}.input`), expected: parseContractJson(entry.expected, `${name}.expected`) };
     case 'expectText':
       fields('selector', 'text');
       return { action, selector: selector(), text: text(entry.text, `${name}.text`, limits.value) };
@@ -162,7 +173,7 @@ export function assertPlannedRecoveryJourneys(journeys: BrowserJourney[]): void 
     if (journey.kind !== 'recovery') continue;
     let acted = false, observed = false, retried = false, outcome = false;
     for (const step of journey.steps) {
-      const action = ['fill', 'select', 'check', 'click', 'press', 'reload', 'expectDownload', 'expectHttpError'].includes(step.action);
+      const action = ['fill', 'select', 'check', 'click', 'press', 'reload', 'restartRuntime', 'expectDownload', 'expectHttpError'].includes(step.action);
       const observation = ['expectText', 'expectValue', 'expectVisible'].includes(step.action);
       const literal = step.action === 'expectText' || step.action === 'expectValue'
         || (step.action === 'expectDownload' && step.text !== undefined);
@@ -196,7 +207,7 @@ export function assertPlannedUxStructure(ux: UxSpec, journeys: BrowserJourney[],
     let currentScreen: string | undefined, interacted = false;
     for (const step of journey.steps) {
       if (step.action !== 'expectScreen') {
-        if (['fill', 'click', 'press', 'select', 'check', 'reload', 'expectDownload', 'expectHttpError'].includes(step.action)) interacted = true;
+        if (['fill', 'click', 'press', 'select', 'check', 'reload', 'restartRuntime', 'expectDownload', 'expectHttpError'].includes(step.action)) interacted = true;
         continue;
       }
       if (!screenIds.has(step.screenId)) throw new Error(`journeys[${index}] (${journey.id}) references an unknown screen: ${step.screenId}.`);
@@ -241,6 +252,9 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
   const inventory = new Set(acceptance.map(criterion => criterion.id));
   if (!inventory.size || inventory.size !== acceptance.length || inventory.size > limits.criteria) throw new Error('The acceptance inventory must have 1–512 unique criterion IDs.');
   const journeys = array(plan.journeys, 'journeys', plan.schemaVersion === 1 ? 2 : 0, limits.journeys).map((value, i) => journey(value, `journeys[${i}]`));
+  if (solution?.runtime.profile !== 'service' && journeys.some(journey => journey.steps.some(step => step.action === 'restartRuntime' || step.action === 'expectServiceState'))) {
+    throw new Error('restartRuntime and expectServiceState require a declared service runtime; static browser and CLI profiles do not support service lifecycle evidence.');
+  }
   if (solution?.runtime.profile !== 'cli' && plan.schemaVersion === 2 && !journeys.length) throw new Error('Browser and service delivery profiles require primary and recovery browser journeys.');
   if (solution?.runtime.profile === 'cli' && journeys.length) throw new Error('A CLI delivery profile cannot declare browser journeys. Use a browser or service profile for an interface.');
   const journeyIds = new Set(journeys.map(item => item.id));
@@ -399,6 +413,8 @@ Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"press","selector":"#title","key":"Enter"}
 - {"action":"check","selector":"#reviewed"}
 - {"action":"reload"}
+- {"action":"restartRuntime"}
+- {"action":"expectServiceState","input":{"action":"list"},"expected":{"tasks":["Inspect pump"]}}
 - {"action":"expectText","selector":"#result","text":"Saved: Inspect pump"}
 - {"action":"expectValue","selector":"#title","value":""}
 - {"action":"expectVisible","selector":"#validation-error"}
@@ -408,6 +424,8 @@ Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"expectDownload","selector":"#export","fileName":"records.csv","text":"Inspect pump"}
 
 expectText compares the exact visible innerText after whitespace normalization. expectValue compares the exact value. expectHidden requires an element to be hidden or absent. expectDownload captures the selected control once and reuses its file for further assertions on that selector until fill, click, select, press, check, reload or expectHttpError. Set fresh: true to require another capture without an edit. Every assertion checks the captured bytes; optional fileName must match the suggested filename exactly, and optional text is a literal substring of the UTF-8 file contents. expectHttpError clicks the selected control and requires a new same-origin fetch/XHR response at the exact path (including any query), method (GET, POST, PUT, PATCH or DELETE), and status (integer 400–499). Use it instead of click when deliberately submitting invalid input to a service. It excuses only the browser's resource diagnostic for that observed response. Follow it with an assertion of the visible error, correction/retry, and a literal successful outcome; an HTTP rejection alone does not demonstrate recovery. Unexpected requests, other failures and application console errors still fail. HTTP error paths are origin-relative, at most 1,000 characters, with no host, fragment or normalization. No evaluate, JavaScript, arbitrary goto/navigation steps, absolute URLs, arbitrary commands, timeouts or custom step fields are supported. Native application links and navigation controls ARE supported, including transitions between separate HTML pages or server routes; there is no single-page output requirement. Use local synthetic inputs. Values for fill and expectValue may be empty for validation/reset checks; all other strings must be nonempty. IDs start with a letter and contain letters, digits, underscores or hyphens (maximum 80 characters). Descriptions and expectedOutcome are at most 4,000 characters, titles 200, selectors 512, values/expected text 10,000, keys 80, filenames 255. At most 512 criteria are supported.
+
+restartRuntime and expectServiceState require a service runtime. restartRuntime has no arguments: the host stops and starts the actual application process in the same temporary package at the same URL, retaining its writable data and browser context, then reloads the page. This is distinct from reload, which retains process memory. expectServiceState invokes the declared service protocol directly from the host with input and compares the complete JSON response with expected; object key order is irrelevant and array order is exact. Each value must be finite ordinary JSON, at most 20 levels deep and 100,000 UTF-8 bytes. Use a read-only state operation from the public invocation protocol after a UI save and after restart to prove backend persistence independently of browser-local state. Follow with literal visible outcomes to prove the interface also recovers. Neither action accepts browser code, arbitrary commands, selectors or replacement expectations during implementation. Static browser and CLI plans cannot use these steps.
 
 Example shape (replace UCcustom-1 and add every remaining packet criterion; do not copy sample outcomes unless they describe the actual requested workflow):
 {
@@ -423,7 +441,7 @@ Example shape (replace UCcustom-1 and add every remaining packet criterion; do n
 
 For browser/service delivery, choose the interaction pattern before placing components: single-task for one focused action, steps for a guided sequence, list-detail for browsing and inspecting records, or workspace for distinct recurring tasks. Choose based on the requested workflow; a single focused screen remains valid. Separate unrelated tasks into focused views and put supporting controls behind purposeful disclosure. Multiple pages, server routes, client routes, tabs or step views are allowed. Do not render every planned screen as a permanently visible section of one long page.
 
-Version 2 requires structure (pattern, rationale, entryScreenId, navigation, persistentElements) and 1–12 screens. Every screen requires id, name, purpose, primaryAction, route, selector, layout, secondaryContent and narrowLayout. IDs, trimmed names and selectors are unique; routes may be shared by mutually exclusive tabs/steps. entryScreenId references the screen reached at launch. route is the exact application-relative path with optional query/fragment, at most 1,000 characters; no host, backslashes, whitespace, control characters or normalization. For a static browser delivery, the entry route is typically /index.html (matching runtime.entrypoint); for a service it is typically /. Exclude host-generated preview mount tokens from routes. selector is ordinary CSS for that screen's unique content root, not a persistent app shell, and cannot use Playwright selector chains. Other screen roots must be hidden or absent when that screen is active; place shared navigation/header outside them.
+Version 2 requires structure (pattern, rationale, entryScreenId, navigation, persistentElements) and 1–12 screens. Every structure field is a required JSON string; in particular, persistentElements is one prose string, not an array of elements. Describe every shared element and preserved state in that string. When no shared elements exist, say so explicitly instead of omitting the field or using an empty string, null or an empty array. Every screen requires id, name, purpose, primaryAction, route, selector, layout, secondaryContent and narrowLayout, each as a JSON string. Use the exact field name selector, never rootSelector. IDs, trimmed names and selectors are unique; routes may be shared by mutually exclusive tabs/steps. entryScreenId references the screen reached at launch. route is the exact application-relative path with optional query/fragment, at most 1,000 characters; no host, backslashes, whitespace, control characters or normalization. For a static browser delivery, the entry route is typically /index.html (matching runtime.entrypoint); for a service it is typically /. Exclude host-generated preview mount tokens from routes. selector is ordinary CSS for that screen's unique content root, not a persistent app shell, and cannot use Playwright selector chains. Other screen roots must be hidden or absent when that screen is active; place shared navigation/header outside them.
 
 Use layout as a rough textual sketch of regions, order, alignment and emphasis before implementation. secondaryContent specifies which optional controls/details are initially hidden and the control that reveals them (or explicitly says there are none). narrowLayout explains how that screen adapts without clipping or losing its primary action. navigation names real control labels and transitions, including return/back behavior. persistentElements describes shared shell controls and what survives changing views. Build the navigation and screen layout first, then populate the task-specific content. All descriptive fields are required nonempty strings up to 4,000 characters; names are at most 200, selectors 512 and IDs 80. Explicitly describe loading behavior even for immediate local operations. Use real task language and planned control labels. This two-page example is illustrative, not a screen-count or routing requirement:
 {

@@ -145,11 +145,12 @@ async function harness(t, options = {}) {
               components: [{ id: 'parser', label: 'Parser', description: 'Extract or reject task messages.', kind: 'logic', files: ['core.cjs'] }], connections: []
             });
             const packet = JSON.parse(await fs.readFile(path.join(this.cwd, '.fleet', 'packet.json'), 'utf8'));
-            const weak = options.initialWeak === true && (planCalls === 1 || options.correctOnRevision === false);
+            const weak = options.initialWeak === true && (planCalls <= (options.weakPlanCalls ?? 1) || options.correctOnRevision === false);
             plans.push(await writePlanningArtifacts(this.cwd, packet.acceptance, weak));
             await options.afterPlan?.(context(this));
           } else if (this.stage === 'planning-review') {
             const record = await reviewRecord(this);
+            if (record.verdict === 'revise' && options.reviseFindings) record.findings = options.reviseFindings(context(this));
             const result = await customTools.find(tool => tool.name === 'fleet_submit_planning_review').execute('review', record);
             assert.notEqual(result.isError, true, JSON.stringify(result));
             reviews.push(structuredClone(record));
@@ -888,4 +889,163 @@ test('an already frozen legacy checkpoint resumes implementation without retroac
   assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
   assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['build']);
   assert.equal((await h.checkpoint()).quality.hash, checkpoint.quality.hash);
+});
+
+for (const backend of ['pi', 'codex']) test(`${backend} continues planning with explicit authorization and reviews each correction before approval`, { timeout }, async t => {
+  const entered = deferred(), release = deferred();
+  const h = await harness(t, { backend, initialWeak: true, weakPlanCalls: 3,
+    reviseFindings: ({ reviewCalls }) => [`${gap} Independent review ${reviewCalls}.`],
+    onPrompt: async ({ stage, planCalls, reviewCalls, prompt, project }) => {
+      if (!['plan', 'planning-review'].includes(stage)) return false;
+      assert.equal(project.status, 'running', 'Review findings must keep planning running.');
+      assert.equal(project.stages.find(item => item.id === 'plan').status, 'active');
+      if (stage === 'plan' && planCalls > 1) {
+        const checkpoint = await assertUnfrozen(h);
+        assert.equal(checkpoint.planningReview.phase, 'revision', 'Persist each revision before invoking the planner.');
+        assert.equal(checkpoint.planningReview.revisionUsed, true);
+        assert.deepEqual(checkpoint.planningReview.review.findings, [`${gap} Independent review ${reviewCalls}.`]);
+        assert.ok(prompt.includes(`${gap} Independent review ${reviewCalls}.`), 'Each correction receives the newest findings.');
+      }
+      if (stage === 'planning-review') {
+        const checkpoint = await assertUnfrozen(h);
+        assert.equal(checkpoint.planningReview.phase, reviewCalls === 1 ? 'reviewing' : 'rereview');
+        if (reviewCalls === 4) { entered.resolve(); await release.promise; }
+      }
+      return false;
+    }
+  });
+  await h.run();
+  assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2);
+  assert.equal(h.project.status, 'failed');
+  await h.resume();
+  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3);
+  assert.equal(h.project.status, 'failed');
+  const running = h.resume();
+  await Promise.race([entered.promise, running.then(() => { throw new Error('Expected fourth independent review: ' + h.project.error); })]);
+  const pending = await assertUnfrozen(h);
+  assert.equal(pending.planningReview.phase, 'rereview');
+  assert.equal(h.project.status, 'running');
+  assert.equal(h.planCalls, 4); assert.equal(h.reviewCalls, 4);
+  assert.deepEqual(h.reviews.map(record => record.verdict), ['revise', 'revise', 'revise']);
+  release.resolve(); await running;
+  const approved = await assertReachedBuild(h);
+  assert.equal(approved.planningReview.revisionUsed, true);
+  assert.deepEqual(h.reviews.map(record => record.verdict), ['revise', 'revise', 'revise', 'approved']);
+  assert.equal(approved.quality.hash, h.plans[3].hash);
+  for (const stage of ['intake', 'research']) assert.equal(h.sessions.filter(session => session.stage === stage).length, 1);
+  const reviewers = h.sessions.filter(session => session.stage === 'planning-review');
+  assert.equal(new Set(reviewers).size, 4, 'Every revision gets a fresh independent reviewer.');
+  assert.ok(reviewers.every(session => session.disposed));
+});
+
+for (const backend of ['pi', 'codex']) test(`${backend} resumes legacy rejected planning with saved findings and fresh approval before freezing`, { timeout }, async t => {
+  const entered = deferred(), release = deferred(); let continuing = false, previousReview;
+  const options = { backend, initialWeak: true, correctOnRevision: false,
+    onPrompt: async ({ stage, workspace, prompt }) => {
+      if (!continuing) return false;
+      if (stage === 'plan') {
+        const checkpoint = await h.checkpoint();
+        assert.equal(checkpoint.planningReview.phase, 'revision');
+        assert.equal(checkpoint.planningReview.revisionUsed, true);
+        assert.deepEqual(checkpoint.planningReview.review, previousReview, 'Legacy continuation retains the last trusted findings.');
+        assert.ok(prompt.includes(gap));
+        assert.equal(await fs.readFile(path.join(workspace, 'plan.md'), 'utf8'), 'Implement extraction only; defer input rejection.');
+      }
+      if (stage === 'planning-review') { entered.resolve(); await release.promise; }
+      return false;
+    }
+  };
+  const h = await harness(t, options);
+  await h.run();
+  assert.match(h.project.error, /Independent planning review still requires changes/);
+  const rejected = await assertUnfrozen(h), { runId, workspace } = h.project;
+  rejected.planningReview.phase = 'rejected';
+  await fs.writeFile(h.checkpointFile(), JSON.stringify(rejected));
+  previousReview = rejected.planningReview.review;
+  const completedFiles = ['scope.md', 'research.md'];
+  const savedFiles = await Promise.all(completedFiles.map(file => fs.readFile(path.join(workspace, file), 'utf8')));
+  await fs.writeFile(path.join(workspace, 'saved-planning-note.md'), 'Keep this work for the next correction.');
+  const count = h.sessions.length;
+  continuing = true; options.correctOnRevision = true; options.failPlannerAfterReviews = undefined;
+  await h.restart();
+  assert.equal(h.sessions.length, count, 'Restart alone cannot dispatch planning work.');
+  const resumed = h.resume();
+  await Promise.race([entered.promise, resumed.then(() => { throw new Error('Expected fresh review before freeze: ' + h.project.error); })]);
+  const pending = await assertUnfrozen(h);
+  assert.equal(pending.planningReview.phase, 'rereview');
+  assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
+  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3);
+  assert.equal(h.project.status, 'running');
+  release.resolve(); await resumed;
+  const approved = await assertReachedBuild(h);
+  assert.equal(approved.planningReview.revisionUsed, true);
+  assert.deepEqual(h.reviews.map(record => record.verdict), ['revise', 'revise', 'approved']);
+  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['plan', 'planning-review', 'build']);
+  for (const stage of ['intake', 'research']) assert.equal(h.sessions.filter(session => session.stage === stage).length, 1);
+  assert.deepEqual(await Promise.all(completedFiles.map(file => fs.readFile(path.join(workspace, file), 'utf8'))), savedFiles);
+  assert.equal(await fs.readFile(path.join(workspace, 'saved-planning-note.md'), 'utf8'), 'Keep this work for the next correction.');
+  assert.notEqual(h.sessions.filter(session => session.stage === 'planning-review').at(-1), h.sessions.filter(session => session.stage === 'planning-review').at(-2));
+});
+
+for (const backend of ['pi', 'codex']) for (const interrupted of ['revision', 'rereview']) test(`${backend} restart during a later ${interrupted} resumes explicitly continued planning without replaying completed work`, { timeout }, async t => {
+  const entered = deferred(); let pause = true;
+  const h = await harness(t, { backend, initialWeak: true, weakPlanCalls: 2,
+    onPrompt: ({ stage, planCalls, reviewCalls }) => {
+      if (pause && (interrupted === 'revision' ? stage === 'plan' && planCalls === 3 : stage === 'planning-review' && reviewCalls === 3)) {
+        entered.resolve(); return never();
+      }
+      return false;
+    }
+  });
+  await h.run();
+  assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2);
+  await h.backend.resume(h.project.id); await entered.promise;
+  const { runId, workspace } = h.project;
+  const oldSession = h.sessions.at(-1);
+  await h.backend.stop(h.project.id);
+  assert.equal(h.project.status, 'stopped');
+  const stopped = await assertUnfrozen(h);
+  assert.equal(stopped.planningReview.phase, interrupted);
+  assert.equal(stopped.planningReview.revisionUsed, true);
+  assert.equal(stopped.planningReview.review.verdict, 'revise');
+  assert.equal(oldSession.aborts, 1); assert.equal(oldSession.disposed, true);
+  const count = h.sessions.length;
+  await setImmediate();
+  assert.equal(h.sessions.length, count, 'Cancellation must not dispatch another planning cycle.');
+  pause = false; await h.restart();
+  assert.equal(h.sessions.length, count, 'Restart preserves the interrupted state until resume.');
+  await h.resume();
+  const approved = await assertReachedBuild(h);
+  assert.equal(approved.planningReview.revisionUsed, true);
+  assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
+  assert.equal(h.planCalls, interrupted === 'revision' ? 4 : 3, 'Only an interrupted planner is replayed; rereview reuses completed planning work.');
+  assert.equal(h.reviewCalls, interrupted === 'revision' ? 3 : 4);
+  assert.deepEqual(h.reviews.map(record => record.verdict), ['revise', 'revise', 'approved']);
+  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), interrupted === 'revision'
+    ? ['plan', 'planning-review', 'build'] : ['planning-review', 'build']);
+  for (const stage of ['intake', 'research']) assert.equal(h.sessions.filter(session => session.stage === stage).length, 1);
+});
+
+test('scoped recovery preserves its own legacy rejected planning state', { timeout }, async t => {
+  const h = await harness(t, { initialWeak: true, correctOnRevision: false });
+  await h.run();
+  const rejected = await assertUnfrozen(h), count = h.sessions.length;
+  rejected.planningReview.phase = 'rejected';
+  // Exercise the shared resume path with a pinned scoped checkpoint. Its scoped
+  // planner owns that review state; ordinary recovery must not reopen it.
+  rejected.modelConfig = { backend: 'pi', provider: 'fixture', model: 'fixture' };
+  rejected.executionBudget = createExecutionBudget();
+  await fs.writeFile(h.checkpointFile(), JSON.stringify(rejected));
+  await h.restart();
+  let observed;
+  h.backend.options.scoped = { async plan() {
+    observed = structuredClone(h.backend.active.get(h.project.id).planningReview);
+    throw new Error('Fixture scoped planning remains paused.');
+  } };
+  await h.resume();
+  assert.deepEqual(observed, rejected.planningReview);
+  assert.deepEqual((await h.checkpoint()).planningReview, rejected.planningReview);
+  assert.equal(h.sessions.length, count, 'Scoped recovery cannot dispatch an ordinary planning correction.');
+  assert.ok(h.project.logs.some(log => /Fixture scoped planning remains paused/.test(log.text)), h.project.error);
+  await assertUnfrozen(h);
 });

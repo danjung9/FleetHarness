@@ -6,7 +6,7 @@
 
 AppYard has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
 
-The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
+The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with [bounded functional repair loops and an early executable user-workflow checkpoint](docs/functional-build-loop.md). Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
 Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities with full access, including self-hosted browsers and servers. Helpers inherit the run process marker for Stop and final cleanup.
 
@@ -17,6 +17,8 @@ Build and verification agents can [open and interact with their app](docs/agent-
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.
 
 Use **Data & storage** to browse current and previous builds, inspect and export files, archive projects, and clean up through recoverable Trash. See [storage and recovery](docs/data-storage.md) for scope and verification behavior.
+
+The **tokens** counter in the toolbar shows recorded workspace usage. Open it for each project's share, input/output counts, and cached input. Counts update during agent work and persist across builds; see [token usage](docs/token-usage.md) for coverage and limitations.
 
 Before handing off a change, run `npm run check`. It captures the current source and runs the frontend build, Electron and harness builds, foundation checksum validation, and both test suites in a private workspace. Logs, source hashes and results remain in `output/checks/`; shared build directories stay untouched. See [build validation](docs/build-validation.md) for prerequisites and result interpretation.
 

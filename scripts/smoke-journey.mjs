@@ -114,7 +114,7 @@ try {
   assert.equal(built.status, 'review', built.error);
   assert.equal(built.report.passed, 1);
   assert.equal(built.report.quality.status, 'passed');
-  assert.ok(built.logs.some(log => log.text.includes('Starting one Pi repair attempt')), 'The automatic repair loop must finish without a user checkpoint');
+  assert.ok(built.logs.some(log => log.text.includes('Starting functional final repair')), 'The automatic repair loop must finish without a user checkpoint');
   assert.equal(await page.locator('.build-flow').isVisible(), true, 'Completion preserves the current Build view until the reviewer continues');
   assert.equal(await progress.getByRole('button', { name: 'Review', exact: true }).getAttribute('aria-current'), 'step');
   await page.getByRole('button', { name: 'Review build', exact: true }).click();

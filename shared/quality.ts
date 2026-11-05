@@ -1,4 +1,4 @@
-import type { RuntimeManifest, SolutionEvaluationReport } from './solution.js';
+import type { JsonValue, RuntimeManifest, SolutionEvaluationReport } from './solution.js';
 
 export type BrowserStep =
   | { action: 'fill'; selector: string; value: string }
@@ -7,6 +7,8 @@ export type BrowserStep =
   | { action: 'press'; selector: string; key: string }
   | { action: 'check'; selector: string }
   | { action: 'reload' }
+  | { action: 'restartRuntime' }
+  | { action: 'expectServiceState'; input: JsonValue; expected: JsonValue }
   | { action: 'expectText'; selector: string; text: string }
   | { action: 'expectValue'; selector: string; value: string }
   | { action: 'expectVisible'; selector: string }
@@ -102,6 +104,9 @@ export interface JourneyResult {
   viewport: 'desktop' | 'narrow';
   status: 'passed' | 'failed';
   detail: string;
+  /** Host-observed progress; absent in reports created before lifecycle checks. */
+  completedSteps?: number;
+  totalSteps?: number;
   screenshot?: string;
   trace?: string;
 }

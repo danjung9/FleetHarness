@@ -10,10 +10,13 @@ import type { BriefDataSnapshot } from './brief-data.js';
 import type { QualityContract } from './quality.js';
 import { validateExecutionBudget } from './execution-budget.js';
 import type { PlanningReviewRecord } from './planning-review.js';
+import { validateFunctionalRepairState, type FunctionalRepairState } from './functional-repair.js';
 
-/** A stopped correction resumes the same revision; another rejection pauses until explicit ordinary continuation. */
+/** Each review can request another automatic revision; interruption preserves the pending work. */
 export interface PlanningReviewProgress {
+  /** rejected is retained for checkpoints saved before automatic review cycling. */
   phase: 'reviewing' | 'revision' | 'rereview' | 'rejected' | 'approved';
+  /** Historical marker for saved checkpoint compatibility, not a revision limit. */
   revisionUsed: boolean;
   review?: PlanningReviewRecord;
 }
@@ -40,7 +43,10 @@ export interface RunCheckpoint {
   foundation?: FoundationSnapshot;
   foundationPlan?: string;
   repairUsed?: boolean;
+  /** Host-owned functional repair allowances persist across interruption and resume. */
+  functionalRepair?: FunctionalRepairState;
   coreReportHash?: string;
+  workflowReportHash?: string;
   clarifications?: string;
   /** Exact answered-clarification bodies inherited from earlier planning attempts. */
   priorClarifications?: string[];
@@ -135,13 +141,16 @@ async function readCheckpoint(root: string, project: Project, planningContinuati
     }
     if (planningContinuation) {
       if (checkpoint.stage !== 'plan' || checkpoint.quality !== undefined || checkpoint.foundation !== undefined
-        || checkpoint.foundationPlan !== undefined || checkpoint.coreReportHash !== undefined
+        || checkpoint.foundationPlan !== undefined || checkpoint.coreReportHash !== undefined || checkpoint.workflowReportHash !== undefined
+        || checkpoint.functionalRepair !== undefined
         || checkpoint.modelConfig !== undefined || checkpoint.executionBudget !== undefined
         || checkpoint.planningReview?.phase === 'approved') {
         throw new Error('Only an ordinary, unfrozen planning checkpoint can continue with a revised brief.');
       }
     } else if (checkpoint.briefHash !== briefFingerprint(project)) throw new Error('The brief or attached inputs changed since this build started. Start a new build with the updated requirements.');
     if (checkpoint.executionBudget) validateExecutionBudget(checkpoint.executionBudget);
+    if (checkpoint.functionalRepair !== undefined) validateFunctionalRepairState(checkpoint.functionalRepair);
+    if (checkpoint.workflowReportHash !== undefined && !/^[a-f0-9]{64}$/.test(checkpoint.workflowReportHash)) throw new Error('Invalid primary workflow checkpoint evidence.');
     if (checkpoint.planningReview !== undefined) {
       const progress = checkpoint.planningReview, review = progress?.review;
       const invalidReview = review !== undefined && (!review || review.reviewerVersion !== 1

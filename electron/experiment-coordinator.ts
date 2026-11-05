@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Project } from '../shared/types.js';
+import type { ProjectTokenUsage } from '../shared/token-usage.js';
 import { stageDefinitions } from '../shared/types.js';
 import type { ArchitectureProfile, CandidateOutcome, CandidateRecord, ExperimentRecord, ExperimentSummary, LearningPartition,
   MemorySnapshot, PinnedModelConfig, PolicySnapshot, PreferenceRecord, PromotionAssessment, PromotionOutboxRecord } from '../shared/learning.js';
@@ -40,6 +41,8 @@ export interface ExperimentCoordinatorOptions {
   verifyCandidate(candidate: CandidateRecord): Promise<void>;
   /** Idempotently project the selected run into state.json, clearing earlier approval and exports. */
   applyPromotion(record: PromotionOutboxRecord): Promise<void>;
+  /** Merge host-observed usage into the parent independently of which candidate wins. */
+  recordUsage?(projectId: string, usage: ProjectTokenUsage | undefined): Promise<void>;
   notify?(): void;
   regressionCheck?(policy: PolicySnapshot): Promise<boolean>;
   random?: () => number;
@@ -57,6 +60,7 @@ export interface StartExperimentOptions {
 interface ActiveExperiment { controller: AbortController; done: Promise<void>; worker?: ExperimentWorker<unknown>; release: () => void | Promise<void> }
 const safeError = (error: unknown) => error instanceof Error ? error.message.slice(0, 1000) : 'The experiment failed.';
 const cloneProject = (source: Project, id: string): Project => ({ ...structuredClone(source), id, status: 'draft', stages: structuredClone(stageDefinitions), logs: [],
+  tokenUsage: undefined,
   runId: undefined, workspace: undefined, report: undefined, visualReview: undefined, systemDesign: undefined, resumeStage: undefined,
   approvedAt: undefined, exportedTo: undefined, executable: undefined, error: undefined, executionFailure: undefined,
   experiment: undefined, qualityVersion: undefined, runtimeProfile: undefined });
@@ -196,7 +200,8 @@ export class ExperimentCoordinator {
       const project = executionProjection(experiment.sharedExecutionState ?? cloneProject(experiment.sourceProject!, `shared-${id}`), resuming);
       const worker = await this.options.sharedPlanner({ experiment, project, modelConfig: experiment.modelConfig!, signal: active.controller.signal,
         saveProjection: async projection => {
-          this.store.updateExperiment(id, { sharedExecutionState: structuredClone(projection), sharedWorkspace: projection.workspace }); this.notify();
+          this.store.updateExperiment(id, { sharedExecutionState: structuredClone(projection), sharedWorkspace: projection.workspace });
+          await this.options.recordUsage?.(experiment.projectId, projection.tokenUsage); this.notify();
         } });
       const shared = await this.execute(worker, active, resuming, project);
       if (!shared.workspace || !shared.objectiveHash || !shared.taskFamily) throw new Error('Shared planning did not freeze a behavioral contract.');
@@ -236,7 +241,8 @@ export class ExperimentCoordinator {
           project, modelConfig: experiment.modelConfig!, signal: active.controller.signal,
           saveProjection: async projection => {
             this.store.updateCandidate(candidateId, { executionState: structuredClone(projection), workspace: projection.workspace,
-              stage: projection.stages.find(stage => stage.status === 'active')?.id ?? projection.resumeStage }); this.notify();
+              stage: projection.stages.find(stage => stage.status === 'active')?.id ?? projection.resumeStage });
+            await this.options.recordUsage?.(experiment.projectId, projection.tokenUsage); this.notify();
           } });
         const terminalFailure = project.status === 'failed' && (project.executionFailure === 'implementation' || project.executionFailure === 'budget');
         const result = await this.execute(worker, active, resuming, project, terminalFailure);

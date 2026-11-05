@@ -161,7 +161,9 @@ test('fresh production workers finalize SQLite-restored supplied-input projectio
   const outcome = await (await recover()).result();
   assert.equal(outcome.terminalReason, 'completed'); assert.equal(outcome.mandatoryPassed, true); assert.equal(outcome.requiredScopePassed, true);
   assert.equal(outcome.withinBudget, true); assert.equal(outcome.durationMs, checkpoint.executionBudget.consumedMs);
-  assert.equal(outcome.repairCount, Number(checkpoint.repairUsed === true));
+  assert.equal(outcome.repairCount, checkpoint.functionalRepair
+    ? Object.values(checkpoint.functionalRepair.gates).reduce((total, gate) => total + gate.attempts, 0)
+    : Number(checkpoint.repairUsed === true));
   assert.deepEqual(h.snapshots.get(candidate.id), projection, 'Collection preserves the completed run, workspace and report.');
   assert.deepEqual(h.store.getCandidate(candidate.id).executionState, projection, 'Collection preserves the durable completed projection.');
   assert.equal(await fs.readFile(checkpointPath, 'utf8'), checkpointBefore, 'Collection cannot reset the consumed budget or frozen model.');

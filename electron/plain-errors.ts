@@ -50,6 +50,13 @@ const messages = {
 } as const;
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
+  ['tests', /^Functional (?:core|workflow|final) repair (?:stopped|exhausted)/i],
+  ['recovery', /^(?:Invalid (?:saved |legacy )?functional repair|No active functional repair|Finish the current functional repair|Invalid primary workflow checkpoint evidence)/i],
+  ['plan', /^(?:Runtime files cannot include reserved writable state directory|restartRuntime and expectServiceState require|A primary browser workflow requires|The frozen plan has no primary user workflow)/i],
+  ['tool', /^(?:restartRuntime requires a host-managed|expectServiceState requires a host-managed|fleet_validate_plan takes an empty object)/i],
+  ['changed', /^(?:Service state must stay in its ordinary runtime data directory|Application files changed during the primary workflow checkpoint)/i],
+  ['preview', /^(?:The runtime service is restarting|Runtime broker is restarting|Runtime broker request interrupted by service restart)/i],
+  ['timeout', /^(?:Runtime broker exhausted its execution budget|This candidate exhausted its frozen execution budget)/i],
   ['comparison-retry', /Planning files are saved\. Resume comparison/i],
   ['planning-retry', /Planning files are saved\. Resume planning|did not submit a planning verdict|Independent planning review did not produce a verdict/i],
   ['planning-review', /^Independent planning review still requires changes/i],

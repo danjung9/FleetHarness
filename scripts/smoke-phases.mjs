@@ -42,6 +42,7 @@ try {
   assert.equal(project.report.passed, 1);
   const { phases, sessions } = assertFixturePhaseRequests(project, fixture.requests);
   assert.ok(project.logs.some(log => log.text.includes('Starting one Pi repair attempt')));
+  assert.ok(project.logs.some(log => log.text.includes('Starting functional final repair')));
   console.log(JSON.stringify({ passed: true, phases, sessions, globalTools: project.globalTools, exactToolSelection: true, repair: true, passingApplicationTests: project.report.passed }));
 } finally {
   await backend?.stopAll();

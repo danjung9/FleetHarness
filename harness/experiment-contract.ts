@@ -3,7 +3,7 @@ import type { AcceptanceCriterion } from './types.js';
 import type { BehavioralContract, BehavioralScenario, BrowserNavigation, BrowserStepBinding, CandidateExecutionContract, SemanticBrowserStep } from '../shared/experiment-contract.js';
 import type { BrowserJourney, BrowserStep, QualityPlan, UxSpec } from '../shared/quality.js';
 import type { EvaluationPlan, SolutionContract } from '../shared/solution.js';
-import { parseSolutionContract, parseEvaluationPlan } from './solution-contract.js';
+import { parseSolutionContract, parseEvaluationPlan, parseContractJson } from './solution-contract.js';
 import { assertPlannedCapabilityEvidence, assertPlannedRecoveryJourneys, assertPlannedUxStructure, parseQualityPlan, parseUxSpec } from './quality-contract.js';
 import { validateFoundationPlan } from './foundations.js';
 import { parseSystemDefinition } from '../shared/system-design.js';
@@ -69,12 +69,15 @@ export function experimentContractHash(value: unknown): string { return digest(c
 export function experimentContractBody(value: unknown): string { return JSON.stringify(value, null, 2) + '\n'; }
 
 function semanticStep(value: unknown, name: string): SemanticBrowserStep {
-  const step = object(value, name, ['id', 'action', 'value', 'text', 'fileName']);
+  const step = object(value, name, ['id', 'action', 'value', 'text', 'fileName', 'input', 'expected']);
   const stepId = id(step.id, `${name}.id`), action = step.action;
   const fields = (...keys: string[]) => object(value, name, ['id', 'action', ...keys]);
   switch (action) {
     case 'input': case 'expectValue': fields('value'); return { id: stepId, action, value: text(step.value, `${name}.value`, 10_000, true) };
-    case 'activate': case 'check': case 'reload': case 'expectVisible': fields(); return { id: stepId, action };
+    case 'activate': case 'check': case 'reload': case 'restartRuntime': case 'expectVisible': fields(); return { id: stepId, action };
+    case 'expectServiceState':
+      fields('input', 'expected');
+      return { id: stepId, action, input: parseContractJson(step.input, `${name}.input`), expected: parseContractJson(step.expected, `${name}.expected`) };
     case 'expectText': fields('text'); return { id: stepId, action, text: text(step.text, `${name}.text`, 10_000) };
     case 'expectDownload': {
       fields('text', 'fileName');
@@ -84,7 +87,7 @@ function semanticStep(value: unknown, name: string): SemanticBrowserStep {
   }
 }
 function defaultBinding(step: SemanticBrowserStep): BrowserStepBinding {
-  return { stepId: step.id, ...(step.action === 'reload' ? {} : { selector: '#shared-outcome' }),
+  return { stepId: step.id, ...(['reload', 'restartRuntime', 'expectServiceState'].includes(step.action) ? {} : { selector: '#shared-outcome' }),
     ...(step.action === 'input' ? { action: 'fill' as const } : step.action === 'activate' ? { action: 'click' as const } : {}) };
 }
 function compileStep(step: SemanticBrowserStep, binding: BrowserStepBinding): BrowserStep[] {
@@ -93,7 +96,8 @@ function compileStep(step: SemanticBrowserStep, binding: BrowserStepBinding): Br
   switch (step.action) {
     case 'input': main = { action: binding.action as 'fill' | 'select', selector, value: step.value }; break;
     case 'activate': main = binding.action === 'press' ? { action: 'press', selector, key: binding.key! } : { action: 'click', selector }; break;
-    case 'reload': main = { action: 'reload' }; break;
+    case 'reload': case 'restartRuntime': main = { action: step.action }; break;
+    case 'expectServiceState': main = { action: step.action, input: structuredClone(step.input), expected: structuredClone(step.expected) }; break;
     case 'expectText': main = { action: 'expectText', selector, text: step.text }; break;
     case 'expectValue': main = { action: 'expectValue', selector, value: step.value }; break;
     case 'expectDownload': main = { action: 'expectDownload', selector, ...(step.fileName === undefined ? {} : { fileName: step.fileName }), ...(step.text === undefined ? {} : { text: step.text }) }; break;
@@ -107,7 +111,9 @@ function qualityPlan(behavior: BehavioralContract, journeys: BrowserJourney[]): 
 function solutionFor(behavior: Pick<BehavioralContract, 'objective' | 'capabilities' | 'invocation'>, runtime: SolutionContract['runtime']): SolutionContract {
   return { schemaVersion: 1, objective: behavior.objective, invocation: structuredClone(behavior.invocation), capabilities: structuredClone(behavior.capabilities), runtime: structuredClone(runtime) };
 }
-const placeholderRuntime = (surface: 'browser' | 'cli'): SolutionContract['runtime'] => surface === 'cli'
+const placeholderRuntime = (surface: 'browser' | 'cli', service = false): SolutionContract['runtime'] => service
+  ? { profile: 'service', files: ['server.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'server.mjs', args: [] }, healthPath: '/health', invokePath: '/invoke' }
+  : surface === 'cli'
   ? { profile: 'cli', files: ['engine.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } }
   : { profile: 'browser', files: ['index.html', 'engine.mjs'], requiredEnv: [], entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
 
@@ -129,8 +135,6 @@ export function parseBehavioralContract(value: unknown, acceptance: AcceptanceCr
     if (raw.network === 'offline' && operationIds.length || raw.network === 'configured-services' && (profiles.includes('browser-js') || !operationIds.length)) throw new Error('External operations require configured service or CLI profiles.');
     delivery = { profiles: profiles as NonNullable<BehavioralContract['delivery']>['profiles'], network: raw.network, operationIds };
   }
-  const solution = parseSolutionContract({ schemaVersion: 1, objective: item.objective, invocation: item.invocation, capabilities: item.capabilities, runtime: placeholderRuntime(item.surface) }, acceptance);
-  if (!solution.invocation) throw new Error('A shared public invocation protocol is required.');
   const scenarios = array(item.scenarios, 'scenarios', item.surface === 'browser' ? 2 : 0, item.surface === 'browser' ? 12 : 0).map((raw, i): BehavioralScenario => {
     const name = `scenarios[${i}]`, scenario = object(raw, name, ['id', 'title', 'kind', 'steps']);
     if (scenario.kind !== 'primary' && scenario.kind !== 'recovery') throw new Error(`${name}.kind must be primary or recovery.`);
@@ -139,6 +143,12 @@ export function parseBehavioralContract(value: unknown, acceptance: AcceptanceCr
     return { id: id(scenario.id, `${name}.id`), title: text(scenario.title, `${name}.title`, 200), kind: scenario.kind, steps };
   });
   unique(scenarios.map(scenario => scenario.id), 'Scenarios');
+  const serviceLifecycle = scenarios.some(scenario => scenario.steps.some(step => step.action === 'restartRuntime' || step.action === 'expectServiceState'));
+  if (serviceLifecycle && (!delivery || delivery.profiles.some(profile => profile !== 'node-service' && profile !== 'python-service'))) {
+    throw new Error('restartRuntime and expectServiceState require an explicit shared delivery contract permitting only node-service and/or python-service profiles.');
+  }
+  const solution = parseSolutionContract({ schemaVersion: 1, objective: item.objective, invocation: item.invocation, capabilities: item.capabilities, runtime: placeholderRuntime(item.surface, serviceLifecycle) }, acceptance);
+  if (!solution.invocation) throw new Error('A shared public invocation protocol is required.');
   const criteria = array(item.criteria, 'criteria', 1, 512).map((raw, i) => {
     const entry = object(raw, `criteria[${i}]`, ['criterionId', 'disposition', 'expectedOutcome', 'capabilityIds', 'scenarioIds', 'reason', 'syntheticCoverage']);
     return { ...entry, journeyIds: entry.scenarioIds, scenarioIds: undefined };
@@ -172,7 +182,7 @@ function binding(value: unknown, step: SemanticBrowserStep, name: string, struct
   const item = object(value, name, ['stepId', 'selector', 'action', 'key', 'before', ...screenFields]);
   if (item.stepId !== step.id) throw new Error(`${name} must bind the exact shared step in order: ${step.id}.`);
   const screen = item.screenId === undefined ? {} : { screenId: id(item.screenId, `${name}.screenId`) };
-  if (step.action === 'reload') { object(value, name, ['stepId', ...screenFields]); return { stepId: step.id, ...screen }; }
+  if (['reload', 'restartRuntime', 'expectServiceState'].includes(step.action)) { object(value, name, ['stepId', ...screenFields]); return { stepId: step.id, ...screen }; }
   const result: BrowserStepBinding = { stepId: step.id, selector: text(item.selector, `${name}.selector`, 512).trim(), ...screen };
   if (step.action === 'input') {
     if (item.action !== 'fill' && item.action !== 'select') throw new Error(`${name} must bind input with fill or select.`);
@@ -262,7 +272,8 @@ behavior-contract.json has exactly schemaVersion:1, objective, invocation:{input
 Use the solution-contract guide's capability and invocation schemas. Every capability has id, kind, description, criterionIds, required, evaluationIds. Every original acceptance criterion occurs once in criteria with criterionId, disposition (implemented or deferred), expectedOutcome, capabilityIds, scenarioIds, and reason only when needed. Deferral decisions are shared: candidates cannot change them. Required capabilities cannot be deferred. Primary deferrals also require the quality guide's syntheticCoverage, using shared scenario IDs as journeyIds. Preserve its explicit assumptions, source-quoted output names and primary assertions through candidate compilation.
 surface browser permits browser or Node/Python service architectures; cli requires CLI delivery. A required interface cannot be omitted by selecting CLI.
 ux has audience, primaryTask, successOutcome, states:{empty,loading,error,success}, persistence, recovery, keyboard. Describe required behavior; candidate planners choose screens and design.
-scenarios is empty for cli. For browser provide 2–12 scenarios, at least one primary and one recovery; every scenario is referenced by criteria. Each has id,title,kind and 2–40 ordered steps with unique id fields. Steps are {id,action:"input",value}, {id,action:"activate"}, {id,action:"check"}, {id,action:"reload"}, {id,action:"expectVisible"}, {id,action:"expectText",text}, {id,action:"expectValue",value}, or {id,action:"expectDownload",fileName?,text?}. No selectors here. Use semantic step IDs explaining the target, e.g. duration-input, submit-schedule, computed-total. Include an activation and subsequent assertion; primary scenarios require a literal outcome. Shared inputs and exact expected visible atomic results are common to all designs. Recovery should observe a failure, correct it, and verify success.
+scenarios is empty for cli. For browser provide 2–12 scenarios, at least one primary and one recovery; every scenario is referenced by criteria. Each has id,title,kind and 2–40 ordered steps with unique id fields. Steps are {id,action:"input",value}, {id,action:"activate"}, {id,action:"check"}, {id,action:"reload"}, {id,action:"restartRuntime"}, {id,action:"expectServiceState",input,expected}, {id,action:"expectVisible"}, {id,action:"expectText",text}, {id,action:"expectValue",value}, or {id,action:"expectDownload",fileName?,text?}. No selectors here. Use semantic step IDs explaining the target, e.g. duration-input, submit-schedule, computed-total. Include an activation and subsequent assertion; primary scenarios require a literal outcome. Shared inputs and exact expected visible atomic results are common to all designs. Recovery should observe a failure, correct it, and verify success.
+restartRuntime and expectServiceState require explicit delivery.profiles restricted to node-service and/or python-service. The host restarts the actual process while retaining writable data, URL and browser context, then reloads. The host state assertion invokes the public service protocol directly and compares the complete expected JSON, independently of browser storage. input and expected each use the solution guide's bounded finite JSON rules (100,000 bytes, 20 levels). Use read-only state operations and assert backend state plus visible results after restart. Candidates bind these steps with stepId and optional screenId only; selectors, code, commands and replacement input/expected values are forbidden.
 evaluation-plan.json uses the existing solution evaluation schema: independently derived cases, host evaluator IDs, versioned datasets, thresholds and trials. Its capability/evaluation IDs must match the shared capabilities. This file is host-only after shared planning. Never copy its input/answer pairs into the public behavior contract or planning prose. Use the public invocation protocol to document complete behavior instead. Do not write foundation-plan.json, solution-contract.json, acceptance-plan.json, ux-spec.json or system-design.json during this shared step.`;
 
 export function candidateExecutionGuide(behaviorHash: string, architectureId: string): string {

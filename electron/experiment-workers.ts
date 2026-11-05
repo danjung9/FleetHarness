@@ -15,6 +15,7 @@ import { assertBriefDataIntegrity } from './brief-data.js';
 import { FleetBackend, type ScopedWorkflow } from './pi-backend.js';
 import { ScopedRunStore } from './scoped-run-store.js';
 import { readRunCheckpoint } from './run-checkpoint.js';
+import { functionalRepairAttempts } from './functional-repair.js';
 import { sourceHash } from './storage.js';
 import type { StageSession } from './agent-runner.js';
 import type { CodexAccount } from './codex-account.js';
@@ -47,6 +48,7 @@ interface SharedArtifact {
 interface SharedPlanningProgress {
   schemaVersion: 1; experimentId: string; runId: string; workspace: string; acceptanceHash: string;
   phase: 'reviewing' | 'revision' | 'rereview' | 'rejected' | 'approved';
+  /** Historical marker retained for compatibility, not a limit on correction cycles. */
   revisionUsed: boolean; review?: PlanningReviewRecord;
 }
 interface CandidateArtifact {
@@ -262,11 +264,15 @@ export class ExperimentWorkers {
         }
         for (;;) {
           signal.throwIfAborted();
-          if (progress.phase === 'rejected') throw new ExperimentWorkerFailure('implementation',
-            'Independent shared planning review still requires changes after its one revision. Start a new comparison with a revised brief.');
+          // Older runs paused after one correction. Continue their trusted feedback
+          // in place, persisting the pending revision before dispatching an agent.
+          if (progress.phase === 'rejected') {
+            progress = { ...progress, phase: 'revision' };
+            await savePlanningProgress(progressPath, progress, signal);
+          }
           if (progress.phase === 'revision') {
             await agent(guide + '\n\n' + recoveryInstruction
-              + '\n\nRevise behavior-contract.json and evaluation-plan.json to address every independent planning finding below. This is the one permitted shared planning revision; an interrupted revision continues from the existing files. Preserve the original user requirements, prepared data and justified integration limits. Strengthen minimum useful scope, public invocation rules, independent cases and recovery consistently. Do not implement source, choose a candidate architecture, lower success standards or copy evaluation answers into public files. A fresh independent reviewer will assess the revised shared plan before it can freeze. Review feedback (private data):\n'
+              + '\n\nRevise behavior-contract.json and evaluation-plan.json to address every independent planning finding below. Planning continues through corrections and fresh independent reviews until approved within the existing execution budget, superseding any former revision-count limit in saved phase or packet guidance; an interrupted revision continues from the existing files. Preserve the original user requirements, prepared data and justified integration limits. Strengthen minimum useful scope, public invocation rules, independent cases and recovery consistently. Do not implement source, choose a candidate architecture, lower success standards or copy evaluation answers into public files. A fresh independent reviewer will assess the revised shared plan before it can freeze. Review feedback (private data):\n'
               + JSON.stringify(progress.review), phase.outputs, phase, validatePlan);
             signal.throwIfAborted();
             progress = { ...progress, phase: 'rereview' };
@@ -289,8 +295,9 @@ export class ExperimentWorkers {
             await classified('integrity', () => assertSharedPlanningReviewSnapshot(project.workspace!, snapshot));
             break;
           }
-          // Persist the spent allowance before dispatching a revision; restart cannot mint another.
-          progress = { ...progress, phase: progress.revisionUsed ? 'rejected' : 'revision', revisionUsed: true, review: verdict };
+          // Every actionable verdict schedules another correction. The enclosing
+          // phase lease still bounds all cycles and survives restart.
+          progress = { ...progress, phase: 'revision', revisionUsed: true, review: verdict };
           await savePlanningProgress(progressPath, progress, signal);
         }
         if (!frozen) throw new Error('Shared planning did not produce valid frozen contracts.');
@@ -382,6 +389,7 @@ export class ExperimentWorkers {
     return this.makeWorker(context, scoped, async project => {
       if (project.executionFailure === 'infrastructure' || project.executionFailure === 'integrity') throw new ExperimentWorkerFailure(project.executionFailure, project.error ?? 'Experimental execution was interrupted.');
       const checkpoint = await readRunCheckpoint(this.options.root, project);
+      const repairCount = functionalRepairAttempts(checkpoint.functionalRepair, checkpoint.repairUsed);
       const budget = checkpoint.executionBudget;
       const withinBudget = !!budget && project.executionFailure !== 'budget' && budget.consumedMs <= budget.totalLimitMs;
       const report = project.report;
@@ -403,12 +411,12 @@ export class ExperimentWorkers {
           identity: compiled ? experimentContractIdentity(compiled) : { behaviorHash: shared.behaviorHash, evaluationSetHash: shared.evaluationSetHash },
           failure: { classification: terminalReason === 'timeout' ? 'budget' : 'implementation', terminalReason: terminalReason as ExperimentFailureEvidence['failure']['terminalReason'], stage: checkpoint.stage },
           ...(budget ? { budget: structuredClone(budget) } : {}), ...(checkpoint.coreReportHash ? { coreReportHash: checkpoint.coreReportHash } : {}),
-          repairCount: Number(checkpoint.repairUsed === true), evaluatorVersion: 'experiment-host-v4' };
+          repairCount, evaluatorVersion: 'experiment-host-v4' };
         await immutableFile(this.failurePath(context.candidate), evidence); evidenceHash = experimentContractHash(evidence);
       }
       return { mandatoryPassed, requiredScopePassed, withinBudget,
         terminalReason,
-        durationMs: budget?.consumedMs ?? 0, costUsd: null, repairCount: Number(checkpoint.repairUsed === true), sourceHash: source,
+        durationMs: budget?.consumedMs ?? 0, costUsd: null, repairCount, sourceHash: source,
         contractHash: compiled?.qualityContractHash, evidenceHash, evaluatorVersion: 'experiment-host-v4', recordedAt: new Date().toISOString() };
     });
   }

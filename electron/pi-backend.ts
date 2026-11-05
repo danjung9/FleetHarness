@@ -3,6 +3,7 @@ import { constants as fsConstants, promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { performance } from 'node:perf_hooks';
 import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { summarizeToolResult } from '../shared/activity.js';
@@ -17,7 +18,10 @@ import { createCandidatePermissionProfile } from './isolated-executor.js';
 import { ClassifiedExecutionFailure } from './execution-failure.js';
 import { prepareSolutionRuntime } from './solution-runtime.js';
 import { runSolutionEvaluation } from './solution-evaluation.js';
-import { retainCoreReport, restoreCoreReport } from './core-evidence.js';
+import { retainCoreReport, restoreCoreReport, retainWorkflowReport, restoreWorkflowReport } from './core-evidence.js';
+import { verifyPrimaryWorkflow, workflowRepairObservation } from './workflow-checkpoint.js';
+import { createFunctionalRepairState, beginFunctionalRepair, finishFunctionalRepair, recoverFunctionalRepair,
+  solutionRepairObservation, verificationRepairObservation, type FunctionalRepairState, type RepairObservation, type FunctionalRepairGate } from './functional-repair.js';
 import type { AcceptanceCriterion } from '../harness/types.js';
 import { runAgentStage, stoppedMessage, sumTokenUsage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
@@ -39,7 +43,7 @@ import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
 const judgeRepairCopy = { recursive: true, force: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fsConstants.COPYFILE_FICLONE };
-type ActiveRun = { planningReview?: PlanningReviewProgress; repairUsed?: boolean; coreReportHash?: string; priorClarifications?: string[]; executionBudget?: ExecutionBudgetState; budgetTimer?: ReturnType<typeof setTimeout>; modelConfig?: { backend: AgentBackend; provider: string; model: string }; answerCorrections?: AnswerCorrection[]; judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { finalizing?: boolean; finished?: boolean; checkpointWrites?: Promise<void>; repairLease?: RepairLease; functionalRepair?: FunctionalRepairState; workflowReportHash?: string; coreObservation?: RepairObservation; planningReview?: PlanningReviewProgress; repairUsed?: boolean; coreReportHash?: string; priorClarifications?: string[]; executionBudget?: ExecutionBudgetState; budgetTimer?: ReturnType<typeof setTimeout>; modelConfig?: { backend: AgentBackend; provider: string; model: string }; answerCorrections?: AnswerCorrection[]; judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', (p.dataInputs ?? []).map(({ name, kind, content }) => ({ name, kind, content })), p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData.map(({ id, digest, includeInApp }) => ({ id, digest, includeInApp }))] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -64,7 +68,19 @@ import type { VisualReviewReport } from '../shared/visual-review.js';
 import { briefFingerprint, readRunCheckpoint, writeRunCheckpoint, type RunCheckpoint, type PlanningReviewProgress } from './run-checkpoint.js';
 import { createPlanningReviewSnapshot, assertAnyPlanningReviewSnapshot, PlanningReviewLedger, planningReviewInstructions, sharedPlanningReviewInstructions, type AnyPlanningReviewSnapshot, type PlanningReviewRecord } from './planning-review.js';
 import { createPlanningReviewProgress } from './planning-review-progress.js';
+import { tokenUsageRecorder } from './token-usage.js';
 import { readPlanningContinuation, copyPlanningContinuation, getPlanningContinuationClarifications } from './planning-continuation.js';
+import { qualityContractGuide } from '../harness/quality-contract.js';
+import { createPlanningValidationTool, validatePlanningArtifacts } from './planning-validation.js';
+
+// Saved packets retain their original bytes and may predate the host's validator.
+// Give unfrozen planners the guide from the same build as that validator instead
+// of requiring them to infer a new schema one failed completion at a time.
+const currentPlanningContractInstructions = 'Current host planning contract: the following guide matches the validator running this session. '
+  + 'For unfrozen planning artifacts, it supersedes conflicting schema examples in the saved .fleet/quality-contract.md. '
+  + 'Keep .fleet and requirements.md unchanged. Preserve the saved plan and its required behaviors while correcting the contracts. '
+  + 'After writing or correcting the planning JSON files, call fleet_validate_plan and fix every reported problem until it passes before finishing your turn. '
+  + 'Validation is read-only and does not approve or freeze the plan; the independent planning review still follows.\n\n' + qualityContractGuide;
 
 async function publishFile(destination: string, body: string, stagingDirectory = path.dirname(destination)) {
   const temporary = path.join(stagingDirectory, '.evaluation-' + randomUUID() + '.tmp');
@@ -83,6 +99,7 @@ function duringPreparation<T>(operation: Promise<T>, signal: AbortSignal): Promi
   });
 }
 
+type RepairLease = { started: number; timer?: ReturnType<typeof setTimeout>; settled: boolean };
 export interface ScopedPlanningContext {
   project: Project;
   acceptance: AcceptanceCriterion[];
@@ -189,28 +206,37 @@ export class FleetBackend {
     metrics.agentAttempts++;
     metrics.inferenceDurationMs += measured.durationMs;
   }
-  private async checkpoint(p: Project, run: ActiveRun, stage = run.checkpointStage, signal?: AbortSignal) {
+  private async checkpoint(p: Project, run: ActiveRun, stage = run.checkpointStage, signal?: AbortSignal, finalizing = false) {
+    if (run.finished || (run.finalizing && !finalizing)) return;
     if (!stage || !run.data || !run.phases || !run.globalTools || !run.acceptance || run.requirements === undefined || !run.packetHash || !run.context || !run.briefHash) return;
     const checkpoint: RunCheckpoint = { version: 1, projectId: p.id, runId: p.runId!, workspace: p.workspace!, briefHash: run.briefHash, stage,
       context: run.context, phases: run.phases, globalTools: run.globalTools, packetHash: run.packetHash, requirements: run.requirements,
       acceptance: run.acceptance, data: run.data, quality: run.quality, foundation: run.foundation,
       foundationPlan: run.foundationPlan, planningAudit: run.planningAudit, planningSnapshot: run.planningSnapshot,
       planningReview: run.planningReview, repairUsed: run.repairUsed, coreReportHash: run.coreReportHash,
+      functionalRepair: run.functionalRepair, workflowReportHash: run.workflowReportHash,
       executionBudget: run.executionBudget, modelConfig: run.modelConfig, priorClarifications: run.priorClarifications,
       clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview, answerCorrections: run.answerCorrections };
-    await writeRunCheckpoint(this.store.root, p, checkpoint, signal);
-    signal?.throwIfAborted();
-    run.checkpointStage = stage;
-    p.resumeStage = stage;
+    const write = (run.checkpointWrites ?? Promise.resolve()).catch(() => {}).then(async () => {
+      if (run.finished || (run.finalizing && !finalizing)) return;
+      await writeRunCheckpoint(this.store.root, p, checkpoint, signal);
+      signal?.throwIfAborted();
+      run.checkpointStage = stage;
+      if (!finalizing || p.status === 'failed' || p.status === 'stopped') p.resumeStage = stage;
+    });
+    run.checkpointWrites = write;
+    await write;
   }
-  private check(run: ActiveRun) { if (run.controller.signal.aborted) throw run.controller.signal.reason instanceof ExecutionBudgetExceeded ? run.controller.signal.reason : new Error(stoppedMessage); }
+  private check(run: ActiveRun) { if (run.controller.signal.aborted) throw (run.controller.signal.reason instanceof ExecutionBudgetExceeded || run.controller.signal.reason instanceof ClassifiedExecutionFailure) ? run.controller.signal.reason : new Error(stoppedMessage); }
   private async finish(p: Project, run: ActiveRun, saveTimeoutMs?: number) {
+    run.finalizing = true;
     clearTimeout(run.budgetTimer);
+    if (run.repairLease) this.settleFunctionalRepair(run, run.repairLease);
     p.verification = undefined;
     try {
       await run.processes.stop();
       if (p.processScope && p.processScope.marker === run.processes.marker && p.processScope.runId === p.runId) p.processScope.cleanup = 'confirmed';
-      p.status = run.controller.signal.aborted && !(run.controller.signal.reason instanceof ExecutionBudgetExceeded) ? 'stopped' : run.outcome ?? 'failed';
+      p.status = run.controller.signal.aborted && !(run.controller.signal.reason instanceof ExecutionBudgetExceeded || run.controller.signal.reason instanceof ClassifiedExecutionFailure) ? 'stopped' : run.outcome ?? 'failed';
       if (p.status === 'stopped') {
         if (p.runCheckpoint?.writerState !== 'unconfirmed') recordProjectError(p, new Error(stoppedMessage), detail => this.log(p, 'verify', 'error', detail));
         p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
@@ -242,7 +268,7 @@ export class FleetBackend {
     }
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const saving = (async () => { if (run.executionBudget?.active) { finishExecutionPhase(run.executionBudget); await this.checkpoint(p, run); } await this.options.clarifications?.cancel(p, p.runId!); await this.changed(p); })().then(() => true);
+      const saving = (async () => { if (run.executionBudget?.active) finishExecutionPhase(run.executionBudget); await this.checkpoint(p, run, undefined, undefined, true); await this.options.clarifications?.cancel(p, p.runId!); await this.changed(p); })().then(() => true);
       // Store owns serialized writes. Keep the existing write queued, but release
       // a refused startup even if persistence is stuck. Promise.race also handles
       // a late rejection without mutating a subsequent run's status or errors.
@@ -262,6 +288,7 @@ export class FleetBackend {
       p.stages.filter(stage => stage.status === 'active' || stage.status === 'review').forEach(stage => { stage.status = 'failed'; });
     } finally {
       clearTimeout(timer);
+      run.finished = true;
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
       this.notify();
@@ -282,9 +309,9 @@ export class FleetBackend {
       // Starting an iteration must not replace the reviewable build when setup fails.
       // Preserve conversation messages that may have arrived while model auth was checked.
       if (p.processScope && p.processScope.cleanup !== 'confirmed') throw error;
-      const conversation = p.conversation;
+      const conversation = p.conversation; const tokenUsage = p.tokenUsage;
       for (const key of Object.keys(p)) delete (p as unknown as Record<string, unknown>)[key];
-      Object.assign(p, previous, { conversation });
+      Object.assign(p, previous, { conversation, tokenUsage });
       this.log(p, 'review', 'error', plainError(error).detail);
       await this.store.save(); this.notify();
       const message = error instanceof Error && error.cause ? error.message : plainError(error).message;
@@ -530,6 +557,9 @@ export class FleetBackend {
     run.planningAudit = saved?.planningAudit;
     run.planningSnapshot = saved?.planningSnapshot;
     run.planningReview = saved?.planningReview; run.coreReportHash = saved?.coreReportHash;
+    run.workflowReportHash = saved?.workflowReportHash;
+    run.functionalRepair = saved?.functionalRepair ?? createFunctionalRepairState({ legacyRepairUsed: saved?.repairUsed, legacyGate: saved?.stage === 'verify' ? 'final' : 'core' });
+    recoverFunctionalRepair(run.functionalRepair);
     run.executionBudget = saved?.executionBudget; run.modelConfig = saved?.modelConfig;
     run.repairUsed = this.options.scoped ? saved?.repairUsed : false; run.priorClarifications = saved?.priorClarifications;
     if (!this.options.scoped && saved?.stage === 'plan' && !saved.quality && !saved.foundation && !saved.foundationPlan && !saved.coreReportHash && run.planningReview?.phase === 'rejected') {
@@ -704,7 +734,10 @@ export class FleetBackend {
   private async agentAttempt(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown>; scopedPlan?: boolean; requireDesign?: boolean }, singleTurn = false) {
     this.check(run);
     const textLog = secretTextBuffer(text => this.log(p, stage, 'text', text));
-    const phase = variant?.phase ?? run.phases!.find(phase => phase.id === stage)!;
+    const savedPhase = variant?.phase ?? run.phases!.find(phase => phase.id === stage)!;
+    const planningValidation = stage === 'plan' && !variant?.scopedPlan && !run.quality;
+    const phase = { ...savedPhase, tools: planningValidation ? [...new Set([...savedPhase.tools, 'fleet_validate_plan'])]
+      : savedPhase.tools.filter(name => name !== 'fleet_validate_plan') };
     if (phase.owner !== 'agent') throw new Error('This phase is controlled by the human or host.');
     const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
     const agentLabel = variant?.label ?? stage + ' agent';
@@ -713,7 +746,7 @@ export class FleetBackend {
     if (stage === 'verify') {
       const checkpoint = p.runCheckpoint!;
       if (checkpoint.verificationAgent) {
-        if (checkpoint.repairAttempts >= (run.judgeRepairing ? 6 : 2)) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
+        if (checkpoint.repairAttempts >= (run.judgeRepairing ? 6 : this.options.scoped ? 3 : 2)) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
         checkpoint.repairAttempts++;
         if (this.options.scoped) { run.repairUsed = true; await this.checkpoint(p, run); }
       }
@@ -746,6 +779,7 @@ export class FleetBackend {
         label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: singleTurn
           ? { ...this.options.agentLimits, timeoutMs: Math.min(this.options.agentLimits?.timeoutMs ?? 600_000, 600_000) } : this.options.agentLimits,
         onMetrics: measured => this.recordInference(p, stage, measured),
+        onUsage: tokenUsageRecorder(p, { source: 'build', runId: p.runId, stage, model: provider + '/' + modelId }, () => this.store.save(), this.notify),
         create: async signal => {
           if (visualRequired && run.quality?.solution && (stage === 'build' || stage === 'verify')) {
             visual = new VisualReviewLedger({ root: p.workspace!, manifest: run.quality.solution.runtime,
@@ -773,12 +807,14 @@ export class FleetBackend {
               const runtime = await (this.options.scoped?.prepareRuntime ?? prepareSolutionRuntime)(p.workspace!, manifest, this.executable, browserSignal, { totalTimeoutMs: 10 * 60_000 });
               if (!runtime.url) { await runtime.close(); throw new Error('The declared runtime did not provide a browser preview.'); }
               return { url: runtime.url, routeBase: runtime.routeBase, close: runtime.close, redactMessage: runtime.redactMessage,
+                restart: runtime.restart, invokeService: manifest.profile === 'service' ? runtime.invoke : undefined,
                 filesHash: runtime.provenance.filesHash, assertIntegrity: runtime.assertIntegrity };
             }
           });
           const immutablePaths = this.options.scoped?.immutablePaths?.(stage) ?? ['.fleet', 'requirements.md', 'inputs'];
           const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined),
             ...(run.helpers ??= new AgentHelperRuntime(p.workspace!, this.executable)).tools(signal), ...createSystemDesignTools(p, stage, signal, () => this.changed(p)),
+            ...(planningValidation ? [createPlanningValidationTool({ workspace: p.workspace!, acceptance: run.acceptance!, signal })] : []),
             ...(browser?.tools() ?? []), ...(visual ? [visual.tool()] : []),
             ...(this.options.scoped ? createIsolatedAgentTools({ workspace: p.workspace!, executable: this.executable, signal, immutablePaths }) : []),
             ...(broker && clarificationPhase ? createClarificationTools(broker, p, clarificationPhase, signal, () => { requestedClarification = true; }) : [])];
@@ -856,7 +892,7 @@ export class FleetBackend {
             return missing;
           };
           const complete = async (text: string, required: string[], requireComponents = true) => {
-            const evidenceInstruction = '\n\nThe host owns .quality-evidence/core-report.json. Read it for diagnostics; never write, edit or delete it. Put your own test results and limitations in verification.md or .agent-output/. Only a new host evaluation can update the core report.';
+            const evidenceInstruction = '\n\nThe host owns .quality-evidence/core-report.json and .quality-evidence/workflow-report.json. Read them for diagnostics; never write, edit or delete them. Put your own test results and limitations in verification.md or .agent-output/. Only new host checks can update these reports.';
             const visualProgress = async () => {
               const report = visual?.report();
               let filesHash = '';
@@ -893,6 +929,7 @@ export class FleetBackend {
               this.log(p, stage, 'info', 'Stage checks incomplete: ' + missing.join(', ') + (needsVisual
                 ? `. Starting visual review iteration ${visualAttempts} of 3.` : '. Starting one artifact completion attempt.'));
               await prompt('The stage is incomplete. Complete these required outputs and host checks before finishing:\n' + missing.join('\n') + '\n\n' +
+                (planningValidation ? currentPlanningContractInstructions + '\n\n' : '') +
                 (needsVisual ? visualInstructions() + ` This is visual review iteration ${visualAttempts} of 3; further iterations require changed runtime files or new host captures, comparisons or resolutions.` : 'This is the only ordinary artifact completion attempt for this step.') +
                 ' Follow the original stage instructions and latest requested step; preserve requirements.md, .fleet and the frozen contracts. The existing stage deadline and independent repair budget still apply.' + evidenceInstruction);
               check(); await this.checkInputs(p, run, signal); check();
@@ -906,27 +943,42 @@ export class FleetBackend {
             }
             if (missing.length) throw new ClassifiedExecutionFailure('implementation', engine + ' did not complete the required stage checks ' + (stoppedForNoProgress ? 'because visual review made no progress' : visualAttempts ? `after ${visualAttempts} visual review iterations` : `after ${artifactAttempts} artifact completion attempts`) + ': ' + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
           };
-          await complete([run.context, run.resumedStage === stage ? 'This phase is resuming in the same workspace after an interrupted or failed attempt. Inspect and continue the existing artifacts; preserve completed work and all frozen inputs/contracts. The previous phase error was: ' + (run.previousError ?? 'The previous run was interrupted.') : '', run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, processPolicy, tests ? testBaselinePolicy : undefined, variant ? '' : systemDesignPrompt(stage),
+          await complete([run.context, run.resumedStage === stage ? 'This phase is resuming in the same workspace after an interrupted or failed attempt. Inspect and continue the existing artifacts; preserve completed work and all frozen inputs/contracts. The previous phase error was: ' + (run.previousError ?? 'The previous run was interrupted.') : '', run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, processPolicy, tests ? testBaselinePolicy : undefined, planningValidation ? currentPlanningContractInstructions : '', variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);
           if (awaitingClarification()) return;
           if (followUp) {
             if (followUp.coreGate) {
               let passed = await hostWork(() => this.evaluateCore(p, run, signal));
               check();
-              if (!passed) {
+              while (!passed) {
                 // Core repairs have their own count, so a build that needed one still has its repairs for the finished app.
                 const coreRepairs = p.runCheckpoint!.coreRepairAttempts ?? 0;
-                if ((this.options.scoped ? run.repairUsed : coreRepairs >= 2) || p.runCheckpoint!.repairStopped) throw new Error('The shared repair budget is exhausted.');
-                run.repairUsed = true; await this.checkpoint(p, run);
+                if ((!this.options.scoped && coreRepairs >= 2) || p.runCheckpoint!.repairStopped) throw new Error('The shared repair budget is exhausted.');
+                await this.functionalRepair(p, run, 'core', run.coreObservation ?? { failures: ['core:runtime'], metrics: {} }, async () => {
                 p.runCheckpoint!.coreRepairAttempts = coreRepairs + 1; await this.changed(p);
                 this.log(p, stage, 'info', 'Core evaluation failed. Using a repair attempt before completing the application.');
                 await complete('The independent core evaluation failed. Read .quality-evidence/core-report.json and the public invocation protocol in solution-contract.json. Use mismatch paths to check response shapes, literal statuses/errors and array ordering as well as computational logic. Repair the actual runtime implementation without changing solution-contract.json, acceptance-plan.json, ux-spec.json or host expectations. Do not substitute canned responses or copied test-only code. Your own tests from this stage are not frozen yet: if the host report shows one asserts the wrong thing, correct it. The host expectations stay. This uses one core repair attempt.', files, false);
                 passed = await hostWork(() => this.evaluateCore(p, run, signal));
+                });
+                if (!this.options.scoped) break;
               }
               if (!this.options.scoped && !passed && await hostWork(() => this.checkFrozenAnswers(p, run, provider, modelId))) passed = await hostWork(() => this.evaluateCore(p, run, signal));
               if (!passed) throw new Error('The required computational capabilities failed independent evaluation. Application completion and delivery remain blocked. Inspect .quality-evidence/core-report.json.');
+              if (run.quality!.solution!.runtime.profile !== 'cli') {
+                const primary = run.quality!.plan.journeys.find(journey => journey.kind === 'primary');
+                if (!primary) throw new ClassifiedExecutionFailure('implementation', 'The frozen plan has no primary user workflow.');
+                this.log(p, stage, 'info', 'Core evaluation passed. Building the first complete user workflow before expanding the application: ' + primary.title + '.');
+                await complete('Implement the first complete user workflow now: ' + primary.id + ' (' + primary.title + '). Read its frozen acceptance steps. Connect the real interface, API, computational core and any required durable state. Complete every step including save/reopen, restart, independent service-state checks and export where declared. For service persistence use .runtime-data/ relative to the process working directory; create it when the standalone app starts. Run this journey with fleet_browser and fix observed failures. Keep other required files present, but finish this useful path before expanding other workflows or writing the final guide. The host will execute this exact primary journey at both widths before permitting application completion. Preserve frozen expectations.', files, false);
+                let workflow = await hostWork(() => this.evaluateWorkflow(p, run, signal));
+                while (workflow.status !== 'passed') {
+                  workflow = await this.functionalRepair(p, run, 'workflow', workflowRepairObservation(workflow), async () => {
+                    await complete('The primary user workflow checkpoint failed. Read .quality-evidence/workflow-report.json, including the failed step, screenshot and trace. Diagnose and fix the actual UI/API/state boundary; rerun affected development checks. The frozen primary journey must pass at both widths before expanding the application. Preserve all requirements, expected outcomes and contracts.', files, false);
+                    return hostWork(() => this.evaluateWorkflow(p, run, signal));
+                  });
+                }
+              }
             }
-            this.log(p, stage, 'info', 'Core evaluation passed. Completing the application and README.md user guide before verification.');
+            this.log(p, stage, 'info', 'Required core and primary workflow checkpoints passed. Completing remaining application interactions and the README.md user guide before full independent verification.');
             await complete(followUp.instruction, [...files, ...followUp.files]);
           }
         }
@@ -987,6 +1039,7 @@ export class FleetBackend {
     this.log(p, 'plan', 'info', 'Plan files are ready. Starting an independent read-only planning review of useful scope, deferrals, evaluation strength and recovery. Planning is complete only after approval and contract freeze.');
     await runAgentStage({
       label: 'Independent planning review', signal: run.controller.signal,
+      onUsage: tokenUsageRecorder(p, { source: 'planning-review', runId: p.runId, stage: 'plan', model: provider + '/' + modelId }, () => this.store.save(), this.notify),
       // Reading all plan pages and preparing a structured verdict can involve long
       // silent model requests. Use the worker time bounds while retaining a turn cap.
       limits: { maxTurns: 64, ...this.options.agentLimits },
@@ -1035,8 +1088,10 @@ export class FleetBackend {
     for (;;) {
       this.check(run);
       const progress = run.planningReview!;
-      if (progress.phase === 'rejected') throw new ClassifiedExecutionFailure('implementation',
-        'Independent planning review still requires changes. The plan remains unfrozen. Resume planning to revise the saved files and run a fresh independent review; completed phases stay complete.');
+      // Eligible legacy rejections become revisions during resume. A remaining
+      // rejection carries frozen evidence and must not reopen mutable planning.
+      if (progress.phase === 'rejected') throw new ClassifiedExecutionFailure('integrity',
+        'The saved rejected plan retains frozen evidence and cannot reopen planning. Start a new build to use new planning contracts.');
       if (progress.phase === 'revision') {
         if (!run.planningSnapshot) {
           const snapshot: [string, string][] = [];
@@ -1082,12 +1137,12 @@ export class FleetBackend {
         this.log(p, 'plan', 'info', planningAuditSummary(audit));
         return;
       }
-      // Persist the allowance before dispatching a revision. Only explicit resume
-      // of a rejected ordinary plan permits another correction; this loop cannot.
-      run.planningReview = { phase: progress.revisionUsed ? 'rejected' : 'revision', revisionUsed: true, review };
+      const rejected = progress.revisionUsed;
+      run.planningReview = { phase: rejected ? 'rejected' : 'revision', revisionUsed: true, review };
       await this.checkpoint(p, run);
       this.log(p, 'plan', 'info', `Independent planning review requested changes (${review.findings.length} findings). `
-        + (progress.revisionUsed ? 'Planning is paused. Resume planning to continue from the saved files.' : 'Starting the one permitted planning revision.'));
+        + (rejected ? 'The correction did not satisfy the reviewer. Continue planning to authorize one more correction.' : 'Starting the one automatic planning correction.'));
+      if (rejected) throw new Error('Independent planning review still requires changes after one correction. Continue planning to try again.');
     }
   }
   private async missingFiles(p: Project, run: ActiveRun, stage: StageId, files: string[], tests = false, requireComponents = true, variant?: { scopedPlan?: boolean; requireDesign?: boolean }) {
@@ -1104,14 +1159,59 @@ export class FleetBackend {
     if (tests && requireComponents && incompleteComponents(p).length) missing.push('component progress: call fleet_component_progress for ' + incompleteComponents(p).join(', '));
     if (stage === 'plan' && !variant?.scopedPlan && !missing.some(file => ['acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json'].includes(file))) {
       try {
-        const contract = await loadQualityContract(p.workspace!, run.acceptance!, true, { requireStructuredUi: true });
-        if (!contract.solution!.invocation) throw new Error('solution-contract.json requires invocation with public input, output and rules. Document exact status/error strings and array ordering here; the builder cannot read sealed evaluation cases.');
-        validateFoundationPlan(JSON.parse(await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8')), contract.solution!.runtime);
+        await validatePlanningArtifacts(p.workspace!, run.acceptance!);
       }
       catch (error) { missing.push('valid quality contract: ' + (error instanceof Error ? error.message : String(error))); }
     }
     return missing;
   }
+  private async functionalRepair<T>(p: Project, run: ActiveRun, gate: FunctionalRepairGate, observation: RepairObservation, work: () => Promise<T>): Promise<T> {
+    this.check(run);
+    run.functionalRepair ??= createFunctionalRepairState({ legacyRepairUsed: run.repairUsed,
+      legacyGate: run.checkpointStage === 'verify' ? 'final' : 'core' });
+    const decision = beginFunctionalRepair(run.functionalRepair, gate, observation);
+    if (!decision.allowed) {
+      await this.checkpoint(p, run);
+      throw new ClassifiedExecutionFailure('implementation', `Functional ${gate} repair stopped: ${decision.reason}. Inspect the host evidence; the application has not passed verification.`);
+    }
+    // The reservation is durable before a model can run, including on interruption.
+    run.repairUsed = true;
+    const lease: RepairLease = { started: performance.now(), settled: false };
+    run.repairLease = lease;
+    await this.checkpoint(p, run);
+    this.check(run);
+    if (run.finalizing || lease.settled) throw new Error(stoppedMessage);
+    lease.timer = setTimeout(() => run.controller.abort(new ClassifiedExecutionFailure('implementation',
+      `Functional ${gate} repair exhausted its active time allowance. Saved files and evidence are preserved.`)), Math.max(1, decision.allowanceMs - (performance.now() - lease.started)));
+    this.log(p, gate === 'final' ? 'verify' : 'build', 'info', `Starting functional ${gate} repair ${decision.attempt}; final verification retains its own repair allowance.`);
+    try { return await work(); }
+    finally {
+      if (this.settleFunctionalRepair(run, lease)) await this.checkpoint(p, run);
+    }
+  }
+
+  private settleFunctionalRepair(run: ActiveRun, lease: RepairLease): boolean {
+    if (lease.settled || run.repairLease !== lease) return false;
+    lease.settled = true;
+    clearTimeout(lease.timer);
+    if (run.functionalRepair) finishFunctionalRepair(run.functionalRepair, Math.ceil(performance.now() - lease.started));
+    run.repairLease = undefined;
+    return true;
+  }
+
+  private async evaluateWorkflow(p: Project, run: ActiveRun, signal: AbortSignal) {
+    this.check(run); signal.throwIfAborted();
+    await this.checkInputs(p, run, signal);
+    const report = redactValue(await verifyPrimaryWorkflow(p.workspace!, this.executable, run.quality!, signal,
+      { ...this.options.verificationLimits, prepareRuntime: this.options.scoped?.prepareRuntime, isolateNetwork: this.options.scoped?.verification?.isolateNetwork }));
+    await this.checkInputs(p, run, signal);
+    run.workflowReportHash = await retainWorkflowReport(this.store.root, p.workspace!, JSON.stringify(report, null, 2));
+    await this.checkpoint(p, run, undefined, signal);
+    await restoreWorkflowReport(this.store.root, p.workspace!, run.workflowReportHash, signal);
+    this.log(p, 'build', 'info', 'Primary user workflow checkpoint: ' + report.status + '. Evidence: .quality-evidence/workflow-report.json');
+    return report;
+  }
+
   private async evaluateCore(p: Project, run: ActiveRun, signal: AbortSignal): Promise<boolean> {
     const check = () => { this.check(run); signal.throwIfAborted(); };
     check();
@@ -1119,10 +1219,11 @@ export class FleetBackend {
     check();
     let runtime: Awaited<ReturnType<typeof prepareSolutionRuntime>> | undefined;
     let report: unknown, passed = false;
+    let observation: RepairObservation = { failures: ['core:runtime'], metrics: {} };
     try {
       runtime = await (this.options.scoped?.prepareRuntime ?? prepareSolutionRuntime)(p.workspace!, run.quality!.solution!.runtime, this.executable, signal);
       const result = await runSolutionEvaluation(runtime, run.quality!.solution!, this.answerKey(run), signal);
-      report = result; passed = result.status === 'passed';
+      report = result; passed = result.status === 'passed'; observation = solutionRepairObservation(result);
     } catch (error) {
       check();
       if (error instanceof VerificationShutdownError) throw error;
@@ -1140,6 +1241,7 @@ export class FleetBackend {
     await restoreCoreReport(this.store.root, p.workspace!, hash, signal);
     check();
     this.log(p, 'build', 'info', 'Independent core evaluation: ' + (passed ? 'passed' : 'failed') + '. Evidence: .quality-evidence/core-report.json');
+    run.coreObservation = observation;
     return passed;
   }
   /** Corrections sit beside the frozen key, which itself never changes. */
@@ -1176,6 +1278,7 @@ export class FleetBackend {
     this.log(p, 'build', 'info', 'The core evaluation still fails after the repair. Checking whether its frozen answers follow the plan\'s own rules.');
     const rulings = await runAnswerCheck({ workspace: p.workspace!, signal: run.controller.signal, limits: this.options.agentLimits,
       onMetrics: measured => this.recordInference(p, 'build', measured),
+      createUsageRecorder: () => tokenUsageRecorder(p, { source: 'build', runId: p.runId, stage: 'build', model: provider + '/' + model }, () => this.store.save(), this.notify),
       engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
         codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession } },
       disputes.map(({ id, input, frozenAnswer, appOutput, mismatch }) => ({ id, input, frozenAnswer, appOutput, mismatch })));
@@ -1216,6 +1319,9 @@ export class FleetBackend {
     }
     if (await restoreCoreReport(this.store.root, p.workspace!, run.coreReportHash, signal)) {
       this.log(p, run.checkpointStage ?? 'build', 'info', 'Restored host core evaluation evidence after the workspace copy was changed or removed. Agent-authored notes belong in verification.md.');
+    }
+    if (await restoreWorkflowReport(this.store.root, p.workspace!, run.workflowReportHash, signal)) {
+      this.log(p, run.checkpointStage ?? 'build', 'info', 'Restored host primary workflow evidence after the workspace copy was changed or removed.');
     }
     await this.options.scoped?.assertInputs?.(p);
     } catch (error) {
@@ -1330,6 +1436,7 @@ export class FleetBackend {
       const result = await runPlanningAudit({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot,
         signal: run.controller.signal, limits: this.options.agentLimits,
         onMetrics: measured => this.recordInference(p, 'plan', measured),
+        createUsageRecorder: () => tokenUsageRecorder(p, { source: 'planning-review', runId: p.runId, stage: 'plan', model: provider + '/' + model }, () => this.store.save(), this.notify),
         engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
           codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession } });
       this.check(run);
@@ -1493,32 +1600,38 @@ export class FleetBackend {
       this.log(p, 'verify', 'info', p.report.output);
       if (!reportPassed(p.report, true) && p.runCheckpoint!.repairStopped) throw new Error('Verification did not pass. Repair made no source changes; start a new run before another fixing agent.');
       // A person pressed Resume on a build that had used its automatic repairs. Without this the button could only repeat the same failure.
+      let manualRepair = false;
       if (run.resumedStage === 'verify' && !reportPassed(p.report, true) && p.runCheckpoint!.repairAttempts >= 2 && !this.options.scoped) {
+        manualRepair = true;
         p.runCheckpoint!.repairAttempts = 1; await this.changed(p);
         this.log(p, 'verify', 'info', 'The automatic repairs were already used, so this Resume pays for one more.');
       }
-      while (!reportPassed(p.report, true) && p.runCheckpoint!.repairAttempts < 2 && (!this.options.scoped || !run.repairUsed)) {
+      while (!reportPassed(p.report, true) && (this.options.scoped || p.runCheckpoint!.repairAttempts < 2)) {
+        const repair = async () => {
         this.check(run);
         await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(redactValue(p.report), null, 2));
         const attempt = p.runCheckpoint!.repairAttempts + 1;
         this.check(run);
         this.log(p, 'verify', 'info', 'Verification failed. Starting ' + (attempt === 1 ? 'one ' : '') + (run.backend === 'codex' ? 'Codex' : 'Pi') + ' repair attempt (' + attempt + '/2).');
-        const failures = { node: { command: p.report.command, exitCode: p.report.exitCode, passed: p.report.passed, failed: p.report.failed, skipped: p.report.skipped, output: p.report.output },
-          errors: p.report.quality?.errors,
-          journeys: p.report.quality?.journeys.filter(journey => journey.status === 'failed').map(journey => ({ ...journey,
+        const failures = { node: { command: p.report!.command, exitCode: p.report!.exitCode, passed: p.report!.passed, failed: p.report!.failed, skipped: p.report!.skipped, output: p.report!.output },
+          errors: p.report!.quality?.errors,
+          journeys: p.report!.quality?.journeys.filter(journey => journey.status === 'failed').map(journey => ({ ...journey,
             plannedSteps: run.quality!.plan.journeys.find(planned => planned.id === journey.id)?.steps })) };
         const beforeRepair = await sourceHash(p.workspace!, { excludeEvidence: true });
         await this.agent(p, run, 'verify', provider, model,
           'The independent test run failed. Repair attempt ' + attempt + '/2. Read test-report.json, diagnose and repair the implementation. Inspect the quality section for failed browser steps and screenshot/trace paths as well as Node failures. Fix the application, including UI behavior, selectors, recovery and responsive layout. Keep acceptance criteria and tests meaningful; do not delete, skip, or weaken tests to obtain a pass. A skipped test counts as a failure: if a test you added cannot run with node alone, rewrite it so it can, and leave browser behavior to the acceptance journeys. Never edit solution-contract.json, acceptance-plan.json or ux-spec.json or recreate the sealed evaluation-plan.json; the host checks their original hash. Keep the delivered runtime and interface connected to the evaluated core. Update README.md so its user guide and sample walkthrough match the repaired application. Update verification.md with the repair and remaining limitations.\n\nExact failing journeys, planned steps and evidence paths from the latest independent check:\n' + JSON.stringify(failures, null, 2), ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'README.md', 'path-to-fleet.md', 'verification.md', ...run.quality!.solution!.runtime.files], true);
         await this.checkInputs(p, run);
         this.check(run);
-        if (beforeRepair === await sourceHash(p.workspace!, { excludeEvidence: true })) {
+        if (!this.options.scoped && beforeRepair === await sourceHash(p.workspace!, { excludeEvidence: true })) {
           p.runCheckpoint!.repairStopped = true; await this.changed(p);
           throw new Error('Verification did not pass. Repair made no source changes; start a new run before another fixing agent.');
         }
         p.report = await this.verify(p, run);
         this.appendTestChanges(p);
         this.log(p, 'verify', 'info', p.report.output);
+        };
+        if (manualRepair) { await repair(); manualRepair = false; }
+        else await this.functionalRepair(p, run, 'final', verificationRepairObservation(p.report), repair);
       }
       this.check(run);
       await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(redactValue(p.report), null, 2));
@@ -1531,6 +1644,7 @@ export class FleetBackend {
         saveBeforeRepair: () => this.saveBeforeJudgeRepair(p, run),
         humanNotes: run.answerCorrections?.map(correction => 'Check the test answer an independent check corrected for case ' + correction.caseId + ': ' + correction.why),
         onMetrics: measured => this.recordInference(p, 'verify', measured),
+        createUsageRecorder: () => tokenUsageRecorder(p, { source: 'build', runId: p.runId, stage: 'verify', model: provider + '/' + model }, () => this.store.save(), this.notify),
         engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
           codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession },
         checkInputs: () => this.checkInputs(p, run), log: text => this.log(p, 'verify', 'info', text),
@@ -1559,9 +1673,9 @@ export class FleetBackend {
       this.check(run);
       run.outcome = 'review'; p.resumeStage = undefined; this.log(p, 'review', 'info', 'Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.');
     } catch (error) {
-      const failure = run.controller.signal.reason instanceof ExecutionBudgetExceeded ? run.controller.signal.reason : error;
+      const failure = run.controller.signal.reason instanceof ExecutionBudgetExceeded || run.controller.signal.reason instanceof ClassifiedExecutionFailure ? run.controller.signal.reason : error;
       if (this.options.scoped) p.executionFailure = failure instanceof ExecutionBudgetExceeded ? 'budget'
-        : run.controller.signal.aborted ? 'cancelled' : failure instanceof ClassifiedExecutionFailure ? failure.classification
+        : failure instanceof ClassifiedExecutionFailure ? failure.classification : run.controller.signal.aborted ? 'cancelled'
           : this.options.scoped.classifyFailure?.(failure) ?? 'infrastructure';
       run.outcome = 'failed';
       const stage = p.stages.findLast(s => s.status === 'active')?.id || 'build';

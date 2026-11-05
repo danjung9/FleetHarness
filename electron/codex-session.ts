@@ -7,6 +7,7 @@ import { runProcessEnvironment } from './process-sweep.js';
 import { spawn } from 'node:child_process';
 import type { IsolationProfile } from './isolated-executor.js';
 import { codexExecutable, codexProcessConfig } from './codex-rpc.js';
+import { normalizeTokenTotals, type TokenTotals } from '../shared/token-usage.js';
 
 type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<Pick<AgentToolResult, 'content' | 'isError'>> };
 // Bundled Codex app-server 0.166: v2/DynamicToolCallOutputContentItem.
@@ -72,11 +73,14 @@ export async function createCodexSession(options: {
   // Reuse the factory's existing activity contract; Codex never starts a Pi session.
   const emit = (event: object) => { for (const listener of listeners) listener(event as StageEvent); };
   let threadId = '', turnId = '', disposed = false, hasHistory = false;
+  let cumulativeUsage: TokenTotals | undefined;
   let currentTurn: { id: string; hasUsage: boolean } | undefined;
   const previousTurns = new Set<string>();
   const earlyUsage = new Map<string, unknown>();
   const reportUsage = (total: unknown) => {
     currentTurn!.hasUsage = true;
+    const totals = normalizeTokenTotals(total);
+    if (totals && (!cumulativeUsage || totals.totalTokens >= cumulativeUsage.totalTokens)) cumulativeUsage = totals;
     emit({ type: 'usage_update', usage: tokenUsage(total, 'codex') });
   };
   const identifyTurn = (id: string) => {
@@ -215,6 +219,7 @@ export async function createCodexSession(options: {
     await connect(await credentials());
   } catch (error) { options.signal.removeEventListener('abort', stop); rpc?.dispose(); throw error; }
   return {
+    getTokenUsage() { return cumulativeUsage; },
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async prompt(text: string) {
       if (disposed || controller.signal.aborted) throw new Error('Codex session is closed.');

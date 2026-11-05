@@ -10,7 +10,7 @@ import { normalizeProjectInput } from '../shared/project-input.js';
 import type { Challenge } from '../harness/types.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { RunProcessSweep } from './process-sweep.js';
-import { artifactInventoryExclusions } from '../shared/runtime-artifacts.js';
+import { artifactInventoryExclusions, isRuntimeDataPath } from '../shared/runtime-artifacts.js';
 
 export function validateInput(input: NewProject, catalog?: readonly Challenge[]): NewProject {
   const normalized = normalizeProjectInput(input);
@@ -103,9 +103,11 @@ export class Store {
 }
 const ignored = new Set<string>(artifactInventoryExclusions);
 export async function listArtifacts(root: string, prefix = ''): Promise<Artifact[]> {
+  if (isRuntimeDataPath(prefix)) return [];
   if ((await fs.lstat(path.join(root, prefix))).isSymbolicLink()) throw new Error('Artifact symlinks are not allowed.');
   const results: Artifact[] = [];
   for (const entry of await fs.readdir(path.join(root, prefix), { withFileTypes: true })) {
+    if (isRuntimeDataPath(path.join(prefix, entry.name))) continue;
     if (entry.isSymbolicLink()) throw new Error('Artifact symlinks are not allowed: ' + path.join(prefix, entry.name));
     if (ignored.has(entry.name)) continue;
     const relative = path.join(prefix, entry.name);

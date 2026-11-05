@@ -94,7 +94,7 @@ export async function exportVerifiedBundle(input: SourceExport, signal?: AbortSi
       await fs.writeFile(manifestPath, JSON.stringify({ schemaVersion: 1, verifiedSourceHash: input.verifiedHash,
         bundleHash: bundle.digest('hex'), bundleHashAlgorithm: 'sha256 of sorted path + NUL + bytes + NUL',
         excludedFromBundleHash: ['reproducibility/manifest.json'], experiment, runtime,
-        excludedFromDelivery: ['memory-context.md'],
+        excludedFromDelivery: ['memory-context.md', '**/.runtime-data/** (case-insensitive path segment)'],
         operations: exportIntegrationOperations(operations), evaluation: 'Generation answer keys and held-out validation data remain private to the host.', files }, null, 2) + '\n', { flag: 'wx' });
       await checkSource();
     }

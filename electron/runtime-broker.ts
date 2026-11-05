@@ -27,6 +27,7 @@ export interface RuntimeBrokerOptions {
 /** One candidate process, one private framed channel; no socket or credential is granted to generated code. */
 export class RuntimeBroker {
   private process!: IsolatedProcess;
+  private starting?: Promise<IsolatedProcess>;
   private pending = new Map<string, { resolve(value: unknown): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> }>();
   private integrationIds = new Set<string>();
   private buffer = Buffer.alloc(0);
@@ -37,8 +38,28 @@ export class RuntimeBroker {
   private ready = new Promise<void>((resolve, reject) => { this.readyResolve = resolve; this.readyReject = reject; });
   private seenReady = false;
   private controller = new AbortController();
-  private constructor(private options: RuntimeBrokerOptions) { void this.ready.catch(() => {}); }
+  private processController?: AbortController;
+  private generation = 0;
+  private restarting?: Promise<void>;
+  private closing?: Promise<void>;
+  private deadline: number;
+  private deadlineTimer: ReturnType<typeof setTimeout>;
+  private constructor(private options: RuntimeBrokerOptions) {
+    if (options.timeoutMs !== undefined && (!Number.isSafeInteger(options.timeoutMs) || options.timeoutMs <= 0 || options.timeoutMs > 3_600_000)) {
+      throw new Error('Invalid isolated execution limit.');
+    }
+    this.deadline = Date.now() + (options.timeoutMs ?? 300_000);
+    this.deadlineTimer = setTimeout(() => this.fail(new Error('Runtime broker exhausted its execution budget.')), options.timeoutMs ?? 300_000);
+    void this.ready.catch(() => {});
+  }
   static async start(options: RuntimeBrokerOptions): Promise<RuntimeBroker> {
+    const broker = new RuntimeBroker(options);
+    try { await broker.startProcess(); return broker; }
+    catch (error) { await broker.close(); throw error; }
+  }
+  private async startProcess(): Promise<void> {
+    const options = this.options;
+    if (this.stopped) throw this.stopped;
     options.signal?.throwIfAborted();
     const workspace = await fs.realpath(options.workspace);
     if (!['node', 'python'].includes(options.runtime) || !options.entrypoint || path.isAbsolute(options.entrypoint)
@@ -51,23 +72,53 @@ export class RuntimeBroker {
     const command = options.runtime === 'node'
       ? [options.executable, '--no-global-search-paths', adapter, '--stdio', entrypoint]
       : [options.executable, '-I', '-B', adapter, '--stdio', entrypoint];
-    const broker = new RuntimeBroker(options);
-    const signal = AbortSignal.any([broker.controller.signal, ...(options.signal ? [options.signal] : [])]);
-    const timer = setTimeout(() => broker.fail(new Error('Runtime broker did not become ready.')),
+    const remaining = this.deadline - Date.now();
+    if (remaining <= 0) { this.fail(new Error('Runtime broker exhausted its execution budget.')); throw this.stopped; }
+    const generation = ++this.generation;
+    this.buffer = Buffer.alloc(0); this.integrationIds.clear(); this.seenReady = false;
+    this.ready = new Promise<void>((resolve, reject) => { this.readyResolve = resolve; this.readyReject = reject; });
+    void this.ready.catch(() => {});
+    this.processController = new AbortController();
+    const signal = AbortSignal.any([this.controller.signal, this.processController.signal, ...(options.signal ? [options.signal] : [])]);
+    const timer = setTimeout(() => this.fail(new Error('Runtime broker did not become ready.')),
       options.startupTimeoutMs ?? options.requestTimeoutMs ?? runtimeBrokerLimits.requestMs);
     try {
-      broker.process = await spawnIsolatedProcess({ workspace, command, readPaths: [path.dirname(adapter), ...(options.readPaths ?? [])],
-        writePaths: options.writePaths, signal, timeoutMs: options.timeoutMs,
+      const starting = this.starting = spawnIsolatedProcess({ workspace, command, readPaths: [path.dirname(adapter), ...(options.readPaths ?? [])],
+        writePaths: options.writePaths, signal, timeoutMs: remaining,
         maxOutputBytes: options.maxOutputBytes ?? runtimeBrokerLimits.outputBytes,
-        onStdout: chunk => broker.receive(chunk), onStderr: chunk => options.onLog?.(broker.redact(chunk.toString('utf8'))) });
-      void broker.process.done.then(result => broker.fail(new Error('Runtime broker exited with ' + result.exitCode + '.'
-        + (result.stderr ? '\n' + result.stderr : ''))), error => broker.fail(error));
-      await broker.ready; clearTimeout(timer); return broker;
+        onStdout: chunk => { if (generation === this.generation) this.receive(chunk, generation, signal); },
+        onStderr: chunk => options.onLog?.(this.redact(chunk.toString('utf8'))) });
+      try { this.process = await starting; }
+      finally { if (this.starting === starting) this.starting = undefined; }
+      void this.process.done.then(result => {
+        if (generation === this.generation) this.fail(new Error('Runtime broker exited with ' + result.exitCode + '.' + (result.stderr ? '\n' + result.stderr : '')));
+      }, error => { if (generation === this.generation) this.fail(error); });
+      await this.ready;
     } catch (error) {
       // The readiness timer can abort sandbox setup before it returns a process.
-      const failure = broker.stopped ?? error;
-      clearTimeout(timer); await broker.close(); throw failure;
-    }
+      const failure = this.stopped ?? error;
+      await this.close(); throw failure;
+    } finally { clearTimeout(timer); }
+  }
+  /** Replace only the generated process; the preview server and its lease stay live. */
+  restart(): Promise<void> {
+    if (this.restarting) return this.restarting;
+    this.restarting = (async () => {
+      try {
+        if (this.stopped) throw this.stopped;
+        this.options.signal?.throwIfAborted();
+        ++this.generation;
+        const interrupted = new Error('Runtime broker request interrupted by service restart.');
+        for (const request of this.pending.values()) { clearTimeout(request.timer); request.reject(interrupted); }
+        this.pending.clear();
+        // The per-process abort also cancels old external requests. Keep the
+        // integration lease and its persisted call budget for the replacement.
+        this.processController?.abort(interrupted);
+        await this.process.close();
+        await this.startProcess();
+      } catch (error) { await this.close(); throw error; }
+    })().finally(() => { this.restarting = undefined; });
+    return this.restarting;
   }
   private redact(text: string) { return this.options.integrations?.redact(text) ?? text; }
   private fail(error: Error) {
@@ -83,7 +134,7 @@ export class RuntimeBroker {
     if (bytes.length > runtimeBrokerLimits.frameBytes) throw new Error('Runtime broker frame exceeds its 2 MB limit.');
     if (!this.process.child.stdin.write(bytes) && this.process.child.stdin.writableLength > runtimeBrokerLimits.frameBytes * 2) throw new Error('Runtime broker input backlog exceeded its limit.');
   }
-  private receive(chunk: Buffer) {
+  private receive(chunk: Buffer, generation: number, signal: AbortSignal) {
     if (this.stopped) return;
     this.buffer = Buffer.concat([this.buffer, chunk]);
     for (;;) {
@@ -109,17 +160,18 @@ export class RuntimeBroker {
         } else if (message.type === 'integration' && id(message.id) && typeof message.operationId === 'string') {
           if (!this.seenReady || this.integrationIds.has(message.id) || this.integrationIds.size >= 100) throw new Error('Invalid or exhausted integration request identity.');
           this.integrationIds.add(message.id);
-          void this.integration(message.id, message.operationId, message.input);
+          void this.integration(message.id, message.operationId, message.input, generation, signal);
         } else throw new Error('Unknown runtime broker frame.');
       } catch (error) { this.fail(error instanceof Error ? error : new Error(String(error))); return; }
     }
   }
-  private async integration(requestId: string, operationId: string, input: IntegrationInput) {
+  private async integration(requestId: string, operationId: string, input: IntegrationInput, generation: number, signal: AbortSignal) {
     try {
       if (!this.options.integrations) throw new Error('This candidate has no configured external integrations.');
-      const value = await this.options.integrations.invoke(operationId, input, this.controller.signal);
-      if (!this.stopped) this.send({ version: 1, type: 'integration-result', id: requestId, ok: true, value });
+      const value = await this.options.integrations.invoke(operationId, input, signal);
+      if (!this.stopped && generation === this.generation) this.send({ version: 1, type: 'integration-result', id: requestId, ok: true, value });
     } catch (error) {
+      if (generation !== this.generation) return;
       if (error instanceof ClassifiedExecutionFailure && error.classification !== 'implementation') { this.fail(error); return; }
       if (!this.stopped) try { this.send({ version: 1, type: 'integration-result', id: requestId, ok: false, error: this.redact(error instanceof Error ? error.message : String(error)).slice(0, 2000) }); }
       catch (failure) { this.fail(failure instanceof Error ? failure : new Error(String(failure))); }
@@ -127,6 +179,7 @@ export class RuntimeBroker {
   }
   private call(kind: 'invoke' | 'http', input: unknown): Promise<unknown> {
     if (this.stopped) return Promise.reject(this.stopped);
+    if (this.restarting) return Promise.reject(new Error('Runtime broker is restarting.'));
     if (this.pending.size >= runtimeBrokerLimits.pending) return Promise.reject(new Error('Runtime broker has too many pending requests.'));
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
@@ -200,10 +253,17 @@ export class RuntimeBroker {
     if (this.stopped) { server.closeAllConnections(); server.close(); throw this.stopped; }
     this.servers.add(server); return 'http://127.0.0.1:' + (server.address() as { port: number }).port + '/' + lease + '/';
   }
-  async close() {
-    this.fail(new Error('Runtime broker closed.'));
-    await this.process?.close();
-    await Promise.all([...this.servers].map(server => new Promise<void>(resolve => { server.closeAllConnections(); server.close(() => resolve()); })));
-    this.servers.clear();
+  close(): Promise<void> {
+    return this.closing ??= (async () => {
+      clearTimeout(this.deadlineTimer);
+      this.fail(new Error('Runtime broker closed.'));
+      // Cancellation can arrive during sandbox preparation, before process is
+      // assigned. Wait for that launch as well before releasing package files.
+      const starting = await this.starting?.catch(() => undefined);
+      await starting?.close();
+      if (starting !== this.process) await this.process?.close();
+      await Promise.all([...this.servers].map(server => new Promise<void>(resolve => { server.closeAllConnections(); server.close(() => resolve()); })));
+      this.servers.clear();
+    })();
   }
 }
