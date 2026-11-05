@@ -60,6 +60,7 @@ export interface Project extends BriefContext {
   qualityVersion?: 1 | 2 | 3;
   visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
+  runSummary?: import('./run-budget.js').RunSummary;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
@@ -76,7 +77,7 @@ export interface Project extends BriefContext {
 }
 export type AgentBackend = 'pi' | 'codex';
 export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean; buildTimeLimitMinutes?: number }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;

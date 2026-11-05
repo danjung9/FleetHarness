@@ -18,6 +18,8 @@
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
     "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
+    "test:budgets": "npm run build:electron && node --test --test-concurrency=2 tests/run-budget.test.mjs tests/run-usage.test.mjs tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/codex-session.test.mjs tests/verification.test.mjs",
+    "test:budgets:ui": "npm run build && node scripts/smoke-run-budgets.mjs && node scripts/smoke-build-budget-desktop.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
     "dist:win": "npm run build && node scripts/build-windows.mjs",

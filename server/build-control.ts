@@ -103,7 +103,8 @@ async function saveCheckpoint(run: HostedRun, sandbox: Sandbox, pointer: Checkpo
 function progressPatch(progress: WorkerProgress): Partial<Project> {
   return { stages: progress.project.stages, logs: progress.project.logs.slice(-600),
     systemDesign: progress.project.systemDesign, qualityVersion: progress.project.qualityVersion, visualReview: progress.project.visualReview,
-    runtimeProfile: progress.project.runtimeProfile, phasePlan: progress.project.phasePlan, globalTools: progress.project.globalTools };
+    runtimeProfile: progress.project.runtimeProfile, runSummary: progress.project.runSummary,
+    phasePlan: progress.project.phasePlan, globalTools: progress.project.globalTools };
 }
 async function finishPaused(run: HostedRun): Promise<void> {
   const resumable = !!metadata(run).checkpoint;

@@ -1,7 +1,8 @@
 import type { AgentSession, AgentSessionEvent } from '@earendil-works/pi-coding-agent';
 import type { StageTokenUsage } from '../shared/types.js';
+import { runAbortError } from './run-budget.js';
 
-export type StageEvent = AgentSessionEvent | { type: 'usage_update'; usage: StageTokenUsage | null };
+export type StageEvent = AgentSessionEvent | { type: 'usage_update'; usage: StageTokenUsage | null; threadId?: never } | { type: 'usage_update'; threadId: string; usage: unknown };
 export type StageSession = Pick<AgentSession, 'prompt' | 'abort' | 'dispose'> & {
   subscribe: (listener: (event: StageEvent) => void) => () => void;
 };
@@ -26,6 +27,7 @@ export function tokenUsage(raw: unknown, engine: 'pi' | 'codex'): StageTokenUsag
     reasoningOutputTokens: count(engine === 'pi' ? u.reasoning : u.reasoningOutputTokens), totalTokens: count(u.totalTokens),
     uncachedPlusOutputTokens: add(uncachedInputTokens, outputTokens) };
 }
+export class AgentShutdownError extends Error { constructor(message: string) { super(message); this.name = 'AgentShutdownError'; } }
 export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns: number }
 export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000, maxTurns: 40 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
@@ -51,7 +53,7 @@ export async function runAgentStage(options: {
     if (key === 'maxTurns' && value === undefined) continue;
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
   }
-  if (options.signal.aborted) throw new Error(stoppedMessage);
+  if (options.signal.aborted) throw runAbortError(options.signal);
   const controller = new AbortController();
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
   let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
@@ -69,7 +71,7 @@ export async function runAgentStage(options: {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. Inspect the saved activity and start a new run.`), limits.idleMs);
   };
-  const abort = () => fail(stoppedMessage);
+  const abort = () => fail(runAbortError(options.signal).message);
   const check = () => { if (failure) throw failure; controller.signal.throwIfAborted(); };
   const release = (target: StageSession, cancel: boolean) => {
     // abort() waits for idle in Pi. Cleanup must not depend on that promise settling.
@@ -85,8 +87,8 @@ export async function runAgentStage(options: {
     session = created;
     unsubscribe = created.subscribe(event => {
       if (closed || failure) return;
-      if (event.type === 'usage_update' || event.type === 'compaction_end' || (event.type === 'message_end' && event.message.role === 'assistant')) receipts++;
-      if (event.type === 'usage_update') { usage = event.usage; sawUsage = true; }
+      if ((event.type === 'usage_update' && !('threadId' in event)) || event.type === 'compaction_end' || (event.type === 'message_end' && event.message.role === 'assistant')) receipts++;
+      if (event.type === 'usage_update' && !('threadId' in event)) { usage = event.usage as StageTokenUsage | null; sawUsage = true; }
       // Pi compaction uses a separate model call, outside assistant messages.
       if (event.type === 'compaction_end') accumulate(tokenUsage(event.result?.usage, 'pi'));
       switch (event.type) {

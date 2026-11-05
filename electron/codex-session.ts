@@ -95,6 +95,7 @@ export async function createCodexSession(options: {
     const p = message.params;
     if (disposed || controller.signal.aborted || p?.threadId !== threadId) return;
     if (message.method === 'thread/tokenUsage/updated') {
+      emit({ type: 'usage_update', threadId, usage: p.tokenUsage?.total });
       // Each stage owns a fresh thread. Replace cumulative totals, never sum them.
       // Accept a final receipt immediately following turn/completed as well.
       if (!currentTurn || typeof p.turnId !== 'string') return;

@@ -10,6 +10,7 @@ import { applicationTestFiles, portableTestCommand } from './verification.js';
 import { ApplicationPreviews } from './solution-preview.js';
 import { assertExecutableSource, executableFileName, stageExecutable, runPackageWorker, saveExecutable } from './executable.js';
 import type { NewProject, Settings } from '../shared/types.js';
+import { normalizeBuildTimeLimitMinutes } from '../shared/run-budget.js';
 import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/catalog.js';
 import { exportVerifiedBundle } from './source-export.js';
 import { readBuildInfo } from './build-info.js';
@@ -347,10 +348,11 @@ function registerIPC() {
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
       !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
+    const buildTimeLimitMinutes = normalizeBuildTimeLimitMinutes(settings.buildTimeLimitMinutes);
     if (settings.backend === 'codex') {
       if (key?.trim()) throw new Error('ChatGPT uses browser sign-in, not an API key.');
       if (codex.account.status !== 'connected' || (codex.sessionCredentials && !codex.account.planUsageEnabled) || !codex.models.some(m => m.id === settings.model && m.configured) || settings.provider !== 'chatgpt') throw new Error('Sign in with ChatGPT, allow plan usage, and select a Codex model first.');
-      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true };
+      store.state.settings = { backend: 'codex', provider: 'chatgpt', model: settings.model, rememberKey: false, developerMode: store.state.settings.developerMode === true, buildTimeLimitMinutes };
       await store.save(); notify(); return bootstrap();
     }
     if (!backend.runtime.getModel(settings.provider, settings.model)) throw new Error('Select a valid Pi model.');
@@ -361,7 +363,7 @@ function registerIPC() {
       if (settings.rememberKey) await fs.writeFile(keyFile, safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })), { mode: 0o600 });
     }
     if (!settings.rememberKey) await fs.rm(keyFile, { force: true });
-    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
+    store.state.settings = { backend: 'pi', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true, buildTimeLimitMinutes };
     await store.save(); notify(); return bootstrap();
   });
 }

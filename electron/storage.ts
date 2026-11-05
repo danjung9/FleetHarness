@@ -52,6 +52,15 @@ export class Store {
         p.executable.status = 'failed';
         p.executable.error = 'Packaging was interrupted. Download the app again to retry.';
       }
+      if (p.status === 'running' && p.runSummary && !p.runSummary.finishedAt) {
+        p.runSummary.terminalReason = 'interrupted'; p.runSummary.finishedAt = p.updatedAt;
+        const phase = p.runSummary.phases.at(-1);
+        if (phase && !phase.finishedAt) phase.finishedAt = p.updatedAt;
+        p.runSummary.usage.limitations = [...new Set([...p.runSummary.usage.limitations, 'The app was interrupted; usage after the last saved checkpoint may be missing.'])];
+        for (const metric of ['requests', 'tokens', 'inputTokens', 'outputTokens', 'cachedInputTokens', 'cacheWriteTokens', 'reasoningTokens', 'costUsd'] as const) {
+          if (p.runSummary.usage[metric].value !== null) p.runSummary.usage[metric].state = 'partial';
+        }
+      }
       if (p.status === 'running' || (p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId))) await this.reconcile(p);
     }
     await this.save();
@@ -80,7 +89,15 @@ export class Store {
     await this.save();
   }
   save() {
-    this.writes = this.writes.catch(() => {}).then(() => atomicHostWrite(this.root, 'state.json', JSON.stringify(this.state, null, 2)));
+    const json = JSON.stringify(this.state, null, 2);
+    const summaries = this.state.projects.filter(p => p.workspace && p.runSummary).map(p => ({ workspace: p.workspace!, json: JSON.stringify(p.runSummary, null, 2) }));
+    this.writes = this.writes.catch(() => {}).then(async () => {
+      await atomicHostWrite(this.root, 'state.json', json);
+      for (const summary of summaries) {
+        try { await atomicHostWrite(summary.workspace, 'run-summary.json', summary.json); }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+      }
+    });
     return this.writes;
   }
   saveProject(next: Project) {
@@ -93,7 +110,7 @@ export class Store {
     return this.writes;
   }
 }
-const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);
+const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store', 'run-summary.json.tmp']);
 export async function listArtifacts(root: string, prefix = ''): Promise<Artifact[]> {
   if ((await fs.lstat(path.join(root, prefix))).isSymbolicLink()) throw new Error('Artifact symlinks are not allowed.');
   const results: Artifact[] = [];
@@ -125,7 +142,7 @@ export type ArtifactManifest = { path: string; contents: Buffer }[];
 export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
   const files: ArtifactManifest = [];
   for (const file of await listArtifacts(root)) {
-    if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
+    if (['test-report.json', 'review.json', 'DELIVERY.md', 'run-summary.json', 'run-summary.json.tmp'].includes(file.path)) continue;
     if (options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');

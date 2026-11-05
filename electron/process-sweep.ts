@@ -4,6 +4,15 @@ import { execFile } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { performance } from 'node:perf_hooks';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+let windowsAccess: typeof import('./windows-process-scan.js') | undefined;
+function windowsProcesses() {
+  windowsAccess ??= require('./windows-process-scan.js') as typeof import('./windows-process-scan.js');
+  windowsAccess.initializeWindowsProcessJob();
+  return windowsAccess;
+}
 
 const current = new AsyncLocalStorage<RunProcessSweep>();
 type Identity = { pid: number; started: string };
@@ -65,7 +74,7 @@ async function ps(environment: boolean) {
 }
 
 async function scan(marker: string): Promise<Identity[]> {
-  if (process.platform === 'win32') return (await import('./windows-process-scan.js')).windowsRunProcesses(marker);
+  if (process.platform === 'win32') return windowsProcesses().windowsRunProcesses(marker);
   if (process.platform === 'darwin') {
     return markedPsProcesses(await ps(false), await ps(true), marker, await ps(false));
   }
@@ -99,12 +108,14 @@ export class RunProcessSweep {
   constructor(private options: SweepOptions = {}) {
     this.marker = options.marker ?? randomUUID();
     if (!/^[a-zA-Z0-9-]{1,100}$/.test(this.marker)) throw new Error('Invalid saved run process marker.');
+    if (process.platform === 'win32' && !options.scan) windowsProcesses();
     this.used = options.marker !== undefined;
   }
   run<T>(work: () => T): T { return current.run(this, work); }
   environment(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     if (this.closed) throw new Error('Run process scope is closed; no further processes may start.');
     if (!this.options.scan && !['darwin', 'linux', 'win32'].includes(process.platform)) throw new Error('Run process inspection is unavailable on this platform; process launch refused.');
+    if (process.platform === 'win32' && !this.options.scan) windowsProcesses();
     this.used = true;
     return { ...base, [markerKey]: this.marker };
   }
@@ -122,7 +133,7 @@ export class RunProcessSweep {
       catch { empty = 0; return undefined; }
     };
     const windows = process.platform === 'win32' && !this.options.signal && !this.options.scan
-      ? await import('./windows-process-scan.js') : undefined;
+      ? windowsProcesses() : undefined;
     const signal = this.options.signal ?? ((pid, signal) => { process.kill(pid, signal); });
     const started = performance.now(), grace = this.options.graceMs ?? 400, deadline = grace + (this.options.killMs ?? 5000);
     do {
@@ -155,5 +166,8 @@ export class RunProcessSweep {
   }
 }
 export function runProcessEnvironment(base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  // Unscoped account/model sessions also launch subprocesses. Establish the app
+  // job before those can become parents of later run work.
+  if (process.platform === 'win32') windowsProcesses();
   return current.getStore()?.environment(base) ?? base;
 }

@@ -1,0 +1,27 @@
+# FH-008 provider accounting
+
+Checked against installed `@earendil-works/pi-coding-agent` / `pi-ai` **1.5.0** and bundled `@openai/codex` **0.166.0** on 2026-11-04. The design proposals in `origin/mukul-dev:vault/Research/Agentic/06-Run-Budgets.md` are not previously implemented policy. FH-008 enforces the whole-build deadline; it does not introduce a token, request or dollar cap.
+
+## Pi
+
+The installed `pi-ai/dist/types.d.ts` defines additive `input`, `output`, `cacheRead`, `cacheWrite` buckets. `reasoning` is already included in output; `cacheWrite1h` is already included in cacheWrite. The OpenAI Responses adapter subtracts cached/cache-write input from its input bucket. AppYard therefore reports inclusive input as `input + cacheRead + cacheWrite`, output as `output`, and total as their sum. A conflicting supplied total is flagged partial. No cache or reasoning subset is added twice. See the [primary Pi usage contract](https://github.com/earendil-works/pi/blob/main/packages/ai/src/types.ts).
+
+The ledger collects finalized assistant messages and `compaction_end.result.usage` separately. Compaction can combine several summary calls, so its record is a lower bound of one observed response, not an exact attempt count. Provider response IDs or session-local start/end identities deduplicate reports; identical content and usage in two different requests never merge. SDK zero-initialized usage, absent reports, canceled/unreported work and invalid numbers remain unavailable. Prompt submissions are counted separately. Hidden retries, failed summarization attempts and interrupted streams can consume usage absent from these events; run totals are explicitly partial.
+
+Pi `cost.totalFromProvider === true` identifies a provider-reported total; otherwise a positive cost is the selected model's catalog estimate. Missing/zero catalog prices do not prove zero cost. If a response identifies another model, AppYard omits the catalog estimate rather than using the requested model's price. Compaction's combined usage lacks response-model attribution, so only provider-reported cost is retained there. Cost records preserve measured/estimated provenance; aggregates distinguish provider, catalog and mixed sources. Aggregate costs are partial observations, not invoices.
+
+Pi exposes a replaceable agent `streamFunction`, also used by the default compaction path. This could gate logical calls in a future restricted adapter. It does **not** establish an all-provider hard quota: `ProviderRequestOptions.fetch` explicitly excludes WebSocket transports and can be unsupported; providers/SDKs can retry internally; `maxTokens` applies only to output; no common exact input-token reservation is exposed. The current application allows many providers. AppYard does not monkey-patch global transport or claim that event observation gates every request. See the [Pi SDK docs](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/sdk.md).
+
+## Codex through ChatGPT
+
+The installed CLI generated its protocol locally with `codex app-server generate-ts`. `ThreadTokenUsageUpdatedNotification` contains `{threadId, turnId, tokenUsage: {total, last, modelContextWindow}}`. Its `TokenUsageBreakdown` includes total/input/cached-input/cache-write-input/output/reasoning-output. AppYard consumes **total** as a cumulative session snapshot and replaces prior values, including late updates while the session remains open. It never adds `last` to `total`, or adds cached/reasoning subsets to input/output. Different sessions retain separate totals. Missing or interrupted usage remains partial/unavailable.
+
+The [official App Server docs](https://learn.chatgpt.com/docs/app-server) document `thread/tokenUsage/updated` and `turn/interrupt`. `turn/started` denotes a user turn, which may contain multiple requests; it is not used as a model-request counter. The generated `rawResponse/completed` type is explicitly **internal-only**, so this implementation does not depend on it. Public request counts are unavailable; submitted prompts are shown separately.
+
+The installed `TurnStartParams` has no per-request token reservation, maximum-output or spend-limit field. Although the protocol has a goal `tokenBudget`, that is not evidence of a guaranteed pre-dispatch ceiling across compaction, retries and every internal request; it is not used as a hard per-build token cap. No ChatGPT subscription allowance is converted into a per-run dollar amount. See the [official Codex integration guide](https://learn.chatgpt.com/docs/codex-sdk) for the distinction between SDK integration and App Server lifecycle.
+
+## Cancellation and scope
+
+Whole-build expiry uses the existing run controller and session cleanup. A local abort cannot promise that an upstream provider immediately stops billing an already accepted request. The deadline prevents AppYard from starting further model phases, retries or repair; partial artifacts and the accounting summary remain available. Human review and separately requested export/packaging have separate lifecycle semantics documented with the build budget.
+
+The Windows installer work was inspected without importing its hosted checkpoint or packaging changes. Its relevant verification fix kills the full Windows test process tree; deadline integration must retain compatible cancellation behavior. The current desktop main branch has no resumable pipeline checkpoint. FH-008 does not add FH-004 Resume.

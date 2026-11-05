@@ -7,6 +7,7 @@ import path from 'node:path';
 import { listArtifacts, sourceHash } from './storage.js';
 import { codexExecutable } from './codex-rpc.js';
 import type { TestReport } from '../shared/types.js';
+import { runAbortError } from './run-budget.js';
 import { runProcessEnvironment } from './process-sweep.js';
 export { reportPassed } from '../shared/verification.js';
 
@@ -119,10 +120,10 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   }
   const files = await applicationTestFiles(root, true);
   if (!files.length || !(await applicationTestFiles(root)).length) throw new Error('Pi did not produce any .test.js, .test.cjs, or .test.mjs files. No verification claim was made.');
-  if (signal?.aborted) throw new Error('Run stopped.');
+  if (signal?.aborted) throw runAbortError(signal);
   const started = performance.now();
   const beforeHash = await sourceHash(root);
-  if (signal?.aborted) throw new Error('Run stopped.');
+  if (signal?.aborted) throw runAbortError(signal);
   const args = [...(runtimeEnvironment ? ['--no-global-search-paths'] : []), '--test', '--test-reporter=' + registeredReporter, ...files.map(file => './' + file)];
   let command: VerificationCommand, home: string;
   try {
@@ -132,7 +133,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
   }
   catch (error) { throw new Error(sandboxFailure + ' ' + (error as Error).message, { cause: error }); }
   try {
-    if (signal?.aborted) throw new Error('Run stopped.');
+    if (signal?.aborted) throw runAbortError(signal);
     const environment = Object.fromEntries(Object.entries(runProcessEnvironment({ ...runtimeEnvironment, PATH: runtimeEnvironment?.PATH ?? process.env.PATH, HOME: root, USERPROFILE: root, TMPDIR: root, TEMP: root, TMP: root,
       CODEX_HOME: home, ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_ASAR: '1', SystemRoot: process.env.SystemRoot })).filter(([, value]) => value !== undefined));
     const child = spawn(command.runner, command.args, {
@@ -194,7 +195,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
       catch (error) { throw new VerificationShutdownError(error); }
       finally { child.stdout?.destroy(); child.stderr?.destroy(); }
     }
-    if (signal?.aborted) throw new Error('Run stopped.');
+    if (signal?.aborted) throw runAbortError(signal);
     if (timedOut) output += `\nVerification exceeded the ${limits.timeoutMs / 1000}-second limit.`;
     if (overflow) output += '\nVerification exceeded the output limit.';
     // Limits before the trusted bootstrap starts are sandbox startup failures, not test results.
@@ -204,7 +205,7 @@ export async function verifyWorkspace(root: string, executable: string, onProces
     const evidence = await registeredEvidence(root, files, output);
     output = evidence.output;
     const hash = await sourceHash(root);
-    if (signal?.aborted) throw new Error('Run stopped.');
+    if (signal?.aborted) throw runAbortError(signal);
     if (beforeHash !== hash) throw new Error('Source files changed during verification. Run verification again before review.');
     return { time: new Date().toISOString(), command: command.command,
       portableCommand: portableTestCommand(files), provenance: { runner: command.runner, args: [...command.args], cwd: root, environment },

@@ -149,7 +149,7 @@ export async function executeHelperProcess(options: HelperProcessOptions): Promi
     // Node's permission layer denies subprocesses, workers and native addons.
     // This prevents helpers daemonizing beyond the process group timeout. The
     // Codex OS sandbox remains the authority for filesystem and network access.
-    const args = ['sandbox', ...(process.platform === 'win32' ? ['-c', 'features.prefer_mxc=true'] : []), '-C', workspace, '-P', 'fleet-helper', '-c', 'permissions.fleet-helper=' + toml(profile),
+    const args = ['sandbox', '-C', workspace, '-P', 'fleet-helper', '-c', 'permissions.fleet-helper=' + toml(profile),
       '-c', 'projects=' + toml({ [workspace]: { trust_level: 'untrusted' } }), '--', executable, ...nodeArgs];
     // Do not inherit API keys, loader hooks, proxy settings, shell startup files,
     // or the user's Codex configuration. This invocation makes no model call.

@@ -4,74 +4,86 @@ import koffi from 'koffi';
 // process start identities leave this module; never log environment contents.
 // https://learn.microsoft.com/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess
 const kernel = koffi.load('kernel32.dll');
-const security = koffi.load('advapi32.dll');
 const native = koffi.load('ntdll.dll');
-const sessions = koffi.load('wtsapi32.dll');
-// WTS provides ownership independently of a process's query/read DACL.
-// https://learn.microsoft.com/windows/win32/api/wtsapi32/nf-wtsapi32-wtsenumerateprocessesw
-const enumerate = sessions.func('int __stdcall WTSEnumerateProcessesW(uintptr_t server, uint32_t reserved, uint32_t version, _Out_ uintptr_t *processes, _Out_ uint32_t *count)');
-const freeProcesses = sessions.func('void __stdcall WTSFreeMemory(uintptr_t buffer)');
 const open = kernel.func('uintptr_t __stdcall OpenProcess(uint32_t access, int inherit, uint32_t pid)');
 const close = kernel.func('int __stdcall CloseHandle(uintptr_t handle)');
 const current = kernel.func('uintptr_t __stdcall GetCurrentProcess()');
 const times = kernel.func('int __stdcall GetProcessTimes(uintptr_t handle, _Out_ void *created, _Out_ void *exited, _Out_ void *kernel, _Out_ void *user)');
 const exitCode = kernel.func('int __stdcall GetExitCodeProcess(uintptr_t handle, _Out_ uint32_t *code)');
 const terminate = kernel.func('int __stdcall TerminateProcess(uintptr_t handle, uint32_t code)');
-const information = kernel.func('int __stdcall GetProcessInformation(uintptr_t handle, int kind, _Out_ void *buffer, uint32_t size)');
 const read = kernel.func('int __stdcall ReadProcessMemory(uintptr_t handle, uintptr_t address, _Out_ void *buffer, size_t size, _Out_ size_t *received)');
 const query = native.func('int32_t __stdcall NtQueryInformationProcess(uintptr_t handle, uint32_t kind, _Out_ void *buffer, uint32_t size, _Out_ uint32_t *received)');
-const openToken = security.func('int __stdcall OpenProcessToken(uintptr_t process, uint32_t access, _Out_ uintptr_t *token)');
-const tokenInfo = security.func('int __stdcall GetTokenInformation(uintptr_t token, int kind, _Out_ void *buffer, uint32_t size, _Out_ uint32_t *received)');
-const sidLength = security.func('uint32_t __stdcall GetLengthSid(uintptr_t sid)');
+const createJob = kernel.func('uintptr_t __stdcall CreateJobObjectW(void *attributes, const char16_t *name)');
+const assignJob = kernel.func('int __stdcall AssignProcessToJobObject(uintptr_t job, uintptr_t process)');
+const setJob = kernel.func('int __stdcall SetInformationJobObject(uintptr_t job, int kind, void *buffer, uint32_t size)');
+const queryJob = kernel.func('int __stdcall QueryInformationJobObject(uintptr_t job, int kind, _Out_ void *buffer, uint32_t size, _Out_ uint32_t *received)');
+const isInJob = kernel.func('int __stdcall IsProcessInJob(uintptr_t process, uintptr_t job, _Out_ int *result)');
+const lastError = kernel.func('uint32_t __stdcall GetLastError()');
 type Handle = number | bigint;
+let applicationJob: Handle = 0;
 
-function sidIdentity(address: Handle) {
-  if (!address) return undefined;
-  const length = sidLength(address);
-  if (length < 8 || length > 68) throw new Error('Invalid process owner identity.');
-  return Buffer.from(koffi.decode(address, 'uint8_t', length)).toString('hex');
+/** Initialize before launching any child. The unnamed, non-inheritable handle
+ * stays open in the host. Descendants inherit membership, including nested jobs;
+ * breakaway is disabled. Host exit kills descendants when the last handle closes.
+ * https://learn.microsoft.com/windows/win32/api/jobapi2/nf-jobapi2-createjobobjectw
+ * https://learn.microsoft.com/windows/win32/procthread/job-objects
+ */
+export function initializeWindowsProcessJob() {
+  if (applicationJob) return;
+  if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Windows process inspection requires an x64 host.');
+  const job = createJob(null, null);
+  if (!job) throw new Error('Cannot create the Windows application process boundary.');
+  // JOBOBJECT_EXTENDED_LIMIT_INFORMATION is 144 bytes on x64; LimitFlags is at 16.
+  const limits = Buffer.alloc(144);
+  limits.writeUInt32LE(0x2000, 16); // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+  if (!setJob(job, 9, limits, limits.length) || !assignJob(job, current())) {
+    close(job);
+    throw new Error('Cannot establish the Windows application process boundary; process launch refused.');
+  }
+  // Never close a successful assignment manually: the host itself is a member.
+  applicationJob = job;
 }
 
-function owner(handle: Handle) {
-  const token: Handle[] = [0];
-  if (!openToken(handle, 8, token)) return undefined;
-  try {
-    const data = Buffer.alloc(512), size = [0];
-    if (!tokenInfo(token[0], 1, data, data.length, size)) throw new Error('Cannot inspect process ownership.');
-    return sidIdentity(data.readBigUInt64LE(0));
-  } finally { close(token[0]); }
+function jobProcesses() {
+  if (!applicationJob) throw new Error('Windows process boundary was not initialized before launch.');
+  let capacity = 128;
+  while (capacity <= 65536) {
+    const data = Buffer.alloc(8 + capacity * 8), received = [0];
+    const ok = queryJob(applicationJob, 3, data, data.length, received);
+    if (!ok && lastError() !== 234) throw new Error('Cannot inspect the Windows application process boundary.');
+    const assigned = data.readUInt32LE(0), count = data.readUInt32LE(4);
+    if (!ok || count < assigned) { capacity = Math.max(capacity * 2, assigned); continue; }
+    if (!count || count > capacity || assigned > capacity) throw new Error('Invalid Windows application process snapshot.');
+    const result: { pid: number }[] = [];
+    for (let index = 0; index < count; index++) {
+      const value = data.readBigUInt64LE(8 + index * 8);
+      if (value <= 0n || value > 0xffffffffn) throw new Error('Invalid Windows application process identity.');
+      // Kernel membership limits inspection to this app and is rechecked through
+      // the opened handle; an inaccessible member stays inconclusive.
+      result.push({ pid: Number(value) });
+    }
+    if (!result.some(entry => entry.pid === process.pid)) throw new Error('Windows application process snapshot omitted its host.');
+    return result;
+  }
+  throw new Error('Windows application process snapshot exceeds its limit.');
 }
-const user = owner(current());
-if (!user) throw new Error('Cannot determine the current Windows process owner.');
-function integrity(handle: Handle) {
-  const token: Handle[] = [0];
-  if (!openToken(handle, 8, token)) throw new Error('Cannot inspect process integrity.');
-  try {
-    const data = Buffer.alloc(512), size = [0];
-    if (!tokenInfo(token[0], 25, data, data.length, size)) throw new Error('Cannot inspect process integrity.');
-    const address = data.readBigUInt64LE(0), length = sidLength(address);
-    if (length < 12 || length > 68) throw new Error('Invalid process integrity identity.');
-    const sid = Buffer.from(koffi.decode(address, 'uint8_t', length));
-    return sid.readUInt32LE(length - 4);
-  } finally { close(token[0]); }
+
+function processStart(handle: Handle) {
+  const created = Buffer.alloc(8);
+  if (!times(handle, created, Buffer.alloc(8), Buffer.alloc(8), Buffer.alloc(8))) throw new Error('Cannot inspect process start identity.');
+  return created.readBigUInt64LE(0);
 }
-const currentIntegrity = integrity(current());
-// Normal children cannot acquire a higher integrity level without a separate
-// elevation boundary. Elevated desktop utilities are outside this run's scope.
+
 function inScope(handle: Handle) {
-  const protection = Buffer.alloc(4);
-  if (!information(handle, 7, protection, protection.length)) throw new Error('Cannot inspect process protection.');
-  // PPL processes require a separately trusted, signed OS launch boundary.
-  // Ordinary run children cannot become protected processes.
-  if (protection.readUInt32LE(0) !== 0xfffffffe) return false;
-  const identity = owner(handle);
-  if (!identity) throw new Error('Cannot inspect process ownership.');
-  if (identity !== user) return false;
-  return integrity(handle) <= currentIntegrity;
+  if (!applicationJob) throw new Error('Windows application process boundary is unavailable.');
+  const member = [0];
+  if (!isInJob(handle, applicationJob, member)) throw new Error('Cannot inspect process boundary membership.');
+  return !!member[0];
 }
 function alive(handle: Handle) {
   const code = [0];
-  return !!exitCode(handle, code) && code[0] === 259;
+  if (!exitCode(handle, code)) throw new Error('Cannot inspect process exit status.');
+  return code[0] === 259;
 }
 function memory(handle: Handle, address: bigint, size: number) {
   if (!address) throw new Error('Process environment is not initialized.');
@@ -118,7 +130,7 @@ function environment(handle: Handle) {
 
 type Identity = { pid: number; started: string };
 export interface WindowsProcessAccess {
-  candidates(): { pid: number; sameOwner: boolean | undefined }[];
+  candidates(): { pid: number }[];
   open(pid: number, terminate: boolean): Handle;
   limited(pid: number): Handle;
   close(handle: Handle): void;
@@ -130,33 +142,11 @@ export interface WindowsProcessAccess {
 }
 
 const systemAccess: WindowsProcessAccess = {
-  candidates() {
-    if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Windows process inspection requires an x64 host.');
-    const buffer: Handle[] = [0], count = [0];
-    if (!enumerate(0, 0, 1, buffer, count)) throw new Error('Cannot enumerate Windows process owners.');
-    try {
-      if (!buffer[0] || count[0] < 1 || count[0] > 65536) throw new Error('Invalid Windows process owner snapshot.');
-      // WTS_PROCESS_INFOW on x64: two DWORDs, name pointer, primary-token SID pointer.
-      const rows = Buffer.from(koffi.decode(buffer[0], 'uint8_t', count[0] * 24));
-      const result: { pid: number; sameOwner: boolean | undefined }[] = [];
-      for (let offset = 0; offset < rows.length; offset += 24) {
-        const pid = rows.readUInt32LE(offset + 4);
-        if (!pid) continue; // The idle pseudo-process has no user token.
-        const identity = sidIdentity(rows.readBigUInt64LE(offset + 16));
-        result.push({ pid, sameOwner: identity === undefined ? undefined : identity === user });
-      }
-      if (!result.some(entry => entry.pid === process.pid && entry.sameOwner)) throw new Error('Windows process owner snapshot omitted the current user.');
-      return result;
-    } finally { if (buffer[0]) freeProcesses(buffer[0]); }
-  },
+  candidates: jobProcesses,
   open: (pid, allowTerminate) => open(0x1410 | (allowTerminate ? 1 : 0), 0, pid),
   limited: pid => open(0x1000, 0, pid),
   close: handle => { close(handle); }, alive, inScope, environment,
-  started(handle) {
-    const created = Buffer.alloc(8);
-    if (!times(handle, created, Buffer.alloc(8), Buffer.alloc(8), Buffer.alloc(8))) throw new Error('Cannot inspect process start identity.');
-    return created.readBigUInt64LE(0).toString();
-  },
+  started: handle => processStart(handle).toString(),
   terminate(handle) {
     // Terminate this verified kernel object, never reopen a possibly reused PID.
     // https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess
@@ -170,9 +160,9 @@ function denied(pid: number, access: WindowsProcessAccess) {
     try { if (!access.alive(limited) || !access.inScope(limited)) return; }
     finally { access.close(limited); }
   }
-  // Refresh ownership to distinguish an exited/replaced process from a same-user
-  // process denying inspection. Unknown ownership cannot confirm cleanup.
-  if (access.candidates().some(entry => entry.pid === pid && entry.sameOwner !== false)) {
+  // Refresh membership to distinguish an exited process from an inaccessible
+  // member. Unknown identity cannot confirm cleanup.
+  if (access.candidates().some(entry => entry.pid === pid)) {
     throw new Error('Cannot inspect user process ' + pid + '.');
   }
 }
@@ -181,7 +171,6 @@ export function windowsRunProcesses(marker: string, access: WindowsProcessAccess
   const result: Identity[] = [];
   for (const candidate of access.candidates()) {
     const { pid } = candidate;
-    if (candidate.sameOwner === false) continue;
     const handle = access.open(pid, false);
     if (!handle) { denied(pid, access); continue; }
     try {

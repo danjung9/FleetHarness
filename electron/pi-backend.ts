@@ -4,6 +4,9 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
+import { normalizeBuildTimeLimitMinutes } from '../shared/run-budget.js';
+import { RunBudget, runAbortError, type BudgetClock } from './run-budget.js';
+import { RunUsageLedger } from './run-usage.js';
 import { Store, safeFile, listArtifacts, sourceHash } from './storage.js';
 import { applicationTestFiles, reportPassed, VerificationShutdownError } from './verification.js';
 import { loadQualityContract, assertQualityContract, verifyApplication, sealEvaluationPlan, restoreEvaluationPlan, type QualityContract, type ApplicationVerificationLimits } from './quality.js';
@@ -12,7 +15,7 @@ import { summarizeToolResult } from '../shared/activity.js';
 import { prepareSolutionRuntime } from './solution-runtime.js';
 import { runSolutionEvaluation } from './solution-evaluation.js';
 import type { AcceptanceCriterion } from '../harness/types.js';
-import { runAgentStage, stoppedMessage, sumTokenUsage, type AgentLimits, type StageSession } from './agent-runner.js';
+import { runAgentStage, AgentShutdownError, sumTokenUsage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { prepareFleetWorkspace, fleetStagePrompt, assertFleetPacketIntegrity } from '../harness/integration.js';
 import { materializeFoundation, validateFoundationPlan, assertFoundationIntegrity, type FoundationSnapshot } from '../harness/foundations.js';
 import { phasePrompt, toolsForPhase, resolvePhaseForRuntime, syntheticDataPhase, type PhaseContract } from '../harness/phases.js';
@@ -38,22 +41,13 @@ async function publishFile(destination: string, body: string, stagingDirectory =
   } finally { await fs.rm(temporary, { force: true }); }
 }
 
-function duringResume<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const aborted = () => reject(new Error(stoppedMessage));
-    if (signal.aborted) aborted();
-    else signal.addEventListener('abort', aborted, { once: true });
-    operation.then(resolve, reject).finally(() => signal.removeEventListener('abort', aborted));
-  });
-}
-
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
 import { runIndependentJudge } from './independent-judge.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; repairUsed?: boolean; helpers?: AgentHelperRuntime; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport };
+type ActiveRun = { budget: RunBudget; usage: RunUsageLedger; heartbeat?: ReturnType<typeof setInterval>; finishing?: boolean; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; repairUsed?: boolean; helpers?: AgentHelperRuntime; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null]));
 const foregroundPolicy = 'Do not start background or detached jobs. Keep shell commands in the foreground and wait for them to finish. Do not use nohup, disown, setsid, Start-Job, Start-Process or trailing &. Stop tracks foreground calls only; an operator must inspect and stop remaining jobs if background activity is detected.';
@@ -88,6 +82,9 @@ interface BackendOptions {
   createCodexSession?: typeof createCodexSession;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   agentLimits?: Partial<AgentLimits>;
+  budgetClock?: BudgetClock;
+  verifyApplication?: typeof verifyApplication;
+  cancellationGraceMs?: number;
   maxLogEntries?: number;
   shutdownTimeoutMs?: number;
   verificationLimits?: Partial<ApplicationVerificationLimits>;
@@ -107,8 +104,15 @@ export class FleetBackend {
       configured: this.runtime.hasConfiguredAuth(m.provider) })).sort((a, b) => Number(b.configured) - Number(a.configured) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))];
   }
   private async changed(p: Project) {
+    const run = this.active.get(p.id);
+    if (run && p.runSummary) { run.budget.snapshot(); p.runSummary.usage = run.usage.snapshot(); }
     if (p.report) p.report.stageMetrics = p.stages.filter(s => s.metrics).map(s => ({ stage: s.id, ...structuredClone(s.metrics!) }));
-    p.updatedAt = new Date().toISOString(); this.notify(); await this.store.save();
+    p.updatedAt = new Date().toISOString(); this.notify();
+    if (run && !run.finishing) {
+      // Cancellation cleanup changes are saved once by finish(), after actual shutdown.
+      if (run.controller.signal.aborted) return;
+      await run.budget.wait(() => this.store.save());
+    } else await this.store.save();
   }
   private log(p: Project, stage: StageId, kind: 'info' | 'text' | 'tool' | 'error', text: string, tool?: ToolEvent) {
     const last = p.logs.at(-1);
@@ -120,7 +124,8 @@ export class FleetBackend {
   }
   private async stage(p: Project, id: StageId, status: 'active' | 'complete' | 'failed' | 'review') {
     const run = this.active.get(p.id);
-    if (run && status === 'active') await this.checkpoint(p, run, id);
+    if (run && !run.finishing) { this.check(run); if (status === 'active') run.budget.phase(id, stageDefinitions.find(s => s.id === id)!.label); }
+    if (run && status === 'active') await run.budget.wait(() => this.checkpoint(p, run, id));
     const stage = p.stages.find(s => s.id === id)!;
     if (status === 'active') {
       stage.metrics ??= { startedAt: new Date().toISOString(), finishedAt: null, durationMs: 0,
@@ -128,7 +133,7 @@ export class FleetBackend {
       stage.metrics.finishedAt = null;
       this.stageStarts.set(p.id + '/' + id, performance.now());
     } else this.finishStageMetrics(p, id);
-    stage.status = status; await this.changed(p);
+    stage.status = status; if (run) await run.budget.wait(() => this.changed(p)); else await this.changed(p);
     if (status === 'complete' && ['intake', 'research', 'plan', 'build', 'verify'].includes(id)) {
       await this.hostedCheckpoint(p, id as PipelineCheckpoint['completedStage']);
     }
@@ -137,12 +142,12 @@ export class FleetBackend {
     if (!this.options.checkpoint) return;
     const run = this.active.get(p.id);
     if (!run?.packetHash || !p.workspace) throw new Error('Run checkpoint is unavailable.');
-    await this.checkInputs(p, run);
+    await run.budget.wait(() => this.checkInputs(p, run));
     if (p.runCheckpoint?.writerState !== 'idle') throw new Error('Writer shutdown was not confirmed before checkpoint creation.');
     await this.checkpoint(p, run);
     const runtime = run.data ? await readRunCheckpoint(this.store.root, p) : undefined;
-    await this.options.checkpoint({ version: 1, completedStage, project: structuredClone(p), packetHash: run.packetHash, runtime,
-      sourceHash: await sourceHash(p.workspace), ...(run.quality ? { qualityHash: run.quality.hash } : {}) });
+    await run.budget.wait(async () => this.options.checkpoint!({ version: 1, completedStage, project: structuredClone(p), packetHash: run.packetHash!, runtime,
+      sourceHash: await sourceHash(p.workspace!), ...(run.quality ? { qualityHash: run.quality.hash } : {}) }));
     this.check(run);
   }
   private finishStageMetrics(p: Project, id: StageId) {
@@ -166,19 +171,21 @@ export class FleetBackend {
       acceptance: run.acceptance, data: run.data, quality: run.quality, foundation: run.foundation, repairUsed: run.repairUsed,
       foundationPlan: run.foundationPlan,
       clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview };
-    await writeRunCheckpoint(this.store.root, p, checkpoint);
+    await run.budget.wait(() => writeRunCheckpoint(this.store.root, p, checkpoint));
+    this.check(run);
     run.checkpointStage = stage;
     p.resumeStage = stage;
   }
-  private check(run: ActiveRun) { if (run.controller.signal.aborted) throw new Error(stoppedMessage); }
+  private check(run: ActiveRun) { run.budget.check(); }
   private async finish(p: Project, run: ActiveRun) {
+    run.finishing = true; clearInterval(run.heartbeat);
     p.verification = undefined;
     try {
       await run.processes.stop();
       if (p.processScope && p.processScope.marker === run.processes.marker && p.processScope.runId === p.runId) p.processScope.cleanup = 'confirmed';
       p.status = run.controller.signal.aborted ? 'stopped' : run.outcome ?? 'failed';
       if (p.status === 'stopped') {
-        p.error = p.runCheckpoint?.writerState === 'unconfirmed' && p.error ? stoppedMessage + '\n' + p.error : stoppedMessage;
+        p.error = p.runCheckpoint?.writerState === 'unconfirmed' && p.error ? runAbortError(run.controller.signal).message + '\n' + p.error : runAbortError(run.controller.signal).message;
         p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       }
     } catch {
@@ -189,6 +196,8 @@ export class FleetBackend {
       p.stages.filter(s => s.status === 'active' || s.status === 'review').forEach(s => { s.status = 'failed'; });
       this.log(p, 'verify', 'error', p.error);
     }
+    run.budget.finish(p.status === 'review' ? 'completed' : p.status === 'stopped' ? 'stopped' : 'failed');
+    if (p.runSummary) p.runSummary.usage = run.usage.snapshot();
     for (const stage of p.stages) this.finishStageMetrics(p, stage.id);
     // Evidence-file errors must not prevent saving the terminal project state.
     if (p.report) {
@@ -201,15 +210,20 @@ export class FleetBackend {
         if (p.status !== 'stopped') p.status = 'failed';
       }
     }
-    try { await this.options.clarifications?.cancel(p, p.runId!); await this.changed(p); }
+    let saveTimer: ReturnType<typeof setTimeout> | undefined;
+    try { await Promise.race([(async () => { await this.options.clarifications?.cancel(p, p.runId!); await this.changed(p); })(), new Promise<never>((_, reject) => {
+      saveTimer = setTimeout(() => reject(new Error('Saving run state did not finish within 5 seconds.')), 5000);
+    })]); }
     catch (error) {
       p.verification = undefined;
       p.error = [p.error, 'Could not save run state: ' + String(error)].filter(Boolean).join('\n');
       if (p.status !== 'stopped') p.status = 'failed';
+      if (p.runSummary && p.status === 'failed' && p.runSummary.terminalReason !== 'time_budget_exhausted') p.runSummary.terminalReason = 'failed';
       p.resumeStage = run.checkpointStage;
       p.stages.filter(stage => stage.status === 'active' || stage.status === 'review').forEach(stage => { stage.status = 'failed'; });
       this.log(p, 'intake', 'error', p.error);
     } finally {
+      clearTimeout(saveTimer);
       if (this.active.get(p.id) === run) this.active.delete(p.id);
       run.resolve();
       this.notify();
@@ -254,24 +268,53 @@ export class FleetBackend {
     if (!startOptions.resume && p.processScope && (p.processScope.cleanup !== 'confirmed' || p.processScope.runId !== p.runId)) throw new Error('Process cleanup is unconfirmed; writer shutdown was not confirmed. Use Stop to reconcile the previous run before starting new work.');
     if (resuming && !['failed', 'stopped'].includes(p.status)) throw new Error('Only a failed or stopped build can resume.');
     if (resuming && (!p.workspace || !p.runId || p.runCheckpoint?.version !== 1)) throw new Error('This build has no saved recovery checkpoint. Start a new run.');
-    const { provider, model: modelId, backend = 'pi' } = this.store.state.settings;
+    const { provider, model: modelId, backend = 'pi', buildTimeLimitMinutes } = this.store.state.settings;
+    if (backend !== 'codex' && (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider))) throw new Error('Choose a model and connect its provider in Model settings first.');
     const previousRunId = p.runId, previousWorkspace = p.workspace;
-    if (backend === 'codex') {
-      await duringResume(this.options.codex?.refresh() ?? Promise.resolve(), preparation?.signal ?? new AbortController().signal);
-      if (this.options.codex?.account.status !== 'connected' || (this.options.codex.sessionCredentials && this.options.codex.account.planUsageEnabled !== true) || !this.options.codex.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
-    } else if (!this.runtime.getModel(provider, modelId) || !this.runtime.hasConfiguredAuth(provider)) throw new Error('Choose a model and connect its provider in Model settings first.');
-    const route = backend === 'codex' ? this.options.codex?.route : undefined;
-    // Authentication can await network I/O; recheck capacity before reserving the run.
-    preparation?.signal.throwIfAborted();
-    if (resuming && (p.runId !== previousRunId || p.workspace !== previousWorkspace)) throw new Error('The build changed while preparing to resume. Try again.');
-    if (this.active.has(id)) throw new Error('This challenge already has an active run.');
-    if (this.active.size + this.resuming.size - (preparation ? 1 : 0) >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
-    if (resuming && !['failed', 'stopped'].includes(p.status)) throw new Error('Only a failed or stopped build can resume.');
+    const saved = startOptions.resume?.project ?? (resuming ? p : undefined);
+    const savedSummary = saved?.runSummary;
+    if (saved && (!savedSummary || savedSummary.runId !== saved.runId || savedSummary.backend !== backend || !savedSummary.model.endsWith('/' + modelId) || !Number.isFinite(Date.parse(savedSummary.deadlineAt)))) {
+      throw new Error('This saved build has no matching time-budget checkpoint. Start a new build; resume cannot grant a fresh allowance.');
+    }
+    const controller = preparation ?? new AbortController();
+    const usage = new RunUsageLedger(backend, savedSummary?.usage);
+    const now = this.options.budgetClock?.wallNow() ?? Date.now();
+    const timeLimitMs = normalizeBuildTimeLimitMinutes(buildTimeLimitMinutes) * 60_000;
+    const runId = saved?.runId ?? startOptions.runId ?? randomUUID();
+    const summary = savedSummary ? structuredClone(savedSummary) : { runId, backend, model: provider + '/' + modelId,
+      startedAt: new Date(now).toISOString(), deadlineAt: new Date(now + timeLimitMs).toISOString(), timeLimitMs, elapsedMs: 0, phases: [], usage: usage.snapshot() };
+    delete summary.finishedAt; delete summary.terminalReason;
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: preparation ?? new AbortController(), done, resolve, review: startOptions.revision?.review };
+    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller, usage,
+      budget: new RunBudget(summary, controller, this.options.budgetClock), done, resolve, review: startOptions.revision?.review };
     this.active.set(id, run);
+    if (!saved) {
+      p.runId = runId; p.workspace = startOptions.workspace ?? path.join(this.store.root, 'workspaces', p.id, runId);
+      p.status = 'running'; p.stages = structuredClone(stageDefinitions); p.logs = []; p.error = undefined; p.report = undefined;
+      p.runCheckpoint = undefined; p.verification = undefined; p.approval = undefined; p.approvedAt = undefined;
+      p.processScope = { runId, marker: run.processes.marker, cleanup: 'pending' };
+    }
+    p.runSummary = summary;
+    let heartbeatSaving = false;
+    run.heartbeat = setInterval(() => {
+      if (run.finishing || heartbeatSaving || this.active.get(id) !== run) return;
+      heartbeatSaving = true;
+      void this.changed(p).catch(error => this.log(p, run.checkpointStage ?? 'intake', 'error', 'Could not save run checkpoint: ' + String(error))).finally(() => { heartbeatSaving = false; });
+    }, 5000);
     try {
+      run.budget.phase('setup', saved ? 'Restore build' : 'Workspace setup');
+      if (startOptions.resume) { p.runId = runId; p.workspace = startOptions.workspace ?? startOptions.resume.project.workspace; }
+      await run.budget.wait(() => fs.mkdir(p.workspace!, { recursive: true, mode: 0o700 }));
+      await run.budget.wait(() => this.changed(p));
+      if (backend === 'codex') {
+        await run.budget.wait(() => run.processes.run(() => this.options.codex?.refresh() ?? Promise.resolve()));
+        if (this.options.codex?.account.status !== 'connected' || (this.options.codex.sessionCredentials && this.options.codex.account.planUsageEnabled !== true) || !this.options.codex.models.some(m => m.id === modelId && m.configured) || provider !== 'chatgpt') throw new Error('Choose a model and sign in with ChatGPT in Model settings first.');
+      }
+      this.check(run);
+      if (resuming && (p.runId !== previousRunId || p.workspace !== previousWorkspace)) throw new Error('The build changed while preparing to resume. Try again.');
+      const route = backend === 'codex' ? this.options.codex?.route : undefined;
+      summary.model = (route?.provider ?? provider) + '/' + modelId;
       const hosted = startOptions.resume;
       if (hosted) {
         if (hosted.version !== 1 || hosted.project.id !== p.id || !hosted.project.runId ||
@@ -283,7 +326,7 @@ export class FleetBackend {
         if (await sourceHash(workspace) !== hosted.sourceHash) throw new Error('Checkpoint files changed. Restore the saved checkpoint before resuming.');
         if (hosted.project.runCheckpoint.packetHash !== hosted.packetHash ||
           hosted.project.runCheckpoint.qualityHash !== hosted.qualityHash) throw new Error('Checkpoint context or quality contract changed. Start a new build.');
-        Object.assign(p, structuredClone(hosted.project), { workspace });
+        Object.assign(p, structuredClone(hosted.project), { workspace, runSummary: summary });
         if (hosted.runtime) await writeRunCheckpoint(this.store.root, p, { ...structuredClone(hosted.runtime), workspace });
         p.stages = structuredClone(stageDefinitions).map((stage, index) => ({ ...stage,
           metrics: p.stages.find(saved => saved.id === stage.id)?.metrics,
@@ -291,7 +334,7 @@ export class FleetBackend {
         resuming = true;
       }
       if (resuming) {
-        await this.restore(p, run);
+        await run.budget.wait(() => this.restore(p, run));
         this.check(run);
         const first = p.stages.findIndex(s => s.status !== 'complete');
         p.stages.slice(first).forEach(s => { s.status = 'queued'; });
@@ -307,7 +350,7 @@ export class FleetBackend {
         void run.processes.run(() => this.execute(p, run, provider, modelId));
         return;
       }
-      p.runId = startOptions.runId ?? randomUUID();
+      p.runId = runId;
       p.processScope = { runId: p.runId, marker: run.processes.marker, cleanup: 'pending' };
       p.verification = undefined; p.approval = undefined;
       p.workspace = startOptions.workspace ?? path.join(this.store.root, 'workspaces', p.id, p.runId);
@@ -319,17 +362,17 @@ export class FleetBackend {
       p.runCheckpoint = undefined;
       p.backend = backend;
       p.model = (route?.provider ?? provider) + '/' + modelId;
-      await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
+      await run.budget.wait(() => fs.mkdir(p.workspace!, { recursive: true, mode: 0o700 }));
       this.check(run);
       if (startOptions.revision) {
-        run.reviewSourceHash = await copyReviewSource(startOptions.revision.workspace, path.join(p.workspace, '.review-source'));
+        run.reviewSourceHash = await run.budget.wait(() => copyReviewSource(startOptions.revision!.workspace, path.join(p.workspace!, '.review-source')));
         this.check(run);
       }
       p.dataInputs = normalizeDataInputs(p.dataInputs);
       run.briefHash = briefFingerprint(p);
-      run.data = await prepareBriefData(p.workspace, p.dataInputs);
+      run.data = await run.budget.wait(() => prepareBriefData(p.workspace!, p.dataInputs!));
       this.check(run);
-      await atomicHostWrite(p.workspace, 'requirements.md', [
+      await run.budget.wait(() => atomicHostWrite(p.workspace!, 'requirements.md', [
         '# ' + p.title, '', p.description, '',
         ...(p.inputs ? ['## Inputs', '', p.inputs, ''] : []),
         ...(p.outputs ? ['## Outputs', '', p.outputs, ''] : []),
@@ -338,18 +381,18 @@ export class FleetBackend {
           : ['No evaluation criteria supplied. Propose measurable outcomes in scope.md and test-matrix.md; distinguish these from user-confirmed criteria.']), '',
         ...(p.resources ? ['## Resources', '', p.resources, ''] : []),
         ...(p.links?.length ? ['## Reference links', '', ...p.links.map(link => '- ' + link), ''] : []),
-        '## Data and inputs', '', p.dataInputs.length
+        '## Data and inputs', '', p.dataInputs?.length
           ? 'User-provided inputs are copied into inputs/. Read inputs/manifest.json for names, formats and paths. Preserve the supplied contents and provenance.'
           : 'No input data supplied. A dedicated synthetic data agent will create use-case-specific fixtures during intake in data/synthetic-data.json and data/README.md.', '',
-        ...p.dataInputs.map(input => '- ' + input.name + ' (' + input.kind + ', ' + Buffer.byteLength(input.content, 'utf8') + ' bytes)'), '',
+        ...(p.dataInputs ?? []).map(input => '- ' + input.name + ' (' + input.kind + ', ' + Buffer.byteLength(input.content, 'utf8') + ' bytes)'), '',
         'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.',
         ...(run.review ? ['', reviewIterationPrompt(run.review)] : [])
-      ].join('\n'));
-      const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
-        criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
+      ].join('\n')));
+      const packet = await run.budget.wait(() => prepareFleetWorkspace({ workspace: p.workspace!, title: p.title, description: p.description,
+        criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot }));
       run.context = packet.context; run.phases = packet.phases; run.globalTools = packet.globalTools; p.globalTools = [...packet.globalTools]; p.phasePlan = structuredClone(packet.phases); run.packetHash = packet.packetHash;
       run.acceptance = packet.acceptance;
-      run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
+      run.requirements = await run.budget.wait(() => fs.readFile(path.join(p.workspace!, 'requirements.md'), 'utf8'));
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
         packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle' };
       this.check(run);
@@ -482,16 +525,25 @@ export class FleetBackend {
     return this.retryStage(p, run, stage, () => this.agentAttempt(p, run, stage, provider, modelId, instruction, files, tests, followUp, variant));
   }
   private async trackedAgent(p: Project, run: ActiveRun, options: Parameters<typeof runAgentStage>[0]) {
+    this.check(run);
+    const usagePhase = p.runSummary!.phases.at(-1)?.id ?? 'build';
+    const sessionKey = randomUUID();
     const timeoutMs = this.options.shutdownTimeoutMs ?? 5000;
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) throw new Error('Invalid writer shutdown timeout.');
     const checkpoint = p.runCheckpoint!;
+    if (checkpoint.writerState !== 'idle') throw new AgentShutdownError('Writer shutdown was not confirmed. Recovery in this workspace is blocked.');
     checkpoint.writerState = 'active'; await this.changed(p);
     let creation: Promise<StageSession> | undefined, session: StageSession | undefined, abort: Promise<void> | undefined;
     let released = false, failed = false, failure: unknown;
     const prompts = new Set<Promise<unknown>>();
     const cancel = () => abort ??= Promise.resolve().then(() => session!.abort());
     try {
-      await runAgentStage({ ...options, create: signal => {
+      await runAgentStage({ ...options,
+        onEvent: event => { run.usage.event(usagePhase, event, sessionKey); options.onEvent(event); },
+        work: (prompt, signal) => options.work(async text => {
+          this.check(run); run.usage.beginPrompt(usagePhase); await prompt(text); this.check(run);
+        }, signal),
+        create: signal => {
         creation = options.create(signal).then(target => {
           session = target;
           return {
@@ -508,6 +560,7 @@ export class FleetBackend {
         return creation;
       } });
     } catch (error) { failed = true; failure = error; }
+    finally { run.usage.endSession(usagePhase, sessionKey, failed || run.controller.signal.aborted); }
     let timer: ReturnType<typeof setTimeout> | undefined;
     const shutdown = (async () => {
       let creationFailed = false;
@@ -521,20 +574,24 @@ export class FleetBackend {
     clearTimeout(timer); released = true;
     try { session?.dispose(); } catch { confirmed = false; }
     checkpoint.writerState = confirmed ? 'idle' : 'unconfirmed'; await this.changed(p);
-    if (!confirmed) throw new Error((failed ? String(failure) + '\n' : '') + 'Writer shutdown was not confirmed. Recovery in this workspace is blocked. Stop and clean up the old workers, then start a new run in a fresh workspace.');
+    if (!confirmed) throw new AgentShutdownError((failed ? String(failure) + '\n' : '') + 'Writer shutdown was not confirmed. Recovery in this workspace is blocked. Stop and clean up the old workers, then start a new run in a fresh workspace.');
     if (failed) throw failure;
   }
   private async agentAttempt(p: Project, run: ActiveRun, stage: StageId, provider: string, modelId: string, instruction: string, files: string[], tests = false, followUp?: { instruction: string; files: string[]; coreGate?: boolean }, variant?: { phase: PhaseContract; label: string; validate: () => Promise<unknown> }) {
     this.check(run);
     const phase = variant?.phase ?? run.phases!.find(phase => phase.id === stage)!;
     if (phase.owner !== 'agent') throw new Error('This phase is controlled by the human or host.');
+    const usagePhase = variant ? 'synthetic-data' : stage === 'verify' && p.runCheckpoint?.verificationAgent ? 'repair' : stage;
+    run.budget.phase(usagePhase, variant?.label ?? (usagePhase === 'repair' ? 'Repair' : stageDefinitions.find(s => s.id === stage)!.label));
     const engine = run.backend === 'codex' ? 'Codex' : 'Pi';
     const agentLabel = variant?.label ?? stage + ' agent';
     const broker = this.options.clarifications;
     const clarificationPhase = !variant && (stage === 'research' || stage === 'plan') ? stage : undefined;
     if (broker && clarificationPhase && broker.pending(p, p.runId!, clarificationPhase)) {
       this.log(p, stage, 'info', 'Waiting for the clarification questions from the interrupted phase before resuming the model.');
-      await broker.wait(p, p.runId!, clarificationPhase, run.controller.signal);
+      run.budget.phase('clarification', 'Human clarification');
+      await run.budget.wait(() => broker.wait(p, p.runId!, clarificationPhase, run.controller.signal));
+      run.budget.phase(usagePhase, agentLabel);
       this.check(run); await this.checkInputs(p, run);
     }
     if (broker && clarificationPhase && run.resumedStage === stage && p.conversation?.questions.some(question => question.runId === p.runId && question.status === 'answered')) {
@@ -588,7 +645,7 @@ export class FleetBackend {
               this.check(run); await this.checkInputs(p, run); browserSignal.throwIfAborted();
               const manifest = run.quality?.solution?.runtime;
               if (!manifest || manifest.profile === 'cli') throw new Error('This run has no browser or service runtime. Browser preview requires the frozen application runtime contract.');
-              const runtime = await prepareSolutionRuntime(p.workspace!, manifest, this.executable, browserSignal, { totalTimeoutMs: 10 * 60_000 });
+              const runtime = await prepareSolutionRuntime(p.workspace!, manifest, this.executable, browserSignal, { totalTimeoutMs: Math.min(10 * 60_000, run.budget.remainingMs()) });
               if (!runtime.url) { await runtime.close(); throw new Error('The declared runtime did not provide a browser preview.'); }
               return { url: runtime.url, close: runtime.close, redactMessage: runtime.redactMessage,
                 filesHash: runtime.provenance.filesHash, assertIntegrity: runtime.assertIntegrity };
@@ -709,8 +766,10 @@ export class FleetBackend {
         if (stage === 'verify') { p.runCheckpoint!.verificationAgent = 'complete'; await this.changed(p); }
         return;
       }
-      this.log(p, stage, 'info', 'Waiting for your clarification answers. The model session is closed; this wait does not use model calls or the agent time limit.');
-      await broker!.wait(p, p.runId!, clarificationPhase!, run.controller.signal);
+      this.log(p, stage, 'info', 'Waiting for your clarification answers. The model session is closed; the whole-build deadline still applies.');
+      run.budget.phase('clarification', 'Human clarification');
+      await run.budget.wait(() => broker!.wait(p, p.runId!, clarificationPhase!, run.controller.signal));
+      run.budget.phase(usagePhase, agentLabel);
       this.check(run); await this.checkInputs(p, run); this.check(run);
       await this.saveClarifications(p, run);
       this.log(p, stage, 'info', 'Clarification answers received. Resuming the phase before planning contracts are frozen.');
@@ -742,7 +801,7 @@ export class FleetBackend {
         await fs.rename(temporary, path.join(p.workspace!, 'visual-review.json'));
       } finally { await fs.rm(temporary, { force: true }); }
     }
-    return verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, {
+    return (this.options.verifyApplication ?? verifyApplication)(p.workspace!, this.executable, run.quality!, run.controller.signal, {
       ...this.options.verificationLimits, requireVisualReview: true, visualReview: run.visualReview
     });
   }
@@ -770,10 +829,12 @@ export class FleetBackend {
   }
   private async evaluateCore(p: Project, run: ActiveRun): Promise<boolean> {
     await this.checkInputs(p, run);
+    const priorPhase = p.runSummary!.phases.at(-1);
+    run.budget.phase('core-evaluation', 'Independent core evaluation');
     let runtime: Awaited<ReturnType<typeof prepareSolutionRuntime>> | undefined;
     let report: unknown, passed = false;
     try {
-      runtime = await prepareSolutionRuntime(p.workspace!, run.quality!.solution!.runtime, this.executable, run.controller.signal);
+      runtime = await prepareSolutionRuntime(p.workspace!, run.quality!.solution!.runtime, this.executable, run.controller.signal, { totalTimeoutMs: run.budget.remainingMs() });
       const result = await runSolutionEvaluation(runtime, run.quality!.solution!, run.quality!.evaluation!, run.controller.signal);
       report = result; passed = result.status === 'passed';
     } catch (error) {
@@ -790,10 +851,14 @@ export class FleetBackend {
       await fs.writeFile(temporary, JSON.stringify(report, null, 2), { flag: 'wx', mode: 0o600 });
       await fs.rename(temporary, path.join(directory, 'core-report.json'));
     } finally { await fs.rm(temporary, { force: true }); }
+    if (priorPhase) run.budget.phase(priorPhase.id, priorPhase.label);
     this.log(p, 'build', 'info', 'Independent core evaluation: ' + (passed ? 'passed' : 'failed') + '. Evidence: .quality-evidence/core-report.json');
     return passed;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
+    return run.budget.wait(() => this.checkFrozenInputs(p, run));
+  }
+  private async checkFrozenInputs(p: Project, run: ActiveRun) {
     if (p.runCheckpoint && briefHash(p) !== p.runCheckpoint.briefHash) throw new Error('The brief changed during the run. Start a new run with the changed brief.');
     await checkSystemDesign(p);
     await assertFleetPacketIntegrity(p.workspace!, run.packetHash!);
@@ -839,12 +904,26 @@ export class FleetBackend {
   }
   private async verify(p: Project, run: ActiveRun) {
     return this.retryStage(p, run, 'verify', async () => {
+      run.budget.phase('verify-host', 'Host verification');
       const checkpoint = p.runCheckpoint!;
-      await this.recordTestChanges(p, 'host verification');
+      await run.budget.wait(() => this.recordTestChanges(p, 'host verification'));
       checkpoint.writerState = 'active'; await this.changed(p);
       let confirmed = true;
-      try { return await this.verifyApplication(p, run); }
-      catch (error) { if (error instanceof VerificationShutdownError) confirmed = false; throw error; }
+      const operation = this.verifyApplication(p, run);
+      try { return await run.budget.wait(() => operation); }
+      catch (error) {
+        if (error instanceof VerificationShutdownError) confirmed = false;
+        if (run.controller.signal.aborted) {
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          try {
+            confirmed = await Promise.race([operation.then(() => true, failure => !(failure instanceof VerificationShutdownError)), new Promise<false>(resolve => {
+              timer = setTimeout(() => resolve(false), this.options.cancellationGraceMs ?? 11_000);
+            })]);
+          } finally { clearTimeout(timer); }
+          if (!confirmed) this.log(p, 'verify', 'error', 'Verification shutdown was not confirmed within the cleanup grace period. Recovery remains blocked.');
+        }
+        throw error;
+      }
       finally { checkpoint.writerState = confirmed ? 'idle' : 'unconfirmed'; await this.changed(p); }
     });
   }
@@ -868,7 +947,7 @@ export class FleetBackend {
           await this.agent(p, run, 'intake', provider, model, syntheticDataInstruction, syntheticDataFiles, false, undefined,
             { phase: syntheticDataPhase, label: 'synthetic data agent', validate: () => validateSyntheticData(p.workspace!) });
           this.check(run);
-          run.data = await freezeSyntheticData(p.workspace!, run.data!);
+          run.data = await run.budget.wait(() => freezeSyntheticData(p.workspace!, run.data!));
           await this.checkpoint(p, run);
           this.check(run);
           p.stages.find(stage => stage.id === 'intake')!.detail = 'Synthetic data prepared for this use case.';
@@ -891,13 +970,13 @@ export class FleetBackend {
         if (!run.quality) {
         await this.agent(p, run, 'plan', provider, model,
           'Read requirements.md, scope.md and research.md. You are the planning agent. Produce plan.md with implementation tasks and test-matrix.md with acceptance-to-test mapping, risks, and operational requirements needing human review. Read .fleet/foundation-guide.md and .fleet/foundation-catalog.json; write foundation-plan.json selecting a versioned starter and computation pack with a concrete reason. Align solution-contract.json with that starter runtime and all its files. The host copies the foundation after planning; do not generate scaffold files yourself. Read .fleet/quality-contract.md and produce valid acceptance-plan.json and ux-spec.json. Cover every packet acceptance ID exactly once, preserving original requirements and explicitly explaining deferred integration work. Define primary and recovery browser journeys with literal expected outcomes and stable selectors that the builder must implement. The host freezes these expectations before building and runs each journey in fresh desktop and narrow browser contexts. Read .fleet/solution-contract.md. Produce solution-contract.json and evaluation-plan.json, and acceptance-plan.json schemaVersion 2. Identify the mandatory computational capabilities, independently derived evaluation cases, baselines and thresholds. In solution-contract.json include invocation with public input, output and rules: every action, field type, exact status/error string, array ordering and validation precedence. The builder must be able to implement the complete wire protocol without seeing evaluation-plan.json; never leave interface details only in sealed cases. Derive held-out cases from these public rules without copying answer pairs into the public contract. Choose browser, CLI or service runtime with a complete file manifest, locked dependencies and explicit model environment requirements. Use a shared implementation for the delivered runtime and tests. The host seals the answer key outside the builder workspace. Browser/service profiles need primary and recovery journeys; CLI can have no browser journeys. Keep Node orchestration tests named *.test.cjs or *.test.mjs. Publish the application architecture with fleet_system_design. Do not implement yet.', ['scope.md', 'research.md', 'plan.md', 'test-matrix.md', 'system-design.json', 'foundation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'evaluation-plan.json']);
-        run.quality = await loadQualityContract(p.workspace!, run.acceptance!, true);
-        run.foundationPlan = await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8');
+        run.quality = await run.budget.wait(() => loadQualityContract(p.workspace!, run.acceptance!, true));
+        run.foundationPlan = await run.budget.wait(async () => fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8'));
         await this.checkpoint(p, run);
         }
         const selection = validateFoundationPlan(JSON.parse(await fs.readFile(await safeFile(p.workspace!, 'foundation-plan.json'), 'utf8')), run.quality.solution!.runtime);
         if (!run.foundation) {
-          run.foundation = await materializeFoundation({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, selection });
+          run.foundation = await run.budget.wait(() => materializeFoundation({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, selection }));
           await this.checkpoint(p, run);
         }
         this.check(run);
@@ -907,7 +986,7 @@ export class FleetBackend {
         p.phasePlan = structuredClone(run.phases);
         await this.sealQuality(p, run);
         this.log(p, 'plan', 'info', 'Solution and acceptance contracts frozen. Evaluation answer keys are held outside the builder workspace. Required capabilities must pass host evaluation.');
-        run.planHash = await this.planningHash(p);
+        run.planHash = await run.budget.wait(() => this.planningHash(p));
         p.runCheckpoint!.qualityHash = run.quality!.hash; p.runCheckpoint!.planHash = run.planHash;
         await this.stage(p, 'plan', 'complete');
       }
@@ -919,7 +998,7 @@ export class FleetBackend {
             instruction: 'Implementation is complete. The core passed host evaluation. Complete the planned application interactions using this exact core, then write README.md as a practical user guide for the software you just built. Inspect the declared runtime, applicable interface, source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and exact startup commands for the declared runtime, dependency installation and required model settings; numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using the prepared input or synthetic sample data and the expected output, with accurate provenance; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Preserve requirements.md, .fleet and frozen contracts. Keep the computational core and tests meaningful while finishing the UI and guide.',
             files: ['README.md']
           });
-        const baseline = await captureTestBaseline(p.workspace!);
+        const baseline = await run.budget.wait(() => captureTestBaseline(p.workspace!));
         p.runCheckpoint!.buildTests = baseline.hashes; p.runCheckpoint!.buildTestContents = baseline.contents;
         p.runCheckpoint!.lastTests = { ...baseline.hashes }; p.runCheckpoint!.testChanges = [];
         await this.stage(p, 'build', 'complete');
@@ -960,14 +1039,16 @@ export class FleetBackend {
       this.check(run);
       await atomicHostWrite(p.workspace!, 'test-report.json', JSON.stringify(p.report, null, 2));
       if (!reportPassed(p.report, true)) throw new Error('Verification did not pass. Inspect the actual test output; delivery remains blocked.');
-      p.report = await runIndependentJudge({ workspace: p.workspace!, resourcesRoot: this.resourcesRoot, report: p.report,
+      run.budget.phase('judge', 'Independent judgment');
+      p.report = await runIndependentJudge({ runtime: run.quality?.solution?.runtime, workspace: p.workspace!, resourcesRoot: this.resourcesRoot, report: p.report,
         signal: run.controller.signal, limits: this.options.agentLimits,
+        runAgent: options => { run.budget.phase('judge', 'Independent judgment'); return this.trackedAgent(p, run, options); },
         repairLimit: 2 - p.runCheckpoint!.repairAttempts,
         canRepair: () => p.runCheckpoint!.repairAttempts < 2 && !p.runCheckpoint!.repairStopped,
         onMetrics: measured => this.recordInference(p, 'verify', measured),
         engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
           codexHome: this.options.codex?.home, getCredentials: this.options.codex?.sessionCredentials, createSession: this.options.createSession },
-        checkInputs: () => this.checkInputs(p, run), log: text => this.log(p, 'verify', 'info', text),
+        checkInputs: () => run.budget.wait(() => this.checkInputs(p, run)), log: text => this.log(p, 'verify', 'info', text),
         recordReport: async report => { p.report = report; await this.changed(p); },
         repair: instruction => this.agent(p, run, 'verify', provider, model, instruction,
           ['README.md', 'path-to-fleet.md', 'verification.md', ...(run.quality!.solution?.runtime.files ?? ['index.html'])], true),

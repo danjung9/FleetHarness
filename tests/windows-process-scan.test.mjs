@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 
 // The production adapter loads Windows DLLs. Other platforms exercise their own
 // native discovery in process-sweep.test.mjs without loading this OS adapter.
@@ -9,7 +11,7 @@ if (process.platform === 'win32') {
   function fixture(overrides = {}) {
     const calls = [];
     const access = {
-      candidates: () => [{ pid: target.pid, sameOwner: true }],
+      candidates: () => [{ pid: target.pid }],
       open: (pid, terminate) => { calls.push(['open', pid, terminate]); return 41n; },
       limited: pid => { calls.push(['limited', pid]); return 42n; },
       close: handle => { calls.push(['close', handle]); },
@@ -22,13 +24,11 @@ if (process.platform === 'win32') {
     return { access, calls };
   }
 
-  test('Windows discovery fails closed for inaccessible same-user and unknown-owner processes', () => {
-    for (const sameOwner of [true, undefined]) {
-      const { access, calls } = fixture({ candidates: () => [{ pid: target.pid, sameOwner }], open: () => 0, limited: () => 0 });
-      assert.throws(() => windowsRunProcesses(marker, access), /Cannot inspect user process/);
-      assert.throws(() => windowsSignalRunProcess(marker, target, access), /Cannot inspect user process/);
-      assert.ok(!calls.some(call => call[0] === 'terminate'));
-    }
+  test('Windows discovery fails closed for an inaccessible application Job member', () => {
+    const { access, calls } = fixture({ open: () => 0, limited: () => 0 });
+    assert.throws(() => windowsRunProcesses(marker, access), /Cannot inspect.*process/);
+    assert.throws(() => windowsSignalRunProcess(marker, target, access), /Cannot inspect.*process/);
+    assert.ok(!calls.some(call => call[0] === 'terminate'));
   });
 
   test('Windows discovery ignores only confirmed outside-scope or exited inaccessible processes', () => {
@@ -37,15 +37,12 @@ if (process.platform === 'win32') {
       assert.deepEqual(windowsRunProcesses(marker, access), []);
       assert.deepEqual(calls, [['limited', target.pid], ['close', 42n]]);
     }
-    const { access, calls } = fixture({ candidates: () => [{ pid: target.pid, sameOwner: false }] });
-    assert.deepEqual(windowsRunProcesses(marker, access), []);
-    assert.deepEqual(calls, [], 'Other users must not be opened or signalled');
   });
 
-  test('Windows ownership inspection errors cannot authorize cleanup and always close the opened handle', () => {
+  test('Windows Job membership inspection errors cannot authorize cleanup and always close the opened handle', () => {
     for (const deniedRead of [false, true]) {
       const { access, calls } = fixture({ ...(deniedRead ? { open: () => 0 } : {}),
-        inScope: () => { throw Error('private owner inspection failure'); } });
+        inScope: () => { throw Error('private Job membership inspection failure'); } });
       assert.throws(() => windowsRunProcesses(marker, access));
       assert.deepEqual(calls.at(-1), ['close', deniedRead ? 42n : 41n]);
       assert.ok(!calls.some(call => call[0] === 'terminate'));
@@ -63,7 +60,7 @@ if (process.platform === 'win32') {
     assert.deepEqual(calls, [['open', target.pid, false], ['close', 41n]]);
   });
 
-  test('Windows signalling rejects a reused identity, lost marker, or changed owner on its opened handle', () => {
+  test('Windows signalling rejects a reused identity, lost marker, or different Job on its opened handle', () => {
     for (const overrides of [{ started: () => 'replacement-start' }, { environment: () => 'OTHER=unmarked\0' }, { inScope: () => false }]) {
       const { access, calls } = fixture(overrides);
       windowsSignalRunProcess(marker, target, access);
@@ -77,5 +74,44 @@ if (process.platform === 'win32') {
     access.environment = handle => { calls.push(['environment', handle]); return 'APPYARD_RUN_PROCESS=' + marker + '\0'; };
     windowsSignalRunProcess(marker, target, access);
     assert.deepEqual(calls, [['open', target.pid, true], ['started', 41n], ['environment', 41n], ['terminate', 41n], ['close', 41n]]);
+  });
+
+  test('the application Job kills a live descendant when its owning host exits', { timeout: 10_000 }, async t => {
+    const { default: koffi } = await import('koffi');
+    const kernel = koffi.load('kernel32.dll');
+    const open = kernel.func('uintptr_t __stdcall OpenProcess(uint32_t access, int inherit, uint32_t pid)');
+    const close = kernel.func('int __stdcall CloseHandle(uintptr_t handle)');
+    const wait = kernel.func('uint32_t __stdcall WaitForSingleObject(uintptr_t handle, uint32_t timeout)');
+    const moduleUrl = new URL('../dist-electron/electron/windows-process-scan.js', import.meta.url).href;
+    const owner = spawn(process.execPath, ['--input-type=module', '-e', `
+      import { spawn } from 'node:child_process';
+      import { once } from 'node:events';
+      import { initializeWindowsProcessJob } from ${JSON.stringify(moduleUrl)};
+      initializeWindowsProcessJob();
+      const descendant = spawn(process.execPath, ['-e', 'process.send("ready"); setInterval(() => {}, 1000);'],
+        { windowsHide: true, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
+      await once(descendant, 'message');
+      process.once('message', () => process.exit(0));
+      process.send({ pid: descendant.pid });
+    `], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
+    const exited = once(owner, 'exit');
+    let diagnostics = '', handle = 0;
+    owner.stderr.on('data', chunk => { diagnostics += chunk.toString(); });
+    t.after(async () => {
+      if (handle) close(handle);
+      if (owner.exitCode === null && owner.signalCode === null) owner.kill('SIGKILL');
+      await exited;
+    });
+    const [message] = await Promise.race([
+      once(owner, 'message', { signal: AbortSignal.timeout(5000) }),
+      exited.then(result => { throw Error('Job owner exited before the descendant was ready: ' + JSON.stringify(result) + '\n' + diagnostics); })
+    ]);
+    assert.ok(Number.isSafeInteger(message.pid) && message.pid > 1);
+    handle = open(0x101000, 0, message.pid); // QUERY_LIMITED_INFORMATION | SYNCHRONIZE
+    assert.ok(handle, 'Hold the exact descendant kernel object before allowing the owner to exit');
+    assert.equal(wait(handle, 0), 258, 'The descendant must be alive before host exit');
+    owner.send('exit');
+    assert.deepEqual(await exited, [0, null], diagnostics);
+    assert.equal(wait(handle, 3000), 0, 'The same descendant handle must signal after the last Job handle closes');
   });
 }

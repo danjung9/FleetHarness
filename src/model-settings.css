@@ -25,3 +25,11 @@
 .desktop-setup-notice h3{margin:0 0 10px;font-size:20px}
 .desktop-setup-notice p{font-size:13px;line-height:1.65;max-width:65ch;margin:0}
 .desktop-setup-notice p+p{margin-top:10px;color:var(--muted)}
+.model-settings-form .subscription-usage{display:flex;gap:24px;flex-wrap:wrap;margin:20px 0}
+.model-settings-form .subscription-usage>div{display:grid;gap:4px;font-size:12px}
+.model-settings-form .subscription-usage strong{font-size:17px;font-variant-numeric:tabular-nums}
+.model-settings-form .subscription-usage small{color:var(--muted,#626c72)}
+.model-settings-form .build-budget-settings{margin:24px 0;padding:20px 0 4px;border-top:1px solid var(--line)}
+.model-settings-form .build-budget-settings label{margin-bottom:8px}
+.model-settings-form .build-budget-settings input{max-width:160px}
+.model-settings-form .build-budget-settings .connection-note{margin:10px 0 14px;max-width:65ch}
