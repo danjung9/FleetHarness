@@ -134,7 +134,12 @@ test('array diagnostics identify length defects and the first differing nested e
   assert.match(score({ tasks: [1] }, { tasks: [1, 2] }).detail, /\$\.tasks: array length mismatch/);
   assert.match(score({ tasks: [{ id: 'same' }, { id: 'actual' }] }, { tasks: [{ id: 'same' }, { id: 'expected' }] }).detail, /\$\.tasks\[1\]\.id: value mismatch/);
   assert.match(score({ tasks: [1, '2'] }, { tasks: [1, 2] }).detail, /\$\.tasks\[1\]: type mismatch/);
-  assert.match(score([1, 2], [2, 1]).detail, /\$\[0\]: value mismatch/);
+  assert.match(score([1, 2], [3, 1]).detail, /\$\[0\]: value mismatch/);
+  // Right values in another order get their own message, and it never reveals an answer.
+  const reordered = score({ ids: ['D3:OP2', 'D5:OP1'] }, { ids: ['D5:OP1', 'D3:OP2'] });
+  assert.equal(reordered.score, 0);
+  assert.match(reordered.detail, /\$\.ids: array order differs/);
+  assert.match(score({ ids: ['a', 'a', 'b'] }, { ids: ['a', 'b', 'b'] }).detail, /value mismatch/);
 });
 
 test('numeric diagnostics separate nested tolerance failures from structural and text failures', () => {
