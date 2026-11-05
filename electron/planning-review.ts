@@ -7,6 +7,8 @@ import { Type } from 'typebox';
 import type { AcceptanceCriterion } from '../harness/types.js';
 import type { BehavioralContract } from '../shared/experiment-contract.js';
 import type { EvaluationPlan } from '../shared/solution.js';
+import { maxConnectedSources } from '../shared/connectors.js';
+import { MAX_DATA_INPUTS } from '../shared/project-input.js';
 import { experimentContractHash, parseBehavioralContract, parseExperimentEvaluationPlan } from '../harness/experiment-contract.js';
 import { parseQualityPlan, parseUxSpec } from '../harness/quality-contract.js';
 import { parseEvaluationPlan, parseSolutionContract } from '../harness/solution-contract.js';
@@ -61,7 +63,7 @@ function canonical(value: unknown): string {
 function assertDataInventory(data: BriefDataSnapshot) {
   const connected = data?.connectedSources ?? [];
   const contextFiles = Array.isArray(connected) && connected.length ? ['context/README.md', ...connected.map(source => source?.path)] : [];
-  if (!Array.isArray(connected) || connected.length > 7 || connected.some(source =>
+  if (!Array.isArray(connected) || connected.length > maxConnectedSources || connected.some(source =>
     !source || !/^[a-f0-9-]{36}$/.test(source.id) || source.path !== 'context/' + source.id + '.json')
     || new Set(contextFiles).size !== contextFiles.length
     || (connected.length && (data.mode !== 'provided' || !/^[a-f0-9]{64}$/.test(data.connectedContextHash ?? '')
@@ -69,7 +71,7 @@ function assertDataInventory(data: BriefDataSnapshot) {
     throw new Error('Planning review prepared data has an invalid file inventory or identity.');
   }
   if (!data || !['provided', 'synthetic'].includes(data.mode) || !/^[a-f0-9]{64}$/.test(data.hash)
-    || !Array.isArray(data.files) || !data.files.length || data.files.length > 19
+    || !Array.isArray(data.files) || !data.files.length || data.files.length > MAX_DATA_INPUTS + maxConnectedSources + 2
     || new Set(data.files).size !== data.files.length || !data.files.includes('inputs/manifest.json')
     || data.files.some(name => typeof name !== 'string'
       || !(name.startsWith('inputs/') && /^[^/\\\u0000-\u001f]+$/.test(name.slice(7)) && !['.', '..'].includes(name.slice(7)))

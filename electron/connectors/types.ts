@@ -1,5 +1,5 @@
 // The shared connector interface. Secrets never leave the main process.
-export type ConnectorKind = 'gmail' | 'google-calendar' | 'google-drive' | 'outlook' | 'outlook-calendar' | 'onedrive' | 'custom-api';
+export type ConnectorKind = 'war-data-platform' | 'maven-smart-system' | 'gmail' | 'google-calendar' | 'google-drive' | 'outlook' | 'outlook-calendar' | 'onedrive' | 'custom-api';
 export interface ContextItem {
   id: string; title: string; kind: 'email' | 'event' | 'file' | 'record';
   when?: string; from?: string; body: string; sourceUrl?: string;

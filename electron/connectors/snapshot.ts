@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { ConnectedDataSelection, ConnectorPreview } from '../../shared/connectors.js';
-import { validateSelections } from '../../shared/connectors.js';
+import { maxConnectedSources, validateSelections } from '../../shared/connectors.js';
 import { createSourceHash } from '../../shared/source-hash.js';
 import { ConnectorStore, validId } from './store.js';
 import { connectorCatalog } from './sample-data.js';
@@ -27,7 +27,7 @@ export async function contextHash(workspace: string) {
   const root = path.join(workspace, 'context'), hash = createSourceHash();
   if (!(await fs.lstat(root)).isDirectory() || (await fs.lstat(root)).isSymbolicLink()) throw new Error('The connected data changed. Start a new build.');
   const names = (await fs.readdir(root)).sort();
-  if (names.length > 9) throw new Error('The connected data changed. Start a new build.');
+  if (names.length > maxConnectedSources + 1) throw new Error('The connected data changed. Start a new build.');
   for (const name of names) {
     const file = path.join(root, name), stat = await fs.lstat(file);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 600_000) throw new Error('The connected data changed. Start a new build.');

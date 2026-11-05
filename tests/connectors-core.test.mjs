@@ -274,7 +274,7 @@ test('reconnecting an account revokes the old grant before the new sign-in', asy
 });
 test('every card previews real sample adapter data and saves only after Use this', async t => {
   const { service, store } = await setup(t);
-  assert.equal((await service.list()).length, 7);
+  assert.equal((await service.list()).length, 9);
   for (const card of connectorCatalog) {
     const preview = await service.preview(card.kind, {});
     assert.equal((await service.list()).find(entry => entry.kind === card.kind).connection, undefined);
@@ -284,7 +284,7 @@ test('every card previews real sample adapter data and saves only after Use this
     assert.deepEqual(await store.read(preview.id), preview);
     assert.equal((await service.list()).find(entry => entry.kind === card.kind).connection.count, 2);
   }
-  assert.equal((await store.list()).length, 7);
+  assert.equal((await store.list()).length, 9);
 });
 test('banner item is absent, contact details are hidden and email instructions stay literal data', async t => {
   const { service, store } = await setup(t), preview = await saved(service);

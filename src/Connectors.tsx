@@ -4,10 +4,6 @@ import { api } from './api';
 import './connectors.css';
 
 const plainFailure = 'The data could not be loaded. Try again.';
-const upcomingConnectors = [
-  { id: 'war-data-platform', label: 'War Data Platform', summary: 'Planned connection to War Data Platform.' },
-  { id: 'maven-smart-system', label: 'Maven Smart System', summary: 'Planned connection to Maven Smart System.' }
-];
 // Connector IPC returns only fixed, public messages. Never display arbitrary provider errors.
 function message(error: unknown) {
   if (!(error instanceof Error)) return plainFailure;
@@ -38,6 +34,9 @@ function useSources() {
   return { cards, error, refresh, model };
 }
 function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: () => Promise<void>; model: string }) {
+  const sampleOnly = !card.available && (card.kind === 'war-data-platform' || card.kind === 'maven-smart-system');
+  const folderLabel = card.kind === 'war-data-platform' ? 'Data product (optional)' : card.kind === 'maven-smart-system' ? 'Collection (optional)' : 'Folder or calendar (optional)';
+  const folderPlaceholder = card.kind === 'war-data-platform' ? 'training-assets' : card.kind === 'maven-smart-system' ? 'training-observations' : undefined;
   const [preview, setPreview] = useState<ConnectorPreview>(), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [query, setQuery] = useState(''), [days, setDays] = useState('30'), [folder, setFolder] = useState('');
   const [address, setAddress] = useState(''), [answer, setAnswer] = useState(''), [choose, setChoose] = useState(false);
@@ -97,7 +96,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
   return <article className="connector-card" aria-label={card.label}>
     <h2>{card.label}</h2><p>{card.summary}</p>
     <p className="connector-readonly">AppYard can only read. It cannot send, change or delete anything.</p>
-    {!card.available && <p>Sign-in is not set up for this source. Ask your administrator to turn it on.</p>}
+    {!card.available && <p>{sampleOnly ? 'Live connection is not configured. Try sample data to explore this source.' : 'Sign-in is not set up for this source. Ask your administrator to turn it on.'}</p>}
     {card.signedIn && <p role="status">Connected. Choose what to include below.</p>}
     {card.connection && <p className="connector-saved" role="status">{card.connection.sample ? 'Sample data ready' : 'Preview saved'}: {card.connection.count} items.</p>}
     {card.kind === 'custom-api' && <label className="connector-address">Service address or documentation link<input type="url" maxLength={2000} value={address} disabled={busy} placeholder="https://example.org/data" onChange={event => setAddress(event.target.value)}/></label>}
@@ -108,8 +107,8 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
     <details className="connector-choices" open={choose} onToggle={event => setChoose(event.currentTarget.open)}><summary>Choose what to include</summary>
       <label>Days to include<select disabled={busy} value={days} onChange={event => { setDays(event.target.value); setPreview(undefined); }}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
       <label>Search word (optional)<input maxLength={200} disabled={busy} value={query} onChange={event => { setQuery(event.target.value); setPreview(undefined); }}/></label>
-      {card.kind !== 'custom-api' && <label>Folder or calendar (optional)<input maxLength={200} disabled={busy} value={folder} onChange={event => { setFolder(event.target.value); setPreview(undefined); }}/></label>}
-      {card.signedIn ? <button className="primary" type="button" disabled={busy} onClick={() => void check('connected')}>Check data</button> : <p>Choose Connect to sign in, or Try sample data to check your choices.</p>}
+      {card.kind !== 'custom-api' && <label>{folderLabel}<input maxLength={200} disabled={busy} value={folder} placeholder={folderPlaceholder} onChange={event => { setFolder(event.target.value); setPreview(undefined); }}/></label>}
+      {card.signedIn ? <button className="primary" type="button" disabled={busy} onClick={() => void check('connected')}>Check data</button> : <p>{sampleOnly ? 'Choose Try sample data to check your choices.' : 'Choose Connect to sign in, or Try sample data to check your choices.'}</p>}
     </details>
     {busy && <div className="connector-progress">
       <p role="status">{progress.stage === 'connecting' ? 'Finish signing in in your browser, or follow the steps here.' : progress.stage === 'question' ? 'One more step to connect.' : 'Preparing your data...'}</p>
@@ -139,15 +138,7 @@ export function Connectors() {
     <p>Event builds use sample data; live connections support local preview only.</p>
     <p>All samples are invented Navy training examples. Check each sample, choose Use this, then select it in your brief.</p>
     {error && <p role="alert" className="form-error">{error} {api.connectors && <button className="text-button" onClick={() => void refresh()}>Try again</button>}</p>}
-    <div className="connector-grid">
-      {upcomingConnectors.map(card => <article className="connector-card" key={card.id} aria-labelledby={card.id + '-title'}>
-        <h2 id={card.id + '-title'}>{card.label}</h2>
-        <p className="connector-coming-soon" id={card.id + '-status'}>Coming soon</p>
-        <p>{card.summary}</p>
-        <div className="connector-actions"><button className="secondary" type="button" disabled aria-describedby={card.id + '-status'}>Connect</button></div>
-      </article>)}
-      {cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}
-    </div>
+    <div className="connector-grid">{cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
   </div>;
 }
 export function ConnectedDataSection({ value, onChange, disabled }: { value: ConnectedDataSelection[]; onChange: (value: ConnectedDataSelection[]) => void; disabled: boolean }) {

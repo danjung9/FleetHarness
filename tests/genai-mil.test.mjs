@@ -272,7 +272,7 @@ test('connector and GenAI.mil IPC coexist with account controls and block provid
   assert.ok(main.handlers.has('fleet:chatgpt:connect'));
   assert.ok(main.handlers.has('fleet:codex:connect-key'));
   const cards = await main.invoke('fleet:connectors:list');
-  assert.equal(cards.length, 7);
+  assert.equal(cards.length, 9);
   const preview = await main.invoke('fleet:connectors:preview', 'gmail', {});
   await main.invoke('fleet:connectors:use', preview.id, preview.digest);
   const saved = await main.invoke('fleet:genai-mil:save', GENAI_MIL_ADDRESS, fakeKey);

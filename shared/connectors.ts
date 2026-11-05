@@ -1,5 +1,6 @@
 import type { ConnectorKind, ContextItem } from '../electron/connectors/types.js';
 export type { ConnectorKind, ContextItem };
+export const maxConnectedSources = 9;
 export interface ConnectedDataSelection { id: string; digest: string; includeInApp: boolean }
 export interface ConnectorFilters { sinceDays?: number; query?: string; folder?: string }
 export interface ConnectorPreview {
@@ -30,7 +31,7 @@ export interface ConnectorsAPI {
 }
 export function validateSelections(value: unknown): ConnectedDataSelection[] {
   if (value === undefined) return [];
-  if (!Array.isArray(value) || value.length > 7) throw new Error('The selected data is not valid. Choose it again in your brief.');
+  if (!Array.isArray(value) || value.length > maxConnectedSources) throw new Error('The selected data is not valid. Choose it again in your brief.');
   const seen = new Set<string>();
   return value.map(item => {
     if (!item || typeof item.id !== 'string' || !/^[a-f0-9-]{36}$/.test(item.id) || typeof item.digest !== 'string' || !/^[a-f0-9]{64}$/.test(item.digest) || typeof item.includeInApp !== 'boolean' || seen.has(item.id)) throw new Error('The selected data is not valid. Choose it again in your brief.');
