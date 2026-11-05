@@ -16,6 +16,151 @@ import { briefHash as conversationBriefHash } from '../dist-electron/electron/co
 import { randomUUID } from 'node:crypto';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+
+// Exercise IPC, real startup, disk copies, persistence and delivery gates. Model
+// sessions and native readiness/process discovery are synthetic here. These
+// checks do not establish native process cleanup or generated-app correctness.
+function iterationBackend(t, store, options = {}) {
+  const entered = deferred(), release = deferred();
+  store.state.settings = { backend: 'pi', provider: 'fixture', model: 'fixture', rememberKey: false };
+  const backend = new FleetBackend(store, process.execPath, () => {}, process.cwd(), {
+    preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
+    processSweep: () => new RunProcessSweep({ scan: async () => [] }),
+    createSession: async () => ({ session: {
+      subscribe() { return () => {}; },
+      async prompt() { entered.resolve(); await release.promise; throw new Error('Synthetic session ended'); },
+      abort() { release.resolve(); }, dispose() {}
+    } }),
+    ...options
+  });
+  backend.runtime = { getModel: () => ({}), hasConfiguredAuth: () => true };
+  t.after(async () => { release.resolve(); await backend.stopAll(); });
+  return { backend, entered, release };
+}
+
+async function directoryContents(root) {
+  const files = {};
+  for (const item of await fs.readdir(root, { withFileTypes: true, recursive: true })) {
+    if (item.isFile()) {
+      const file = path.join(item.parentPath, item.name);
+      files[path.relative(root, file)] = (await fs.readFile(file)).toString('base64');
+    }
+  }
+  return files;
+}
+
+for (const delivered of [false, true]) test(`post-approval iteration commits fresh state only after startup (${delivered ? 'delivered' : 'approved'})`, async t => {
+  const { store, p, root } = await fixture(t), checking = deferred(), ready = deferred();
+  t.after(() => ready.resolve());
+  const { backend, entered } = iterationBackend(t, store, { preflight: { browser: async () => { checking.resolve(); await ready.promise; } } });
+  const main = await mainHarness(store, backend, 'electron/main.ts', { dialog: { async showOpenDialog() { return { filePaths: [root] }; } } });
+  await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
+  if (delivered) await main.invoke('fleet:export', p.id);
+  const old = structuredClone(p), source = await directoryContents(p.workspace);
+  const bundle = delivered ? await directoryContents(p.exportedTo) : undefined;
+  const request = main.invoke('fleet:request-changes', p.id, 'Add a clear reset button for the synthetic example.');
+  await checking.promise;
+  assert.equal(p.approvedAt, old.approvedAt); assert.equal(p.status, old.status);
+  assert.deepEqual(p.approval, old.approval); assert.equal(p.feedback, old.feedback);
+  assert.equal(p.reviewHistory.at(-1).decision, 'changes_requested');
+  assert.equal(p.reviewHistory.at(-1).nextRunId, undefined);
+  const savedWhileStarting = JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects.find(item => item.id === p.id);
+  assert.equal(savedWhileStarting.approvedAt, old.approvedAt); assert.equal(savedWhileStarting.status, old.status);
+  for (const channel of ['fleet:approve', 'fleet:export', 'fleet:download-executable', 'fleet:request-changes']) {
+    await assert.rejects(main.invoke(channel, p.id, 'Another synthetic request.'), /Stop this run/);
+  }
+  ready.resolve(); await request; await entered.promise;
+  assert.equal(p.status, 'running'); assert.notEqual(p.runId, old.runId); assert.notEqual(p.workspace, old.workspace);
+  for (const key of ['approvedAt', 'approval', 'report', 'verification', 'exportedTo', 'executable']) assert.equal(p[key], undefined, key);
+  assert.equal(p.feedback, '');
+  assert.deepEqual(p.reviewHistory[0], old.reviewHistory[0]);
+  assert.equal(p.reviewHistory.at(-1).nextRunId, p.runId);
+  assert.equal(await fs.readFile(path.join(p.workspace, '.review-source/index.html'), 'utf8'), '<h1>Synthetic fixture</h1>');
+  assert.match(await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8'), /Add a clear reset button/);
+  for (const name of ['review.json', 'test-report.json', 'evaluation-plan.json']) {
+    await assert.rejects(fs.access(path.join(p.workspace, '.review-source', name)), { code: 'ENOENT' });
+  }
+  assert.deepEqual(await directoryContents(old.workspace), source);
+  if (delivered) assert.deepEqual(await directoryContents(old.exportedTo), bundle);
+  await backend.stop(p.id);
+  // Replaying a previous report or approval cannot certify this run, even when
+  // a stale client labels it ready for review or delivery.
+  p.status = 'review'; p.stages.find(s => s.id === 'review').status = 'review';
+  p.qualityVersion = old.qualityVersion; p.report = structuredClone(old.report);
+  for (const evidence of [undefined, old.verification]) {
+    p.verification = evidence;
+    await assert.rejects(main.invoke('fleet:approve', p.id, 'Attempt to reuse old evidence.'), /verification evidence/);
+    for (const channel of ['fleet:export', 'fleet:download-executable']) await assert.rejects(main.invoke(channel, p.id), /Review and approve/);
+  }
+  p.status = 'approved'; p.approvedAt = old.approvedAt; p.approval = old.approval; p.feedback = old.feedback;
+  p.verification = { runId: p.runId, reportHash: reportHash(p.report) };
+  for (const channel of ['fleet:export', 'fleet:download-executable']) await assert.rejects(main.invoke(channel, p.id), /Approval does not match/);
+  p.status = 'review'; p.approvedAt = undefined; p.approval = undefined;
+  await fs.writeFile(path.join(p.workspace, 'index.html'), '<h1>New, unverified iteration</h1>');
+  await assert.rejects(main.invoke('fleet:approve', p.id, 'Attempt to reuse old source hash.'), /Artifacts changed/);
+  if (delivered) assert.deepEqual(await directoryContents(old.exportedTo), bundle);
+});
+
+for (const failure of ['preflight', 'source copy', 'commit']) test(`post-approval failed ${failure} preserves approval and deliverability`, async t => {
+  const { store, p, root } = await fixture(t);
+  const { backend } = iterationBackend(t, store);
+  const main = await mainHarness(store, backend, 'electron/main.ts', { dialog: { async showOpenDialog() { return { filePaths: [root] }; } } });
+  await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
+  await main.invoke('fleet:export', p.id);
+  const old = structuredClone(p), source = await directoryContents(p.workspace), bundle = await directoryContents(p.exportedTo);
+  if (failure === 'preflight') backend.runtime.hasConfiguredAuth = () => false;
+  if (failure === 'source copy') await fs.symlink(path.join(root, 'missing'), path.join(p.workspace, 'blocked-source'));
+  if (failure === 'commit') {
+    const save = store.saveProject.bind(store);
+    store.saveProject = async next => { if (next.status === 'running') throw new Error('Synthetic commit failure'); return save(next); };
+  }
+  await assert.rejects(main.invoke('fleet:request-changes', p.id, 'Add a clear reset button for the synthetic example.'), /comments were saved.*could not start/);
+  if (failure === 'source copy') await fs.rm(path.join(p.workspace, 'blocked-source'));
+  for (const key of ['runId', 'workspace', 'status', 'approvedAt', 'approval', 'feedback', 'verification', 'report', 'exportedTo', 'executable', 'stages']) assert.deepEqual(p[key], old[key], key);
+  assert.equal(backend.active.size, 0);
+  assert.equal(p.reviewHistory.at(-1).decision, 'changes_requested'); assert.equal(p.reviewHistory.at(-1).nextRunId, undefined);
+  assert.deepEqual(await directoryContents(p.workspace), source); assert.deepEqual(await directoryContents(old.exportedTo), bundle);
+  const reloaded = new Store(root); await reloaded.init();
+  assert.deepEqual(reloaded.project(p.id).approval, old.approval);
+  assert.equal(reloaded.project(p.id).reviewHistory.at(-1).feedback, 'Add a clear reset button for the synthetic example.');
+  assert.ok(await main.invoke('fleet:export', p.id), 'The original approval remains deliverable');
+  assert.deepEqual(await directoryContents(old.exportedTo), bundle);
+});
+
+test('post-approval chat action waits for confirmation, rejects stale proposals and starts through IPC', async t => {
+  const { store, p } = await fixture(t), { backend, entered } = iterationBackend(t, store);
+  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
+  await main.invoke('fleet:approve', p.id, 'Reviewed the synthetic application.');
+  const action = { id: 'change-proposal', type: 'request_changes', title: 'Request a change', reason: 'Add a reset button.', feedback: 'Add a reset button for the synthetic example.',
+    status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
+  p.conversation = { status: 'idle', messages: [], actions: [action], questions: [] };
+  await store.save();
+  const old = p.runId;
+  assert.equal(backend.active.size, 0); assert.ok(p.approvedAt);
+  action.runId = 'stale-run';
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /older brief or build/);
+  action.runId = old;
+  backend.runtime.hasConfiguredAuth = () => false;
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /comments were saved.*could not start/);
+  assert.equal(action.status, 'proposed'); assert.ok(p.approvedAt); assert.equal(p.runId, old);
+  backend.runtime.hasConfiguredAuth = () => true;
+  await main.invoke('fleet:conversation:apply', p.id, action.id); await entered.promise;
+  assert.equal(action.status, 'applied'); assert.notEqual(p.runId, old); assert.equal(p.approvedAt, undefined);
+  assert.match(await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8'), /Add a reset button for the synthetic example/);
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /no longer available/);
+  await backend.stop(p.id);
+});
+
+for (const status of ['draft', 'running', 'review', 'failed', 'approved', 'delivered']) test(`post-approval proposal refuses ${status} without approval`, async t => {
+  const { store, p } = await fixture(t), { backend } = iterationBackend(t, store);
+  p.status = status;
+  const action = { id: 'unapproved-change', type: 'request_changes', feedback: 'Add a reset button to the synthetic example.', status: 'proposed', baseBriefHash: conversationBriefHash(p), runId: p.runId };
+  p.conversation = { status: 'idle', messages: [], actions: [action], questions: [] };
+  const main = await mainHarness(store, backend, 'electron/main.ts', { briefHash: conversationBriefHash, randomUUID, hostLead: { active: new Map(), async cancel() {} } });
+  await assert.rejects(main.invoke('fleet:conversation:apply', p.id, action.id), /Review and approve this build/);
+  assert.equal(action.status, 'proposed'); assert.equal(backend.active.size, 0); assert.equal(p.reviewHistory, undefined);
+  if (!['review', 'failed'].includes(status)) await assert.rejects(main.invoke('fleet:request-changes', p.id, 'Add a reset button to the synthetic example.'), /Finish a build/);
+});
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'lifecycle-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

@@ -69,8 +69,15 @@ try {
           throw new Error('Choose a configured model before starting another iteration.');
         }
         window.qualityFixtureCalls.changes.push({ id, feedback });
-        project.reviewHistory.at(-1).nextRunId = 'quality-requested-iteration';
+        project.reviewHistory ??= [];
+        let request = project.reviewHistory.findLast(item => item.runId === project.runId && item.decision === 'changes_requested' && !item.nextRunId);
+        if (!request) {
+          request = { id: 'quality-approved-request', runId: project.runId, decision: 'changes_requested', feedback, createdAt: new Date().toISOString() };
+          project.reviewHistory.push(request);
+        }
+        request.nextRunId = 'quality-requested-iteration';
         project.status = 'running'; project.runId = 'quality-requested-iteration'; project.report = undefined;
+        project.approvedAt = undefined; project.approval = undefined; project.verification = undefined; project.exportedTo = undefined;
         project.stages.forEach(stage => { stage.status = stage.id === 'intake' ? 'active' : 'queued'; });
         current = structuredClone(current); for (const listener of listeners) listener(current);
       },
@@ -225,10 +232,20 @@ try {
   await exportButton.click();
   await page.waitForFunction(() => window.qualityFixtureCalls.exports.length === 1);
   assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls), { approvals: [project.id], changes: [{ id: project.id, feedback: changeNotes }], exports: [project.id], downloads: [] });
+  const requestChange = page.getByRole('button', { name: 'Request a change', exact: true });
+  assert.equal(await requestChange.isDisabled(), true);
+  await page.getByLabel('What should change?', { exact: true }).fill('          ');
+  assert.equal(await requestChange.isDisabled(), true);
+  const approvedChange = 'Keep the saved schedule available after restarting the app.';
+  await page.getByLabel('What should change?', { exact: true }).fill(approvedChange);
+  await requestChange.click();
+  await page.locator('.build-flow').waitFor();
+  assert.deepEqual((await page.evaluate(() => window.qualityFixtureCalls.changes)).at(-1), { id: project.id, feedback: approvedChange });
+  assert.equal(await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Build', exact: true }).getAttribute('aria-pressed'), 'true');
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: true, browserFailureBlocksApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
     failedChangeRequestPreservesDraft: true, savedChangeRequestSurvivesRestart: true, changeRequestsRetry: true, changeRequestsReturnToBuild: true,
     explicitRequirementGaps: true, missingQualityBlocksApproval: true,
     requiredCapabilityBlocksApproval: true, coreDeferralBlocksApproval: true, missingEvaluationBlocksApproval: true, cleanRuntimeRequired: true,
-    evaluationMetricsAndProvenance: true, cliApprovesWithoutBrowserJourneys: true, cliExportsRunnablePackage: true, screenshots: output }));
+    evaluationMetricsAndProvenance: true, cliApprovesWithoutBrowserJourneys: true, cliExportsRunnablePackage: true, approvedChangeRequestStartsIteration: true, screenshots: output }));
 } finally { await browser?.close(); await new Promise(resolve => server.httpServer.close(resolve)); }

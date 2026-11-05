@@ -36,11 +36,12 @@ export interface ClarificationQuestion {
 
 export interface ConversationAction {
   id: string;
-  type: 'start' | 'stop' | 'revise';
+  type: 'start' | 'stop' | 'revise' | 'request_changes';
   title: string;
   reason: string;
   status: 'proposed' | 'applied' | 'dismissed';
   brief?: NewProject;
+  feedback?: string;
   baseBriefHash: string;
   runId?: string;
 }

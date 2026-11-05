@@ -172,6 +172,12 @@ function registerIPC() {
       if (action.type === 'stop' && !backend.active.has(id)) throw new Error('That build finished before the stop action was applied.');
       if (action.type === 'stop') { await backend.stop(id); action.status = 'applied'; record('Build stopped. Saved outputs remain available.'); }
       else if (action.type === 'start') { await startRun(id, true); action.status = 'applied'; record('Started a fresh build from the current brief.'); }
+      else if (action.type === 'request_changes') {
+        if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this build before requesting a change from delivery.');
+        reviewFeedback(action.feedback!);
+        await startRun(id, true, false, action.feedback); action.status = 'applied';
+        record('Started a new iteration with your requested changes. Review and approve the new build before delivery.');
+      }
       else if (action.type === 'revise' && action.brief) {
         const revised = validateInput({ ...projectBrief(p), ...action.brief }, p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog());
         if (backend.active.has(id)) await backend.stop(id);
