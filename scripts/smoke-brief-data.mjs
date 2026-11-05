@@ -59,10 +59,14 @@ try {
   await dialog.getByLabel(/^Problem statement(?:\s|$)/).fill(briefDataFixtureProject.description);
   await dialog.getByLabel('Attach data files', { exact: true }).setInputFiles(file);
   await dialog.getByRole('button', { name: 'Paste data', exact: true }).click();
+  // The editor moves focus to its name field on the next frame; wait so typing is not redirected.
+  await page.waitForFunction(() => document.activeElement?.closest('.brief-data-field')?.querySelector('label')?.textContent === 'Input name');
   await dialog.getByLabel('Input name', { exact: true }).fill('task-notes.txt');
   await dialog.getByLabel('Input content', { exact: true }).fill('  TASK: check valve\n');
   await dialog.getByRole('button', { name: 'Add input', exact: true }).click();
   await dialog.getByRole('button', { name: 'Paste data', exact: true }).click();
+  // The editor moves focus to its name field on the next frame; wait so typing is not redirected.
+  await page.waitForFunction(() => document.activeElement?.closest('.brief-data-field')?.querySelector('label')?.textContent === 'Input name');
   await dialog.getByLabel('Input name', { exact: true }).fill('pending-notes.txt');
   await dialog.getByLabel('Input content', { exact: true }).fill('TASK: check gauge\n');
   await dialog.getByRole('button', { name: /^Norfolk catalog · / }).click();

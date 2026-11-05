@@ -266,7 +266,12 @@ try {
   assert.ok(fixture.requests.length > 0); assert.deepEqual(errors, []);
   await page.getByRole('button', { name: 'Connectors', exact: true }).click();
   for (const name of ['Gmail', 'Outlook', 'Your own data service']) await page.getByRole('article', { name, exact: true }).getByRole('button', { name: 'Disconnect', exact: true }).click();
-  await page.waitForFunction(async () => (await window.fleetHarness.connectors.list()).filter(card => ['gmail', 'outlook', 'custom-api'].includes(card.kind)).every(card => !card.connection && !card.signedIn));
+  // Poll from here: an async predicate given to waitForFunction resolves at once.
+  for (const deadline = Date.now() + 30000; ; await new Promise(resolve => setTimeout(resolve, 200))) {
+    const disconnected = await page.evaluate(async () => (await window.fleetHarness.connectors.list()).filter(card => ['gmail', 'outlook', 'custom-api'].includes(card.kind)).every(card => !card.connection && !card.signedIn));
+    if (disconnected) break;
+    assert.ok(Date.now() < deadline, 'The connections did not disconnect within 30 seconds');
+  }
   for (const { id } of connectedIds) {
     for (const file of [path.join('secrets', id), path.join('connections', id + '.json'), path.join('snapshots', id + '.json')]) await assert.rejects(fs.access(path.join(stateDir, 'connectors', file)), { code: 'ENOENT' });
   }

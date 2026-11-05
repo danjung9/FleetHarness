@@ -60,10 +60,15 @@ try {
   await page.getByRole('heading',{name:'Brief',exact:true}).waitFor();
   await page.getByRole('button',{name:'Save & start build',exact:true}).click();
   await page.getByRole('dialog',{name:'Start build',exact:true}).getByRole('button',{name:'Start automatic build',exact:true}).click();
-  await page.waitForFunction(async id => ['review', 'failed', 'stopped'].includes((await window.fleetHarness.bootstrap()).state.projects.find(project => project.id === id)?.status), id, {timeout:90000});
-  const final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
+  // Poll from here: an async predicate given to waitForFunction resolves at once.
+  let final;
+  for(const deadline=Date.now()+90000;;await new Promise(resolve=>setTimeout(resolve,250))){
+    final=await page.evaluate(async id=>(await window.fleetHarness.bootstrap()).state.projects.find(p=>p.id===id),id);
+    if(['review','failed','stopped'].includes(final?.status))break;
+    assert.ok(Date.now()<deadline,'The fixture build did not settle within 90 seconds: '+final?.status);
+  }
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
-  assert.equal(final.status,'review',final.error);
+  assert.equal(final.status,'review',final.error||'no error recorded');
   assert.equal(final.report.passed,1);
   assert.ok(final.logs.some(l=>l.text.includes('Starting one Pi repair attempt')));
   assert.ok(final.logs.some(l=>l.kind==='tool'&&l.text.includes('write')));
