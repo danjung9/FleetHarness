@@ -3,58 +3,60 @@ type: directive
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Finish one R5 recovery-evidence update and preserve main's native execution ownership."
+summary: "Review two new R6 artifacts independently, retire completed triage and retain current native owners."
 ---
 
 # QA instructions
 
-[P, charter and Flow-Goals] Ten satisfactory catalog builds remain the goal. Follow [[Research/Agentic/Flow-Goals]], with [[Research/Plan/Review]] correcting older Plan/Findings claims and the charter's overnight decisions superseding historical containment and authentication restrictions. Full host/network access is intentional. Keep November 5 noon scope freeze and 2 PM EST submission. A person approves the final artifact and submission.
+[P, charter and Flow-Goals] Ten satisfactory catalog builds remain the goal. Follow [[Research/Agentic/Flow-Goals]], the later corrections in [[Research/Plan/Review]] and current charter decisions. Full host/network access is intentional. Keep November 5 noon scope freeze, the 1:15 PM submission target and 2 PM EST deadline. A person accepts the final artifact and approves submission.
 
-[E, meeting 189] Relay and org state identify mvp `5f4eb390d0bddd36dcaeef1945feb0abb65aed6f`. Snapshot-189 and current state show code seats disabled. The current queue contains no QA task. This directive replaces the earlier allocation; its task file requests dispatch, not evidence that work has started.
+[E, meeting 194] The supplied relay names mvp 5f4eb390d0bddd36dcaeef1945feb0abb65aed6f. Snapshot-194 reports no running seats, code seats disabled, and queued dev-1/dev-3 returns plus builder's audit. This replacement retires the prior runner allocation. Its task JSON requests one officer assignment; dispatch is not verified.
 
-## Completed work and current failures
+## Decisions on completed reports
 
-[E] [[Research/QA/Ten/Scoreboard]] records R5 finished at 03:39: four failed builds, zero automatic passes and zero satisfactory results, attributed to f2e5422 plus scratch changes. Exact executed R5 source/compiled identity remains missing.
-
-| Completed evidence | Decision |
+| Evidence | Decision |
 | --- | --- |
-| [E] Runner's `qa-results/Research/QA/Runner/R5-Failure-Triage.md` in `~/Documents/CDAO/fh-org/qa` cites IDs 12/36 plan rejection followed by writer-shutdown uncertainty. The central Runner copy is absent. | [R] Accept the bounded chronology. Preserve the actual location and transfer through the existing coordinator. Update only new gaps. |
-| [E] [[Research/QA/Officer/JUDGE-R5-id11-training]] derives request-first ordering and structured negotiation. Retained output agrees within checked scope; prepared expectations conflict. | [R] Accept the canonical NOT judgment and coalesce duplicates. Missing sealed evaluation evidence prevents complete host-failure attribution. No key rewrite or satisfactory upgrade. |
-| [E] ID 20 `log-tail.txt:87-89` records plan rejection then shutdown uncertainty; ID 11 `log-tail.txt:80-83` records failed computation and shutdown uncertainty. | [R] Include these deltas in the runner's existing report. Do not repeat semantic analysis or invent an operating-system cause. |
+| [E] [R5 triage](~/Documents/CDAO/fh-org/qa/qa-results/Research/QA/Runner/R5-Failure-Triage.md) now covers IDs 12/36/20 plan rejection, ID 11's separate shutdown warning and current restoration controls. | [R] Accept as complete. Preserve historical f2e5422-plus-scratch scope and canonical [[Research/QA/Officer/JUDGE-R5-id11-training]]. No repeat judgment or chronology. |
+| [E] [Native triage](~/Documents/CDAO/fh-org/qa/qa-results/Research/QA/Runner/Native-5f4eb39-Triage.md) maps seven listed problems plus smoke-electron's preview timeout. Native 971 total, 964 passes and six failures leave one test unclassified. The sandbox log has different totals. | [R] Accept the bounded crosswalk. Main supplies original native TAP/footer and complete errors, or records unavailable evidence. Do not infer per-test statuses or fill native totals from another execution. |
+| [E] [[Research/QA/Ten/Scoreboard]] is now R6: nine finished failures, zero automatic passes and zero satisfactory results. IDs 11/12 have final NOT judgments after two judge repairs despite passing generated tests/journeys. | [R] Independently review these two new artifacts. In-pipeline judgments are evidence to examine, not completed officer judgments. No historical verdict or source pass transfers to R6. |
 
-## Sole assignment: qa-runner
+## Sole assignment: qa-officer
 
-[R] In at most 15 active minutes, amend only `qa-results/Research/QA/Runner/R5-Failure-Triage.md`, plus local journal/disclosure. Preserve IDs 12/36 and their historical revision. Add ID 20's final/tail hashes, cited stage chronology and null report. Cross-reference the officer's ID 11 judgment while recording its separate shutdown warning. Distinguish retained observations, source explanations and missing native proof. No candidate execution, browser, process scan, install, real build or product/checker edit.
+[R] In at most 20 active minutes, make one read-only review of R6/id11-training and R6/id12-optask. Write JUDGE-R6-id11-training.md and JUDGE-R6-id12-optask.md in the assigned Officer folder and update its README index. Keep local journal/disclosure. First coalesce any equivalent judgment that appeared after this meeting; do not repeat it.
 
-[E, relay patch] 5f4eb39 adds `restoreFrozenPlan`, persists frozen planning bodies, and uses `RunProcessSweep.quiesce` after failed intended-engine stages. New tests cover restored live planning notes and process-confirmed retry. [R] Read the patch/source as text and correct the old regression request:
+[R] Use requirements.md as the retained card text, distinguishing its original requirements from generated scope/test-matrix criteria. Read final.json, judge.json, test-report.json, MANIFEST.json, relevant source/tests as text, retained screenshots and complete-output evidence. Hash the reviewed receipts and decisive files. Identify missing files and normalized Markdown separately from actual artifact mutation. Do not execute generated code or reach the separately retained originals outside the assignment.
 
-- Valid frozen snapshots restore changed live planning notes byte for byte and may continue. Restoration must be logged; later verification remains required. Do not make every live plan edit fatal.
-- Missing/corrupt restoration evidence or failed restoration, combined with unconfirmed shutdown, must preserve both failures, keep the build failed without an acceptance report, and block retry/Resume/review/delivery.
-- Retain unchanged-plan/confirmed-shutdown controls. Abort acknowledgment alone does not prove exit. Do not generalize live restoration to every Resume checkpoint.
+[R] Produce one original-obligation matrix per artifact: requirement, cited evidence, supported result or remaining gap, and next owner. Record the automatic FAIL unchanged and derive an independent verdict from the evidence. Passing counts alone cannot establish task completeness, fresh-input behavior, actual offline use or delivered-file correctness. Source inspection and model-written logs are not new runtime observations.
 
-[R] Return one updated handoff to main/Engineering's existing owner through normal reporting. Request the exact-revision regression receipt and missing native evidence together. If current behavior already meets a requirement, retain that receipt without inventing a defect. Finish once; do not poll for missing receipts.
+[R] Focus the disputed boundary without copying the final judge blindly:
 
-## qa-officer
+- ID 11: check the claimed synthetic recurrence limitation against original periodicity obligations. Trace SCH-05 to its source and distinguish a person accepting a schedule from the software providing a review control. Identify whether a proposed human check belongs after technical readiness, rather than treating it as another implementation repair. Never fabricate acceptance or remove an original requirement.
+- ID 12: check the claimed substitute grammar against the original requested input format and retained parser/tests. A mutually consistent synthetic protocol and key cannot establish the original format. Attribute any claimed repaired offline behavior to actual retained evidence or leave it unverified.
+- For both, distinguish supported implementation defects, missing releasable domain specifications, missing evidence and human decisions. Do not invent domain rules, obtain nonpublic material, change a key or hand-edit an app.
+- Return one combined handoff through normal reporting: any unsupported judge assertion with exact contrary evidence; supported prerequisite gaps to Product/main; a generic planning lesson to Engineering's already queued consistency audit. No second audit implementation or extra repair loop.
 
-[R] No new assignment. The R5 ID 11 judgment is complete. Main supplies the preserved sealed evaluator identity and exact input/expected projection once, or marks them unavailable. Reopen only for that evidence or a newly identified artifact. Engineering's already queued builder owns the generic pre-freeze consistency audit. Preserve ordered assertions and failed versions; reconcile independently before a new versioned run. Other One-Shot-Gaps proposals remain follow-up.
+[R] If decisive evidence is missing, name it once, finish a bounded not-verified finding and stop. No receipt polling. This review cannot upgrade failed benchmark rows or grant human acceptance.
 
-## Main QA lead coverage
+## qa-runner and main QA lead coverage
 
-| Existing coverage | Next proof through its current owner |
+[R] Runner has no new assignment. Reopen the completed native triage only when main supplies new exact-target evidence; retain the same report. Main owns all real builds, native execution and driver recovery.
+
+| Existing owner and coverage | Remaining proof or action |
 | --- | --- |
-| [E] Main's R1 audit and fourteen historical negative officer judgments are documented. Current R5 reviews add distinct evidence. | [R] Retire repeated historical audits. Main owns real runs; judge newly eligible artifacts against the original card, fresh inputs and complete outputs. Automatic success and human acceptance remain separate. |
-| [E] [[Research/QA/Acceptance/Review-3da8ad8]] preserves four bounded input/recovery/Pi Stop/restart passes. [[Research/QA/Acceptance/Overnight]] lists F01-F25 gaps. | [R] Existing acceptance reviewer owns these checkers. Preserve revision, engine, fixture and environment scope. No transferred pass or full-shutdown claim at 5f4eb39. |
-| [E] R5 retains shutdown warnings without categorized native exit evidence. | [R] Main verifies shutdown before affected workspace reuse. Supply source/scratch/compiled identity, original planning bytes/hash, writer outcome, final sweep category and owned-work exit/quiet observations. Preserve functional verdict before separate cleanup. No survivor claim without evidence. |
-| [E] Delivery and persisted-test-baseline Resume scripts are prepared; native results remain pending in the acceptance review. | [R] Main runs existing scripts on a stable compiled target and returns build provenance/raw receipts to their owner. No second checker writer. |
-| [E] 5f4eb39 includes packaging, service containers and changes after delivery. | [R] Main proves fresh-destination package/container launch and stop, changed-input behavior, requested changes taking effect, fresh verification/approval and preserved old delivery history. Source additions or export invocation do not establish these outcomes. |
-| [E] [[Research/QA/Auto/f2e5422]] lists 934 unit, 94 harness passes and 15 smoke rows; the charter says 16 screens. The sandbox gate failed dependency installation. | [R] Main reconciles the inventory with named receipts. Missing counts are evidence gaps. Later gate returns need same-base/same-host comparison, without blanket environmental exemptions or transferred pass counts. |
+| [E] Main/native owners have the seven-name failure crosswalk. | [R] Recover native invocation, full error blocks/footer, source/scratch/compiled identity and runtime versions. Existing packaging owner handles four package/runtime cases; backend owner handles shutdown/retry; browser owner proves wrong rendered output is rejected; preview owner diagnoses the Parse message timeout. Preserve assertions and deadlines; compare the same base/host where needed. |
+| [E] R6 has three service-disconnected failures and three Home-navigation timeouts, alongside three build/verify failures. | [R] Main checks provider readiness and actual modal/navigation/driver state before retrying affected cards. Zero-work failures remain failures but do not measure generated-app quality. No seat enters credentials or launches a replacement round. |
+| [E] Feed-194 reports guard timeouts for R6 ID 36 data/synthetic-data.json and public/index.html; its tail alleges a lexical-order conflict. | [R] Main supplies an authorized complete receipt or marks evidence missing. Existing builder may use the lead, but complete protocol/input/expected/output identities are required for causal attribution. No guard bypass, absent-functionality claim or sorting expectations to pass. |
+| [E] [[Research/QA/Acceptance/Review-0666861]] distinguishes a real same-run preview-origin/persistence defect from a corrected baseline Resume selector. | [R] Main retains repair and native reruns; Acceptance retains checker ownership. Preserve native Reload preview and unchanged persistence/approval/export assertions. A selector fix is not a runtime pass. Keep this later integration distinct from the 5f4eb39 smoke timeout. |
+| [E] [[Research/QA/Acceptance/Overnight]] and [[Research/QA/Acceptance/Review-3da8ad8]] retain scoped input/recovery/Pi Stop/restart evidence and remaining delivery gaps. | [R] Preserve earlier passes at their actual revision/engine/fixture scope. Current intended-engine shutdown, fresh-copy offline/package/container launch and stop, requested changes, fresh approval and old delivery history still need exact-target evidence. No duplicate checker or blanket sweep. |
 
-## Questions and teammate coordination
+[R] Preserve valid frozen-plan restoration and unchanged-plan controls. Missing/corrupt restoration or write failure plus unconfirmed shutdown must retain both errors and prevent retry/Resume/review/delivery. Abort acknowledgment alone is not exit evidence. Main verifies owned-work exit and quiet observations before affected workspace reuse, records functional verdict before separate cleanup, and preserves failed receipts.
 
-[E, feed-189] No literal QUESTIONS line appears. [R] Answers to substantive requests: main supplies missing execution/evaluator evidence; existing Engineering ownership handles regressions; absent evidence stays unverified. Valid plan restoration is expected, while failed restoration and unconfirmed shutdown prevent progress. Prior failures remain unchanged.
+## Answers, teammate work and stopping rules
 
-[R] Dan owns `src/`, `studio/`, `index.html` and CSS. Dev-1 keeps the artifact-read repair and preserves the new delivery callback. Dev-2 keeps label corrections and preserves new smoke-quality assertions. Dev-3 keeps connector wording work. QA claims none of those files. LATEST.md's dev-1/dev-2 overlaps supersede the older analysis's no-overlap statement.
+[E, feed-194] No literal QUESTIONS line appears. [R] Completed runner requests are answered: main supplies missing native accounting and execution/evaluator evidence; existing Engineering owners supply closure. Missing records stay unverified. The 15 listed smoke scripts versus the charter's 16 still need named-receipt reconciliation, not an inferred extra pass.
 
-[R] Reuse [[Research/RandE/UX/Merged-Walkthrough]] for Dan's lost-draft, account-switch and reachable-Stop handoff. Source/screenshots do not establish officer usability. GenAI.mil stays framework-only; connector fixtures do not establish live interoperability. Hosted, budget and Windows branches require separate integrated evidence. No duplicate walkthrough, packaging, integration or blanket acceptance sweep.
+[R] Engineering's existing five-file audit remains the sole planning implementation. Missing domain authority and genuine user acceptance belong on Product/main's human decision list. Internal agreement between invented rules does not satisfy the original task. Preserve full-access policy and do not revive historical containment holds.
 
-[R] Use synthetic/public data only. Keep build consent, artifact approval, monitoring, escalation and shutdown visible. Escalate prohibited data, changed approved bytes or unconfirmed shutdown through main. No credentials, official writes, external messages, pushes or publication. Read both relays at start and finish and adapt without weakening assertions. Write only within the assigned folder, keep `.tmp/JOURNAL.md`, and stage inaccessible central logs/status locally for transfer.
+[P] Dan owns src/, studio/, index.html and CSS. [R] QA claims none. Preserve his delivery callback, new smoke assertions, provider labels and retained drafts. LATEST.md's dev-1/dev-2 overlaps supersede the older analysis's no-overlap statement. Adapt checkers through their existing owner without weakening outcomes. Reuse [[Research/RandE/UX/Merged-Walkthrough]] and the existing Dan handoff; no duplicate walkthrough. GenAI.mil remains framework-only; live connector interoperability and separate hosted/budget/Windows branches need their own evidence.
+
+[R] Use synthetic/public data. Preserve build consent, artifact approval, monitoring, escalation and Stop. Escalate prohibited data, changed approved bytes or unconfirmed shutdown through main. No credentials, official writes, external messages, pushes or publication. Read both relays before and after work. Write only within the assigned folder, retain .tmp/JOURNAL.md and stage inaccessible central logs/status locally for transfer.
