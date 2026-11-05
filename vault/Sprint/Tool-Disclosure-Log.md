@@ -113,6 +113,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Overnight GUI checker adapters revision 2 | QA tool | Adapted desktop key and OAuth controls, detached Stop and native Resume to the four Model connection tabs while retaining their substantive assertions | Team-created fixtures using installed Electron and Playwright | 2026-11-05 |
 | Node.js built-in inspector and vm checker probes | QA diagnostic | Reproduced unsupported dynamic import in the OAuth interceptor and validated an import-free replacement with synthetic routing data; no app or network listener | Node.js built-in modules | 2026-11-05 |
 | d6f8750 combined acceptance receipts | Synthetic QA dataset | Reviewed four native/browser receipts and screenshots to separate stale test adapters from a reproduced saved-state startup defect | Main-owned local acceptance execution | 2026-11-05 |
+| Combined acceptance receipts at 3da8ad8 | Synthetic native and browser evidence dataset | Independently reviewed input, OAuth-control, browser recovery, detached Stop and full restart Resume receipts; retained scopes and remaining gaps | Event team runtime owner | 2026-11-05 |
 
 ## Data and sources
 

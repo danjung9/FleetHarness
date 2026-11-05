@@ -12,6 +12,8 @@ Last updated 2026-11-05, after resumed integration coordination. Dated entries b
 
 ## Latest session
 
+- [E, November 5 3da8ad8 acceptance] [[Research/QA/Acceptance/Review-3da8ad8]] independently confirms all four latest PASS receipts within scope: desktop inputs 15/15, browser recovery 5/5, detached Pi Stop seven checks and full restart/Resume 5/5. The bounded saved-state startup defect closes. All original 23 areas plus Connectors/GenAI.mil have explicit remaining gaps. Native delivery and persisted-test-baseline checks are being prepared; main owns execution. Full acceptance remains pending.
+
 - [E, November 5 combined receipt triage] [[Research/QA/Acceptance/Review-d6f8750]] confirms a browser saved-state startup defect, 11 passing data-input cases and stale Settings selectors that prevented Stop/Resume execution. OAuth's owned interceptor also needed repair. Three scripts are updated, browser checker unchanged, all syntax/pure checks pass. [[Research/QA/Acceptance/Overnight]] now maps 25 areas including Connectors and GenAI.mil. Main has the defect location and owns native reruns; no combined acceptance is claimed.
 
 - [E, November 5 01:37 read-only audit] [[Research/Backend-Audit/Merge-Parent-Review]] compares both parents of 8053707 and identifies preview-startup Stop and persisted Resume-baseline regressions. No test files were deleted. Incoming 29ac921 remains unfinished work. [[Research/QA/Ten/Round-Reconciliation-2026-11-05]] reconciles all 18 saved final receipts: zero satisfactory results, a false Round 2 completion headline, one stale experiment verdict and broken experiment links. Full Submission line inventory is in [[Research/Backend-Audit/Submission-Claims-Review]]. Main owns fixes and fresh execution.
