@@ -39,3 +39,11 @@ summary: "Local tool, prior-work and friction record for authorized central tran
 - [E] Prior work: the November 4 package and experiment receipts are historical inputs. The complete correction inventory is [[Research/Backend-Audit/Submission-Claims-Review]].
 - [E] Friction: default temporary-file writes are unavailable, direct command strings work; initial broad discovery encountered the denied tools folder and subsequent discovery uses permitted named paths. Central logs and their utility are outside this assignment.
 - [R] Authorized owner transfers this staged record into central Sprint logs and the eventual session/status handoff.
+
+## 2026-11-05 completed rewrite
+
+- [E] Outcome: four submission files now describe f2e5422 and link scoped synthetic receipts. Current product findings supersede the November 4 log and session where they discuss the clock mismatch or d0f4c69 as current. The old records remain dated history.
+- [E] Reused evidence: current manifest and THIRD_PARTY inventory, native overnight receipts, corrected candidate reviews and benchmark reconciliation. Models/tools are disclosed as resources, without authorship attribution. No new external tool, service, library or dataset was introduced.
+- [E] Friction: the document guard rejected two disclosure rows as authorship attribution. Revised copy retains explicit factory tools/models and incorporates the broader itemized ledger by reference, matching the earlier disclosure approach. The revised write succeeded. A separate patch-format rejection applied no changes; ordinary document writes then succeeded.
+- [E] Coordination: live benchmark records advanced from the task's round 4 snapshot to round 5. One result placeholder remains; unfinished rows are not a final result. The final relay analysis changed during work and was reread; it confirms unmerged budgets and separate hosted/Windows branches.
+- [R] Central owner transfers staged tool/prior-work/friction and session/status records, attaches the complete tool ledger and runs the full vault guard. See [[Submission/Sessions/2026-11-05-submission-rewrite]].
