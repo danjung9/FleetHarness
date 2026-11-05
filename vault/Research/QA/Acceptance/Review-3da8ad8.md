@@ -71,6 +71,8 @@ Paths below are relative to `Research/QA/Overnight/`. Original receipts are unch
 
 ## Next checks
 
-[R] Highest value is completing the path to usable delivered output and verifying original tests survive an actual restart. Two owned native scripts are being prepared under `Research/QA/Overnight/`. Their final commands, hashes, pure-validation result and precise remaining limits will be recorded here before handoff. Main retains native execution. No current result is inferred for these new scripts.
+[E] The first new script is ready: `Research/QA/Overnight/qa-native-baseline-resume.mjs`, SHA256 `e53ee61b7a80af13690252ff3e4f1f092c7000dd6922118b02f69dafb1d1bcbf`. Source review, syntax and pure negative controls pass. Main received its path. It changes only literal fixture filename references from `parser.test.cjs` to `token.test.cjs`, records original/transformed hashes, and checks exact saved baseline bytes/hash maps before Stop, after full process exit, after restart and during resumed verification. It requires a newly written verification artifact without rerunning earlier phases, then stops. It does not complete verification or execute the preserved tests after that gate. No native result is claimed yet.
+
+[R] The second script completes the build-to-source-delivery path with independent changed-input checks. It is still being prepared; final commands, hash and validation will be recorded before handoff. Main retains native execution.
 
 [R] After those checks, prioritize the owner-controlled intended event-key/Codex build and Stop route, a concrete requested behavior change, and native service/CLI delivery. Retain the target's exact lifecycle/judge regression receipts rather than substituting a broad test count. Windows and hosted deployment remain separate platform/branch acceptance.
