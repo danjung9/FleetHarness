@@ -868,7 +868,8 @@ export class FleetBackend {
     p.report!.testBaseline = { hashes: { ...p.runCheckpoint!.buildTests! }, changes: [...p.runCheckpoint!.testChanges ?? []], policy: testBaselinePolicy };
     if (p.runCheckpoint!.testChanges?.length) p.report!.output += '\n' + p.runCheckpoint!.testChanges.join('\n');
     const audit = this.active.get(p.id)?.planningAudit;
-    if (audit) p.report!.output += '\n' + planningAuditSummary(audit);
+    // Repairs read this output as the exact test result, so the audit joins only a passing report.
+    if (audit && !p.report!.failed && p.report!.exitCode === 0) p.report!.output += '\n' + planningAuditSummary(audit);
   }
   private async auditPlan(p: Project, run: ActiveRun, provider: string, model: string) {
     const audit = run.planningAudit ??= { attempts: [], correctionStarted: false, complete: false };
