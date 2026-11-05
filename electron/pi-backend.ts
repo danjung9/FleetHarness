@@ -31,7 +31,7 @@ import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+type ActiveRun = { planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -442,13 +442,15 @@ export class FleetBackend {
     catch (error) {
       if (p.runCheckpoint?.writerState !== 'idle') throw error;
       this.check(run);
-      if (!transientFailure(error) || run.retried?.has(stage)) throw error;
+      // A model stall can outlast one retry, so a stage gets two before the person is asked to resume.
+      const earlier = run.stageRetries?.get(stage) ?? 0;
+      if (!transientFailure(error) || earlier >= 2) throw error;
       // A provider interruption cannot mask changed frozen inputs.
       await this.checkInputs(p, run); this.check(run);
-      (run.retried ??= new Set()).add(stage);
-      this.log(p, stage, 'info', 'Temporary interruption: ' + String(error) + '. Retrying this stage once in the same workspace; earlier artifacts are saved.');
+      (run.stageRetries ??= new Map()).set(stage, earlier + 1);
+      this.log(p, stage, 'info', 'Temporary interruption: ' + String(error) + '. Retrying this stage (' + (earlier + 1) + ' of 2) in the same workspace; earlier artifacts are saved.');
       await this.changed(p); this.check(run);
-      return work();
+      return this.retryStage(p, run, stage, work);
     }
   }
   /** Validate exact frozen bodies even if shutdown interrupted sealing/restoration. */
@@ -590,7 +592,7 @@ export class FleetBackend {
       }
       try { await this.trackedAgent(p, run, {
         label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: singleTurn
-          ? { ...this.options.agentLimits, timeoutMs: Math.min(this.options.agentLimits?.timeoutMs ?? 120_000, 120_000) } : this.options.agentLimits,
+          ? { ...this.options.agentLimits, timeoutMs: Math.min(this.options.agentLimits?.timeoutMs ?? 600_000, 600_000) } : this.options.agentLimits,
         onMetrics: measured => this.recordInference(p, stage, measured),
         create: async signal => {
           if (visualRequired && run.quality?.solution && (stage === 'build' || stage === 'verify')) {
@@ -692,14 +694,16 @@ export class FleetBackend {
             check(); await this.checkInputs(p, run); check();
             if (awaitingClarification() || singleTurn) return;
             let missing = await validateOutputs(required, requireComponents); check();
-            if (missing.length) {
+            // Plan contract errors are mechanical and often come one at a time, so planning gets more attempts.
+            const attempts = stage === 'plan' ? 5 : 1;
+            for (let attempt = 0; missing.length && attempt < attempts; attempt++) {
               this.log(p, stage, 'info', 'Stage artifacts missing: ' + missing.join(', ') + '. Starting one completion attempt.');
               await prompt('The stage is incomplete. Complete these required outputs and checks before finishing: ' + missing.join(', ') + '. For visual review, use fleet_browser and fleet_visual_review to record initial desktop/narrow observations, resolve findings after fixing the source, then capture and review both sizes again. Reopen after source edits; previous captures cannot verify changed files. Follow the original stage instructions and latest requested step; preserve requirements.md and .fleet. This is the only artifact completion attempt for this step.');
               check(); await this.checkInputs(p, run); check();
               if (awaitingClarification()) return;
               missing = await validateOutputs(required, requireComponents); check();
             }
-            if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
+            if (missing.length) throw new Error(engine + ' did not produce the required artifacts after ' + (attempts === 1 ? 'one completion attempt: ' : 'its completion attempts: ') + missing.join(', ') + '. Inspect the session, then resume this phase to continue from its saved files.');
           };
           await complete([run.context, run.resumedStage === stage ? 'This phase is resuming in the same workspace after an interrupted or failed attempt. Inspect and continue the existing artifacts; preserve completed work and all frozen inputs/contracts. The previous phase error was: ' + (run.previousError ?? 'The previous run was interrupted.') : '', run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, processPolicy, tests ? testBaselinePolicy : undefined, variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);

@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "1fce3a1c756c46961158ce1f1a4e5036dac92127052998d28e82c2aa4a8bcc76",
+  "electron/pi-backend.ts": "8d536c279b72d2ff13191abce25e1fa965f2d5c0969e3ca2327f7261dfcf8c89",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -34,7 +34,7 @@ const errorInventory = {
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
   "electron/solution-runtime.ts": "adff71659e0a5bc4e897aac805cdef71088321682ba564fd5edaefd19c6989cc",
   "electron/visual-review.ts": "4f3f4aade42b2032aa0bf27774110cf9c2393c04b8a85f927c1b2367ee64eac9",
-  "electron/agent-runner.ts": "cd2dda17f8cef33368a53bf9aa2f7430d76c12318760dc846089db0bfd476025",
+  "electron/agent-runner.ts": "7439fbd910893a7c35a175b0e38aaced918ab99f76d1c3b822cc87821b0ded70",
   "harness/integration.ts": "dcf498a183b90defa591068b54ee13485230a5359ded4d030cd0cd023b00cf34",
   "harness/planner.ts": "d4277229e364ca18355db9c8bc6054e494c972a9e7d69f48e45ddd63e816aa31",
   "harness/tool-registry.ts": "4d4a49881e35b191d59801482244e17d08d543d0d48aafa904d00f59ebaa9169",
@@ -65,7 +65,7 @@ const errorInventory = {
   "electron/review.ts": "d87816eb820111fdc7fe8c81d44381b67d35e232ac82a34e58fdaf71ea7fcc92",
   "electron/agent-helpers.ts": "c1366645d3f2ffb0f4013f120752cc9ba5d01b02f9b4b1549181af252ba81a7e",
   "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4",
-  "electron/agent-browser.ts": "0c5763c5405303f5fc4cb1d3b7508b4d049a483d0c7f715c2e615dc3ceba8626",
+  "electron/agent-browser.ts": "f13eac047a9cbb21c5204397ac146ac3392ded44ef8cd331e53b234a2b58fe8e",
   "electron/run-checkpoint.ts": "9b33234a062aff1763bcd5b674311b07639b1d3941fa8b3d1365a2eb6a03139f",
   "electron/executable.ts": "01b2ac13f34acf7c23675a48c8a877322658b8794e642ce9981cf1096b52f785",
   "electron/service-package.ts": "2fd75c5a6ec4a34b3c74bcd378d10c563a0b3ead8d29a48b6d08a01a07d2f1f3",

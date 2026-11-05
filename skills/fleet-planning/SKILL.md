@@ -26,3 +26,5 @@ For every mandatory capability, include a valid input outside bundled examples a
 For required export or transfer, freeze complete expected content and destination-state assertions. A filename, disclaimer, fragment or sender acknowledgement cannot satisfy the output obligation.
 
 Hand off once all planning artifacts exist. Before freezing the contracts, the host audits the plan against the original obligations and allows at most one planning correction turn. Remaining gaps stay visible for review. Build and verification repair cannot weaken, rewrite or defer frozen expectations. Do not implement application code or claim tests passed during planning.
+
+Prefer a browser or Node service runtime, because AppYard packages those as a double-click app that needs no Node, terminal or network. Use Python or a command-line runtime only when the task truly needs it, because the person then needs a terminal. Plan every primary journey against the Sailor bar in `fleet-ux`: visible controls and forms, human-readable times and quantities, and outputs a person can use directly.

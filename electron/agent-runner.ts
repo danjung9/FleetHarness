@@ -27,7 +27,7 @@ export function tokenUsage(raw: unknown, engine: 'pi' | 'codex'): StageTokenUsag
     uncachedPlusOutputTokens: add(uncachedInputTokens, outputTokens) };
 }
 export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns?: number }
-export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000 };
+export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 8 * 60_000 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
 
 /** Bound setup, model/tool work and artifact recovery even when the SDK ignores abort. */

@@ -120,8 +120,8 @@ test('real Pi provider that never responds is bounded by the inactivity watchdog
   const stalled = await provider(t, () => {});
   const h = await backend(t, stalled.baseUrl, { idleMs: 500, timeoutMs: 3000 });
   await h.pi.start(h.project.id); await h.settle();
-  assert.equal(stalled.requests.length, 2); assert.equal(h.project.status, 'failed');
-  assert.equal(h.project.logs.filter(log => log.text.includes('Retrying this stage once')).length, 1);
+  assert.equal(stalled.requests.length, 3); assert.equal(h.project.status, 'failed');
+  assert.equal(h.project.logs.filter(log => log.text.includes('Retrying this stage (1 of 2)')).length, 1);
   assert.match(rawError(h.project), /no progress/); assert.equal(h.pi.active.size, 0);
   assert.equal(h.project.stages.some(s => s.status === 'active'), false);
 });

@@ -144,7 +144,8 @@ export class AgentBrowserSession {
   private readonly aborted = () => { void this.stop(new Error('Browser session stopped.')); };
 
   constructor(private readonly options: AgentBrowserOptions) {
-    this.timeout = options.timeoutMs ?? 600_000;
+    // A build stage can run for 30 minutes of edit and recheck loops, and its final recheck must still work.
+    this.timeout = options.timeoutMs ?? 1_800_000;
     this.stepTimeout = options.stepTimeoutMs ?? 10_000;
     this.startupTimeout = options.startupTimeoutMs ?? 30_000;
     this.observationTimeout = options.observationTimeoutMs ?? 10_000;

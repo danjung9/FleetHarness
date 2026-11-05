@@ -1563,10 +1563,10 @@ for (const failure of ['Provider error: 503 service unavailable', 'Connection lo
   });
 }
 
-test('transient retries stop after two stage executions and preserve completed stages', { timeout: 10000 }, async t => {
+test('transient retries stop after three stage executions and preserve completed stages', { timeout: 10000 }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => { if (stage === 'build') throw new Error('Provider error: 503'); return false; } });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.filter(s => s.stage === 'build').length, 2);
+  assert.equal(h.sessions.filter(s => s.stage === 'build').length, 3);
   assert.ok(h.project.stages.slice(0, 3).every(s => s.status === 'complete'));
   assert.equal(await fs.readFile(path.join(h.project.workspace, 'research.md'), 'utf8'), 'Local fixture research');
 });
@@ -1997,7 +1997,7 @@ for (const recover of [true, false]) {
     await h.run();
     await h.assertSettled(recover ? 'review' : 'failed');
     const planner = h.sessions.find(session => session.stage === 'plan');
-    assert.equal(planner.prompts.length, 2);
+    assert.equal(planner.prompts.length, recover ? 2 : 6);
     assert.match(planner.prompts[1], /requires invocation/);
     if (!recover) {
       assert.equal(h.sessions.some(session => session.stage === 'build'), false);
@@ -2142,7 +2142,7 @@ test('builder cannot weaken a planned browser expectation', { timeout: workflowT
   assert.ok(!h.sessions.some(session => session.stage === 'verify'));
 });
 
-test('invalid acceptance coverage gets one planning completion attempt before build is blocked', { timeout: workflowTimeout }, async t => {
+test('invalid acceptance coverage gets bounded planning completion attempts before build is blocked', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
     if (stage !== 'plan') return false;
     await artifacts(cwd, stage);
@@ -2151,7 +2151,7 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
     await fs.writeFile(file, JSON.stringify(plan)); return true;
   } });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 2);
+  assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 6);
   assert.match(rawError(h.project), /quality contract/);
   assert.ok(!h.sessions.some(session => session.stage === 'build'));
 });
@@ -2203,8 +2203,8 @@ test('missing artifacts get one targeted completion prompt within the same stage
 test('an agent that keeps omitting artifacts cannot advance or loop forever', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { scenario: ({ stage }) => stage === 'plan' });
   await h.run(); await h.assertSettled('failed');
-  assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 2);
-  assert.match(rawError(h.project), /after one completion attempt.*plan\.md/);
+  assert.equal(h.sessions.length, 4); assert.equal(h.sessions.find(s => s.stage === 'plan').prompts.length, 6);
+  assert.match(rawError(h.project), /after its completion attempts.*plan\.md/);
 });
 
 test('empty files and directories cannot satisfy stage outputs', { timeout: workflowTimeout }, async t => {

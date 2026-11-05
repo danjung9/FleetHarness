@@ -379,7 +379,7 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
   });
 }
 
-test('codex: a temporary stage failure retries once after the sweep proves the writer ended', { timeout: 15000 }, async t => {
+test('codex: a temporary stage failure retries twice after the sweep proves the writer ended', { timeout: 15000 }, async t => {
   await fs.mkdir('.tmp', { recursive: true });
   const root = await fs.mkdtemp(path.resolve('.tmp/sweep-retry-'));
   const store = new Store(root); await store.init();
@@ -396,7 +396,7 @@ test('codex: a temporary stage failure retries once after the sweep proves the w
       async request(method) {
         if (method === 'account/read') return { account: { type: 'chatgpt' } };
         if (method === 'thread/start') return { thread: { id: 'fixture-thread' } };
-        if (method === 'turn/start') { turns++; throw new Error(turns === 1 ? '503 temporary interruption' : 'synthetic stage failure'); }
+        if (method === 'turn/start') { turns++; throw new Error(turns <= 2 ? '503 temporary interruption' : 'synthetic stage failure'); }
         return {};
       },
     }) }),
@@ -405,9 +405,9 @@ test('codex: a temporary stage failure retries once after the sweep proves the w
   t.after(async () => { await backend.stopAll(); await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); });
   await backend.start(project.id);
   await backend.active.get(project.id)?.done;
-  assert.equal(turns, 2, 'The temporary failure gets exactly one retry');
+  assert.equal(turns, 3, 'A temporary failure gets two retries');
   assert.ok(scans >= 2, 'The retry waited for process evidence');
-  assert.ok(project.logs.some(log => log.text.includes('Retrying this stage once')));
+  assert.ok(project.logs.some(log => log.text.includes('Retrying this stage (2 of 2)')));
   assert.equal(project.status, 'failed');
   assert.equal(project.runCheckpoint.writerState, 'idle');
   assert.doesNotMatch(project.error, /could not confirm|operator shutdown procedure/);
