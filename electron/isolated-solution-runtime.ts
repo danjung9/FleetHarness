@@ -4,7 +4,7 @@ import os from 'node:os';
 import { createRuntimeFilesHasher } from './runtime-files-hash.js';
 import { performance } from 'node:perf_hooks';
 import type { JsonValue, RuntimeManifest } from '../shared/solution.js';
-import { assertRuntimeSourceFiles } from '../shared/runtime-artifacts.js';
+import { assertRuntimeSourceFiles, runtimeDataDirectory } from '../shared/runtime-artifacts.js';
 import type { SolutionRuntime, SolutionRuntimeLimits } from './solution-runtime.js';
 import type { IntegrationBroker } from './integration-broker.js';
 import { RuntimeBroker } from './runtime-broker.js';
@@ -69,11 +69,11 @@ export async function prepareIsolatedSolutionRuntime(sourceRoot: string, manifes
   const combined = AbortSignal.any([controller.signal, ...(signal ? [signal] : [])]);
   const timer = setTimeout(() => controller.abort(new Error('Isolated runtime exhausted its execution budget.')), limits.totalTimeoutMs);
   let broker: RuntimeBroker | undefined, integrations: IntegrationBroker | undefined, closed = false;
-  const close = async () => {
-    if (closed) return;
+  let closing: Promise<void> | undefined;
+  const close = () => closing ??= (async () => {
     closed = true; clearTimeout(timer); controller.abort(); integrations?.revoke();
     try { await broker?.close(); } finally { await fs.rm(directory, { recursive: true, force: true }); }
-  };
+  })();
   try {
     await fs.mkdir(root, { mode: 0o700 });
     const base = await fs.realpath(sourceRoot), hash = createRuntimeFilesHasher();
@@ -89,9 +89,12 @@ export async function prepareIsolatedSolutionRuntime(sourceRoot: string, manifes
     }
     const filesHash = hash.digest();
     const dependencies = await prepareIsolatedDependencies({ root, manifest, nodeExecutable, signal: combined, timeoutMs: limits.installTimeoutMs });
+    const dataRoot = path.join(root, runtimeDataDirectory);
+    if (manifest.profile === 'service') await fs.mkdir(dataRoot, { mode: 0o700 });
     integrations = services.integrations?.();
     broker = await RuntimeBroker.start({ workspace: root, executable: command.runtime === 'python' ? dependencies.python! : nodeExecutable,
       runtime: command.runtime, entrypoint: command.entrypoint, readPaths: dependencies.readPaths, signal: combined, integrations,
+      writePaths: manifest.profile === 'service' ? [dataRoot] : undefined,
       timeoutMs: limits.totalTimeoutMs, startupTimeoutMs: limits.startupTimeoutMs,
       requestTimeoutMs: limits.invocationTimeoutMs, maxOutputBytes: limits.maxOutputBytes });
     const url = manifest.profile === 'cli' ? undefined : await broker.listen({ staticRoot: root,
@@ -104,14 +107,26 @@ export async function prepareIsolatedSolutionRuntime(sourceRoot: string, manifes
       if (Array.isArray(value)) return value.map(redactOutput);
       return Object.fromEntries(Object.entries(value).map(([key, item]) => [redact(key), redactOutput(item)]));
     };
+    const assertIntegrity = async () => {
+      combined.throwIfAborted();
+      if (closed) throw new Error('Isolated runtime is closed.');
+      const current = createRuntimeFilesHasher();
+      for (const file of [...manifest.files].sort()) current.add(file, await readFile(root, file));
+      if (current.digest() !== filesHash) throw new ClassifiedExecutionFailure('integrity', 'The runtime changed its frozen application files.');
+    };
+    let restarting: Promise<void> | undefined;
+    const restart = () => {
+      if (restarting) return restarting;
+      restarting = (async () => {
+        try { await assertIntegrity(); await broker!.restart(); await assertIntegrity(); }
+        catch (error) { await close(); throw error; }
+      })().finally(() => { restarting = undefined; });
+      return restarting;
+    };
+    await assertIntegrity();
     return { root, url, routeBase: '', provenance: { profile: manifest.profile, filesHash, runtime: command.runtime + ' (isolated stdio)', environmentNames: [] },
       testEnvironment: dependencies.testEnvironment, invoke: input => broker!.invoke(input), redactOutput, redactMessage: redact, close,
-      assertIntegrity: async () => {
-        combined.throwIfAborted();
-        const current = createRuntimeFilesHasher();
-        for (const file of [...manifest.files].sort()) current.add(file, await readFile(root, file));
-        if (current.digest() !== filesHash) throw new ClassifiedExecutionFailure('integrity', 'The runtime changed its frozen application files.');
-      } };
+      ...(manifest.profile === 'service' ? { restart } : {}), assertIntegrity };
   } catch (error) { await close(); throw error; }
 }
 
@@ -124,8 +139,14 @@ export const verifyIsolatedWorkspace: typeof verifyWorkspace = async (root, exec
   const args = ['--no-global-search-paths', '--test', applicationTestReporter, ...files.map(file => './' + file)];
   const readPaths: string[] = environment?.FLEET_PYTHON_READ_PATHS ? JSON.parse(environment.FLEET_PYTHON_READ_PATHS) : [];
   if (!Array.isArray(readPaths) || readPaths.some(file => typeof file !== 'string' || !path.isAbsolute(file))) throw new Error('Invalid host test runtime paths.');
+  const dataRoot = path.join(root, runtimeDataDirectory), writePaths: string[] = [];
+  try {
+    const data = await fs.lstat(dataRoot);
+    if (!data.isDirectory() || data.isSymbolicLink()) throw new Error('Service state must stay in its ordinary runtime data directory.');
+    writePaths.push(dataRoot);
+  } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   const process = await spawnIsolatedProcess({ workspace: root, command: [executable, ...args], signal,
-    readPaths, env: environment?.FLEET_PYTHON ? { FLEET_PYTHON: environment.FLEET_PYTHON } : {},
+    readPaths, writePaths, env: environment?.FLEET_PYTHON ? { FLEET_PYTHON: environment.FLEET_PYTHON } : {},
     timeoutMs: options.timeoutMs ?? 120_000, maxOutputBytes: options.maxOutputBytes ?? 2_000_000,
     onStdout: bytes => evidence.stdout(bytes), onStderr: bytes => evidence.stderr(bytes) });
   let exitCode: number | null;

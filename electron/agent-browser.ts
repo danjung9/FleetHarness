@@ -7,7 +7,7 @@ import { Type, type Static } from 'typebox';
 import { Check } from 'typebox/value';
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { BrowserJourney, UxSpec } from '../shared/quality.js';
-import { performBrowserStep } from './browser-actions.js';
+import { performBrowserStep, type BrowserRuntimeHooks } from './browser-actions.js';
 import { BrowserHttpEvidence } from './browser-http-evidence.js';
 import type { VisualCaptureInput } from './visual-review.js';
 
@@ -15,7 +15,7 @@ export interface AgentBrowserOptions {
   root: string;
   signal: AbortSignal;
   /** Prepare a fresh host-owned copy of the application's declared runtime files. */
-  prepare: (signal: AbortSignal) => Promise<{ url: string; routeBase?: string; close: () => Promise<void>; redactMessage?: (message: string) => string; filesHash?: string; assertIntegrity?: () => Promise<void> }>;
+  prepare: (signal: AbortSignal) => Promise<BrowserRuntimeHooks & { url: string; routeBase?: string; close: () => Promise<void>; redactMessage?: (message: string) => string; filesHash?: string; assertIntegrity?: () => Promise<void> }>;
   /** Record a saved, successful screenshot against the runtime that was actually rendered. */
   onCapture?: (capture: VisualCaptureInput) => Promise<string>;
   /** Frozen host acceptance journeys; callers may select an ID, never supply steps. */
@@ -216,7 +216,10 @@ export class AgentBrowserSession {
               generation.expectedDownloads = step.action === 'expectDownload' ? 1 : 0;
               generation.expectedDownloadStep = step.action === 'expectDownload' ? journey.completedSteps : undefined;
               try {
-                await within(performBrowserStep(page, step, this.stepTimeout, generation.httpEvidence, this.ux, generation.runtime?.routeBase), step.action === 'expectScreen' ? undefined : this.stepTimeout, signal);
+                // Host service calls enforce startup/invocation budgets, which may
+                // exceed a DOM interaction's timeout. The whole call stays cancellable.
+                const hostDeadline = ['expectScreen', 'restartRuntime', 'expectServiceState'].includes(step.action);
+                await within(performBrowserStep(page, step, this.stepTimeout, generation.httpEvidence, this.ux, generation.runtime?.routeBase, generation.runtime), hostDeadline ? undefined : this.stepTimeout, signal);
                 if (step.action === 'expectDownload' && generation.expectedDownloadUrl) generation.verifiedDownloads.push({ url: generation.expectedDownloadUrl, step: journey.completedSteps });
               } finally { generation.expectedDownloads = 0; generation.expectedDownloadUrl = undefined; generation.expectedDownloadStep = undefined; }
               journey.completedSteps++;

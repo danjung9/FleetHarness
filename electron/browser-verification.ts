@@ -12,7 +12,8 @@ import { createPreviewProxy } from './preview-proxy.js';
 import type { SolutionRuntime } from './solution-runtime.js';
 import { ClassifiedExecutionFailure } from './execution-failure.js';
 
-type JourneyRuntime = Pick<SolutionRuntime, 'url' | 'assertIntegrity' | 'close' | 'redactMessage'> & { routeBase?: string };
+type JourneyRuntime = Pick<SolutionRuntime, 'url' | 'assertIntegrity' | 'close' | 'redactMessage' | 'restart'>
+  & Partial<Pick<SolutionRuntime, 'invoke' | 'provenance'>> & { routeBase?: string };
 
 export interface BrowserVerificationOptions {
   root: string;
@@ -161,7 +162,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
     if (!browser) throw new Error('Browser verification could not start. Install Google Chrome, or run `npm run setup:browser` from the source checkout to install Chromium, then retry. No browser is downloaded during a build.\n' + failures.join('\n').slice(0, 2000));
     for (const journey of plan.journeys) for (const [viewport, dimensions] of Object.entries(viewports)) {
       deadline.check();
-      const result: JourneyResult = { id: journey.id, title: journey.title, viewport: viewport as JourneyResult['viewport'], status: 'failed', detail: '' };
+      const result: JourneyResult = { id: journey.id, title: journey.title, viewport: viewport as JourneyResult['viewport'], status: 'failed', detail: '', completedSteps: 0, totalSteps: journey.steps.length };
       journeys.push(result);
       const problems: string[] = [];
       const record = (problem: string) => { if (problems.length < 12 && !problems.includes(problem)) problems.push(problem.slice(0, 1200)); };
@@ -227,8 +228,14 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           const stepLimit = Math.min(stepTimeoutMs, deadline.remaining());
           expectedDownloads = step.action === 'expectDownload' ? 1 : 0;
           try {
-            const operation = performBrowserStep(page, step, stepLimit, httpEvidence, ux, runtime?.routeBase ?? sharedRouteBase);
-            await deadline.run(step.action === 'expectScreen' ? operation : stepWithin(operation, stepLimit));
+            const hooks = runtime?.provenance?.profile === 'service'
+              ? { restart: runtime.restart?.bind(runtime), invokeService: runtime.invoke?.bind(runtime) } : undefined;
+            const operation = performBrowserStep(page, step, stepLimit, httpEvidence, ux, runtime?.routeBase ?? sharedRouteBase, hooks);
+            // Runtime startup/invocation limits own service operations; the
+            // journey deadline still bounds stalled hooks and cancellation.
+            const hostDeadline = ['expectScreen', 'restartRuntime', 'expectServiceState'].includes(step.action);
+            await deadline.run(hostDeadline ? operation : stepWithin(operation, stepLimit));
+            result.completedSteps = stepIndex;
           } finally { expectedDownloads = 0; }
           const overflow = await deadline.run(page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0) > innerWidth + 1));
           if (overflow) record('Horizontal overflow prevents the application fitting the ' + viewport + ' viewport.');

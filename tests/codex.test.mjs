@@ -414,6 +414,11 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
         if (guide) {
           await fs.access(path.join(options.cwd, runtimeProfile === 'browser' ? 'index.html' : 'evaluate.cjs'));
           await assert.rejects(fs.access(path.join(options.cwd, 'README.md')), /ENOENT/);
+          if (runtimeProfile === 'browser') {
+            const checkpoint = JSON.parse(await fs.readFile(path.join(options.cwd, '.quality-evidence/workflow-report.json'), 'utf8'));
+            assert.equal(checkpoint.status, 'passed');
+            assert.equal(checkpoint.journeys.length, 2, 'Codex completes the primary workflow at both widths before its guide');
+          }
         }
         const files = guide ? { 'README.md': runtimeProfile === 'browser' ? '# Fixture guide\nOpen index.html in a browser. Enter TASK: inspect pump in Message and select Parse message. The task appears and survives reload. Empty input asks you to enter a message. Run `node --test app.test.cjs` with Node for developer tests.' : '# Fixture guide\nWith Node installed, pipe a JSON message into `node evaluate.cjs`. The input `"TASK: inspect pump"` returns `"inspect pump"`; an empty JSON string returns null. Run `node --test app.test.cjs` for developer tests.' }
           : phase === 'synthetic-data' ? syntheticDataFiles
@@ -457,7 +462,7 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the Codex engine routes $
   t.after(() => backend.stopAll()); await backend.start(project.id); await backend.active.get(project.id)?.done;
   assert.equal(project.status, 'review', project.error); assert.equal(project.backend, 'codex'); assert.equal(project.report.passed, 1); assert.equal(project.report.quality.status, 'passed'); assert.equal(project.report.quality.journeys.length, runtimeProfile === 'browser' ? 4 : 0);
   assert.equal(project.runtimeProfile, runtimeProfile);
-  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', 'build', 'build', 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
+  assert.deepEqual(phases, ['intake', 'synthetic-data', 'research', 'plan', ...Array(runtimeProfile === 'browser' ? 3 : 2).fill('build'), 'verify']); assert.ok(project.logs.some(l => l.text.includes('Codex · ChatGPT subscription')));
   for (const session of sessions) {
     assert.equal(session.skills.includes('ponytail'), ['research', 'plan', 'build', 'verify'].includes(session.phase), `${session.phase} Ponytail access`);
     assert.equal(session.skills.includes('impeccable'), session.phase === 'plan' || runtimeProfile === 'browser' && ['build', 'verify'].includes(session.phase), `${session.phase} Impeccable access`);

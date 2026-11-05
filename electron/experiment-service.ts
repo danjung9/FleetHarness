@@ -7,6 +7,7 @@ import type { ModelRuntime } from '@earendil-works/pi-coding-agent';
 import type { ExperimentAPI, ExperimentAvailability } from '../shared/experiments.js';
 import type { ArchitectureProfile, CandidateRecord, ExperimentSummary, LearningSettings, PromotionOutboxRecord } from '../shared/learning.js';
 import type { Project } from '../shared/types.js';
+import { mergeTokenUsage } from '../shared/token-usage.js';
 import { validateIntegrationOperation, type IntegrationOperation } from '../shared/integration.js';
 import { ExperimentCoordinator } from './experiment-coordinator.js';
 import { ExperimentWorkers, experimentProfiles } from './experiment-workers.js';
@@ -38,8 +39,8 @@ const identity = (value: unknown) => {
   return value;
 };
 const summaryFields = (project: Project) => {
-  const { id, title, status, stages, logs, runId, model, report, visualReview, runtimeProfile, systemDesign, error } = project;
-  return structuredClone({ id, title, status, stages, logs, runId, model, report, visualReview, runtimeProfile, systemDesign, error });
+  const { id, title, status, stages, logs, runId, model, report, visualReview, runtimeProfile, systemDesign, error, tokenUsage } = project;
+  return structuredClone({ id, title, status, stages, logs, runId, model, report, visualReview, runtimeProfile, systemDesign, error, tokenUsage });
 };
 
 /** A real smoke probe makes unsupported or ineffective OS confinement fail closed. */
@@ -89,6 +90,10 @@ export class ExperimentService implements ExperimentAPI {
       sharedPlanner: context => this.workers.sharedPlanner(context), candidateWorker: context => this.workers.candidateWorker(context),
       selectProfiles: (shared, registry) => this.workers.selectProfiles(shared, registry), verifyCandidate: candidate => this.workers.verifyCandidate(candidate),
       applyPromotion: record => this.applyPromotion(record), notify: () => this.changed(), evaluatorVersion: 'experiment-host-v4',
+      recordUsage: async (projectId, usage) => {
+        const project = options.store.project(projectId), merged = mergeTokenUsage(project.tokenUsage, usage);
+        if (merged !== project.tokenUsage) { project.tokenUsage = merged; await options.store.save(); }
+      },
       regressionCheck: async policy => (await probeExperimentIsolation(options.executable, this.lifetime.signal)).available
         && runExperimentRegressionChecks(options.executable, policy.profileIds, this.lifetime.signal),
       classifyFailure: error => (error as { classification?: string })?.classification === 'integrity' ? 'gate-defect' : 'infrastructure' });
@@ -125,7 +130,13 @@ export class ExperimentService implements ExperimentAPI {
   refreshProjectSummaries() {
     if (this.closed) return;
     for (const project of this.options.store.state.projects) {
-      const record = this.learning.listExperiments(project.id).at(-1);
+      const records = this.learning.listExperiments(project.id);
+      // Recover a crash between the durable worker projection and state.json.
+      for (const experiment of records) {
+        project.tokenUsage = mergeTokenUsage(project.tokenUsage, experiment.sharedExecutionState?.tokenUsage);
+        for (const candidate of this.learning.listCandidates(experiment.id)) project.tokenUsage = mergeTokenUsage(project.tokenUsage, candidate.executionState?.tokenUsage);
+      }
+      const record = records.at(-1);
       const latest = record && this.learning.summary(record.id);
       const active = latest && ['queued', 'planning', 'running', 'comparing', 'promoting'].includes(latest.status);
       const selected = latest?.status === 'complete' && !!latest.selectedCandidateId;
@@ -221,6 +232,7 @@ export class ExperimentService implements ExperimentAPI {
     if (current?.experimentId === experiment.id && current.candidateId === candidate.id && parent.report?.sourceHash === candidate.outcome?.sourceHash
       && parent.workspace === candidate.workspace) return; // A crash after state.json is saved must not reset subsequent approval.
     const previous = structuredClone(parent);
+    parent.tokenUsage = mergeTokenUsage(parent.tokenUsage, selected.tokenUsage);
     const fields = ['runId', 'workspace', 'model', 'backend', 'report', 'qualityVersion', 'visualReview', 'runtimeProfile', 'systemDesign', 'phasePlan', 'globalTools', 'logs', 'stages'] as const;
     for (const field of fields) (parent as unknown as Record<string, unknown>)[field] = structuredClone(selected[field]);
     parent.status = 'review'; parent.approvedAt = undefined; parent.exportedTo = undefined; parent.executable = undefined;

@@ -20,6 +20,7 @@ export interface ReviewRecord {
   sourceHash?: string; nextRunId?: string;
 }
 export interface Project extends BriefContext {
+  tokenUsage?: import('./token-usage.js').ProjectTokenUsage;
   archivedAt?: string;
   reviewHistory?: ReviewRecord[];
   conversation?: import('./conversation.js').ProjectConversation;

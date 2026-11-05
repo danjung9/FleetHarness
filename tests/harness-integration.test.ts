@@ -104,7 +104,7 @@ test('global workspace tools are inherited while phase tools remain scoped to th
     const byId = (id: string) => packet.stages.find(s => s.id === id)!;
     assert.deepEqual(byId('intake').tools, ['fleet_get_challenge']);
     assert.deepEqual(byId('research').tools, ['fleet_search_evidence']);
-    assert.deepEqual(byId('plan').tools, ['fleet_system_design']);
+    assert.deepEqual(byId('plan').tools, ['fleet_system_design', 'fleet_validate_plan']);
     assert.deepEqual(byId('build').tools, [...packet.recipe.tools, 'fleet_component_progress', 'fleet_browser', 'fleet_visual_review']);
     assert.deepEqual(byId('verify').tools, [...packet.recipe.tools, 'fleet_component_progress', 'fleet_browser', 'fleet_visual_review']);
     assert.ok(!byId('plan').skills.includes('fleet-delivery'));

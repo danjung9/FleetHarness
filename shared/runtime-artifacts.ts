@@ -1,6 +1,14 @@
+/** Host-created writable service state, retained across process restarts. Never deployment source. */
+export const runtimeDataDirectory = '.runtime-data';
+
 /** Names omitted at every depth from the verified source and exported bundle. */
-export const artifactInventoryExclusions = ['node_modules', '.git', '.pi', '.DS_Store'] as const;
+export const artifactInventoryExclusions = ['node_modules', '.git', '.pi', '.DS_Store', runtimeDataDirectory] as const;
 const excludedRuntimeSegments = new Set<string>(artifactInventoryExclusions.map(name => name.toLowerCase()));
+
+/** Match complete portable path segments, including aliases on case-insensitive filesystems. */
+export function isRuntimeDataPath(file: string) {
+  return file.split(/[\\/]/).some(segment => segment.toLowerCase() === runtimeDataDirectory);
+}
 
 /** Root artifacts rewritten by the host after verification, outside the source digest. */
 const hostWrittenArtifacts = new Set(['test-report.json', 'review.json', 'delivery.md']);
@@ -11,6 +19,9 @@ export function assertRuntimeSourceFiles(files: unknown): asserts files is strin
     throw new Error('Runtime files must be a nonempty array of source file paths.');
   }
   for (const file of files) {
+    if (isRuntimeDataPath(file)) {
+      throw new Error(`Runtime files cannot include reserved writable state directory ${file}. Keep deployment source outside ${runtimeDataDirectory}/; create mutable application data there at runtime.`);
+    }
     // Runtime dependencies must be present in both the approved source digest
     // and its export. Also reject case aliases on case-insensitive filesystems
     // and Windows separators in saved manifests checked directly at export.

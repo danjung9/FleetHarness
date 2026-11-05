@@ -202,6 +202,9 @@ function json(value: unknown, name: string): JsonValue {
   return result;
 }
 
+/** Bounded ordinary JSON shared by frozen evaluation and lifecycle observations. */
+export { json as parseContractJson };
+
 function canonical(value: JsonValue): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;

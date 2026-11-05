@@ -6,7 +6,7 @@ import { stageDefinitions, starters } from '../shared/types.js';
 import { getChallenge } from '../harness/catalog.js';
 import { normalizeProjectInput } from '../shared/project-input.js';
 import type { Challenge } from '../harness/types.js';
-import { artifactInventoryExclusions } from '../shared/runtime-artifacts.js';
+import { artifactInventoryExclusions, isRuntimeDataPath } from '../shared/runtime-artifacts.js';
 
 export function validateInput(input: NewProject, catalog?: readonly Challenge[]): NewProject {
   const normalized = normalizeProjectInput(input);
@@ -76,9 +76,10 @@ export class Store {
 }
 const ignored = new Set<string>(artifactInventoryExclusions);
 export async function listArtifacts(root: string, prefix = ''): Promise<Artifact[]> {
+  if (isRuntimeDataPath(prefix)) return [];
   const results: Artifact[] = [];
   for (const entry of await fs.readdir(path.join(root, prefix), { withFileTypes: true })) {
-    if (ignored.has(entry.name) || entry.isSymbolicLink()) continue;
+    if (ignored.has(entry.name) || isRuntimeDataPath(entry.name) || entry.isSymbolicLink()) continue;
     const relative = path.join(prefix, entry.name);
     if (entry.isDirectory()) results.push(...await listArtifacts(root, relative));
     else if (entry.isFile()) results.push({ path: relative, size: (await fs.stat(path.join(root, relative))).size });

@@ -13,6 +13,10 @@ import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { ClarificationBroker } from '../dist-electron/electron/clarifications.js';
 import { completeFixtureVisualReview, fixtureVisualReviewInput } from '../scripts/visual-review-fixture.mjs';
 import { createFixturePlanningReviewSession } from '../scripts/planning-review-fixture.mjs';
+import { createHash } from 'node:crypto';
+import { qualityContractGuide } from '../dist-electron/harness/quality-contract.js';
+import { readRunCheckpoint, writeRunCheckpoint } from '../dist-electron/electron/run-checkpoint.js';
+import { assertFleetPacketIntegrity } from '../dist-electron/harness/integration.js';
 
 const resourcesRoot = path.resolve('.');
 // Each workflow prepares independent packages and launches real browser contexts.
@@ -232,9 +236,10 @@ test('a final state-save failure retains the verification checkpoint and can res
   assert.equal(reportPassed(h.project.report), true);
 });
 
-test('resume from failed verification permits one fresh repair and still requires passing checks', { timeout: workflowTimeout * 2 }, async t => {
+test('resume preserves exhausted repair allowances but accepts a verifier fix after passing fresh checks', { timeout: workflowTimeout * 2 }, async t => {
   let broken = true;
   const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (!broken && stage === 'verify') { await artifacts(cwd, 'repair'); return false; }
     if (broken && ['verify', 'repair'].includes(stage)) {
       await artifacts(cwd, stage, true);
       await fs.writeFile(path.join(cwd, 'core.cjs'), 'exports.parse = () => "verification defect";');
@@ -248,7 +253,9 @@ test('resume from failed verification permits one fresh repair and still require
   broken = false;
   await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('review');
   assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
-  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['verify', 'repair']);
+  assert.deepEqual(h.sessions.slice(count).map(session => session.stage), ['verify']);
+  const repairedCheckpoint = await readRunCheckpoint(h.root, h.project);
+  assert.equal(repairedCheckpoint.functionalRepair.gates.final.attempts, 2, 'Resume preserves consumed attempts');
   assert.equal(reportPassed(h.project.report), true);
 });
 
@@ -411,7 +418,7 @@ test('clarification-enabled automatic builds do not create extra model sessions 
   h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
   await h.run(); await h.assertSettled('review');
   assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'research', 'plan', 'build', 'verify']);
-  assert.deepEqual(h.sessions.map(session => session.prompts.length), [1, 1, 1, 2, 1]);
+  assert.deepEqual(h.sessions.map(session => session.prompts.length), [1, 1, 1, 3, 1]);
   for (const session of h.sessions) {
     const enabled = ['research', 'plan'].includes(session.stage);
     assert.equal(session.customTools.some(tool => tool.name === 'fleet_request_clarification'), enabled);
@@ -429,7 +436,7 @@ test('factory build agents continue beyond 40 model turns and complete independe
     return false;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2);
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 3);
   assert.equal(reportPassed(h.project.report), true);
   assert.ok(h.sessions.every(session => session.disposed));
 });
@@ -472,7 +479,7 @@ test('build agents interact with their declared app, see images, reopen changed 
     assert.equal(session.customTools.some(tool => tool.name === 'fleet_browser'), ['build', 'verify'].includes(session.stage));
   }
   const logs = h.project.logs.filter(log => log.tool?.name === 'fleet_browser' && log.tool?.phase === 'complete');
-  assert.equal(logs.length, 16, 'Manual interactions and every frozen journey deliver their screenshots to the agent.');
+  assert.equal(logs.length, 20, 'Core and primary-workflow construction both exercise manual interactions; every frozen journey also delivers its screenshots.');
   assert.ok(logs.every(log => log.text.includes('Image delivered to the agent')));
   assert.ok(logs.every(log => !log.text.includes('iVBORw0KGgo')));
   const stale = await browserTool.execute('late-screenshot', { action: 'screenshot' });
@@ -894,7 +901,7 @@ for (const runtimeProfile of ['browser', 'cli']) test(`the complete ${runtimePro
   assert.equal(h.project.stages.find(s => s.id === 'review').status, 'review');
   assert.equal(h.project.stages.find(s => s.id === 'deliver').status, 'queued');
   assert.equal(h.project.approvedAt, undefined); assert.ok(h.sessions.every(s => s.disposed));
-  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2);
+  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, runtimeProfile === 'cli' ? 2 : 3);
   assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /No installation is required/);
   assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
   assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
@@ -1026,7 +1033,7 @@ test('core evaluation precedes completed application component tracking', { time
   } });
   await h.run(); await h.assertSettled('review');
   assert.equal(completedApplication, true);
-  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2, 'Incomplete UI components must not trigger artifact repair before the core gate');
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 3, 'Core and primary workflow checkpoints precede full component completion');
   assert.equal(reportPassed(h.project.report, true), true);
 });
 
@@ -1051,7 +1058,7 @@ test('host core evidence survives agent edits and deletion through guide, verifi
   assert.equal(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'), original);
   assert.equal(h.project.logs.filter(log => log.text.includes('Restored host core evaluation evidence')).length, 3);
   assert.equal(h.sessions.filter(session => session.stage === 'repair').length, 1);
-  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 2);
+  assert.equal(h.sessions.find(session => session.stage === 'build').prompts.length, 3);
   assert.equal(reportPassed(h.project.report, true), true);
   assert.equal(await sourceHash(h.project.workspace), h.project.report.sourceHash);
 });
@@ -1110,7 +1117,7 @@ test('a timed-out core evaluation cannot publish evidence or overwrite its recov
 for (const repair of [true, false]) test(`required core evaluation ${repair ? 'repairs the engine' : 'blocks application completion'}`, { timeout: 20000 }, async t => {
   let coreAttempts = 0;
   const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
-    if (stage !== 'build') return false;
+    if (stage !== 'build' || session.prompts.at(-1).startsWith('Implement the first complete user workflow')) return false;
     coreAttempts++;
     await assert.rejects(fs.access(path.join(cwd, 'evaluation-plan.json')), /ENOENT/, 'The builder must not receive the answer key');
     await artifacts(cwd, stage);
@@ -1119,7 +1126,7 @@ for (const repair of [true, false]) test(`required core evaluation ${repair ? 'r
     return true;
   } });
   await h.run(); await h.assertSettled(repair ? 'review' : 'failed');
-  assert.equal(coreAttempts, 2);
+  assert.equal(coreAttempts, repair ? 2 : 3);
   assert.equal(h.sessions.some(session => session.stage === 'verify'), repair);
   assert.equal(h.sessions.some(session => session.stage === 'repair'), false);
   const evidence = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.quality-evidence/core-report.json'), 'utf8'));
@@ -1131,10 +1138,10 @@ for (const repair of [true, false]) test(`required core evaluation ${repair ? 'r
   } else assert.ok(!h.sessions.find(session => session.stage === 'build').writingGuide);
 });
 
-for (const repair of [true, false]) test(`passing Node tests cannot hide a static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: 30000 }, async t => {
+for (const repair of [true, false]) test(`passing Node tests and an early workflow cannot hide a later static browser app (${repair ? 'repairs UI' : 'blocks review'})`, { timeout: 30000 }, async t => {
   let attempts = 0, findingId, nodeReport;
   const h = await harness(t, { verificationLimits: { browserStepTimeoutMs: 1000 }, scenario: async ({ cwd, stage }) => {
-    if (stage === 'build') {
+    if (stage === 'guide' && attempts === 0) {
       await artifacts(cwd, stage);
       await fs.writeFile(path.join(cwd, 'index.html'), '<!doctype html><title>Placeholder</title><main>Works</main><script>' + qualityFixtureHtml.match(/\/\* CORE_START \*\/[\s\S]*?\/\* CORE_END \*\//)[0] + '</script>');
       return true;
@@ -1205,17 +1212,107 @@ test('invalid acceptance coverage gets one planning completion attempt before bu
   assert.ok(!h.sessions.some(session => session.stage === 'build'));
 });
 
+test('planners validate and correct saved contracts before the single completion attempt is needed', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+    if (stage !== 'plan') return false;
+    assert.ok(session.tools.includes('fleet_validate_plan'));
+    assert.ok(session.prompts[0].includes(qualityContractGuide), 'The prompt carries the guide from the current host build.');
+    await artifacts(cwd, stage);
+    const file = path.join(cwd, 'ux-spec.json');
+    const ux = JSON.parse(await fs.readFile(file, 'utf8'));
+    const persistentElements = ux.structure.persistentElements;
+    delete ux.structure.persistentElements;
+    ux.screens[0].rootSelector = ux.screens[0].selector;
+    delete ux.screens[0].selector;
+    await fs.writeFile(file, JSON.stringify(ux));
+    const validate = session.customTools.find(tool => tool.name === 'fleet_validate_plan');
+    let result = await validate.execute('missing-persistent', {});
+    assert.equal(result.isError, true);
+    assert.match(result.details.errors.join(), /ux-spec\.json: structure\.persistentElements/);
+    ux.structure.persistentElements = persistentElements;
+    await fs.writeFile(file, JSON.stringify(ux));
+    result = await validate.execute('wrong-selector', {});
+    assert.equal(result.isError, true);
+    assert.match(result.details.errors.join(), /rootSelector.*Allowed fields:.*selector/);
+    ux.screens[0].selector = ux.screens[0].rootSelector;
+    delete ux.screens[0].rootSelector;
+    await fs.writeFile(file, JSON.stringify(ux));
+    result = await validate.execute('valid', {});
+    assert.equal(result.isError, false);
+    assert.equal(result.details.status, 'passed');
+    await fs.access(path.join(cwd, 'evaluation-plan.json'));
+    return true;
+  } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(h.sessions.find(session => session.stage === 'plan').prompts.length, 1);
+  assert.equal(h.project.logs.some(log => log.text.includes('Starting one artifact completion attempt')), false);
+  for (const session of h.sessions.filter(session => session.stage !== 'plan')) {
+    assert.equal(session.tools.includes('fleet_validate_plan'), false);
+    assert.equal(session.customTools.some(tool => tool.name === 'fleet_validate_plan'), false);
+    assert.equal(session.prompts.some(prompt => prompt.includes('Current host planning contract:')), false);
+  }
+});
+
+test('resumed planning gets current schema guidance and validation without changing an older frozen packet', { timeout: workflowTimeout }, async t => {
+  let firstAttempt = true;
+  const h = await harness(t, { scenario: async ({ cwd, stage, session }) => {
+    if (stage !== 'plan') return false;
+    if (firstAttempt) {
+      firstAttempt = false;
+      await artifacts(cwd, stage);
+      throw new Error('Fixture interrupted before planning validation.');
+    }
+    assert.ok(session.prompts[0].includes(qualityContractGuide));
+    assert.match(session.prompts[0], /supersedes conflicting schema examples/);
+    assert.match(session.prompts[0], /same workspace/);
+    assert.ok(session.tools.includes('fleet_validate_plan'));
+    const result = await session.customTools.find(tool => tool.name === 'fleet_validate_plan').execute('resume', {});
+    assert.equal(result.isError, false, JSON.stringify(result));
+    // Continue entirely from the saved planning files, without rewriting them.
+    return true;
+  } });
+  await h.run(); await h.assertSettled('failed');
+  const { runId, workspace } = h.project;
+  const saved = await readRunCheckpoint(h.root, h.project);
+  const guide = '# Legacy quality guide\nux-spec.json uses schemaVersion 1; no structure or screen assertions.\n';
+  const packetRoot = path.join(workspace, '.fleet');
+  await fs.writeFile(path.join(packetRoot, 'quality-contract.md'), guide);
+  const packetFile = path.join(packetRoot, 'packet.json');
+  const packet = JSON.parse(await fs.readFile(packetFile, 'utf8'));
+  packet.stages.find(phase => phase.id === 'plan').tools = ['fleet_system_design'];
+  await fs.writeFile(packetFile, JSON.stringify(packet));
+  saved.phases.find(phase => phase.id === 'plan').tools = ['fleet_system_design'];
+  // Construct a trusted historical fixture, including its original packet digest.
+  const manifestFile = path.join(packetRoot, 'manifest.json');
+  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8'));
+  const hash = createHash('sha256');
+  for (const name of [...manifest.files].sort()) hash.update(name + '\0').update(await fs.readFile(path.join(packetRoot, name))).update('\0');
+  saved.packetHash = manifest.hash = hash.digest('hex');
+  await fs.writeFile(manifestFile, JSON.stringify(manifest));
+  await writeRunCheckpoint(h.root, h.project, saved);
+  await assertFleetPacketIntegrity(workspace, saved.packetHash);
+  await h.backend.resume(h.project.id); await h.settle(); await h.assertSettled('review');
+  assert.equal(h.project.runId, runId);
+  assert.equal(h.project.workspace, workspace);
+  assert.equal(await fs.readFile(path.join(packetRoot, 'quality-contract.md'), 'utf8'), guide);
+  await assertFleetPacketIntegrity(workspace, saved.packetHash);
+  const plans = h.sessions.filter(session => session.stage === 'plan');
+  assert.equal(plans.length, 2);
+  assert.equal(plans[1].prompts.length, 1);
+  assert.deepEqual(h.sessions.map(session => session.stage), ['intake', 'synthetic-data', 'research', 'plan', 'plan', 'build', 'verify']);
+});
+
 for (const brokenRepair of [false, true]) {
-  test(`independent test failure gets exactly one repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: workflowTimeout }, async t => {
+  test(`independent test failure uses bounded progress-sensitive repair and ${brokenRepair ? 'fails clearly' : 'advances after re-verification'}`, { timeout: workflowTimeout }, async t => {
     const h = await harness(t, { brokenBuild: true, brokenRepair }); await h.run();
     await h.assertSettled(brokenRepair ? 'failed' : 'review');
-    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', 'repair']);
+    assert.deepEqual(h.sessions.map(s => s.stage), ['intake', 'synthetic-data', 'research', 'plan', 'build', 'verify', ...Array(brokenRepair ? 2 : 1).fill('repair')]);
     assert.deepEqual(h.sessions.at(-1).skills, h.sessions.find(session => session.stage === 'verify').skills);
     assert.ok(h.sessions.at(-1).skills.includes('ponytail'));
     assert.ok(h.sessions.at(-1).skills.includes('impeccable'));
     assert.equal(reportPassed(h.project.report), !brokenRepair);
-    assert.equal(h.project.logs.filter(l => l.text.includes('Starting one Pi repair attempt')).length, 1);
-    if (brokenRepair) { assert.match(h.project.error, /Verification did not pass/); assert.equal(h.project.report.failed, 2); }
+    assert.equal(h.project.logs.filter(l => l.text.includes('Starting functional final repair')).length, brokenRepair ? 2 : 1);
+    if (brokenRepair) { assert.match(h.project.error, /Functional final repair stopped: no-progress/); assert.equal(h.project.report.failed, 2); }
   });
 }
 
@@ -1268,7 +1365,7 @@ test('missing application tests are recovered before verification starts', { tim
     await artifacts(cwd, stage); if (session.prompts.length === 1) await fs.rm(path.join(cwd, 'app.test.cjs')); return true;
   } });
   await h.run(); await h.assertSettled('review');
-  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 3); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
+  assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 4); assert.match(h.sessions.find(s => s.stage === 'build').prompts[1], /application.*test/);
 });
 
 test('the user guide is requested after implementation and checked before verification', { timeout: workflowTimeout }, async t => {

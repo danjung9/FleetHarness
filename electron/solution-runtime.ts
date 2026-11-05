@@ -7,7 +7,7 @@ import { createRuntimeFilesHasher } from './runtime-files-hash.js';
 import { createServer } from 'node:http';
 import { PreviewServers } from './preview.js';
 import type { JsonValue, RuntimeCommand, RuntimeManifest, SolutionEvaluationReport } from '../shared/solution.js';
-import { assertRuntimeSourceFiles } from '../shared/runtime-artifacts.js';
+import { assertRuntimeSourceFiles, runtimeDataDirectory } from '../shared/runtime-artifacts.js';
 
 export interface SolutionRuntimeLimits {
   totalTimeoutMs: number;
@@ -28,6 +28,8 @@ export interface SolutionRuntime {
   invoke(input: JsonValue): Promise<JsonValue>;
   /** Service-only HTTP observation. Receives input only; expectations remain in the host. */
   invokeHttp?(input: JsonValue): Promise<{ status: number; output: JsonValue }>;
+  /** Service-only process restart. Keeps the package, durable data, dependencies and origin. */
+  restart?(): Promise<void>;
   assertIntegrity(): Promise<void>;
   redactOutput(value: JsonValue): JsonValue;
   redactMessage(message: string): string;
@@ -155,23 +157,24 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   if (manifest.requiredEnv.some(name => !/^[A-Z_][A-Z0-9_]*$/.test(name) || reservedEnv.test(name))) throw new Error('Runtime environment contains a reserved or invalid name.');
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-solution-'));
   const root = path.join(directory, 'package');
-  const children = new Set<ChildProcess>();
+  const children = new Map<ChildProcess, Promise<void>>();
   const controller = new AbortController();
   const previews = new PreviewServers();
   let failure: Error | undefined, closed = false;
-  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children) kill(child); previews.close(); };
+  const stop = (error: Error) => { failure ??= error; controller.abort(error); for (const child of children.keys()) kill(child); previews.close(); };
   const abort = () => stop(new Error('Solution execution stopped.'));
   signal?.addEventListener('abort', abort, { once: true });
   const deadline = setTimeout(() => stop(new Error('Solution runtime exceeded its total execution limit.')), limits.totalTimeoutMs);
   const check = () => { if (failure) throw failure; if (closed) throw new Error('Solution runtime is closed.'); signal?.throwIfAborted(); };
-  const close = async () => {
-    if (closed) return;
+  let closing: Promise<void> | undefined;
+  const close = () => closing ??= (async () => {
     closed = true; clearTimeout(deadline); signal?.removeEventListener('abort', abort);
     controller.abort(new Error('Solution runtime closed.'));
-    for (const child of children) kill(child);
+    for (const child of children.keys()) kill(child);
+    await Promise.all(children.values());
     previews.close();
     await fs.rm(directory, { recursive: true, force: true });
-  };
+  })();
   const env: NodeJS.ProcessEnv = { PATH: [path.dirname(nodeExecutable), '/usr/local/bin', '/usr/bin', '/bin'].join(path.delimiter),
     HOME: path.join(directory, 'home'), TMPDIR: path.join(directory, 'tmp'), TEMP: path.join(directory, 'tmp'), TMP: path.join(directory, 'tmp'),
     ELECTRON_RUN_AS_NODE: '1', PYTHONDONTWRITEBYTECODE: '1', LANG: 'C.UTF-8' };
@@ -187,7 +190,8 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
   const launch = (command: string, args: string[], timeout: number, input?: string, extraEnv?: NodeJS.ProcessEnv) => {
     check();
     const child = spawn(command, args, { cwd: root, env: { ...env, ...extraEnv }, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
-    children.add(child);
+    const exited = new Promise<void>(resolve => child.once('close', () => { children.delete(child); resolve(); }));
+    children.set(child, exited);
     const stdout: Buffer[] = [], stderr: Buffer[] = []; let bytes = 0;
     let rejectExecution!: (error: Error) => void;
     let settled = false;
@@ -213,9 +217,9 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     child.stderr?.on('data', chunk => collect(chunk, 'stderr'));
     child.stdin?.on('error', () => { /* exit status reports broken input pipes */ });
     child.stdin?.end(input);
-    const result = finished.finally(() => { settled = true; clearTimeout(timer); controller.signal.removeEventListener('abort', aborted); children.delete(child); kill(child); });
+    const result = finished.finally(() => { settled = true; clearTimeout(timer); controller.signal.removeEventListener('abort', aborted); kill(child); });
     void result.catch(() => {});
-    return { child, result };
+    return { child, result, exited };
   };
   try {
     await Promise.all([fs.mkdir(root), fs.mkdir(env.HOME!), fs.mkdir(env.TMPDIR!)]);
@@ -242,6 +246,10 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     const filesHash = hash.digest();
     const assertIntegrity = async () => {
       check();
+      if (manifest.profile === 'service') {
+        const data = await fs.lstat(path.join(root, runtimeDataDirectory));
+        if (!data.isDirectory() || data.isSymbolicLink()) throw new Error('Service state must stay in its ordinary runtime data directory.');
+      }
       const current = createRuntimeFilesHasher();
       for (const file of [...manifest.files].sort()) current.add(file, await fs.readFile(await ordinaryFile(root, file)));
       if (current.digest() !== filesHash) throw new Error('Declared runtime files changed during execution. Keep mutable state outside the deployment file allowlist.');
@@ -283,6 +291,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     const actualRuntime = selected?.runtime === 'python' ? python! : nodeExecutable;
     const version = (await launch(actualRuntime, ['--version'], limits.startupTimeoutMs).result).stdout.toString('utf8').trim();
     let url: string | undefined, serviceFailure: Error | undefined;
+    let runningService: ReturnType<typeof launch> | undefined, serviceGeneration = 0, restarting: Promise<void> | undefined;
     const request = async (address: string, init?: RequestInit, observeStatus = false) => {
       check();
       const requestSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(limits.invocationTimeoutMs), ...(init?.signal ? [init.signal] : [])]);
@@ -294,32 +303,58 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
       finally { await reader.cancel().catch(() => {}); }
       return { status: response.status, bytes: Buffer.concat(chunks) };
     };
-    if (manifest.profile === 'service') {
-      if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
-      for (const value of [manifest.healthPath, manifest.invokePath]) if (!value.startsWith('/') || value.startsWith('//') || /[\\?#]/.test(value)) throw new Error('Service paths must be local absolute URL paths.');
-      const assignedPort = await port(); url = 'http://127.0.0.1:' + assignedPort + '/';
-      env.HOST = '127.0.0.1'; env.PORT = String(assignedPort);
-      const [program, args] = commandFor(selected);
-      const running = launch(program, args, limits.totalTimeoutMs, undefined, { HOST: '127.0.0.1', PORT: String(assignedPort) });
-      void running.result.then(() => { serviceFailure = new Error('The runtime service exited unexpectedly.'); }, error => { serviceFailure = error; });
+    const startService = async () => {
+      check(); serviceFailure = undefined;
+      const generation = ++serviceGeneration;
+      const [program, args] = commandFor(selected!);
+      const running = runningService = launch(program, args, limits.totalTimeoutMs);
+      void running.result.then(() => {
+        if (generation === serviceGeneration) serviceFailure = new Error('The runtime service exited unexpectedly.');
+      }, error => { if (generation === serviceGeneration) serviceFailure = error; });
       const until = Date.now() + limits.startupTimeoutMs;
       for (;;) {
         check(); if (serviceFailure) throw serviceFailure;
         const remaining = until - Date.now();
         if (remaining > 0) try {
-          await request(new URL(manifest.healthPath, url).href, { signal: AbortSignal.timeout(Math.min(1000, remaining)) });
+          await request(new URL(manifest.healthPath!, url!).href, { signal: AbortSignal.timeout(Math.min(1000, remaining)) });
+          check(); if (serviceFailure) throw serviceFailure;
           if (Date.now() < until) break;
-        } catch { /* Retry failed health checks only within the original startup budget. */ }
+        } catch { /* Retry failed health checks only within this startup budget. */ }
         if (Date.now() >= until) throw new Error('Runtime service did not become healthy before the startup deadline.');
         await new Promise(resolve => setTimeout(resolve, Math.min(50, Math.max(1, until - Date.now()))));
       }
+    };
+    if (manifest.profile === 'service') {
+      if (!selected || !manifest.healthPath || !manifest.invokePath) throw new Error('Service runtime needs a command, healthPath and invokePath.');
+      for (const value of [manifest.healthPath, manifest.invokePath]) if (!value.startsWith('/') || value.startsWith('//') || /[\\?#]/.test(value)) throw new Error('Service paths must be local absolute URL paths.');
+      const assignedPort = await port(); url = 'http://127.0.0.1:' + assignedPort + '/';
+      env.HOST = '127.0.0.1'; env.PORT = String(assignedPort);
+      await fs.mkdir(path.join(root, runtimeDataDirectory), { mode: 0o700 });
+      await startService();
     } else if (manifest.profile === 'browser') {
       if (manifest.entrypoint !== 'index.html') throw new Error('Browser runtime requires index.html.');
       url = await previews.url(root, manifest.files);
     }
     await assertIntegrity();
+    const restart = () => {
+      if (restarting) return restarting;
+      restarting = (async () => {
+        try {
+          await assertIntegrity();
+          // Invalidate the old process callback before terminating it. Its expected
+          // close must not mark the replacement process as failed.
+          ++serviceGeneration;
+          if (runningService) { kill(runningService.child); await runningService.exited; }
+          await assertIntegrity();
+          await startService();
+          await assertIntegrity();
+        } catch (error) { await close(); throw error; }
+      })().finally(() => { restarting = undefined; });
+      return restarting;
+    };
     const encodeInput = async (input: JsonValue) => {
       check(); if (serviceFailure) throw serviceFailure;
+      if (restarting) throw new Error('The runtime service is restarting.');
       await assertIntegrity();
       const encoded = JSON.stringify(input);
       if (Buffer.byteLength(encoded) > limits.maxOutputBytes) throw new Error('Runtime input exceeded the size limit.');
@@ -335,7 +370,7 @@ export async function prepareSolutionRuntime(sourceRoot: string, manifest: Runti
     };
     return { root, url, routeBase: manifest.profile === 'browser' ? new URL(url!).pathname.slice(0, -'/index.html'.length) : '',
       testEnvironment: { ...env }, provenance: { profile: manifest.profile, filesHash, runtime: version || selected?.runtime || 'node', environmentNames: [...manifest.requiredEnv] },
-      ...(manifest.profile === 'service' ? { invokeHttp: (input: JsonValue) => invokeService(input, true) } : {}),
+      ...(manifest.profile === 'service' ? { invokeHttp: (input: JsonValue) => invokeService(input, true), restart } : {}),
       async invoke(input) {
         if (manifest.profile === 'service') return (await invokeService(input)).output;
         const encoded = await encodeInput(input);

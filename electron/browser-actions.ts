@@ -1,10 +1,18 @@
 import type { Download, Page } from 'playwright';
+import { isDeepStrictEqual } from 'node:util';
 import type { BrowserStep, UxSpec } from '../shared/quality.js';
+import type { JsonValue } from '../shared/solution.js';
 import { parseUxSpec } from '../harness/quality-contract.js';
+import { parseContractJson } from '../harness/solution-contract.js';
 import type { BrowserHttpEvidence } from './browser-http-evidence.js';
 
 const maxDownloadBytes = 8_000_000;
 const normalized = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+export interface BrowserRuntimeHooks {
+  restart?: () => Promise<void>;
+  invokeService?: (input: JsonValue) => Promise<JsonValue>;
+}
 
 function cssTarget(page: Page, selector: string) {
   if (typeof selector !== 'string' || !selector.trim() || selector.includes('>>')) {
@@ -90,7 +98,7 @@ async function expectScreen(page: Page, screenId: string, timeout: number, suppl
 
 /** The same host-authored steps drive development review and final verification.
  * Callers own origin restrictions, unexpected-download cancellation and deadlines. */
-export async function performBrowserStep(page: Page, step: BrowserStep, timeout: number, httpEvidence?: BrowserHttpEvidence, ux?: UxSpec, routeBase?: string) {
+export async function performBrowserStep(page: Page, step: BrowserStep, timeout: number, httpEvidence?: BrowserHttpEvidence, ux?: UxSpec, routeBase?: string, runtime?: BrowserRuntimeHooks) {
   if (step.action === 'expectScreen') { await expectScreen(page, step.screenId, timeout, ux, routeBase); return; }
   if (step.action === 'expectHttpError') {
     if (!httpEvidence) throw new Error('Expected HTTP rejection requires host-recorded browser response evidence.');
@@ -98,6 +106,20 @@ export async function performBrowserStep(page: Page, step: BrowserStep, timeout:
     return;
   }
   if (step.action === 'reload') { await page.reload({ waitUntil: 'domcontentloaded', timeout }); return; }
+  if (step.action === 'restartRuntime') {
+    if (!runtime?.restart) throw new Error('restartRuntime requires a host-managed service runtime with restart support.');
+    await runtime.restart();
+    await page.reload({ waitUntil: 'domcontentloaded', timeout });
+    return;
+  }
+  if (step.action === 'expectServiceState') {
+    if (!runtime?.invokeService) throw new Error('expectServiceState requires a host-managed service invocation; browser JavaScript cannot provide this evidence.');
+    const input = parseContractJson(step.input, 'expectServiceState.input');
+    const expected = parseContractJson(step.expected, 'expectServiceState.expected');
+    const actual = parseContractJson(await runtime.invokeService(input), 'expectServiceState response');
+    if (!isDeepStrictEqual(actual, expected)) throw new Error(`expectServiceState: expected ${JSON.stringify(expected).slice(0, 500)}, received ${JSON.stringify(actual).slice(0, 500)}.`);
+    return;
+  }
   // Prefixing with css prevents selectors from being treated as executable browser code.
   const target = cssTarget(page, step.selector);
   switch (step.action) {

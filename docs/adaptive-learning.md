@@ -11,7 +11,7 @@ The two candidates then plan, build and verify independently. Inspect their
 evidence and previews, choose a passing revision for project review, and approve
 delivery separately. Source changes invalidate the recorded verification.
 
-Before a new shared plan freezes, a fresh read-only reviewer checks minimum useful scope, each original criterion and deferral, public protocol consistency, evaluation shortcuts and boundaries, and meaningful recovery. The same selected Pi or Codex model runs this separate session. A rejection permits one planner revision and a fresh review; another rejection blocks candidate creation. The host privately binds verdicts to the reviewed documents and behavior/evaluation hashes, rechecks them before freezing, and preserves the revision allowance across restart. Previously frozen plans resume without changing their expectations. This gate also covers shared planning for paired and adaptive ordinary builds. It is a model judgment; its effect on generated output quality and cost needs controlled live comparisons.
+Before a new shared plan freezes, a fresh read-only reviewer checks minimum useful scope, each original criterion and deferral, public protocol consistency, evaluation shortcuts and boundaries, and meaningful recovery. The same selected Pi or Codex model runs this separate session. Each request for changes automatically starts another planner revision and a fresh independent review; candidate creation waits for approval. The host privately binds verdicts to the reviewed documents and behavior/evaluation hashes, rechecks them before freezing, and preserves the pending revision or review across restart. Stop requests, session limits and the existing shared-planning execution budget still apply. Previously frozen plans resume without changing their expectations. This gate also covers shared planning for paired and adaptive ordinary builds. It is a model judgment; its effect on generated output quality and cost needs controlled live comparisons.
 
 **Model settings → Comparisons & learning** controls installation-wide learning.
 The default is Off. Paired mode gathers evidence while ordinary runs retain the
@@ -123,7 +123,7 @@ keeps its own interpreter and argument handling.
 ## Frozen defaults
 
 Candidate planning, implementation and verification each have a 30-minute limit,
-with a 90-minute candidate total including one repair. Recovery preserves consumed
+with a 90-minute candidate total including bounded functional repairs. Core, primary-workflow and final verification each reserve up to three repairs and fifteen active repair minutes, still within the candidate and phase deadlines. Recovery preserves consumed
 budget and pinned model/profile/memory versions. An extra attempt has a new ID.
 External operations default to 100 calls per candidate, 2 MB responses and a
 30-second request timeout. Missing trustworthy dollar telemetry remains unknown.

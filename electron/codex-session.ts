@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import type { AgentSessionEvent, AgentToolResult, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { StageSession } from './agent-runner.js';
 import type { IsolationProfile } from './isolated-executor.js';
+import { normalizeTokenTotals, type TokenTotals } from '../shared/token-usage.js';
 import { CHATGPT_ACCESS_TOKEN_ENV, CHATGPT_MODEL_PROVIDER, CodexRpc, codexExecutable, codexProcessConfig, type CodexCredentials, type RpcMessage } from './codex-rpc.js';
 
 type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<Pick<AgentToolResult, 'content' | 'isError'>> };
@@ -69,6 +70,7 @@ export async function createCodexSession(options: {
   // Reuse the factory's existing activity contract; Codex never starts a Pi session.
   const emit = (event: object) => { for (const listener of listeners) listener(event as AgentSessionEvent); };
   let threadId = '', turnId = '', disposed = false, hasHistory = false;
+  let tokenUsage: TokenTotals | undefined;
   let pending: { resolve: () => void; reject: (error: Error) => void } | undefined;
   const settle = (error?: Error) => { const current = pending; pending = undefined; turnId = ''; if (error) current?.reject(error); else current?.resolve(); };
   const tools = options.tools as unknown as Tool[];
@@ -109,6 +111,14 @@ export async function createCodexSession(options: {
     if (source !== rpc) return;
     if (message.id !== undefined && message.method) { void serverRequest(source, message); return; }
     const p = message.params;
+    if (message.method === 'thread/tokenUsage/updated' && p?.threadId === threadId && !disposed && !controller.signal.aborted) {
+      const totals = normalizeTokenTotals(p.tokenUsage?.total);
+      if (totals && (!tokenUsage || totals.totalTokens >= tokenUsage.totalTokens)) {
+        tokenUsage = totals;
+        emit({ type: 'tool_execution_update' });
+      }
+      return;
+    }
     if (!pending || p?.threadId !== threadId) return;
     switch (message.method) {
       case 'turn/started': turnId = p.turn.id; emit({ type: 'turn_start' }); break;
@@ -180,6 +190,7 @@ export async function createCodexSession(options: {
     await connect(await credentials());
   } catch (error) { options.signal.removeEventListener('abort', stop); rpc?.dispose(); throw error; }
   return {
+    getTokenUsage() { return tokenUsage; },
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async prompt(text: string) {
       if (disposed || controller.signal.aborted) throw new Error('Codex session is closed.');

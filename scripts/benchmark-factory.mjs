@@ -9,6 +9,7 @@ import { runSolutionEvaluation } from '../dist-electron/electron/solution-evalua
 import { parseSolutionContract, parseEvaluationPlan } from '../dist-electron/harness/solution-contract.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { readRunCheckpoint } from '../dist-electron/electron/run-checkpoint.js';
+import { functionalRepairAttempts } from '../dist-electron/electron/functional-repair.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { factoryBrowserInterface, factoryBrowserHoldoutPlan, factoryBrowserHoldoutPassed, runFactoryBrowserHoldout } from './factory-browser-holdout.mjs';
 import { captureLiveBenchmarkInputs } from './factory-benchmark-inputs.mjs';
@@ -215,12 +216,11 @@ export function gradeLiveBenchmarkResult({ scenario, project, deliveredProfile, 
     sourceMatched, pipelineSourceHash, holdoutSourceHashBefore, holdoutSourceHashAfter, failureReasons };
 }
 
-/** Only for fresh benchmark generations: ordinary resume resets this repair budget. */
+/** Read persisted reservations, including interrupted repairs; never infer them from logs. */
 export async function readLiveRepairEvidence(root, project) {
   try {
     const checkpoint = await readRunCheckpoint(root, project);
-    if (checkpoint.repairUsed !== undefined && typeof checkpoint.repairUsed !== 'boolean') throw new Error('Invalid repair evidence.');
-    return { repairAttempts: checkpoint.repairUsed === true ? 1 : 0, repairEvidence: 'checkpoint' };
+    return { repairAttempts: functionalRepairAttempts(checkpoint.functionalRepair, checkpoint.repairUsed), repairEvidence: 'checkpoint' };
   } catch {
     // Do not infer zero from truncated logs or expose private checkpoint data.
     return { repairAttempts: null, repairEvidence: 'unavailable' };

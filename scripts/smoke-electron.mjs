@@ -47,7 +47,7 @@ try {
   await fs.writeFile(path.join(output,'fixture-run.json'),JSON.stringify(final,null,2));
   assert.equal(final.status,'review',final.error);
   assert.equal(final.report.passed,1);
-  assert.ok(final.logs.some(l=>l.text.includes('Starting one Pi repair attempt')));
+  assert.ok(final.logs.some(l=>l.text.includes('Starting functional final repair')));
   assert.ok(final.logs.some(l=>l.kind==='tool'&&l.text.includes('write')));
   await page.getByRole('button',{name:'Preview — generated app',exact:true}).click();
   await page.getByRole('button',{name:'Reload preview'}).click();

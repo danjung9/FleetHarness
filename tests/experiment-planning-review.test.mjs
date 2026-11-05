@@ -69,7 +69,7 @@ async function harness(t, options = {}) {
         else if (this.stage === 'research') await write(cwd, 'research.md', 'A reduction over a numeric array is sufficient.');
         else if (this.stage === 'plan') {
           const packet = JSON.parse(await fs.readFile(path.join(cwd, '.fleet/packet.json'), 'utf8'));
-          const weak = options.initialWeak && (planCalls === 1 || options.correctOnRevision === false);
+          const weak = options.initialWeak && (planCalls < (options.correctOnPlan ?? 2) || options.correctOnRevision === false);
           const { behavior, evaluation } = contracts(packet.acceptance, weak);
           await write(cwd, 'behavior-contract.json', behavior); await write(cwd, 'evaluation-plan.json', evaluation);
         } else if (this.stage === 'review' && !options.omitVerdict) {
@@ -131,17 +131,37 @@ test('a semantically weak shared plan is corrected before it freezes for either 
   }
 });
 
-test('a second shared planning rejection blocks freeze and cannot gain another revision on resume', { timeout }, async t => {
-  const h = await harness(t, { initialWeak: true, correctOnRevision: false }); await h.start();
-  await assertUnfrozen(h); assert.equal(h.project.executionFailure, 'implementation');
-  assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2); assert.equal((await h.progress()).phase, 'rejected');
-  const count = h.sessions.length; await h.resume();
-  await assertUnfrozen(h); assert.equal(h.sessions.length, count); assert.equal((await h.progress()).phase, 'rejected');
+test('successive shared planning rejections automatically revise until independent approval', { timeout }, async t => {
+  let h;
+  h = await harness(t, { initialWeak: true, correctOnPlan: 4,
+    onPrompt: async ({ stage, planCalls, reviewCalls, prompt }) => {
+      if (stage !== 'plan' || planCalls === 1) return false;
+      await assertUnfrozen(h);
+      assert.equal(h.project.status, 'running');
+      const progress = await h.progress();
+      assert.equal(progress.phase, 'revision');
+      assert.equal(progress.review.verdict, 'revise');
+      assert.equal(progress.revisionUsed, true);
+      assert.equal(reviewCalls, planCalls - 1);
+      assert.match(prompt, /A constant total of 5 passes both examples/);
+      assert.doesNotMatch(prompt, /one permitted|only.*revision/);
+      return false;
+    } });
+  await h.start();
+  assert.equal(h.project.status, 'review', h.project.error);
+  assert.equal(h.planCalls, 4); assert.equal(h.reviewCalls, 4);
+  const progress = await h.progress();
+  assert.equal(progress.phase, 'approved'); assert.equal(progress.revisionUsed, true);
+  assert.equal((await h.artifact()).planningReview.verdict, 'approved');
+  const reviewers = h.sessions.filter(session => session.stage === 'review');
+  assert.equal(new Set(reviewers).size, 4, 'Every changed plan receives a fresh reviewer session.');
+  assert.ok(reviewers.every(reviewer => reviewer.disposed));
+  assert.ok(!h.project.logs.some(log => /Planning is paused|after its one revision/.test(log.text)));
 });
 
 test('the selected Codex backend independently reviews and rereviews the shared architecture-neutral plan', { timeout }, async t => {
-  const h = await harness(t, { backend: 'codex', initialWeak: true }); await h.start();
-  assert.equal(h.project.status, 'review', h.project.error); assert.equal(h.planCalls, 2); assert.equal(h.reviewCalls, 2);
+  const h = await harness(t, { backend: 'codex', initialWeak: true, correctOnPlan: 3 }); await h.start();
+  assert.equal(h.project.status, 'review', h.project.error); assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3);
   assert.equal((await h.artifact()).planningReview.verdict, 'approved');
   for (const reviewer of h.sessions.filter(session => session.stage === 'review')) {
     assert.equal(reviewer.options.customTools, undefined);
@@ -235,9 +255,9 @@ test('a changed shared planning document invalidates the submitted approval', { 
   assert.match(h.project.error, /changed|review|snapshot/i);
 });
 
-for (const interrupted of ['reviewing', 'revision', 'rereview']) test(`restart during shared ${interrupted} preserves review state and the correction allowance`, { timeout }, async t => {
+for (const interrupted of ['reviewing', 'revision', 'rereview']) test(`restart during shared ${interrupted} preserves pending work and continues automatic corrections`, { timeout }, async t => {
   const entered = deferred(); let pause = true;
-  const h = await harness(t, { initialWeak: interrupted !== 'reviewing', correctOnRevision: false,
+  const h = await harness(t, { initialWeak: interrupted !== 'reviewing', correctOnPlan: interrupted === 'rereview' ? 3 : 2,
     onPrompt: ({ stage, planCalls, reviewCalls }) => {
       const target = interrupted === 'reviewing' ? stage === 'review' && reviewCalls === 1
         : interrupted === 'revision' ? stage === 'plan' && planCalls === 2 : stage === 'review' && reviewCalls === 2;
@@ -253,10 +273,109 @@ for (const interrupted of ['reviewing', 'revision', 'rereview']) test(`restart d
   if (interrupted === 'reviewing') {
     assert.equal(h.project.status, 'review', h.project.error); assert.equal(h.planCalls, 1); assert.equal(h.reviewCalls, 2);
   } else {
-    await assertUnfrozen(h); assert.equal((await h.progress()).phase, 'rejected');
-    assert.equal(h.planCalls, interrupted === 'revision' ? 3 : 2);
-    assert.equal(h.reviewCalls, interrupted === 'rereview' ? 3 : 2);
+    assert.equal(h.project.status, 'review', h.project.error); assert.equal((await h.progress()).phase, 'approved');
+    assert.equal(h.planCalls, 3);
+    assert.equal(h.reviewCalls, interrupted === 'rereview' ? 4 : 2);
   }
+});
+
+for (const interrupted of ['revision', 'rereview']) test(`stop and restart during a later shared ${interrupted} retains the same workspace and review`, { timeout }, async t => {
+  const entered = deferred(); let pause = true;
+  const h = await harness(t, { initialWeak: true, correctOnPlan: 4,
+    onPrompt: ({ stage, planCalls, reviewCalls }) => {
+      const target = interrupted === 'revision' ? stage === 'plan' && planCalls === 4 : stage === 'review' && reviewCalls === 3;
+      if (pause && target) { entered.resolve(); return never(); }
+      return false;
+    } });
+  await h.worker.start(); await entered.promise;
+  const stoppedSession = h.sessions.at(-1); await h.worker.stop();
+  await assertUnfrozen(h); assert.equal(h.project.status, 'stopped');
+  const progress = await h.progress();
+  assert.equal(progress.phase, interrupted); assert.equal(progress.review.verdict, 'revise');
+  assert.equal(progress.revisionUsed, true);
+  assert.equal(stoppedSession.disposed, true); assert.equal(stoppedSession.aborts, 1);
+  const { workspace, runId } = h.project;
+  const completedStages = h.project.stages.filter(stage => stage.status === 'complete').map(stage => stage.id);
+  pause = false; await h.resume();
+  assert.equal(h.project.status, 'review', h.project.error);
+  assert.equal(h.project.workspace, workspace); assert.equal(h.project.runId, runId);
+  for (const id of completedStages) assert.equal(h.project.stages.find(stage => stage.id === id).status, 'complete');
+  assert.equal(h.sessions.filter(session => session.stage === 'intake').length, 1);
+  assert.equal(h.sessions.filter(session => session.stage === 'research').length, 1);
+  assert.equal(h.planCalls, interrupted === 'revision' ? 5 : 4);
+  assert.equal(h.reviewCalls, interrupted === 'revision' ? 4 : 5);
+  assert.equal((await h.progress()).phase, 'approved');
+});
+
+test('a legacy rejected shared plan resumes its saved findings before running more review cycles', { timeout }, async t => {
+  const entered = deferred(); let pause = true, legacy, h;
+  h = await harness(t, { initialWeak: true, correctOnPlan: 5,
+    onPrompt: async ({ stage, planCalls, prompt }) => {
+      if (stage !== 'plan' || planCalls < 3) return false;
+      if (pause && planCalls === 3) { entered.resolve(); return never(); }
+      if (planCalls === 4) {
+        const saved = await h.progress();
+        assert.equal(saved.phase, 'revision', 'Legacy rejection is durably migrated before dispatch.');
+        assert.deepEqual(saved.review, legacy.review);
+        assert.match(prompt, /A constant total of 5 passes both examples/);
+      }
+      return false;
+    } });
+  await h.worker.start(); await entered.promise; await h.worker.stop();
+  legacy = await h.progress(); legacy.phase = 'rejected';
+  await fs.writeFile(path.join(h.root, 'experiments', h.experiment.id, 'planning-review-state.json'), JSON.stringify(legacy));
+  h.project.status = 'failed'; h.project.error = 'Independent shared planning review still requires changes after its one revision.';
+  const { runId, workspace } = h.project; pause = false; await h.resume();
+  assert.equal(h.project.status, 'review', h.project.error);
+  assert.equal(h.project.runId, runId); assert.equal(h.project.workspace, workspace);
+  assert.equal(h.planCalls, 5); assert.equal(h.reviewCalls, 4);
+  assert.equal((await h.progress()).phase, 'approved');
+});
+
+test('repeated shared planning reviews still stop on a provider failure without freezing', { timeout }, async t => {
+  const h = await harness(t, { initialWeak: true, correctOnRevision: false,
+    onPrompt: ({ stage, reviewCalls }) => {
+      if (stage === 'review' && reviewCalls === 3) throw new Error('Fixture provider unavailable.');
+      return false;
+    } });
+  await h.start(); await assertUnfrozen(h);
+  assert.equal(h.project.status, 'failed'); assert.equal(h.project.executionFailure, 'infrastructure');
+  assert.equal(h.planCalls, 3); assert.equal(h.reviewCalls, 3);
+  assert.equal((await h.progress()).phase, 'rereview');
+  assert.ok(h.sessions.every(session => session.disposed));
+});
+
+test('automatic shared planning corrections retain and exhaust the saved phase budget', { timeout }, async t => {
+  const entered = deferred(); let pause = true;
+  const h = await harness(t, { initialWeak: true, correctOnRevision: false,
+    onPrompt: ({ stage, planCalls }) => {
+      if (stage === 'plan' && planCalls >= 3) {
+        if (pause) entered.resolve();
+        return never();
+      }
+      return false;
+    } });
+  await h.worker.start(); await entered.promise; await h.worker.stop();
+  await assertUnfrozen(h);
+  const checkpointPath = path.join(h.root, 'run-checkpoints', h.project.runId + '.json');
+  const checkpoint = JSON.parse(await fs.readFile(checkpointPath, 'utf8'));
+  assert.equal(checkpoint.executionBudget.active, undefined);
+  const consumed = checkpoint.executionBudget.phases.plan;
+  assert.ok(consumed > 0);
+  checkpoint.executionBudget.phaseLimitMs = consumed + 200;
+  await fs.writeFile(checkpointPath, JSON.stringify(checkpoint));
+  pause = false; await h.resume();
+  await assertUnfrozen(h);
+  assert.equal(h.project.status, 'failed'); assert.equal(h.project.executionFailure, 'budget');
+  assert.match(h.project.error, /exhausted.*execution budget/);
+  assert.equal(h.planCalls, 4); assert.equal(h.reviewCalls, 2);
+  assert.equal((await h.progress()).phase, 'revision');
+  const exhausted = JSON.parse(await fs.readFile(checkpointPath, 'utf8')).executionBudget;
+  assert.equal(exhausted.phases.plan, exhausted.phaseLimitMs);
+  assert.ok(exhausted.consumedMs >= consumed);
+  const count = h.sessions.length; await h.resume();
+  assert.equal(h.sessions.length, count, 'Restart cannot reset the consumed phase budget.');
+  assert.equal(h.project.executionFailure, 'budget');
 });
 
 for (const changed of [false, true]) test(`approved shared review before contract commit ${changed ? 'rejects changed inputs' : 'resumes without another model call'}`, { timeout }, async t => {

@@ -10,7 +10,7 @@ export interface ExperimentState {
 }
 export interface CandidateReview {
   experimentId: string; candidateId: string; sourceHash?: string;
-  project: Pick<Project, 'id' | 'title' | 'status' | 'stages' | 'logs' | 'runId' | 'model' | 'report' | 'visualReview' | 'runtimeProfile' | 'systemDesign' | 'error'>;
+  project: Pick<Project, 'id' | 'title' | 'status' | 'stages' | 'logs' | 'runId' | 'model' | 'report' | 'visualReview' | 'runtimeProfile' | 'systemDesign' | 'error' | 'tokenUsage'>;
 }
 export interface ExperimentAPI {
   experimentState(projectId: string): Promise<ExperimentState>;

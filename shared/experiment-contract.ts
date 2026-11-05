@@ -1,4 +1,4 @@
-import type { RuntimeManifest, SolutionCapability, SolutionContract } from './solution.js';
+import type { JsonValue, RuntimeManifest, SolutionCapability, SolutionContract } from './solution.js';
 import type { LegacyUxScreen, UxScreen, UxSpecCommon, UxStructure } from './quality.js';
 import type { SystemDefinition } from './system-design.js';
 import type { FoundationPlan } from '../harness/foundations.js';
@@ -6,7 +6,8 @@ import type { FoundationPlan } from '../harness/foundations.js';
 /** Public behavioral expectations. Evaluation cases and answer keys never belong here. */
 export type SemanticBrowserStep = { id: string } & (
   | { action: 'input'; value: string }
-  | { action: 'activate' | 'check' | 'reload' | 'expectVisible' }
+  | { action: 'activate' | 'check' | 'reload' | 'restartRuntime' | 'expectVisible' }
+  | { action: 'expectServiceState'; input: JsonValue; expected: JsonValue }
   | { action: 'expectText'; text: string }
   | { action: 'expectValue'; value: string }
   | { action: 'expectDownload'; fileName?: string; text?: string }

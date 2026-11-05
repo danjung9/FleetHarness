@@ -8,6 +8,7 @@ import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager
 import { PiBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store, sourceHash } from '../dist-electron/electron/storage.js';
 import { startFixtureProvider } from '../scripts/mock-provider.mjs';
+import { runAgentStage } from '../dist-electron/electron/agent-runner.js';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 async function provider(t, respond) {
@@ -33,6 +34,30 @@ async function backend(t, baseUrl, limits = { idleMs: 10000, timeoutMs: 20000 })
   t.after(async () => { await pi.stopAll(); await fs.rm(root, { recursive: true, force: true }); });
   return { pi, store, root, project: store.state.projects[0], settle: async () => { await pi.active.get(store.state.projects[0].id)?.done; } };
 }
+
+test('Stop retains usage already reported by a real Pi stream before message persistence', { timeout: 10000 }, async t => {
+  const fixture = await provider(t, (_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+    res.write('data: ' + JSON.stringify({ id: 'partial-usage', object: 'chat.completion.chunk', created: 1, model: 'fixture-model',
+      choices: [{ index: 0, delta: { role: 'assistant', content: 'Partial response' }, finish_reason: null }],
+      usage: { prompt_tokens: 40, completion_tokens: 5, total_tokens: 45, prompt_tokens_details: { cached_tokens: 10 } }
+    }) + '\n\n');
+    // Keep the stream open so the test cancels before the SDK's final append.
+  });
+  const h = await backend(t, fixture.baseUrl), settingsManager = SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: false } });
+  const loader = new DefaultResourceLoader({ cwd: h.root, agentDir: path.join(h.root, 'pi'), settingsManager,
+    noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true });
+  await loader.reload();
+  const { session } = await createAgentSession({ cwd: h.root, agentDir: path.join(h.root, 'pi'), modelRuntime: h.pi.runtime,
+    model: h.pi.runtime.getModel('fleet-fixture', 'fixture-model'), thinkingLevel: 'off', tools: [], excludeTools: ['mcp__*'],
+    resourceLoader: loader, settingsManager, sessionManager: SessionManager.inMemory(h.root) });
+  const controller = new AbortController(), observed = [];
+  await assert.rejects(runAgentStage({ label: 'Partial usage', signal: controller.signal, limits: { idleMs: 3000, timeoutMs: 5000 },
+    create: async () => session, work: prompt => prompt('Stream a response'), onUsage: value => observed.push(value),
+    onEvent: event => { if (event.type === 'message_update' && event.message.usage.input > 0) controller.abort(); }
+  }), /stopped by you/);
+  assert.deepEqual(observed.at(-1), { inputTokens: 40, outputTokens: 5, cachedInputTokens: 10, totalTokens: 45 });
+});
 
 test('real Pi SDK sends browser tool screenshot pixels and console errors to an image-capable model', { timeout: 10000 }, async t => {
   const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==';
@@ -98,7 +123,7 @@ test('real Pi SDK recovers a 503, executes file tools, repairs a failing test an
   const h = await backend(t, proxy.baseUrl); await h.pi.start(h.project.id); await h.settle();
   assert.equal(h.project.status, 'review', h.project.error); assert.equal(h.pi.active.size, 0);
   assert.ok(h.project.logs.some(l => l.text.includes('Provider retry 1/2')));
-  assert.ok(h.project.logs.some(l => l.text.includes('Starting one Pi repair attempt')));
+  assert.ok(h.project.logs.some(l => l.text.includes('Starting functional final repair')));
   assert.ok(h.project.logs.some(l => l.kind === 'tool' && l.text.startsWith('write')));
   const visualCalls = fixture.requests.flatMap(request => request.messages.flatMap(message => message.tool_calls ?? [])).filter(call => call.function?.name === 'fleet_visual_review');
   assert.ok(new Set(visualCalls.map(call => call.id)).size >= 12, 'Build, verification and repair each compare initial and fresh captures at both widths.');

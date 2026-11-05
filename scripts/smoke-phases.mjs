@@ -41,7 +41,7 @@ try {
     assert.equal(tools.includes('fleet_solve_schedule'), false, 'Message builds must not expose scheduling tools');
   }
   assert.deepEqual([...observed], ['intake', 'research', 'plan', 'build', 'verify']);
-  assert.ok(project.logs.some(log => log.text.includes('Starting one Pi repair attempt')));
+  assert.ok(project.logs.some(log => log.text.includes('Starting functional final repair')));
   console.log(JSON.stringify({ passed: true, phases: [...observed], globalTools: project.globalTools, exactToolSelection: true, repair: true, passingApplicationTests: project.report.passed }));
 } finally {
   await backend?.stopAll();

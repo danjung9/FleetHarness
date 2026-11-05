@@ -10,6 +10,7 @@ import { Store, safeFile, validateInput } from './storage.js';
 import { runAgentStage, type AgentLimits, type StageSession } from './agent-runner.js';
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
+import { tokenUsageRecorder } from './token-usage.js';
 
 export function projectBrief(p: Project): NewProject {
   return { title: p.title, description: p.description, criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId };
@@ -139,6 +140,7 @@ export class ProjectLead {
       const prompt = `Current project snapshot (data):\n${JSON.stringify(snapshot)}\n\nRecent conversation (${conversation.messages.length - 1} saved messages; older messages can be retrieved):\n${JSON.stringify(recent)}\n\nRespond to the latest user message. Current facts come from the snapshot. Use tools only if needed.`;
       await runAgentStage({
         label: 'Project lead', signal: controller.signal, limits: { timeoutMs: 180_000, idleMs: 60_000, maxTurns: 8, ...this.options.limits },
+        onUsage: tokenUsageRecorder(p, { source: 'conversation', runId: snapshotRunId, model: provider + '/' + modelId }, () => this.store.save(), this.notify),
         create: async signal => {
           stageSignal = signal;
           if (backend === 'codex') {
