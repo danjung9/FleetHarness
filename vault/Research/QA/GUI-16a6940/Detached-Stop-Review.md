@@ -1,14 +1,29 @@
 ---
 type: qa-review
-status: pending-runtime
+status: complete
 owner: mukul
 updated: 2026-11-05
-summary: "The corrected native scanner is integrated at 16a6940; the unchanged detached Stop fixture is ready and still requires a native receipt."
+summary: "Independent receipt review passes the unchanged detached Pi Stop case at clean 16a6940; broader shutdown paths remain outside this result."
 ---
 
 # Detached Pi Stop at 16a6940
 
-[E] **The macOS option defect is corrected in source; detached Stop remains unverified on the corrected runtime.** Commit f5fec32 switches user selection to -U, which works with the existing legacy option mode. Later integrated changes retry inconclusive inspection, reset the consecutive-empty count after errors, and persist per-run cleanup state. The native marked/unmarked-worker test is present. [[Research/QA/Auto/Review-16a6940]] explains why the available automatic reports cannot establish that test ran on this source.
+[E, independently reviewed November 5] **STOP-DETACHED-01 passes at clean 16a6940.** [Receipt 6b784ff0](stop-detached-6b784ff0-7732-4894-beec-6314ba3d6a5d/result.json) ran 01:04:42 to 01:05:02 EST using the unchanged script digest below. This closes the original bounded Pi shell, parent and detached-child reproduction on this revision. The earlier d0f4c69 failure remains valid historical evidence.
+
+| Independent receipt check | Result |
+| --- | --- |
+| Before Stop | Shell 42055 and child 42064 are distinct session/group leaders; parent 42056 shares the shell group. All three are live and owned. Both worker heartbeats were advancing. |
+| Observation | All three PIDs absent at both endpoints. Parent count stays 9 and child count stays 11 across 8.003 seconds, after a 2.001-second settling period. |
+| App/provider | Stopped at both endpoints; provider requests remain one. All seven unchanged checks pass. |
+| Watchdog exclusion | Observation ends 49.110 seconds before the independent worker deadline. No worker self-exit record is present. |
+| Cleanup separation | PASS is recorded 46 ms before cleanup begins. Cleanup also passes, with no fallback signals recorded. |
+| Identity and bytes | Full commit/tree and clean tracked source match. Script digest matches; all seven control-file hashes match. All shared observation.json fields equal result.json. Retained 59 frontend and 49 backend artifact hashes match the executed manifests. |
+
+[E] The 643 ms value is the post-click stopped-status observation, not exact process termination latency. The dedicated GUI checkout currently matches the receipt's clean full HEAD. Main, the runtime owner, reports the matching rebuild; retained compiled sweep code contains the corrected -U flag. Artifact equality is established, while full dependency/build reproducibility is not separately claimed.
+
+[R] Stop this bounded fixture investigation and proceed to acceptance of the combined application, as directed by main. The source review and preparation record below are historical; they do not override the measured PASS above. Codex, Quit, crash recovery, Windows and general containment remain separate scopes.
+
+[E, historical preparation before the receipt above] The macOS option defect was corrected in source; native Stop was then pending. Commit f5fec32 switches user selection to -U, which works with the existing legacy option mode. Later integrated changes retry inconclusive inspection, reset the consecutive-empty count after errors, and persist per-run cleanup state. The native marked/unmarked-worker test is present. [[Research/QA/Auto/Review-16a6940]] explains why the available automatic reports cannot establish that test ran on this source.
 
 [E, exact Git source] The target is 16a694080508ebae19384f05fda8279b5a5feb96, tree 1ca33b56fb6ca9f799fa40dc4166c9a1dc6342f6, currently available locally as origin/mvp and origin/dev/reviewed. The QA clone remains untouched at 631849f. Source availability does not authorize advancing any other session's active checkout.
 

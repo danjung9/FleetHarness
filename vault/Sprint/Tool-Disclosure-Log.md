@@ -102,6 +102,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Round 3 cleanup receipts, first three completed builds | Evidence dataset | Read final status and verification summaries for ID 12, ID 36 and ID 11 alongside the running sweep source; distinguish cleanup confirmation failure from proven surviving work | Team benchmark runner, reported f662d81 plus scratch patches | 2026-11-04 |
 | Detached Pi Stop fixture, pinned 16a6940 revision | QA tool | Prepared unchanged independent Stop regression at the corrected integrated source; syntax and pure validation only here | Team-created fixture | 2026-11-05 |
 | Automatic QA reports and runner source, rechecked 2026-11-05 | Evidence dataset | Compared reported revision, retained checkout, reflog, smoke stack and ignored preparation return codes | Team runtime owner | 2026-11-05 |
+| STOP-DETACHED-01 native receipt 6b784ff0 at 16a6940 | Evidence dataset | Independently verified bounded native shutdown, control and artifact hashes, identity, timing and cleanup separation | Existing runtime owner | 2026-11-05 |
 
 ## Data and sources
 
