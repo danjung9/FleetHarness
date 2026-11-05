@@ -1,0 +1,65 @@
+✔ CommonJS: sample has eight unresolved barriers and explicit unknowns (0.747792ms)
+✔ CommonJS: missing values reject without draft loss (0.245708ms)
+✔ CommonJS: inclusive text boundaries and owner limits (0.629167ms)
+✔ CommonJS: explicit commits isolate saved content and guard dirty review (0.3655ms)
+✔ CommonJS: persistent envelope rejects corruption and reports storage failure (0.731625ms)
+✔ CommonJS: documents retain fixes, attribution and unknown approvals safely (0.26075ms)
+✖ CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.392ms)
+✔ CommonJS: committed nested data and exported fixes stay isolated from draft edits (0.408375ms)
+✔ CommonJS: reusable nine-step playbook keeps external gates (0.157334ms)
+✔ browser inline: sample has eight unresolved barriers and explicit unknowns (0.249792ms)
+✔ browser inline: missing values reject without draft loss (0.09425ms)
+✔ browser inline: inclusive text boundaries and owner limits (0.291ms)
+✔ browser inline: explicit commits isolate saved content and guard dirty review (0.283417ms)
+✔ browser inline: persistent envelope rejects corruption and reports storage failure (0.243416ms)
+✔ browser inline: documents retain fixes, attribution and unknown approvals safely (0.160667ms)
+✖ browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.120625ms)
+✔ browser inline: committed nested data and exported fixes stay isolated from draft edits (0.141791ms)
+✔ browser inline: reusable nine-step playbook keeps external gates (0.095542ms)
+✔ inline and standalone produce the same actual workflow results (0.346ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 17
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.675375
+
+✖ failing tests:
+
+test at transition-core.test.cjs:14:1
+✖ CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.392ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/a071306a-aa8c-459e-92bf-f28cb7de242c/51911f91-dc8d-473d-9bc5-d036b5bd3355/transition-core.test.cjs:23:55)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Invalid storage format/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at transition-core.test.cjs:14:1
+✖ browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence (0.120625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/a071306a-aa8c-459e-92bf-f28cb7de242c/51911f91-dc8d-473d-9bc5-d036b5bd3355/transition-core.test.cjs:23:55)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Invalid storage format/,
+    operator: 'throws',
+    diff: 'simple'
+  }

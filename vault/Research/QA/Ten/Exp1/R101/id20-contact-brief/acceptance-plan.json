@@ -1,0 +1,815 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC20-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Real unclassified AIS, IMO registry, OFAC and EU snapshots are ingested with lawful provenance. This real-data requirement remains unverified. The implemented synthetic companion workflow ingests all named source families plus port logs, resolves Name/IMO/MMSI and exports the complete Cited Contact Brief, Identity Resolution Record and Evidence Appendix, exercised under UC20-2.",
+      "journeyIds": [],
+      "deferralBasis": "real-data",
+      "reason": "Approved real AIS, IMO registry, OFAC/EU snapshots with provenance and permitted usage are absent and prohibited by this synthetic-only workspace. Fictional snapshots demonstrate the full workflow but cannot establish real open-source grounding; live acquisition also needs separately authorized connectors."
+    },
+    {
+      "criterionId": "UC20-2",
+      "disposition": "implemented",
+      "expectedOutcome": "In the explicitly synthetic complete workflow, every factual brief claim resolves to a permitted exact original span, revision, capture and observation timestamps and a verified captured-content digest; unsupported intent, flag, sanctions applicability and conflicting AIS remain UNKNOWN. Same-name identities require deliberate selection. The Cited Contact Brief exports with a resolvable offline Evidence Appendix and Identity Resolution Record. Integrity failures block affected claims and export; local review preserves saved and unsaved interpretation separately. Synthetic evaluation is generated, but this does not establish real-format compliance, production immutability, owner acceptance or operational validation.",
+      "journeyIds": [
+        "brief-export",
+        "ambiguous-name",
+        "input-recovery",
+        "missing-stale",
+        "permitted-evidence",
+        "integrity-recovery",
+        "import-conflict",
+        "review-boundary",
+        "synthetic-evaluation"
+      ]
+    },
+    {
+      "criterionId": "RET-01",
+      "disposition": "implemented",
+      "expectedOutcome": "The denied snapshot is the strongest unfiltered lexical match but is removed before identity matching, retrieval, viewing and export. ALDER REACH owner North Lantern returns only REG-A and its exact owner span; no denied content or unsupported claims appear in any result or portable export. An allowed flag is a synthetic filtering fixture, not authorization.",
+      "journeyIds": [
+        "permitted-evidence",
+        "brief-export"
+      ]
+    },
+    {
+      "criterionId": "RET-02",
+      "disposition": "implemented",
+      "expectedOutcome": "The fixed synthetic as-of and more-than-30-day policy expose PORT-A observation as STALE despite fresh capture; OFAC observation time and absent flag, EU applicability and intent are UNKNOWN. One future snapshot is excluded. No-match and conflicting AIS conclusions abstain; restoration and corrected identifiers recover without guessed facts.",
+      "journeyIds": [
+        "missing-stale",
+        "input-recovery",
+        "import-conflict"
+      ]
+    },
+    {
+      "criterionId": "RET-03",
+      "disposition": "deferred",
+      "expectedOutcome": "An actual owner reviews held-out labels, relevance and latency measurements, with corpus size, runtime/hardware, sample count, measured boundary and percentiles recorded. The synthetic evaluation report and safety-case measurements are implemented as companion evidence under UC20-2, but evaluation with an owner remains unverified.",
+      "journeyIds": [],
+      "deferralBasis": "human-authority",
+      "reason": "No participating owner can review labels, assess relevance or accept measured results in this unattended run. The local report explicitly says PENDING; synthetic labels and automated timing cannot substitute for that person\u2019s participation."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "brief-export",
+      "title": "Resolve IMO, inspect citations, review and export the Cited Contact Brief",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "Selected: ALDER REACH | IMO 9000003 | MMSI 999000101"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-families",
+          "text": "Synthetic sources: AIS, IMO registry, OFAC, EU, port logs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-title",
+          "text": "Cited Contact Brief \u2014 SYNTHETIC"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-owner",
+          "text": "Registered owner: North Lantern Shipping Ltd. [REG-A:owner]"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-ais",
+          "text": "Last supported AIS: 36.90 N, 76.30 W at 2026-11-04T10:00:00Z [AIS-A:position]"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-sanctions",
+          "text": "Sanctions status: UNKNOWN \u2014 name-only OFAC match; EU evidence absent."
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-intent",
+          "text": "Intent: UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#citation-coverage",
+          "text": "Factual citation coverage: 100%"
+        },
+        {
+          "action": "click",
+          "selector": "#cite-owner"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-excerpt",
+          "text": "Registered owner: North Lantern Shipping Ltd."
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-source",
+          "text": "REG-A | revision 1 | IMO registry | synthetic://registry/REG-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-times",
+          "text": "Captured: 2026-11-04T11:00:00Z | Observed: 2026-11-03T09:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-integrity",
+          "text": "Integrity: verified"
+        },
+        {
+          "action": "fill",
+          "selector": "#interpretation",
+          "value": "Identity requires human review; intent remains unknown."
+        },
+        {
+          "action": "click",
+          "selector": "#save-interpretation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-state",
+          "text": "Interpretation saved locally."
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#mark-reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Local review acknowledged \u2014 no operational approval."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Local review acknowledged \u2014 no operational approval."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#interpretation",
+          "value": "Identity requires human review; intent remains unknown."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-brief",
+          "fileName": "cited-contact-brief.html",
+          "text": "Registered owner: North Lantern Shipping Ltd."
+        },
+        {
+          "action": "expectText",
+          "selector": "#export-status",
+          "text": "Exported brief and permitted evidence appendix; citations resolve offline."
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-name",
+      "title": "Resolve same-name candidates deliberately and inspect identifier-linked designation",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "name"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "ALDER REACH"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "Ambiguous: 2 candidates. Select a vessel before generating a brief."
+        },
+        {
+          "action": "expectText",
+          "selector": "#candidate-a",
+          "text": "ALDER REACH | IMO 9000003 | MMSI 999000101"
+        },
+        {
+          "action": "expectText",
+          "selector": "#candidate-b",
+          "text": "ALDER REACH | IMO 9000015 | MMSI 999000102"
+        },
+        {
+          "action": "click",
+          "selector": "#choose-b"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "Selected: ALDER REACH | IMO 9000015 | MMSI 999000102"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-sanctions",
+          "text": "Sanctions evidence: synthetic EU identifier-linked designation [EU-B:designation]. OFAC status: UNKNOWN."
+        },
+        {
+          "action": "click",
+          "selector": "#cite-designation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-excerpt",
+          "text": "Synthetic designation: IMO 9000015; listed entity ALDER REACH."
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-source",
+          "text": "EU-B | revision 1 | EU | synthetic://eu/EU-B"
+        }
+      ]
+    },
+    {
+      "id": "input-recovery",
+      "title": "Recover invalid identifier and no matches, then stop synthesis",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "12"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#query-error",
+          "text": "Enter a synthetic IMO with exactly 7 digits."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#query",
+          "value": "12"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "name"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "NO SUCH VESSEL"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "UNKNOWN \u2014 no permitted identity match."
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "mmsi"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "999000101"
+        },
+        {
+          "action": "press",
+          "selector": "#query",
+          "key": "Enter"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-owner",
+          "text": "Registered owner: North Lantern Shipping Ltd. [REG-A:owner]"
+        },
+        {
+          "action": "click",
+          "selector": "#stop"
+        },
+        {
+          "action": "expectText",
+          "selector": "#run-status",
+          "text": "Stopped. Start a new research query to resume."
+        },
+        {
+          "action": "expectText",
+          "selector": "#identity-status",
+          "text": "No vessel selected."
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-state",
+          "text": "No active brief."
+        }
+      ]
+    },
+    {
+      "id": "missing-stale",
+      "title": "Inspect missing, stale, future and unknown-time evidence",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-flag",
+          "text": "Flag: UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-port",
+          "text": "Historical port call: Fictional Harbor One at 2026-08-01T08:00:00Z [PORT-A:call] \u2014 STALE; not current location."
+        },
+        {
+          "action": "expectText",
+          "selector": "#freshness-policy",
+          "text": "Synthetic as-of: 2026-11-04T12:00:00Z | Stale threshold: more than 30 days"
+        },
+        {
+          "action": "expectText",
+          "selector": "#future-status",
+          "text": "Future-dated snapshots excluded: 1"
+        },
+        {
+          "action": "click",
+          "selector": "#cite-port"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-freshness",
+          "text": "Observation: STALE | Capture: fresh"
+        },
+        {
+          "action": "click",
+          "selector": "#cite-ofac"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-times",
+          "text": "Captured: 2026-11-04T11:00:00Z | Observed: UNKNOWN"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-freshness",
+          "text": "Observation age: UNKNOWN | Capture: fresh"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-sanctions",
+          "text": "Sanctions status: UNKNOWN \u2014 name-only OFAC match; EU evidence absent."
+        }
+      ]
+    },
+    {
+      "id": "permitted-evidence",
+      "title": "Filter strongest excluded lexical hit and inspect exact permitted span",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "fill",
+          "selector": "#evidence-query",
+          "value": "ALDER REACH owner North Lantern"
+        },
+        {
+          "action": "click",
+          "selector": "#search-evidence"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-result-ids",
+          "text": "REG-A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-excerpt",
+          "text": "Registered owner: North Lantern Shipping Ltd."
+        },
+        {
+          "action": "expectText",
+          "selector": "#excluded-count",
+          "text": "Excluded by synthetic permission filter: 1"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-brief",
+          "fileName": "cited-contact-brief.html",
+          "text": "REG-A:owner"
+        }
+      ]
+    },
+    {
+      "id": "integrity-recovery",
+      "title": "Block changed snapshot and recover the original synthetic corpus",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "click",
+          "selector": "#diagnostics-toggle"
+        },
+        {
+          "action": "select",
+          "selector": "#diagnostic-case",
+          "value": "tampered"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-diagnostic"
+        },
+        {
+          "action": "expectText",
+          "selector": "#integrity-error",
+          "text": "REG-A integrity mismatch. Affected claims and export blocked; restore samples."
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-owner",
+          "text": "Registered owner: UNKNOWN \u2014 snapshot integrity failure."
+        },
+        {
+          "action": "click",
+          "selector": "#export-brief"
+        },
+        {
+          "action": "expectText",
+          "selector": "#export-status",
+          "text": "Export blocked: restore verified snapshots."
+        },
+        {
+          "action": "click",
+          "selector": "#restore-samples"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-owner",
+          "text": "Registered owner: North Lantern Shipping Ltd. [REG-A:owner]"
+        },
+        {
+          "action": "click",
+          "selector": "#cite-owner"
+        },
+        {
+          "action": "expectText",
+          "selector": "#snapshot-integrity",
+          "text": "Integrity: verified"
+        }
+      ]
+    },
+    {
+      "id": "import-conflict",
+      "title": "Reject malformed corpus then withhold conflicting AIS conclusions",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "click",
+          "selector": "#diagnostics-toggle"
+        },
+        {
+          "action": "select",
+          "selector": "#diagnostic-case",
+          "value": "malformed"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-diagnostic"
+        },
+        {
+          "action": "expectText",
+          "selector": "#corpus-error",
+          "text": "Import rejected: snapshot BAD-1 is missing capturedAt. Previous corpus retained."
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-owner",
+          "text": "Registered owner: North Lantern Shipping Ltd. [REG-A:owner]"
+        },
+        {
+          "action": "select",
+          "selector": "#diagnostic-case",
+          "value": "conflicting-ais"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-diagnostic"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-ais",
+          "text": "Last supported AIS: UNKNOWN \u2014 conflicting observations at 2026-11-04T10:00:00Z."
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-values",
+          "text": "AIS-A: 36.90 N, 76.30 W | AIS-C: 35.10 N, 75.00 W"
+        },
+        {
+          "action": "expectText",
+          "selector": "#escalation",
+          "text": "Human review required. No automatic identity, location or intent conclusion."
+        },
+        {
+          "action": "click",
+          "selector": "#restore-samples"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-ais",
+          "text": "Last supported AIS: 36.90 N, 76.30 W at 2026-11-04T10:00:00Z [AIS-A:position]"
+        }
+      ]
+    },
+    {
+      "id": "review-boundary",
+      "title": "Preserve unsaved interpretation and require save before local acknowledgement",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "select",
+          "selector": "#query-type",
+          "value": "imo"
+        },
+        {
+          "action": "fill",
+          "selector": "#query",
+          "value": "9000003"
+        },
+        {
+          "action": "click",
+          "selector": "#research"
+        },
+        {
+          "action": "fill",
+          "selector": "#interpretation",
+          "value": "Review the stale port record with an analyst."
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#mark-reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Save or discard the interpretation before acknowledging review."
+        },
+        {
+          "action": "click",
+          "selector": "#cite-owner"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#interpretation",
+          "value": "Review the stale port record with an analyst."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#interpretation",
+          "value": "Review the stale port record with an analyst."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-state",
+          "text": "Unsaved interpretation restored."
+        },
+        {
+          "action": "click",
+          "selector": "#save-interpretation"
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#mark-reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Local review acknowledged \u2014 no operational approval."
+        },
+        {
+          "action": "fill",
+          "selector": "#interpretation",
+          "value": "Changed review note."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-interpretation"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#interpretation",
+          "value": "Review the stale port record with an analyst."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Local review acknowledged \u2014 no operational approval."
+        }
+      ]
+    },
+    {
+      "id": "synthetic-evaluation",
+      "title": "Produce the held-out Synthetic Evaluation Report for later owner review",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-samples"
+        },
+        {
+          "action": "click",
+          "selector": "#run-evaluation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-title",
+          "text": "Synthetic Evaluation Report"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-cases",
+          "text": "Held-out cases: 6 | Identity and abstention: 6/6"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-relevance",
+          "text": "Relevant spans: 4/4 retrieved | Precision: 100% | Recall: 100%"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-coverage",
+          "text": "Citation correctness: 4/4 | Excluded leaks: 0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-corpus",
+          "text": "Corpus: 8 snapshots | Permitted: 7 | Retrieval eligible: 6"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evaluation-owner",
+          "text": "Owner review: PENDING \u2014 synthetic labels are not owner-approved."
+        },
+        {
+          "action": "expectVisible",
+          "selector": "#evaluation-latency"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "#evaluation-runtime"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-evaluation",
+          "fileName": "synthetic-evaluation-report.json",
+          "text": "\"ownerReview\": \"PENDING\""
+        }
+      ]
+    }
+  ]
+}

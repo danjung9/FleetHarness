@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC8-1",
+      "disposition": "deferred",
+      "expectedOutcome": "All six source roles enforce approved comment, return, approval and release permissions; INITIAL, UPDATE, CORRECT and CASCOR reports enforce the applicable approved NWP 1-03.1 category, required-field and message-format rules; every revision, comment and approval remains auditable with current routing visible, using notional unclassified data only.",
+      "journeyIds": [],
+      "reason": "Only a synthetic INITIAL workflow is planned. Approved NWP edition, required fields/categories, all report-type semantics and routing rules are missing; local persona selection is not authenticated access control. No compliance claim. The demonstrated subset is checked under WFL-01/02/03; full source coverage remains unverified."
+    },
+    {
+      "criterionId": "WFL-01",
+      "disposition": "implemented",
+      "expectedOutcome": "An early or out-of-order release is denied without advancing state. Changing an approved revision removes every current approval, restarts review, and prevents release using the old decision. The corrected revision can complete fresh review and simulated CO release. Unsaved edits cannot be submitted or approved without deliberate save or discard.",
+      "journeyIds": [
+        "stale-approval",
+        "recover-draft"
+      ]
+    },
+    {
+      "criterionId": "WFL-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Two amendments from revision 1 remain separately readable across reload, with their common base visible. Explicit resolution stores the chosen combined text with both amendment heads as parents; both source contents survive reload and no prior approval carries into revision 4.",
+      "journeyIds": [
+        "resolve-amendments"
+      ]
+    },
+    {
+      "criterionId": "WFL-03",
+      "disposition": "implemented",
+      "expectedOutcome": "A reviewer can create an INITIAL synthetic report, return revision 1 with a retained reason, save revision 2, complete Division Officer, Department Head, CHENG, XO and CO review, reload the simulated released state and download the corrected content with traceable revision and review history. Human workflow acceptance remains separately pending.",
+      "journeyIds": [
+        "review-return-release",
+        "recover-draft"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE8-1",
+      "disposition": "deferred",
+      "expectedOutcome": "One mock CASREP completes every approval role through CO release including a return-for-revision loop, accompanied by a short demo video or delivered live walkthrough and a one-page brief explaining permissions, classification handling, Navy messaging integration and fielding prerequisites.",
+      "journeyIds": [],
+      "reason": "The build will supply a synthetic all-role simulated-release workflow, walkthrough script and one-page fielding brief, but no human-delivered walkthrough/video, acceptance of that brief or authorized formal CO release is available in this unattended local phase. The entire source deliverable remains unverified rather than equating a script/download with its completion."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "review-return-release",
+      "title": "Create, return, revise and route through every reviewer to export",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#equipment",
+          "value": "Training pump"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "division"
+        },
+        {
+          "action": "fill",
+          "selector": "#review-comment",
+          "value": "Clarify repair status"
+        },
+        {
+          "action": "click",
+          "selector": "#return"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Returned to Originator \u2014 revision 1"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump unavailable; replacement requested"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "co"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Simulated release \u2014 revision 2"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Simulated release \u2014 revision 2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-original",
+          "text": "Pump unavailable"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-return",
+          "text": "Clarify repair status"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "synthetic-casrep.txt",
+          "text": "Pump unavailable; replacement requested"
+        }
+      ]
+    },
+    {
+      "id": "stale-approval",
+      "title": "Reject early release and invalidate approval after a content change",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#equipment",
+          "value": "Training pump"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "co"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-error",
+          "text": "Release denied: current revision requires the complete review chain."
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump isolated; replacement requested"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-status",
+          "text": "No current approvals \u2014 revision 2"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "co"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-error",
+          "text": "Release denied: current revision requires the complete review chain."
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Draft \u2014 revision 2"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-forward"
+        },
+        {
+          "action": "select",
+          "selector": "#persona",
+          "value": "co"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Simulated release \u2014 revision 2"
+        }
+      ]
+    },
+    {
+      "id": "recover-draft",
+      "title": "Correct missing input and preserve unsaved edits at the review boundary",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#equipment",
+          "value": "Training pump"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Enter a casualty description."
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Unsaved repair detail"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-error",
+          "text": "Save or discard your draft changes before review."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#casualty",
+          "value": "Unsaved repair detail"
+        },
+        {
+          "action": "click",
+          "selector": "#discard-changes"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#casualty",
+          "value": "Pump unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Awaiting Division Officer \u2014 revision 1"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#workflow-status",
+          "text": "Awaiting Division Officer \u2014 revision 1"
+        }
+      ]
+    },
+    {
+      "id": "resolve-amendments",
+      "title": "Preserve competing amendments and deliberately resolve their contents",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#equipment",
+          "value": "Training pump"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "Pump unavailable"
+        },
+        {
+          "action": "click",
+          "selector": "#save-draft"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved revision 1"
+        },
+        {
+          "action": "click",
+          "selector": "#open-amendments"
+        },
+        {
+          "action": "fill",
+          "selector": "#amendment-a",
+          "value": "Pump isolated locally"
+        },
+        {
+          "action": "fill",
+          "selector": "#amendment-b",
+          "value": "Replacement pump requested"
+        },
+        {
+          "action": "click",
+          "selector": "#stage-amendments"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Conflict: 2 amendments require review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-a",
+          "text": "Pump isolated locally"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-b",
+          "text": "Replacement pump requested"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-base",
+          "text": "Both amendments start from revision 1"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-a",
+          "text": "Pump isolated locally"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-b",
+          "text": "Replacement pump requested"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution",
+          "value": "Pump isolated locally; replacement pump requested"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Resolved: both amendments retained"
+        },
+        {
+          "action": "expectText",
+          "selector": "#resolution-parents",
+          "text": "Resolution includes both amendment parents"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-amendment-a",
+          "text": "Pump isolated locally"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-amendment-b",
+          "text": "Replacement pump requested"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#casualty",
+          "value": "Pump isolated locally; replacement pump requested"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-status",
+          "text": "No current approvals \u2014 revision 4"
+        }
+      ]
+    }
+  ]
+}

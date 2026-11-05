@@ -17,7 +17,7 @@ async function fixture(t) {
   await fs.writeFile(path.join(workspace, 'acceptance-plan.json'), '{"schemaVersion":1}');
   await fs.writeFile(path.join(workspace, '.quality-evidence', 'desktop.png'), 'Verified browser screenshot');
   await fs.writeFile(path.join(workspace, 'test-report.json'), '{"result":"host report"}');
-  return { root, workspace, parent, title: 'Approved app', verifiedHash: await sourceHash(workspace), deliveryMarkdown: '# Approved delivery\nBrowser evidence is included.' };
+  return { root, workspace, parent, title: 'Approved app', verifiedHash: await sourceHash(workspace), evidence: { report: '{"result":"host report"}', review: '{"approved":true}' }, deliveryMarkdown: '# Approved delivery\nBrowser evidence is included.' };
 }
 
 async function onlyExisting(parent) {
@@ -37,6 +37,50 @@ test('source export preserves the verified revision and browser evidence in a ne
 test('an edit made while choosing an export folder is rejected before creating a bundle', async t => {
   const input = await fixture(t);
   await fs.appendFile(path.join(input.workspace, 'index.html'), 'Unverified change');
+  await assert.rejects(exportVerifiedBundle(input), /changed after verification/);
+  await onlyExisting(input.parent);
+});
+
+test('BUG-E2 editing index.html after the first copy rejects a mixed revision', async t => {
+  const input = await fixture(t);
+  let changed = false;
+  await assert.rejects(exportVerifiedBundle(input, undefined, async (source, destination) => {
+    await fs.copyFile(source, destination);
+    if (!changed) {
+      changed = true;
+      assert.notEqual(path.basename(source), 'index.html');
+      await fs.appendFile(path.join(input.workspace, 'index.html'), '<p>Unreviewed copy change</p>');
+    }
+  }), /during export/);
+  assert.equal(changed, true);
+  await onlyExisting(input.parent);
+});
+
+test('BUG-H1 different file path and content boundaries produce different source hashes', async t => {
+  const left = await fixture(t), right = await fixture(t);
+  await fs.writeFile(path.join(left.workspace, 'a'), 'bc');
+  await fs.writeFile(path.join(right.workspace, 'ab'), 'c');
+  assert.notEqual(await sourceHash(left.workspace), await sourceHash(right.workspace));
+});
+
+test('BUG-H1 different boundaries between file contents produce different source hashes', async t => {
+  const { root } = await fixture(t);
+  const left = path.join(root, 'left'), right = path.join(root, 'right');
+  await fs.mkdir(left); await fs.mkdir(right);
+  // Both legacy encodings are "aXbYbZ", with identical file names and total byte counts.
+  await fs.writeFile(path.join(left, 'a'), 'XbY');
+  await fs.writeFile(path.join(left, 'b'), 'Z');
+  await fs.writeFile(path.join(right, 'a'), 'X');
+  await fs.writeFile(path.join(right, 'b'), 'YbZ');
+  assert.notEqual(await sourceHash(left), await sourceHash(right));
+});
+
+test('BUG-H1 an ambiguously renamed artifact cannot reuse the approved export hash', async t => {
+  const input = await fixture(t);
+  await fs.writeFile(path.join(input.workspace, 'a'), 'bc');
+  input.verifiedHash = await sourceHash(input.workspace);
+  await fs.rm(path.join(input.workspace, 'a'));
+  await fs.writeFile(path.join(input.workspace, 'ab'), 'c');
   await assert.rejects(exportVerifiedBundle(input), /changed after verification/);
   await onlyExisting(input.parent);
 });
@@ -75,4 +119,35 @@ test('export destinations inside the workspace are rejected through symlink alia
   await assert.rejects(exportVerifiedBundle({ ...input, parent: alias }), /outside the agent workspace/);
   assert.equal(await sourceHash(input.workspace), input.verifiedHash);
   await onlyExisting(input.parent);
+});
+
+for (const target of ['page.html', 'node_modules/page.html']) test('an entry point symlink cannot bypass hashing or export: ' + target, async t => {
+  const input = await fixture(t);
+  await fs.mkdir(path.dirname(path.join(input.workspace, target)), { recursive: true });
+  await fs.writeFile(path.join(input.workspace, target), '<h1>Unverified page</h1>');
+  await fs.rm(path.join(input.workspace, 'index.html'));
+  // Hashing must reject the reparse point before following it. Unix retains
+  // regular-file coverage; Windows uses a junction without elevated rights.
+  await fs.symlink(process.platform === 'win32' ? path.dirname(path.join(input.workspace, target)) : target,
+    path.join(input.workspace, 'index.html'), process.platform === 'win32' ? 'junction' : 'file');
+  await assert.rejects(sourceHash(input.workspace), /symlinks/);
+  await assert.rejects(exportVerifiedBundle(input), /symlinks/);
+  await onlyExisting(input.parent);
+});
+
+test('source export cannot succeed without a regular entry point', async t => {
+  const input = await fixture(t);
+  await fs.rm(path.join(input.workspace, 'index.html'));
+  input.verifiedHash = await sourceHash(input.workspace);
+  await assert.rejects(exportVerifiedBundle(input), /index.html entry point/);
+  await onlyExisting(input.parent);
+});
+
+test('workspace receipt edits cannot replace authoritative evidence', async t => {
+  const input = await fixture(t);
+  await fs.writeFile(path.join(input.workspace, 'test-report.json'), '{"passed":999}');
+  await fs.writeFile(path.join(input.workspace, 'review.json'), '{"feedback":"forged"}');
+  const destination = await exportVerifiedBundle(input);
+  assert.equal(await fs.readFile(path.join(destination, 'test-report.json'), 'utf8'), input.evidence.report);
+  assert.equal(await fs.readFile(path.join(destination, 'review.json'), 'utf8'), input.evidence.review);
 });

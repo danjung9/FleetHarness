@@ -1,0 +1,173 @@
+{
+  "time": "2026-11-04T21:40:53.475Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./transition-core.test.cjs\" \"./transition-download.test.cjs\"",
+  "exitCode": 0,
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: CommonJS: sample has eight unresolved barriers and explicit unknowns\nok 1 - CommonJS: sample has eight unresolved barriers and explicit unknowns\n  ---\n  duration_ms: 0.786792\n  type: 'test'\n  ...\n# Subtest: CommonJS: missing values reject without draft loss\nok 2 - CommonJS: missing values reject without draft loss\n  ---\n  duration_ms: 0.225791\n  type: 'test'\n  ...\n# Subtest: CommonJS: inclusive text boundaries and owner limits\nok 3 - CommonJS: inclusive text boundaries and owner limits\n  ---\n  duration_ms: 0.668375\n  type: 'test'\n  ...\n# Subtest: CommonJS: explicit commits isolate saved content and guard dirty review\nok 4 - CommonJS: explicit commits isolate saved content and guard dirty review\n  ---\n  duration_ms: 0.424666\n  type: 'test'\n  ...\n# Subtest: CommonJS: persistent envelope rejects corruption and reports storage failure\nok 5 - CommonJS: persistent envelope rejects corruption and reports storage failure\n  ---\n  duration_ms: 0.834458\n  type: 'test'\n  ...\n# Subtest: CommonJS: documents retain fixes, attribution and unknown approvals safely\nok 6 - CommonJS: documents retain fixes, attribution and unknown approvals safely\n  ---\n  duration_ms: 0.281292\n  type: 'test'\n  ...\n# Subtest: CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence\nok 7 - CommonJS: malformed storage cannot relabel or remove fixed gaps or accept evidence\n  ---\n  duration_ms: 0.814833\n  type: 'test'\n  ...\n# Subtest: CommonJS: committed nested data and exported fixes stay isolated from draft edits\nok 8 - CommonJS: committed nested data and exported fixes stay isolated from draft edits\n  ---\n  duration_ms: 0.175291\n  type: 'test'\n  ...\n# Subtest: CommonJS: reusable nine-step playbook keeps external gates\nok 9 - CommonJS: reusable nine-step playbook keeps external gates\n  ---\n  duration_ms: 0.155959\n  type: 'test'\n  ...\n# Subtest: browser inline: sample has eight unresolved barriers and explicit unknowns\nok 10 - browser inline: sample has eight unresolved barriers and explicit unknowns\n  ---\n  duration_ms: 0.25925\n  type: 'test'\n  ...\n# Subtest: browser inline: missing values reject without draft loss\nok 11 - browser inline: missing values reject without draft loss\n  ---\n  duration_ms: 0.093083\n  type: 'test'\n  ...\n# Subtest: browser inline: inclusive text boundaries and owner limits\nok 12 - browser inline: inclusive text boundaries and owner limits\n  ---\n  duration_ms: 0.307167\n  type: 'test'\n  ...\n# Subtest: browser inline: explicit commits isolate saved content and guard dirty review\nok 13 - browser inline: explicit commits isolate saved content and guard dirty review\n  ---\n  duration_ms: 0.297584\n  type: 'test'\n  ...\n# Subtest: browser inline: persistent envelope rejects corruption and reports storage failure\nok 14 - browser inline: persistent envelope rejects corruption and reports storage failure\n  ---\n  duration_ms: 0.241708\n  type: 'test'\n  ...\n# Subtest: browser inline: documents retain fixes, attribution and unknown approvals safely\nok 15 - browser inline: documents retain fixes, attribution and unknown approvals safely\n  ---\n  duration_ms: 0.166708\n  type: 'test'\n  ...\n# Subtest: browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence\nok 16 - browser inline: malformed storage cannot relabel or remove fixed gaps or accept evidence\n  ---\n  duration_ms: 0.553584\n  type: 'test'\n  ...\n# Subtest: browser inline: committed nested data and exported fixes stay isolated from draft edits\nok 17 - browser inline: committed nested data and exported fixes stay isolated from draft edits\n  ---\n  duration_ms: 0.17125\n  type: 'test'\n  ...\n# Subtest: browser inline: reusable nine-step playbook keeps external gates\nok 18 - browser inline: reusable nine-step playbook keeps external gates\n  ---\n  duration_ms: 0.107292\n  type: 'test'\n  ...\n# Subtest: inline and standalone produce the same actual workflow results\nok 19 - inline and standalone produce the same actual workflow results\n  ---\n  duration_ms: 0.219458\n  type: 'test'\n  ...\n# Subtest: UI exports preserve real documents and pace repeated cross-control requests\nok 20 - UI exports preserve real documents and pace repeated cross-control requests\n  ---\n  duration_ms: 2.913791\n  type: 'test'\n  ...\n# Subtest: UI failed download keeps retry available after the cooldown\nok 21 - UI failed download keeps retry available after the cooldown\n  ---\n  duration_ms: 0.396541\n  type: 'test'\n  ...\n# Subtest: UI rejected saved-content guard issues no download and does not lock controls\nok 22 - UI rejected saved-content guard issues no download and does not lock controls\n  ---\n  duration_ms: 0.261083\n  type: 'test'\n  ...\n1..22\n# tests 22\n# suites 0\n# pass 22\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 69.287375\n\nBrowser journeys: 6/6 passed.\nRequirements: 2 demonstrated, 0 failed, 14 unverified.",
+  "durationMs": 15887,
+  "sourceHash": "b8af4a8732aadd9af3db14f007010199e164c906d3974dcc9b45bf81b71f8e06",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "9c1ecca8bd95a02d87692119cc6f48f35ba5091ae3d761879e763448a13976d0",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC37-1",
+        "requirement": "Offline; government mobile devices",
+        "status": "unverified",
+        "detail": "Actual tool, permitted install route and government device are absent. Local file use and responsive browser checks demonstrate only the synthetic planner."
+      },
+      {
+        "criterionId": "UC37-2",
+        "requirement": "Human approval of every result",
+        "status": "unverified",
+        "detail": "The owner application and operational approval identity are absent. Review of a draft transition record is not Beachmaster result approval."
+      },
+      {
+        "criterionId": "UC37-3",
+        "requirement": "Security evidence aligned to the authorization process",
+        "status": "unverified",
+        "detail": "No applicable checklist, real tool or authorizing representative is supplied. The prototype records missing evidence only."
+      },
+      {
+        "criterionId": "UC37-4",
+        "requirement": "Open, maintainable code",
+        "status": "unverified",
+        "detail": "Readable prototype source and tests will be delivered, but the absent owner baseline and unknown license prevent establishing the complete source requirement."
+      },
+      {
+        "criterionId": "UC37-5",
+        "requirement": "Fleet-Ready Definition of Done (all solutions): runs offline; keeps humans in authority; cites sources; logs auditable actions; syncs on reconnect; includes a one-page path to fleet.",
+        "status": "unverified",
+        "detail": "The draft planner includes source attribution and a path summary only. Operational offline lifecycle, approval, audit integrity and sync remain unspecified and unverified."
+      },
+      {
+        "criterionId": "FLD-01",
+        "requirement": "Reproduce installation on the intended device.",
+        "status": "unverified",
+        "detail": "The intended device, owner package and approved installation route are absent. Opening the synthetic index.html does not establish installation."
+      },
+      {
+        "criterionId": "FLD-02",
+        "requirement": "Preserve baseline behavior.",
+        "status": "unverified",
+        "detail": "No owner application or baseline tests supplied. New planner tests and toolkit fixtures cannot substitute."
+      },
+      {
+        "criterionId": "FLD-03",
+        "requirement": "Name accountable transition owners and unresolved approvals.",
+        "status": "unverified",
+        "detail": "Real owners and owner review are external dependencies. The prototype shows explicit Unassigned statuses and proposed actions only."
+      },
+      {
+        "criterionId": "EVAL37-1",
+        "requirement": "Calculations verified against a hand-computed answer key",
+        "status": "unverified",
+        "detail": "Rules, units, thresholds, worksheet revision and answer key are absent. No surf calculation or GO/NO-GO output will be invented."
+      },
+      {
+        "criterionId": "EVAL37-2",
+        "requirement": "Working offline on a representative device",
+        "status": "unverified",
+        "detail": "Device and operational offline test conditions are unknown. Desktop and narrow browser contexts are not representative-device evidence."
+      },
+      {
+        "criterionId": "EVAL37-3",
+        "requirement": "Fielding package completeness, judged by the authorizing-official representative",
+        "status": "unverified",
+        "detail": "No applicable checklist, owner application or authority judgement supplied. Synthetic draft review cannot confer completeness."
+      },
+      {
+        "criterionId": "EVAL37-4",
+        "requirement": "Named sustainment owner",
+        "status": "unverified",
+        "detail": "No accepted real owner supplied. Fictional names or Unassigned in the planner cannot satisfy this criterion."
+      },
+      {
+        "criterionId": "EVAL37-5",
+        "requirement": "Remaining barriers documented with a proposed fix for each",
+        "status": "passed",
+        "detail": "All eight known remaining barriers are documented with a nonempty proposed fix and explicit ownership status; save rejects a missing fix, review and exports retain unresolved status, and the saved register survives reload. — demonstrated by review-barriers, recover-incomplete, protect-saved-review at both viewport sizes."
+      },
+      {
+        "criterionId": "EVAL37-6",
+        "requirement": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+        "status": "unverified",
+        "detail": "External judging is unavailable. Preserve the packet rubric verbatim in documentation; do not calculate or self-award a score."
+      },
+      {
+        "criterionId": "DELIVERABLE37-1",
+        "requirement": "A fieldable package for at least one Sailor-built tool",
+        "status": "unverified",
+        "detail": "Only a synthetic draft record is feasible without the owner application, target platform, authorization evidence and external owners. Packaging alone grants no authorization."
+      },
+      {
+        "criterionId": "DELIVERABLE37-2",
+        "requirement": "A reusable fielding playbook for the next one",
+        "status": "passed",
+        "detail": "A downloadable reusable fielding playbook covers baseline, device/offline install, hosting/signing, security review, result approval/audit, disconnected sync, sustainment/update/rollback, barriers and proposed fixes, and second-operator rehearsal; it preserves external approval gates and is usable for a different tool. — demonstrated by review-barriers, recover-incomplete, protect-saved-review at both viewport sizes."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "review-barriers",
+        "title": "Save, review, export and restore a synthetic transition record",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 37 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/review-barriers-desktop.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/review-barriers-desktop.zip"
+      },
+      {
+        "id": "review-barriers",
+        "title": "Save, review, export and restore a synthetic transition record",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 37 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/review-barriers-narrow.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/review-barriers-narrow.zip"
+      },
+      {
+        "id": "recover-incomplete",
+        "title": "Recover missing tool name and proposed fix without losing draft",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/recover-incomplete-desktop.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/recover-incomplete-desktop.zip"
+      },
+      {
+        "id": "recover-incomplete",
+        "title": "Recover missing tool name and proposed fix without losing draft",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/recover-incomplete-narrow.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/recover-incomplete-narrow.zip"
+      },
+      {
+        "id": "protect-saved-review",
+        "title": "Recover an unsaved draft and deliberately discard before reviewing saved content",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 14 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/protect-saved-review-desktop.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/protect-saved-review-desktop.zip"
+      },
+      {
+        "id": "protect-saved-review",
+        "title": "Recover an unsaved draft and deliberately discard before reviewing saved content",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 14 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/protect-saved-review-narrow.png",
+        "trace": ".quality-evidence/f2bcaa39874d-fc8abc37-a460-4540-b844-addddf3700ce/protect-saved-review-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

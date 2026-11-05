@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Synthetic ship-readiness analysts and leadership reviewers evaluating an illustrative offline dependency-timing prototype.",
+  "primaryTask": "Load the synthetic 21-day snapshot, inspect five local changes, calculate timing and uncertainty, open the evidence for every flag, and record a human advisory review before exporting a leadership brief.",
+  "successOutcome": "The analyst obtains a reproducible synthetic brief with radar finish day 25 and margin -5, watch finish day 24 and margin -4 at deadline day 20, exact source citations, unknowns, assumptions and explicit human authority. No mission-readiness certification or operational action occurs.",
+  "screens": [
+    {
+      "name": "Dependency review",
+      "purpose": "One responsive workspace with snapshot identity and freshness, local change timeline, timing results and evidence detail. Start with Load synthetic scenario; Apply next change advances one clearly named event. Analyze computes the current draft. Local what-if repair duration is labeled. Advanced model checks are secondary.",
+      "primaryAction": "Analyze"
+    },
+    {
+      "name": "Advisory brief and review",
+      "purpose": "A section of the same page containing bounded options, review note, advisory acknowledgment, local review history, Save local session and Export advisory brief. Evidence remains accessible without losing draft fields.",
+      "primaryAction": "Record review"
+    }
+  ],
+  "states": {
+    "empty": "Before loading, show No synthetic scenario loaded and Load synthetic scenario; no green result or recommendation. Analyze and review are unavailable with a visible reason. Export requires a current valid analysis.",
+    "loading": "All calculation and storage are local and normally immediate. Announce Analyzing while computing and prevent duplicate submissions; restore controls on completion. Never imply a network sync is running.",
+    "error": "Invalid graphs block current results with the exact cycle or missing-task diagnostic and Restore valid model guidance. Missing duration is a valid UNKNOWN, not a validation failure. Missing acknowledgment shows an inline error and retains the note. Storage failure keeps the draft in memory and explains that it is not saved.",
+    "success": "Show current snapshot/event version, exact finish, deadline, target margin, known path or UNKNOWN. Within deadline means timing only. Final sequence has two late timing targets. Evidence panels resolve all sources. Confirm local review without implying an operational action."
+  },
+  "persistence": "Use versioned localStorage for an explicit Save local session of the full working scenario, local edits, note, analysis fingerprint, acknowledgment and review log. Reload restores that session with Saved local session restored. Input edits otherwise remain in memory across panels. Mark unsaved changes clearly. Loading the baseline replaces the local working copy only; if there are unsaved edits, present labeled discard/cancel controls before replacement. No operational source sync or encrypted storage claim. Storage failure preserves the current in-memory state.",
+  "recovery": "Blank repair duration remains null and yields UNKNOWN until corrected. Advanced model checks offer valid, cycle and dangling examples, kept separate from ordinary analyst tasks. Restore valid model via the valid option, then Analyze. Editing a calculated input invalidates current analysis and review and requires Analyze again; never export stale results. A recorded review is bound to its exact model/event fingerprint; changing the scenario requires another deliberate acknowledgment and review. Save or discard unsaved edits before recording a different committed session. Review note remains through acknowledgment errors and panel changes.",
+  "keyboard": "Use labeled native buttons, numeric input, select, textarea and checkbox. Tab order follows scenario \u2192 changes \u2192 duration \u2192 Analyze \u2192 results/evidence \u2192 review \u2192 save/export \u2192 advanced model checks. Visible focus, Enter/Space activation and no keyboard traps; errors use live status announcements and accessible descriptions. Focus moves to graph error on failure and results heading on successful analysis. Panels use aria-expanded. Narrow layout stacks controls and wraps source excerpts without horizontal page scrolling."
+}

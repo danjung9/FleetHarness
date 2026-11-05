@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders evaluating synthetic tasking messages locally; no operational decisions are authorized.",
+  "primaryTask": "Paste synthetic EVENT/TASK text, extract and inspect exact source evidence, select a provisional event category, approve valid records, and view and export a UTC daily schedule.",
+  "successOutcome": "Explicitly reviewed records appear on a labeled 00:00–24:00 UTC timeline and in a local provenance-preserving download. Full USMTF mapping, independent accuracy and disconnected operation remain unverified.",
+  "screens": [
+    {
+      "name": "Message and extraction",
+      "purpose": "Preserve a draft and immutable parsed source; show synthetic grammar help and actionable issues.",
+      "primaryAction": "Parse message (#parse)"
+    },
+    {
+      "name": "Review and source evidence",
+      "purpose": "Compare literal fields and UTF-16 spans with normalized values; choose Frequency plan, Crypto change-over, Flight quarters or Other synthetic category. These are user choices, not inferred USMTF mappings.",
+      "primaryAction": "Approve valid records (#approve)"
+    },
+    {
+      "name": "Daily schedule",
+      "purpose": "Show reviewed intervals and point tasks on a 24-hour UTC timeline and readable event rows; preserve full intervals when visually clipped.",
+      "primaryAction": "Export reviewed schedule (#export)"
+    }
+  ],
+  "states": {
+    "empty": "Show synthetic-only notice, grammar examples and Enter synthetic message text guidance. No reviewed records for this day. Default schedule date is explicitly 2026-11-04, never inferred for missing event dates.",
+    "loading": "Local parsing, approval and download preparation are immediate; announce Parsing or Preparing download through a status region and prevent duplicate actions while busy.",
+    "error": "Show line/field-specific issues in #issues; invalid timestamps remain null and never enter an approved schedule. Preserve draft and parsed snapshot separately. Unsaved source changes block approval/export and offer Parse changes or Discard draft. Storage is not required.",
+    "success": "Report extraction count and review state separately. No extraction issues does not imply approval. Explicit approval shows Reviewed: N record(s), labeled UTC schedule rows and export availability."
+  },
+  "persistence": "In-memory session only; reload intentionally resets work. Display Not saved across reload and offer export. Preserve source draft through date changes, evidence inspection and failed approval. Keep last parsed snapshot and its approval while the draft differs, but block exporting stale content. Parse changes deliberately replaces the snapshot and clears approval; Discard draft restores it. No localStorage or backend required.",
+  "recovery": "Correct uncertain fields through the source draft and reparse; retain original evidence in the prior snapshot until deliberate replacement. Empty, invalid and unsupported input produces specific messages. Approval requires no issues and a category choice for every record. Unsaved changes leave approval action available to explain the block; export is disabled with visible reason. Discard draft restores committed reviewed content. Duplicate identifiers and end-before-start require source correction; acknowledgment cannot validate them.",
+  "keyboard": "Use labeled native textarea, date input, selects and buttons, logical Tab order and visible focus. Enter/Space activate focused buttons; textarea Enter inserts newline. Evidence buttons expose read-only source with accessible labels; status/errors are announced. Desktop and narrow layouts use wrapping rows and a readable textual schedule alongside the visual timeline; no hover-only actions."
+}

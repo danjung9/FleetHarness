@@ -56,6 +56,13 @@ async function workspace(t, html = application) {
 // Deadline/cancellation cases below retain their explicit short test limits.
 const functionalTimeout = 60_000;
 const verify = (root, overrides = {}) => verifyBrowserJourneys({ root, plan: plan(), contractHash: 'a'.repeat(64), timeoutMs: 45_000, stepTimeoutMs: 2500, ...overrides });
+// The checked-in core fixture tests rendered-result evidence, not the native
+// sandbox. Production verification still selects its fail-closed launcher.
+function fixtureLauncher(_root, executable, args) {
+  const ready = 'synthetic-browser-core-ready\n';
+  const bootstrap = `process.stdout.write(${JSON.stringify(ready)});const child=require('node:child_process').spawn(process.execPath,${JSON.stringify(args)},{stdio:'inherit'});child.once('error',e=>{console.error(e.code);process.exitCode=1});child.once('exit',code=>{process.exitCode=code??1});`;
+  return { runner: executable, args: ['--input-type=commonjs', '-e', bootstrap], ready, command: 'synthetic browser core fixture launcher' };
+}
 
 test('actual browser journeys cover keyboard, selection, validation, reload persistence and downloads at both viewport sizes', { timeout: functionalTimeout }, async t => {
   const root = await workspace(t);
@@ -73,10 +80,35 @@ test('actual browser journeys cover keyboard, selection, validation, reload pers
   }
 });
 
+test('native download assertions reuse each file until an edit requires a fresh export', { timeout: functionalTimeout }, async t => {
+  const html = application.replace('</main>', '<button id="second-export">Export second file</button><p id="captures">0</p></main>')
+    .replace('</script>', `let captures=0;
+      for(const id of ['export','second-export']) document.getElementById(id).onclick=()=>{
+        document.getElementById('captures').textContent=String(++captures);
+        const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([Array.from({length:9},(_,i)=>'part-'+i+': '+task.value).join('\\n')]));
+        a.download=id+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      };</script>`);
+  const root = await workspace(t, html);
+  const steps = [{ action: 'fill', selector: '#task', value: 'Inspect pump' }];
+  for (let i = 0; i < 9; i++) for (const selector of ['#export', '#second-export']) {
+    steps.push({ action: 'expectDownload', selector, fileName: selector.slice(1) + '.txt', text: 'part-' + i + ': Inspect pump' });
+  }
+  steps.push({ action: 'expectText', selector: '#captures', text: '2' },
+    { action: 'fill', selector: '#task', value: 'Inspect valve' },
+    { action: 'expectDownload', selector: '#export', fileName: 'export.txt', text: 'part-8: Inspect valve' },
+    { action: 'expectText', selector: '#captures', text: '3' },
+    { action: 'expectDownload', selector: '#export', fresh: true, text: 'part-0: Inspect valve' },
+    { action: 'expectText', selector: '#captures', text: '4' });
+  const result = await verify(root, { plan: plan(steps), stepTimeoutMs: 2500 });
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.journeys.length, 4);
+  assert.ok(result.journeys.every(journey => journey.status === 'passed'), JSON.stringify(result));
+});
+
 test('passing core tests cannot hide a wrong rendered result', { timeout: functionalTimeout }, async t => {
   const root = await workspace(t, application.replace("result.textContent='Saved: '+task.value+' ('+document.querySelector('#priority').value+')'", "result.textContent='Wrong result'"));
   await fs.writeFile(path.join(root, 'app.test.cjs'), 'require("node:test")("core passes",()=>require("node:assert/strict").equal(2+2,4));');
-  assert.equal(reportPassed(await verifyWorkspace(root, process.execPath, () => {})), true);
+  assert.equal(reportPassed(await verifyWorkspace(root, process.execPath, () => {}, undefined, { launcher: fixtureLauncher })), true);
   const result = await verify(root);
   assert.equal(result.journeys.length, 4, JSON.stringify(result));
   for (const journey of result.journeys) {

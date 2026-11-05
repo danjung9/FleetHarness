@@ -1,0 +1,782 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Departmental agents negotiate the weekly calendar, resolve personnel collisions and alternate allocations under operational windows, approved qualifications and fatigue policies, and satisfy all mandated SFTRM periodicities.",
+      "journeyIds": [],
+      "reason": "Deferred in full: four synthetic sessions demonstrate bounded feasibility only. Departmental agents/negotiation, owner-approved operational fatigue rules, interfaces and SFTRM semantics are absent."
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "No pair sharing a person or room overlaps. Baseline A is 0\u201360, B is 90\u2013150, C is 0\u201360, D is 1440\u20131500; simultaneous A/C share neither person nor room.",
+      "journeyIds": [
+        "baseline",
+        "collision"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Full sessions fit operating and person windows, qualifications are covered, rest and whole-horizon budgets hold. Baseline P01 rest is exactly 30, each total 120. Rest 31, budget 119, missing Q-A and window end 1499 fail; end 1500 permits D.",
+      "journeyIds": [
+        "baseline",
+        "rest-budget",
+        "qualification",
+        "windows"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "B start 0 only is infeasible after complete search; budget 1 reports search limit reached with feasibility unknown; budget 50000 finds B at 90.",
+      "journeyIds": [
+        "collision",
+        "search-limit"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Owner recurrence rules expand into explicit mandatory occurrence IDs and due windows; every occurrence meets its deadline.",
+      "journeyIds": [],
+      "reason": "Deferred: owner recurrence/deadline rules and SFTRM authority are absent. Four explicit sessions do not establish periodicity compliance; future integration must expand and check every occurrence."
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "implemented",
+      "expectedOutcome": "A coordinator inspects the synthetic board and loads and deliberately marks the current feasible draft reviewed. Any edit clears review. No automatic constraint relaxation is available. Actual revision acceptance remains a human review obligation.",
+      "journeyIds": [
+        "baseline",
+        "edit-review"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "An interactive weekly departmental board resolves cross-department conflicts with one-click objective-based schedule optimization and personnel loading heatmaps.",
+      "journeyIds": [],
+      "reason": "Deferred in full: this two-day feasibility draft and totals are not a weekly departmental optimization board or heatmaps. Objectives, negotiation and operational calendar integrations are absent."
+    },
+    {
+      "criterionId": "USER11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "All four baseline intervals and fixed assignments appear, with P01 and P02 each 120 minutes across both days.",
+      "journeyIds": [
+        "baseline"
+      ]
+    },
+    {
+      "criterionId": "USER11-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Current inputs drive computation. Editing D duration 60 to 30 recomputes end 1470 and P02 total 90; editing a window can make the problem infeasible with no stale current draft.",
+      "journeyIds": [
+        "edit-review",
+        "windows"
+      ]
+    },
+    {
+      "criterionId": "USER11-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Feasible draft, Infeasible, Invalid input, and Search limit reached with feasibility unknown are distinct plainly worded outcomes matching the literal journey messages.",
+      "journeyIds": [
+        "baseline",
+        "invalid",
+        "collision",
+        "search-limit"
+      ]
+    },
+    {
+      "criterionId": "USER11-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Search keeps A\u2013D, exact people/rooms, qualification requirements and limits; impossible cases retain the problem rather than dropping requests, reassigning or silently relaxing constraints.",
+      "journeyIds": [
+        "collision",
+        "qualification",
+        "rest-budget"
+      ]
+    },
+    {
+      "criterionId": "USER11-5",
+      "disposition": "implemented",
+      "expectedOutcome": "B duration 0 stays entered with an actionable positive-whole-number error. Impossible B starts retain four requests. Correction recovers feasibility; failed import preserves current work.",
+      "journeyIds": [
+        "invalid",
+        "collision",
+        "bad-import"
+      ]
+    },
+    {
+      "criterionId": "USER11-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Review is bound to the current checked feasible inputs and draft. Relevant edits clear review immediately; imported content never restores trusted review.",
+      "journeyIds": [
+        "edit-review",
+        "portable"
+      ]
+    },
+    {
+      "criterionId": "USER11-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Version-1 synthetic JSON round-trips exact structured inputs and draft. Saved D duration 30 recovers after reload and import with end 1470 and P02 load 90. One self-contained index.html works offline without external assets. Node deep-equality round-trip and manual local-file reopen supplement the browser journey.",
+      "journeyIds": [
+        "portable",
+        "bad-import"
+      ]
+    },
+    {
+      "criterionId": "USER11-8",
+      "disposition": "implemented",
+      "expectedOutcome": "App and practical README label synthetic practice and not an issued schedule and contain all omissions, limited feasibility and owner-policy warnings in the literal limitations journey.",
+      "journeyIds": [
+        "limitations"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "baseline",
+      "title": "Generate all four sessions",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-A",
+          "text": "A | 0\u201360 | P01 | Room-1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-C",
+          "text": "C | 0\u201360 | P02 | Room-2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131500 | P02 | Room-2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P01",
+          "text": "P01: 120 / 120 minutes across both days"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P02",
+          "text": "P02: 120 / 120 minutes across both days"
+        }
+      ]
+    },
+    {
+      "id": "edit-review",
+      "title": "Review and recompute changed duration",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "click",
+          "selector": "#mark-reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed \u2014 current synthetic draft."
+        },
+        {
+          "action": "fill",
+          "selector": "#duration-D",
+          "value": "30"
+        },
+        {
+          "action": "press",
+          "selector": "#duration-D",
+          "key": "Tab"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Not reviewed \u2014 current inputs need review."
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131470 | P02 | Room-2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P02",
+          "text": "P02: 90 / 120 minutes across both days"
+        },
+        {
+          "action": "click",
+          "selector": "#mark-reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed \u2014 current synthetic draft."
+        }
+      ]
+    },
+    {
+      "id": "invalid",
+      "title": "Correct invalid duration",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#duration-B",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Invalid input \u2014 correct the highlighted fields."
+        },
+        {
+          "action": "expectText",
+          "selector": "#error-duration-B",
+          "text": "B duration must be a positive whole number of minutes."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#duration-B",
+          "value": "0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#request-count",
+          "text": "4 requests retained: A, B, C, D"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration-B",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        }
+      ]
+    },
+    {
+      "id": "collision",
+      "title": "Restore a feasible alternate start",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#starts-B",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "expectText",
+          "selector": "#request-count",
+          "text": "4 requests retained: A, B, C, D"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#starts-B",
+          "value": "0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#assignment-B",
+          "text": "P01 | Room-1 | Q-A"
+        },
+        {
+          "action": "fill",
+          "selector": "#starts-B",
+          "value": "0, 90"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        }
+      ]
+    },
+    {
+      "id": "rest-budget",
+      "title": "Recover rest and whole-horizon budget boundaries",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#rest-P01",
+          "value": "31"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#rest-P01",
+          "value": "31"
+        },
+        {
+          "action": "fill",
+          "selector": "#rest-P01",
+          "value": "30"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "fill",
+          "selector": "#budget-P02",
+          "value": "119"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "expectText",
+          "selector": "#request-count",
+          "text": "4 requests retained: A, B, C, D"
+        },
+        {
+          "action": "fill",
+          "selector": "#budget-P02",
+          "value": "120"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P02",
+          "text": "P02: 120 / 120 minutes across both days"
+        }
+      ]
+    },
+    {
+      "id": "qualification",
+      "title": "Restore supplied qualification without reassignment",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#qualifications-P01",
+          "value": "Q-X"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#qualifications-P01",
+          "value": "Q-X"
+        },
+        {
+          "action": "expectText",
+          "selector": "#assignment-B",
+          "text": "P01 | Room-1 | Q-A"
+        },
+        {
+          "action": "fill",
+          "selector": "#qualifications-P01",
+          "value": "Q-A"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        }
+      ]
+    },
+    {
+      "id": "windows",
+      "title": "Require complete session window containment",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#availability-P02",
+          "value": "0-240;1440-1499"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "fill",
+          "selector": "#availability-P02",
+          "value": "0-240;1440-1680"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "fill",
+          "selector": "#operating-windows",
+          "value": "0-240;1440-1499"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Infeasible \u2014 no permitted combination satisfies all constraints."
+        },
+        {
+          "action": "fill",
+          "selector": "#operating-windows",
+          "value": "0-240;1440-1500"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131500 | P02 | Room-2"
+        }
+      ]
+    },
+    {
+      "id": "search-limit",
+      "title": "Recover from exhausted search without claiming infeasibility",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#advanced-toggle"
+        },
+        {
+          "action": "fill",
+          "selector": "#max-nodes",
+          "value": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Search limit reached \u2014 feasibility is unknown."
+        },
+        {
+          "action": "expectText",
+          "selector": "#request-count",
+          "text": "4 requests retained: A, B, C, D"
+        },
+        {
+          "action": "fill",
+          "selector": "#max-nodes",
+          "value": "50000"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        }
+      ]
+    },
+    {
+      "id": "portable",
+      "title": "Save, reload and import exact edited snapshot",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#duration-D",
+          "value": "30"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#save-portable",
+          "fileName": "synthetic-training-draft.json",
+          "text": "\"classification\":\"synthetic\""
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally and downloaded \u2014 exact current inputs and draft."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#duration-D",
+          "value": "30"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131470 | P02 | Room-2"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration-D",
+          "value": "45"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "fill",
+          "selector": "#import-text",
+          "value": "{\"schemaVersion\":1,\"classification\":\"synthetic\",\"inputs\":{\"epoch\":\"Day 1 minute 0\",\"operatingWindows\":[[0,240],[1440,1680]],\"people\":[{\"id\":\"P01\",\"qualifications\":[\"Q-A\"],\"availability\":[[0,240],[1440,1680]],\"maxMinutes\":120,\"minRestMinutes\":30},{\"id\":\"P02\",\"qualifications\":[\"Q-B\"],\"availability\":[[0,240],[1440,1680]],\"maxMinutes\":120,\"minRestMinutes\":0}],\"requests\":[{\"id\":\"A\",\"duration\":60,\"starts\":[0],\"person\":\"P01\",\"room\":\"Room-1\",\"qualification\":\"Q-A\"},{\"id\":\"B\",\"duration\":60,\"starts\":[0,90],\"person\":\"P01\",\"room\":\"Room-1\",\"qualification\":\"Q-A\"},{\"id\":\"C\",\"duration\":60,\"starts\":[0],\"person\":\"P02\",\"room\":\"Room-2\",\"qualification\":\"Q-B\"},{\"id\":\"D\",\"duration\":30,\"starts\":[1440],\"person\":\"P02\",\"room\":\"Room-2\",\"qualification\":\"Q-B\"}],\"maxNodes\":50000},\"draft\":{\"status\":\"feasible\",\"assignments\":[{\"requestId\":\"A\",\"start\":0,\"end\":60,\"person\":\"P01\",\"room\":\"Room-1\"},{\"requestId\":\"B\",\"start\":90,\"end\":150,\"person\":\"P01\",\"room\":\"Room-1\"},{\"requestId\":\"C\",\"start\":0,\"end\":60,\"person\":\"P02\",\"room\":\"Room-2\"},{\"requestId\":\"D\",\"start\":1440,\"end\":1470,\"person\":\"P02\",\"room\":\"Room-2\"}],\"loads\":{\"P01\":120,\"P02\":90}}}"
+        },
+        {
+          "action": "click",
+          "selector": "#stage-import"
+        },
+        {
+          "action": "expectText",
+          "selector": "#import-status",
+          "text": "Valid synthetic snapshot \u2014 confirm replacement of current work."
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-import"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#duration-D",
+          "value": "30"
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131470 | P02 | Room-2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-P02",
+          "text": "P02: 90 / 120 minutes across both days"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Not reviewed \u2014 current inputs need review."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#save-portable",
+          "fileName": "synthetic-training-draft.json",
+          "text": "\"end\":1470"
+        }
+      ]
+    },
+    {
+      "id": "bad-import",
+      "title": "Preserve work after failed or cancelled import",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "fill",
+          "selector": "#import-text",
+          "value": "{broken"
+        },
+        {
+          "action": "click",
+          "selector": "#stage-import"
+        },
+        {
+          "action": "expectText",
+          "selector": "#import-status",
+          "text": "Import failed \u2014 enter valid synthetic snapshot JSON. Current work was kept."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-B",
+          "text": "B | 90\u2013150 | P01 | Room-1"
+        },
+        {
+          "action": "fill",
+          "selector": "#import-text",
+          "value": "{\"schemaVersion\":1,\"classification\":\"synthetic\",\"inputs\":{\"epoch\":\"Day 1 minute 0\",\"operatingWindows\":[[0,240],[1440,1680]],\"people\":[{\"id\":\"P01\",\"qualifications\":[\"Q-A\"],\"availability\":[[0,240],[1440,1680]],\"maxMinutes\":120,\"minRestMinutes\":30},{\"id\":\"P02\",\"qualifications\":[\"Q-B\"],\"availability\":[[0,240],[1440,1680]],\"maxMinutes\":120,\"minRestMinutes\":0}],\"requests\":[{\"id\":\"A\",\"duration\":60,\"starts\":[0],\"person\":\"P01\",\"room\":\"Room-1\",\"qualification\":\"Q-A\"},{\"id\":\"B\",\"duration\":60,\"starts\":[0,90],\"person\":\"P01\",\"room\":\"Room-1\",\"qualification\":\"Q-A\"},{\"id\":\"C\",\"duration\":60,\"starts\":[0],\"person\":\"P02\",\"room\":\"Room-2\",\"qualification\":\"Q-B\"},{\"id\":\"D\",\"duration\":30,\"starts\":[1440],\"person\":\"P02\",\"room\":\"Room-2\",\"qualification\":\"Q-B\"}],\"maxNodes\":50000},\"draft\":{\"status\":\"feasible\",\"assignments\":[{\"requestId\":\"A\",\"start\":0,\"end\":60,\"person\":\"P01\",\"room\":\"Room-1\"},{\"requestId\":\"B\",\"start\":90,\"end\":150,\"person\":\"P01\",\"room\":\"Room-1\"},{\"requestId\":\"C\",\"start\":0,\"end\":60,\"person\":\"P02\",\"room\":\"Room-2\"},{\"requestId\":\"D\",\"start\":1440,\"end\":1470,\"person\":\"P02\",\"room\":\"Room-2\"}],\"loads\":{\"P01\":120,\"P02\":90}}}"
+        },
+        {
+          "action": "click",
+          "selector": "#stage-import"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-import"
+        },
+        {
+          "action": "expectText",
+          "selector": "#import-status",
+          "text": "Import cancelled \u2014 current work was kept."
+        },
+        {
+          "action": "expectText",
+          "selector": "#result-D",
+          "text": "D | 1440\u20131500 | P02 | Room-2"
+        },
+        {
+          "action": "click",
+          "selector": "#generate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Feasible draft \u2014 all 4 requests scheduled."
+        }
+      ]
+    },
+    {
+      "id": "limitations",
+      "title": "Read synthetic limitations and README",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#limitations-toggle"
+        },
+        {
+          "action": "expectText",
+          "selector": "#synthetic-banner",
+          "text": "Synthetic practice only \u2014 not an issued schedule."
+        },
+        {
+          "action": "expectText",
+          "selector": "#limitations-text",
+          "text": "Omitted: recurrence; SFTRM interpretation; departmental negotiation and agents; real readiness data; qualification policy beyond supplied values; official-calendar writes; reconnect synchronization. Feasibility over supplied starts is not global optimization. Owner-approved fatigue and periodicity rules are required for operational use."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#download-readme",
+          "fileName": "README.md",
+          "text": "Omitted: recurrence; SFTRM interpretation; departmental negotiation and agents; real readiness data; qualification policy beyond supplied values; official-calendar writes; reconnect synchronization. Feasibility over supplied starts is not global optimization. Owner-approved fatigue and periodicity rules are required for operational use."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "title": "Paperless Underway — synthetic offline workspace",
+  "description": "Dependency-free locally opened application; both replicas, routing queues and receiver acknowledgements are explicitly simulated. No operational endpoints.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Source capture and correction",
+      "description": "Training scan/transcription, requisition and correspondence candidates alongside citations.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "tasking",
+      "label": "Tasking and records",
+      "description": "Bounded extraction, duplicate consolidation, reviewed deadlines, status drafts and synthetic filing schedule.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Review and local routing",
+      "description": "Exact-revision approval, local recipient queue, readable named outputs and audit exports.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Durable local workspace",
+      "description": "IndexedDB persists drafts, immutable revisions, decisions and transfer receipts before saved indicators.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "sync",
+      "label": "Reconciliation and transfer simulator",
+      "description": "Two local replicas, explicit conflict review, replay-safe merges and acknowledged byte budgets.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Evaluation and transition evidence",
+      "description": "Frozen synthetic answer key, illustrative metrics, unscored worksheets and one-page path to fleet.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "path-to-fleet.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "storage",
+      "label": "Persist source-linked drafts and revisions"
+    },
+    {
+      "from": "capture",
+      "to": "tasking",
+      "label": "Extract bounded source fields and tasks"
+    },
+    {
+      "from": "tasking",
+      "to": "review",
+      "label": "Validated outputs and unresolved findings"
+    },
+    {
+      "from": "review",
+      "to": "storage",
+      "label": "Commit approval snapshot, local route and audit"
+    },
+    {
+      "from": "storage",
+      "to": "sync",
+      "label": "Pending immutable operations and acknowledged offsets"
+    },
+    {
+      "from": "sync",
+      "to": "review",
+      "label": "Competing heads or simulated receipt"
+    },
+    {
+      "from": "review",
+      "to": "evidence",
+      "label": "Reviewed outputs, elapsed time and error counts"
+    }
+  ]
+}

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Synthetic practice draft</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#243638;background:#f3f5f4;font-size:16px;line-height:1.5}*{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:32px 24px 60px}h1{font-size:2rem;line-height:1.2;margin:12px 0}h2{font-size:1.35rem;margin:0 0 10px}h3{font-size:1.08rem;margin:20px 0 8px}p{margin:8px 0 14px}.badge{display:inline-block;border:1px solid #8ca4a1;background:#e4eeea;padding:4px 10px;border-radius:4px;font-size:.9rem;font-weight:650}.intro{max-width:800px}.card{margin-top:24px;background:white;border:1px solid #ccd7d3;border-radius:8px;padding:22px}.help{color:#4e6261;font-size:.94rem}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;text-align:left}caption{text-align:left;margin:0 0 10px;font-weight:600}th,td{padding:12px 10px;border-bottom:1px solid #dde4e0;vertical-align:top}th{font-size:.9rem;color:#425955}th:first-child,td:first-child{padding-left:0}input,select,button{font:inherit}input[type=text]{border:1px solid #829893;border-radius:4px;padding:7px 8px;background:white;color:#243638;max-width:100%;width:100%}input.duration{width:88px}input.starts{min-width:150px}input:focus,button:focus,select:focus,summary:focus{outline:3px solid #93beb3;outline-offset:3px}button,.file-label{border:1px solid #285e53;background:#285e53;color:white;padding:9px 15px;border-radius:5px;cursor:pointer;font-weight:600;display:inline-block}button.secondary{color:#285e53;background:white}button:disabled{opacity:.5;cursor:default}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}select{max-width:240px;padding:6px;border:1px solid #829893;border-radius:4px;background:white}details{margin-top:18px}summary{cursor:pointer;font-weight:600}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.field{display:block;margin:10px 0}.field span{display:block;margin-bottom:4px;font-size:.94rem}.window-row{display:flex;gap:12px}.window-row .field{flex:1;min-width:0}.person{border-top:1px solid #dde4e0;margin-top:12px;padding-top:8px}.result{border-left:5px solid #708e84}.result[data-status=feasible]{border-left-color:#285e53}.result[data-status=infeasible],.result[data-status=invalid_input]{border-left-color:#a4613c}.result[data-status=search_limit_reached]{border-left-color:#947733}#result-title{margin-top:4px}.next{padding:12px;background:#eef3f0;border-radius:4px}#notice{min-height:24px;font-weight:600;margin-top:14px}#review-state{font-weight:650}ul{padding-left:22px}.over{color:#8a371d;font-weight:650}.muted{color:#526360}footer{font-size:.9rem;color:#4e6261;margin-top:24px}#import-file{max-width:100%}.hidden{display:none}@media(max-width:640px){main{padding:20px 12px 40px}.card{padding:16px}h1{font-size:1.65rem}th,td{padding:9px 8px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<span class="badge">SYNTHETIC DATA · DRAFT ONLY</span>
+<h1>Practice session draft</h1>
+<p class="intro">Inspect four proposed administrative practice sessions for two fictional people. This local helper checks the supplied limits and finds times from your allowed choices. It does not issue a schedule or establish operational compliance.</p>
+<p class="help">Start with the example below. Inspect the result, then mark it reviewed and save a draft file before closing. Nothing is sent anywhere.</p>
+</header>
+<noscript><p class="card">JavaScript is needed to calculate this draft. Enable it for this local file, then reopen the page.</p></noscript>
+<section class="card" aria-labelledby="requests-title">
+<h2 id="requests-title">1. Inspect the four requests</h2>
+<p>Change durations or allowed starts to try another synthetic scenario. Each edit recomputes the result and clears review. Assigned people, rooms and required qualifications stay fixed.</p>
+<p class="help">All times are integer minutes from the start of day 1. Day 1 starts at 0; day 2 starts at 1440. Enter starts separated by commas, such as <strong>0, 90</strong>. A blank list leaves no allowed start. Intervals include the start and exclude the end; the rest gap is checked separately.</p>
+<div class="table-wrap"><table>
+<caption>All requests remain required</caption>
+<thead><tr><th>Request</th><th>Person</th><th>Room</th><th>Requires</th><th>Duration, min</th><th>Allowed start minutes</th></tr></thead>
+<tbody id="request-inputs"></tbody>
+</table></div>
+<details id="constraints">
+<summary>Inspect or edit synthetic constraints</summary>
+<p class="help">The example uses operating and both-person availability windows 0 to 240 and 1440 to 1680. Each entire session must fit one window. Limits apply across both days combined. Editing these values defines a new synthetic scenario. Search never changes a constraint or adds a qualification.</p>
+<h3>Operating windows</h3><div id="operating-inputs"></div>
+<div id="people-inputs" class="grid"></div>
+</details>
+<details>
+<summary>Evaluator search allowance</summary>
+<label class="field"><span>Maximum candidate attempts, 1 to 200000</span><input id="max-nodes" type="text" inputmode="numeric" aria-label="Search allowance"></label>
+<p class="help">Default: 50000. Reaching the allowance is inconclusive. It does not establish that no solution exists.</p>
+</details>
+<div class="actions"><button id="find">Find draft again</button><button id="reset" class="secondary">Restore supplied example</button></div>
+</section>
+<section id="result" class="card result" aria-labelledby="result-title">
+<h2>2. Inspect the result</h2>
+<div aria-live="polite" aria-atomic="true"><h3 id="result-title"></h3><p id="result-summary"></p><p id="next-step" class="next"></p></div>
+<ul id="explanations"></ul>
+<p id="search-note" class="help"></p>
+<div class="table-wrap"><table>
+<caption>Current draft: all four requests</caption>
+<thead><tr><th>Request</th><th>Person and room</th><th>Selected start</th><th>End minute</th></tr></thead>
+<tbody id="draft-rows"></tbody>
+</table></div>
+<p class="help">When a draft is present, select another allowed start to inspect a person-selected draft. Every selection is independently checked and clears review. A conflicting selection is invalid draft input, not proof that the allowed choices are infeasible. Find draft again returns to automatic search.</p>
+<h3>Personnel totals across both days</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Person</th><th>All requested minutes</th><th>Checked draft minutes</th><th>Whole-horizon limit</th></tr></thead>
+<tbody id="totals"></tbody>
+</table></div>
+</section>
+<section class="card" aria-labelledby="review-title">
+<h2 id="review-title">3. Review and keep your draft</h2>
+<p id="review-state" role="status"></p>
+<p>Mark reviewed only after inspecting every request, time and constraint. This records acknowledgement on this page. It is not authorization to issue a schedule.</p>
+<button id="review">Mark current draft reviewed</button>
+<h3>Save before you close</h3>
+<p>No automatic storage is used. <strong>Save draft file</strong> downloads a JSON copy of the exact inputs and draft, including errors if present. Keep that file and index.html. Reopen index.html, then use <strong>Import draft file</strong> to recover. Import rechecks the file and always clears review. File transfer is not reconnect synchronization.</p>
+<div class="actions"><button id="save" class="secondary">Save draft file</button></div>
+<label class="field" for="import-file"><span><strong>Import draft file</strong></span><input id="import-file" type="file" accept=".json,application/json"></label>
+<p id="notice" role="status" aria-live="polite"></p>
+</section>
+<footer>
+<p>Partial ID 11 demonstration. Synthetic and unclassified only. No real people, ships, units or records. No recurrence, SFTRM interpretation, departmental negotiation or agents, real readiness data, qualification policy beyond supplied values, official-calendar writes or reconnect sync.</p>
+<p>A coordinator remains in charge. If a result looks wrong, leave it unreviewed, save the draft and ask the responsible human to inspect the inputs. No contact or operational-system updates occur here. Close the page to stop using it.</p>
+</footer>
+</main>
+<script id="app-core">
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.Practice = api;
+})(typeof globalThis === 'object' ? globalThis : this, function () {
+  'use strict';
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const canonical = value => Array.isArray(value) ? '[' + value.map(canonical).join(',') + ']'
+    : value && typeof value === 'object' ? '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}'
+    : JSON.stringify(value);
+  const WINDOWS = [{ start: 0, end: 240 }, { start: 1440, end: 1680 }];
+  const FIXTURE = {
+    windows: WINDOWS,
+    people: [
+      { id: 'P01', qualifications: ['Q-A'], windows: WINDOWS, maxMinutes: 120, restMinutes: 30 },
+      { id: 'P02', qualifications: ['Q-B'], windows: WINDOWS, maxMinutes: 120, restMinutes: 0 }
+    ],
+    requests: [
+      { id: 'A', duration: 60, starts: [0], people: ['P01'], resources: ['Room-1'], qualifications: ['Q-A'] },
+      { id: 'B', duration: 60, starts: [0, 90], people: ['P01'], resources: ['Room-1'], qualifications: ['Q-A'] },
+      { id: 'C', duration: 60, starts: [0], people: ['P02'], resources: ['Room-2'], qualifications: ['Q-B'] },
+      { id: 'D', duration: 60, starts: [1440], people: ['P02'], resources: ['Room-2'], qualifications: ['Q-B'] }
+    ],
+    maxNodes: 50000
+  };
+  function object(v, label) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error(label + ' must be an object.');
+  }
+  function list(v, label, max, min = 0) {
+    if (!Array.isArray(v) || v.length < min || v.length > max) throw new Error(label + ' must contain ' + min + ' to ' + max + ' items.');
+  }
+  function integer(v, label, min = 0, max = 1000000000) {
+    if (!Number.isSafeInteger(v) || v < min || v > max) throw new Error(label + ' must be a whole number from ' + min + ' to ' + max + '.');
+  }
+  function text(v, label) {
+    if (typeof v !== 'string' || !v.trim() || v.length > 200) throw new Error(label + ' must be a nonempty name up to 200 characters.');
+  }
+  function unique(values, label) {
+    if (new Set(values).size !== values.length) throw new Error(label + ' cannot contain duplicates.');
+  }
+  function strings(v, label, min = 0) {
+    list(v, label, 100, min);
+    v.forEach(x => text(x, label));
+    unique(v, label);
+  }
+  function windows(v, label) {
+    list(v, label, 100);
+    v.forEach((w, i) => {
+      object(w, label);
+      integer(w.start, label + ' window ' + (i + 1) + ' start');
+      integer(w.end, label + ' window ' + (i + 1) + ' end');
+      if (w.end <= w.start) throw new Error(label + ' window ' + (i + 1) + ': end must be after start.');
+    });
+  }
+  function validate(input, fixed = false) {
+    object(input, 'Input');
+    windows(input.windows, 'Operating');
+    list(input.people, 'People', 200, 1);
+    input.people.forEach(p => {
+      object(p, 'Person'); text(p.id, 'Person ID');
+      strings(p.qualifications, p.id + ' qualifications');
+      windows(p.windows, p.id + ' availability');
+      integer(p.maxMinutes, p.id + ' whole-horizon limit');
+      integer(p.restMinutes, p.id + ' rest gap');
+    });
+    unique(input.people.map(p => p.id), 'People IDs');
+    list(input.requests, 'Requests', 24, 1);
+    input.requests.forEach(r => {
+      object(r, 'Request'); text(r.id, 'Request ID');
+      integer(r.duration, r.id + ' duration', 1, 10080);
+      list(r.starts, r.id + ' allowed starts', 100);
+      r.starts.forEach(s => integer(s, r.id + ' allowed start'));
+      unique(r.starts, r.id + ' allowed starts');
+      strings(r.people, r.id + ' assigned people', 1);
+      strings(r.resources, r.id + ' assigned rooms', 1);
+      strings(r.qualifications, r.id + ' required qualifications');
+      r.people.forEach(id => {
+        if (!input.people.some(p => p.id === id)) throw new Error(r.id + ': unknown assigned person ' + id + '.');
+      });
+    });
+    unique(input.requests.map(r => r.id), 'Request IDs');
+    integer(input.maxNodes === undefined ? 50000 : input.maxNodes, 'Search allowance', 1, 200000);
+    if (fixed) {
+      if (input.requests.length !== 4 || FIXTURE.requests.some(r => !input.requests.some(x => x.id === r.id))) {
+        throw new Error('Keep all four requests A, B, C and D exactly once. No request may be dropped or added.');
+      }
+      if (input.people.length !== 2 || FIXTURE.people.some(p => !input.people.some(x => x.id === p.id))) {
+        throw new Error('Keep the supplied people P01 and P02 exactly once.');
+      }
+      for (const r of input.requests) {
+        const source = FIXTURE.requests.find(x => x.id === r.id);
+        for (const key of ['people', 'resources', 'qualifications']) {
+          if (canonical(r[key]) !== canonical(source[key])) throw new Error(r.id + ': keep the supplied assigned person, room and required qualification.');
+        }
+      }
+    }
+    return input;
+  }
+  const overlap = (a, b) => a.start < b.end && b.start < a.end;
+  const fits = (a, ws) => ws.some(w => a.start >= w.start && a.end <= w.end);
+  function baseResult(status, input, explanations = [], assignments = [], explored = 0, method = 'search') {
+    return { status, assignments: clone(assignments), explanations, explored,
+      maxNodes: Number.isSafeInteger(input && input.maxNodes) ? input.maxNodes : 50000, method };
+  }
+  function solveSchedule(input, fixed = false) {
+    try { validate(input, fixed); }
+    catch (error) { return baseResult('invalid_input', input, [error.message]); }
+    const maxNodes = input.maxNodes === undefined ? 50000 : input.maxNodes;
+    const roster = new Map(input.people.map(p => [p.id, p]));
+    const reasons = new Set();
+    const choices = new Map();
+    for (const r of input.requests) {
+      const qualified = r.qualifications.every(q => r.people.some(id => roster.get(id).qualifications.includes(q)));
+      if (!qualified) reasons.add(r.id + ': assigned people lack required qualification ' + r.qualifications.join(', ') + '.');
+      const candidates = [];
+      for (const start of r.starts.slice().sort((a, b) => a - b)) {
+        const a = { id: r.id, start, end: start + r.duration, people: r.people.slice(), resources: r.resources.slice() };
+        if (!fits(a, input.windows)) { reasons.add(r.id + ': candidate ' + start + ' does not fit a complete operating window.'); continue; }
+        const unavailable = r.people.find(id => !fits(a, roster.get(id).windows));
+        if (unavailable) { reasons.add(r.id + ': candidate ' + start + ' does not fit ' + unavailable + ' availability.'); continue; }
+        if (qualified) candidates.push(a);
+      }
+      if (!candidates.length) reasons.add(r.id + ': no allowed start meets qualification and full-session availability. Keep this request and correct its inputs.');
+      choices.set(r.id, candidates);
+    }
+    for (const p of input.people) {
+      const total = input.requests.filter(r => r.people.includes(p.id)).reduce((n, r) => n + r.duration, 0);
+      if (total > p.maxMinutes) reasons.add(p.id + ': all requests total ' + total + ' minutes, exceeding the ' + p.maxMinutes + '-minute whole-horizon limit.');
+      if (total > p.maxMinutes) return baseResult('infeasible', input, [...reasons]);
+    }
+    if (input.requests.some(r => !choices.get(r.id).length)) return baseResult('infeasible', input, [...reasons]);
+    const ordered = input.requests.slice().sort((a, b) => choices.get(a.id).length - choices.get(b.id).length || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const assigned = [];
+    let explored = 0, exhausted = false;
+    function search(i) {
+      if (i === ordered.length) return true;
+      for (const a of choices.get(ordered[i].id)) {
+        if (explored >= maxNodes) { exhausted = true; return false; }
+        explored++;
+        const collision = assigned.find(b => overlap(a, b) && a.resources.some(room => b.resources.includes(room)));
+        if (collision) { reasons.add(a.id + ' and ' + collision.id + ': shared room overlaps in an explored choice.'); continue; }
+        let conflict = false;
+        for (const id of a.people) {
+          const p = roster.get(id);
+          const previous = assigned.filter(b => b.people.includes(id));
+          const near = previous.find(b => a.start < b.end + p.restMinutes && b.start < a.end + p.restMinutes);
+          if (near) {
+            reasons.add(a.id + ' and ' + near.id + ': ' + id + ' overlaps or lacks the supplied ' + p.restMinutes + '-minute rest gap.');
+            conflict = true; break;
+          }
+        }
+        if (conflict) continue;
+        assigned.push(a);
+        if (search(i + 1)) return true;
+        assigned.pop();
+        if (exhausted) return false;
+      }
+      return false;
+    }
+    const feasible = search(0);
+    const assignments = feasible ? input.requests.map(r => assigned.find(a => a.id === r.id)) : [];
+    return baseResult(feasible ? 'feasible' : exhausted ? 'search_limit_reached' : 'infeasible', input,
+      feasible ? [] : [...reasons].slice(0, 100), assignments, explored);
+  }
+  const evaluate = input => solveSchedule(input, true);
+
+  // Independent complete-draft audit. This does not call the search or use its candidate filtering.
+  function checkDraft(input, assignments, fixed = false) {
+    const errors = [];
+    try {
+      validate(input, fixed);
+      list(assignments, 'Draft assignments', 24);
+      if (assignments.length !== input.requests.length) errors.push('Draft must contain every request exactly once.');
+      const seen = new Set();
+      for (const a of assignments) {
+        object(a, 'Draft assignment'); text(a.id, 'Draft request ID');
+        if (seen.has(a.id)) errors.push('Draft repeats request ' + a.id + '.');
+        seen.add(a.id);
+        const r = input.requests.find(r => r.id === a.id);
+        if (!r) { errors.push('Draft has unknown request ' + a.id + '.'); continue; }
+        integer(a.start, a.id + ' draft start'); integer(a.end, a.id + ' draft end');
+        if (a.end !== a.start + r.duration) errors.push(a.id + ': draft end must equal start plus duration.');
+        if (!r.starts.includes(a.start)) errors.push(a.id + ': draft start must be one of its allowed starts.');
+        if (canonical(a.people) !== canonical(r.people) || canonical(a.resources) !== canonical(r.resources)) errors.push(a.id + ': assigned people and room must remain unchanged.');
+        if (!input.windows.some(w => w.start <= a.start && a.end <= w.end)) errors.push(a.id + ': complete draft session is outside operating windows.');
+        for (const id of r.people) {
+          const p = input.people.find(p => p.id === id);
+          if (!p.windows.some(w => w.start <= a.start && a.end <= w.end)) errors.push(a.id + ': complete draft session is outside ' + id + ' availability.');
+        }
+        for (const q of r.qualifications) {
+          if (!r.people.some(id => input.people.find(p => p.id === id).qualifications.includes(q))) errors.push(a.id + ': assigned people lack qualification ' + q + '.');
+        }
+      }
+      for (const r of input.requests) if (!seen.has(r.id)) errors.push('Draft is missing request ' + r.id + '.');
+      for (const p of input.people) {
+        const sessions = assignments.filter(a => input.requests.find(r => r.id === a.id)?.people.includes(p.id));
+        const total = sessions.reduce((n, a) => n + a.end - a.start, 0);
+        if (total > p.maxMinutes) errors.push(p.id + ': draft total exceeds the whole-horizon limit.');
+        for (let i = 0; i < sessions.length; i++) for (let j = i + 1; j < sessions.length; j++) {
+          const a = sessions[i], b = sessions[j];
+          const gap = a.start <= b.start ? b.start - a.end : a.start - b.end;
+          if (gap < p.restMinutes) errors.push(a.id + ' and ' + b.id + ': ' + p.id + ' needs at least ' + p.restMinutes + ' minutes between sessions.');
+        }
+      }
+      for (let i = 0; i < assignments.length; i++) for (let j = i + 1; j < assignments.length; j++) {
+        const a = assignments[i], b = assignments[j];
+        const ar = input.requests.find(r => r.id === a.id), br = input.requests.find(r => r.id === b.id);
+        if (ar && br && a.start < b.end && b.start < a.end && ar.resources.some(room => br.resources.includes(room))) errors.push(a.id + ' and ' + b.id + ': shared room overlaps.');
+      }
+    } catch (error) { errors.push(error.message); }
+    return [...new Set(errors)];
+  }
+  function totals(input, assignments = []) {
+    return input.people.map(p => ({
+      id: p.id, limit: p.maxMinutes,
+      requested: input.requests.filter(r => r.people.includes(p.id)).every(r => Number.isSafeInteger(r.duration) && r.duration > 0)
+        ? input.requests.filter(r => r.people.includes(p.id)).reduce((sum, r) => sum + r.duration, 0) : null,
+      draft: assignments.length === input.requests.length && checkDraft(input, assignments, true).length === 0
+        ? assignments.filter(a => a.people.includes(p.id)).reduce((sum, a) => sum + a.end - a.start, 0) : null
+    }));
+  }
+  function createState(input = clone(FIXTURE)) { return { input: clone(input), result: evaluate(input), review: null }; }
+  function updateInput(state, input) { return createState(input); }
+  function regenerate(state) { return createState(state.input); }
+  function selectedResult(input, assignments) {
+    const errors = checkDraft(input, assignments, true);
+    return baseResult(errors.length ? 'invalid_input' : 'feasible', input, errors, assignments, 0, 'selected');
+  }
+  function replaceDraft(state, assignments) {
+    return { input: clone(state.input), result: selectedResult(state.input, assignments), review: null };
+  }
+  function selectStart(state, id, start) {
+    if (state.result.assignments.length !== state.input.requests.length) throw new Error('Find a complete draft before selecting its times.');
+    if (!state.input.requests.some(r => r.id === id)) throw new Error('Unknown request.');
+    const next = clone(state.result.assignments);
+    const a = next.find(a => a.id === id), r = state.input.requests.find(r => r.id === id);
+    a.start = start; a.end = start + r.duration;
+    return replaceDraft(state, next);
+  }
+  const snapshot = state => canonical({ input: state.input, result: state.result });
+  function isReviewed(state) { return !!state.review && state.review.snapshot === snapshot(state); }
+  function markReviewed(state) {
+    if (state.result.status !== 'feasible' || checkDraft(state.input, state.result.assignments, true).length) throw new Error('Only a complete, valid feasible draft can be marked reviewed.');
+    return { input: clone(state.input), result: clone(state.result), review: { snapshot: snapshot(state) } };
+  }
+  function verifySavedResult(input, result) {
+    object(result, 'Saved result');
+    if (result.method !== 'search' && result.method !== 'selected') throw new Error('Saved result method is unsupported.');
+    const expected = result.method === 'search' ? evaluate(input) : selectedResult(input, result.assignments);
+    if (canonical(expected) !== canonical(result)) throw new Error('Saved inputs and draft do not match an independently rechecked result. Keep the original file and correct the draft in the app.');
+  }
+  // Portable files must be editable by this four-request screen, even when numeric input is invalid.
+  function editableShape(input) {
+    object(input, 'Saved input');
+    const scalar = (value, label) => {
+      if (!(typeof value === 'number' && Number.isFinite(value)) && !(typeof value === 'string' && value.length <= 1000)) throw new Error(label + ' must be a number or editable text.');
+    };
+    const ws = (value, label) => {
+      list(value, label, 100);
+      value.forEach(w => { object(w, label); scalar(w.start, label + ' start'); scalar(w.end, label + ' end'); });
+    };
+    ws(input.windows, 'Saved operating windows');
+    list(input.people, 'Saved people', 2, 2);
+    unique(input.people.map(p => p.id), 'Saved people IDs');
+    input.people.forEach(p => {
+      object(p, 'Saved person');
+      if (!FIXTURE.people.some(x => x.id === p.id)) throw new Error('Saved people must be P01 and P02.');
+      strings(p.qualifications, p.id + ' qualifications'); ws(p.windows, p.id + ' windows');
+      scalar(p.maxMinutes, p.id + ' limit'); scalar(p.restMinutes, p.id + ' rest');
+    });
+    list(input.requests, 'Saved requests', 4, 4);
+    unique(input.requests.map(r => r.id), 'Saved request IDs');
+    input.requests.forEach(r => {
+      object(r, 'Saved request');
+      const source = FIXTURE.requests.find(x => x.id === r.id);
+      if (!source) throw new Error('Saved requests must be A, B, C and D.');
+      for (const key of ['people', 'resources', 'qualifications']) if (canonical(r[key]) !== canonical(source[key])) throw new Error(r.id + ': saved fixed assignment or required qualification changed.');
+      scalar(r.duration, r.id + ' duration'); list(r.starts, r.id + ' starts', 100);
+      r.starts.forEach(s => scalar(s, r.id + ' start'));
+    });
+    if (input.maxNodes !== undefined) scalar(input.maxNodes, 'Search allowance');
+  }
+  function exportState(state) {
+    editableShape(state.input);
+    verifySavedResult(state.input, state.result);
+    return JSON.stringify({ format: 'synthetic-practice-draft', version: 1, input: state.input, result: state.result }, null, 2);
+  }
+  function importState(source) {
+    if (typeof source !== 'string' || source.length > 1000000) throw new Error('Choose a draft JSON file smaller than 1,000,000 characters.');
+    let doc;
+    try { doc = JSON.parse(source); } catch (_) { throw new Error('Cannot read JSON. Choose an unchanged file made with Save draft file.'); }
+    object(doc, 'Saved file');
+    if (doc.format !== 'synthetic-practice-draft' || doc.version !== 1) throw new Error('Unsupported file. Choose a version 1 synthetic practice draft.');
+    editableShape(doc.input);
+    verifySavedResult(doc.input, doc.result);
+    return { input: clone(doc.input), result: clone(doc.result), review: null };
+  }
+  return { defaultInput: () => clone(FIXTURE), validate, solveSchedule, evaluate, checkDraft, totals,
+    createState, updateInput, regenerate, replaceDraft, selectStart, markReviewed, isReviewed, exportState, importState, canonical };
+});
+</script>
+<script id="app-ui">
+(function () {
+  'use strict';
+  const C = globalThis.Practice;
+  let state = C.createState();
+  let revision = 0;
+  const byId = id => document.getElementById(id);
+  const make = (tag, value, className) => {
+    const el = document.createElement(tag);
+    if (value !== undefined) el.textContent = value;
+    if (className) el.className = className;
+    return el;
+  };
+  const number = raw => /^\d+$/.test(raw.trim()) && Number.isSafeInteger(Number(raw.trim())) ? Number(raw.trim()) : raw;
+  const numbers = raw => raw.trim() === '' ? [] : raw.split(',').map(number);
+  const names = raw => raw.trim() === '' ? [] : raw.split(',').map(s => s.trim());
+  function notice(text) { byId('notice').textContent = text; }
+  function edit(path, value) {
+    const input = JSON.parse(JSON.stringify(state.input));
+    let at = input;
+    for (const key of path.slice(0, -1)) at = at[key];
+    at[path[path.length - 1]] = value;
+    state = C.updateInput(state, input);
+    revision++;
+    renderResult();
+    notice('Inputs changed. Result recomputed. Review cleared.');
+  }
+  function field(value, label, path, parse = number, className = '') {
+    const input = make('input');
+    input.type = 'text'; input.value = Array.isArray(value) ? value.join(', ') : value;
+    input.setAttribute('aria-label', label);
+    if (parse !== names) input.inputMode = 'numeric';
+    input.className = className;
+    input.addEventListener('input', () => edit(path, parse(input.value)));
+    return input;
+  }
+  function labelled(parent, title, input) {
+    const label = make('label', undefined, 'field');
+    label.append(make('span', title), input); parent.append(label);
+  }
+  function windowFields(parent, ws, path, title) {
+    if (!ws.length) parent.append(make('p', 'No availability windows. This leaves no allowed session.', 'help'));
+    ws.forEach((w, i) => {
+      const row = make('div', undefined, 'window-row');
+      labelled(row, 'Window ' + (i + 1) + ' start', field(w.start, title + ' window ' + (i + 1) + ' start', path.concat(i, 'start')));
+      labelled(row, 'Window ' + (i + 1) + ' end', field(w.end, title + ' window ' + (i + 1) + ' end', path.concat(i, 'end')));
+      parent.append(row);
+    });
+  }
+  function renderInputs() {
+    byId('request-inputs').replaceChildren();
+    state.input.requests.forEach((r, i) => {
+      const row = make('tr');
+      [r.id, r.people.join(', '), r.resources.join(', '), r.qualifications.join(', ')].forEach(s => row.append(make('td', s)));
+      const duration = make('td'), starts = make('td');
+      duration.append(field(r.duration, r.id + ' duration', ['requests', i, 'duration'], number, 'duration'));
+      starts.append(field(r.starts, r.id + ' allowed starts', ['requests', i, 'starts'], numbers, 'starts'));
+      row.append(duration, starts); byId('request-inputs').append(row);
+    });
+    byId('operating-inputs').replaceChildren();
+    windowFields(byId('operating-inputs'), state.input.windows, ['windows'], 'Operating');
+    byId('people-inputs').replaceChildren();
+    state.input.people.forEach((p, i) => {
+      const panel = make('div', undefined, 'person'); panel.append(make('h3', p.id));
+      labelled(panel, 'Supplied qualifications, comma separated', field(p.qualifications, p.id + ' qualifications', ['people', i, 'qualifications'], names));
+      labelled(panel, 'Whole-horizon maximum, minutes', field(p.maxMinutes, p.id + ' whole-horizon maximum', ['people', i, 'maxMinutes']));
+      labelled(panel, 'Minimum rest gap, minutes', field(p.restMinutes, p.id + ' rest gap', ['people', i, 'restMinutes']));
+      panel.append(make('p', 'Availability windows', 'help'));
+      windowFields(panel, p.windows, ['people', i, 'windows'], p.id + ' availability');
+      byId('people-inputs').append(panel);
+    });
+    byId('max-nodes').value = state.input.maxNodes === undefined ? 50000 : state.input.maxNodes;
+  }
+  function minute(value) {
+    return value + ' (Day ' + (Math.floor(value / 1440) + 1) + ', +' + value % 1440 + ' min)';
+  }
+  function renderResult() {
+    const r = state.result;
+    const selected = r.method === 'selected';
+    const copy = {
+      feasible: ['Feasible draft', 'All four requests fit the current supplied constraints. This is a draft for inspection, not an issued schedule.', 'Next: inspect the times and personnel totals, mark the current draft reviewed, then save a draft file.'],
+      infeasible: ['Infeasible over the allowed starts', 'No complete draft meets the current constraints using the listed start choices. All four requests are retained below and in your saved file.', 'Next: inspect the conflicts and correct mistaken inputs. A coordinator must decide any changes to the synthetic scenario. Do not drop or reassign a request to make it fit.'],
+      invalid_input: [selected ? 'Invalid input: selected draft needs correction' : 'Invalid input', 'The current inputs cannot be accepted. The error remains here until corrected.', selected ? 'Next: select a valid allowed start, or use Find draft again. Review stays cleared.' : 'Next: correct the named field. Use whole minutes and the listed format. Your entered values are retained.'],
+      search_limit_reached: ['Search limit reached', 'The search stopped at its allowance. A solution may still exist. This result does not prove infeasibility.', 'Next: keep all requests. An evaluator can rerun with a larger allowance, or a coordinator can inspect the candidate choices. Save this inconclusive result if stopping.']
+    }[r.status];
+    byId('result').dataset.status = r.status;
+    byId('result-title').textContent = copy[0];
+    byId('result-summary').textContent = copy[1]; byId('next-step').textContent = copy[2];
+    byId('explanations').replaceChildren();
+    if (r.status === 'feasible') {
+      ['All four requests and fixed assignments are present.', 'Full sessions fit operating and assigned-person availability windows.', 'Supplied qualifications, person rest, room exclusivity and whole-horizon limits pass.'].forEach(s => byId('explanations').append(make('li', s)));
+    } else {
+      r.explanations.forEach(s => byId('explanations').append(make('li', s)));
+    }
+    byId('search-note').textContent = selected ? 'Person-selected times, independently checked against current input.' : 'Candidate attempts: ' + r.explored + ' of ' + r.maxNodes + '. Feasibility is over listed starts only, not global optimization. Conflicts are observations, not a minimal conflict set.';
+    byId('draft-rows').replaceChildren();
+    state.input.requests.forEach(req => {
+      const row = make('tr'), assigned = r.assignments.find(a => a.id === req.id);
+      row.append(make('td', req.id), make('td', req.people.join(', ') + ' / ' + req.resources.join(', ')));
+      const start = make('td');
+      if (assigned) {
+        const select = make('select'); select.setAttribute('aria-label', req.id + ' selected draft start');
+        req.starts.forEach(n => { const option = make('option', minute(n)); option.value = n; select.append(option); });
+        select.value = assigned.start;
+        select.addEventListener('change', () => {
+          state = C.selectStart(state, req.id, Number(select.value)); revision++;
+          renderResult(); notice('Draft time changed and independently checked. Review cleared.');
+        });
+        start.append(select);
+      } else start.textContent = 'No draft time';
+      row.append(start, make('td', assigned ? minute(assigned.end) : 'No draft time'));
+      byId('draft-rows').append(row);
+    });
+    byId('totals').replaceChildren();
+    C.totals(state.input, r.assignments).forEach(p => {
+      const row = make('tr'); row.append(make('td', p.id));
+      row.append(make('td', p.requested === null ? 'Fix duration input' : p.requested, p.requested > p.limit ? 'over' : ''));
+      row.append(make('td', p.draft === null ? 'No checked draft' : p.draft), make('td', p.limit)); byId('totals').append(row);
+    });
+    byId('review-state').textContent = C.isReviewed(state) ? 'Current draft marked reviewed on this page. It is still a synthetic draft.' : 'Not reviewed. Inspect the current draft before marking it reviewed.';
+    byId('review').disabled = r.status !== 'feasible' || C.isReviewed(state);
+  }
+  byId('max-nodes').addEventListener('input', event => edit(['maxNodes'], number(event.target.value)));
+  byId('find').addEventListener('click', () => { state = C.regenerate(state); revision++; renderResult(); notice('Search rerun from current input. Review cleared.'); });
+  byId('reset').addEventListener('click', () => {
+    if (!window.confirm('Replace the current inputs and draft with the supplied synthetic example? Save first to keep your changes.')) return;
+    state = C.createState(); revision++; renderInputs(); renderResult(); notice('Supplied example restored. Review cleared.');
+  });
+  byId('review').addEventListener('click', () => { state = C.markReviewed(state); revision++; renderResult(); notice('Current draft marked reviewed. Save the draft file before closing.'); });
+  byId('save').addEventListener('click', () => {
+    let url;
+    try {
+      const text = C.exportState(state);
+      url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const link = make('a'); link.href = url; link.download = 'synthetic-practice-draft.json';
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      notice('Draft download requested. Check that the file was saved before closing. Import will clear review.');
+    } catch (error) { if (url) URL.revokeObjectURL(url); notice('Save failed: ' + error.message + ' Keep this page open.'); }
+  });
+  byId('import-file').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const startingRevision = revision;
+    try {
+      if (file.size > 1000000) throw new Error('Choose a draft file smaller than 1,000,000 bytes.');
+      const next = C.importState(await file.text());
+      if (revision !== startingRevision) throw new Error('The page changed while the file was loading. Choose the file again to replace the current draft.');
+      if (!window.confirm('Replace the current inputs and draft with this saved file? Import clears review. Save first to keep current changes.')) return;
+      state = next; revision++; renderInputs(); renderResult(); notice('Exact saved inputs and draft imported and rechecked. Review cleared. Inspect before marking reviewed.');
+    } catch (error) { notice('Import failed: ' + error.message + ' Current inputs and draft were kept.'); }
+    finally { event.target.value = ''; }
+  });
+  renderInputs(); renderResult();
+})();
+</script>
+</body>
+</html>

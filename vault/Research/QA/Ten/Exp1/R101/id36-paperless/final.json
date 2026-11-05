@@ -1,0 +1,375 @@
+{
+ "title": "Paperless Underway",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T21:55:47.871Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\" \"./ui.test.cjs\"",
+  "exitCode": 0,
+  "total": 23,
+  "passed": 23,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: module: bounded source extraction and independent key\nok 1 - module: bounded source extraction and independent key\n  ---\n  duration_ms: 1.379375\n  type: 'test'\n  ...\n# Subtest: module: validation boundaries\nok 2 - module: validation boundaries\n  ---\n  duration_ms: 1.74525\n  type: 'test'\n  ...\n# Subtest: module: exact revision approval, rejection guards, routing idempotence and pause\nok 3 - module: exact revision approval, rejection guards, routing idempotence and pause\n  ---\n  duration_ms: 2.414333\n  type: 'test'\n  ...\n# Subtest: module: concurrent edit and tombstone preserve heads and review decision\nok 4 - module: concurrent edit and tombstone preserve heads and review decision\n  ---\n  duration_ms: 0.919375\n  type: 'test'\n  ...\n# Subtest: module: merge order and replay plus malformed history do not mutate queue\nok 5 - module: merge order and replay plus malformed history do not mutate queue\n  ---\n  duration_ms: 0.711125\n  type: 'test'\n  ...\n# Subtest: module: priority bounded transfer and interrupted / duplicate acknowledgement\nok 6 - module: priority bounded transfer and interrupted / duplicate acknowledgement\n  ---\n  duration_ms: 0.328417\n  type: 'test'\n  ...\n# Subtest: module: calendar retention, unknown class, illustrative arithmetic\nok 7 - module: calendar retention, unknown class, illustrative arithmetic\n  ---\n  duration_ms: 0.086208\n  type: 'test'\n  ...\n# Subtest: inline browser core: bounded source extraction and independent key\nok 8 - inline browser core: bounded source extraction and independent key\n  ---\n  duration_ms: 0.312292\n  type: 'test'\n  ...\n# Subtest: inline browser core: validation boundaries\nok 9 - inline browser core: validation boundaries\n  ---\n  duration_ms: 0.240333\n  type: 'test'\n  ...\n# Subtest: inline browser core: exact revision approval, rejection guards, routing idempotence and pause\nok 10 - inline browser core: exact revision approval, rejection guards, routing idempotence and pause\n  ---\n  duration_ms: 0.471375\n  type: 'test'\n  ...\n# Subtest: inline browser core: concurrent edit and tombstone preserve heads and review decision\nok 11 - inline browser core: concurrent edit and tombstone preserve heads and review decision\n  ---\n  duration_ms: 0.8645\n  type: 'test'\n  ...\n# Subtest: inline browser core: merge order and replay plus malformed history do not mutate queue\nok 12 - inline browser core: merge order and replay plus malformed history do not mutate queue\n  ---\n  duration_ms: 0.354417\n  type: 'test'\n  ...\n# Subtest: inline browser core: priority bounded transfer and interrupted / duplicate acknowledgement\nok 13 - inline browser core: priority bounded transfer and interrupted / duplicate acknowledgement\n  ---\n  duration_ms: 0.338084\n  type: 'test'\n  ...\n# Subtest: inline browser core: calendar retention, unknown class, illustrative arithmetic\nok 14 - inline browser core: calendar retention, unknown class, illustrative arithmetic\n  ---\n  duration_ms: 0.086708\n  type: 'test'\n  ...\n# Subtest: same behavior in standalone inline and module implementation\nok 15 - same behavior in standalone inline and module implementation\n  ---\n  duration_ms: 0.197459\n  type: 'test'\n  ...\n# Subtest: module: whitespace-only required fields cannot pass review\nok 16 - module: whitespace-only required fields cannot pass review\n  ---\n  duration_ms: 0.101958\n  type: 'test'\n  ...\n# Subtest: module: conflict resolution preserves an unfinished draft until save or discard\nok 17 - module: conflict resolution preserves an unfinished draft until save or discard\n  ---\n  duration_ms: 0.262\n  type: 'test'\n  ...\n# Subtest: module: invalid receipt batches are atomic and whole-byte only\nok 18 - module: invalid receipt batches are atomic and whole-byte only\n  ---\n  duration_ms: 0.224041\n  type: 'test'\n  ...\n# Subtest: inline browser core: whitespace-only required fields cannot pass review\nok 19 - inline browser core: whitespace-only required fields cannot pass review\n  ---\n  duration_ms: 0.108833\n  type: 'test'\n  ...\n# Subtest: inline browser core: conflict resolution preserves an unfinished draft until save or discard\nok 20 - inline browser core: conflict resolution preserves an unfinished draft until save or discard\n  ---\n  duration_ms: 0.431875\n  type: 'test'\n  ...\n# Subtest: inline browser core: invalid receipt batches are atomic and whole-byte only\nok 21 - inline browser core: invalid receipt batches are atomic and whole-byte only\n  ---\n  duration_ms: 0.378834\n  type: 'test'\n  ...\n# Subtest: UI locks editable fields synchronously through queued transactions, then retains corrections\nok 22 - UI locks editable fields synchronously through queued transactions, then retains corrections\n  ---\n  duration_ms: 6.154084\n  type: 'test'\n  ...\n# Subtest: UI unlocks after transaction rejection and retains the editable draft\nok 23 - UI unlocks after transaction rejection and retains the editable draft\n  ---\n  duration_ms: 0.97\n  type: 'test'\n  ...\n1..23\n# tests 23\n# suites 0\n# pass 23\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 82.472625\n\nBrowser journeys: 20/20 passed.\nRequirements: 14 demonstrated, 0 failed, 6 unverified.",
+  "durationMs": 20960,
+  "sourceHash": "bfd471a9118592b0b172edf5fd7987d55191f2afc206b6f5ac50d85f9944b332",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "3535919091720372b8b49f0ebef8e40464a9f03075ee2bacea7d32fd815e1e17",
+   "status": "passed",
+   "requirementsMet": false,
+   "criteria": [
+    {
+     "criterionId": "UC36-1",
+     "requirement": "Offline-first with clean sync",
+     "status": "passed",
+     "detail": "All three synthetic forms and tasking outputs are saved offline, survive reload, route locally after review, and reach an acknowledged local demo replica after explicit conflict resolution. No real sync is claimed. \u2014 demonstrated by forms-route, tasking-records, conflict-review, save-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "UC36-2",
+     "requirement": "Human review before anything is submitted",
+     "status": "passed",
+     "detail": "Invalid, unsaved, conflicted and changed revisions cannot route; explicit review of the saved current revision precedes each local route. A changed approved duration requires renewed review. \u2014 demonstrated by validation-recovery, conflict-review at both viewport sizes."
+    },
+    {
+     "criterionId": "UC36-3",
+     "requirement": "Audit trail",
+     "status": "passed",
+     "detail": "Audit export and review/routing ledger retain source-linked immutable revision actions, Training Reviewer decisions, reasons and local routing/receipt states. \u2014 demonstrated by evaluation-exports, conflict-review at both viewport sizes."
+    },
+    {
+     "criterionId": "UC36-4",
+     "requirement": "Runs on government devices and existing low-code platforms where possible",
+     "status": "unverified",
+     "detail": "Authorized government device/browser policy and owner-selected low-code runtime are required to establish actual compatibility. Synthetic desktop/narrow workflow, reload and exports are demonstrated; they cannot certify those systems."
+    },
+    {
+     "criterionId": "UC36-5",
+     "requirement": "Synthetic data only; no personal information",
+     "status": "passed",
+     "detail": "The application and exports use fictional DEMO records, no personal information, and visible synthetic/nonoperational labels; pause blocks routing and acknowledgement. \u2014 demonstrated by safety-stop, forms-route, evaluation-exports at both viewport sizes."
+    },
+    {
+     "criterionId": "UC36-6",
+     "requirement": "Fleet-Ready Definition of Done (all solutions): runs offline; keeps humans in authority; cites sources; logs auditable actions; syncs on reconnect; includes a one-page path to fleet.",
+     "status": "passed",
+     "detail": "Labeled synthetic workflow operates from the local file offline with citations, reviewed routing, inspectable audit, simulated reconnect and a downloadable one-page path to fleet. This is not operational Fleet-Ready certification. \u2014 demonstrated by forms-route, tasking-records, conflict-review, evaluation-exports at both viewport sizes."
+    },
+    {
+     "criterionId": "OFF-01",
+     "requirement": "Replaying an operation has no duplicate effect.",
+     "status": "passed",
+     "detail": "Replaying immutable operations adds zero revisions and zero duplicate routing effects. \u2014 demonstrated by replay-converge at both viewport sizes."
+    },
+    {
+     "criterionId": "OFF-02",
+     "requirement": "Concurrent edits and deletes remain visible.",
+     "status": "passed",
+     "detail": "Concurrent edit/edit values 45 and 50 and edit/delete heads remain visible until a reasoned reviewer choice creates a new revision referencing every reviewed head. \u2014 demonstrated by replay-converge, conflict-review at both viewport sizes."
+    },
+    {
+     "criterionId": "OFF-03",
+     "requirement": "Converge independent of delivery order.",
+     "status": "passed",
+     "detail": "Opposite delivery orders yield identical canonical record state with both concurrent heads preserved. Missing history preserves the queue until restored. \u2014 demonstrated by replay-converge, missing-history at both viewport sizes."
+    },
+    {
+     "criterionId": "OFF-04",
+     "requirement": "Resume transfers within a bounded link budget.",
+     "status": "passed",
+     "detail": "Zero budget retains work; send without acknowledgement leaves image at 6144 bytes; acknowledged 4096-byte budget sends critical 1024 and image 3072, reaching 9216; next 3072 completes 12288 after reload. \u2014 demonstrated by transfer-resume at both viewport sizes."
+    },
+    {
+     "criterionId": "OFF-05",
+     "requirement": "Persist across device restart and review before routing.",
+     "status": "passed",
+     "detail": "Saved edits and acknowledged offsets survive browser reload offline; reconnect conflicts require explicit choice and renewed review before routing, with reviewer decision exported. Physical restart, eviction and device loss remain unverified. \u2014 demonstrated by forms-route, save-recovery, conflict-review, transfer-resume at both viewport sizes."
+    },
+    {
+     "criterionId": "EVAL36-1",
+     "requirement": "Extraction accuracy against an answer key",
+     "status": "passed",
+     "detail": "Against the planner-defined 20-field synthetic answer key, raw extraction is 16/20 (80%); after source-based correction reviewed accuracy is 20/20 (100%). No general OCR or real-data accuracy is claimed. \u2014 demonstrated by evaluation-exports, tasking-records at both viewport sizes."
+    },
+    {
+     "criterionId": "EVAL36-2",
+     "requirement": "Errors caught before submission",
+     "status": "passed",
+     "detail": "All four seeded issues (ambiguous duration, negative quantity, missing subject, conflicting task due date) block routing, survive correction, and result in 4 caught, 4 corrected and 0 unresolved before approval. \u2014 demonstrated by validation-recovery, evaluation-exports at both viewport sizes."
+    },
+    {
+     "criterionId": "EVAL36-3",
+     "requirement": "Time per packet against a manual baseline [baseline to be set with Fleet SME]",
+     "status": "unverified",
+     "detail": "A Fleet SME must authorize the official manual baseline; synthetic elapsed timing, assumed 1200-second comparison and arithmetic cannot establish that authorized comparison."
+    },
+    {
+     "criterionId": "EVAL36-4",
+     "requirement": "Complete offline operation and conflict-free sync",
+     "status": "passed",
+     "detail": "Both synthetic tracks complete offline, survive reload, resolve competing heads explicitly and acknowledge the reviewed local packet on simulated reconnect without duplicate effects. No operational transport is implied. \u2014 demonstrated by forms-route, tasking-records, conflict-review, replay-converge at both viewport sizes."
+    },
+    {
+     "criterionId": "EVAL36-5",
+     "requirement": "Ease of use judged by a Sailor panel",
+     "status": "unverified",
+     "detail": "An actual Sailor panel must judge usability. Complete task flows and an unscored panel worksheet are demonstrated; software cannot supply panel judgment."
+    },
+    {
+     "criterionId": "EVAL36-6",
+     "requirement": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+     "status": "unverified",
+     "detail": "Official judges must assign the rubric scores. A worksheet with exact categories/weights and blank scores is demonstrated; it cannot confer official scores."
+    },
+    {
+     "criterionId": "DELIVERABLE36-1",
+     "requirement": "Sailor hours returned to maintenance, training and watchstanding",
+     "status": "unverified",
+     "detail": "Observed unit workload and time-use data are needed to establish hours actually returned. Measured prototype timing and fictional 20-packet illustrative savings cannot establish realized benefit."
+    },
+    {
+     "criterionId": "DELIVERABLE36-2",
+     "requirement": "Fewer errors and less rework",
+     "status": "unverified",
+     "detail": "Comparable unit baseline and follow-up error/rework observations are needed to establish actual reductions. Four seeded issues caught/corrected demonstrate synthetic prevention, not operational improvement."
+    },
+    {
+     "criterionId": "DELIVERABLE36-3",
+     "requirement": "Forms completed and routed without connectivity",
+     "status": "passed",
+     "detail": "Completed training log, supply requisition and routine correspondence/routing cover sheet are downloadable and routed to a named local demo queue while offline, clearly pending sync. \u2014 demonstrated by forms-route at both viewport sizes."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "forms-route",
+     "title": "Complete and route all three forms offline",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 23 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/forms-route-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/forms-route-desktop.zip"
+    },
+    {
+     "id": "forms-route",
+     "title": "Complete and route all three forms offline",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 23 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/forms-route-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/forms-route-narrow.zip"
+    },
+    {
+     "id": "tasking-records",
+     "title": "Extract a week of tasking and file reviewed outputs",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 26 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/tasking-records-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/tasking-records-desktop.zip"
+    },
+    {
+     "id": "tasking-records",
+     "title": "Extract a week of tasking and file reviewed outputs",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 26 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/tasking-records-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/tasking-records-narrow.zip"
+    },
+    {
+     "id": "validation-recovery",
+     "title": "Catch seeded errors and invalidate stale approval",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 34 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/validation-recovery-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/validation-recovery-desktop.zip"
+    },
+    {
+     "id": "validation-recovery",
+     "title": "Catch seeded errors and invalidate stale approval",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 34 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/validation-recovery-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/validation-recovery-narrow.zip"
+    },
+    {
+     "id": "conflict-review",
+     "title": "Recover from concurrent edit and delete on reconnect",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 34 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/conflict-review-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/conflict-review-desktop.zip"
+    },
+    {
+     "id": "conflict-review",
+     "title": "Recover from concurrent edit and delete on reconnect",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 34 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/conflict-review-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/conflict-review-narrow.zip"
+    },
+    {
+     "id": "replay-converge",
+     "title": "Replay and reverse delivery preserve canonical state",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 22 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/replay-converge-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/replay-converge-desktop.zip"
+    },
+    {
+     "id": "replay-converge",
+     "title": "Replay and reverse delivery preserve canonical state",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 22 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/replay-converge-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/replay-converge-narrow.zip"
+    },
+    {
+     "id": "missing-history",
+     "title": "Preserve queued work on invalid history and recover",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 16 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/missing-history-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/missing-history-desktop.zip"
+    },
+    {
+     "id": "missing-history",
+     "title": "Preserve queued work on invalid history and recover",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 16 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/missing-history-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/missing-history-narrow.zip"
+    },
+    {
+     "id": "transfer-resume",
+     "title": "Resume priority transfers from receiver acknowledgements",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 22 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/transfer-resume-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/transfer-resume-desktop.zip"
+    },
+    {
+     "id": "transfer-resume",
+     "title": "Resume priority transfers from receiver acknowledgements",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 22 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/transfer-resume-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/transfer-resume-narrow.zip"
+    },
+    {
+     "id": "evaluation-exports",
+     "title": "Inspect synthetic accuracy, assumptions and unscored worksheets",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 23 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/evaluation-exports-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/evaluation-exports-desktop.zip"
+    },
+    {
+     "id": "evaluation-exports",
+     "title": "Inspect synthetic accuracy, assumptions and unscored worksheets",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 23 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/evaluation-exports-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/evaluation-exports-narrow.zip"
+    },
+    {
+     "id": "save-recovery",
+     "title": "Failed durable save preserves draft then recovers",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 20 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/save-recovery-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/save-recovery-desktop.zip"
+    },
+    {
+     "id": "save-recovery",
+     "title": "Failed durable save preserves draft then recovers",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 20 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/save-recovery-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/save-recovery-narrow.zip"
+    },
+    {
+     "id": "safety-stop",
+     "title": "Inspect boundary and pause simulated routing",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 8 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/safety-stop-desktop.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/safety-stop-desktop.zip"
+    },
+    {
+     "id": "safety-stop",
+     "title": "Inspect boundary and pause simulated routing",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 8 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/safety-stop-narrow.png",
+     "trace": ".quality-evidence/0968e8743ec2-d5941d73-870e-475f-9d11-705918fef386/safety-stop-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 16.7,
+ "challengeId": "36",
+ "workspace": "~/fhexp/ud-r101/workspaces/007cf040-9303-4be3-ba71-cb83e12f5abf/23a4f5c3-d008-4cb0-9d9b-75f4ad2f183a"
+}

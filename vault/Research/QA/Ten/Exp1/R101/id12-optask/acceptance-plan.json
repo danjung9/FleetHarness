@@ -1,0 +1,515 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Extract all three named categories directly from fictional pipe-delimited OPTASK text, review the mock type mapping and source evidence, and display overlapping intervals on a consolidated UTC timeline. Synthetic only; not validated against actual USMTF formats or operational rules.",
+      "journeyIds": [
+        "daily-schedule",
+        "exclude-non-event",
+        "answer-key"
+      ]
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every source-derived field has a zero-based end-exclusive UTF-16 span into its immutable revision; the sample frequency start evidence is 2026-11-04T06:00:00Z. Derived values retain original-field links.",
+      "journeyIds": [
+        "daily-schedule"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Empty source is rejected; missing timezone, impossible calendar date and unsupported line produce distinct issues with zero invented events; explicit correction creates revision 2 and preserves revision 1. Draft changes block review and export.",
+      "journeyIds": [
+        "invalid-recovery",
+        "exclude-non-event",
+        "stale-review"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "01:00 at -05:00 normalizes to 06:00Z; a 23:30–00:30 flight interval remains 60 minutes and displays 30 minutes on each UTC day.",
+      "journeyIds": [
+        "utc-boundary",
+        "daily-schedule"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "deferred",
+      "expectedOutcome": "An independent person inspects the separately authored synthetic answer key, actual extraction, precision/recall denominators and discrepancies and records their review. A finite automated comparison is implemented but cannot establish independent human review.",
+      "journeyIds": [],
+      "deferralBasis": "human-authority",
+      "reason": "Packet method is human. No independent person has performed or recorded inspection of the held-out synthetic key and actual application output. A generated score or model statement cannot stand in for that person’s review. The answer-key journey still demonstrates the complete synthetic comparison under UC12-1; MSG-04 remains unverified."
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "implemented",
+      "expectedOutcome": "After opening the self-contained local file, parsing, review, timeline and both downloads require no network. Reload restores source and reviewed state when local storage is available.",
+      "journeyIds": [
+        "daily-schedule"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Convert the fictional raw message to the Synchronized 24-hour Visual Schedule with Frequency Plan, Crypto Change-over Window and Flight Quarters, a common 00:00–24:00 axis, accessible day list and reviewed CSV/traceability JSON exports.",
+      "journeyIds": [
+        "daily-schedule",
+        "utc-boundary"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "daily-schedule",
+      "title": "Extract, review and export the fictional OPTASK schedule",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "3 events extracted; 0 issues. Review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#mapping-summary",
+          "text": "FREQPLAN → Frequency Plan; CRYPTO → Crypto Change-over Window; FLIGHTQTRS → Flight Quarters"
+        },
+        {
+          "action": "click",
+          "selector": "#evidence-FP-01-start"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-text",
+          "text": "2026-11-04T06:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-range",
+          "text": "UTF-16 [102, 122); line 2"
+        },
+        {
+          "action": "check",
+          "selector": "#mapping-reviewed"
+        },
+        {
+          "action": "check",
+          "selector": "#events-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed synthetic revision 1."
+        },
+        {
+          "action": "fill",
+          "selector": "#schedule-day",
+          "value": "2026-11-04"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#day-summary",
+          "text": "2026-11-04 UTC · 3 events · 165 displayed minutes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-FP-01",
+          "text": "Frequency Plan · FP-01 · Training Alpha · 225.500 MHz · 06:00–08:00 UTC · 120 minutes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-CW-01",
+          "text": "Crypto Change-over Window · CW-01 · TRAINING-KEY-A to TRAINING-KEY-B · 07:30–07:45 UTC · 15 minutes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-FQ-01",
+          "text": "Flight Quarters · FQ-01 · Fictional deck drill · 23:30–24:00 UTC · 30 minutes · continues next day"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "#timeline"
+        },
+        {
+          "action": "expectText",
+          "selector": "#overlap-summary",
+          "text": "FP-01 and CW-01 overlap for 15 minutes."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-csv",
+          "fileName": "reviewed-schedule.csv",
+          "text": "2026-11-04T23:30:00.000Z,2026-11-05T00:30:00.000Z"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-json",
+          "fileName": "extraction-review.json",
+          "text": "SYNTHETIC-DEMO-01"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed synthetic revision 1."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source-input",
+          "value": "OPTASK|SYNTHETIC-DEMO-01|Fictional training vessel Meridian\nFREQPLAN|FP-01|Training Alpha|225.500|MHz|2026-11-04T06:00:00Z|2026-11-04T08:00:00Z\nCRYPTO|CW-01|TRAINING-KEY-A to TRAINING-KEY-B|2026-11-04T07:30:00Z|2026-11-04T07:45:00Z\nFLIGHTQTRS|FQ-01|Fictional deck drill|2026-11-04T23:30:00Z|2026-11-05T00:30:00Z"
+        }
+      ]
+    },
+    {
+      "id": "utc-boundary",
+      "title": "Normalize offsets and retain full cross-midnight intervals",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "FREQPLAN|TZ-01|Training Alpha|225.500|MHz|2026-11-04T01:00:00-05:00|2026-11-04T08:00:00Z\nFLIGHTQTRS|NIGHT-01|Night drill|2026-11-04T23:30:00Z|2026-11-05T00:30:00Z"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#mapping-reviewed"
+        },
+        {
+          "action": "check",
+          "selector": "#events-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#normalized-TZ-01-start",
+          "text": "2026-11-04T06:00:00.000Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#duration-NIGHT-01",
+          "text": "Full interval: 60 minutes"
+        },
+        {
+          "action": "fill",
+          "selector": "#schedule-day",
+          "value": "2026-11-05"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#day-summary",
+          "text": "2026-11-05 UTC · 1 event · 30 displayed minutes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-NIGHT-01",
+          "text": "Flight Quarters · NIGHT-01 · Night drill · 00:00–00:30 UTC · 30 minutes · continued from previous day"
+        }
+      ]
+    },
+    {
+      "id": "invalid-recovery",
+      "title": "Reject unknown dates and recover by creating a corrected revision",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#input-error",
+          "text": "Enter a synthetic OPTASK message."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "CRYPTO|BAD-01|TRAINING-A to TRAINING-B|2026-11-04T07:30:00|2026-11-04T07:45:00Z\nFLIGHTQTRS|BAD-02|Invalid date drill|2026-02-30T09:00:00Z|2026-02-30T10:00:00Z\nUNSUPPORTED training note"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#parse-summary",
+          "text": "0 events extracted; 3 issues. Review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-1",
+          "text": "Line 1: Start timestamp requires an explicit timezone."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-2",
+          "text": "Line 2: Invalid calendar date."
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-3",
+          "text": "Line 3: Unsupported record type."
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Resolve all issues and confirm the mapping and events before review."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "OPTASK|SYNTHETIC-DEMO-01|Fictional training vessel Meridian\nFREQPLAN|FP-01|Training Alpha|225.500|MHz|2026-11-04T06:00:00Z|2026-11-04T08:00:00Z\nCRYPTO|CW-01|TRAINING-KEY-A to TRAINING-KEY-B|2026-11-04T07:30:00Z|2026-11-04T07:45:00Z\nFLIGHTQTRS|FQ-01|Fictional deck drill|2026-11-04T23:30:00Z|2026-11-05T00:30:00Z"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#mapping-reviewed"
+        },
+        {
+          "action": "check",
+          "selector": "#events-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed synthetic revision 2."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-json",
+          "fileName": "extraction-review.json",
+          "text": "2026-02-30T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "exclude-non-event",
+      "title": "Explicitly exclude an unsupported non-event and complete review",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "FLIGHTQTRS|FQ-02|Fictional recovery drill|2026-11-04T12:00:00Z|2026-11-04T12:30:00Z\nNOTE training lunch"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-1",
+          "text": "Line 2: Unsupported record type."
+        },
+        {
+          "action": "fill",
+          "selector": "#issue-note-1",
+          "value": "Non-event training note; exclude from schedule."
+        },
+        {
+          "action": "click",
+          "selector": "#exclude-issue-1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issue-disposition-1",
+          "text": "Excluded: Non-event training note; exclude from schedule."
+        },
+        {
+          "action": "check",
+          "selector": "#mapping-reviewed"
+        },
+        {
+          "action": "check",
+          "selector": "#events-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "fill",
+          "selector": "#schedule-day",
+          "value": "2026-11-04"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#day-summary",
+          "text": "2026-11-04 UTC · 1 event · 30 displayed minutes"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-json",
+          "fileName": "extraction-review.json",
+          "text": "Non-event training note; exclude from schedule."
+        }
+      ]
+    },
+    {
+      "id": "stale-review",
+      "title": "Block stale exports and preserve draft until explicit reparse",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "check",
+          "selector": "#mapping-reviewed"
+        },
+        {
+          "action": "check",
+          "selector": "#events-reviewed"
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "FLIGHTQTRS|NEW-01|Revised drill|2026-11-04T10:00:00Z|2026-11-04T11:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unsaved source changes. Parse to create a new revision or discard changes."
+        },
+        {
+          "action": "click",
+          "selector": "#commit-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Parse or discard source changes before review."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-draft"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source-input",
+          "value": "OPTASK|SYNTHETIC-DEMO-01|Fictional training vessel Meridian\nFREQPLAN|FP-01|Training Alpha|225.500|MHz|2026-11-04T06:00:00Z|2026-11-04T08:00:00Z\nCRYPTO|CW-01|TRAINING-KEY-A to TRAINING-KEY-B|2026-11-04T07:30:00Z|2026-11-04T07:45:00Z\nFLIGHTQTRS|FQ-01|Fictional deck drill|2026-11-04T23:30:00Z|2026-11-05T00:30:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed synthetic revision 1."
+        },
+        {
+          "action": "click",
+          "selector": "#reset"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-reset"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed synthetic revision 1."
+        },
+        {
+          "action": "click",
+          "selector": "#reset"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-reset"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source-input",
+          "value": ""
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "No extraction yet."
+        }
+      ]
+    },
+    {
+      "id": "answer-key",
+      "title": "Compare extraction with the planner-authored finite synthetic key",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#run-benchmark"
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-counts",
+          "text": "Expected events: 3; extracted events: 3; matched events: 3; false positives: 0; missed events: 0."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-scores",
+          "text": "Event precision: 100% (3/3); recall: 100% (3/3); exact fields: 100% (17/17)."
+        },
+        {
+          "action": "expectText",
+          "selector": "#benchmark-review",
+          "text": "Synthetic planner-authored key. Independent human review pending; operational accuracy unverified."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC12-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Raw USMTF messages yield frequency plans, crypto change-over windows and flight quarters times on one consolidated visual timeline.",
+      "journeyIds": [],
+      "reason": "No actual-format specification or SME-reviewed mapping is supplied. The implemented synthetic EVENT/TASK review and UTC timeline slice cannot establish USMTF extraction or domain category correctness."
+    },
+    {
+      "criterionId": "MSG-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every extracted field retains a half-open UTF-16 span whose slice equals its literal source text in the immutable original; the user can inspect source evidence and export it after explicit review.",
+      "journeyIds": [
+        "trace-review-export",
+        "draft-approval-boundary"
+      ]
+    },
+    {
+      "criterionId": "MSG-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Empty text, missing timezone, invalid calendar dates and unsupported lines produce specific issues and no approved schedule or invented timestamps; correcting the source permits deliberate review and a valid schedule.",
+      "journeyIds": [
+        "invalid-source-recovery",
+        "draft-approval-boundary"
+      ]
+    },
+    {
+      "criterionId": "MSG-03",
+      "disposition": "implemented",
+      "expectedOutcome": "09:00Z and 04:00-05:00 normalize to 2026-11-04T09:00:00.000Z. A 23:30Z–00:30Z interval remains 60 minutes, displays 23:30–24:00 on November 4 and 00:00–00:30 on November 5, and exports its original complete normalized interval.",
+      "journeyIds": [
+        "utc-day-boundary"
+      ]
+    },
+    {
+      "criterionId": "MSG-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Independent human review compares held-out synthetic formats and non-events against an independently authored answer key and reports event and field precision/recall, sample counts and errors.",
+      "journeyIds": [],
+      "reason": "No independently authored held-out corpus, human reviewer, matching rules or agreed accuracy threshold is supplied. Planner-authored regression cases are protected from build drift but are not independent SME ground truth."
+    },
+    {
+      "criterionId": "MSG-05",
+      "disposition": "deferred",
+      "expectedOutcome": "With the browser disconnected, a locally available application parses synthetic messages, supports review and daily timeline use, and downloads the reviewed schedule.",
+      "journeyIds": [],
+      "reason": "The self-contained local workflow and reviewed export are planned and exercised by trace-review-export, but the allowed declarative browser steps cannot disconnect the browser or prove network isolation. A witnessed disconnected end-to-end run is required; local packaging alone is only a partial demonstration."
+    },
+    {
+      "criterionId": "DELIVERABLE12-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Mock USMTF text is seamlessly converted into a synchronized 24-hour visual schedule usable by watchstanders and shipboard leaders.",
+      "journeyIds": [],
+      "reason": "No reviewed mock-USMTF mapping or owner assessment of synchronized/seamless behavior is supplied. The demonstrated UTC 24-hour synthetic timeline and manual category review remain a partial slice, not the complete deliverable."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "trace-review-export",
+      "title": "Inspect exact source evidence and approve a synthetic schedule",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "click",
+          "selector": "#evidence-E1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-id",
+          "text": "E1 | [6, 8) | E1"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#original-source",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//"
+        },
+        {
+          "action": "expectText",
+          "selector": "#normalized-start-E1",
+          "text": "2026-11-04T09:00:00.000Z"
+        },
+        {
+          "action": "select",
+          "selector": "#category-E1",
+          "value": "frequency"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed: 1 record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-row-E1",
+          "text": "Frequency plan | Radio check | 09:00–10:00 UTC | Reviewed"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "reviewed-schedule.json",
+          "text": "\"sourceText\": \"EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//\""
+        }
+      ]
+    },
+    {
+      "id": "utc-day-boundary",
+      "title": "Normalize equal instants and preserve a cross-midnight window",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/UTC event//\nEVENT/E2/2026-11-04T04:00-05:00/2026-11-04T05:00-05:00/TEAM/Offset event//\nEVENT/X/2026-11-04T23:30Z/2026-11-05T00:30Z/TEAM/Night check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#normalized-start-E1",
+          "text": "2026-11-04T09:00:00.000Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#normalized-start-E2",
+          "text": "2026-11-04T09:00:00.000Z"
+        },
+        {
+          "action": "select",
+          "selector": "#category-E1",
+          "value": "frequency"
+        },
+        {
+          "action": "select",
+          "selector": "#category-E2",
+          "value": "frequency"
+        },
+        {
+          "action": "select",
+          "selector": "#category-X",
+          "value": "frequency"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "fill",
+          "selector": "#schedule-day",
+          "value": "2026-11-04"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-row-X",
+          "text": "Frequency plan | Night check | 23:30–24:00 UTC | Reviewed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#duration-X",
+          "text": "Full duration: 60 minutes"
+        },
+        {
+          "action": "fill",
+          "selector": "#schedule-day",
+          "value": "2026-11-05"
+        },
+        {
+          "action": "click",
+          "selector": "#show-day"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-row-X",
+          "text": "Frequency plan | Night check | 00:00–00:30 UTC | Reviewed"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "reviewed-schedule.json",
+          "text": "2026-11-05T00:30:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "invalid-source-recovery",
+      "title": "Reject empty, ambiguous, invalid and unsupported input, then recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issues",
+          "text": "Enter synthetic message text."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-summary",
+          "text": "No reviewed records for this day."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "TASK/T1/2026-11-04T09:00/TEAM/Check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issues",
+          "text": "Line 1: due requires a valid timestamp with an explicit timezone."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-summary",
+          "text": "No reviewed records for this day."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "TASK/T1/2026-02-30T09:00Z/TEAM/Check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issues",
+          "text": "Line 1: due requires a valid timestamp with an explicit timezone."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-summary",
+          "text": "No reviewed records for this day."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "This is not an event"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issues",
+          "text": "Line 1: unsupported message structure."
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-summary",
+          "text": "No reviewed records for this day."
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "expectText",
+          "selector": "#issues",
+          "text": "No extraction issues."
+        },
+        {
+          "action": "select",
+          "selector": "#category-E1",
+          "value": "frequency"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed: 1 record"
+        },
+        {
+          "action": "expectText",
+          "selector": "#schedule-row-E1",
+          "text": "Frequency plan | Radio check | 09:00–10:00 UTC | Reviewed"
+        }
+      ]
+    },
+    {
+      "id": "draft-approval-boundary",
+      "title": "Prevent an edited source from exporting stale reviewed content",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//"
+        },
+        {
+          "action": "click",
+          "selector": "#parse"
+        },
+        {
+          "action": "select",
+          "selector": "#category-E1",
+          "value": "frequency"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "fill",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Changed draft//"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved source changes. Parse changes or discard draft before approval or export."
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Approval unavailable while source changes are unsaved."
+        },
+        {
+          "action": "click",
+          "selector": "#discard-draft"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#source-input",
+          "value": "EVENT/E1/2026-11-04T09:00Z/2026-11-04T10:00Z/TEAM/Radio check//"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed: 1 record"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "reviewed-schedule.json",
+          "text": "Radio check"
+        }
+      ]
+    }
+  ]
+}

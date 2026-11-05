@@ -1,0 +1,814 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "The complete labeled synthetic PB4T workflow uses Engineering, Weapons, Combat Systems, Damage Control and Flight Operations Agents to propose, reject and accept allocations against shared crew, resources, operational windows, synthetic fatigue and explicit mandatory occurrences. The baseline resolves the C01/Training Room collision by moving Damage Control to Mon 11:00 C04; all five required drills are covered. Repeated, cross-week and overdue occurrences are visible. Real SFTRM, formats and operational rules remain unvalidated.",
+      "journeyIds": [
+        "weekly-resolution",
+        "qualification-recovery",
+        "availability-recovery",
+        "recurrence-coverage",
+        "overdue-recovery",
+        "fatigue-policy"
+      ]
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "The baseline retains all five drills with zero personnel or resource interval overlaps and explicitly reports the resolved Damage Control collision. A conflicting board edit is rejected on validation and corrected without losing the occurrence.",
+      "journeyIds": [
+        "weekly-resolution",
+        "edit-review"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Assignments meet explicit qualifications, crew/resource/ship availability, distinct role counts, daily/weekly duty and synthetic block/rest limits including prior duty. Missing EOOW and unavailable flight crew block acceptance until corrected. A 4.5h daily load fails a 4h limit and passes only after a deliberate versioned synthetic policy edit to 4.5h; hard constraints never relax automatically.",
+      "journeyIds": [
+        "qualification-recovery",
+        "availability-recovery",
+        "fatigue-policy"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "An impossible DC deadline is reported infeasible over supplied candidates, a node budget of 1 reports search exhausted with feasibility unresolved, and budget 0 is invalid input. None authorizes acceptance. Correction to budget 50000 yields all five baseline occurrences; stopping preserves inputs without accepting a new schedule.",
+      "journeyIds": [
+        "search-recovery",
+        "invalid-and-stop"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic recurrence and explicit history expand into stable required occurrences: baseline five weekly drills; two-day DC fixture eight total with four DC deadlines, including DC-4 on 16 Nov due 17 Nov 00:00 beyond the displayed week. An overdue DC-0 remains uncovered and blocks acceptance until explicit fictional completion history is recorded. No real SFTRM integration or certification is claimed.",
+      "journeyIds": [
+        "recurrence-coverage",
+        "overdue-recovery"
+      ]
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "implemented",
+      "expectedOutcome": "The operator reviews an editable board, load heatmap, conflicts and every explicit relaxation request, then deliberately records synthetic acceptance of a valid complete revision with reviewer alias. Acceptance persists across reload; an unsaved conflicting draft blocks acceptance, committed edits invalidate the old review, and only a revalidated revision can be accepted. This interaction is not actual human prototype acceptance or operational authority.",
+      "journeyIds": [
+        "review-export",
+        "edit-review",
+        "fatigue-policy"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "implemented",
+      "expectedOutcome": "A self-contained interactive Weekly PB4T Schedule Board provides one-click Optimize schedule, five departmental negotiation records, Conflict and Resolution Report, Periodicity Coverage Report, Personnel Loading Heatmap and Synthetic Schedule Review Record and Export. The literal baseline assignments yield weekly loads C01=2h, C02=1h, C03=1h, C04=2h, C05=0h, C06=1h; a readable download contains the same accepted revision, assignments, loads and synthetic warning. Optimization denotes bounded feasibility, with no global optimality claim.",
+      "journeyIds": [
+        "weekly-resolution",
+        "review-export",
+        "edit-review"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "weekly-resolution",
+      "title": "Negotiate the complete synthetic PB4T week",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#data-warning",
+          "text": "Synthetic demonstration — not validated against real formats, SFTRM or operational rules."
+        },
+        {
+          "action": "expectText",
+          "selector": "#initial-conflict",
+          "text": "Engineering casualty control and Damage Control drill overlap Monday 08:00–10:00: C01 and Training Room."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Feasible — all 5 required occurrences assigned. Bounded feasibility; global optimality is not established."
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-eng",
+          "text": "Engineering casualty control | Mon 09 Nov 08:00–10:00 | C01 Avery Vale | Training Room"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-combat",
+          "text": "Combat Systems exercise | Mon 09 Nov 10:00–11:00 | C03 Casey North | Training Room"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-dc",
+          "text": "Damage Control drill | Mon 09 Nov 11:00–13:00 | C04 Riley Marsh | Training Room"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-flight",
+          "text": "Flight quarters | Mon 09 Nov 13:00–14:00 | C06 Taylor Finch | Flight Deck"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-weapons",
+          "text": "Weapons drill | Tue 10 Nov 09:00–10:00 | C02 Morgan Reed | Training Room"
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-eng",
+          "text": "Engineering Agent: proposed Mon 08:00 C01; retained Mon 08:00 C01; accepted."
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-dc",
+          "text": "Damage Control Agent: proposed Mon 08:00 C01; rejected: personnel and resource collision; counterproposal Mon 11:00 C04; accepted."
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-combat",
+          "text": "Combat Systems Agent: proposed Mon 10:00 C03; retained Mon 10:00 C03; accepted."
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-weapons",
+          "text": "Weapons Agent: proposed Tue 09:00 C02; retained Tue 09:00 C02; accepted."
+        },
+        {
+          "action": "expectText",
+          "selector": "#negotiation-flight",
+          "text": "Flight Operations Agent: proposed Mon 13:00 C06; retained Mon 13:00 C06; accepted."
+        },
+        {
+          "action": "expectText",
+          "selector": "#constraint-summary",
+          "text": "0 personnel collisions; 0 resource collisions; 0 availability violations; 0 qualification violations; 0 fatigue violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P1: 5 required; 5 covered; 0 overdue; 0 uncovered."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-summary",
+          "text": "Weekly counted duty: C01 2h; C02 1h; C03 1h; C04 2h; C05 0h; C06 1h."
+        },
+        {
+          "action": "expectText",
+          "selector": "#resolution-summary",
+          "text": "Resolved: Damage Control moved from Mon 08:00 C01 to Mon 11:00 C04. No hard constraints relaxed."
+        }
+      ]
+    },
+    {
+      "id": "review-export",
+      "title": "Accept, persist and export the reviewed revision",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#reviewer",
+          "value": "Alex Demo"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted synthetic revision 1 by Alex Demo. Not authorization to execute drills."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted synthetic revision 1 by Alex Demo. Not authorization to execute drills."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "pb4t-synthetic-review.txt",
+          "text": "Accepted synthetic revision 1 by Alex Demo"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "pb4t-synthetic-review.txt",
+          "text": "Damage Control drill | Mon 09 Nov 11:00–13:00 | C04 Riley Marsh | Training Room"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "pb4t-synthetic-review.txt",
+          "text": "Weekly counted duty: C01 2h; C02 1h; C03 1h; C04 2h; C05 0h; C06 1h."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "pb4t-synthetic-review.txt",
+          "text": "Synthetic demonstration — not validated against real formats, SFTRM or operational rules."
+        }
+      ]
+    },
+    {
+      "id": "edit-review",
+      "title": "Resolve competing board values and invalidate stale acceptance",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "fill",
+          "selector": "#reviewer",
+          "value": "Alex Demo"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "select",
+          "selector": "#edit-occurrence",
+          "value": "DC-1"
+        },
+        {
+          "action": "select",
+          "selector": "#edit-person",
+          "value": "C01"
+        },
+        {
+          "action": "fill",
+          "selector": "#edit-start",
+          "value": "2026-11-09T08:00"
+        },
+        {
+          "action": "click",
+          "selector": "#preview-edit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#edit-comparison",
+          "text": "Saved: DC-1 Mon 11:00 C04. Draft: DC-1 Mon 08:00 C01."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Save or discard the draft before accepting a schedule."
+        },
+        {
+          "action": "click",
+          "selector": "#save-edit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Revision 2 pending validation. Previous acceptance invalidated."
+        },
+        {
+          "action": "click",
+          "selector": "#validate-board"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-error",
+          "text": "DC-1 conflicts with ENG-1: C01 and Training Room."
+        },
+        {
+          "action": "fill",
+          "selector": "#edit-start",
+          "value": "2026-11-09T11:00"
+        },
+        {
+          "action": "select",
+          "selector": "#edit-person",
+          "value": "C04"
+        },
+        {
+          "action": "click",
+          "selector": "#save-edit"
+        },
+        {
+          "action": "click",
+          "selector": "#validate-board"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Revision 3 valid; awaiting synthetic review."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Accepted synthetic revision 3 by Alex Demo. Not authorization to execute drills."
+        }
+      ]
+    },
+    {
+      "id": "qualification-recovery",
+      "title": "Correct missing EOOW qualification",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "missing-eoow"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Infeasible over supplied candidates — ENG-1 has no qualified EOOW assignment."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "A valid complete schedule is required before acceptance."
+        },
+        {
+          "action": "select",
+          "selector": "#crew-person",
+          "value": "C01"
+        },
+        {
+          "action": "fill",
+          "selector": "#crew-qualifications",
+          "value": "EOOW, Fire Party Leader"
+        },
+        {
+          "action": "click",
+          "selector": "#save-crew"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P1: 5 required; 5 covered; 0 overdue; 0 uncovered."
+        },
+        {
+          "action": "expectText",
+          "selector": "#qualification-result",
+          "text": "ENG-1: C01 holds EOOW for the full occurrence."
+        }
+      ]
+    },
+    {
+      "id": "availability-recovery",
+      "title": "Correct crew availability without dropping a drill",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "unavailable-flight"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Infeasible over supplied candidates — FLIGHT-1 has no available crew in its allowed window."
+        },
+        {
+          "action": "select",
+          "selector": "#crew-person",
+          "value": "C06"
+        },
+        {
+          "action": "fill",
+          "selector": "#crew-available-start",
+          "value": "2026-11-09T13:00"
+        },
+        {
+          "action": "fill",
+          "selector": "#crew-available-end",
+          "value": "2026-11-09T14:00"
+        },
+        {
+          "action": "click",
+          "selector": "#save-crew"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#board-flight",
+          "text": "Flight quarters | Mon 09 Nov 13:00–14:00 | C06 Taylor Finch | Flight Deck"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P1: 5 required; 5 covered; 0 overdue; 0 uncovered."
+        }
+      ]
+    },
+    {
+      "id": "search-recovery",
+      "title": "Distinguish impossible candidates, exhaustion and correction",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "impossible-deadline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Infeasible over supplied candidates — DC-1 cannot finish by Mon 09 Nov 09:00."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "A valid complete schedule is required before acceptance."
+        },
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Search exhausted — feasibility unresolved; increase the node budget or revise inputs."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "A valid complete schedule is required before acceptance."
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "50000"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P1: 5 required; 5 covered; 0 overdue; 0 uncovered."
+        }
+      ]
+    },
+    {
+      "id": "recurrence-coverage",
+      "title": "Account for repeated and cross-week training deadlines",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "two-day-dc"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P2: 8 required; 8 covered; 0 overdue; 0 uncovered."
+        },
+        {
+          "action": "expectText",
+          "selector": "#dc-occurrences",
+          "text": "DC-1: 09 Nov 11:00, due 11 Nov 00:00; DC-2: 11 Nov 11:00, due 13 Nov 00:00; DC-3: 13 Nov 11:00, due 15 Nov 00:00; DC-4: 16 Nov 11:00, due 17 Nov 00:00."
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary-notice",
+          "text": "DC-4 is outside the displayed week and remains required."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-review",
+          "fileName": "pb4t-synthetic-review.txt",
+          "text": "DC-4: 16 Nov 11:00, due 17 Nov 00:00"
+        }
+      ]
+    },
+    {
+      "id": "overdue-recovery",
+      "title": "Keep overdue training visible and correct explicit history",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "overdue-history"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P3: 6 required; 5 covered; 1 overdue; 1 uncovered."
+        },
+        {
+          "action": "expectText",
+          "selector": "#overdue-detail",
+          "text": "DC-0 due 08 Nov 00:00 has no recorded completion. Acceptance blocked."
+        },
+        {
+          "action": "click",
+          "selector": "#accept-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "A valid complete schedule is required before acceptance."
+        },
+        {
+          "action": "fill",
+          "selector": "#history-occurrence",
+          "value": "DC-0"
+        },
+        {
+          "action": "fill",
+          "selector": "#history-completion",
+          "value": "2026-11-07T11:00"
+        },
+        {
+          "action": "click",
+          "selector": "#save-history"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P3: 6 required; 6 covered; 0 overdue; 0 uncovered."
+        }
+      ]
+    },
+    {
+      "id": "fatigue-policy",
+      "title": "Correct a duty overload through explicit policy review",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "fatigue-overload"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Infeasible over supplied candidates — C01 counted duty 4.5h exceeds daily limit 4h."
+        },
+        {
+          "action": "click",
+          "selector": "#request-relaxation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#relaxation-detail",
+          "text": "Requested: daily duty limit 4h → 4.5h. Not applied. Synthetic policy review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#policy-version",
+          "text": "SYN-P1"
+        },
+        {
+          "action": "fill",
+          "selector": "#policy-daily-hours",
+          "value": "4.5"
+        },
+        {
+          "action": "fill",
+          "selector": "#policy-reason",
+          "value": "Synthetic boundary demonstration"
+        },
+        {
+          "action": "click",
+          "selector": "#save-policy"
+        },
+        {
+          "action": "expectText",
+          "selector": "#policy-version",
+          "text": "SYN-P2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Policy changed; schedule validation and synthetic review required."
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#fatigue-result",
+          "text": "C01: 4.5h counted duty / 4.5h daily limit; 0 fatigue violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#relaxation-detail",
+          "text": "Applied by explicit synthetic policy edit: daily duty limit 4h → 4.5h. Reason: Synthetic boundary demonstration. No operational approval claimed."
+        }
+      ]
+    },
+    {
+      "id": "invalid-and-stop",
+      "title": "Recover validation, cancel a search and preserve the draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-case",
+          "value": "baseline"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#input-error",
+          "text": "Search node budget must be an integer from 1 to 200000."
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "50000"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "click",
+          "selector": "#stop-search"
+        },
+        {
+          "action": "expectText",
+          "selector": "#search-status",
+          "text": "Stopped by operator — no new schedule accepted. Inputs preserved."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#search-budget",
+          "value": "50000"
+        },
+        {
+          "action": "click",
+          "selector": "#optimize"
+        },
+        {
+          "action": "expectText",
+          "selector": "#coverage-summary",
+          "text": "SYN-P1: 5 required; 5 covered; 0 overdue; 0 uncovered."
+        }
+      ]
+    }
+  ]
+}

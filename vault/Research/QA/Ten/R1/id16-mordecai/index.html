@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MORDECAI | Oversight simulation</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#182c3b;background:#eef2f4;font-size:16px}*{box-sizing:border-box}body{margin:0}header{background:#132c3d;color:white;padding:28px max(20px,calc((100vw - 1160px)/2))}header p{color:#c9d9e3;max-width:760px}h1{font-size:2rem;letter-spacing:.06em;margin:8px 0}h2{font-size:1.15rem;margin:0 0 16px}h3{font-size:1rem}p{line-height:1.5}small,.muted{color:#4f6270}header small{color:#8fced2}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;font-weight:750}.boundary{border-left:3px solid #79c8cb;padding-left:14px}main{max-width:1200px;margin:auto;padding:24px 20px 50px}.statusbar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;font-size:.9rem}.pill{background:white;border:1px solid #c4d2db;border-radius:6px;padding:10px 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:white;border:1px solid #cbd6de;border-radius:10px;padding:22px;min-width:0}.wide{grid-column:1/-1}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:12px 0}.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px}label{font-size:.9rem;font-weight:650}button,input,select{font:inherit;border-radius:5px;min-height:42px}input,select{border:1px solid #8296a4;padding:8px;background:white;width:100%;color:inherit}button{border:1px solid #a9b8c2;background:#f5f8fa;color:#203b4b;padding:9px 14px;cursor:pointer;font-weight:600}button.primary{background:#17666c;border-color:#17666c;color:white}button.danger{background:#ad3037;color:white;border-color:#ed9ba0;padding:14px 20px}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:3px solid #c77600;outline-offset:3px}.result{background:#edf5f5;border-left:3px solid #39858a;padding:12px;line-height:1.5;overflow-wrap:anywhere}.stat{font-size:2rem;font-weight:700}.metrics{display:flex;gap:36px;margin:18px 0}.metrics p{margin:0}.details{margin-top:18px;border-top:1px solid #d9e1e6;padding-top:14px}summary{cursor:pointer;font-weight:650;padding:4px 0}li{margin:8px 0;overflow-wrap:anywhere}ul{padding-left:20px}pre{white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#f4f6f8;padding:12px;font-size:.8rem}#error{background:#fff0e7;border:1px solid #bc6c28;padding:14px;margin-bottom:18px}#error:empty{display:none}.halted{color:#a12129;font-weight:700}.draft{color:#8b4c00;font-weight:600}footer{margin-top:20px;color:#526573;font-size:.85rem}@media(max-width:700px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.card{padding:18px}h1{font-size:1.6rem}.row button{flex:1}header{padding:22px 20px}.top button{width:100%}.metrics{gap:24px}}
+</style></head><body>
+<header><small class="eyebrow">Synthetic oversight lab · Offline</small><div class="top"><div><h1>MORDECAI</h1><div>Agent oversight console</div></div><button id="halt" class="danger">Halt all simulated agents</button></div><p class="boundary">Explore who may act, who wins a shared resource, and how an operator halt blocks future work. Synthetic agents only. Execution creates a local action report; it controls no equipment.</p></header>
+<main><div class="statusbar"><span class="pill">Simulation clock <strong id="clock">t=100</strong></span><span class="pill" id="halt-status">Ready: simulation active.</span><span class="pill" id="save-status" role="status">Restoring local session</span></div>
+<div id="error" role="alert" tabindex="-1"></div><div id="feedback" class="muted" role="status" aria-live="polite"></div>
+<div class="grid">
+<section class="card"><span class="eyebrow muted">01 · Review authority</span><h2>Roster & demonstration policy</h2><p id="roster-order" class="result"></p><ul id="roster"></ul><div class="row"><div class="field"><label for="condition">Ship condition</label><select id="condition"><option value="cruising">Cruising</option><option value="general-quarters">General quarters</option></select></div><button id="apply-condition">Apply condition</button><button id="discard-condition">Discard condition</button></div><div class="row"><div class="field"><label for="promotion">Repair promotion (0–100)</label><input id="promotion" type="number" min="0" max="100" step="1" value="0"></div><button id="save-promotion">Save promotion</button><button id="discard-promotion">Discard promotion</button></div><p id="draft-status"></p><details class="details"><summary>How authority is calculated</summary><p>Policy demo-v1 is invented for this exercise. Higher score wins: base rank + condition modifier + saved promotion. Sensor base: 60. Repair base: 40. General quarters adds 30 to repair. Cruising adds 0. Equal top scores escalate with no lease. ID sorting is for display only.</p><p>Heartbeat freshness: 10 seconds. Authorization ends at t=200; resource ownership lasts 5 seconds. A heartbeat is liveness evidence, not verified identity.</p></details></section>
+<section class="card"><span class="eyebrow muted">02 · Announce work</span><h2>Intent workspace</h2><p>Announce a single inspection, or queue two competing requests in one batch. Resolve before executing.</p><div class="row"><div class="field"><label for="agent-select">Requesting agent</label><select id="agent-select"><option value="repair">repair</option><option value="sensor">sensor</option><option value="ghost">ghost (registration exercise)</option></select></div><button id="submit-intent" class="primary">Announce intent</button></div><p class="muted">Resource: pump-1 · Allowed action: inspect</p><p id="intent-result" class="result" aria-live="polite">None</p><div class="row"><div class="field"><label for="arrival-order">Competing request arrival order</label><select id="arrival-order"><option value="sensor-first">Sensor first</option><option value="repair-first">Repair first</option></select></div><button id="queue-contenders">Queue competing requests</button></div><div class="metrics"><div><p class="stat" id="pending-count">0</p><p>Pending intents</p></div><div><p class="stat" id="executed-count">0</p><p>Completed actions</p></div></div><div class="row"><button id="resolve" class="primary">Resolve batch</button><button id="clear-batch">Clear batch</button></div><p class="muted">Clear batch cancels unexecuted work and releases ownership. Completed history stays.</p></section>
+<section class="card wide"><span class="eyebrow muted">03 · Review then execute</span><h2>Decision & action review</h2><div class="grid"><div><p>Winner: <strong id="decision-winner">None</strong> · Lease owner: <strong id="lease-owner">None</strong></p><p id="decision-reason" class="result">None</p><p id="lease-detail" class="muted">No active resource lease.</p><ul id="candidate-scores"></ul><button id="execute" class="primary">Execute approved action</button><p id="execution-result" aria-live="polite">None</p></div><div><h3>Latest completed action</h3><p id="action-latest" class="result">None</p><h3>Simulated halt acknowledgements</h3><p id="halt-acks">None</p><p class="muted" id="halt-help">Halt cancels pending and granted work for every registered agent. Completed actions remain visible. No resume is available.</p></div></div><details class="details"><summary>Intent, decision & action history</summary><ul id="history"></ul><h3>Decision input snapshots</h3><pre id="snapshots">No decisions yet.</pre></details></section>
+<section class="card"><h2>Eligibility exercises</h2><p>Load a labeled synthetic failure at t=100, announce an intent, then repair eligibility and deliberately resubmit. This cancels the current unexecuted batch and preserves history.</p><div class="field"><label for="eligibility-case">Synthetic failure</label><select id="eligibility-case"><option value="missing">Missing manifest · ghost</option><option value="expired">Expired authorization · repair</option><option value="stale">Stale heartbeat · repair</option></select></div><div class="row"><button id="load-case">Load scenario</button><button id="repair-eligibility">Repair eligibility</button></div><details class="details"><summary>Advance synthetic time</summary><p>The clock advances only when requested. Recheck expiry before execution.</p><div class="field"><label for="seconds">Seconds to advance</label><input id="seconds" type="number" min="1" step="1" value="5"></div><div class="row"><button id="advance">Advance time</button></div></details></section>
+<section class="card"><h2>Local session</h2><p>Committed work and policy drafts are saved in this browser only. File storage support varies by browser. Export before discarding a session. Browser data can be edited; it is not a trusted audit store.</p><div class="row"><button id="export">Export session JSON</button><button id="new-session">New session</button></div><div id="reset-confirm" hidden><p>Discard this session, including its halt, drafts and history? This creates a new simulation and never resumes queued work.</p><div class="row"><button id="confirm-reset">Confirm new session</button><button id="cancel-reset">Keep current session</button></div></div><p id="session-label" class="muted"></p></section>
+</div><footer>Simulation boundary: no cryptographic identity, approved authority matrix, agent transport, physical halt, or operational connection. Human review and separate runtime validation remain required.</footer></main>
+<script id="governance-core">(function(root){
+'use strict';
+const clone=x=>JSON.parse(JSON.stringify(x));
+const integer=x=>Number.isSafeInteger(x)&&x>=0;
+const idOK=x=>typeof x==='string'&&/^[a-zA-Z][a-zA-Z0-9-]{0,79}$/.test(x);
+const policy={version:'demo-v1',modifiers:{cruising:{repair:0,sensing:0},'general-quarters':{repair:30,sensing:0}},tie:'escalate',leaseSeconds:5};
+function agent(id,rank,cls){return {id,displayName:id,class:cls,baseRank:rank,allowedActions:['inspect'],validFrom:0,expiresAt:1000,heartbeatAt:100,contract:{heartbeat:true,intent:true,actionReport:true,halt:true}};}
+function auth(id){return {id:'auth-'+id,agentId:id,resourceId:'pump-1',action:'inspect',validFrom:0,expiresAt:200};}
+function initial(sessionId='synthetic-session'){return {schemaVersion:1,sessionId,now:100,revision:0,halted:false,condition:'cruising',policy:clone(policy),promotion:0,agents:[agent('sensor',60,'sensing'),agent('repair',40,'repair')],authorizationLeases:[auth('sensor'),auth('repair')],resourceLeases:[],intents:[],decisions:[],actionReports:[],haltAcknowledgements:[],audit:[],drafts:{promotion:'0',condition:'cruising'},batchId:'batch-1',batchSequence:1,selectedAgent:'repair',intentResult:'None',executionResult:'None',currentDecision:null};}
+function score(s,a){return a.baseRank+s.policy.modifiers[s.condition][a.class]+(a.id==='repair'?s.promotion:0);}
+function eligibility(s,id,resource='pump-1',action='inspect'){
+ if(s.halted)return 'operator halt is active.';
+ if(!integer(s.now)||!idOK(id)||resource!=='pump-1'||action!=='inspect')return 'malformed intent or telemetry.';
+ const a=s.agents.find(a=>a.id===id);if(!a)return `agent ${id} is not registered.`;
+ if(!integer(a.validFrom)||!integer(a.expiresAt)||a.validFrom>s.now||s.now>=a.expiresAt)return `${id} manifest is invalid or expired.`;
+ if(!a.contract||!['heartbeat','intent','actionReport','halt'].every(k=>a.contract[k]===true)||!Array.isArray(a.allowedActions)||!a.allowedActions.includes(action))return `${id} manifest contract or action is invalid.`;
+ const l=s.authorizationLeases.find(l=>l.agentId===id&&l.resourceId===resource&&l.action===action);
+ if(!l||!integer(l.validFrom)||!integer(l.expiresAt)||s.now<l.validFrom)return `${id} authorization lease is invalid.`;
+ if(s.now>=l.expiresAt)return `${id} authorization lease expired at t=${l.expiresAt}.`;
+ if(!integer(a.heartbeatAt)||a.heartbeatAt>s.now)return `${id} heartbeat telemetry is malformed.`;
+ if(s.now-a.heartbeatAt>10)return `${id} heartbeat is stale at t=${s.now}.`;
+ return null;
+}
+function validate(s){
+ const fail=()=>{throw Error('Invalid local snapshot. Discard it to start a new session.');};
+ if(!s||s.schemaVersion!==1||typeof s.sessionId!=='string'||!integer(s.now)||!integer(s.revision)||typeof s.halted!=='boolean'||!['cruising','general-quarters'].includes(s.condition)||!integer(s.promotion)||s.promotion>100||JSON.stringify(s.policy)!==JSON.stringify(policy))fail();
+ for(const k of ['agents','authorizationLeases','resourceLeases','intents','decisions','actionReports','haltAcknowledgements','audit'])if(!Array.isArray(s[k]))fail();
+ for(const k of ['agents','authorizationLeases','resourceLeases','intents','decisions','actionReports'])if(new Set(s[k].map(x=>x.id)).size!==s[k].length||s[k].some(x=>!idOK(x.id)))fail();
+ if(!idOK(s.selectedAgent)||typeof s.intentResult!=='string'||typeof s.executionResult!=='string')fail();
+ if(!s.drafts||typeof s.drafts.promotion!=='string'||!['cruising','general-quarters'].includes(s.drafts.condition)||!integer(s.batchSequence)||s.batchId!=='batch-'+s.batchSequence)fail();
+ for(const a of s.agents)if(!['repair','sensing'].includes(a.class)||!integer(a.baseRank)||typeof a.displayName!=='string'||!a.displayName.length||a.displayName.length>100||!integer(a.heartbeatAt)||!integer(a.validFrom)||!integer(a.expiresAt)||!a.contract||!Array.isArray(a.allowedActions))fail();
+ for(const a of s.authorizationLeases)if(!s.agents.some(x=>x.id===a.agentId)||a.resourceId!=='pump-1'||a.action!=='inspect'||!integer(a.validFrom)||!integer(a.expiresAt))fail();
+ for(const i of s.intents)if(!['pending','rejected','granted','denied','canceled','completed'].includes(i.status)||i.resourceId!=='pump-1'||i.action!=='inspect'||!integer(i.announcedAt)||(!s.agents.some(a=>a.id===i.agentId)&&i.status!=='rejected'))fail();
+ const active=s.resourceLeases.filter(l=>l.status==='active');if(active.length>1||s.halted&&active.length)fail();
+ for(const l of s.resourceLeases)if(!integer(l.issuedAt)||!integer(l.expiresAt)||!s.intents.some(i=>i.id===l.intentId&&i.agentId===l.holder)||!['active','released','revoked'].includes(l.status))fail();
+ if(new Set(s.actionReports.map(r=>r.intentId)).size!==s.actionReports.length)fail();
+ for(const r of s.actionReports)if(!s.intents.some(i=>i.id===r.intentId&&i.status==='completed'&&i.agentId===r.agentId)||!s.decisions.some(d=>d.id===r.decisionId))fail();
+ if(s.intents.filter(i=>i.status==='completed').length!==s.actionReports.length)fail();
+ for(const d of s.decisions)if(!Array.isArray(d.candidates)||!integer(d.time)||!['cruising','general-quarters'].includes(d.condition)||d.leaseId&&!s.resourceLeases.some(l=>l.id===d.leaseId))fail();
+ for(const l of active)if(!s.intents.some(i=>i.id===l.intentId&&i.status==='granted')||!s.decisions.some(d=>d.leaseId===l.id&&d.winner===l.holder&&!d.obsolete))fail();
+ for(const a of s.haltAcknowledgements)if(!s.agents.some(x=>x.id===a.agentId)||a.status!=='acknowledged'||!integer(a.time))fail();
+ if(new Set(s.haltAcknowledgements.map(a=>a.agentId)).size!==s.haltAcknowledgements.length)fail();
+ // Restored receipts must link the same intent, resource, batch and authority snapshot.
+ for(const l of s.resourceLeases){
+  const i=s.intents.find(i=>i.id===l.intentId),d=s.decisions.find(d=>d.leaseId===l.id);
+  if(!i||!d||l.resourceId!==i.resourceId||l.batchId!==i.batchId||d.batchId!==i.batchId||d.winner!==l.holder||l.issuedAt!==d.time||l.expiresAt!==l.issuedAt+policy.leaseSeconds)fail();
+ }
+ for(const d of s.decisions){
+  if(d.sessionId!==s.sessionId||d.policyVersion!==policy.version||!integer(d.promotion)||d.promotion>100||!integer(d.revision)||d.revision>s.revision||typeof d.obsolete!=='boolean'||typeof d.reason!=='string')fail();
+  if(new Set(d.candidates.map(c=>c.intentId)).size!==d.candidates.length)fail();
+  for(const c of d.candidates){
+   const i=s.intents.find(i=>i.id===c.intentId);
+   if(!i||i.agentId!==c.agentId||i.batchId!==d.batchId)fail();
+   if(c.eligibility===null){
+    const a=c.manifest;
+    if(!a||a.id!==c.agentId||!integer(a.baseRank)||!['repair','sensing'].includes(a.class)||!c.authorization||c.authorization.agentId!==a.id||c.score!==a.baseRank+policy.modifiers[d.condition][a.class]+(a.id==='repair'?d.promotion:0))fail();
+   }else if(typeof c.eligibility!=='string'||!c.eligibility||c.score!==null)fail();
+  }
+  if(d.winner!==null&&!d.candidates.some(c=>c.agentId===d.winner&&c.eligibility===null))fail();
+ }
+ for(const r of s.actionReports){
+  const i=s.intents.find(i=>i.id===r.intentId),d=s.decisions.find(d=>d.id===r.decisionId),l=d&&s.resourceLeases.find(l=>l.id===d.leaseId);
+  if(!l||l.intentId!==i.id||d.winner!==r.agentId||r.resourceId!==i.resourceId||r.action!==i.action||r.result!=='completed'||!integer(r.time)||r.time<l.issuedAt||r.time>=l.expiresAt||l.status!=='released')fail();
+ }
+ if(s.currentDecision&&!s.decisions.some(d=>d.id===s.currentDecision))fail();
+ if(s.halted&&(s.intents.some(i=>['pending','granted'].includes(i.status))||s.haltAcknowledgements.length!==s.agents.length))fail();
+ return s;
+}
+function clear(s){s.intents.forEach(i=>{if(['pending','granted','denied'].includes(i.status))i.status='canceled';});s.resourceLeases.forEach(l=>{if(l.status==='active')l.status='released';});s.currentDecision=null;s.batchSequence++;s.batchId='batch-'+s.batchSequence;}
+function invalidate(s){s.resourceLeases.forEach(l=>{if(l.status==='active')l.status='released';});s.intents.forEach(i=>{if(['granted','denied'].includes(i.status))i.status='pending';});s.decisions.forEach(d=>{if(!s.actionReports.some(r=>r.decisionId===d.id))d.obsolete=true;});}
+function announce(s,id,intentId){
+ const error=eligibility(s,id);const iid=intentId||'intent-'+(s.intents.length+1);
+ if(!idOK(iid)||s.intents.some(i=>i.id===iid)){s.intentResult='Rejected: duplicate or invalid intent ID.';return;}
+ s.intents.push({id:iid,batchId:s.batchId,agentId:id,resourceId:'pump-1',action:'inspect',announcedAt:s.now,status:error?'rejected':'pending',reason:error});
+ s.intentResult=error?'Rejected: '+error:`Pending: ${id} requests pump-1.`;
+}
+function transition(input,event){
+ validate(input);const s=clone(input);if(!event||typeof event.type!=='string')throw Error('Choose a valid action.');
+ if(s.halted&&!['halt','announce','execute','draft'].includes(event.type))throw Error('Operator halt is active. Start a confirmed new session to continue.');
+ if(event.type==='draft'){if(event.field==='promotion')s.drafts.promotion=String(event.value);else if(event.field==='condition'&&['cruising','general-quarters'].includes(event.value))s.drafts.condition=event.value;else throw Error('Invalid draft.');return s;}
+ switch(event.type){
+ case 'announce':announce(s,event.agentId||s.selectedAgent,event.id);break;
+ case 'queue':clear(s);for(const id of event.order==='repair-first'?['repair','sensor']:['sensor','repair'])announce(s,id);break;
+ case 'clear':clear(s);break;
+ case 'scenario':{
+ if(!['missing','expired','stale'].includes(event.value))throw Error('Choose a synthetic scenario.');
+ clear(s);s.now=100;let a=s.agents.find(a=>a.id==='repair');Object.assign(a,agent('repair',40,'repair'));Object.assign(s.authorizationLeases.find(a=>a.agentId==='repair'),auth('repair'));s.selectedAgent=event.value==='missing'?'ghost':'repair';
+ if(event.value==='missing'){s.agents=s.agents.filter(a=>a.id!=='ghost');s.authorizationLeases=s.authorizationLeases.filter(a=>a.agentId!=='ghost');if(s.intents.some(i=>i.agentId==='ghost'&&i.status!=='rejected')){s.agents.push(agent('ghost',20,'repair'));s.authorizationLeases.push(auth('ghost'));throw Error('Ghost already registered in this session; use a new session for the missing scenario.');}}
+ if(event.value==='expired')s.authorizationLeases.find(a=>a.agentId==='repair').expiresAt=100;
+ if(event.value==='stale')a.heartbeatAt=89;s.intentResult='Scenario loaded. Announce a fresh intent.';break;}
+ case 'repair':{const id=s.selectedAgent;let a=s.agents.find(a=>a.id===id);if(!a){a=agent(id,20,'repair');s.agents.push(a);s.authorizationLeases.push(auth(id));}a.validFrom=0;a.expiresAt=1000;a.heartbeatAt=s.now;const l=s.authorizationLeases.find(l=>l.agentId===id);l.validFrom=0;l.expiresAt=s.now+100;s.intentResult='Eligibility repaired. Announce a fresh intent.';break;}
+ case 'promotion':{const v=event.value;if(String(v).trim()===''||!integer(Number(v))||Number(v)>100)throw Error('Enter a whole repair promotion from 0 to 100.');s.promotion=Number(v);s.drafts.promotion=String(s.promotion);invalidate(s);break;}
+ case 'condition':if(!['cruising','general-quarters'].includes(event.value))throw Error('Choose a valid condition.');s.condition=event.value;s.drafts.condition=s.condition;invalidate(s);break;
+ case 'discard':s.drafts={promotion:String(s.promotion),condition:s.condition};break;
+ case 'advance':if(!integer(event.seconds)||event.seconds<1)throw Error('Enter positive whole seconds.');s.now+=event.seconds;break;
+ case 'resolve':{
+ if(s.drafts.promotion!==String(s.promotion)||s.drafts.condition!==s.condition)throw Error('Save or discard policy drafts before resolving.');
+ s.resourceLeases.forEach(l=>{if(l.batchId===s.batchId&&l.status==='active')l.status='released';});
+ const list=s.intents.filter(i=>i.batchId===s.batchId&&['pending','granted','denied'].includes(i.status));
+ const candidates=list.map(i=>{const a=s.agents.find(a=>a.id===i.agentId),error=eligibility(s,i.agentId);i.status=error?'rejected':'pending';i.reason=error;return {intentId:i.id,agentId:i.agentId,eligibility:error,score:error?null:score(s,a),manifest:clone(a||null),authorization:clone(s.authorizationLeases.find(l=>l.agentId===i.agentId)||null)};});
+ const ranked=candidates.filter(c=>!c.eligibility).sort((a,b)=>b.score-a.score||a.agentId.localeCompare(b.agentId));
+ const d={id:'decision-'+(s.decisions.length+1),sessionId:s.sessionId,revision:s.revision+1,time:s.now,batchId:s.batchId,policyVersion:s.policy.version,condition:s.condition,promotion:s.promotion,candidates,winner:null,reason:'No eligible pending intents. No lease granted.',leaseId:null,obsolete:false};
+ if(s.resourceLeases.some(l=>l.status==='active'&&l.expiresAt>s.now))d.reason='Resource pump-1 is already leased. No lease granted.';
+ else if(ranked.length>1&&ranked[0].score===ranked[1].score){const top=ranked.filter(c=>c.score===ranked[0].score);d.reason=`Escalate pump-1: ${top.map(c=>c.agentId+' '+c.score).join(' = ')}. No lease granted.`;}
+ else if(ranked.length){const w=ranked[0];d.winner=w.agentId;d.reason=ranked.length>1?`${w.agentId} wins pump-1: ${w.score} > ${ranked[1].score} under demo-v1 / ${s.condition}.`:`${w.agentId} wins pump-1: eligible under demo-v1 / ${s.condition}.`;d.leaseId='lease-'+(s.resourceLeases.length+1);s.resourceLeases.push({id:d.leaseId,holder:w.agentId,resourceId:'pump-1',intentId:w.intentId,batchId:s.batchId,issuedAt:s.now,expiresAt:s.now+5,status:'active'});list.forEach(i=>{if(i.status!=='rejected')i.status=i.id===w.intentId?'granted':'denied';});}
+ s.decisions.push(d);s.currentDecision=d.id;break;}
+ case 'execute':{
+ if(s.halted){s.executionResult='Blocked: operator halt is active.';break;}
+ if(s.drafts.promotion!==String(s.promotion)||s.drafts.condition!==s.condition){s.executionResult='Blocked: save or discard policy drafts first.';break;}
+ const d=s.decisions.find(d=>d.id===s.currentDecision),l=d&&s.resourceLeases.find(l=>l.id===d.leaseId);
+ let error=!d||d.obsolete?'Resolve a current batch first.':!l||l.status!=='active'?'No approved action is available.':s.now>=l.expiresAt?'Resource lease expired.':eligibility(s,l.holder);
+ if(!error&&s.actionReports.some(r=>r.intentId===l.intentId))error='Action already completed.';
+ if(error){s.executionResult='Blocked: '+error;break;}
+ const i=s.intents.find(i=>i.id===l.intentId);i.status='completed';l.status='released';s.actionReports.push({id:'action-'+(s.actionReports.length+1),decisionId:d.id,intentId:i.id,agentId:i.agentId,resourceId:i.resourceId,action:i.action,time:s.now,result:'completed'});s.executionResult='Action completed in simulation.';break;}
+ case 'halt':if(!s.halted){s.halted=true;s.intents.forEach(i=>{if(['pending','granted','denied'].includes(i.status))i.status='canceled';});s.resourceLeases.forEach(l=>{if(l.status==='active')l.status='revoked';});s.haltAcknowledgements=s.agents.map(a=>({agentId:a.id,time:s.now,status:'acknowledged'})).sort((a,b)=>a.agentId.localeCompare(b.agentId));}else return s;break;
+ default:throw Error('Unknown action.');
+ }
+ s.revision++;s.audit.push({revision:s.revision,time:s.now,event:event.type,message:s.intentResult,decision:s.currentDecision});return validate(s);
+}
+function restore(text){return validate(JSON.parse(text));}
+const api={initial,transition,eligibility,score,validate,restore};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.GovernanceCore=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+<script>
+'use strict';
+const C=GovernanceCore,$=id=>document.getElementById(id),key='mordecai-synthetic-v1';let state=C.initial(),locked=false,busy=false;
+function error(message){$('error').textContent=message;$('error').focus();}
+function persist(){try{localStorage.setItem(key,JSON.stringify(state));$('save-status').textContent='Saved locally';}catch(e){$('save-status').textContent='Session not saved — export to keep your work.';}}
+function list(id,items){const el=$(id);el.replaceChildren();for(const text of items){const li=document.createElement('li');li.textContent=text;el.append(li);}}
+function render(){
+ $('clock').textContent='t='+state.now;$('halt-status').textContent=state.halted?'Halted: future simulated actions blocked.':'Ready: simulation active.';$('halt-status').classList.toggle('halted',state.halted);
+ const sorted=[...state.agents].sort((a,b)=>C.score(state,b)-C.score(state,a)||a.id.localeCompare(b.id));$('roster-order').textContent=sorted.map(a=>a.id+' '+C.score(state,a)).join('; ');
+ list('roster',sorted.map(a=>a.displayName+' · '+a.class+' · score '+C.score(state,a)+' · '+(C.eligibility(state,a.id)||'Eligible (synthetic)')));
+ $('condition').value=state.drafts.condition;$('promotion').value=state.drafts.promotion;$('agent-select').value=state.selectedAgent;
+ const dirtyP=state.drafts.promotion!==String(state.promotion),dirtyC=state.drafts.condition!==state.condition;$('draft-status').textContent=[dirtyP?'Unsaved promotion':'Promotion saved: '+state.promotion,dirtyC?'Unsaved condition':'Condition saved: '+state.condition].join(' · ');$('draft-status').classList.toggle('draft',dirtyP||dirtyC);
+ $('intent-result').textContent=state.intentResult;$('execution-result').textContent=state.executionResult;
+ $('pending-count').textContent=state.intents.filter(i=>i.status==='pending').length;$('executed-count').textContent=state.actionReports.length;
+ const d=state.decisions.find(d=>d.id===state.currentDecision);$('decision-winner').textContent=d&&d.winner||'None';$('decision-reason').textContent=d?(d.obsolete?'Obsolete decision. Resolve batch again.':d.reason):'None';
+ const l=state.resourceLeases.find(l=>l.status==='active'&&l.expiresAt>state.now);$('lease-owner').textContent=l?l.holder:'None';$('lease-detail').textContent=l?'Exclusive pump-1 lease: t='+l.issuedAt+' to t='+l.expiresAt+' (expiry excluded).':'No active resource lease.';
+ list('candidate-scores',d?d.candidates.map(c=>c.agentId+': '+(c.eligibility||'score '+c.score)):[]);
+ const a=state.actionReports.at(-1);$('action-latest').textContent=a?`Executed: ${a.agentId} / ${a.resourceId} / ${a.action} at t=${a.time}.`:'None';$('halt-acks').textContent=state.haltAcknowledgements.map(a=>a.agentId+': acknowledged').join('; ')||'None';
+ list('history',[...state.intents.map(i=>i.id+' · '+i.agentId+' · '+i.status+(i.reason?' · '+i.reason:'')),...state.actionReports.map(a=>a.id+' · '+a.agentId+' completed at t='+a.time)]);$('snapshots').textContent=state.decisions.length?JSON.stringify(state.decisions,null,2):'No decisions yet.';$('session-label').textContent=state.sessionId+' · revision '+state.revision;
+ for(const id of ['halt','condition','apply-condition','discard-condition','promotion','save-promotion','discard-promotion','queue-contenders','resolve','clear-batch','eligibility-case','load-case','repair-eligibility','advance','seconds','arrival-order'])$(id).disabled=locked||state.halted;
+ $('submit-intent').disabled=locked;$('execute').disabled=locked;$('agent-select').disabled=locked||state.halted;$('export').disabled=locked;
+ if(state.halted)$('halt-help').textContent='Halt enforced. Pending and granted work is canceled. Use a confirmed new session to start a separate simulation.';
+}
+function dispatch(event){if(busy||locked)return;busy=true;$('error').textContent='';try{state=C.transition(state,event);persist();render();$('feedback').textContent='Updated: '+event.type+'.';if(event.type==='announce'&&state.intentResult.startsWith('Rejected:'))error(state.intentResult+' Repair eligibility or start a new session, then resubmit.');if(event.type==='execute'&&state.executionResult.startsWith('Blocked:'))error(state.executionResult);}catch(e){error(e.message);}finally{busy=false;}}
+function on(id,fn){$(id).addEventListener('click',fn);}
+$('promotion').addEventListener('input',()=>dispatch({type:'draft',field:'promotion',value:$('promotion').value}));$('condition').addEventListener('change',()=>dispatch({type:'draft',field:'condition',value:$('condition').value}));
+$('agent-select').addEventListener('change',()=>{state.selectedAgent=$('agent-select').value;persist();});
+on('halt',()=>dispatch({type:'halt'}));on('submit-intent',()=>dispatch({type:'announce',agentId:$('agent-select').value}));on('queue-contenders',()=>dispatch({type:'queue',order:$('arrival-order').value}));on('resolve',()=>dispatch({type:'resolve'}));on('execute',()=>dispatch({type:'execute'}));on('clear-batch',()=>dispatch({type:'clear'}));on('save-promotion',()=>dispatch({type:'promotion',value:$('promotion').value}));on('apply-condition',()=>dispatch({type:'condition',value:$('condition').value}));on('discard-promotion',()=>dispatch({type:'draft',field:'promotion',value:String(state.promotion)}));on('discard-condition',()=>dispatch({type:'draft',field:'condition',value:state.condition}));on('load-case',()=>dispatch({type:'scenario',value:$('eligibility-case').value}));on('repair-eligibility',()=>dispatch({type:'repair'}));on('advance',()=>dispatch({type:'advance',seconds:Number($('seconds').value)}));
+on('export',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='mordecai-session.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+on('new-session',()=>{$('reset-confirm').hidden=false;$('confirm-reset').focus();});on('cancel-reset',()=>{$('reset-confirm').hidden=true;$('new-session').focus();});on('confirm-reset',()=>{state=C.initial('synthetic-'+Date.now());locked=false;$('error').textContent='';$('reset-confirm').hidden=true;$('halt-help').textContent='Halt cancels pending and granted work for every registered agent. Completed actions remain visible. No resume is available.';persist();render();});
+try{const saved=localStorage.getItem(key);if(saved)state=C.restore(saved);$('save-status').textContent=saved?'Saved locally':'New local session';}catch(e){if(e.name==='SecurityError')$('save-status').textContent='Session not saved — browser storage unavailable.';else{locked=true;error('Invalid local snapshot. Actions are locked. Use New session and Confirm new session to discard it.');$('save-status').textContent='Session locked';}}
+render();
+</script></body></html>

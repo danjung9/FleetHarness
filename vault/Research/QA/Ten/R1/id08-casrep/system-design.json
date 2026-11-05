@@ -1,0 +1,102 @@
+{
+  "title": "CASREP Command — synthetic local review workflow",
+  "description": "Dependency-free local INITIAL-report demonstration. Persona selection and CO release are simulations; no messaging, identity or synchronization service is connected.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "Draft and routing workspace",
+      "description": "Labeled synthetic report editor, persona switcher, current holder, return/revise and explicit save/discard.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "workflow",
+      "label": "Revision-bound review engine",
+      "description": "Inline classic-JS core: allowed transitions, ordered reviewers, approval invalidation, immutable released snapshot and synthetic lifecycle relationships.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "lineage",
+      "label": "Amendment and conflict review",
+      "description": "Preserve immutable revision DAG; compare both simulated competing amendments and create explicit resolution with all heads as parents.",
+      "kind": "logic",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local persistence and audit",
+      "description": "Versioned localStorage envelope; persist before saved confirmation; recover drafts, history, comments and revision-bound decisions on reload.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Simulated CO release and export",
+      "description": "Local text download only, explicitly not an official Navy message; includes exact approved content and readable lineage/audit.",
+      "kind": "integration",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "tests",
+      "label": "Application core verification",
+      "description": "Node built-in tests execute the actual marked inline core extracted from index.html; no independent duplicate engine.",
+      "kind": "logic",
+      "files": [
+        "core.test.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "workspace",
+      "to": "workflow",
+      "label": "Draft edits and persona actions"
+    },
+    {
+      "from": "workflow",
+      "to": "store",
+      "label": "Atomic revisions, decisions and audit"
+    },
+    {
+      "from": "store",
+      "to": "workspace",
+      "label": "Saved state, holder and history"
+    },
+    {
+      "from": "workspace",
+      "to": "lineage",
+      "label": "Review competing synthetic amendments"
+    },
+    {
+      "from": "lineage",
+      "to": "workflow",
+      "label": "Resolved revision invalidates approvals"
+    },
+    {
+      "from": "workflow",
+      "to": "export",
+      "label": "CO-approved immutable snapshot"
+    },
+    {
+      "from": "tests",
+      "to": "workflow",
+      "label": "Execute actual inline domain functions"
+    },
+    {
+      "from": "tests",
+      "to": "lineage",
+      "label": "Exercise merge invariants and failures"
+    }
+  ]
+}

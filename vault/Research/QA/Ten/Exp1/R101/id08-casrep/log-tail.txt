@@ -1,0 +1,110 @@
+verify error bash failed
+"✔ required fields, exact recovery errors, enum, UTC, linked reports and boundaries (2.656666ms)\n✔ full return, revise, six-role approval and immutable release journey (4.2155ms)\n✔ role guards, dirty decisions, stale approvals, comments and release confirmation (2.950708ms)\n✔ branch values survive reconciliation and reload; both reviewed parents retained (9.353375ms)\n✔ reconciliati
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node <<'EOF'\nconst fs=require('fs'),crypto=require('crypto');\nfor(const f of ['acceptance-plan.json','ux-spec.json','system-design.json']) console.log(f,crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'));\nlet h=fs.readFileSync('index.html','utf8');\nh=h.replace('<details><summary>Lifecycle and local data</summary>','<details open><summary>L
+verify tool bash completed
+"acceptance-plan.json c5a8f85d48416365c8b7c006cb49bd400918048f9f589d7ae1687aace705f605\nux-spec.json c231403451f16500eb71ee5eb1d2e9845e6fc1bf3b7d5832fd8642460bac3e07\nsystem-design.json 3c69ba57aa73a158d1fe8140110901a7676c21329d82c595ff0cdbf8f27bb3b7\n✔ required fields, exact recovery errors, enum, UTC, linked reports and boundaries (2.334125ms)\n✔ full return, revise, six-role appr
+verify text The repair passes all 11 application tests, with no skipped checks. It quarantines incomplete stored data and makes lifecycle controls visible for the frozen journey. I also corrected the walkthrough to load a fresh sample before editing a cancelled draft. Desktop and narrow browser results remain unverified until the host runs them.
+verify tool fleet_reconcile_records
+{
+  "local": [
+    {
+      "id": "root",
+      "recordId": "synthetic-casrep",
+      "parents": [],
+      "actor": "Example",
+      "value": "base"
+    },
+    {
+      "id": "edit",
+      "recordId": "synthetic-casrep",
+      "parents": [
+        "root"
+      ],
+      "actor": "Example A",
+      "value": "amended"
+    }
+  ],
+  "remote": [
+    {
+      "id": "root",
+      "rec
+verify tool fleet_reconcile_records completed
+[{"type":"inputText","text":"{\n  \"operations\": [\n    {\n      \"id\": \"delete\",\n      \"recordId\": \"synthetic-casrep\",\n      \"parents\": [\n        \"root\"\n      ],\n      \"actor\": \"Example B\",\n      \"value\": null\n    },\n    {\n      \"id\": \"edit\",\n      \"recordId\": \"synthetic-casrep\",\n      \"parents\": [\n        \"root\"\n      ]
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node -v; rg -n 'test\\\\(|class Repository|details open|Recovery examples|Load a fresh' casrep.test.cjs index.html walkthrough.md; cat test-matrix.md\""
+}
+verify tool bash completed
+"v26.0.0\ncasrep.test.cjs:14:test('required fields, exact recovery errors, enum, UTC, linked reports and boundaries',()=>{\ncasrep.test.cjs:23:test('full return, revise, six-role approval and immutable release journey',()=>{\ncasrep.test.cjs:33:test('role guards, dirty decisions, stale approvals, comments and release confirmation',()=>{\ncasrep.test.cjs:43:test('branch values surviv
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > verification.md <<'EOF'\nPrimary deferrals: none.\n\nVerification phase, 2026-11-04. Synthetic-only scope; no operational systems contacted.\n\nGenerated: self-contained index.html, application tests, walkthrough and fielding brief. Runnable: the actual inline application core and repository executed under Node v26.0.0. Browser quick start requires a moder
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "draft",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"CASREP drafting and message preview: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "route",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Command review and authority guards: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "lineage",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Revision and conflict review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local record and audit repository: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Routing board and history: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "outputs",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and source was inspected. Local application tests pass 11/11; host desktop/narrow browser verification and human review remain pending. Generated reports implementation only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic release package and guidance: generated. The live diagram has been updated."}]
+verify text Primary deferrals: none.
+
+Used the bounded repair for storage validation and hidden lifecycle controls. Updated tests, README, walkthrough and verification evidence.
+
+Node tests: **11 passed, 0 failed, 0 skipped**. Frozen plans preserved; all components reported generated.
+
+Browser verification remains pending. The host must run desktop/narrow journeys and produce `test-report.json`, screenshots a
+verify info TAP version 13
+# Subtest: required fields, exact recovery errors, enum, UTC, linked reports and boundaries
+ok 1 - required fields, exact recovery errors, enum, UTC, linked reports and boundaries
+  ---
+  duration_ms: 4.58675
+  type: 'test'
+  ...
+# Subtest: full return, revise, six-role approval and immutable release journey
+ok 2 - full return, revise, six-role approval and immutable release journey
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

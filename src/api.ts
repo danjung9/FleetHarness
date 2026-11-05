@@ -12,10 +12,11 @@ function makeProject(input: NewProject): Project {
     id: crypto.randomUUID(), status: 'draft', stages: structuredClone(stageDefinitions),
     logs: [], feedback: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
-const empty = (): AppState => ({ version: 1, settings: { provider: '', model: '', rememberKey: false }, projects: starters.map(makeProject) });
+const empty = (): AppState => ({ version: 1, settings: { provider: '', model: '', rememberKey: false, developerMode: false }, projects: starters.map(makeProject) });
 let browserState: AppState;
 if (!isHosted) {
   try { browserState = JSON.parse(localStorage.getItem('fleet-browser-preview') || 'null') || empty(); } catch { browserState = empty(); }
+  browserState.settings.developerMode = browserState.settings.developerMode === true;
 }
 const listeners = new Set<(state: AppState) => void>();
 function save() {
@@ -31,10 +32,22 @@ export const api: FleetAPI = window.fleetHarness || (isHosted ? hostedClient.api
     const p = browserState.projects.find(p => p.id === id)!;
     const normalized = normalizeProjectInput(input);
     const sourceChallenge = normalized.challengeId ? p.sourceChallenge?.id === normalized.challengeId ? p.sourceChallenge : getChallenge(normalized.challengeId, browserState.norfolkCatalog?.challenges) : undefined;
-    Object.assign(p, normalized, { sourceChallenge }); p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined; save(); return p;
+    Object.assign(p, normalized, { sourceChallenge, updatedAt: new Date().toISOString() });
+    p.status = 'draft'; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+    p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
+    p.stages.forEach(stage => { stage.status = stage.id === 'intake' ? 'complete' : 'queued'; });
+    save(); return p;
   },
   startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
+  setDeveloperMode: async enabled => {
+    if (typeof enabled !== 'boolean') throw new Error('Developer mode must be enabled or disabled.');
+    const nextState = { ...browserState, settings: { ...browserState.settings, developerMode: enabled } };
+    localStorage.setItem('fleet-browser-preview', JSON.stringify(nextState));
+    browserState = nextState;
+    for (const fn of listeners) fn(structuredClone(browserState));
+    return api.bootstrap();
+  },
   connectChatGPT: desktopOnly, cancelChatGPTLogin: desktopOnly, disconnectChatGPT: desktopOnly, refreshChatGPT: desktopOnly,
   onState: fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }
 });

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OPTASK · Synthetic schedule</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#182e3d;background:#edf2f3;line-height:1.5}*{box-sizing:border-box}body{margin:0}header{background:#112f40;color:white;padding:28px max(22px,calc((100vw - 1240px)/2))}header p{margin:6px 0;color:#cae4e9}h1{font-size:30px;margin:6px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:16px}main{max-width:1284px;margin:auto;padding:22px}.notice{background:#fcdf9b;color:#382b11;padding:9px 14px;border-radius:5px;display:inline-block;font-weight:650}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}section{background:white;border:1px solid #d2dee1;border-radius:9px;padding:22px;margin-bottom:20px;min-width:0}.step{color:#567582;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700}label{display:block;font-weight:600;margin:12px 0 6px}textarea{width:100%;min-height:230px;resize:vertical;font:13px/1.6 ui-monospace,monospace}textarea,input,select{border:1px solid #93aab5;border-radius:4px;padding:9px;background:white;color:#182e3d}button{font:inherit;font-weight:600;border:1px solid #a6bbc4;background:#f5f8fa;color:#16384b;border-radius:5px;padding:9px 14px;cursor:pointer;margin:6px 6px 6px 0}button.primary{background:#156474;color:white;border-color:#156474}button:hover{filter:brightness(.93)}:focus-visible{outline:3px solid #d58311;outline-offset:3px}small,.muted{color:#57707b}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f0f5f6;padding:12px;font-size:12px;max-height:260px;overflow:auto}details{margin-top:12px}summary{cursor:pointer;font-weight:600}#validation-error{color:#922b21;font-weight:650}#validation-error:empty{display:none}.ack{display:flex;gap:9px;align-items:flex-start;font-weight:400}.ack input{margin-top:6px}.pill{font-size:12px;background:#e6f0f1;padding:4px 9px;border-radius:20px}.record{border-top:1px solid #dbe5e8;padding:9px 0}.field-grid{display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:14px}.field-grid dd{margin:0;overflow-wrap:anywhere}.field-grid dt{color:#57707b}.timeline{margin-top:16px}.axis{display:flex;justify-content:space-between;font-size:11px;margin-left:140px}.lane{display:grid;grid-template-columns:140px 1fr;align-items:center;margin:13px 0;gap:0}.lane-name{font-size:13px;font-weight:650}.track{border-left:1px solid #9eb5bf;border-right:1px solid #9eb5bf;background:repeating-linear-gradient(to right,#edf3f5 0%,#edf3f5 calc(4.1667% - 1px),#cddde3 4.1667%);padding:5px 0;min-height:30px}.bar-row{height:24px;position:relative;margin:3px 0}.bar{position:absolute;height:21px;min-width:3px;border-radius:3px;background:#167787;color:white;font-size:11px;overflow:hidden;white-space:nowrap}.bar.CRYPTO{background:#8a5ca2}.bar.FLIGHT{background:#b56b24}.schedule-item{padding:12px 0;border-bottom:1px solid #e1e9eb}.schedule-item p{margin:0}mark{background:#f7d776}footer{font-size:12px;color:#57707b;padding:10px 0 30px}.toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:8px}.toolbar label{margin:0}#storage-status{font-size:13px}#inspection[hidden]{display:none}@media(max-width:720px){.grid{grid-template-columns:1fr}header{padding:22px}main{padding:12px}section{padding:16px}.lane{grid-template-columns:95px 1fr}.lane-name{font-size:11px}.axis{margin-left:95px;font-size:9px}h1{font-size:25px}.field-grid{grid-template-columns:80px 1fr}button{max-width:100%}}
+</style></head><body>
+<header><div class="step" style="color:#9cc9d2">Offline workspace / Challenge 12</div><h1>OPTASK message → daily schedule</h1><p>Extract, inspect and review a synthetic tasking message.</p><div id="synthetic-notice" class="notice">Synthetic, not validated against the real format.</div></header>
+<main><p id="storage-status">Local-only workspace. No server sync. Use synthetic text only.</p><div id="validation-error" role="alert" tabindex="-1"></div>
+<div class="grid"><section><div class="step">01 / Capture</div><h2>Message workspace</h2><button id="load-sample">Load synthetic sample</button><label for="source">Raw synthetic message</label><textarea id="source" spellcheck="false" placeholder="Load the sample or paste invented FREQ, CRYPTO and FLIGHT records."></textarea><p id="draft-status" role="status"></p><button class="primary" id="parse">Parse message</button><button id="discard-draft">Discard source edits</button><p id="parse-summary" role="status">No message parsed. Load a sample to begin.</p>
+<details><summary>Invented grammar and input rules</summary><pre>FREQ/id/start/end/owner/value/unit/description//
+CRYPTO/id/start/end/owner/demoLabel/description//
+FLIGHT/id/start/end/owner/description//
+NOTE/text//</pre><p>synthetic-optask/v1 only. One record per line; fields cannot contain slashes or newlines. Dates use YYYY-MM-DDTHH:mmZ or an explicit ±HH:mm offset, years 1900–2099. Frequency values are invented positive decimals in kHz or MHz. Crypto labels must begin KEY-DEMO-. No operational meaning is assigned. Limit: 200,000 UTF-16 units.</p></details>
+<details open><summary>Source revision history</summary><p>Previous committed source</p><pre id="previous-source">No previous revision.</pre><div id="source-history"></div></details></section>
+<section><div class="step">02 / Inspect and commit</div><h2>Extraction and source review</h2><p id="mapping-summary">FREQ → Frequency plan; CRYPTO → Crypto change-over; FLIGHT → Flight quarters.</p><div id="issues"></div><div id="records"><p class="muted">Extracted records and issues will appear here.</p></div>
+<div id="inspection" hidden><h3>Inspect source</h3><p id="event-interval"></p><label for="field-select">Source field</label><select id="field-select"></select><dl class="field-grid"><dt>Value</dt><dd id="field-value"></dd><dt>Offset</dt><dd id="field-span"></dd><dt>Original</dt><dd id="field-source"></dd><dt>Normalized</dt><dd id="field-normalized"></dd></dl><pre id="source-highlight"></pre></div>
+<label class="ack"><input type="checkbox" id="reviewed"><span>I checked the source, category mapping and extracted times. This confirms only the synthetic demonstration.</span></label><button class="primary" id="confirm-review">Confirm review and save</button><p id="review-status" role="status">Not reviewed. Parse and inspect the source first.</p></section></div>
+<section><div class="step">03 / Schedule</div><h2 id="day-heading">24-hour schedule · 2026-11-04 · UTC</h2><div class="toolbar"><div><label for="day">UTC day</label><input id="day" type="date" value="2026-11-04"></div><button id="show-day">Show day</button><button class="primary" id="export">Export reviewed schedule</button></div><p id="schedule-state">Review your message to populate the schedule.</p><div class="timeline"><div class="axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div><div id="lanes"></div></div><div id="schedule-list"></div><p id="outside-day"></p><small>Full UTC intervals stay in the source inspector and export. Bars show only the selected day; overlapping entries have separate rows.</small></section>
+<section><div class="step">Evidence / Synthetic only</div><h2>Synthetic answer-key review</h2><p id="benchmark-disclosure">Synthetic answer key authored during planning; not SME ground truth.</p><button id="run-benchmark">Run synthetic comparison</button><div id="benchmark-results" hidden><p id="benchmark-counts"></p><p id="benchmark-metrics"></p><p id="benchmark-nonevents"></p><details><summary>Inspect held-out input, expected key and actual output</summary><pre id="benchmark-detail"></pre></details><label class="ack"><input id="benchmark-reviewed" type="checkbox"><span>I reviewed this synthetic comparison.</span></label><button id="save-benchmark-review">Save comparison review</button><p id="benchmark-review">Not human-reviewed.</p></div></section>
+<details><summary>Storage recovery</summary><p>Only this browser stores your work. Storage can vary when opening a local file. Download reviewed output to keep a copy.</p><button id="export-unreadable">Export unreadable saved bytes</button><button id="replace-storage">Replace saved workspace</button></details><footer>No real USMTF validation, OCR, handwriting recognition, authentication, operational integration or conflict resolution. Not for operational scheduling.</footer></main>
+<script id="optask-core">
+/* Synthetic OPTASK application core. No external dependencies. */
+(function(root){
+'use strict';
+const disclosure='Synthetic, not validated against the real format.';
+const mapping={FREQ:'Frequency plan',CRYPTO:'Crypto change-over',FLIGHT:'Flight quarters'};
+const layouts={FREQ:['type','id','start','end','owner','value','unit','description'],CRYPTO:['type','id','start','end','owner','demoLabel','description'],FLIGHT:['type','id','start','end','owner','description'],NOTE:['type','text']};
+function normalizeTimestamp(s){
+ const m=/^(19\d{2}|20\d{2})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(Z|[+-]\d{2}:\d{2})$/.exec(s);
+ if(!m)return null;
+ const [y,mo,d,h,mi]=m.slice(1,6).map(Number), t=new Date(Date.UTC(y,mo-1,d,h,mi));
+ if(t.getUTCFullYear()!==y||t.getUTCMonth()!==mo-1||t.getUTCDate()!==d||h>23||mi>59)return null;
+ const z=m[6];let offset=0;
+ if(z!=='Z'){const a=+z.slice(1,3),b=+z.slice(4);if(a>14||b>59||(a===14&&b!==0))return null;offset=(a*60+b)*(z[0]==='+'?1:-1);}
+ return new Date(+t-offset*60000).toISOString();
+}
+function parseMessage(raw,sourceId='revision-1'){
+ const out={grammar:'synthetic-optask/v1',disclosure,offsetUnit:'UTF-16',raw,sourceId,events:[],records:[],issues:[],nonEvents:[]};
+ const issue=(line,message,span=null,code='invalid')=>out.issues.push({code,line,sourceId,span,message:`Line ${line}: ${message}`});
+ if(typeof raw!=='string'||!raw.trim()){out.issues.push({code:'empty',line:0,sourceId,span:null,message:'Enter synthetic message text.'});return out;}
+ if(raw.length>200000){issue(0,'input exceeds 200,000 UTF-16 units.');return out;}
+ let base=0;
+ raw.split('\n').forEach((part,i)=>{
+ const line=part.endsWith('\r')?part.slice(0,-1):part, span={start:base,end:base+line.length},lineNumber=i+1;
+ base+=part.length+1;if(!line.trim())return;
+ const tokens=line.endsWith('//')?line.slice(0,-2).split('/'):line.split('/'), type=tokens[0],names=Object.prototype.hasOwnProperty.call(layouts,type)?layouts[type]:null;
+ if(!names){issue(lineNumber,`unsupported record type ${type}.`,span,'unsupported');out.nonEvents.push({line:lineNumber,span,type});return;}
+ let p=span.start;const fields={};tokens.forEach((v,j)=>{const name=names[j]||`extra${j}`;fields[name]={name,sourceText:v,span:{start:p,end:p+v.length},normalizedValue:v};p+=v.length+1;});
+ const record={id:tokens[1]||'',category:mapping[type]||null,fields,sourceId,line:lineNumber,lineSpan:span,reviewStatus:'awaiting review',valid:true};out.records.push(record);
+ const bad=(msg)=>{record.valid=false;issue(lineNumber,msg,span);};
+ if(!line.endsWith('//')||tokens.length!==names.length)bad('incorrect fields or missing terminal // delimiter.');
+ if(tokens.some(v=>!v.trim()))bad('all fields must be nonempty.');
+ if(type==='NOTE'){out.nonEvents.push({line:lineNumber,span,type,fields});return;}
+ if(!/^[A-Za-z][A-Za-z0-9_-]*$/.test(record.id))bad('id must start with a letter and contain letters, digits, underscores or hyphens.');
+ for(const name of ['start','end']){
+ const token=fields[name]?.sourceText||'',norm=normalizeTimestamp(token);if(fields[name])fields[name].normalizedValue=norm;
+ record[name+'Utc']=norm;
+ if(!norm)bad(!/(Z|[+-]\d{2}:\d{2})$/.test(token)?`${name} requires an explicit timezone.`:`${name} is not a valid calendar timestamp.`);
+ }
+ if(record.startUtc&&record.endUtc){record.durationMinutes=(Date.parse(record.endUtc)-Date.parse(record.startUtc))/60000;if(record.durationMinutes<=0)bad('end must be after start.');}
+ if(type==='FREQ'&&(!/^\d+(\.\d+)?$/.test(fields.value?.sourceText||'')||(!Number.isFinite(Number(fields.value?.sourceText))||Number(fields.value?.sourceText)<=0)||!['kHz','MHz'].includes(fields.unit?.sourceText)))bad('frequency requires a positive decimal value and kHz or MHz.');
+ if(type==='CRYPTO'&&!/^KEY-DEMO-[A-Za-z0-9_-]+$/.test(fields.demoLabel?.sourceText||''))bad('crypto label must be a fictitious KEY-DEMO-* token.');
+ });
+ const groups=Object.create(null);out.records.filter(r=>r.category).forEach(r=>(groups[r.id]||= []).push(r));
+ Object.values(groups).filter(g=>g.length>1).forEach(g=>g.forEach(r=>{r.valid=false;issue(r.line,`duplicate id ${r.id}.`,r.lineSpan,'duplicate');}));
+ out.events=out.records.filter(r=>r.category&&r.valid);return out;
+}
+function projectDay(events,utcDay){
+ const start=Date.parse(utcDay+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(utcDay)||!Number.isFinite(start)||new Date(start).toISOString().slice(0,10)!==utcDay)return {error:'Choose a valid UTC day.',entries:[],outside:events.length};
+ const end=start+86400000,entries=[];
+ for(const e of events){const a=Date.parse(e.startUtc),b=Date.parse(e.endUtc);if(a>=end||b<=start)continue;const x=Math.max(a,start),y=Math.min(b,end);entries.push({...e,displayStart:x===end?'24:00':new Date(x).toISOString().slice(11,16),displayEnd:y===end?'24:00':new Date(y).toISOString().slice(11,16),offsetMinutes:(x-start)/60000,visibleMinutes:(y-x)/60000,continued:a<start,continues:b>end});}
+ return {day:utcDay,entries,outside:events.length-entries.length};
+}
+function scheduleText(e){const f=e.fields;return [e.category,e.id,`${e.displayStart}–${e.displayEnd} UTC`,...(e.continued?['continued from previous day']:[]),...(e.continues?['continues next day']:[]),...(f.value?[`${f.value.sourceText} ${f.unit.sourceText}`]:[]),...(f.demoLabel?[f.demoLabel.sourceText]:[]),f.description.sourceText].join(' · ');}
+function compareAnswerKey(actual,key){
+ let matched=0,fieldDiscrepancies=0,timeDiscrepancies=0,spanDiscrepancies=0;
+ for(const expected of key.events){const e=actual.events.find(e=>e.id===expected.id);if(!e)continue;
+ if(e.category===expected.category&&e.startUtc===expected.startUtc&&e.endUtc===expected.endUtc)matched++;
+ for(const n of ['startUtc','endUtc'])if(e[n]!==expected[n])timeDiscrepancies++;
+ for(const [n,k]of Object.entries(expected.fields)){const f=e.fields[n];if(!f||f.sourceText!==k.sourceText)fieldDiscrepancies++;if(!f||f.span.start!==k.span.start||f.span.end!==k.span.end)spanDiscrepancies++;}
+ }
+ return {expected:key.events.length,extracted:actual.events.length,matched,falsePositives:actual.events.length-matched,missed:key.events.length-matched,precision:actual.events.length?matched/actual.events.length:null,recall:key.events.length?matched/key.events.length:null,fieldDiscrepancies,timeDiscrepancies,spanDiscrepancies};
+}
+function freshSnapshot(){return {schemaVersion:1,history:[],draft:'',currentId:null,reviewedId:null,day:'2026-11-04',benchmarkReviewed:false};}
+function commitDraft(s){if(s.history.at(-1)?.raw!==s.draft){const id='revision-'+(s.history.length+1);s.history.push({id,grammar:'synthetic-optask/v1',disclosure,raw:s.draft,previousRevisionId:s.currentId});s.currentId=id;}s.reviewedId=null;return parseMessage(s.draft,s.currentId);}
+function isDirty(s){return s.draft!==(s.history.at(-1)?.raw||'');}
+function reviewSnapshot(s,ack){if(isDirty(s))return 'Parse the edited source before review.';if(!s.currentId)return 'Parse message before review.';const p=parseMessage(s.history.at(-1).raw,s.currentId);if(p.issues.length)return 'Resolve all issues before review.';if(!ack)return 'Check the source and mapping acknowledgement before review.';s.reviewedId=s.currentId;return null;}
+function restoreSnapshot(text){try{const s=JSON.parse(text);if(s.schemaVersion!==1||!Array.isArray(s.history)||typeof s.draft!=='string'||projectDay([],s.day).error)throw Error();let prev=null;for(let i=0;i<s.history.length;i++){const r=s.history[i];if(r.id!=='revision-'+(i+1)||typeof r.raw!=='string'||r.previousRevisionId!==prev)throw Error();prev=r.id;}if(s.currentId!==prev||(s.reviewedId!==null&&s.reviewedId!==s.currentId))throw Error();if(s.reviewedId&&parseMessage(s.history.at(-1).raw).issues.length)throw Error();return {snapshot:s};}catch{return {error:'Saved workspace is unreadable. Export its original bytes or replace it explicitly.'};}}
+function buildExport(s,day){if(isDirty(s))return {error:'Parse and review the edited source before export.'};if(!s.currentId||s.reviewedId!==s.currentId)return {error:'Review and save the parsed source before export.'};const p=parseMessage(s.history.at(-1).raw,s.currentId);if(p.issues.length)return {error:'Resolve all issues before export.'};const schedule=projectDay(p.events,day);if(schedule.error)return schedule;return {schemaVersion:1,grammar:p.grammar,disclosure,utcDay:day,sourceHistory:s.history,reviewedRevisionId:s.reviewedId,reviewStatus:'reviewed',events:p.events.map(e=>({...e,reviewStatus:'reviewed'})),issues:p.issues,schedule};}
+const api={disclosure,mapping,normalizeTimestamp,parseMessage,projectDay,scheduleText,compareAnswerKey,freshSnapshot,commitDraft,isDirty,reviewSnapshot,restoreSnapshot,buildExport};if(typeof module!=='undefined')module.exports=api;root.OptaskCore=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+<script id="answer-key" type="application/json">
+{
+  "disclosure": "Synthetic, not validated against the real format.",
+  "origin": "plan.md: Held-out synthetic set and pre-build answer key; planning-authored, not SME ground truth",
+  "raw": "FREQ/HF/2026-11-04T10:00+02:00/2026-11-04T11:00+02:00/RADIO/305.25/MHz/Invented net//\nCRYPTO/HC/2026-11-04T12:10Z/2026-11-04T12:20Z/RADIO/KEY-DEMO-H/Practice window//\nFLIGHT/HA/2026-11-04T23:50Z/2026-11-05T00:10Z/AIR/Deck exercise//\nNOTE/Synthetic, not validated against the real format.//\nUNKNOWN/no scheduled activity//",
+  "events": [
+    {
+      "id": "HF",
+      "category": "Frequency plan",
+      "startUtc": "2026-11-04T08:00:00.000Z",
+      "endUtc": "2026-11-04T09:00:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "FREQ",
+          "span": {
+            "start": 0,
+            "end": 4
+          }
+        },
+        "id": {
+          "sourceText": "HF",
+          "span": {
+            "start": 5,
+            "end": 7
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T10:00+02:00",
+          "span": {
+            "start": 8,
+            "end": 30
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-04T11:00+02:00",
+          "span": {
+            "start": 31,
+            "end": 53
+          }
+        },
+        "owner": {
+          "sourceText": "RADIO",
+          "span": {
+            "start": 54,
+            "end": 59
+          }
+        },
+        "value": {
+          "sourceText": "305.25",
+          "span": {
+            "start": 60,
+            "end": 66
+          }
+        },
+        "unit": {
+          "sourceText": "MHz",
+          "span": {
+            "start": 67,
+            "end": 70
+          }
+        },
+        "description": {
+          "sourceText": "Invented net",
+          "span": {
+            "start": 71,
+            "end": 83
+          }
+        }
+      }
+    },
+    {
+      "id": "HC",
+      "category": "Crypto change-over",
+      "startUtc": "2026-11-04T12:10:00.000Z",
+      "endUtc": "2026-11-04T12:20:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "CRYPTO",
+          "span": {
+            "start": 86,
+            "end": 92
+          }
+        },
+        "id": {
+          "sourceText": "HC",
+          "span": {
+            "start": 93,
+            "end": 95
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T12:10Z",
+          "span": {
+            "start": 96,
+            "end": 113
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-04T12:20Z",
+          "span": {
+            "start": 114,
+            "end": 131
+          }
+        },
+        "owner": {
+          "sourceText": "RADIO",
+          "span": {
+            "start": 132,
+            "end": 137
+          }
+        },
+        "demoLabel": {
+          "sourceText": "KEY-DEMO-H",
+          "span": {
+            "start": 138,
+            "end": 148
+          }
+        },
+        "description": {
+          "sourceText": "Practice window",
+          "span": {
+            "start": 149,
+            "end": 164
+          }
+        }
+      }
+    },
+    {
+      "id": "HA",
+      "category": "Flight quarters",
+      "startUtc": "2026-11-04T23:50:00.000Z",
+      "endUtc": "2026-11-05T00:10:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "FLIGHT",
+          "span": {
+            "start": 167,
+            "end": 173
+          }
+        },
+        "id": {
+          "sourceText": "HA",
+          "span": {
+            "start": 174,
+            "end": 176
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T23:50Z",
+          "span": {
+            "start": 177,
+            "end": 194
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-05T00:10Z",
+          "span": {
+            "start": 195,
+            "end": 212
+          }
+        },
+        "owner": {
+          "sourceText": "AIR",
+          "span": {
+            "start": 213,
+            "end": 216
+          }
+        },
+        "description": {
+          "sourceText": "Deck exercise",
+          "span": {
+            "start": 217,
+            "end": 230
+          }
+        }
+      }
+    }
+  ],
+  "nonEventLines": 2,
+  "unsupportedWarnings": 1
+}
+</script>
+<script>
+(function(){'use strict';
+const C=OptaskCore,$=id=>document.getElementById(id),key=JSON.parse($('answer-key').textContent),storageKey='synthetic-optask-v1';
+const sample='FREQ/F1/2026-11-04T08:00Z/2026-11-04T12:00Z/COMMS/251.5/MHz/Training net//\nCRYPTO/C1/2026-11-04T09:30Z/2026-11-04T09:45Z/COMMS/KEY-DEMO-A/Change-over drill//\nFLIGHT/A1/2026-11-04T23:30Z/2026-11-05T00:30Z/AIR/Deck rehearsal//\nNOTE/Synthetic, not validated against the real format.//';
+let s=C.freshSnapshot(),p=null,selected=null,sessionOnly=false,unreadable=null,benchmark=null;
+const set=(id,text)=>$(id).textContent=text;
+function error(text){set('validation-error',text);if(text)$('validation-error').focus();}
+function persist(){if(unreadable!==null)return;try{localStorage.setItem(storageKey,JSON.stringify(s));}catch{sessionOnly=true;}set('storage-status',sessionOnly?'Saved only for this session; export to keep a copy.':'Local-only workspace. No server sync. Use synthetic text only.');}
+try{const saved=localStorage.getItem(storageKey);if(saved){const r=C.restoreSnapshot(saved);if(r.error){unreadable=saved;sessionOnly=true;error(r.error);}else s=r.snapshot;}}catch{sessionOnly=true;}
+function download(name,text){const url=URL.createObjectURL(new Blob([text],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function add(parent,tag,text,cls){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;parent.append(el);return el;}
+function inspect(r){selected=r;$('inspection').hidden=false;$('field-select').replaceChildren();for(const name of Object.keys(r.fields)){const o=document.createElement('option');o.value=name;o.textContent=name;$('field-select').append(o);}set('event-interval',r.startUtc&&r.endUtc?`${r.startUtc} → ${r.endUtc} · ${r.durationMinutes} minutes`:'Unresolved interval; correct the source and reparse.');showField();}
+function showField(){if(!selected)return;const f=selected.fields[$('field-select').value];set('field-value',f.sourceText);set('field-span',`UTF-16 [${f.span.start}, ${f.span.end})`);set('field-source',p.raw.slice(f.span.start,f.span.end));set('field-normalized',f.normalizedValue===null?'Unresolved':String(f.normalizedValue));const pre=$('source-highlight');pre.replaceChildren(document.createTextNode(p.raw.slice(selected.lineSpan.start,f.span.start)));add(pre,'mark',p.raw.slice(f.span.start,f.span.end));pre.append(document.createTextNode(p.raw.slice(f.span.end,selected.lineSpan.end)));}
+function renderSchedule(){set('day-heading',`24-hour schedule · ${s.day} · UTC`);const reviewed=s.currentId&&s.currentId===s.reviewedId,dirty=C.isDirty(s),projection=C.projectDay(reviewed?p.events:[],s.day);set('schedule-state',dirty?'Source edits are pending. The displayed schedule is the previous reviewed revision; parse and review to update it.':reviewed?'Reviewed schedule. Select an event to inspect its full source.':'Review your message to populate the schedule.');$('lanes').replaceChildren();$('schedule-list').replaceChildren();for(const [type,category]of Object.entries(C.mapping)){const lane=add($('lanes'),'div','','lane');add(lane,'div',category,'lane-name');const track=add(lane,'div','','track');projection.entries.filter(e=>e.category===category).forEach(e=>{const row=add(track,'div','','bar-row'),bar=add(row,'div',e.id,'bar '+type);bar.style.left=(e.offsetMinutes/14.4)+'%';bar.style.width=(e.visibleMinutes/14.4)+'%';bar.title=C.scheduleText(e);});}for(const e of projection.entries){const div=add($('schedule-list'),'div','','schedule-item'),text=add(div,'p',C.scheduleText(e));text.id='schedule-'+e.id;}set('outside-day',`${projection.outside} reviewed events outside this UTC day.`);}
+function render(){const dirty=C.isDirty(s);set('draft-status',dirty?'Unsaved source changes; parse before review or export.':s.currentId?'Parsed source saved locally.':'No source committed yet.');set('review-status',s.reviewedId===s.currentId&&s.currentId?`Reviewed and saved ${sessionOnly?'only for this session':'locally'}: ${p.events.length} event${p.events.length===1?'':'s'}.`:'Not reviewed. Inspect source and confirm review.');$('issues').replaceChildren();$('records').replaceChildren();if(p){set('parse-summary',`${p.events.length} event${p.events.length===1?'':'s'} extracted; ${p.issues.length} issue${p.issues.length===1?'':'s'}; review required.`);p.issues.forEach((i,n)=>{const e=add($('issues'),'p',i.message);e.id='issue-'+(n+1);});p.records.filter(r=>r.category).forEach(r=>{const div=add($('records'),'div','','record');add(div,'span',`${r.category} · ${r.id} · ${r.valid?'awaiting review':'needs correction'}`);const b=add(div,'button','Inspect source');b.id='inspect-'+r.id;b.onclick=()=>inspect(r);});}else set('parse-summary','No message parsed. Load a sample to begin.');set('previous-source',s.history.length>1?s.history.at(-2).raw:'No previous revision.');$('source-history').replaceChildren();for(const r of s.history){const d=add($('source-history'),'details','');add(d,'summary',r.id+(r.id===s.currentId?' · current':''));add(d,'pre',r.raw);}renderSchedule();}
+$('source').value=s.draft;$('day').value=s.day;if(s.currentId)p=C.parseMessage(s.history.at(-1).raw,s.currentId);
+$('source').oninput=()=>{s.draft=$('source').value;$('reviewed').checked=false;persist();render();};
+$('load-sample').onclick=()=>{$('source').value=sample;s.draft=sample;$('reviewed').checked=false;persist();error('');render();};
+$('discard-draft').onclick=()=>{s.draft=s.history.at(-1)?.raw||'';$('source').value=s.draft;persist();error('');render();};
+$('parse').onclick=()=>{error('');if(!s.draft.trim()){error('Enter synthetic message text.');return;}set('parse-summary','Parsing message');p=C.commitDraft(s);selected=null;$('inspection').hidden=true;$('reviewed').checked=false;persist();render();};
+$('confirm-review').onclick=()=>{const e=C.reviewSnapshot(s,$('reviewed').checked);if(e){error(e);return;}error('');persist();render();};
+$('field-select').onchange=showField;
+$('show-day').onclick=()=>{const projection=C.projectDay([], $('day').value);if(projection.error){error(projection.error);return;}s.day=$('day').value;error('');persist();renderSchedule();};
+$('export').onclick=()=>{const result=C.buildExport(s,s.day);if(result.error){error(result.error);return;}error('');download('optask-'+s.day+'.json',JSON.stringify(result,null,2));};
+$('run-benchmark').onclick=()=>{set('benchmark-counts','Comparing synthetic key');const actual=C.parseMessage(key.raw,'held-out-H');benchmark=C.compareAnswerKey(actual,key);const b=benchmark;set('benchmark-counts',`Expected ${b.expected}; extracted ${b.extracted}; matched ${b.matched}; false positives ${b.falsePositives}; missed ${b.missed}.`);const pct=n=>n===null?'N/A':Math.round(n*100)+'%';set('benchmark-metrics',`Event precision ${pct(b.precision)}; event recall ${pct(b.recall)}; field discrepancies ${b.fieldDiscrepancies}; time discrepancies ${b.timeDiscrepancies}; span discrepancies ${b.spanDiscrepancies}.`);const lines=key.raw.split('\n').slice(3),none=C.parseMessage(lines.join('\n'),'held-out-nonevents');set('benchmark-nonevents',`${lines.length} non-event lines; ${none.events.length} extracted events; ${none.issues.filter(i=>i.code==='unsupported').length} unsupported-line warning.`);set('benchmark-detail',JSON.stringify({key,actual,comparison:b},null,2));$('benchmark-results').hidden=false;$('benchmark-reviewed').checked=s.benchmarkReviewed;set('benchmark-review',s.benchmarkReviewed?'Synthetic comparison reviewed locally.':'Not human-reviewed.');};
+$('save-benchmark-review').onclick=()=>{if(!benchmark||!$('benchmark-reviewed').checked){error('Run the comparison and check its review acknowledgement.');return;}s.benchmarkReviewed=true;persist();set('benchmark-review','Synthetic comparison reviewed locally.');error('');};
+$('export-unreadable').onclick=()=>{if(unreadable===null){error('No unreadable saved bytes to export.');return;}download('unreadable-optask-workspace.json',unreadable);};
+$('replace-storage').onclick=()=>{if(!confirm('Replace the saved workspace with the current workspace? Export any unreadable bytes first.'))return;unreadable=null;persist();error('Saved workspace replaced explicitly.');};
+if(sessionOnly)set('storage-status','Saved only for this session; export to keep a copy.');if(unreadable!==null)set('storage-status','Unreadable saved workspace preserved. Use Storage recovery to export or explicitly replace it.');render();
+})();
+</script></body></html>

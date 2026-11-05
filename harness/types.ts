@@ -24,7 +24,7 @@ export interface AcceptanceCriterion {
   method: 'automated' | 'human' | 'integration';
   scenario: string;
   provenance?: Array<{
-    kind: 'requirement' | 'evaluation' | 'deliverable' | 'user' | 'recipe';
+    kind: 'requirement' | 'evaluation' | 'deliverable' | 'user' | 'recipe' | 'description' | 'summary';
     id: string;
     path: string;
   }>;

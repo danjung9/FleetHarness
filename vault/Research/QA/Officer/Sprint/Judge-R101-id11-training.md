@@ -1,0 +1,31 @@
+---
+type: evidence
+status: complete
+owner: mukul
+updated: 2026-11-04
+summary: "R101 challenge 11 has real tests but substitutes preset alternatives for departmental scheduling."
+---
+
+# Challenge 11 round 101 review record
+
+[E] The assigned `Research/QA/Ten/R101/id11-training` directory is absent. Scoped discovery and the preceding R101 review identified `Research/QA/Ten/Exp1/R101/id11-training`. Requirements were read first at the corrected location. No round 1 artifact was substituted. The experiment scoreboard still links through the missing path component.
+
+[E, experiment scoreboard and final.json] Round 101 is attributed to mvp 1d9eeee plus disclosed scratch changes in account, RPC, session and verification files and extra.patch. The recorded generation model is gpt-6.1-sol; elapsed time is 15 minutes and uncached input plus output is 285821 tokens. These are prior build records, not a fresh run or proof those changes shipped. final.json identifies challenge 11 and review status; its report equals test-report.json.
+
+[E, index.html:20 and :23] The supplied roster gives C01 and C05 the fictional EOOW qualification and matching availability. Engineering's candidate list contains only C01 at Monday 08:00. Removing only C01's EOOW qualification through the supported crew editor leaves a qualified, available C05 in the sample. The search at line 49 examines only listed candidates and cannot discover that substitute. This is a static source finding, not a newly executed failure. README explicitly says additional candidate/time choices require developer edits. domain.test.cjs:11 demonstrates recovery only after a test adds the C05 candidate directly to the data. A noncoding Sailor cannot make that addition through this UI.
+
+[E, index.html:49 and :71] Department names are request attributes rendered as agent responses after one central depth-first search. There are real shared constraints, rejected candidates and changed results, but no separately acting departmental negotiators or objective comparison. The first complete feasible assignment ends search. Recurrence examples are expanded in fixture code, with no general recurrence input. The weekly board renders a list; the heatmap has numeric loads but identical green styling in every cell. These limits concern the requested mechanism and outcome, not a demand for real operational data or deployment authorization.
+
+[E, README, verification.md and test-report.json] The guide discloses simulated participants, fixed candidates, no objective, unvalidated SFTRM rules and restricted inputs. Its opening no-primary-deferrals claim and the final requirementsMet true result overstate that scope. Verification's earlier browser-pending status is superseded by the supplied host report: 20 application tests, zero failures/skips and twenty passing browser executions across ten journeys at two widths. The host reports all seven criteria passed. Verification records two adversarial failures before a bounded repair; the host Repair=no flag concerns a different stage and does not establish contradictory retry accounting.
+
+[E, domain.test.cjs and acceptance-plan.json] Tests extract the actual inline core, use literal expected assignments and independently calculate overlaps and duty totals. They check invalid data, policy boundaries, alternate crew, exact occurrence membership and changed inputs. Five tests execute actual controller handlers through a minimal DOM/storage adapter. Their substance supports the limited behavior, not autonomous negotiation. One export-string test calls core formatting functions rather than a browser. The later browser journeys do request actual downloads, but compare selected text fragments, not complete report contents. No journey tests discovering an unlisted substitute, objective improvement or load-dependent heatmap colors.
+
+[E, visual inspection] All three requested screenshots were examined. shot-open shows an empty workspace; shot-clicked shows empty-state warnings, not a completed schedule; shot-narrow shows readable stacked controls. The additional retained weekly-resolution desktop image shows the feasible five-occurrence status. First-open records no page/console errors, external requests or narrow overflow, but does not independently prove the entire workflow offline. No browser, candidate program, test suite, provider, login or Sailor trial ran during this review.
+
+[E, local SHA-256 checks] `.tmp/r101-id11-review-identity.json` inventories 61 supplied files. All 54 manifest entries exist; 48 match and six Markdown files differ, consistent with the manifest's stated normalization caveat. The app, tests, plans, report and retained journey evidence match their entries. index.html SHA-256 is `5a612a0de1c3e234b503f525dcd5be97af4ee73aa891f99f5193e0cbd0831b44`. Raw frozen output outside this assignment was not accessed.
+
+[E, tool disclosure] Reused local command runner, installed shell/text readers and ripgrep for scoped reads; image viewer for supplied captures; patch tool for local notes; Python 3.9.6 standard library for JSON, hashes and note checks. Workspace-tool versions are not exposed. Providers are the installed workspace runtime, upstream shell/search projects and Python Software Foundation. No package, outside service, new model run or dataset was added. Prior work consists of the supplied synthetic app, test artifacts, experiment scoreboard, context and existing local review records.
+
+[E, friction] The assigned path was missing; combined output was truncated; narrower reads resolved decisive evidence. The Python launcher emitted denied cache-write warnings, but the commands completed successfully. Central Sprint/Sessions/Team/Now are outside write authority, and tools/fh.py is denied. This local record stages disclosure, friction and prior-work updates without invoking denied tooling or claiming central completion. No outward message, commit, shared-file edit or generated-app modification occurred.
+
+[R] Main owns scoreboard and central-record transfer. Route the failed generalization case through the existing factory acceptance-skill work. Use a synthetic roster change and an independently established feasible witness; do not confuse a passing preset demonstration with full-card satisfaction. Human acceptance remains separate.

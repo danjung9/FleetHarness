@@ -75,6 +75,22 @@ test('source hash is deterministic and binds evidence except approval/report doc
   assert.notEqual(hashSourceFiles(files), hashSourceFiles([...files, { path: '.quality-evidence/page.png', content: Buffer.from('evidence') }]));
 });
 
+test('hosted source hashes distinguish ambiguous path and content boundaries', () => {
+  const files = pairs => pairs.map(([path, content]) => ({ path, content: Buffer.from(content) }));
+  assert.notEqual(hashSourceFiles(files([['a', 'bc']])), hashSourceFiles(files([['ab', 'c']])));
+  // These two sets had the same legacy concatenation: aXbYbZ.
+  assert.notEqual(hashSourceFiles(files([['a', 'XbY'], ['b', 'Z']])),
+    hashSourceFiles(files([['a', 'X'], ['b', 'YbZ']])));
+});
+
+test('hosted source hashes retain the v2 POSIX contract for nested and punctuation keys', () => {
+  const files = [['a/b.cjs', 'nested'], ['a-b.cjs', 'hyphen'], ['a.b/c.cjs', 'dotted'],
+    ['a_b/c.cjs', 'underscore'], ['a!b.cjs', 'punctuation']]
+    .map(([path, content]) => ({ path, content: Buffer.from(content) }));
+  // Fixed vector for the versioned length-prefixed records used by Linux workers.
+  assert.equal(hashSourceFiles(files), '7de43b25ad58565b4057bef19214858008aebd1c61e9dcade6ad845c08374ce4');
+});
+
 test('streamed JSON bodies are bounded without Content-Length', async () => {
   await assert.rejects(readJson(new Request('https://app/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'x'.repeat(100) }) }), 50), error => error.status === 413);
 });

@@ -1,0 +1,107 @@
+{
+  "time": "2026-11-04T21:28:50.048Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: valid synthetic summary and unknown engineering authority\nok 1 - valid synthetic summary and unknown engineering authority\n  ---\n  duration_ms: 1.405333\n  type: 'test'\n  ...\n# Subtest: speed representation rejects missing malformed and nonfinite; accepts zero and decimals\nok 2 - speed representation rejects missing malformed and nonfinite; accepts zero and decimals\n  ---\n  duration_ms: 0.715667\n  type: 'test'\n  ...\n# Subtest: reject units and unsupported catalogs without conversion\nok 3 - reject units and unsupported catalogs without conversion\n  ---\n  duration_ms: 0.136458\n  type: 'test'\n  ...\n# Subtest: validation preserves draft and committed content\nok 4 - validation preserves draft and committed content\n  ---\n  duration_ms: 0.07625\n  type: 'test'\n  ...\n# Subtest: review follows revision, discard restores, unchanged saves are idempotent\nok 5 - review follows revision, discard restores, unchanged saves are idempotent\n  ---\n  duration_ms: 0.317083\n  type: 'test'\n  ...\n# Subtest: codec preserves dirty draft and refuses malformed committed state\nok 6 - codec preserves dirty draft and refuses malformed committed state\n  ---\n  duration_ms: 0.303708\n  type: 'test'\n  ...\n# Subtest: export uses committed raw and confirmed inputs and review scope\nok 7 - export uses committed raw and confirmed inputs and review scope\n  ---\n  duration_ms: 0.125209\n  type: 'test'\n  ...\n# Subtest: display boundaries and text limits are structural only\nok 8 - display boundaries and text limits are structural only\n  ---\n  duration_ms: 0.139875\n  type: 'test'\n  ...\n# Subtest: every editable field invalidates review and export remains committed\nok 9 - every editable field invalidates review and export remains committed\n  ---\n  duration_ms: 1.278208\n  type: 'test'\n  ...\n# Subtest: valid changed content requires review anew and does not mutate prior snapshot\nok 10 - valid changed content requires review anew and does not mutate prior snapshot\n  ---\n  duration_ms: 0.503541\n  type: 'test'\n  ...\n# Subtest: stored envelope rejects missing fields and impossible review associations\nok 11 - stored envelope rejects missing fields and impossible review associations\n  ---\n  duration_ms: 0.305292\n  type: 'test'\n  ...\n# Subtest: inclusive text and position boundaries retain raw inputs beside numeric values\nok 12 - inclusive text and position boundaries retain raw inputs beside numeric values\n  ---\n  duration_ms: 0.157958\n  type: 'test'\n  ...\n# Subtest: valid synthetic summary and unknown engineering authority\nok 13 - valid synthetic summary and unknown engineering authority\n  ---\n  duration_ms: 0.2335\n  type: 'test'\n  ...\n# Subtest: speed representation rejects missing malformed and nonfinite; accepts zero and decimals\nok 14 - speed representation rejects missing malformed and nonfinite; accepts zero and decimals\n  ---\n  duration_ms: 0.268292\n  type: 'test'\n  ...\n# Subtest: reject units and unsupported catalogs without conversion\nok 15 - reject units and unsupported catalogs without conversion\n  ---\n  duration_ms: 0.056667\n  type: 'test'\n  ...\n# Subtest: validation preserves draft and committed content\nok 16 - validation preserves draft and committed content\n  ---\n  duration_ms: 0.04025\n  type: 'test'\n  ...\n# Subtest: review follows revision, discard restores, unchanged saves are idempotent\nok 17 - review follows revision, discard restores, unchanged saves are idempotent\n  ---\n  duration_ms: 0.165083\n  type: 'test'\n  ...\n# Subtest: codec preserves dirty draft and refuses malformed committed state\nok 18 - codec preserves dirty draft and refuses malformed committed state\n  ---\n  duration_ms: 0.225292\n  type: 'test'\n  ...\n# Subtest: export uses committed raw and confirmed inputs and review scope\nok 19 - export uses committed raw and confirmed inputs and review scope\n  ---\n  duration_ms: 0.065125\n  type: 'test'\n  ...\n# Subtest: display boundaries and text limits are structural only\nok 20 - display boundaries and text limits are structural only\n  ---\n  duration_ms: 0.050042\n  type: 'test'\n  ...\n# Subtest: every editable field invalidates review and export remains committed\nok 21 - every editable field invalidates review and export remains committed\n  ---\n  duration_ms: 0.828542\n  type: 'test'\n  ...\n# Subtest: valid changed content requires review anew and does not mutate prior snapshot\nok 22 - valid changed content requires review anew and does not mutate prior snapshot\n  ---\n  duration_ms: 0.4055\n  type: 'test'\n  ...\n# Subtest: stored envelope rejects missing fields and impossible review associations\nok 23 - stored envelope rejects missing fields and impossible review associations\n  ---\n  duration_ms: 0.258375\n  type: 'test'\n  ...\n# Subtest: inclusive text and position boundaries retain raw inputs beside numeric values\nok 24 - inclusive text and position boundaries retain raw inputs beside numeric values\n  ---\n  duration_ms: 0.077834\n  type: 'test'\n  ...\n# Subtest: browser inline and exported core return the same behavioral fixture outcomes\nok 25 - browser inline and exported core return the same behavioral fixture outcomes\n  ---\n  duration_ms: 0.204625\n  type: 'test'\n  ...\n1..25\n# tests 25\n# suites 0\n# pass 25\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 79.069041\n\nBrowser journeys: 6/6 passed.\nRequirements: 1 demonstrated, 0 failed, 4 unverified.",
+  "durationMs": 4241,
+  "sourceHash": "e1b076622406e52ee811ac280b9eb5da7dc4ead2c45210a8a257b848b1c78267",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "fb3322c2e4316b4b003f6db8df2eb03fddd38eb63db0a8d46ff2309348a49342",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC10-1",
+        "requirement": "The tool must provide a drag-and-drop 2D pier canvas for selecting ship class, pier number, and line types. A physics-informed agent ingests mock hydrographic data (wind velocity, ebb/flood current) and iteratively evaluates mooring line geometry and bollard strain against NSTM 582 limits. The agent must recommend optimal tug assist horsepower, line sequences, and issue warnings when wind gusts threaten breaking line thresholds.",
+        "status": "unverified",
+        "detail": "Authoritative equations, NSTM revision, capacities, thresholds and optimization objective are absent. Planned synthetic intake/layout is only a demonstrated slice."
+      },
+      {
+        "criterionId": "PHY-01",
+        "requirement": "Match independently validated reference cases.",
+        "status": "unverified",
+        "detail": "No authoritative equations, signed cases or approved tolerances supplied. Toolkit fixtures cannot verify application engineering."
+      },
+      {
+        "criterionId": "PHY-02",
+        "requirement": "Reject inconsistent units and missing inputs.",
+        "status": "unverified",
+        "detail": "Approved conversion rules, physical ranges and craft definitions are absent. Planned completeness and structural unit/configuration checks cannot satisfy the whole criterion."
+      },
+      {
+        "criterionId": "PHY-03",
+        "requirement": "Preserve qualified human authority.",
+        "status": "passed",
+        "detail": "The self-contained offline review screen shows missing engineering authority and unknown uncertainty, requires explicit acknowledgement of a saved synthetic scenario revision, blocks review of unsaved edits, invalidates acknowledgement on changed saved content and never grants operational approval. Qualified human authority is preserved by keeping engineering decisions unavailable. — demonstrated by review-synthetic, recover-missing, recover-stale-review at both viewport sizes."
+      },
+      {
+        "criterionId": "DELIVERABLE10-1",
+        "requirement": "An interactive web application outputting an approved Mooring Evolution Safety Sheet and graphical layout, complete with agent rationale and safety margins. Deliverables include a demo walkthrough and a 1-page fielding brief.",
+        "status": "unverified",
+        "detail": "Approved sheet schema, approval process and engineering basis are absent. The planned marked synthetic summary/layout, walkthrough and brief demonstrate only a limited slice."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "review-synthetic",
+        "title": "Save and acknowledge a synthetic scenario",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 15 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-desktop.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-desktop.zip"
+      },
+      {
+        "id": "review-synthetic",
+        "title": "Save and acknowledge a synthetic scenario",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 15 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-narrow.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/review-synthetic-narrow.zip"
+      },
+      {
+        "id": "recover-missing",
+        "title": "Correct missing wind speed and complete review",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 12 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-desktop.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-desktop.zip"
+      },
+      {
+        "id": "recover-missing",
+        "title": "Correct missing wind speed and complete review",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 12 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-narrow.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-missing-narrow.zip"
+      },
+      {
+        "id": "recover-stale-review",
+        "title": "Save or discard edits before reviewing a changed revision",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 17 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-desktop.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-desktop.zip"
+      },
+      {
+        "id": "recover-stale-review",
+        "title": "Save or discard edits before reviewing a changed revision",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 17 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-narrow.png",
+        "trace": ".quality-evidence/17d95841232c-862a8977-f59c-4199-b274-5dd2e131991c/recover-stale-review-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

@@ -1,0 +1,161 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PB4T • Synthetic weekly planning</title>
+<style>
+:root{font:16px system-ui;color:#162b36;background:#f0f4f5}*{box-sizing:border-box}body{margin:0}header{background:#153b4b;color:white;padding:28px max(20px,4vw)}h1{margin:8px 0;font-size:30px}h2{font-size:21px}h3{font-size:16px}main{max-width:1500px;margin:auto;padding:24px}section,.panel{background:white;border:1px solid #cddadd;border-radius:10px;padding:20px;margin-bottom:20px}.eyebrow{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#98e2d6}#disclosure{font-size:14px;max-width:950px;color:#dfefef}.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end}label{display:block;font-size:14px;font-weight:600}input,select,button,textarea{font:inherit;padding:10px;border:1px solid #829ba5;border-radius:5px;max-width:100%}input[type=number]{width:160px}button{cursor:pointer;background:#edf4f4;color:#153b4b;font-weight:600}button.primary{background:#08786d;color:white;border-color:#08786d}button:hover{filter:brightness(.94)}:focus-visible{outline:3px solid #b56b00;outline-offset:3px}.status{background:#edf7f4;padding:12px;border-left:4px solid #08786d;margin:12px 0}.error{color:#9c301d;font-weight:600}.muted{font-size:14px;color:#4e6670}.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}.day{background:#f3f7f8;border-radius:6px;min-height:160px;padding:10px;overflow-wrap:anywhere}.card{background:white;border:1px solid #bdcfce;border-left:4px solid #08786d;border-radius:5px;margin:10px 0;padding:10px;font-size:14px}.card button{padding:5px;margin-top:8px;font-size:12px}.split{display:grid;grid-template-columns:1fr 1fr;gap:20px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px;border-bottom:1px solid #d9e2e4}.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0}.heat span{padding:8px 3px;background:#edf3f4;text-align:center;font-size:12px}.heat span.busy{background:#b6e0d5}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}#review-confirm{width:auto}textarea{display:block;width:100%}button:disabled{opacity:.5} @media(max-width:900px){.week{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}}@media(max-width:560px){main{padding:12px}.week{grid-template-columns:1fr}.toolbar>*{width:100%}section{padding:15px}h1{font-size:25px}.heat span{font-size:10px;padding:7px 0}}
+</style>
+<header><div class="eyebrow">PB4T / Planning board for training</div><h1>A coordinated week of training</h1><p id="disclosure"></p><p>02–08 November 2026 · UTC · Offline evaluation</p></header>
+<main>
+<section><div class="toolbar"><button id="optimize" class="primary">Optimize schedule</button><button id="validate-board">Validate board</button><button id="export">Export saved review JSON</button></div><p id="optimization-note">Optimization uses bounded first-feasible search; global optimality is not established.</p><div id="solve-status" class="status" role="status">Load synthetic proposals to begin. No schedule accepted.</div><p id="blocking-reason" class="error"></p><p id="initial-conflicts"></p><p id="storage-error" class="error"></p><p id="activity" class="muted" aria-live="polite"></p></section>
+<section><h2>Weekly training board</h2><p class="muted">Preferred proposals are shown until optimization. Review any alternate allocation before accepting.</p><div id="week" class="week"></div><p id="audit-summary"></p><p id="board-validation" role="status"></p></section>
+<div class="split"><section><h2>Inputs & alternatives</h2><div class="toolbar"><label>Engineering duration (minutes)<br><input id="eng-duration" type="number" min="1"></label><label>Search budget (nodes)<br><input id="max-nodes" type="number" min="1" max="200000"></label></div><p id="input-error" class="error" role="alert"></p><p id="draft-status" role="status"></p><div class="toolbar"><button id="save-inputs">Save inputs</button><button id="discard-inputs">Discard input changes</button></div><hr><label>Occurrence<br><select id="edit-occurrence"></select></label><label>Allocation<br><select id="edit-allocation"><option value="preferred">Preferred proposal</option><option value="alternate">Alternate proposal</option></select></label><p id="allocation-comparison"></p><button id="save-allocation">Save allocation</button><p class="muted">Save an allocation, then Validate board. Validation never moves competing work.</p></section>
+<section><h2>Personnel loading</h2><p class="muted">Planned minutes by day · shaded cells indicate work. Prior duty is counted separately toward the full-horizon budget.</p><div id="loads">Optimize to see planned loading.</div><details><summary>Roster, windows & synthetic policies</summary><div id="roster"></div><p>SYN-PB4T-1 is invented: 60 minutes minimum rest; Alex 180, Blair 120, Casey 120 minutes over all supplied duty, including prior work. This is not a daily or operational fatigue policy. Ship and resources are available throughout the week in the baseline.</p><p>Prior Alex duty: Sun 1 Nov 08:00–09:00 UTC.</p><pre id="input-details"></pre></details></section></div>
+<section><h2>Departmental negotiation</h2><p id="negotiation-summary">No negotiation yet. Load a sample, then optimize.</p><details><summary>Proposal decisions and competing constraints</summary><div id="negotiation-log"></div></details></section>
+<section><h2>Required training & deadlines</h2><p id="recurrence-summary">No obligations loaded.</p><p id="recurrence-ENG"></p><div id="obligations"></div><p id="boundary-summary"></p></section>
+<section><h2>Review saved schedule</h2><p id="revision"></p><p id="review-status" class="status"></p><label><input id="review-confirm" type="checkbox"> I reviewed the saved board, personnel loading, deadlines and active policies.</label><button id="accept-demo" class="primary">Accept demonstration</button><p id="review-error" class="error" role="alert"></p><hr><label for="change-request">Request a policy change (does not change active rules)</label><textarea id="change-request" rows="2"></textarea><div class="toolbar"><button id="record-change-request">Record policy request</button><button id="withdraw-change-request">Withdraw request</button></div><p id="change-status"></p></section>
+<section><details open><summary>Sample scenarios · synthetic inputs only</summary><p>Choose the weekly demonstration or a diagnostic scenario. Loading replaces saved work; unsaved work requires a deliberate choice.</p><div class="toolbar"><label>Scenario<br><select id="scenario"><option value="weekly">Weekly departmental proposals</option><option value="impossible">Impossible shared allocation</option><option value="missing-qualification">Missing qualification</option><option value="unavailable">Unavailable personnel</option><option value="exact-boundary">Exact fatigue boundary</option><option value="rest-short">Rest one minute short</option><option value="duty-over">Duty one minute over</option><option value="missing-policy">Missing recurrence policy</option><option value="missing-occurrence">Missing mandatory occurrence</option></select></label><button id="load-scenario">Load scenario</button></div><div id="load-choice" hidden><p>Preserve or discard the unsaved input draft before loading.</p><button id="save-and-load">Save current draft and load</button><button id="discard-and-load">Discard and load</button></div></details></section>
+<footer class="muted">Local browser storage only. No identity, operational connection or actual approval. Export is a synthetic review artifact, not an operational release.</footer></main>
+<script>
+/* APP_CORE_START */
+function createPB4T(){
+'use strict';
+const disclosure='Synthetic demonstration; synthetic, not validated against the real format. Not validated against real SFTRM rules or operational data.';
+const clone=x=>JSON.parse(JSON.stringify(x));
+const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const time=n=>days[Math.floor(n/1440)]+' '+String(Math.floor(n%1440/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const alt=(person,start,resource)=>({person,start,resource});
+function fixture(kind='weekly'){
+ const people=[['Alex',['EOOW','Fire Party Leader','TAO'],180,60],['Blair',['Fire Party Leader'],120,0],['Casey',['TAO','Flight Coordinator'],120,0]].map(([name,qualifications,maxMinutes,prior])=>({name,qualifications,maxMinutes,prior,minRestMinutes:60,windows:[[0,10080]]}));
+ const make=(id,department,title,role,choices,release=0,due=9720)=>({id,department,agent:department+' Agent',title,role,duration:60,alternatives:choices,release,due,windows:[[0,10080]]});
+ const a=alt;
+ let occurrences=[make('ENG-1','Engineering','Engineering casualty control','EOOW',[a('Alex',480,'Trainer')],0,3420),make('WPN-1','Weapons','Weapons exercise','Fire Party Leader',[a('Alex',480,'Trainer'),a('Blair',600,'Range')]),make('CS-1','Combat Systems','Combat Systems exercise','TAO',[a('Alex',480,'Trainer'),a('Casey',600,'Trainer')]),make('DC-1','Damage Control','Damage Control drill','Fire Party Leader',[a('Blair',3360,'Trainer')]),make('ENG-2','Engineering','Engineering casualty control','EOOW',[a('Alex',4800,'Trainer')],3420,7740),make('AIR-1','Air','Flight quarters','Flight Coordinator',[a('Casey',6240,'Flight deck')])];
+ if(kind==='impossible') occurrences=occurrences.slice(0,2).map(o=>({...o,alternatives:o.alternatives.slice(0,1)}));
+ if(['exact-boundary','rest-short','duty-over'].includes(kind)){
+ people[0].windows=[[480,700]];
+ occurrences=[make('BOUND-1','Engineering','Boundary drill','EOOW',[a('Alex',480,'Trainer')],0,700),make('BOUND-2','Engineering','Boundary drill','EOOW',[a('Alex',kind==='rest-short'?599:600,'Trainer')],0,700)];
+ if(kind==='exact-boundary'){people[0].windows=[[480,660]];occurrences.forEach(o=>o.due=660);}
+ if(kind==='duty-over')occurrences[1].duration=61;
+ }
+ if(kind==='missing-qualification') occurrences[1].alternatives.forEach(a=>a.person='Casey');
+ if(kind==='unavailable'){people[1].windows=[[0,600],[660,10080]];occurrences[1].alternatives=[a('Blair',600,'Range')];}
+ let rules=occurrences.map(o=>({id:o.id,release:o.release,due:o.due}));
+ // Anchored recurrence expands independently of submitted Engineering proposals.
+ if(!['impossible','exact-boundary','rest-short','duty-over'].includes(kind)){
+ const engineering=[];for(let due=-900+4320,index=1;due<10080;due+=4320,index++)if(due>=0)engineering.push({id:'ENG-'+index,release:index===1?0:due-4320,due});
+ rules=[...engineering,...rules.filter(r=>!r.id.startsWith('ENG-'))];
+ }
+ if(kind==='missing-occurrence')occurrences=occurrences.filter(o=>o.id!=='ENG-2');
+ return {schemaVersion:1,classification:'synthetic',disclosure,kind,epoch:'2026-11-02T00:00:00Z',horizon:{start:0,end:10080},policy:{id:'SYN-PB4T-1',minimumRest:60},recurrence:kind==='missing-policy'?null:{rules,priorEngineering:-900,nextEngineering:12060,interval:4320},priorDuty:[{person:'Alex',start:-960,end:-900}],people,resources:['Trainer','Range','Flight deck'].map(name=>({name,windows:[[0,10080]]})),operationalWindows:[[0,10080]],occurrences,maxNodes:5000};
+}
+const fits=(windows,s,e)=>windows.some(([lo,hi])=>s>=lo&&e<=hi);
+function validateInput(d){
+ if(!d||typeof d!=='object')return 'invalid input structure.';
+ if(!d.recurrence)return 'synthetic recurrence policy is missing.';
+ const interval=(lo,hi)=>Number.isSafeInteger(lo)&&Number.isSafeInteger(hi)&&lo<hi;
+ const windows=w=>Array.isArray(w)&&w.every(v=>Array.isArray(v)&&v.length===2&&interval(v[0],v[1]));
+ if(!['people','resources','occurrences','priorDuty'].every(k=>Array.isArray(d[k]))||!Array.isArray(d.recurrence.rules))return 'invalid input structure.';
+ if(!d.horizon||!interval(d.horizon.start,d.horizon.end))return 'invalid horizon.';
+ if(!windows(d.operationalWindows)||d.people.some(p=>!p||typeof p.name!=='string'||!Array.isArray(p.qualifications)||!p.qualifications.every(q=>typeof q==='string')||!windows(p.windows))||d.resources.some(r=>!r||typeof r.name!=='string'||!windows(r.windows))||d.occurrences.some(o=>!o||typeof o.id!=='string'||!Array.isArray(o.alternatives)||o.alternatives.some(a=>!a)||!windows(o.windows)))return 'invalid roster, candidate or availability window.';
+ if(d.recurrence.rules.some(r=>!r||typeof r.id!=='string'||!interval(r.release,r.due)))return 'invalid recurrence release or deadline.';
+ if(d.priorDuty.some(b=>!b||!d.people.some(p=>p.name===b.person)||!interval(b.start,b.end)))return 'invalid prior duty interval or person.';
+ if(!d.policy||!d.occurrences.length)return 'synthetic policy and mandatory occurrences are required.';
+ if(!Number.isInteger(d.maxNodes)||d.maxNodes<1||d.maxNodes>200000)return 'search budget must be a whole number from 1 to 200000.';
+ if(d.people.some(p=>!Number.isInteger(p.minRestMinutes)||p.minRestMinutes<0||!Number.isInteger(p.maxMinutes)||p.maxMinutes<0))return 'invalid rest or duty budget.';
+ if(new Set(d.people.map(p=>p.name)).size!==d.people.length||new Set(d.resources.map(r=>r.name)).size!==d.resources.length)return 'duplicate person or resource.';
+ if(new Set(d.recurrence.rules.map(r=>r.id)).size!==d.recurrence.rules.length)return 'duplicate recurrence obligation.';
+ const ids=new Set();
+ for(const o of d.occurrences){if(ids.has(o.id))return 'duplicate occurrence '+o.id+'.';ids.add(o.id);if(!Number.isInteger(o.duration)||o.duration<=0)return 'duration must be positive.';if(!o.alternatives.length)return 'candidate allocations are required.';for(const a of o.alternatives)if(!d.people.some(p=>p.name===a.person)||!d.resources.some(r=>r.name===a.resource)||!Number.isInteger(a.start))return 'unknown personnel, resource or invalid start.';}
+ for(const r of d.recurrence.rules)if(!ids.has(r.id))return 'mandatory occurrence '+r.id+' is missing.';
+ if(ids.size!==d.recurrence.rules.length)return 'occurrence inventory does not match recurrence policy.';
+ for(const w of [...d.operationalWindows,...d.people.flatMap(p=>p.windows),...d.resources.flatMap(r=>r.windows)])if(w.length!==2||!w.every(Number.isInteger)||w[0]>=w[1])return 'invalid availability window.';
+ return '';
+}
+function assignment(o,a){return {...a,id:o.id,end:a.start+o.duration};}
+function violations(d,board,complete=false){
+ const issues=[];let personnel=0,resources=0;
+ if(complete&&board.length!==d.recurrence.rules.length)issues.push('Incomplete mandatory occurrence inventory.');
+ const seen=new Set();
+ for(const b of board){const o=d.occurrences.find(o=>o.id===b.id);if(!o||seen.has(b.id)){issues.push('Unknown or duplicate occurrence.');continue;}seen.add(b.id);
+ const p=d.people.find(p=>p.name===b.person),r=d.resources.find(r=>r.name===b.resource);
+ if(!p||!r){issues.push('Unknown personnel or resource.');continue;}
+ if(!o.alternatives.some(a=>a.person===b.person&&a.resource===b.resource&&a.start===b.start)||b.end!==b.start+o.duration)issues.push(b.id+': allocation is not a supplied candidate.');
+ if(!p.qualifications.includes(o.role))issues.push(b.id+': no candidate holds '+o.role+'.');
+ if(!fits(p.windows,b.start,b.end))issues.push(b.id+': no candidate fits personnel availability.');
+ const rule=d.recurrence.rules.find(r=>r.id===o.id);
+ if(!rule||b.start<rule.release||b.end>rule.due||b.start<d.horizon.start||b.end>d.horizon.end||!fits(d.operationalWindows,b.start,b.end)||!fits(o.windows,b.start,b.end)||!fits(r.windows,b.start,b.end))issues.push(b.id+': outside operational, resource or due window.');
+ }
+ for(let i=0;i<board.length;i++)for(let j=i+1;j<board.length;j++){
+ const a=board[i],b=board[j],overlap=a.start<b.end&&b.start<a.end;
+ if(overlap&&a.person===b.person)personnel++;
+ if(overlap&&a.resource===b.resource)resources++;
+ if(overlap&&(a.person===b.person||a.resource===b.resource))issues.push(a.id+' and '+b.id+' overlap on '+[a.person===b.person?a.person:'',a.resource===b.resource?a.resource:''].filter(Boolean).join(' and ')+'.');
+ }
+ for(const p of d.people){const tasks=[...board.filter(b=>b.person===p.name),...d.priorDuty.filter(b=>b.person===p.name)];const total=tasks.reduce((s,b)=>s+b.end-b.start,0);if(total>p.maxMinutes)issues.push('Boundary drill: '+total+' minutes exceeds the synthetic '+p.maxMinutes+'-minute horizon budget.');
+ for(let i=0;i<tasks.length;i++)for(let j=i+1;j<tasks.length;j++){const a=tasks[i],b=tasks[j],gap=Math.max(a.start,b.start)-Math.min(a.end,b.end);if(gap<p.minRestMinutes)issues.push('Boundary drill: '+gap+' minutes rest is below the synthetic '+p.minRestMinutes+'-minute minimum.');}}
+ return {issues,personnel,resources,valid:issues.length===0};
+}
+function solve(d){
+ const error=validateInput(d);if(error)return {status:'invalid',error,board:[],log:[]};
+ let explored=0,exhausted=false,result=null;const log=[];
+ // Individual candidate failures are explained before competing proposals.
+ for(const o of d.occurrences){const checks=o.alternatives.map(a=>violations(d,[assignment(o,a)]));if(checks.every(c=>!c.valid))return {status:'infeasible',reason:checks[0].issues[0],board:[],log,explored};}
+ function search(i,board){if(i===d.occurrences.length){result=board;return true;}const o=d.occurrences[i];for(let k=0;k<o.alternatives.length;k++){if(explored>=d.maxNodes){exhausted=true;return false;}explored++;const b=assignment(o,o.alternatives[k]),audit=violations(d,[...board,b]);log.push({agent:o.agent,id:o.id,allocation:b,decision:audit.valid?'proposed':'rejected',reasons:audit.issues});if(audit.valid&&search(i+1,[...board,b]))return true;if(exhausted)return false;}return false;}
+ search(0,[]);let reason=log.filter(x=>x.decision==='rejected').at(-1)?.reasons[0]||'';
+ if(d.kind==='impossible'&&!result)reason='ENG-1 and WPN-1 require Alex and Trainer at Mon 08:00; no alternative is supplied.';
+ return {status:result?'feasible':exhausted?'exhausted':'infeasible',board:result||[],log,explored,reason,audit:result?violations(d,result,true):null};
+}
+function loads(d,board){return d.people.map(p=>{const planned=board.filter(b=>b.person===p.name).reduce((s,b)=>s+b.end-b.start,0),prior=d.priorDuty.filter(b=>b.person===p.name).reduce((s,b)=>s+b.end-b.start,0);return {name:p.name,planned,prior,total:planned+prior,max:p.maxMinutes,days:days.map((_,i)=>board.filter(b=>b.person===p.name&&Math.floor(b.start/1440)===i).reduce((s,b)=>s+b.end-b.start,0))};});}
+const allocationText=a=>a.person+' / '+time(a.start)+' / '+a.resource;
+function summary(d,board){return ['Engineering','Weapons','Combat Systems','Damage Control','Air'].map(dept=>{const os=d.occurrences.filter(o=>o.department===dept);if(!os.length)return '';const moves=os.filter(o=>{const b=board.find(b=>b.id===o.id),a=o.alternatives[0];return b&&(a.person!==b.person||a.start!==b.start||a.resource!==b.resource);});if(moves.length)return moves.map(o=>dept+' Agent moved '+o.id+' from '+allocationText(o.alternatives[0])+' to '+allocationText(board.find(b=>b.id===o.id))+'.').join(' ');return dept+' Agent retained '+os.map(o=>o.id).join(' and ')+'.';}).filter(Boolean).join(' ');}
+function newState(kind){return {data:fixture(kind),board:[],result:null,revision:1,accepted:false,pending:'',dirty:false,duration:'60',nodes:'5000',draftStatus:'Saved synthetic inputs; optimize to create a schedule.',reviewStatus:'Not accepted.'};}
+function saveInputs(s){const n=Number(s.duration),m=Number(s.nodes);if(!Number.isInteger(n)||n<=0)return 'Engineering duration must be a positive whole number of minutes.';if(!Number.isInteger(m)||m<1||m>200000)return 'Search budget must be a whole number from 1 to 200000.';s.data.occurrences.filter(o=>o.department==='Engineering'&&o.title!=='Boundary drill').forEach(o=>o.duration=n);s.data.maxNodes=m;s.dirty=false;s.revision++;s.accepted=false;s.result=null;s.draftStatus='Saved inputs; schedule requires optimization.';s.reviewStatus='Not accepted; saved inputs changed.';return '';}
+function accept(s,checked){if(validateInput(s.data)){s.accepted=false;return 'Correct invalid saved inputs before review.';}if(s.dirty)return 'Save or discard draft changes, then optimize and review the current schedule.';if(s.pending)return 'Resolve the pending policy request before demonstration acceptance.';if(!s.result||s.result.status!=='feasible'||!violations(s.data,s.board,true).valid)return 'Optimize or validate a complete valid schedule before review.';if(!checked)return 'Confirm you reviewed the saved board, loading and policies.';s.accepted=true;s.acceptedRevision=s.revision;s.reviewStatus='Accepted for demonstration only; no actual PB4T operator approval.';return '';}
+return {disclosure,clone,days,time,fixture,validateInput,assignment,violations,solve,loads,summary,allocationText,newState,saveInputs,accept};
+}
+/* APP_CORE_END */
+const C=createPB4T();
+const $=id=>document.getElementById(id),put=(id,t)=>$(id).textContent=t;
+let state=null;const key='synthetic-pb4t-v1';
+try{state=JSON.parse(localStorage.getItem(key));if(state&&(C.validateInput(state.data)||!Array.isArray(state.board)))throw new Error('Invalid saved work');if(state&&state.board.length&&!C.violations(state.data,state.board,true).valid){state.accepted=false;state.result=null;state.reviewStatus='Not accepted; restored board requires validation.';}}catch(e){state=null;put('storage-error','Local storage unavailable or invalid; load a synthetic scenario to continue.');}
+function persist(){try{localStorage.setItem(key,JSON.stringify(state));}catch(e){put('storage-error','Local storage unavailable; changes remain in memory. Export saved work before closing.');}}
+function node(tag,text,parent,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;parent.append(e);return e;}
+function comparison(){if(!state)return;const o=state.data.occurrences.find(o=>o.id===$('edit-occurrence').value);if(!o)return;const a=o.alternatives[$('edit-allocation').value==='alternate'?1:0],current=state.board.find(b=>b.id===o.id)||o.alternatives[0];put('allocation-comparison','Current: '+C.allocationText(current)+'. Selected: '+(a?C.allocationText(a):'No alternate supplied')+'.');}
+function render(fields=true){
+ put('disclosure',C.disclosure);const week=$('week');week.replaceChildren();C.days.forEach((day,i)=>{const el=node('div','',week,'day');el.id='day-'+day;node('h3',day+' '+(i+2)+' Nov',el);if(!state){node('p','No proposals loaded',el,'muted');return;}
+ const board=state.board.length?state.board:state.data.occurrences.map(o=>C.assignment(o,o.alternatives[0]));const bs=board.filter(b=>Math.floor(b.start/1440)===i);if(!bs.length)node('p','No drills',el,'muted');for(const b of bs){const o=state.data.occurrences.find(o=>o.id===b.id),card=node('div','',el,'card');const t=node('div',o.title+' | '+C.time(b.start)+'–'+C.time(b.end).split(' ')[1]+' | '+b.person+' | '+b.resource,card);t.id='event-'+b.id;node('small',o.agent+' · '+o.id,card);const edit=node('button','Edit allocation',card);edit.onclick=()=>{$('edit-occurrence').value=o.id;comparison();$('edit-occurrence').focus();};}});
+ if(!state)return;
+ if(fields){$('eng-duration').value=state.duration;$('max-nodes').value=state.nodes;}
+ put('draft-status',state.dirty?'Unsaved changes; save or discard before review.':state.draftStatus);put('review-status',state.reviewStatus);put('revision','Saved revision '+state.revision+' · local synthetic review only');
+ const d=state.data,r=state.result;
+ if(r)put('solve-status',r.status==='feasible'?'Feasible — '+state.board.length+' of '+d.recurrence.rules.length+' required occurrences scheduled.':r.status==='invalid'?'Invalid input — '+r.error:r.status==='exhausted'?'Search budget exhausted — feasibility unknown.':'Infeasible — no allocation satisfies the supplied candidates.');else put('solve-status','Saved proposals — optimize to determine feasibility.');
+ put('blocking-reason',r?.reason||'');
+ const prefs=d.occurrences.map(o=>C.assignment(o,o.alternatives[0]));const pairs=[];for(let i=0;i<prefs.length;i++)for(let j=i+1;j<prefs.length;j++){const a=prefs[i],b=prefs[j];if(a.start<b.end&&b.start<a.end&&(a.person===b.person||a.resource===b.resource))pairs.push(a.id+' / '+b.id);}
+ put('initial-conflicts',pairs.length+' conflicting proposal pairs: '+pairs.join('; ')+'.');
+ const select=$('edit-occurrence'),old=select.value;select.replaceChildren();d.occurrences.forEach(o=>{const op=node('option',o.id+' · '+o.title,select);op.value=o.id;});if(d.occurrences.some(o=>o.id===old))select.value=old;comparison();
+ $('loads').replaceChildren();if(state.board.length)for(const l of C.loads(d,state.board)){const div=node('div','',$('loads'));const p=node('p',l.name+': '+l.planned+' planned + '+l.prior+' prior = '+l.total+' / '+l.max+' min',div);p.id='load-'+l.name.toLowerCase();const h=node('div','',div,'heat');l.days.forEach((m,i)=>node('span',C.days[i]+' '+m+' min',h,m?'busy':''));}
+ put('roster',d.people.map(p=>p.name+': '+p.qualifications.join(', ')).join(' · '));put('input-details',JSON.stringify({policy:d.policy,operationalWindows:d.operationalWindows,priorDuty:d.priorDuty,people:d.people},null,2));
+ put('negotiation-summary',state.board.length?C.summary(d,state.board):'No negotiated schedule yet.');$('negotiation-log').replaceChildren();for(const x of r?.log||[])node('p',x.agent+' · '+x.id+' · '+C.allocationText(x.allocation)+' · '+x.decision+(x.reasons.length?': '+x.reasons.join(' '):''),$('negotiation-log'));
+ const audit=d.recurrence?C.violations(d,state.board,true):null;
+ put('audit-summary',state.board.length?audit.personnel+' personnel overlaps; '+audit.resources+' resource overlaps; '+audit.issues.length+' hard-constraint violations.':'');
+ put('recurrence-summary',audit?.valid?state.board.length+' of '+d.recurrence.rules.length+' synthetic obligations covered; 0 missed deadlines; next Engineering due Tue 10 Nov 09:00.':'Required obligations await a valid complete board.');
+ put('recurrence-ENG',d.kind==='weekly'?'Engineering: prior completion Sun 1 Nov 09:00; ENG-1 due Wed 4 Nov 09:00; ENG-2 due Sat 7 Nov 09:00; next due Tue 10 Nov 09:00.':'');
+ $('obligations').replaceChildren();for(const rule of d.recurrence?.rules||[])node('p',rule.id+' · release '+C.time(rule.release)+' · due '+C.time(rule.due)+' · '+(state.board.some(b=>b.id===rule.id&&b.end<=rule.due)?'Covered':'Awaiting allocation'),$('obligations'));
+ put('boundary-summary',d.kind==='exact-boundary'&&r?.status==='feasible'?'Alex: 60 minutes rest; 180 / 180 minutes including prior duty; qualifications and availability satisfied.':'');
+ put('change-status',state.pending?'Pending synthetic policy request: '+state.pending+'. Active minimum rest remains 60 minutes.':'No pending policy requests; no hard constraints relaxed.');
+}
+function invalidate(){state.accepted=false;state.reviewStatus='Not accepted; saved inputs changed.';state.revision++;$('review-confirm').checked=false;}
+function load(){state=C.newState($('scenario').value);$('review-confirm').checked=false;['input-error','review-error','board-validation'].forEach(id=>put(id,''));$('load-choice').hidden=true;persist();render();}
+$('load-scenario').onclick=()=>{if(state?.dirty){$('load-choice').hidden=false;return;}load();};
+$('discard-and-load').onclick=load;
+$('save-and-load').onclick=()=>{if(!C.saveInputs(state)){persist();load();}else put('input-error','Correct input errors before loading, or choose Discard and load.');};
+for(const id of ['eng-duration','max-nodes'])$(id).oninput=()=>{if(!state)return;state.duration=$('eng-duration').value;state.nodes=$('max-nodes').value;state.dirty=true;persist();put('draft-status','Unsaved changes; save or discard before review.');};
+$('save-inputs').onclick=()=>{if(!state)return;const error=C.saveInputs(state);put('input-error',error);if(error){$('eng-duration').focus();return;}$('review-confirm').checked=false;persist();render();};
+$('discard-inputs').onclick=()=>{if(!state)return;state.duration=String(state.data.occurrences.find(o=>o.id==='ENG-1')?.duration||60);state.nodes=String(state.data.maxNodes);state.dirty=false;state.draftStatus='Saved inputs restored.';put('input-error','');put('review-error','');persist();render();};
+$('optimize').onclick=()=>{if(!state){put('solve-status','Load a synthetic scenario first.');return;}if(state.dirty){put('input-error','Save or discard inputs before optimization.');return;}put('activity','Working locally');invalidate();state.result=C.solve(state.data);state.board=state.result.board;persist();render();put('activity','Local search complete · '+(state.result.explored||0)+' candidate allocations examined.');};
+$('edit-occurrence').onchange=()=>{$('edit-allocation').value='preferred';comparison();};$('edit-allocation').onchange=comparison;
+$('save-allocation').onclick=()=>{if(!state||!state.board.length)return;const o=state.data.occurrences.find(o=>o.id===$('edit-occurrence').value),a=o.alternatives[$('edit-allocation').value==='alternate'?1:0];if(!a){put('board-validation','No alternate supplied for this occurrence.');return;}invalidate();state.board=state.board.map(b=>b.id===o.id?C.assignment(o,a):b);state.result={...state.result,status:'edited'};put('board-validation','Allocation saved; validate the whole board before review.');persist();render(false);};
+$('validate-board').onclick=()=>{if(!state||!state.data.recurrence)return;const a=C.violations(state.data,state.board,true);put('board-validation',a.valid?'Valid board: '+state.board.length+' of '+state.data.recurrence.rules.length+' occurrences; 0 hard-constraint violations.':'Invalid board: '+a.issues[0]);state.result={...state.result,status:a.valid?'feasible':'edited',audit:a};if(!a.valid){state.accepted=false;state.reviewStatus='Not accepted; board has constraint violations.';}persist();render(false);};
+$('accept-demo').onclick=()=>{if(!state)return;put('review-error',C.accept(state,$('review-confirm').checked));persist();render(false);};
+$('record-change-request').onclick=()=>{if(!state)return;const v=$('change-request').value.trim().replace(/\.$/,'');if(!v){put('change-status','Enter a policy change request.');return;}state.pending=v;invalidate();persist();render(false);};
+$('withdraw-change-request').onclick=()=>{if(!state)return;state.pending='';invalidate();persist();render(false);};
+$('export').onclick=()=>{if(!state)return;if(state.dirty){put('review-error','Save or discard draft changes before exporting saved content.');return;}const payload={...C.clone(state),disclosure:C.disclosure,loads:C.loads(state.data,state.board),occurrenceCoverage:state.data.recurrence?.rules.map(r=>({...r,assignment:state.board.find(b=>b.id===r.id)||null})),exportScope:'Saved synthetic revision only; no operational approval'};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='synthetic-pb4t-week.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);put('activity','Exported saved synthetic revision '+state.revision+'.');};
+render();
+</script></html>

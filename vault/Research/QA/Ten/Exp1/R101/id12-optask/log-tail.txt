@@ -1,0 +1,89 @@
+verify tool bash completed
+"/* Application domain core. Embedded verbatim in index.html by build.cjs. No dependencies. */\n(function (root) {\n'use strict';\nconst TYPES = {FREQPLAN:'Frequency Plan',CRYPTO:'Crypto Change-over Window',FLIGHTQTRS:'Flight Quarters'};\nconst GRAMMAR = 'synthetic-optask/v1';\nconst NOTICE = 'Synthetic only - not validated against actual USMTF formats or operational rules';\nconst 
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > adversarial.test.cjs <<'EOF'\nconst test=require('node:test');\nconst assert=require('node:assert/strict');\nconst fs=require('node:fs');\nconst vm=require('node:vm');\nconst path=require('node:path');\nconst ctx=vm.createContext({});\nvm.runInContext(fs.readFileSync(path.join(__dirname,'index.html'),'utf8').match(/<script id=\\\"application-core\\\">([\\\
+verify error bash failed
+"✖ module: prototype property names are unsupported records, never events (1.814625ms)\n✖ module: restored evidence rejects changed issue spans, headers and grammar (1.2155ms)\n✔ module: exact size boundary and rejected reparse preserve reviewed work (0.23775ms)\n✔ module: midnight endpoint excludes next day and seconds retain fractional minutes (0.101125ms)\n✔ module: comparison detec
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('core.cjs');s=p.read_text();s=s.replace(\\\"const TYPES = {FREQPLAN:'Frequency Plan',CRYPTO:'Crypto Change-over Window',FLIGHTQTRS:'Flight Quarters'};\\\", \\\"const TYPES = Object.assign(Object.create(null), {FREQPLAN:'Frequency Plan',CRYPTO:'Crypto Change-over Window',FLIGHTQTRS:'Flight Quarters'});\\\")\ns=s.
+verify tool bash completed
+"✔ module: prototype property names are unsupported records, never events (0.814459ms)\n✔ module: restored evidence rejects changed issue spans, headers and grammar (1.913916ms)\n✔ module: exact size boundary and rejected reparse preserve reviewed work (0.2595ms)\n✔ module: midnight endpoint excludes next day and seconds retain fractional minutes (0.114334ms)\n✔ module: comparison d
+verify text The new tests reproduced two defects: JavaScript prototype names could be accepted as event tags, and altered issue/header evidence could survive a session restore. I repaired both in the single bounded pass and rebuilt the self-contained page. All 31 Node tests now pass with no skips, including tests against the embedded core. The host’s desktop and narrow browser checks are still required.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"rg -n 'commit-review.*onclick|show-day.*onclick|function download|cancel-reset|confirm-reset|reset.*onclick' index.template.html; rg --files --hidden -g '*report*' -g '*trace*' -g '*screenshot*'; cat build.cjs\""
+}
+verify tool bash completed
+"28:<dialog id=\"reset-dialog\" aria-labelledby=\"reset-title\"><h2 id=\"reset-title\">Clear this local session?</h2><p>This removes the draft, preserved revisions and local review decisions. Downloaded files are not removed.</p><div class=\"actions\"><button id=\"cancel-reset\">Cancel</button><button id=\"confirm-reset\" class=\"danger\">Clear session</button></div></dialog>\n77:$(
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md');s=p.read_text().replace('node --test core.test.cjs workflow.test.cjs','node --test core.test.cjs workflow.test.cjs adversarial.test.cjs');s=s.replace('Recorded build evidence: **21 tests passed, 0 failed, 0 skipped**. This README-only update did not rerun tests or browser checks.', 'Verification evi
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "source",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Preserved OPTASK source: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "parser",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Traceable category parser: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Evidence and mapping review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "schedule",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synchronized 24-hour visual schedule: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "session",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local session state: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "exports",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; verification inspection complete and 31 application Node tests pass after one bounded parser/session repair. Host desktop/narrow browser verification remains unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Reviewed local exports: generated. The live diagram has been updated."}]
+verify text Repaired unsupported-tag handling and saved-evidence validation. All **31 Node tests pass**, with no skips.
+
+Updated README, acceptance matrix, and [verification.md](verification.md). Frozen plans remain unchanged.
+
+Browser journeys, screenshots, traces, offline operation, and MSG-04 human review remain unverified. The completion gate is not met; `requirementsMet=false`. The single repair allowanc
+verify info TAP version 13
+# Subtest: module: prototype property names are unsupported records, never events
+ok 1 - module: prototype property names are unsupported records, never events
+  ---
+  duration_ms: 0.719959
+  type: 'test'
+  ...
+# Subtest: module: restored evidence rejects changed issue spans, headers and grammar
+ok 2 - module: restored evidence rejects changed issue spans, headers and grammar
+  ---
+
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

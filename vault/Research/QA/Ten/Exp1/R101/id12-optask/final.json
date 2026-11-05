@@ -1,0 +1,225 @@
+{
+ "title": "Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T21:51:51.926Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./adversarial.test.cjs\" \"./core.test.cjs\" \"./workflow.test.cjs\"",
+  "exitCode": 0,
+  "total": 31,
+  "passed": 31,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: module: prototype property names are unsupported records, never events\nok 1 - module: prototype property names are unsupported records, never events\n  ---\n  duration_ms: 0.719959\n  type: 'test'\n  ...\n# Subtest: module: restored evidence rejects changed issue spans, headers and grammar\nok 2 - module: restored evidence rejects changed issue spans, headers and grammar\n  ---\n  duration_ms: 1.891709\n  type: 'test'\n  ...\n# Subtest: module: exact size boundary and rejected reparse preserve reviewed work\nok 3 - module: exact size boundary and rejected reparse preserve reviewed work\n  ---\n  duration_ms: 0.199791\n  type: 'test'\n  ...\n# Subtest: module: midnight endpoint excludes next day and seconds retain fractional minutes\nok 4 - module: midnight endpoint excludes next day and seconds retain fractional minutes\n  ---\n  duration_ms: 0.107167\n  type: 'test'\n  ...\n# Subtest: module: comparison detects missed and unexpected events and handles zero denominators\nok 5 - module: comparison detects missed and unexpected events and handles zero denominators\n  ---\n  duration_ms: 0.297583\n  type: 'test'\n  ...\n# Subtest: inline: prototype property names are unsupported records, never events\nok 6 - inline: prototype property names are unsupported records, never events\n  ---\n  duration_ms: 0.2155\n  type: 'test'\n  ...\n# Subtest: inline: restored evidence rejects changed issue spans, headers and grammar\nok 7 - inline: restored evidence rejects changed issue spans, headers and grammar\n  ---\n  duration_ms: 0.803625\n  type: 'test'\n  ...\n# Subtest: inline: exact size boundary and rejected reparse preserve reviewed work\nok 8 - inline: exact size boundary and rejected reparse preserve reviewed work\n  ---\n  duration_ms: 0.133375\n  type: 'test'\n  ...\n# Subtest: inline: midnight endpoint excludes next day and seconds retain fractional minutes\nok 9 - inline: midnight endpoint excludes next day and seconds retain fractional minutes\n  ---\n  duration_ms: 0.10775\n  type: 'test'\n  ...\n# Subtest: inline: comparison detects missed and unexpected events and handles zero denominators\nok 10 - inline: comparison detects missed and unexpected events and handles zero denominators\n  ---\n  duration_ms: 0.259125\n  type: 'test'\n  ...\n# Subtest: module: all three categories and exact sample evidence\nok 11 - module: all three categories and exact sample evidence\n  ---\n  duration_ms: 1.968292\n  type: 'test'\n  ...\n# Subtest: module: every source field slices unchanged mixed line endings and Unicode\nok 12 - module: every source field slices unchanged mixed line endings and Unicode\n  ---\n  duration_ms: 0.200083\n  type: 'test'\n  ...\n# Subtest: module: no inferred timestamps and one issue per invalid record\nok 13 - module: no inferred timestamps and one issue per invalid record\n  ---\n  duration_ms: 0.251417\n  type: 'test'\n  ...\n# Subtest: module: strict timezone, calendar and interval boundaries\nok 14 - module: strict timezone, calendar and interval boundaries\n  ---\n  duration_ms: 0.383166\n  type: 'test'\n  ...\n# Subtest: module: duplicates invalidate every member; header and missing-field issues\nok 15 - module: duplicates invalidate every member; header and missing-field issues\n  ---\n  duration_ms: 0.161042\n  type: 'test'\n  ...\n# Subtest: module: synchronized day clipping retains full interval and overlaps\nok 16 - module: synchronized day clipping retains full interval and overlaps\n  ---\n  duration_ms: 5.083959\n  type: 'test'\n  ...\n# Subtest: module: planner key comparison measures actual fields, including negative cases\nok 17 - module: planner key comparison measures actual fields, including negative cases\n  ---\n  duration_ms: 0.321167\n  type: 'test'\n  ...\n# Subtest: browser inline: all three categories and exact sample evidence\nok 18 - browser inline: all three categories and exact sample evidence\n  ---\n  duration_ms: 0.295459\n  type: 'test'\n  ...\n# Subtest: browser inline: every source field slices unchanged mixed line endings and Unicode\nok 19 - browser inline: every source field slices unchanged mixed line endings and Unicode\n  ---\n  duration_ms: 0.102792\n  type: 'test'\n  ...\n# Subtest: browser inline: no inferred timestamps and one issue per invalid record\nok 20 - browser inline: no inferred timestamps and one issue per invalid record\n  ---\n  duration_ms: 0.134583\n  type: 'test'\n  ...\n# Subtest: browser inline: strict timezone, calendar and interval boundaries\nok 21 - browser inline: strict timezone, calendar and interval boundaries\n  ---\n  duration_ms: 0.111542\n  type: 'test'\n  ...\n# Subtest: browser inline: duplicates invalidate every member; header and missing-field issues\nok 22 - browser inline: duplicates invalidate every member; header and missing-field issues\n  ---\n  duration_ms: 0.101833\n  type: 'test'\n  ...\n# Subtest: browser inline: synchronized day clipping retains full interval and overlaps\nok 23 - browser inline: synchronized day clipping retains full interval and overlaps\n  ---\n  duration_ms: 0.23875\n  type: 'test'\n  ...\n# Subtest: browser inline: planner key comparison measures actual fields, including negative cases\nok 24 - browser inline: planner key comparison measures actual fields, including negative cases\n  ---\n  duration_ms: 0.227125\n  type: 'test'\n  ...\n# Subtest: packaged browser core and module behavior agree on parse, review, schedule, exports\nok 25 - packaged browser core and module behavior agree on parse, review, schedule, exports\n  ---\n  duration_ms: 1.869542\n  type: 'test'\n  ...\n# Subtest: empty parse consumes no revision; correction preserves exact invalid original\nok 26 - empty parse consumes no revision; correction preserves exact invalid original\n  ---\n  duration_ms: 6.788458\n  type: 'test'\n  ...\n# Subtest: stale draft blocks review and both exports; explicit discard restores reviewed revision\nok 27 - stale draft blocks review and both exports; explicit discard restores reviewed revision\n  ---\n  duration_ms: 0.388958\n  type: 'test'\n  ...\n# Subtest: reasoned exclusion and both confirmations required; invalid record stays unplotted\nok 28 - reasoned exclusion and both confirmations required; invalid record stays unplotted\n  ---\n  duration_ms: 0.66575\n  type: 'test'\n  ...\n# Subtest: reviewed zero-event revision exports only header and traceable excluded source\nok 29 - reviewed zero-event revision exports only header and traceable excluded source\n  ---\n  duration_ms: 0.114083\n  type: 'test'\n  ...\n# Subtest: CSV has stable order, full UTC endpoints, day clips and safe spreadsheet text\nok 30 - CSV has stable order, full UTC endpoints, day clips and safe spreadsheet text\n  ---\n  duration_ms: 0.20225\n  type: 'test'\n  ...\n# Subtest: persistence round trip retains draft, review, exclusions, history and chosen day\nok 31 - persistence round trip retains draft, review, exclusions, history and chosen day\n  ---\n  duration_ms: 1.058583\n  type: 'test'\n  ...\n1..31\n# tests 31\n# suites 0\n# pass 31\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 72.082541\n\nBrowser journeys: 12/12 passed.\nRequirements: 6 demonstrated, 0 failed, 1 unverified.",
+  "durationMs": 7293,
+  "sourceHash": "dca76580d4809f68c1882764054fa4f8e99e6520539ff4a83670fb3b10cbcb55",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "fe22b930bceccaa6ac04896b0046427a7e97bb3fc3172e91a90be26d8ae5d17e",
+   "status": "passed",
+   "requirementsMet": false,
+   "criteria": [
+    {
+     "criterionId": "UC12-1",
+     "requirement": "A parser that takes raw formatted military text (USMTF format), extracts frequency plans, crypto change-over windows, and flight quarters event times, and plots them on a consolidated visual timeline.",
+     "status": "passed",
+     "detail": "Extract all three named categories directly from fictional pipe-delimited OPTASK text, review the mock type mapping and source evidence, and display overlapping intervals on a consolidated UTC timeline. Synthetic only; not validated against actual USMTF formats or operational rules. \u2014 demonstrated by daily-schedule, exclude-non-event, answer-key at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-01",
+     "requirement": "Every extracted field has exact source offsets.",
+     "status": "passed",
+     "detail": "Every source-derived field has a zero-based end-exclusive UTF-16 span into its immutable revision; the sample frequency start evidence is 2026-11-04T06:00:00Z. Derived values retain original-field links. \u2014 demonstrated by daily-schedule at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-02",
+     "requirement": "Do not invent ambiguous timestamps.",
+     "status": "passed",
+     "detail": "Empty source is rejected; missing timezone, impossible calendar date and unsupported line produce distinct issues with zero invented events; explicit correction creates revision 2 and preserves revision 1. Draft changes block review and export. \u2014 demonstrated by invalid-recovery, exclude-non-event, stale-review at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-03",
+     "requirement": "Normalize time zones without shifting the event.",
+     "status": "passed",
+     "detail": "01:00 at -05:00 normalizes to 06:00Z; a 23:30\u201300:30 flight interval remains 60 minutes and displays 30 minutes on each UTC day. \u2014 demonstrated by utc-boundary, daily-schedule at both viewport sizes."
+    },
+    {
+     "criterionId": "MSG-04",
+     "requirement": "Review output against an independent answer key.",
+     "status": "unverified",
+     "detail": "Packet method is human. No independent person has performed or recorded inspection of the held-out synthetic key and actual application output. A generated score or model statement cannot stand in for that person\u2019s review. The answer-key journey still demonstrates the complete synthetic comparison under UC12-1; MSG-04 remains unverified."
+    },
+    {
+     "criterionId": "MSG-05",
+     "requirement": "Keep the timeline usable offline.",
+     "status": "passed",
+     "detail": "After opening the self-contained local file, parsing, review, timeline and both downloads require no network. Reload restores source and reviewed state when local storage is available. \u2014 demonstrated by daily-schedule at both viewport sizes."
+    },
+    {
+     "criterionId": "DELIVERABLE12-1",
+     "requirement": "A tool that seamlessly converts mock USMTF raw text into a synchronized 24-hour visual schedule for watchstanders and shipboard leaders.",
+     "status": "passed",
+     "detail": "Convert the fictional raw message to the Synchronized 24-hour Visual Schedule with Frequency Plan, Crypto Change-over Window and Flight Quarters, a common 00:00\u201324:00 axis, accessible day list and reviewed CSV/traceability JSON exports. \u2014 demonstrated by daily-schedule, utc-boundary at both viewport sizes."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "daily-schedule",
+     "title": "Extract, review and export the fictional OPTASK schedule",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 24 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/daily-schedule-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/daily-schedule-desktop.zip"
+    },
+    {
+     "id": "daily-schedule",
+     "title": "Extract, review and export the fictional OPTASK schedule",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 24 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/daily-schedule-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/daily-schedule-narrow.zip"
+    },
+    {
+     "id": "utc-boundary",
+     "title": "Normalize offsets and retain full cross-midnight intervals",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 11 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/utc-boundary-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/utc-boundary-desktop.zip"
+    },
+    {
+     "id": "utc-boundary",
+     "title": "Normalize offsets and retain full cross-midnight intervals",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 11 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/utc-boundary-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/utc-boundary-narrow.zip"
+    },
+    {
+     "id": "invalid-recovery",
+     "title": "Reject unknown dates and recover by creating a corrected revision",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 17 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/invalid-recovery-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/invalid-recovery-desktop.zip"
+    },
+    {
+     "id": "invalid-recovery",
+     "title": "Reject unknown dates and recover by creating a corrected revision",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 17 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/invalid-recovery-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/invalid-recovery-narrow.zip"
+    },
+    {
+     "id": "exclude-non-event",
+     "title": "Explicitly exclude an unsupported non-event and complete review",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 13 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/exclude-non-event-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/exclude-non-event-desktop.zip"
+    },
+    {
+     "id": "exclude-non-event",
+     "title": "Explicitly exclude an unsupported non-event and complete review",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 13 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/exclude-non-event-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/exclude-non-event-narrow.zip"
+    },
+    {
+     "id": "stale-review",
+     "title": "Block stale exports and preserve draft until explicit reparse",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 19 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/stale-review-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/stale-review-desktop.zip"
+    },
+    {
+     "id": "stale-review",
+     "title": "Block stale exports and preserve draft until explicit reparse",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 19 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/stale-review-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/stale-review-narrow.zip"
+    },
+    {
+     "id": "answer-key",
+     "title": "Compare extraction with the planner-authored finite synthetic key",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 4 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/answer-key-desktop.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/answer-key-desktop.zip"
+    },
+    {
+     "id": "answer-key",
+     "title": "Compare extraction with the planner-authored finite synthetic key",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 4 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/answer-key-narrow.png",
+     "trace": ".quality-evidence/1fafa9764fa4-e52dbb49-6b6c-4b4e-b44c-7111a60524d0/answer-key-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 12.6,
+ "challengeId": "12",
+ "workspace": "~/fhexp/ud-r101/workspaces/258fa005-35e0-4faa-a4f4-b10c236682fa/136f8373-5ead-4577-93b9-3a1ae76daf6e"
+}

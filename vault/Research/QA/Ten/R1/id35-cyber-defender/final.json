@@ -1,0 +1,255 @@
+{
+ "title": "Autonomous Cyber Defender",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T21:22:01.548Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: CommonJS: seeded finding, benign control and exact citations\nok 1 - CommonJS: seeded finding, benign control and exact citations\n  ---\n  duration_ms: 2.180958\n  type: 'test'\n  ...\n# Subtest: CommonJS: unknown, unsupported and temporal boundaries never imply compliance\nok 2 - CommonJS: unknown, unsupported and temporal boundaries never imply compliance\n  ---\n  duration_ms: 0.426167\n  type: 'test'\n  ...\n# Subtest: CommonJS: invalid imports rejected atomically and raw draft retained\nok 3 - CommonJS: invalid imports rejected atomically and raw draft retained\n  ---\n  duration_ms: 1.494542\n  type: 'test'\n  ...\n# Subtest: CommonJS: byte and asset limits include exact boundaries\nok 4 - CommonJS: byte and asset limits include exact boundaries\n  ---\n  duration_ms: 0.44825\n  type: 'test'\n  ...\n# Subtest: CommonJS: SHA-256, canonical order and all proposal fields bind content\nok 5 - CommonJS: SHA-256, canonical order and all proposal fields bind content\n  ---\n  duration_ms: 4.16225\n  type: 'test'\n  ...\n# Subtest: CommonJS: dirty draft blocks review/export, survives reload, save invalidates old review\nok 6 - CommonJS: dirty draft blocks review/export, survives reload, save invalidates old review\n  ---\n  duration_ms: 3.361417\n  type: 'test'\n  ...\n# Subtest: CommonJS: review and evidence replacement require deliberate decisions\nok 7 - CommonJS: review and evidence replacement require deliberate decisions\n  ---\n  duration_ms: 0.959292\n  type: 'test'\n  ...\n# Subtest: CommonJS: portable handoff retains evidence and ordered events, never execution outcomes\nok 8 - CommonJS: portable handoff retains evidence and ordered events, never execution outcomes\n  ---\n  duration_ms: 1.181166\n  type: 'test'\n  ...\n# Subtest: CommonJS: corrupt and denied storage fail visibly, memory state remains intact\nok 9 - CommonJS: corrupt and denied storage fail visibly, memory state remains intact\n  ---\n  duration_ms: 0.409584\n  type: 'test'\n  ...\n# Subtest: CommonJS: review replay with mismatched proposal identity is rejected\nok 10 - CommonJS: review replay with mismatched proposal identity is rejected\n  ---\n  duration_ms: 1.093584\n  type: 'test'\n  ...\n# Subtest: CommonJS: multibyte byte limits and empty collections reject without losing analysis\nok 11 - CommonJS: multibyte byte limits and empty collections reject without losing analysis\n  ---\n  duration_ms: 0.478458\n  type: 'test'\n  ...\n# Subtest: inline browser factory: seeded finding, benign control and exact citations\nok 12 - inline browser factory: seeded finding, benign control and exact citations\n  ---\n  duration_ms: 0.362375\n  type: 'test'\n  ...\n# Subtest: inline browser factory: unknown, unsupported and temporal boundaries never imply compliance\nok 13 - inline browser factory: unknown, unsupported and temporal boundaries never imply compliance\n  ---\n  duration_ms: 0.343125\n  type: 'test'\n  ...\n# Subtest: inline browser factory: invalid imports rejected atomically and raw draft retained\nok 14 - inline browser factory: invalid imports rejected atomically and raw draft retained\n  ---\n  duration_ms: 1.2305\n  type: 'test'\n  ...\n# Subtest: inline browser factory: byte and asset limits include exact boundaries\nok 15 - inline browser factory: byte and asset limits include exact boundaries\n  ---\n  duration_ms: 0.248875\n  type: 'test'\n  ...\n# Subtest: inline browser factory: SHA-256, canonical order and all proposal fields bind content\nok 16 - inline browser factory: SHA-256, canonical order and all proposal fields bind content\n  ---\n  duration_ms: 3.388542\n  type: 'test'\n  ...\n# Subtest: inline browser factory: dirty draft blocks review/export, survives reload, save invalidates old review\nok 17 - inline browser factory: dirty draft blocks review/export, survives reload, save invalidates old review\n  ---\n  duration_ms: 3.340708\n  type: 'test'\n  ...\n# Subtest: inline browser factory: review and evidence replacement require deliberate decisions\nok 18 - inline browser factory: review and evidence replacement require deliberate decisions\n  ---\n  duration_ms: 0.903417\n  type: 'test'\n  ...\n# Subtest: inline browser factory: portable handoff retains evidence and ordered events, never execution outcomes\nok 19 - inline browser factory: portable handoff retains evidence and ordered events, never execution outcomes\n  ---\n  duration_ms: 1.470542\n  type: 'test'\n  ...\n# Subtest: inline browser factory: corrupt and denied storage fail visibly, memory state remains intact\nok 20 - inline browser factory: corrupt and denied storage fail visibly, memory state remains intact\n  ---\n  duration_ms: 0.385792\n  type: 'test'\n  ...\n# Subtest: inline browser factory: review replay with mismatched proposal identity is rejected\nok 21 - inline browser factory: review replay with mismatched proposal identity is rejected\n  ---\n  duration_ms: 1.032167\n  type: 'test'\n  ...\n# Subtest: inline browser factory: multibyte byte limits and empty collections reject without losing analysis\nok 22 - inline browser factory: multibyte byte limits and empty collections reject without losing analysis\n  ---\n  duration_ms: 0.398709\n  type: 'test'\n  ...\n1..22\n# tests 22\n# suites 0\n# pass 22\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 127.146167\n\nBrowser journeys: 8/8 passed.\nRequirements: 1 demonstrated, 0 failed, 17 unverified.",
+  "durationMs": 5114,
+  "sourceHash": "1e4ed9035a534fc66ee39a88cb74ef8e7e47934fbe708d30c743e41a8e57de4a",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "bfc6ecc60b0fbb47d5228e1e467c6fc3857709623638253be5f0b748889c105e",
+   "status": "passed",
+   "requirementsMet": false,
+   "criteria": [
+    {
+     "criterionId": "UC35-1",
+     "requirement": "Isolated and low-bandwidth",
+     "status": "unverified",
+     "detail": "Only local synthetic review is planned; deployment environment, link profile and measured transport are absent."
+    },
+    {
+     "criterionId": "UC35-2",
+     "requirement": "Human approval before any change, with rollback",
+     "status": "unverified",
+     "detail": "Prototype records synthetic proposal review and rollback instructions only; no authorized execution or rollback adapter exists."
+    },
+    {
+     "criterionId": "UC35-3",
+     "requirement": "Full audit trail",
+     "status": "unverified",
+     "detail": "Ordered local prototype events are exportable; authenticated attribution, operational coverage, retention and integrity infrastructure are absent."
+    },
+    {
+     "criterionId": "UC35-4",
+     "requirement": "Open interfaces; no live Navy networks",
+     "status": "unverified",
+     "detail": "Documented local synthetic JSON import/export and no network calls are planned; no external interoperability contract or consumer is supplied."
+    },
+    {
+     "criterionId": "UC35-5",
+     "requirement": "Fleet-Ready Definition of Done (all solutions): runs offline; keeps humans in authority; cites sources; logs auditable actions; syncs on reconnect; includes a one-page path to fleet.",
+     "status": "unverified",
+     "detail": "Local synthetic evidence, review, citations and handoff are demonstrated; reconnect transport, operational authority and reviewed fleet transition are absent."
+    },
+    {
+     "criterionId": "CYB-01",
+     "requirement": "Explain findings with asset and control evidence.",
+     "status": "passed",
+     "detail": "Analyze the planning-defined synthetic baseline: LAB-A has auditEnabled=false and is the single seeded finding; LAB-B has auditEnabled=true and is benign. Explain each with exact asset/configuration and SYN-AUDIT r1 evidence; unknown values remain insufficient evidence. Preserve these citations through reviewed handoff, reject malformed input, and invalidate review after explanation edits. \u2014 demonstrated by explain-and-handoff, recover-evidence, review-edited-explanation, recover-unknown at both viewport sizes."
+    },
+    {
+     "criterionId": "CYB-02",
+     "requirement": "Approval is specific to the proposed change.",
+     "status": "unverified",
+     "detail": "Draft and digest-bound handoff review invalidation are demonstrated, but the required execution rejection cannot be established without a lab adapter and reviewed tests."
+    },
+    {
+     "criterionId": "CYB-03",
+     "requirement": "Verify rollback and analyst handoff.",
+     "status": "unverified",
+     "detail": "Handoff includes proposed checks and rollback steps marked not executed / not verified; actual apply/reverse and failed rollback or partial remediation tests require the absent lab."
+    },
+    {
+     "criterionId": "EVAL35-1",
+     "requirement": "Share of seeded misconfigurations and vulnerabilities found",
+     "status": "unverified",
+     "detail": "Two planning-defined synthetic examples and an unknown case are exercised; no independently approved vulnerability corpus or domain coverage target exists. No general detection rate is claimed."
+    },
+    {
+     "criterionId": "EVAL35-2",
+     "requirement": "Time to a correct remediation plan",
+     "status": "unverified",
+     "detail": "A proposal can be prepared locally; independent correctness rubric, analyst study and agreed timing protocol are absent."
+    },
+    {
+     "criterionId": "EVAL35-3",
+     "requirement": "Changes applied only with approval, and rolled back cleanly",
+     "status": "unverified",
+     "detail": "Synthetic review state is shown without any execution; authorized lab application and rollback evidence are absent."
+    },
+    {
+     "criterionId": "EVAL35-4",
+     "requirement": "Works over the emulated low-bandwidth link",
+     "status": "unverified",
+     "detail": "Offline local use is planned; no emulator, bandwidth/latency/loss profile or pass thresholds are supplied."
+    },
+    {
+     "criterionId": "EVAL35-5",
+     "requirement": "Complete audit trail",
+     "status": "unverified",
+     "detail": "Prototype exports local workflow history; operational event specification, identity, retention and integrity remain undefined."
+    },
+    {
+     "criterionId": "EVAL35-6",
+     "requirement": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+     "status": "unverified",
+     "detail": "Rubric is retained verbatim; scoring is reserved to human judges. No self-score substitutes for judging."
+    },
+    {
+     "criterionId": "DELIVERABLE35-1",
+     "requirement": "Shorter time from new requirement or vulnerability to verified remediation",
+     "status": "unverified",
+     "detail": "No execution adapter, verified remediation or comparable manual timing baseline exists; the prototype ends at a proposal."
+    },
+    {
+     "criterionId": "DELIVERABLE35-2",
+     "requirement": "Fewer manual hours per network",
+     "status": "unverified",
+     "detail": "No observed manual baseline, representative workload or analyst-hours study is supplied; no savings are inferred."
+    },
+    {
+     "criterionId": "DELIVERABLE35-3",
+     "requirement": "Risk explained in terms commanders, system owners and data owners can act on",
+     "status": "unverified",
+     "detail": "Plain-language synthetic impact and next steps are included in the handoff; actionability for these audiences requires independent owner review."
+    },
+    {
+     "criterionId": "DELIVERABLE35-4",
+     "requirement": "Every change auditable and reversible",
+     "status": "unverified",
+     "detail": "Proposal revisions, local events and rollback instructions are included; execution, audit assurance and actual reversibility remain unverified without the lab."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "explain-and-handoff",
+     "title": "Explain seeded and benign evidence, review and export a durable handoff",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 16 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/explain-and-handoff-desktop.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/explain-and-handoff-desktop.zip"
+    },
+    {
+     "id": "explain-and-handoff",
+     "title": "Explain seeded and benign evidence, review and export a durable handoff",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 16 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/explain-and-handoff-narrow.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/explain-and-handoff-narrow.zip"
+    },
+    {
+     "id": "recover-evidence",
+     "title": "Reject malformed evidence, preserve it and recover with the synthetic sample",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 9 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-evidence-desktop.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-evidence-desktop.zip"
+    },
+    {
+     "id": "recover-evidence",
+     "title": "Reject malformed evidence, preserve it and recover with the synthetic sample",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 9 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-evidence-narrow.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-evidence-narrow.zip"
+    },
+    {
+     "id": "review-edited-explanation",
+     "title": "Preserve draft rationale and invalidate review when committed content changes",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 18 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/review-edited-explanation-desktop.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/review-edited-explanation-desktop.zip"
+    },
+    {
+     "id": "review-edited-explanation",
+     "title": "Preserve draft rationale and invalidate review when committed content changes",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 18 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/review-edited-explanation-narrow.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/review-edited-explanation-narrow.zip"
+    },
+    {
+     "id": "recover-unknown",
+     "title": "Expose insufficient evidence and recover without inventing compliance",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 11 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-unknown-desktop.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-unknown-desktop.zip"
+    },
+    {
+     "id": "recover-unknown",
+     "title": "Expose insufficient evidence and recover without inventing compliance",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 11 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-unknown-narrow.png",
+     "trace": ".quality-evidence/cf4747934ffc-b5d5e532-9519-4ed0-aa64-93f2debb7ab4/recover-unknown-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 12.3,
+ "challengeId": "35",
+ "workspace": "~/fhten/ud-r1/workspaces/94d61e6c-9480-42da-b760-f183ec30ca5a/33bea871-7cba-4992-9e7c-fdc90aa59ce0"
+}

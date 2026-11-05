@@ -1,0 +1,56 @@
+✔ UI1 real controller default rows, edit commit, invalid text and reset (3.410042ms)
+✔ UI2 real controller review invalidation, manual conflict/recovery and exhausted status (2.022416ms)
+✔ UI3 actual import handler retains workspace on rejection and restores exact manual alternate (1.764334ms)
+✔ T1 default independent interval pairs, qualifications, totals and exact fixed assignments (1.680416ms)
+✔ T2 edits change calculations without changing original data (0.230042ms)
+✔ T3 missing qualifications and unavailable people are infeasible, not malformed (0.136667ms)
+✔ T4 distinct person and room collisions, with feasible control (0.563042ms)
+✔ T5 rest boundary in both input orders (0.168875ms)
+✔ T6 zero-rest adjacency and two-day total duty cap (0.159625ms)
+✔ T7 complete operating and person window containment, exact end boundary (0.164584ms)
+✔ T8 four distinct outcomes and exact node allowance semantics (0.30575ms)
+✔ T9 malformed fields are actionable, never silently repaired (0.42225ms)
+✔ T10 all outcomes preserve frozen exact inputs (0.297583ms)
+✖ V1 empty windows, alternate candidate backtracking and room adjacency (1.220583ms)
+✔ P1 HTML embeds byte-equal classic core with no external runtime references (1.198583ms)
+✔ P2 actual inline core computes defaults and edits in isolated VM (1.796459ms)
+✔ P3 UI disclosures and inert untrusted text; no adjacent runtime dependency (0.485833ms)
+✔ S1 any input edit/recompute or revert clears review and invalid JSON retains text (2.841041ms)
+✔ S2 manual selection checks all sessions, preserves unresolved selection, rejects unlisted start (0.729417ms)
+✔ S3 portable snapshots recover exact raw inputs and results, including all failure states (2.657084ms)
+✔ S4 atomic rejection of tampered/stale snapshots; manual alternate restored, never re-solved away (1.176208ms)
+✔ S4b conflicting manual draft round-trip remains unresolved and review-free (0.3095ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 21
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69.915958
+
+✖ failing tests:
+
+test at core.test.cjs:21:1
+✖ V1 empty windows, alternate candidate backtracking and room adjacency (1.220583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'infeasible'
+  - 'feasible'
+  
+      at independentlyCheck (/Users/mukul/fhrun/ud/workspaces/36a0d580-9345-4e4f-bca2-44c9c214bb33/d6d7914c-92e2-441b-9aa9-a8e74096bb28/core.test.cjs:5:4)
+      at TestContext.<anonymous> (/Users/mukul/fhrun/ud/workspaces/36a0d580-9345-4e4f-bca2-44c9c214bb33/d6d7914c-92e2-441b-9aa9-a8e74096bb28/core.test.cjs:24:21)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'infeasible',
+    expected: 'feasible',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,637 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Capture and operate offline, then synchronize all intended changes cleanly through an authorized real adapter on reconnect.",
+      "journeyIds": [],
+      "reason": "Local IndexedDB save/reload and simulated reconnect are planned, but authenticated transport, offline provisioning and operational clean sync are absent."
+    },
+    {
+      "criterionId": "UC36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Routing requires deliberate approval of the exact saved, valid, conflict-free revision. Unsaved edits and new saved revisions cannot reuse earlier approval. Reconnect never grants approval.",
+      "journeyIds": [
+        "review-route",
+        "validation-recovery",
+        "edit-conflict"
+      ]
+    },
+    {
+      "criterionId": "UC36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Provide an attributable, retained and inspectable audit trail for capture, edits, validation, conflicts, review and routing under owner-approved controls.",
+      "journeyIds": [],
+      "reason": "A persisted synthetic action history is planned; authenticated attribution, tamper resistance and owner-defined audit retention are absent. A partial local history does not establish the broad source audit requirement."
+    },
+    {
+      "criterionId": "UC36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Run on the owner-selected government devices and existing low-code platform where feasible with documented compatibility evidence.",
+      "journeyIds": [],
+      "reason": "No designated government device, browser policy or existing low-code target is supplied; compatibility and security need authorized platform evaluation."
+    },
+    {
+      "criterionId": "UC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "All supplied records and fictional actors are synthetic. The workspace displays \u201cSynthetic demonstration only. Do not enter personal or operational information.\u201d No personal information or operational source is supplied or contacted.",
+      "journeyIds": [
+        "delivery-order",
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "UC36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Demonstrate all fleet-ready obligations together: offline use, human authority, cited sources, auditable actions, real reconnect sync and a reviewed one-page path to fleet.",
+      "journeyIds": [],
+      "reason": "The slice includes local offline entry, human review, a source label, local history and a path-to-fleet document; real synchronization and fleet-ready deployment remain unverified."
+    },
+    {
+      "criterionId": "OFF-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Applying the identical peer revision twice leaves the complete canonical state, pending operations and domain audit unchanged after the first application; the browser still displays 2 revisions, one peer effect and First aid drill.",
+      "journeyIds": [
+        "replay"
+      ]
+    },
+    {
+      "criterionId": "OFF-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Concurrent Pump drill and First aid drill edits remain as two visible heads. A concurrent deletion remains visible beside the local edit. Explicit local-value resolution creates a new revision whose parents include every reviewed head and retains the decision.",
+      "journeyIds": [
+        "edit-conflict",
+        "delete-conflict"
+      ]
+    },
+    {
+      "criterionId": "OFF-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Merging the same immutable operations in either delivery order produces identical canonical revisions, record heads and conflict values: Pump drill and First aid drill, two unresolved heads.",
+      "journeyIds": [
+        "delivery-order"
+      ]
+    },
+    {
+      "criterionId": "OFF-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Under a declared byte budget, transfer critical records first, interrupt a photo halfway, and resume exactly at receiver-acknowledged offsets; zero budget retains pending work.",
+      "journeyIds": [],
+      "reason": "Attachment transfer is outside the minimum slice. No interrupted-photo receiver, acknowledged byte offsets or bounded-link transport is implemented; merge logic is insufficient."
+    },
+    {
+      "criterionId": "OFF-05",
+      "disposition": "deferred",
+      "expectedOutcome": "After device restart, recover the saved offline edit, reconnect, retain and resolve conflicts, and inspect the reviewer decision before routing.",
+      "journeyIds": [],
+      "reason": "Browser reload persistence and review are planned, but actual device restart, eviction resilience and durable device storage require integration evidence beyond a reload."
+    },
+    {
+      "criterionId": "EVAL36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Measure extracted fields against an independent answer key, reporting correct fields, scored fields and errors.",
+      "journeyIds": [],
+      "reason": "No supplied scans, extraction implementation or independently approved answer key; manual synthetic entry is not extraction accuracy."
+    },
+    {
+      "criterionId": "EVAL36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Identify the independently seeded applicable form errors before submission, report missed errors and allow correction without losing the draft.",
+      "journeyIds": [],
+      "reason": "Synthetic validation catches a zero-minute log before review; official form rules, seeded domain errors and SME-approved coverage are missing, so the full evaluation is deferred."
+    },
+    {
+      "criterionId": "EVAL36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Measure time per equivalent packet against a Fleet SME-defined manual baseline and report workload, sample size and elapsed times.",
+      "journeyIds": [],
+      "reason": "No SME manual baseline, equivalent packet workload or timing protocol is supplied; do not invent savings."
+    },
+    {
+      "criterionId": "EVAL36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Complete the intended offline workflow and reconcile through actual reconnect without lost changes or unresolved conflicts after human resolution.",
+      "journeyIds": [],
+      "reason": "Simulated peer reconciliation is only a slice; complete offline provisioning, durable device operation and authenticated reconnect are not implemented."
+    },
+    {
+      "criterionId": "EVAL36-5",
+      "disposition": "deferred",
+      "expectedOutcome": "A Sailor panel judges ease of use using an owner-approved task protocol and records its findings.",
+      "journeyIds": [],
+      "reason": "No Sailor panel or approved usability protocol is available. Browser assertions cannot establish panel acceptance."
+    },
+    {
+      "criterionId": "EVAL36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Official judges record results using the exact 30/20/20/15/15 rubric weights.",
+      "journeyIds": [],
+      "reason": "Official judges must apply Warfighting 30%, Speed to Fleet 20%, Scalability 20%, Barrier Removal 15%, Judges\u2019 Discretion 15%; no self-score is evidence."
+    },
+    {
+      "criterionId": "DELIVERABLE36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Demonstrate measured Sailor hours returned to maintenance, training and watchstanding against an SME baseline.",
+      "journeyIds": [],
+      "reason": "Hours returned require representative fleet workloads and an SME baseline; neither is supplied."
+    },
+    {
+      "criterionId": "DELIVERABLE36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Demonstrate fewer errors and less rework than an equivalent manual workflow using approved measurements.",
+      "journeyIds": [],
+      "reason": "Reduced errors and rework require a measured comparison with an approved baseline; synthetic rule demonstrations do not establish improvement."
+    },
+    {
+      "criterionId": "DELIVERABLE36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Complete and route the intended forms without connectivity using an owner-approved disconnected routing mechanism and inspectable receipt.",
+      "journeyIds": [],
+      "reason": "The form can be queued locally for simulated routing. Actual disconnected routing, recipient authority and authoritative receipt semantics are unspecified and absent."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "review-route",
+      "title": "Save offline, reload, review and route deliberately",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "expectText",
+          "selector": "#connection-status",
+          "text": "Offline \u2014 local work only"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Review the saved revision before routing."
+        },
+        {
+          "action": "click",
+          "selector": "#review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-summary",
+          "text": "Damage control drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Approved by Reviewer Example"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Queued for simulated routing"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Simulated receipt recorded; no external delivery"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-audit",
+          "text": "Reviewer Example approved the routed revision"
+        },
+        {
+          "action": "fill",
+          "selector": "#activity",
+          "value": "First aid drill"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Save or discard changes before routing."
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Review the saved revision before routing."
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Correct a rejected synthetic log without losing the draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Duration must be a whole number from 1 to 1440 minutes."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Not saved"
+        },
+        {
+          "action": "fill",
+          "selector": "#duration",
+          "value": "90"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally"
+        },
+        {
+          "action": "click",
+          "selector": "#review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-summary",
+          "text": "Damage control drill | 2026-11-01 | 90 minutes | Unit Example"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Queued for simulated routing"
+        }
+      ]
+    },
+    {
+      "id": "replay",
+      "title": "Replay a peer operation without duplicating its effect",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "click",
+          "selector": "#peer-update"
+        },
+        {
+          "action": "expectText",
+          "selector": "#record-summary",
+          "text": "First aid drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-count",
+          "text": "2 revisions"
+        },
+        {
+          "action": "expectText",
+          "selector": "#peer-effect-count",
+          "text": "1 peer change applied"
+        },
+        {
+          "action": "click",
+          "selector": "#peer-update"
+        },
+        {
+          "action": "expectText",
+          "selector": "#record-summary",
+          "text": "First aid drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-count",
+          "text": "2 revisions"
+        },
+        {
+          "action": "expectText",
+          "selector": "#peer-effect-count",
+          "text": "1 peer change applied"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-status",
+          "text": "Already present; no changes"
+        }
+      ]
+    },
+    {
+      "id": "edit-conflict",
+      "title": "Retain concurrent edits and resolve the reviewed heads",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "fill",
+          "selector": "#activity",
+          "value": "Pump drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "click",
+          "selector": "#peer-concurrent-edit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#local-head",
+          "text": "Pump drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "expectText",
+          "selector": "#peer-head",
+          "text": "First aid drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Resolve the conflict before routing."
+        },
+        {
+          "action": "select",
+          "selector": "#resolution-choice",
+          "value": "local"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Conflict resolved: Pump drill"
+        },
+        {
+          "action": "expectText",
+          "selector": "#resolution-audit",
+          "text": "Reviewer Example chose the local value; both heads retained as parents"
+        },
+        {
+          "action": "click",
+          "selector": "#review"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Queued for simulated routing"
+        }
+      ]
+    },
+    {
+      "id": "delete-conflict",
+      "title": "Keep edit and delete visible until a deliberate decision",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#activity",
+          "value": "Damage control drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "fill",
+          "selector": "#activity",
+          "value": "Pump drill"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "click",
+          "selector": "#peer-concurrent-delete"
+        },
+        {
+          "action": "expectText",
+          "selector": "#local-head",
+          "text": "Pump drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "expectText",
+          "selector": "#peer-head",
+          "text": "Deleted by Peer Example"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Resolve the conflict before routing."
+        },
+        {
+          "action": "select",
+          "selector": "#resolution-choice",
+          "value": "local"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Conflict resolved: Pump drill"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#record-summary",
+          "text": "Pump drill | 2026-11-01 | 60 minutes | Unit Example"
+        },
+        {
+          "action": "expectText",
+          "selector": "#resolution-audit",
+          "text": "Reviewer Example chose the local value; both heads retained as parents"
+        }
+      ]
+    },
+    {
+      "id": "delivery-order",
+      "title": "Compare both peer delivery orders",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#compare-orders"
+        },
+        {
+          "action": "expectText",
+          "selector": "#order-a",
+          "text": "Pump drill + First aid drill \u2014 2 unresolved heads"
+        },
+        {
+          "action": "expectText",
+          "selector": "#order-b",
+          "text": "Pump drill + First aid drill \u2014 2 unresolved heads"
+        },
+        {
+          "action": "expectText",
+          "selector": "#order-result",
+          "text": "Identical canonical state in both delivery orders"
+        },
+        {
+          "action": "expectText",
+          "selector": "#data-boundary",
+          "text": "Synthetic demonstration only. Do not enter personal or operational information."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-reference",
+          "text": "Source: Challenge 36 \u2014 Paperless Underway; synthetic training-log schema v1"
+        }
+      ]
+    }
+  ]
+}

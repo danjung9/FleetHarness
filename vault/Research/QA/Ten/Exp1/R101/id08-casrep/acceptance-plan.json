@@ -1,0 +1,1087 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "The complete synthetic CASREP uses all six simulated roles, required fields, categories 2/3/4 and INITIAL/UPDATE/CORRECT/CASCOR previews; a returned draft is revised, reviewed and simulated-released with visible holder, comments and revision-bound approvals. Linked amendments preserve released snapshots. This demonstrates assumed format checks only, not validated NWP 1-03.1 compliance or operational rules.",
+      "journeyIds": [
+        "route-return-release",
+        "invalid-fields",
+        "stale-approval",
+        "local-draft",
+        "linked-lifecycle"
+      ]
+    },
+    {
+      "criterionId": "WFL-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Out-of-order CO release and dirty-form review are rejected; content changes invalidate earlier approvals and require a new complete route before simulated release.",
+      "journeyIds": [
+        "stale-approval",
+        "local-draft"
+      ]
+    },
+    {
+      "criterionId": "WFL-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Two competing amendments visibly retain restoration 20:00Z and the fictional seal-kit request; unresolved conflict blocks release, explicit reconciliation retains both parents through reload and exports their history with the final release.",
+      "journeyIds": [
+        "conflict-recovery"
+      ]
+    },
+    {
+      "criterionId": "WFL-03",
+      "disposition": "implemented",
+      "expectedOutcome": "An evaluator can perform intake, comment, return, revise, all approvals and local export, and recover invalid inputs without losing the draft. Automated journeys do not claim that a human reviewer has accepted the workflow.",
+      "journeyIds": [
+        "route-return-release",
+        "release-package",
+        "invalid-fields"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One mock CASREP traverses Sailor/LPO, Division Officer, Department Head, Engineer Officer/CHENG, XO and CO with a return loop. Named synthetic message/history downloads, a live walkthrough and a one-page fielding brief cover permissions, classification, Navy messaging boundaries and fielding prerequisites; release remains a local simulation.",
+      "journeyIds": [
+        "route-return-release",
+        "conflict-recovery",
+        "release-package"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "route-return-release",
+      "title": "Return, revise and route through every command role",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Division Officer"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "fill",
+          "selector": "#comment",
+          "value": "Check cooling impact."
+        },
+        {
+          "action": "click",
+          "selector": "#add-comment"
+        },
+        {
+          "action": "expectText",
+          "selector": "#latest-comment",
+          "text": "Division Officer: Check cooling impact."
+        },
+        {
+          "action": "fill",
+          "selector": "#return-reason",
+          "value": "Specify the affected cooling loop"
+        },
+        {
+          "action": "click",
+          "selector": "#return"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Returned for revision"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "CHWP-2 failed. Auxiliary cooling loop B."
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Engineer Officer/CHENG"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "XO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "CO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-summary",
+          "text": "Current revision approved by Sailor/LPO, Division Officer, Department Head, Engineer Officer/CHENG, XO, CO"
+        },
+        {
+          "action": "expectText",
+          "selector": "#return-history",
+          "text": "Division Officer returned: Specify the affected cooling loop"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        }
+      ]
+    },
+    {
+      "id": "release-package",
+      "title": "Export a simulated release and inspect required guidance",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Engineer Officer/CHENG"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "XO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "CO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-message",
+          "fileName": "synthetic-casrep-message.txt",
+          "text": "SYNTHETIC — DEMONSTRATION ONLY — NOT FOR TRANSMISSION"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-history",
+          "fileName": "synthetic-casrep-history.json",
+          "text": "SYN-CASREP-0001"
+        },
+        {
+          "action": "click",
+          "selector": "#show-walkthrough"
+        },
+        {
+          "action": "expectText",
+          "selector": "#walkthrough-title",
+          "text": "Live walkthrough: draft, return, revise, reconcile, approve and export"
+        },
+        {
+          "action": "click",
+          "selector": "#show-brief"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-title",
+          "text": "Fielding brief: permissions, classification, messaging and prerequisites"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-boundary",
+          "text": "No classified data. No authenticated identities. No Navy messaging connection. No authority to operate."
+        }
+      ]
+    },
+    {
+      "id": "invalid-fields",
+      "title": "Recover required-field and linked-report validation",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Enter a casualty description."
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "CHWP-2 failed."
+        },
+        {
+          "action": "select",
+          "selector": "#report-type",
+          "value": "UPDATE"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "UPDATE requires a related synthetic report."
+        },
+        {
+          "action": "fill",
+          "selector": "#related-report",
+          "value": "SYN-CASREP-0000"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#preview-type",
+          "text": "TYPE: UPDATE"
+        },
+        {
+          "action": "select",
+          "selector": "#report-type",
+          "value": "CORRECT"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#preview-type",
+          "text": "TYPE: CORRECT"
+        },
+        {
+          "action": "select",
+          "selector": "#report-type",
+          "value": "CASCOR"
+        },
+        {
+          "action": "fill",
+          "selector": "#restored-at",
+          "value": ""
+        },
+        {
+          "action": "fill",
+          "selector": "#closure",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "CASCOR requires a restoration time and closure narrative."
+        },
+        {
+          "action": "fill",
+          "selector": "#restored-at",
+          "value": "2026-11-05T18:00:00Z"
+        },
+        {
+          "action": "fill",
+          "selector": "#closure",
+          "value": "Pump restored after fictional seal replacement."
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#preview-type",
+          "text": "TYPE: CASCOR"
+        },
+        {
+          "action": "expectText",
+          "selector": "#preview-closure",
+          "text": "CLOSURE: Pump restored after fictional seal replacement."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#preview-type",
+          "text": "TYPE: CASCOR"
+        }
+      ]
+    },
+    {
+      "id": "stale-approval",
+      "title": "Reject skipped routing, dirty review and stale approval reuse",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-error",
+          "text": "Release blocked: current holder is Division Officer."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "CHWP-2 failed. Auxiliary cooling loop B."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-error",
+          "text": "Save or discard unsaved changes before a decision."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-state",
+          "text": "Previous approvals invalidated by content revision."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-error",
+          "text": "Release blocked: current holder is Sailor/LPO."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Engineer Officer/CHENG"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "XO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "CO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        }
+      ]
+    },
+    {
+      "id": "conflict-recovery",
+      "title": "Review both competing amendments and explicitly reconcile",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-amendments"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Conflict: 2 competing amendments"
+        },
+        {
+          "action": "expectText",
+          "selector": "#branch-a",
+          "text": "Restoration: 2026-11-05T20:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#branch-b",
+          "text": "Corrective action: Standby pump online; request fictional seal kit."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-error",
+          "text": "Release blocked: resolve competing amendments."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution-restoration",
+          "value": "2026-11-05T20:00:00Z"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution-action",
+          "value": "Standby pump online; request fictional seal kit."
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflict"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Resolved: both source amendments retained"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Sailor/LPO"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#branch-a",
+          "text": "Restoration: 2026-11-05T20:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#branch-b",
+          "text": "Corrective action: Standby pump online; request fictional seal kit."
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Engineer Officer/CHENG"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "XO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "CO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-history",
+          "fileName": "synthetic-casrep-history.json",
+          "text": "Standby pump online; request fictional seal kit."
+        }
+      ]
+    },
+    {
+      "id": "local-draft",
+      "title": "Persist unfinished work and recover deliberately before review",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "fill",
+          "selector": "#casualty",
+          "value": "CHWP-2 failed. Unfinished cooling-loop assessment."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#casualty",
+          "value": "CHWP-2 failed. Unfinished cooling-loop assessment."
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Unsaved changes restored locally"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transition-error",
+          "text": "Save or discard unsaved changes before a decision."
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Division Officer"
+        }
+      ]
+    },
+    {
+      "id": "linked-lifecycle",
+      "title": "Keep released snapshot immutable when amending and cancelling",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "originator"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "division"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Department Head"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "department"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Engineer Officer/CHENG"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "cheng"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "XO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "xo"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "CO"
+        },
+        {
+          "action": "select",
+          "selector": "#role",
+          "value": "co"
+        },
+        {
+          "action": "check",
+          "selector": "#release-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#release"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Simulated release — not transmitted"
+        },
+        {
+          "action": "click",
+          "selector": "#new-amendment"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Draft — linked UPDATE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#related-report-label",
+          "text": "Related report: SYN-CASREP-0001"
+        },
+        {
+          "action": "expectText",
+          "selector": "#original-release-status",
+          "text": "Original: simulated release retained"
+        },
+        {
+          "action": "click",
+          "selector": "#cancel-draft"
+        },
+        {
+          "action": "check",
+          "selector": "#cancel-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#confirm-cancel"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "Cancelled draft — history retained"
+        },
+        {
+          "action": "expectText",
+          "selector": "#original-release-status",
+          "text": "Original: simulated release retained"
+        }
+      ]
+    }
+  ]
+}

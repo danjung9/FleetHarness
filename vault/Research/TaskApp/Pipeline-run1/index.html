@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Training Draft · Synthetic planning board</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#18322e;background:#eff3ef;font-size:15px}*{box-sizing:border-box}body{margin:0}header{background:#173d35;color:white;padding:28px max(24px,calc((100vw - 1380px)/2));border-bottom:5px solid #c4dc71}.eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:12px;font-weight:700;color:#d4e6ab}h1{font-size:32px;letter-spacing:-.04em;margin:8px 0}header p{color:#dbe7e0;margin:7px 0;max-width:850px}main{max-width:1428px;margin:auto;padding:24px}h2{font-size:19px;margin:0 0 14px}h3{font-size:15px}button,.file-label{font:inherit;border:1px solid #9eb2a7;border-radius:6px;padding:10px 15px;background:white;color:#183d33;cursor:pointer;font-weight:600}button.primary{background:#215d49;color:white;border-color:#215d49}button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled),.file-label:hover{filter:brightness(.95)}:focus-visible{outline:3px solid #b58121;outline-offset:3px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:20px}.toolbar span{margin-right:auto}.badge{display:inline-block;padding:5px 9px;border-radius:4px;background:#e8efda;color:#304b22;font-size:12px;font-weight:700}.layout{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(290px,1fr);gap:20px}.card{background:white;border:1px solid #d2ded4;border-radius:10px;padding:22px;margin-bottom:20px;box-shadow:0 3px 12px #18322e04}.status{border-left:5px solid #417f50;background:#eaf3e7;padding:16px 20px;margin-bottom:20px;border-radius:6px}.status.bad{border-color:#b47129;background:#fff4e4}.status h2{margin-bottom:5px}.muted,small{color:#52665e;font-size:13px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:#4e665c;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:#f4f7f3}th,td{padding:10px 7px;border-bottom:1px solid #e1e8e0;vertical-align:middle}input,select,textarea{font:inherit;border:1px solid #a9bbb0;border-radius:4px;background:#fff;color:#173b31;padding:7px;max-width:100%}td input{width:90px}td input.starts{width:105px}td select{width:80px}textarea{width:100%;font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2;min-height:420px;resize:vertical}label{display:block;font-size:13px;margin:10px 0 6px}.day{background:#f5f8f2;border:1px solid #dde5d6;padding:13px;border-radius:7px;margin:12px 0}.day h3{margin:0 0 10px}.session{display:flex;justify-content:space-between;gap:12px;background:white;border-left:4px solid #5b856b;border-radius:4px;padding:10px;margin:7px 0;font-size:13px}.session strong{min-width:22px}.session span{flex:1}.session time{font-variant-numeric:tabular-nums}.diagnostics{font-size:13px;line-height:1.6;padding-left:20px;max-height:210px;overflow:auto}.notice{font-size:13px;line-height:1.6;color:#52665e}.review-status{padding:10px;background:#f1f5ea;font-size:13px;border-radius:4px;margin-top:12px}progress{width:100%;accent-color:#447958}summary{cursor:pointer;font-weight:600;padding:8px 0}footer{font-size:12px;color:#52665e;padding:0 0 25px}#message{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;margin:12px 0}#error{color:#823d12;white-space:pre-wrap;overflow-wrap:anywhere}ul{padding-left:20px}#importFile{max-width:230px;font-size:12px} @media(max-width:1000px){.layout{grid-template-columns:1fr}main{padding:15px}header{padding:22px}.card{padding:16px}}
+</style></head><body>
+<header><div class="eyebrow">Planning workspace / Synthetic only</div><h1>Training Draft</h1><p>Four practice sessions. Two days. Explicit constraints.</p><p>A coordinator’s feasibility workspace — synthetic draft, not an issued schedule or an operational compliance tool.</p></header>
+<main><div class="toolbar"><span class="badge">OFFLINE · NO INTEGRATIONS</span><button id="reset">Reset sample</button><button id="solve" class="primary">Generate draft</button><button id="save">Save JSON</button><label for="importFile" style="margin:0">Import JSON<input id="importFile" type="file" accept=".json,application/json"></label></div>
+<div id="message" role="status" aria-live="polite"></div>
+<section id="status" class="status" aria-live="polite"><h2 id="statusTitle"></h2><div id="statusDetail" class="notice"></div></section>
+<div class="layout"><div>
+<section class="card"><h2>01 / Session proposals</h2><p class="muted">Edit a value and leave the field to recompute. Times are integer minutes from the synthetic epoch; day two starts at 1440. People and rooms stay as explicitly assigned.</p><p id="boardWarning" class="notice"></p><div class="table-wrap"><table><thead><tr><th>Request</th><th>Minutes</th><th>Allowed starts</th><th>Person</th><th>Room</th><th>Qualification</th><th>Draft start</th></tr></thead><tbody id="requests"></tbody></table></div><p class="muted">Allowed starts: comma-separated integers. A draft-start edit checks the entire selected draft; it never changes constraints.</p></section>
+<section class="card"><h2>02 / Two-day board</h2><div id="days"></div><h3>Constraint observations</h3><div id="explanations"></div><p class="muted">Explanations describe observed search conflicts, not a minimal unsatisfiable core. No constraint is relaxed.</p></section>
+<section class="card"><h2>Exact input / Roster &amp; windows</h2><p class="muted">Edit the complete JSON contract, including qualifications, availability, operating windows and fixed assignments. Invalid text is retained. All times must be within 0–2880; intervals are half-open [start,end).</p><label for="inputText">Synthetic input JSON</label><textarea id="inputText" spellcheck="false" aria-describedby="error"></textarea><p id="error" role="alert"></p><details><summary>Evaluator search allowance</summary><label for="budget">Maximum candidate attempts (1–200000)</label><input id="budget" type="number" min="1" max="200000" step="1"><p class="notice">Default 50000. Exhaustion leaves feasibility unknown. This synchronous bounded search does not provide global optimization or automatic personnel selection.</p></details></section>
+</div><aside>
+<section class="card"><h2>03 / Personnel loading</h2><p class="muted">Whole-horizon minutes across both days. Caps do not reset daily.</p><div id="loading"></div><h3>Supplied constraints</h3><div id="constraints" class="notice"></div></section>
+<section class="card"><h2>04 / Current-draft review</h2><p class="notice">Inspect every session, load and constraint before marking this synthetic draft reviewed. Any input, result or reviewer-label edit clears the mark. Import always requires a fresh review.</p><label for="reviewer">Synthetic reviewer label</label><input id="reviewer" maxlength="200" placeholder="e.g. Demo coordinator"><button id="review" class="primary" style="margin-top:12px">Mark draft reviewed</button><div id="reviewStatus" class="review-status"></div><p class="muted">Local unauthenticated acknowledgment. Separate from source approval and issuing authority.</p></section>
+<section class="card"><h2>Scope &amp; limits</h2><div class="notice">Synthetic data only. Not an issued schedule. This two-day view does not establish weekly coverage. Feasibility applies only to listed starts.<p>Not implemented:</p><ul><li>Recurrence and SFTRM interpretation</li><li>Departmental negotiation/agents</li><li>Real readiness data</li><li>Qualification policy beyond supplied values</li><li>Official-calendar writes</li><li>Reconnect sync</li></ul><p>The example rest and duty caps are demonstration inputs, not approved fatigue policy. No credentials, identity service, backend or operational connections.</p><p>Nothing is saved automatically. Save JSON before closing; reopen this HTML and import the file to recover inputs and draft. Local file transfer is not synchronization. Keep this prototype synthetic.</p></div></section>
+</aside></div><footer>Training Draft v1 · Standalone prototype · Human acceptance and operational validation remain separate.</footer></main>
+<!-- APP_CORE_START -->
+<script>
+/* Synthetic Training Draft core v1. Independently written, no runtime dependencies. */
+(function (root) {
+  'use strict';
+  const clone = value => JSON.parse(JSON.stringify(value));
+  function canonical(v) {
+    if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
+    if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canonical(v[k])).join(',') + '}';
+    return JSON.stringify(v);
+  }
+  function fail(path, message) { throw new Error(path + ': ' + message); }
+  function object(v, path, keys) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) fail(path, 'supply an object');
+    for (const k of Object.keys(v)) if (!keys.includes(k)) fail(path + '.' + k, 'unknown field; remove it');
+    for (const k of keys) if (!Object.hasOwn(v, k)) fail(path + '.' + k, 'required field is missing');
+  }
+  function integer(v, path, min = 0, max = 2880) {
+    if (!Number.isSafeInteger(v) || v < min || v > max) fail(path, 'supply an integer from ' + min + ' to ' + max);
+  }
+  function text(v, path) {
+    if (typeof v !== 'string' || !v.trim() || v.length > 200) fail(path, 'supply nonempty text, at most 200 characters');
+  }
+  function list(v, path, min = 0) {
+    if (!Array.isArray(v) || v.length < min || v.length > 100) fail(path, 'supply an array of ' + min + '–100 items');
+  }
+  function unique(v, path) { if (new Set(v).size !== v.length) fail(path, 'remove duplicate values'); }
+  function windows(v, path) {
+    list(v, path);
+    v.forEach((w, i) => {
+      if (!Array.isArray(w) || w.length !== 2) fail(path + '[' + i + ']', 'supply [start,end]');
+      w.forEach((n, j) => integer(n, path + '[' + i + '][' + j + ']'));
+      if (w[0] >= w[1]) fail(path + '[' + i + ']', 'end must follow start');
+    });
+  }
+  function validate(v) {
+    object(v, 'input', ['schemaVersion','epoch','operatingWindows','people','requests','maxNodes']);
+    if (v.schemaVersion !== 1) fail('schemaVersion', 'only version 1 is supported');
+    object(v.epoch, 'epoch', ['label','day2Minute']); text(v.epoch.label, 'epoch.label');
+    if (v.epoch.day2Minute !== 1440) fail('epoch.day2Minute', 'must be 1440 for this two-day demonstration');
+    windows(v.operatingWindows, 'operatingWindows');
+    integer(v.maxNodes, 'maxNodes', 1, 200000);
+    list(v.people, 'people', 2);
+    if (v.people.length !== 2) fail('people', 'retain exactly P01 and P02');
+    v.people.forEach((p, i) => {
+      const path = 'people[' + i + ']';
+      object(p, path, ['id','qualifications','availability','maxMinutes','restMinutes']);
+      text(p.id, path + '.id'); list(p.qualifications, path + '.qualifications');
+      p.qualifications.forEach((q,j) => text(q,path + '.qualifications['+j+']')); unique(p.qualifications,path+'.qualifications');
+      windows(p.availability,path+'.availability'); integer(p.maxMinutes,path+'.maxMinutes'); integer(p.restMinutes,path+'.restMinutes');
+    });
+    if (canonical(v.people.map(p=>p.id).sort()) !== '["P01","P02"]') fail('people', 'retain unique IDs P01 and P02');
+    list(v.requests, 'requests', 4);
+    if (v.requests.length !== 4) fail('requests', 'retain exactly A, B, C and D');
+    v.requests.forEach((r,i) => {
+      const path='requests['+i+']';
+      object(r,path,['id','duration','allowedStarts','personId','roomId','requiredQualification']);
+      text(r.id,path+'.id'); integer(r.duration,path+'.duration',1);
+      text(r.personId,path+'.personId'); if (!v.people.some(p=>p.id===r.personId)) fail(path+'.personId','choose P01 or P02');
+      text(r.roomId,path+'.roomId'); text(r.requiredQualification,path+'.requiredQualification');
+      list(r.allowedStarts,path+'.allowedStarts',1); unique(r.allowedStarts,path+'.allowedStarts');
+      r.allowedStarts.forEach((n,j)=> {integer(n,path+'.allowedStarts['+j+']'); if(n+r.duration>2880) fail(path+'.allowedStarts['+j+']','session end must be at most 2880');});
+    });
+    if (canonical(v.requests.map(r=>r.id).sort()) !== '["A","B","C","D"]') fail('requests','retain unique IDs A, B, C and D');
+    return v;
+  }
+  function defaults() {
+    const ws = [[0,240],[1440,1680]];
+    return {schemaVersion:1,epoch:{label:'Synthetic day one at minute 0',day2Minute:1440},operatingWindows:clone(ws),
+      people:[{id:'P01',qualifications:['Q-A'],availability:clone(ws),maxMinutes:120,restMinutes:30},{id:'P02',qualifications:['Q-B'],availability:clone(ws),maxMinutes:120,restMinutes:0}],
+      requests:[['A',[0],'P01','Room-1','Q-A'],['B',[0,90],'P01','Room-1','Q-A'],['C',[0],'P02','Room-2','Q-B'],['D',[1440],'P02','Room-2','Q-B']].map(([id,allowedStarts,personId,roomId,requiredQualification])=>({id,duration:60,allowedStarts,personId,roomId,requiredQualification})),maxNodes:50000};
+  }
+  const assignment = (r,start) => ({requestId:r.id,start,end:start+r.duration,personId:r.personId,roomId:r.roomId});
+  const fits = (a,ws) => ws.some(w=>a.start>=w[0] && a.end<=w[1]);
+  function conflicts(input, a, assigned) {
+    const r=input.requests.find(r=>r.id===a.requestId), p=input.people.find(p=>p.id===a.personId), out=[];
+    if (!p.qualifications.includes(r.requiredQualification)) out.push(r.id+': '+p.id+' lacks qualification '+r.requiredQualification);
+    if (!fits(a,input.operatingWindows)) out.push(r.id+': whole session is outside operating windows');
+    if (!fits(a,p.availability)) out.push(r.id+': '+p.id+' is unavailable for the whole session');
+    if (r.duration+assigned.filter(b=>b.personId===p.id).reduce((s,b)=>s+b.end-b.start,0)>p.maxMinutes) out.push(r.id+': '+p.id+' exceeds whole-horizon duty cap '+p.maxMinutes);
+    for (const b of assigned) {
+      const overlap=a.start<b.end && b.start<a.end;
+      if (a.roomId===b.roomId && overlap) out.push(r.id+' / '+b.requestId+': room '+a.roomId+' collision');
+      if (a.personId===b.personId && a.start<b.end+p.restMinutes && b.start<a.end+p.restMinutes) out.push(r.id+' / '+b.requestId+': '+p.id+' overlap or required rest '+p.restMinutes+' minutes');
+    }
+    return out;
+  }
+  function loads(input, assignments) {
+    return input.people.map(p=>({personId:p.id,proposedMinutes:input.requests.filter(r=>r.personId===p.id).reduce((n,r)=>n+r.duration,0),scheduledMinutes:assignments.length===4?assignments.filter(a=>a.personId===p.id).reduce((n,a)=>n+a.end-a.start,0):null,maxMinutes:p.maxMinutes}));
+  }
+  function invalid(message, revision=0) {return {status:'invalid_input',origin:'search',assignments:[],loads:[],diagnostics:[message],explored:0,inputRevision:revision};}
+  function solve(input, revision=0) {
+    try {validate(input);} catch(e) {return invalid(e.message,revision);}
+    let explored=0, exhausted=false; const assigned=[], reasons=new Set();
+    function search(i) {
+      if(i===input.requests.length) return true;
+      const r=input.requests[i];
+      for(const start of r.allowedStarts) {
+        if(explored===input.maxNodes) {exhausted=true; return false;}
+        explored++;
+        const a=assignment(r,start), errors=conflicts(input,a,assigned);
+        if(errors.length) {errors.forEach(e=>{if(reasons.size<100) reasons.add(e);}); continue;}
+        assigned.push(a); if(search(i+1)) return true; assigned.pop(); if(exhausted) return false;
+      }
+      return false;
+    }
+    const ok=search(0), assignments=ok?clone(assigned):[];
+    // A separate full-draft pass guards the search result before review/display.
+    if(ok) {const checked=checkDraft(input,Object.fromEntries(assignments.map(a=>[a.requestId,a.start])),revision); if(checked.status!=='feasible') throw new Error('Internal draft consistency failure');}
+    return {status:ok?'feasible':exhausted?'budget_exhausted':'infeasible',origin:'search',assignments,loads:loads(input,assignments),diagnostics:ok?[]:[...reasons],explored,inputRevision:revision};
+  }
+  function checkDraft(input, selectedStarts, revision=0) {
+    validate(input); object(selectedStarts,'selectedStarts',input.requests.map(r=>r.id));
+    const assigned=[], diagnostics=[];
+    for(const r of input.requests) {
+      const start=selectedStarts[r.id];
+      if(!r.allowedStarts.includes(start)) fail('selectedStarts.'+r.id,'choose a listed allowed start');
+      const a=assignment(r,start); diagnostics.push(...conflicts(input,a,assigned)); assigned.push(a);
+    }
+    const ok=diagnostics.length===0, assignments=ok?assigned:[];
+    return {status:ok?'feasible':'infeasible',origin:'manual',assignments,loads:loads(input,assignments),diagnostics,explored:0,inputRevision:revision,selectedStarts:clone(selectedStarts)};
+  }
+  function fromText(inputText, revision=0) {
+    let inputs; try {inputs=JSON.parse(inputText);} catch(e) {return {inputText,inputs:null,result:invalid('JSON: '+e.message,revision),revision,review:null,historicalReview:null};}
+    return {inputText,inputs,result:solve(inputs,revision),revision,review:null,historicalReview:null};
+  }
+  function createState() {return fromText(JSON.stringify(defaults(),null,2));}
+  function editText(state,text) {return fromText(text,state.revision+1);}
+  function selectStart(state,id,start) {
+    if(state.result.status==='invalid_input') fail('draft','correct the input first');
+    const selected=state.result.origin==='manual'?clone(state.result.selectedStarts):Object.fromEntries(state.result.assignments.map(a=>[a.requestId,a.start]));
+    if(Object.keys(selected).length!==4) fail('draft','generate a complete draft before selecting starts');
+    selected[id]=start; const revision=state.revision+1;
+    return {...state,revision,review:null,historicalReview:null,result:checkDraft(state.inputs,selected,revision)};
+  }
+  function markReviewed(state, reviewer, timestamp=new Date().toISOString()) {
+    text(reviewer,'reviewer');
+    if(state.result.status!=='feasible') fail('review','only a complete feasible draft can be reviewed');
+    const checked=checkDraft(state.inputs,Object.fromEntries(state.result.assignments.map(a=>[a.requestId,a.start])));
+    if(checked.status!=='feasible') fail('review','draft is no longer valid');
+    return {...state,review:{reviewer,timestamp,inputRevision:state.revision}};
+  }
+  function snapshot(state) {
+    return JSON.stringify({schemaVersion:1,kind:'synthetic-training-draft',inputText:state.inputText,inputs:state.inputs,result:state.result,draftReview:state.review||state.historicalReview},null,2);
+  }
+  function importSnapshot(serialized) {
+    if(typeof serialized!=='string' || new TextEncoder().encode(serialized).length>1048576) fail('snapshot','file must be at most 1 MiB');
+    let s; try{s=JSON.parse(serialized);}catch(e){fail('snapshot','invalid JSON: '+e.message);}
+    object(s,'snapshot',['schemaVersion','kind','inputText','inputs','result','draftReview']);
+    if(s.schemaVersion!==1 || s.kind!=='synthetic-training-draft') fail('snapshot','unsupported format/version');
+    if(typeof s.inputText!=='string') fail('snapshot.inputText','must be text');
+    if(!s.result || !Number.isSafeInteger(s.result.inputRevision) || s.result.inputRevision<0) fail('snapshot.result','missing valid revision');
+    const revision=s.result.inputRevision;
+    const restored=fromText(s.inputText,revision);
+    if(canonical(restored.inputs)!==canonical(s.inputs)) fail('snapshot.inputs','does not match saved editor text');
+    let expected=restored.result;
+    if(s.result.origin==='manual') {
+      if(expected.status==='invalid_input') fail('snapshot.result','manual draft requires valid input');
+      expected=checkDraft(restored.inputs,s.result.selectedStarts,revision);
+    }
+    if(canonical(expected)!==canonical(s.result)) fail('snapshot.result','stale or tampered result; regenerate from exact inputs');
+    if(s.draftReview!==null) {
+      object(s.draftReview,'snapshot.draftReview',['reviewer','timestamp','inputRevision']); text(s.draftReview.reviewer,'snapshot.draftReview.reviewer');
+      if(typeof s.draftReview.timestamp!=='string' || !Number.isFinite(Date.parse(s.draftReview.timestamp))) fail('snapshot.draftReview.timestamp','invalid timestamp');
+      if(s.draftReview.inputRevision!==revision || expected.status!=='feasible') fail('snapshot.draftReview','inconsistent review');
+    }
+    return {...restored,result:clone(s.result),historicalReview:clone(s.draftReview),review:null};
+  }
+  const api={defaults,validate,solve,checkDraft,loads,createState,fromText,editText,selectStart,markReviewed,snapshot,importSnapshot,canonical};
+  if(typeof module==='object' && module.exports) module.exports=api;
+  root.TrainingDraft=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+<!-- APP_CORE_END -->
+<script>
+(function(){
+'use strict';
+const C=TrainingDraft,$=id=>document.getElementById(id);
+let state=C.createState(), lastValid=state.inputs;
+const titles={feasible:'Feasible draft',infeasible:'Infeasible with these choices',invalid_input:'Invalid input',budget_exhausted:'Search limit reached; feasibility unknown'};
+function el(tag,text,className){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;}
+function msg(text){$('message').textContent=text;}
+function time(n){const day=Math.floor(n/1440)+1,m=n%1440;return 'D'+day+' '+String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function changeInput(mutator){try{const input=JSON.parse(state.inputText);mutator(input);state=C.editText(state,JSON.stringify(input,null,2));render(true);msg('Input updated. Current-draft review cleared.');}catch(e){msg(e.message);}}
+function pendingEdit(){state={...state,review:null,historicalReview:null};$('review').disabled=true;$('save').disabled=true;$('solve').disabled=true;$('statusTitle').textContent='Edit pending';$('statusDetail').textContent='Leave this field to commit the value and recompute. The displayed board is a previous reference, not a current result.';$('reviewStatus').textContent='Not reviewed. Pending edit cleared the mark.';}
+function render(syncText){
+ $('save').disabled=false;$('solve').disabled=false;
+ const r=state.result, valid=r.status!=='invalid_input';if(valid)lastValid=state.inputs;
+ const input=valid?state.inputs:lastValid;
+ if(syncText)$('inputText').value=state.inputText;
+ $('statusTitle').textContent=titles[r.status];$('status').className='status'+(r.status==='feasible'?'':' bad');
+ $('statusDetail').textContent=r.status==='feasible'?'All four sessions satisfy the supplied constraints. '+(r.origin==='manual'?'Person-selected draft checked.':'First complete feasible choice found; '+r.explored+' candidate attempts.'):
+ r.status==='budget_exhausted'?'Stopped after '+r.explored+' candidate attempts. No complete draft; no proof of infeasibility.':r.status==='invalid_input'?'Correct the retained input below. No previous success is current.':'No complete draft satisfies these exact choices. All requests remain available for correction.';
+ $('error').textContent=r.status==='invalid_input'?r.diagnostics.join('\n'):'';
+ $('boardWarning').textContent=valid?'': 'Input is invalid. Rows and constraint summaries below show the last valid input for reference only. Correct the exact JSON; no current draft is shown.';
+ $('budget').disabled=!valid;$('budget').value=valid?input.maxNodes:'';
+ const tbody=$('requests');tbody.replaceChildren();
+ for(const q of input.requests){const tr=el('tr');tr.append(el('td',q.id));
+  for(const [field,label] of [['duration','Minutes'],['allowedStarts','Allowed starts'],['personId','Person'],['roomId','Room'],['requiredQualification','Qualification']]){
+   const td=el('td'),control=el('input');control.value=field==='allowedStarts'?q[field].join(', '):q[field];control.className=field==='allowedStarts'?'starts':'';control.setAttribute('aria-label',q.id+' '+label);control.disabled=!valid;
+   control.addEventListener('input',pendingEdit);control.addEventListener('blur',()=>{if($('statusTitle').textContent==='Edit pending')control.dispatchEvent(new Event('change'));});
+   control.addEventListener('change',()=>changeInput(v=>{const row=v.requests.find(x=>x.id===q.id);row[field]=field==='duration'?(control.value.trim()===''?null:Number(control.value)):field==='allowedStarts'?control.value.split(',').map(s=>s.trim()===''?null:Number(s)):control.value;}));td.append(control);tr.append(td);
+  }
+  const td=el('td'),sel=el('select');sel.setAttribute('aria-label',q.id+' Draft start');sel.append(new Option('Unresolved',''));
+  q.allowedStarts.forEach(n=>sel.append(new Option(String(n),String(n))));
+  const a=r.assignments.find(a=>a.requestId===q.id);sel.value=r.origin==='manual'?String(r.selectedStarts[q.id]):a?String(a.start):'';sel.disabled=!valid || (!a && r.origin!=='manual');
+  sel.addEventListener('change',()=>{if(sel.value===''){render(false);return;}try{state=C.selectStart(state,q.id,Number(sel.value));render(false);msg('Selected draft checked. Review cleared.');}catch(e){msg(e.message);render(false);}});td.append(sel);tr.append(td);tbody.append(tr);
+ }
+ $('days').replaceChildren();
+ for(const day of [1,2]){const box=el('div',undefined,'day');box.append(el('h3','Day '+day+' · minutes '+((day-1)*1440)+'–'+(day*1440)));
+  const sessions=r.assignments.filter(a=>a.start>=(day-1)*1440 && a.start<day*1440);
+  if(!sessions.length)box.append(el('p',r.status==='feasible'?'No sessions on this day.':'No complete draft. Requests remain in Session proposals.','muted'));
+  for(const a of sessions){const row=el('div',undefined,'session');row.append(el('strong',a.requestId),el('span',a.personId+' · '+a.roomId),el('time',time(a.start)+' → '+time(a.end)));box.append(row);} $('days').append(box);
+ }
+ $('explanations').replaceChildren();if(r.diagnostics.length){const ul=el('ul',undefined,'diagnostics');r.diagnostics.forEach(s=>ul.append(el('li',s)));$('explanations').append(ul);}else $('explanations').append(el('p','No conflicts in the complete current draft.','muted'));
+ $('loading').replaceChildren();for(const p of input.people){const load=r.loads.find(l=>l.personId===p.id),box=el('div');box.append(el('h3',p.id+' · '+(load?load.proposedMinutes:'—')+' proposed / '+p.maxMinutes+' cap'));
+ box.append(el('p',load && load.scheduledMinutes!==null?load.scheduledMinutes+' scheduled minutes':'No complete draft','muted'));const bar=el('progress');bar.max=Math.max(1,p.maxMinutes);bar.value=load&&load.scheduledMinutes!==null?load.scheduledMinutes:0;bar.setAttribute('aria-label',p.id+' scheduled duty minutes');box.append(bar);$('loading').append(box);}
+ $('constraints').replaceChildren();$('constraints').append(el('p','Operating windows: '+input.operatingWindows.map(w=>'['+w.join(', ')+']').join(', ')));
+ input.people.forEach(p=>$('constraints').append(el('p',p.id+' · qualifications '+(p.qualifications.join(', ')||'(none)')+' · rest '+p.restMinutes+' min · availability '+p.availability.map(w=>'['+w.join(', ')+']').join(', '))));
+ $('review').disabled=r.status!=='feasible'||!$('reviewer').value.trim();
+ $('reviewStatus').textContent=state.review?'Reviewed by '+state.review.reviewer+' · '+state.review.timestamp:state.historicalReview?'Imported historical review by '+state.historicalReview.reviewer+'. Fresh review required.':'Not reviewed. Review applies only to the current feasible draft.';
+}
+$('inputText').addEventListener('input',()=>{state=C.editText(state,$('inputText').value);render(false);msg('Input recomputed. Review cleared.');});
+$('budget').addEventListener('input',pendingEdit);$('budget').addEventListener('blur',()=>{if($('statusTitle').textContent==='Edit pending')$('budget').dispatchEvent(new Event('change'));});
+$('budget').addEventListener('change',()=>changeInput(v=>{v.maxNodes=$('budget').value.trim()===''?null:Number($('budget').value);}));
+$('solve').addEventListener('click',()=>{state=C.editText(state,state.inputText);render(true);msg('Generated from the current input. Review cleared.');});
+$('reset').addEventListener('click',()=>{state=C.createState();lastValid=state.inputs;render(true);msg('Synthetic sample restored. Unsaved edits replaced.');});
+$('reviewer').addEventListener('input',()=>{state={...state,review:null,historicalReview:null};$('review').disabled=state.result.status!=='feasible'||!$('reviewer').value.trim();$('reviewStatus').textContent='Not reviewed. Reviewer-label edit cleared the mark.';});
+$('review').addEventListener('click',()=>{try{state=C.markReviewed(state,$('reviewer').value);render(false);msg('Current synthetic draft marked reviewed; not operational approval.');}catch(e){msg(e.message);}});
+$('save').addEventListener('click',()=>{try{const text=C.snapshot(state);if(new TextEncoder().encode(text).length>1048576)throw new Error('Snapshot exceeds 1 MiB; shorten input before saving.');const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=el('a');a.href=url;a.download='synthetic-training-draft.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);msg('Download requested. Keep the JSON file; import after reopening to recover.');}catch(e){msg('Save failed: '+e.message);}});
+$('importFile').addEventListener('change',async()=>{const f=$('importFile').files[0];if(!f)return;try{if(f.size>1048576)throw new Error('File exceeds 1 MiB.');const restored=C.importSnapshot(await f.text());state=restored;render(true);msg('Imported exact inputs and draft. Fresh current-draft review required.');}catch(e){msg('Import rejected; current workspace retained. '+e.message);}finally{$('importFile').value='';}});
+render(true);
+})();
+</script></body></html>

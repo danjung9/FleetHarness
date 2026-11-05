@@ -1,0 +1,209 @@
+{
+  "time": "2026-11-04T21:09:29.319Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./scheduler.test.cjs\"",
+  "exitCode": 0,
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: N1: actual application resolves the planned collision with exact literal times and loads\nok 1 - N1: actual application resolves the planned collision with exact literal times and loads\n  ---\n  duration_ms: 2.614041\n  type: 'test'\n  ...\n# Subtest: N2: independently audit all pairs, resource-only collisions, unknowns and incomplete coverage\nok 2 - N2: independently audit all pairs, resource-only collisions, unknowns and incomplete coverage\n  ---\n  duration_ms: 1.053958\n  type: 'test'\n  ...\n# Subtest: N3: qualification union, assigned-person availability and operating windows\nok 3 - N3: qualification union, assigned-person availability and operating windows\n  ---\n  duration_ms: 0.329708\n  type: 'test'\n  ...\n# Subtest: N4: minimum-rest and weekly-duty boundaries, zero values and back-to-back\nok 4 - N4: minimum-rest and weekly-duty boundaries, zero values and back-to-back\n  ---\n  duration_ms: 0.303583\n  type: 'test'\n  ...\n# Subtest: N5: impossible set and exhaustion differ; budget counts attempted candidate placements\nok 5 - N5: impossible set and exhaustion differ; budget counts attempted candidate placements\n  ---\n  duration_ms: 0.167041\n  type: 'test'\n  ...\n# Subtest: N6: prior commitments consume duty and enforce rest, personnel/resource collisions and availability\nok 6 - N6: prior commitments consume duty and enforce rest, personnel/resource collisions and availability\n  ---\n  duration_ms: 0.287833\n  type: 'test'\n  ...\n# Subtest: N7: alternate exact personnel assignment recovers a collision without changing constraints\nok 7 - N7: alternate exact personnel assignment recovers a collision without changing constraints\n  ---\n  duration_ms: 0.160875\n  type: 'test'\n  ...\n# Subtest: N8: independent audit catches third-to-first conflicts and prior duty excess\nok 8 - N8: independent audit catches third-to-first conflicts and prior duty excess\n  ---\n  duration_ms: 0.276416\n  type: 'test'\n  ...\n# Subtest: N9: actual revision transitions, dirty guard, unchanged save, failed solve, history and fresh review\nok 9 - N9: actual revision transitions, dirty guard, unchanged save, failed solve, history and fresh review\n  ---\n  duration_ms: 0.73675\n  type: 'test'\n  ...\n# Subtest: N10/N11: validation limits and malformed models remain invalid, not infeasible\nok 10 - N10/N11: validation limits and malformed models remain invalid, not infeasible\n  ---\n  duration_ms: 1.447792\n  type: 'test'\n  ...\n# Subtest: N11: storage rejects corrupt, stale or forged acceptance and preserves invalid drafts separately\nok 11 - N11: storage rejects corrupt, stale or forged acceptance and preserves invalid drafts separately\n  ---\n  duration_ms: 0.772375\n  type: 'test'\n  ...\n# Subtest: supplemental exact window endpoints, 1-minute shortfalls and prior-rest boundaries\nok 12 - supplemental exact window endpoints, 1-minute shortfalls and prior-rest boundaries\n  ---\n  duration_ms: 0.338417\n  type: 'test'\n  ...\n# Subtest: V1: 216 finite models agree with an independent exhaustive oracle\nok 13 - V1: 216 finite models agree with an independent exhaustive oracle\n  ---\n  duration_ms: 7.963417\n  type: 'test'\n  ...\n# Subtest: V2: search must backtrack an earlier request and audit immutable commitment pairs\nok 14 - V2: search must backtrack an earlier request and audit immutable commitment pairs\n  ---\n  duration_ms: 0.257584\n  type: 'test'\n  ...\n# Subtest: V3: restored unfinished work cannot approve or solve; discard and stale replay guards\nok 15 - V3: restored unfinished work cannot approve or solve; discard and stale replay guards\n  ---\n  duration_ms: 0.529917\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 104.078167\n\nBrowser journeys: 16/16 passed.\nRequirements: 3 demonstrated, 0 failed, 4 unverified.",
+  "durationMs": 12432,
+  "sourceHash": "0d096deb78643350154e969e33e30edeb7c5f1411028c2552a31f9f4088ddf33",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "b84725be9c1159fe429385df20391cc1305a98438d81f1b15943bfd4ec97dc81",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC11-1",
+        "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+        "status": "unverified",
+        "detail": "The slice demonstrates deterministic feasibility for synthetic departmental requests only. No collaborating agents, authoritative fatigue policy, SFTRM rules or completion history are supplied. Full source requirement remains unverified."
+      },
+      {
+        "criterionId": "SCH-01",
+        "requirement": "No personnel or shared-resource double booking.",
+        "status": "passed",
+        "detail": "Every complete proposal has zero overlapping interval pairs sharing personnel or an exclusive resource. In the planned two-request example, Damage Control occupies Monday 09:00–10:00 UTC and Engineering moves from 09:00 to 10:30–11:30 UTC; both use Alex and Room A without overlap. Proposal edits invalidate prior review. — demonstrated by resolve-collision, review-revision at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-02",
+        "requirement": "Honor availability, qualifications, rest and duty budgets.",
+        "status": "passed",
+        "detail": "Within explicit synthetic inputs, every assigned interval is contained in a ship operating window and every assigned person availability window, all required qualifications are covered by assigned people, every same-person pair satisfies supplied rest and total horizon duty does not exceed budget. Missing FPL, availability ending at minute 600, rest 31 and duty budget 119 prevent the two-request proposal; restoring availability to 1020, rest 30 and budget 120 yields both requests and exactly 120 duty minutes. These are demonstration values, not approved policy. — demonstrated by recover-qualification, recover-availability, recover-fatigue at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-03",
+        "requirement": "Distinguish infeasible input from exhausted search.",
+        "status": "passed",
+        "detail": "An exhaustive search of the impossible two-request candidate set reports Infeasible: no complete schedule within supplied candidates. A one-node budget reports Search limit reached: feasibility is unknown. Neither exposes an approvable partial proposal. Invalid duration is rejected as validation, separate from either solver result. Correcting inputs or increasing budget recovers a complete feasible proposal. — demonstrated by recover-exhaustion, recover-impossible, recover-invalid at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-04",
+        "requirement": "Preserve mandatory training periodicities.",
+        "status": "unverified",
+        "detail": "Owner-approved periodicity rules, applicability and completion history are missing. Two explicit synthetic occurrences do not establish recurrence completeness or SFTRM compliance. No mandatory-compliance indicator will be shown."
+      },
+      {
+        "criterionId": "SCH-05",
+        "requirement": "Have an operator accept the proposed schedule.",
+        "status": "unverified",
+        "detail": "Local revision-bound acceptance and edit protection are demonstrated, but automated interaction cannot establish actual operator acceptance. No authorized operator or human acceptance evidence is supplied. Hard constraints are never relaxed automatically."
+      },
+      {
+        "criterionId": "DELIVERABLE11-1",
+        "requirement": "An interactive weekly schedule board showing automated conflict resolution across departments with one-click schedule optimization and personnel loading heatmaps.",
+        "status": "unverified",
+        "detail": "The prototype supplies a weekly editable board, conflict comparison, one-action feasible allocation and numeric heatmap. Bounded first-feasible search has no optimization objective or optimality guarantee; the full deliverable remains unverified pending owner definition and implementation of optimization."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "resolve-collision",
+        "title": "Resolve a shared person and room collision",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 9 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/resolve-collision-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/resolve-collision-desktop.zip"
+      },
+      {
+        "id": "resolve-collision",
+        "title": "Resolve a shared person and room collision",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 9 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/resolve-collision-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/resolve-collision-narrow.zip"
+      },
+      {
+        "id": "recover-qualification",
+        "title": "Restore a missing assigned-person qualification",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-qualification-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-qualification-desktop.zip"
+      },
+      {
+        "id": "recover-qualification",
+        "title": "Restore a missing assigned-person qualification",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-qualification-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-qualification-narrow.zip"
+      },
+      {
+        "id": "recover-availability",
+        "title": "Restore the assigned person availability window",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-availability-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-availability-desktop.zip"
+      },
+      {
+        "id": "recover-availability",
+        "title": "Restore the assigned person availability window",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-availability-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-availability-narrow.zip"
+      },
+      {
+        "id": "recover-fatigue",
+        "title": "Enforce exact rest and horizon-duty boundaries",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 18 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-fatigue-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-fatigue-desktop.zip"
+      },
+      {
+        "id": "recover-fatigue",
+        "title": "Enforce exact rest and horizon-duty boundaries",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 18 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-fatigue-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-fatigue-narrow.zip"
+      },
+      {
+        "id": "recover-exhaustion",
+        "title": "Retry an inconclusive bounded search",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-exhaustion-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-exhaustion-desktop.zip"
+      },
+      {
+        "id": "recover-exhaustion",
+        "title": "Retry an inconclusive bounded search",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-exhaustion-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-exhaustion-narrow.zip"
+      },
+      {
+        "id": "recover-impossible",
+        "title": "Repair a finite candidate set with no feasible allocation",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-impossible-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-impossible-desktop.zip"
+      },
+      {
+        "id": "recover-impossible",
+        "title": "Repair a finite candidate set with no feasible allocation",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-impossible-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-impossible-narrow.zip"
+      },
+      {
+        "id": "recover-invalid",
+        "title": "Correct invalid duration without losing the request",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 9 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-invalid-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-invalid-desktop.zip"
+      },
+      {
+        "id": "recover-invalid",
+        "title": "Correct invalid duration without losing the request",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 9 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-invalid-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/recover-invalid-narrow.zip"
+      },
+      {
+        "id": "review-revision",
+        "title": "Persist a proposal and prevent stale local acceptance",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 24 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/review-revision-desktop.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/review-revision-desktop.zip"
+      },
+      {
+        "id": "review-revision",
+        "title": "Persist a proposal and prevent stale local acceptance",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 24 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/review-revision-narrow.png",
+        "trace": ".quality-evidence/2ec8bb799c02-05884328-13d6-4ee2-baf5-d865f9cbf6d1/review-revision-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

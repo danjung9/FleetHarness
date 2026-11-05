@@ -1,0 +1,93 @@
+verify text The repaired app passes 19 tests with no skips. The added cases cover malformed inputs, duplicate allocations, resource substitution, duty/rest boundaries, independent editor drafts, acceptance invalidation, and stopping a search.
+
+The controller tests execute the app’s real inline event handlers through a small DOM adapter. They verify state handling, but desktop/narrow rendering, downloads, and 
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\nfrom pathlib import Path\np=json.loads(Path('.fleet/packet.json').read_text())\nprint(json.dumps(p.get('acceptance'),indent=2))\nprint('Host report exists:',Path('test-report.json').exists())\nPY\""
+}
+verify tool bash completed
+"[\n  {\n    \"id\": \"UC11-1\",\n    \"requirement\": \"The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies per
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> domain.test.cjs <<'EOF'\ntest('UC11-1 SCH-01 SCH-02 SCH-04 independent allocation oracle across feasible samples',()=>{\n  for(const name of ['baseline','two-day-dc','overdue-history']){\n    const w=C.fixture(name),as=plain(C.solve(w).assignments),daily={},weekly={};\n    const contains=(windows,a)=>windows.some(x=>x.start<=a.start&&x.end>=a.end);\n    a
+verify tool bash completed
+"✔ UC11-1 SCH-01 DELIVERABLE11-1: five participants negotiate baseline, independent interval/load oracle (2.12275ms)\n✔ SCH-02 missing qualification and unavailable person recover via actual input changes (0.476125ms)\n✔ SCH-03 impossible versus exhausted versus invalid input (0.994083ms)\n✔ SCH-04 four repeated cycles include cross-week deadline; overdue history must be explicit (0
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md');s=p.read_text()\ns=s.replace('The crew editor displays', 'Unsaved crew changes must be saved before selecting another person; switching is blocked with a recovery message. Saving a different editor preserves those changes and continues to block acceptance until all editors are saved.\\\\n\\\\nThe cr
+verify tool bash completed
+"completed"
+verify text The final suite passes all 20 tests, including an independent audit across the feasible sample schedules. I’ve documented the repairs, preserved the pre-repair failure details, and mapped every acceptance ID to evidence in `verification.md`.
+
+I also updated the README and test matrix. The browser gate remains pending: the host still needs to run all ten journeys at desktop and narrow widths and pr
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib\nexpected={'acceptance-plan.json':'00439070a073fd9ccb90af8c3150c915c6e60db17a998d88cdb797adfe655804','ux-spec.json':'79e1e977aea650eae7a26af7ff5cf42d8b5c3aa9af8ce566aa155a13a917161d','system-design.json':'9ef034b9398a7f6b18931b143a0cacff49f2ac777b8f74b81cc395de4a5fa273'}\nfor name,digest in expected.item
+verify tool bash completed
+"acceptance-plan.json: unchanged\nux-spec.json: unchanged\nsystem-design.json: unchanged\nHost report left for harness.\nREADME.md:64:Unsaved crew changes must be saved before selecting another person; switching is blocked with a recovery message. Saving a different editor preserves those changes and continues to block acceptance until all editors are saved.\nREADME.md:122:During a 
+verify tool fleet_component_progress
+{
+  "componentId": "inputs",
+  "status": "generated",
+  "detail": "index.html implementation exists after bounded verification repair. Frozen architecture preserved; local application checks pass. Generated reports implementation only; desktop/narrow browser and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic week and policy workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "agents",
+  "status": "generated",
+  "detail": "index.html implementation exists after bounded verification repair. Frozen architecture preserved; local application checks pass. Generated reports implementation only; desktop/narrow browser and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Five departmental agents (simulated): generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "domain",
+  "status": "generated",
+  "detail": "index.html implementation exists after bounded verification repair. Frozen architecture preserved; local application checks pass. Generated reports implementation only; desktop/narrow browser and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Occurrence and hard-constraint engine: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "board",
+  "status": "generated",
+  "detail": "index.html implementation exists after bounded verification repair. Frozen architecture preserved; local application checks pass. Generated reports implementation only; desktop/narrow browser and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Weekly PB4T board and reports: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "index.html implementation exists after bounded verification repair. Frozen architecture preserved; local application checks pass. Generated reports implementation only; desktop/narrow browser and human review remain unverified."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic review and export: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "tests",
+  "status": "generated",
+  "detail": "domain.test.cjs exists: 20 actual application-core/controller tests pass locally; zero skipped. Host browser gate pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Application domain verification: generated. The live diagram has been updated."}]
+verify text Completed the bounded repair: fixed input validation, allocation auditing, draft preservation, and search controls.
+
+- Application tests: **20 passed, 0 failed, 0 skipped**.
+- Frozen plans and architecture remain unchanged.
+- Evidence and limitations recorded in [verification.md](verification.md); README and test matrix updated.
+- All components reported as generated.
+
+Desktop/narrow browser journ
+verify info TAP version 13
+# Subtest: UC11-1 SCH-01 DELIVERABLE11-1: five participants negotiate baseline, independent interval/load oracle
+ok 1 - UC11-1 SCH-01 DELIVERABLE11-1: five participants negotiate baseline, independent interval/load oracle
+  ---
+  duration_ms: 2.363333
+  type: 'test'
+  ...
+# Subtest: SCH-02 missing qualification and unavailable person recover via actual input changes
+ok 2 - SCH-02 mi
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

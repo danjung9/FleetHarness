@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Expeditionary/underway Sailors capturing documents offline on tablets; command staff and Training, Supply and Admin reviewer roles. All data is synthetic.",
+  "primaryTask": "Extract both forms and a week of tasking, correct cited candidates, save and validate, review the exact revision, route locally offline, then reconcile conflicts and deliver through a labeled reconnect simulator.",
+  "successOutcome": "Three named forms, five verified actions, draft status updates and a filing manifest survive reload; local inbox receipts are visible; reviewed simulated replicas converge without duplicate remote receipts.",
+  "screens": [
+    {
+      "name": "Packet workspace",
+      "purpose": "Read image/text sources beside extracted fields; correct uncertainty and inspect citations, validation and saved versus unsaved state.",
+      "primaryAction": "Save packet, then Validate"
+    },
+    {
+      "name": "Review and local inboxes",
+      "purpose": "Review committed forms, actions, status and filing; deliberately approve the exact saved revision and route locally.",
+      "primaryAction": "Approve reviewed revision, then Route locally"
+    },
+    {
+      "name": "Reconnect and conflict review",
+      "purpose": "Inspect competing values including deleted task; choose each result and review again. Secondary sync lab demonstrates replay, order and byte-budget recovery.",
+      "primaryAction": "Resolve conflicts, then Sync records"
+    },
+    {
+      "name": "Evidence and path to fleet",
+      "purpose": "Export six named outputs, source/audit history and honest synthetic metrics; expose deferred judgments and operational gaps.",
+      "primaryAction": "Export packet"
+    }
+  ],
+  "states": {
+    "empty": "Explain both tracks and offer Load synthetic packet. No automatic sample load or silent reset. Stable controls remain labeled; no PII entry is requested.",
+    "loading": "During IndexedDB open, extraction, save and reconnect show an explicit local progress message and disable duplicate actions until completion. Saved appears only after transaction completion; all sources are inline and need no network.",
+    "error": "Inline errors name invalid fields; route shows the specific validation, dirty-draft or missing-review block. Save failure retains editable draft; missing history preserves queue. Conflicts show both values with explicit choices. Simulated faults are labeled secondary tools.",
+    "success": "Show Saved locally, 0 errors, reviewed current revision, local inbox receipts and remote queued separately. Reconnect success explicitly says simulated; named outputs remain readable and exportable."
+  },
+  "persistence": "IndexedDB transactionally stores sources, drafts, packet revisions, reviewer decisions, audit, two local replicas, inbox receipts and receiver-acknowledged offsets. Reopen index.html at the same file/origin to recover offline. Show storage-unavailable failure with recovery export; never fall back silently to volatile saved state. No encryption claim. Keep unsaved draft distinct from committed content; export committed and recovery data separately.",
+  "recovery": "Correct invalid fields without losing other work. Require Save or Discard unsaved changes before approving/routing; saving or resolving conflicts invalidates prior approval. Conflict review shows subject variants and edit-versus-delete and requires deliberate selection/custom value for each. Retain queue on missing history. Retry saves and interrupted acknowledgements. Ordinary navigation/reload preserves work; do not expose destructive reset without confirmation and recovery export.",
+  "keyboard": "Use native labeled inputs, selects, buttons and checkbox; logical Tab order source \u2192 candidates \u2192 save \u2192 validation \u2192 review \u2192 route; visible focus; Enter/Space activates buttons. Announce save/error/conflict status in live regions, associate field errors with inputs and focus the first error after validation. Narrow layout stacks source/review panes without hiding outputs or horizontal page scrolling."
+}

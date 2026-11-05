@@ -1,0 +1,100 @@
+{
+  "title": "Synthetic tasking review and daily timeline",
+  "description": "Local-only synthetic message extraction with immutable source evidence, explicit review, UTC daily schedule and export. No operational integrations or USMTF compliance claimed.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Message capture",
+      "description": "Labeled synthetic text draft, grammar help, parse action and replacement safeguards.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "parser",
+      "label": "Deterministic extraction and validation",
+      "description": "EVENT/TASK grammar, exact UTF-16 spans, strict explicit-zone dates, warnings and duplicate checks. core.cjs is the Node adapter for the actual inline core.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Source evidence and review",
+      "description": "Show original slices and normalized values separately. Select synthetic event category, resolve source errors and deliberately approve valid records.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "schedule",
+      "label": "UTC daily schedule",
+      "description": "Half-open UTC day clipping, point tasks, retained full intervals and readable 24-hour visual timeline.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "session",
+      "label": "Local session state",
+      "description": "Immutable parsed snapshot, editable draft, review revisions and guarded in-memory transitions; no persistence across reload promised.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Reviewed schedule download",
+      "description": "Local JSON download containing immutable source, every field span, original and normalized timestamps, user category decisions and full reviewed intervals. No remote integration.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "parser",
+      "label": "Exact source snapshot"
+    },
+    {
+      "from": "parser",
+      "to": "review",
+      "label": "Extracted fields, spans and issues"
+    },
+    {
+      "from": "review",
+      "to": "session",
+      "label": "Explicit category review and approval"
+    },
+    {
+      "from": "session",
+      "to": "schedule",
+      "label": "Current approved revision and selected day"
+    },
+    {
+      "from": "session",
+      "to": "review",
+      "label": "Saved approval and draft status"
+    },
+    {
+      "from": "schedule",
+      "to": "export",
+      "label": "Selected-day view and full reviewed records"
+    },
+    {
+      "from": "session",
+      "to": "export",
+      "label": "Original source and provenance"
+    }
+  ]
+}

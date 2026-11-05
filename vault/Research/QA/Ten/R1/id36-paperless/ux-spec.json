@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Sailors and fictional reviewers evaluating a synthetic offline administrative workflow; no real operational data.",
+  "primaryTask": "Capture a synthetic training log, save locally, reconcile simulated peer changes, resolve every conflict and deliberately review before simulated routing.",
+  "successOutcome": "The saved current revision survives browser reload, competing changes remain visible until chosen, and an approved revision receives a clearly labeled simulated receipt with its reviewer decision.",
+  "screens": [
+    {
+      "name": "Training log workspace",
+      "purpose": "Capture and reopen one synthetic log with source reference, local save state and inline validation.",
+      "primaryAction": "Save locally"
+    },
+    {
+      "name": "Conflict and review",
+      "purpose": "Show both competing values including deletion; choose a resolution, inspect the saved fields and approve that exact revision.",
+      "primaryAction": "Approve saved revision"
+    },
+    {
+      "name": "Simulated reconnect and history",
+      "purpose": "Inspect pending simulated routing and local action history; secondary expandable tools exercise replay and opposite merge orders.",
+      "primaryAction": "Simulate reconnect"
+    }
+  ],
+  "states": {
+    "empty": "Show no saved log and explain Load synthetic sample. #load-sample fills a draft only; it does not save or approve.",
+    "loading": "Show Opening local records or Saving locally during IndexedDB work. Disable duplicate mutation while pending and announce completion; never show Saved locally before transaction completion.",
+    "error": "Keep the draft after invalid duration, storage failure or missing history. Show a specific inline error and retry. Unresolved heads block review/routing. Dirty content blocks routing until explicit save or discard.",
+    "success": "Show Saved locally after commit. Separate approval, Queued for simulated routing and Simulated receipt recorded; no external delivery. Preserve the review decision and resolution history."
+  },
+  "persistence": "IndexedDB transaction commits graph, local queue, review and audit together. Store draft separately and preserve it across navigation/reconnect. Reload restores saved values and review references. Plain browser storage is unencrypted; actual device restart, eviction, backup and retention remain unverified. Storage denial must keep the editable draft and never acknowledge success.",
+  "recovery": "Correct invalid fields without losing other entries. Keep original graph/queue on missing parents, cycle or collision. Offer retry/request missing history. Display both competing values; select local, peer or custom value and confirm to create an all-head resolution. An unsaved draft requires explicit Save or Discard before review/routing; discard restores committed values. New revisions invalidate approval. No automatic routing on reconnect without prior approval.",
+  "keyboard": "Use labeled native inputs, selects, checkboxes and buttons in logical Tab order with visible focus. Enter/Space activates native actions; errors are associated with fields, status is announced with aria-live. Focus the first invalid field or conflict heading after blocking. Desktop and narrow layouts stack without horizontal scrolling; all controls remain reachable."
+}

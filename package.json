@@ -11,6 +11,7 @@
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "tsc && vite build && npm run build:electron",
     "build:web": "tsc && vite build --outDir dist-web --base /",
+    "icons": "node scripts/create-icon.mjs",
     "start": "electron .",
     "preview": "vite preview",
     "test": "npm run build:electron && npm run build:worker && node --test --test-concurrency=2 tests/*.test.mjs",
@@ -48,6 +49,7 @@
     "@openai/codex": "0.166.0",
     "@supabase/supabase-js": "2.119.0",
     "@vercel/sandbox": "3.9.1",
+    "koffi": "3.3.6",
     "lru-cache": "10.4.3",
     "lucide-react": "1.68.0",
     "nitro": "3.0.261103-rc",
@@ -87,6 +89,7 @@
       "package.json"
     ],
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools",
       "target": [
         "dmg",
@@ -100,7 +103,14 @@
       "buildResources": "build"
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "artifactName": "AppYard-${version}-windows-${arch}-setup.${ext}"
     },
     "nsis": {

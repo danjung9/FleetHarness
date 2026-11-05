@@ -1,0 +1,231 @@
+{
+ "title": "CASREP Command: Unified Casualty Report Drafting, Routing & Release",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T22:03:45.017Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./casrep.test.cjs\"",
+  "exitCode": 0,
+  "total": 11,
+  "passed": 11,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: required fields, exact recovery errors, enum, UTC, linked reports and boundaries\nok 1 - required fields, exact recovery errors, enum, UTC, linked reports and boundaries\n  ---\n  duration_ms: 4.58675\n  type: 'test'\n  ...\n# Subtest: full return, revise, six-role approval and immutable release journey\nok 2 - full return, revise, six-role approval and immutable release journey\n  ---\n  duration_ms: 4.288\n  type: 'test'\n  ...\n# Subtest: role guards, dirty decisions, stale approvals, comments and release confirmation\nok 3 - role guards, dirty decisions, stale approvals, comments and release confirmation\n  ---\n  duration_ms: 3.211458\n  type: 'test'\n  ...\n# Subtest: branch values survive reconciliation and reload; both reviewed parents retained\nok 4 - branch values survive reconciliation and reload; both reviewed parents retained\n  ---\n  duration_ms: 10.198625\n  type: 'test'\n  ...\n# Subtest: reconciliation union is idempotent, order independent and preserves delete conflict\nok 5 - reconciliation union is idempotent, order independent and preserves delete conflict\n  ---\n  duration_ms: 0.352625\n  type: 'test'\n  ...\n# Subtest: atomic repository failure leaves committed state unchanged and buffer recoverable\nok 6 - atomic repository failure leaves committed state unchanged and buffer recoverable\n  ---\n  duration_ms: 0.687167\n  type: 'test'\n  ...\n# Subtest: corrupted or unsupported storage is quarantined without overwrite\nok 7 - corrupted or unsupported storage is quarantined without overwrite\n  ---\n  duration_ms: 0.359125\n  type: 'test'\n  ...\n# Subtest: linked amendment, cancellation, expiry, supersession and closure preserve release\nok 8 - linked amendment, cancellation, expiry, supersession and closure preserve release\n  ---\n  duration_ms: 6.708125\n  type: 'test'\n  ...\n# Subtest: unchanged save does not manufacture revision and stop blocks mutations\nok 9 - unchanged save does not manufacture revision and stop blocks mutations\n  ---\n  duration_ms: 0.378208\n  type: 'test'\n  ...\n# Subtest: incomplete version-1 envelopes and dangling selections are quarantined without writes\nok 10 - incomplete version-1 envelopes and dangling selections are quarantined without writes\n  ---\n  duration_ms: 0.633291\n  type: 'test'\n  ...\n# Subtest: replayed routing cannot duplicate approvals or releases; content binding rejects tampering\nok 11 - replayed routing cannot duplicate approvals or releases; content binding rejects tampering\n  ---\n  duration_ms: 1.842625\n  type: 'test'\n  ...\n1..11\n# tests 11\n# suites 0\n# pass 11\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 122.610958\n\nBrowser journeys: 14/14 passed.\nRequirements: 5 demonstrated, 0 failed, 0 unverified.",
+  "durationMs": 12174,
+  "sourceHash": "6b84313107ecf884e8f7db2a945f089708d85cb0708fb1fe3ca589656bfa005c",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "934785ea7c79d99a620628f5f59af44e39d5478ec3a405e106febdf08a100597",
+   "status": "passed",
+   "requirementsMet": true,
+   "criteria": [
+    {
+     "criterionId": "UC8-1",
+     "requirement": "The tool must support role-based access for the originator (Sailor/LPO), Division Officer, Department Head, Engineer Officer/CHENG, XO, and CO as releasing authority, with each role able to comment, return for revision, or approve and forward. Drafts must enforce NWP 1-03.1 CASREP formatting (report types such as INITIAL, UPDATE, CORRECT, and CASCOR, plus category and required fields), keep a full version history and audit trail of every comment and approval, and show at a glance where each report is in the routing chain. The prototype must use notional, unclassified data only.",
+     "status": "passed",
+     "detail": "The complete synthetic CASREP uses all six simulated roles, required fields, categories 2/3/4 and INITIAL/UPDATE/CORRECT/CASCOR previews; a returned draft is revised, reviewed and simulated-released with visible holder, comments and revision-bound approvals. Linked amendments preserve released snapshots. This demonstrates assumed format checks only, not validated NWP 1-03.1 compliance or operational rules. \u2014 demonstrated by route-return-release, invalid-fields, stale-approval, local-draft, linked-lifecycle at both viewport sizes."
+    },
+    {
+     "criterionId": "WFL-01",
+     "requirement": "Reject invalid state transitions and stale approvals.",
+     "status": "passed",
+     "detail": "Out-of-order CO release and dirty-form review are rejected; content changes invalidate earlier approvals and require a new complete route before simulated release. \u2014 demonstrated by stale-approval, local-draft at both viewport sizes."
+    },
+    {
+     "criterionId": "WFL-02",
+     "requirement": "Retain record lineage and conflicts.",
+     "status": "passed",
+     "detail": "Two competing amendments visibly retain restoration 20:00Z and the fictional seal-kit request; unresolved conflict blocks release, explicit reconciliation retains both parents through reload and exports their history with the final release. \u2014 demonstrated by conflict-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "WFL-03",
+     "requirement": "Complete the owner-specific workflow.",
+     "status": "passed",
+     "detail": "An evaluator can perform intake, comment, return, revise, all approvals and local export, and recover invalid inputs without losing the draft. Automated journeys do not claim that a human reviewer has accepted the workflow. \u2014 demonstrated by route-return-release, release-package, invalid-fields at both viewport sizes."
+    },
+    {
+     "criterionId": "DELIVERABLE8-1",
+     "requirement": "A working prototype that walks one mock CASREP from initial draft through every approval role to CO release, including at least one \"returned for revision\" loop. Teams should also submit a short demo video or live walkthrough and a one-page brief covering the role/permission model, how the tool would handle classification and integration with existing Navy messaging systems, and what it would take to field it.",
+     "status": "passed",
+     "detail": "One mock CASREP traverses Sailor/LPO, Division Officer, Department Head, Engineer Officer/CHENG, XO and CO with a return loop. Named synthetic message/history downloads, a live walkthrough and a one-page fielding brief cover permissions, classification, Navy messaging boundaries and fielding prerequisites; release remains a local simulation. \u2014 demonstrated by route-return-release, conflict-recovery, release-package at both viewport sizes."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "route-return-release",
+     "title": "Return, revise and route through every command role",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 37 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/route-return-release-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/route-return-release-desktop.zip"
+    },
+    {
+     "id": "route-return-release",
+     "title": "Return, revise and route through every command role",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 37 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/route-return-release-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/route-return-release-narrow.zip"
+    },
+    {
+     "id": "release-package",
+     "title": "Export a simulated release and inspect required guidance",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 27 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/release-package-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/release-package-desktop.zip"
+    },
+    {
+     "id": "release-package",
+     "title": "Export a simulated release and inspect required guidance",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 27 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/release-package-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/release-package-narrow.zip"
+    },
+    {
+     "id": "invalid-fields",
+     "title": "Recover required-field and linked-report validation",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 27 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/invalid-fields-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/invalid-fields-desktop.zip"
+    },
+    {
+     "id": "invalid-fields",
+     "title": "Recover required-field and linked-report validation",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 27 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/invalid-fields-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/invalid-fields-narrow.zip"
+    },
+    {
+     "id": "stale-approval",
+     "title": "Reject skipped routing, dirty review and stale approval reuse",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 40 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/stale-approval-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/stale-approval-desktop.zip"
+    },
+    {
+     "id": "stale-approval",
+     "title": "Reject skipped routing, dirty review and stale approval reuse",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 40 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/stale-approval-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/stale-approval-narrow.zip"
+    },
+    {
+     "id": "conflict-recovery",
+     "title": "Review both competing amendments and explicitly reconcile",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 40 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/conflict-recovery-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/conflict-recovery-desktop.zip"
+    },
+    {
+     "id": "conflict-recovery",
+     "title": "Review both competing amendments and explicitly reconcile",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 40 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/conflict-recovery-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/conflict-recovery-narrow.zip"
+    },
+    {
+     "id": "local-draft",
+     "title": "Persist unfinished work and recover deliberately before review",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 12 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/local-draft-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/local-draft-desktop.zip"
+    },
+    {
+     "id": "local-draft",
+     "title": "Persist unfinished work and recover deliberately before review",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 12 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/local-draft-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/local-draft-narrow.zip"
+    },
+    {
+     "id": "linked-lifecycle",
+     "title": "Keep released snapshot immutable when amending and cancelling",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 29 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/linked-lifecycle-desktop.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/linked-lifecycle-desktop.zip"
+    },
+    {
+     "id": "linked-lifecycle",
+     "title": "Keep released snapshot immutable when amending and cancelling",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 29 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/linked-lifecycle-narrow.png",
+     "trace": ".quality-evidence/56e2d00097b9-2348c3de-f215-405d-9c4a-021f8c697e9c/linked-lifecycle-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 11.8,
+ "challengeId": "8",
+ "workspace": "~/fhexp/ud-r101/workspaces/aa2280f3-b360-4c6f-bfe1-ec7352d90e1a/c8e6df86-30e1-4405-a246-3f7c0df92afd"
+}

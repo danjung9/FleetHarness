@@ -1,0 +1,895 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Both tracks save and reload offline, route to local inboxes, retain queue on errors, then reconcile reviewed conflicts to equal simulated replicas with exactly 1 remote packet receipt.",
+      "journeyIds": [
+        "packet-offline",
+        "reconnect-review",
+        "storage-history-recovery"
+      ]
+    },
+    {
+      "criterionId": "UC36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Unreviewed, invalid, dirty and changed saved revisions cannot route; explicit review of current saved content is required after edit or merge.",
+      "journeyIds": [
+        "packet-offline",
+        "validation-recovery",
+        "reconnect-review"
+      ]
+    },
+    {
+      "criterionId": "UC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Source-linked audit records capture extraction, correction, saving, validation, exact-revision approval, chosen conflict values and routing with actor-role and timestamp; audit export retains sourceId.",
+      "journeyIds": [
+        "evidence-review",
+        "reconnect-review"
+      ]
+    },
+    {
+      "criterionId": "UC36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Runs on government devices and existing low-code platforms where possible remains unverified. Stand-in: Authorized government devices and the owner low-code runtime are unavailable; withhold compatibility/deployment claims. Demonstrate the complete local browser workflow and a platform-transition checklist.",
+      "journeyIds": [],
+      "reason": "real-system: Authorized government devices and the owner low-code runtime are unavailable; withhold compatibility/deployment claims. Demonstrate the complete local browser workflow and a platform-transition checklist."
+    },
+    {
+      "criterionId": "UC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "Only invented role-labelled fixtures are used. UI and packet/audit exports state synthetic, not validated against the real format; no personal data or real endpoint is used.",
+      "journeyIds": [
+        "packet-offline",
+        "evidence-review"
+      ]
+    },
+    {
+      "criterionId": "UC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic offline workflow preserves human authority, TRAIN-01 citation and audit actions, reconciles on simulated reconnect, and exports the one-page path to fleet with 30/60/90/180-day stages.",
+      "journeyIds": [
+        "packet-offline",
+        "reconnect-review",
+        "evidence-review"
+      ]
+    },
+    {
+      "criterionId": "OFF-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Replaying immutable operations preserves 3 revisions and 2 heads; replaying routed packet sync preserves exactly 1 remote packet receipt without duplicate effects.",
+      "journeyIds": [
+        "merge-order",
+        "reconnect-review"
+      ]
+    },
+    {
+      "criterionId": "OFF-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Both subject edits and Inspect locker versus Deleted remain visible until human choice; resolution retains chosen text Ready after supply check and kept task, records all reviewed heads and invalidates approval.",
+      "journeyIds": [
+        "reconnect-review"
+      ]
+    },
+    {
+      "criterionId": "OFF-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Actual A-into-B and B-into-A canonical record states match with the same 2 unresolved heads retained; no clock-selected winner.",
+      "journeyIds": [
+        "merge-order"
+      ]
+    },
+    {
+      "criterionId": "OFF-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Zero budget and interrupted acknowledgement do not change offsets. 2000 acknowledged bytes completes critical 1000 bytes then advances photo 5000 to 6000; reload retains progress; 4000 more completes photo with 0 pending.",
+      "journeyIds": [
+        "transfer-resume"
+      ]
+    },
+    {
+      "criterionId": "OFF-05",
+      "disposition": "implemented",
+      "expectedOutcome": "Saved edits survive offline reload; failed save retains the draft without false saved acknowledgement; reviewed conflict decisions survive reload and routing requires review of current revision.",
+      "journeyIds": [
+        "packet-offline",
+        "reconnect-review",
+        "storage-history-recovery"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Compare extraction with the pre-authored 28-field synthetic answer key: 27/28 correct before correction; 1 ambiguous owner flagged; reviewed outputs contain all 28 correct values, all 5 actions and source citations.",
+      "journeyIds": [
+        "packet-offline",
+        "evidence-review"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Catch all 5 seeded date, quantity, subject, owner and filing-class errors before submission; after correction report 0 remaining and permit routing only after current-revision approval.",
+      "journeyIds": [
+        "validation-recovery"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Time per packet against a manual baseline [baseline to be set with Fleet SME] remains unverified. Stand-in: A Fleet-SME-established manual timing baseline is unavailable; withhold fleet timing comparison. Record observed synthetic elapsed time and a separately invented 20-minute baseline.",
+      "journeyIds": [],
+      "reason": "real-data: A Fleet-SME-established manual timing baseline is unavailable; withhold fleet timing comparison. Record observed synthetic elapsed time and a separately invented 20-minute baseline."
+    },
+    {
+      "criterionId": "EVAL36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Complete both tracks locally without network, persist through reload, explicitly resolve both conflict types, converge simulated replicas without duplicate receipt and resume acknowledged transfer.",
+      "journeyIds": [
+        "packet-offline",
+        "reconnect-review",
+        "transfer-resume"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-5",
+      "disposition": "deferred",
+      "expectedOutcome": "Ease of use judged by a Sailor panel remains unverified. Stand-in: A Sailor panel must supply its own usability judgment; withhold endorsement. Demonstrate both tracks and provide an unscored panel worksheet.",
+      "journeyIds": [],
+      "reason": "human-authority: A Sailor panel must supply its own usability judgment; withhold endorsement. Demonstrate both tracks and provide an unscored panel worksheet."
+    },
+    {
+      "criterionId": "EVAL36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Official judging rubric: Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%. remains unverified. Stand-in: Official judges must issue official rubric scores; withhold scoring. Display the five original weights with every score unassessed.",
+      "journeyIds": [],
+      "reason": "human-authority: Official judges must issue official rubric scores; withhold scoring. Display the five original weights with every score unassessed."
+    },
+    {
+      "criterionId": "DELIVERABLE36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Sailor hours returned to maintenance, training and watchstanding remains unverified. Stand-in: Observed operational workload and independently measured manual/assisted timings are unavailable; withhold actual hours-returned claims. Show an invented 20 versus 8 minute, 10-packet estimate of 2.00 hours.",
+      "journeyIds": [],
+      "reason": "real-data: Observed operational workload and independently measured manual/assisted timings are unavailable; withhold actual hours-returned claims. Show an invented 20 versus 8 minute, 10-packet estimate of 2.00 hours."
+    },
+    {
+      "criterionId": "DELIVERABLE36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Fewer errors and less rework remains unverified. Stand-in: Matched operational error and rework observations are unavailable; withhold actual fleet error-reduction claims. Detect and correct five seeded synthetic errors before local routing.",
+      "journeyIds": [],
+      "reason": "real-data: Matched operational error and rework observations are unavailable; withhold actual fleet error-reduction claims. Detect and correct five seeded synthetic errors before local routing."
+    },
+    {
+      "criterionId": "DELIVERABLE36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Complete Training log, Supply requisition document and Routine correspondence package plus verified actions, draft status and filing manifest; offline local inboxes show Training: 1 | Supply: 1 | Admin: 1 | Actions: 5, with remote delivery explicitly queued.",
+      "journeyIds": [
+        "packet-offline",
+        "evidence-review"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "packet-offline",
+      "title": "Extract, correct, persist and route both tracks offline",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#data-boundary",
+          "text": "synthetic, not validated against the real format"
+        },
+        {
+          "action": "expectText",
+          "selector": "#connection-state",
+          "text": "Offline \u2014 local routing only"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "expectText",
+          "selector": "#extraction-score",
+          "text": "27/28 fields correct; 1 ambiguous owner needs review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-citation",
+          "text": "TRAIN-01 image region 1: Damage-control drill | 2026-11-02 | 60 | Training Reviewer A"
+        },
+        {
+          "action": "select",
+          "selector": "#task2-owner",
+          "value": "Supply Reviewer A"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task2-owner-display",
+          "text": "Supply Reviewer A"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-summary",
+          "text": "0 errors; ready for human review"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked: review the current saved revision first."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally: 3 forms and 5 actions; remote delivery queued"
+        },
+        {
+          "action": "expectText",
+          "selector": "#inbox-summary",
+          "text": "Training: 1 | Supply: 1 | Admin: 1 | Actions: 5"
+        },
+        {
+          "action": "expectText",
+          "selector": "#output-summary",
+          "text": "Training log | Supply requisition document | Routine correspondence package | Verified action list | Draft status updates | Records filing manifest"
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-output",
+          "text": "Damage-control drill | 2026-11-02 | 60 minutes | Training Reviewer A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#requisition-output",
+          "text": "DEMO-0001 | Filter cartridge | 4 EA | Supply Reviewer A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#correspondence-output",
+          "text": "Admin Reviewer A \u2192 Training Reviewer A | Weekly readiness summary | Submit the synthetic readiness summary for review."
+        },
+        {
+          "action": "expectText",
+          "selector": "#accuracy-reviewed",
+          "text": "Reviewed accuracy: 28/28; raw extraction: 27/28"
+        },
+        {
+          "action": "expectText",
+          "selector": "#filing-summary",
+          "text": "TRAIN-01: TRAIN-DEMO | REQ-01: SUPPLY-DEMO | CORR-01: ADMIN-DEMO | TASK-01\u201305: TASK-DEMO"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-packet",
+          "fileName": "paperless-packet.json",
+          "text": "synthetic, not validated against the real format"
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Catch all seeded errors and preserve the draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "click",
+          "selector": "#seed-errors"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-summary",
+          "text": "5 errors: training date; requisition quantity; correspondence subject; task owner; filing class"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked: fix 5 validation errors before review."
+        },
+        {
+          "action": "fill",
+          "selector": "#training-date",
+          "value": "2026-11-02"
+        },
+        {
+          "action": "fill",
+          "selector": "#req-quantity",
+          "value": "4"
+        },
+        {
+          "action": "fill",
+          "selector": "#corr-subject",
+          "value": "Weekly readiness summary"
+        },
+        {
+          "action": "select",
+          "selector": "#task2-owner",
+          "value": "Supply Reviewer A"
+        },
+        {
+          "action": "select",
+          "selector": "#filing-class",
+          "value": "TRAIN-DEMO"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-summary",
+          "text": "0 errors; ready for human review"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "fill",
+          "selector": "#corr-subject",
+          "value": "Corrected readiness summary"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked: save or discard unsaved changes before routing."
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked: review the current saved revision first."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally: 3 forms and 5 actions; remote delivery queued"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error-metrics",
+          "text": "Seeded errors caught: 5/5; remaining: 0"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-review",
+      "title": "Resolve competing edits and delete before reconnect delivery",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "select",
+          "selector": "#task2-owner",
+          "value": "Supply Reviewer A"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-concurrent"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-summary",
+          "text": "2 conflicts require review; remote routing paused"
+        },
+        {
+          "action": "expectText",
+          "selector": "#subject-heads",
+          "text": "Replica A: Ready for review | Replica B: Needs supply check"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-heads",
+          "text": "Replica A: Inspect locker | Replica B: Deleted"
+        },
+        {
+          "action": "select",
+          "selector": "#subject-choice",
+          "value": "custom"
+        },
+        {
+          "action": "fill",
+          "selector": "#subject-resolution",
+          "value": "Ready after supply check"
+        },
+        {
+          "action": "select",
+          "selector": "#task-choice",
+          "value": "keep"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflicts"
+        },
+        {
+          "action": "expectText",
+          "selector": "#merge-status",
+          "text": "Resolved 2 conflicts; approval required"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-decision",
+          "text": "Training Reviewer A chose: Ready after supply check; kept Inspect locker"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked: review the current saved revision first."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "click",
+          "selector": "#sync-records"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-status",
+          "text": "Simulated replicas equal; 0 conflicts; 1 remote packet receipt"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-decision",
+          "text": "Training Reviewer A chose: Ready after supply check; kept Inspect locker"
+        },
+        {
+          "action": "click",
+          "selector": "#replay-sync"
+        },
+        {
+          "action": "expectText",
+          "selector": "#replay-status",
+          "text": "Replay unchanged: 1 remote packet receipt; no duplicate revisions"
+        }
+      ]
+    },
+    {
+      "id": "merge-order",
+      "title": "Compare actual canonical merges in opposite orders",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#open-sync-lab"
+        },
+        {
+          "action": "click",
+          "selector": "#compare-orders"
+        },
+        {
+          "action": "expectText",
+          "selector": "#order-result",
+          "text": "A into B equals B into A; 2 unresolved heads retained"
+        },
+        {
+          "action": "click",
+          "selector": "#replay-operations"
+        },
+        {
+          "action": "expectText",
+          "selector": "#operation-replay",
+          "text": "Replay unchanged: 3 revisions; 2 heads"
+        }
+      ]
+    },
+    {
+      "id": "transfer-resume",
+      "title": "Acknowledge critical bytes first and resume a half-photo",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#open-sync-lab"
+        },
+        {
+          "action": "click",
+          "selector": "#load-transfer"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#send-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "0 bytes acknowledged; critical 0/1000; photo 5000/10000"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "2000"
+        },
+        {
+          "action": "check",
+          "selector": "#interrupt-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#send-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "Acknowledgement interrupted; critical 0/1000; photo 5000/10000"
+        },
+        {
+          "action": "click",
+          "selector": "#interrupt-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#send-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "2000 bytes acknowledged; critical 1000/1000; photo 6000/10000"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-progress",
+          "text": "Critical 1000/1000; photo 6000/10000"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "4000"
+        },
+        {
+          "action": "click",
+          "selector": "#send-chunk"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "4000 bytes acknowledged; critical 1000/1000; photo 10000/10000"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-pending",
+          "text": "0 pending items"
+        }
+      ]
+    },
+    {
+      "id": "storage-history-recovery",
+      "title": "Keep queued work after failed save and missing history",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "select",
+          "selector": "#task2-owner",
+          "value": "Supply Reviewer A"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "fill",
+          "selector": "#corr-subject",
+          "value": "Recovered summary"
+        },
+        {
+          "action": "click",
+          "selector": "#fail-next-save"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#storage-error",
+          "text": "Save failed; draft retained. Retry local save or export recovery copy."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#corr-subject",
+          "value": "Recovered summary"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Saved locally"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#corr-subject",
+          "value": "Recovered summary"
+        },
+        {
+          "action": "click",
+          "selector": "#inject-missing-history"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-error",
+          "text": "Missing parent rev-missing; local queue unchanged. Request missing history."
+        },
+        {
+          "action": "click",
+          "selector": "#restore-history"
+        },
+        {
+          "action": "click",
+          "selector": "#reconnect"
+        },
+        {
+          "action": "expectText",
+          "selector": "#history-status",
+          "text": "History restored; queued work retained"
+        }
+      ]
+    },
+    {
+      "id": "evidence-review",
+      "title": "Inspect cited outputs, audit and honest measurement boundaries",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "select",
+          "selector": "#task2-owner",
+          "value": "Supply Reviewer A"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "click",
+          "selector": "#open-evidence"
+        },
+        {
+          "action": "expectText",
+          "selector": "#audit-summary",
+          "text": "Capture \u2192 Extract \u2192 Correct \u2192 Save \u2192 Validate \u2192 Approve \u2192 Route locally"
+        },
+        {
+          "action": "expectText",
+          "selector": "#audit-detail",
+          "text": "Training Reviewer A | Route locally | current saved revision | timestamp recorded"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-summary",
+          "text": "Inspect locker \u2014 Training Reviewer A \u2014 2026-11-02; Count filters \u2014 Supply Reviewer A \u2014 2026-11-03; Draft readiness note \u2014 Admin Reviewer A \u2014 2026-11-04; Test radio \u2014 Training Reviewer A \u2014 2026-11-05; File weekly summary \u2014 Admin Reviewer A \u2014 2026-11-06"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status-draft",
+          "text": "Draft: 0/5 actions complete; 5 awaiting role confirmation."
+        },
+        {
+          "action": "expectText",
+          "selector": "#metrics-boundary",
+          "text": "Synthetic estimate: (20 - 8) \u00d7 10 / 60 = 2.00 hours; no measured fleet savings"
+        },
+        {
+          "action": "expectText",
+          "selector": "#baseline-status",
+          "text": "Fleet SME baseline: unavailable; observed packet elapsed time is local only"
+        },
+        {
+          "action": "expectText",
+          "selector": "#panel-status",
+          "text": "Sailor panel: unassessed"
+        },
+        {
+          "action": "expectText",
+          "selector": "#rubric-status",
+          "text": "Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%. Scores: unassessed."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-audit",
+          "fileName": "paperless-audit.json",
+          "text": "sourceId"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-path",
+          "fileName": "path-to-fleet.txt",
+          "text": "30d: owner selects forms; 60d: owner-platform build; 90d: unit pilot; 180d: fleet release decision"
+        }
+      ]
+    }
+  ]
+}

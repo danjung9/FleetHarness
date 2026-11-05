@@ -8,7 +8,7 @@ export type BrowserStep =
   | { action: 'expectText'; selector: string; text: string }
   | { action: 'expectValue'; selector: string; value: string }
   | { action: 'expectVisible'; selector: string }
-  | { action: 'expectDownload'; selector: string; fileName?: string; text?: string };
+  | { action: 'expectDownload'; selector: string; fileName?: string; text?: string; fresh?: boolean };
 
 export interface BrowserJourney {
   id: string;
@@ -25,6 +25,11 @@ export interface QualityPlan {
     expectedOutcome: string;
     journeyIds: string[];
     reason?: string;
+    syntheticCoverage?: {
+      assumptions: string;
+      journeyIds: string[];
+      outputs: Array<{ sourceCriterionId: string; name: string }>;
+    };
   }>;
   journeys: BrowserJourney[];
 }

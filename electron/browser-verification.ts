@@ -1,8 +1,11 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
+import { atomicHostWrite } from '../shared/host-files.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { chromium, type Browser, type BrowserContext, type BrowserServer, type Page } from 'playwright';
 import { PreviewServers } from './preview.js';
+import { runProcessEnvironment } from './process-sweep.js';
 import type { BrowserStep, JourneyResult, QualityPlan } from '../shared/quality.js';
 
 export interface BrowserVerificationOptions {
@@ -75,7 +78,9 @@ async function keepArtifact(file: string) {
   }
 }
 
-async function perform(page: Page, step: BrowserStep, timeout: number) {
+export type DownloadCaptures = Map<string, { fileName: string; text: string }>;
+export async function performBrowserStep(page: Page, step: BrowserStep, timeout: number, downloads: DownloadCaptures) {
+  if (['fill', 'click', 'select', 'press', 'check', 'reload'].includes(step.action)) downloads.clear();
   if (step.action === 'reload') { await page.reload({ waitUntil: 'domcontentloaded', timeout }); return; }
   // Prefixing with css prevents selectors from being treated as executable browser code.
   const target = page.locator('css=' + step.selector);
@@ -101,6 +106,8 @@ async function perform(page: Page, step: BrowserStep, timeout: number) {
       throw new Error(`${step.action} ${step.selector}: expected ${JSON.stringify(expected.slice(0, 500))}, received ${JSON.stringify(actual.slice(0, 500))}.`);
     }
     case 'expectDownload': {
+      let captured = step.fresh ? undefined : downloads.get(step.selector);
+      if (!captured) {
       const [download] = await Promise.all([page.waitForEvent('download', { timeout }), target.click({ timeout })]);
       if (step.fileName !== undefined && download.suggestedFilename() !== step.fileName) {
         await download.cancel();
@@ -118,7 +125,11 @@ async function perform(page: Page, step: BrowserStep, timeout: number) {
       }
       const failure = await download.failure();
       if (failure) throw new Error('Download failed: ' + failure);
-      if (step.text !== undefined && !Buffer.concat(chunks).toString('utf8').includes(step.text)) throw new Error('Downloaded content does not contain the expected literal text.');
+      captured = { fileName: download.suggestedFilename(), text: Buffer.concat(chunks).toString('utf8') };
+      downloads.set(step.selector, captured);
+      }
+      if (step.fileName !== undefined && captured.fileName !== step.fileName) throw new Error(`Expected download ${JSON.stringify(step.fileName)}, received ${JSON.stringify(captured.fileName)}.`);
+      if (step.text !== undefined && !captured.text.includes(step.text)) throw new Error('Downloaded content does not contain the expected literal text.');
       break;
     }
     default: throw new Error('Unsupported browser action.');
@@ -144,7 +155,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
     for (const candidate of candidates) {
       deadline.check();
       try {
-        launching = chromium.launchServer({ ...candidate, headless: true, chromiumSandbox: true, host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
+        launching = chromium.launchServer({ ...candidate, env: runProcessEnvironment(), headless: true, chromiumSandbox: true, host: '127.0.0.1', timeout: Math.min(5_000, deadline.remaining()) });
         server = await deadline.run(launching);
         browser = await deadline.run(chromium.connect(server.wsEndpoint(), { timeout: Math.min(5_000, deadline.remaining()) }));
         break;
@@ -181,10 +192,11 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
         page.on('dialog', dialog => { record('Unexpected ' + dialog.type() + ' dialog: ' + dialog.message()); void dialog.dismiss().catch(() => {}); });
         context.on('page', opened => { if (opened !== page) { record('Application opened an unexpected new window.'); void opened.close().catch(() => {}); } });
         await deadline.run(page.goto(url, { waitUntil: 'load', timeout: Math.min(stepTimeoutMs, deadline.remaining()) }));
+        const downloads: DownloadCaptures = new Map();
         for (const step of journey.steps) {
           stepIndex++;
           const stepLimit = Math.min(stepTimeoutMs, deadline.remaining());
-          await deadline.run(stepWithin(perform(page, step, stepLimit), stepLimit));
+          await deadline.run(stepWithin(performBrowserStep(page, step, stepLimit, downloads), stepLimit));
           const overflow = await deadline.run(page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0) > innerWidth + 1));
           if (overflow) record('Horizontal overflow prevents the application fitting the ' + viewport + ' viewport.');
         }
@@ -197,13 +209,19 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           deadline.check();
           if (page && !page.isClosed()) {
             const screenshot = path.join(evidence.relative, stem + '.png');
-            await deadline.run(page.screenshot({ path: path.join(evidence.base, screenshot), timeout: Math.min(2000, deadline.remaining()), animations: 'disabled', fullPage: false }));
+            const bytes = await deadline.run(page.screenshot({ timeout: Math.min(2000, deadline.remaining()), animations: 'disabled', fullPage: false }));
+            await deadline.run(atomicHostWrite(evidence.base, screenshot, bytes));
             await deadline.run(keepArtifact(path.join(evidence.base, screenshot)));
             result.screenshot = screenshot.replaceAll(path.sep, '/');
           }
           if (context && tracing) {
             const trace = path.join(evidence.relative, stem + '.zip');
-            await deadline.run(context.tracing.stop({ path: path.join(evidence.base, trace) }));
+            const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-trace-'));
+            try {
+              const file = path.join(scratch, 'trace.zip');
+              await deadline.run(context.tracing.stop({ path: file }));
+              await deadline.run(atomicHostWrite(evidence.base, trace, await fs.readFile(file)));
+            } finally { await fs.rm(scratch, { recursive: true, force: true }); }
             await deadline.run(keepArtifact(path.join(evidence.base, trace)));
             result.trace = trace.replaceAll(path.sep, '/');
           }

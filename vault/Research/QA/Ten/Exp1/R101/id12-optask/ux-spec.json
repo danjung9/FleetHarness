@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and shipboard leaders evaluating fictional tasking locally; no operational use.",
+  "primaryTask": "Paste or load synthetic OPTASK text, extract Frequency Plan, Crypto Change-over Window and Flight Quarters, review source evidence and mapping, then inspect and export a UTC daily schedule.",
+  "successOutcome": "A clearly reviewed synthetic revision yields the Synchronized 24-hour Visual Schedule and matching reviewed-schedule.csv and extraction-review.json with full interval provenance.",
+  "screens": [
+    {
+      "name": "Message and extraction",
+      "purpose": "Persistent synthetic-only notice; exact raw message, Load synthetic sample, Parse message, immutable revision history and draft state. Evidence inspector exposes each source field without raw JSON dominating the task.",
+      "primaryAction": "Parse message"
+    },
+    {
+      "name": "Review extraction",
+      "purpose": "Named category mapping, extracted field table, source evidence, issues, exclusion reason and confirmation checkboxes. All issues require correction/reparse or explicit reasoned exclusion.",
+      "primaryAction": "Confirm reviewed revision"
+    },
+    {
+      "name": "Daily schedule",
+      "purpose": "UTC date control, common 00:00–24:00 hourly axis and three category tracks, overlap labels and equivalent textual event list, full interval details and local exports.",
+      "primaryAction": "Show day"
+    },
+    {
+      "name": "Synthetic comparison and session",
+      "purpose": "Secondary finite answer-key comparison with denominators and pending human review; reset confirmation and local storage notices.",
+      "primaryAction": "Run synthetic comparison"
+    }
+  ],
+  "states": {
+    "empty": "No extraction yet. Offer Load synthetic sample and explain the pipe grammar. Empty parse shows Enter a synthetic OPTASK message. A reviewed zero-event revision explicitly says No events for this day.",
+    "loading": "Parsing, review, benchmark and exports are local and normally immediate. Announce Parsing synthetic message or Preparing download and prevent duplicate submission until completion; clear working state on failure.",
+    "error": "Show line-specific errors and preserve source. Missing timezone is unknown, never inferred. Disable export with visible reason while stale, unreviewed or unresolved. Storage failure announces Session only: local storage unavailable. Download failure retains reviewed data and offers retry.",
+    "success": "Show exact reviewed revision and selected UTC day, category-specific details, daily clipped minutes, cross-day indicators and overlap. Confirm downloads as local synthetic exports; no operational approval implied."
+  },
+  "persistence": "Persist exact draft, immutable revisions, current review and selected UTC day in versioned localStorage after each change. Reload restores them. Catch unavailable or corrupt storage, warn and continue session-only without claiming persistence. Confirmed reset clears this app’s key and active state; never clear unrelated storage. Exports are user controlled.",
+  "recovery": "Source edits mark committed results stale and block export/review. Parse creates a new unreviewed immutable revision; Discard changes restores committed source deliberately. Exclude requires a nonempty reason. Reparse rather than editing original evidence. Reset requires visible confirm/cancel controls. Errors preserve work; only explicit confirmed reset clears it.",
+  "keyboard": "Use labeled native textarea, date input, checkboxes and buttons; logical source→review→day→export Tab order and visible focus. Enter/Space activate buttons; no keyboard trap. Evidence buttons move focus to a labeled inspector. Reset dialog returns focus to Reset on cancel. Announce status with aria-live, associate errors with controls, and provide a textual schedule. Stack panels and horizontally scroll the hourly timeline within its own region at narrow widths."
+}

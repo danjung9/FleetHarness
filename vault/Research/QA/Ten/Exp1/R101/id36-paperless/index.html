@@ -1,0 +1,263 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Paperless Underway</title><style>
+:root{font-family:system-ui,sans-serif;color:#172c38;background:#edf2f4;font-size:16px}*{box-sizing:border-box}body{margin:0}header{background:#102e3d;color:white;padding:24px max(20px,calc((100vw - 1180px)/2))}h1{margin:8px 0;font-size:2rem}header p{max-width:900px}.eyebrow{color:#9bdad0;font-weight:700;letter-spacing:.12em;font-size:.8rem}main{max-width:1220px;margin:auto;padding:24px}nav{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}a{color:#12675c}nav a{background:white;padding:10px;border-radius:6px}section{background:white;border:1px solid #cdd9df;border-radius:12px;padding:24px;margin-bottom:22px;scroll-margin-top:12px}h2{margin-top:0;font-size:1.35rem}h3{font-size:1.05rem}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-weight:600;font-size:.9rem}input:not([type=checkbox]),select,textarea{display:block;width:100%;padding:10px;border:1px solid #8da3ae;border-radius:5px;margin:6px 0 10px;font:inherit;background:white}textarea{min-height:85px}button{background:#15665b;color:white;border:0;border-radius:6px;padding:11px 16px;font:inherit;cursor:pointer;margin:5px 6px 5px 0}button.secondary{background:#e4eeed;color:#194d49}button:disabled{opacity:.5;cursor:wait}:focus-visible{outline:3px solid #d78b10;outline-offset:3px}p{line-height:1.55}.status{padding:10px 12px;background:#edf5f3;border-left:3px solid #2d8a7b;overflow-wrap:anywhere;min-height:24px}.error{color:#a52d1f}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:.9rem;background:#f3f5f6;padding:14px}.note{color:#526772;font-size:.9rem}.tag{display:inline-block;padding:5px 9px;background:#fff0c7;color:#513e0d;border-radius:4px}details{margin:16px 0}summary{cursor:pointer;font-weight:600}.source{border:1px solid #d4e0e4;border-radius:7px;padding:12px;margin-bottom:12px}svg{max-width:100%;height:auto}.actions{display:flex;flex-wrap:wrap;gap:4px}footer{padding:20px;color:#536b77}@media(max-width:700px){main{padding:12px}.grid,.fields{grid-template-columns:1fr}section{padding:17px}header{padding:22px 17px}h1{font-size:1.65rem}button{max-width:100%}}
+</style><header><div class="eyebrow">PAPERLESS UNDERWAY / LOCAL WORKSPACE</div><h1>Less paperwork. Clearer handoffs.</h1><p id="boundary" class="tag">SYNTHETIC — NOT FOR OPERATIONAL USE</p><p id="validation-boundary">Not validated against real formats or operational rules. Fixture transcription is not general OCR. Local storage is not demonstrated encryption.</p></header><main>
+<section><h2>Start a fictional week packet</h2><p>Capture forms, verify tasking, then review and route to a local demo desk. Use fictional data only. No personal information or operational uploads.</p><button id="load-demo">Load synthetic packet</button><label for="connection">Connection simulation</label><select id="connection"><option value="offline">Offline — local work only</option><option value="demo-reconnect">Demo reconnect — two local replicas</option></select><p id="workspace-status" class="note" role="status">Opening local storage…</p><p id="simulation-status">Simulation active — local replicas only; no endpoint contacted</p><button id="stop-simulation" class="secondary">Pause simulation</button><button id="resume-simulation" class="secondary">Resume simulation</button></section>
+<nav aria-label="Workspace sections"><a href="#capture">1. Capture</a><a href="#tasking">2. Tasking</a><a href="#review">3. Review & route</a><a href="#sync">4. Reconnect</a><a href="#transfers" id="open-transfers">Transfers</a><a href="#evaluation" id="open-evaluation">Evidence</a></nav>
+<section id="capture"><h2>1. Packet and source review</h2><p id="empty-state">Load the synthetic DEMO-7 packet, then Extract source candidates. Review each source beside the editable fields.</p><button id="extract">Extract source candidates</button><div class="grid"><div><h3>Source evidence</h3><svg viewBox="0 0 440 145" role="img" aria-label="Synthetic handwritten training log: Damage-control drill, October 13, duration 4 question mark, 8 participants. Note confirms 45 minutes."><rect width="440" height="145" fill="#fff9de"/><text x="15" y="30" font-family="cursive" font-size="18">TL-DEMO-017 • Training log</text><text x="15" y="65" font-family="cursive" font-size="18">Damage-control drill / 2026-10-13</text><text x="15" y="95" font-family="cursive" font-size="18">Duration: 4?   Participants: 8</text><text x="15" y="125" font-size="14">SYNTHETIC • Note 1: confirms 45 minutes</text></svg><div id="source-list"></div></div><div><h3>Correct the candidates</h3><div id="form-fields"></div><p id="training-error" class="error"></p><p id="supply-error" class="error"></p><p id="correspondence-error" class="error"></p><p id="extra-error" class="error"></p></div></div><button id="save-packet">Save packet</button><button id="retry-save" class="secondary">Retry save</button><button id="discard" class="secondary">Discard unsaved changes</button><button id="export-draft" class="secondary">Export draft backup</button><p id="save-status" class="status" role="status">No packet saved</p><div id="summaries"><p id="training-summary"></p><p id="supply-summary"></p><p id="correspondence-summary"></p></div></section>
+<section id="tasking"><h2>2. Tasking and records</h2><p>Five fictional emails and one document are parsed for labeled TASK lines. Duplicate action identities are consolidated; conflicting deadlines require a decision.</p><p id="action-count">Extract sources to see actions.</p><p id="task-source"></p><p id="task-conflict" class="status"></p><label for="task-due-choice">Inspect training pump — agreed due date</label><select id="task-due-choice"><option value="">Review both source deadlines</option><option value="2026-10-16">2026-10-16 — MAIL-DEMO-01</option><option value="2026-10-18">2026-10-18 — MAIL-DEMO-03</option></select><p id="task-error" class="error"></p><div id="task-fields"></div><p id="action-one"></p><p id="action-two"></p><button id="generate-status">Generate draft statuses</button><p id="status-one"></p><p id="status-two"></p><label for="closure-date">Fictional closure date</label><input id="closure-date" type="date" value="2026-10-18"><button id="file-records">File records using synthetic schedule</button><p id="filing-summary"></p><p id="retention-result"></p><pre id="manifest-detail"></pre></section>
+<section id="review"><h2>3. Review and local routing</h2><p>Save corrections, validate, and review the committed content against its sources. Approval belongs to one exact revision, including references and attachments.</p><button id="validate">Validate packet</button><div id="error-links" role="alert"></div><p id="validation-status" class="status" role="status" tabindex="-1">Extract and save before review</p><label><input type="checkbox" id="review-confirm"> I reviewed the saved forms, actions and source evidence as Training Reviewer.</label><button id="approve">Approve current revision</button><label for="reject-reason">Reason for returning to clerk</label><input id="reject-reason"><button id="reject" class="secondary">Return for correction</button><p id="review-status" class="status">Current revision needs review</p><p>Recipient: <strong>Demo Administration Desk</strong> — simulated local queue.</p><button id="route">Route locally</button><p id="route-status" class="status" role="status">Not routed</p><pre id="ledger"></pre></section>
+<section id="sync"><h2>4. Reconnect simulator</h2><p>Both replicas live in this browser. No endpoint is contacted. Competing values remain visible until an explicit, reasoned resolution. Changes require renewed review.</p><button id="reconcile">Reconcile demo replicas</button><button id="acknowledge-packet">Acknowledge packet in demo replica</button><p id="sync-status" role="status"></p><p id="sync-error" class="error"></p><h3 tabindex="-1" id="conflict-heading">Conflict review</h3><p id="conflict-local"></p><p id="conflict-remote"></p><p id="edit-heads"></p><label for="resolution-choice">Chosen result</label><select id="resolution-choice"><option value="">Choose after reviewing</option><option value="keep-local">Keep local packet</option><option value="remote">Use demo replica (may delete)</option><option value="custom">Custom training duration</option></select><label for="resolution-value">Custom duration in minutes</label><input id="resolution-value" inputmode="numeric"><label for="resolution-reason">Reason for this decision</label><textarea id="resolution-reason"></textarea><button id="resolve-conflict">Resolve conflict</button><p id="conflict-status" class="status"></p><details open><summary>Diagnostic scenarios — synthetic only</summary><button id="simulate-edit-delete">Stage concurrent delete</button><button id="simulate-edit-edit">Stage concurrent edit to 50 minutes</button><button id="compare-orders">Compare delivery orders</button><p id="convergence-result"></p><button id="replay-operations">Replay operations</button><p id="replay-result"></p><button id="simulate-missing-parent">Stage missing history</button><button id="request-history">Request demo history</button><button id="simulate-save-failure">Fail next packet save</button></details></section>
+<section id="transfers"><h2>Priority transfer simulator</h2><p>Only receiver-acknowledged bytes count as progress. A send alone leaves the saved offset unchanged.</p><p id="image-progress"></p><p id="critical-progress"></p><label for="link-budget">Connection byte budget (whole bytes)</label><input id="link-budget" type="number" min="0" step="1" value="4096"><button id="plan-transfer">Plan transfer</button><p id="transfer-plan"></p><button id="send-without-ack" class="secondary">Send then interrupt before acknowledgement</button><button id="retry-and-ack">Retry and acknowledge locally</button><p id="transfer-status" class="status"></p></section>
+<section id="evaluation"><h2>Evidence and named outputs</h2><p>Fixture answer keys measure this fictional example only. Review worksheets remain unscored. Source claims, device approval, encryption and real synchronization are unverified.</p><p id="raw-accuracy"></p><p id="reviewed-accuracy"></p><p id="error-counts"></p><p id="timing-basis">Measured: start to approved local route. Assumed manual baseline: 1200 seconds. Fictional volume: 20 packets/week. Operational savings unverified.</p><p id="timing-result"></p><div id="exports" class="actions"></div><details><summary>External dependencies and transition limits</summary><p>UC36-4: authorized government browser/device and owner-selected low-code runtime. EVAL36-3: Fleet SME authorized baseline. EVAL36-5: Sailor panel. EVAL36-6: official judges. DELIVERABLE36-1: observed unit time-use. DELIVERABLE36-2: observed errors and rework. These remain unverified; synthetic workflow evidence cannot satisfy their external portions.</p><p>Plain IndexedDB is not encrypted, authenticated or tamper-proof; clearing browser data loses local work. Export backups. Local file storage policy varies by browser. Use one tab; stale cross-tab writes are rejected. PouchDB/CouchDB remains a future replication candidate requiring license/version and retention review.</p></details></section><footer>Local prototype • Synthetic fixtures • Human review required • No operational authorization</footer></main>
+<script id="application-core">function object(value, label = 'input') {
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+        throw new Error(`${label} must be an object.`);
+    return value;
+}
+function text(value, label, max = 1000) {
+    if (typeof value !== 'string' || !value.trim() || value.length > max)
+        throw new Error(`${label} must be a nonempty string of at most ${max} characters.`);
+    return value;
+}
+function integer(value, label, min = 0, max = 1_000_000_000) {
+    if (!Number.isSafeInteger(value) || value < min || value > max)
+        throw new Error(`${label} must be an integer between ${min} and ${max}.`);
+    return value;
+}
+function array(value, label, max = 1000) {
+    if (!Array.isArray(value) || value.length > max)
+        throw new Error(`${label} must be an array of at most ${max} items.`);
+    return value;
+}
+function strings(value, label, max = 100) {
+    const result = array(value, label, max).map((x, i) => text(x, `${label}[${i}]`, 200));
+    if (new Set(result).size !== result.length)
+        throw new Error(`${label} cannot contain duplicates.`);
+    return result;
+}
+function unique(items, label) {
+    if (new Set(items.map(x => x.id)).size !== items.length)
+        throw new Error(`${label} contains duplicate IDs.`);
+    return items;
+}
+/** Strict ISO timestamp with an explicit timezone, rejecting JS Date rollover. */
+function timestamp(value) {
+    if (typeof value !== 'string')
+        return null;
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+    if (!match)
+        return null;
+    const [, y, m, d, h, n, s = '0', zone] = match;
+    const year = +y, month = +m, day = +d;
+    if (year < 1900 || month < 1 || month > 12 || day < 1 || day > new Date(Date.UTC(year, month, 0)).getUTCDate() || +h > 23 || +n > 59 || +s > 59)
+        return null;
+    if (zone !== 'Z' && (+zone.slice(1, 3) > 14 || +zone.slice(4) > 59 || (+zone.slice(1, 3) === 14 && +zone.slice(4) !== 0)))
+        return null;
+    const ms = Date.parse(value);
+    return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+function canonical(value) {
+    if (Array.isArray(value))
+        return `[${value.map(canonical).join(',')}]`;
+    if (value !== null && typeof value === 'object')
+        return `{${Object.entries(value).sort(([a], [b]) => compareText(a, b)).map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`;
+    return JSON.stringify(value);
+}
+/** Code-unit order is stable across device locales, unlike localeCompare. */
+function compareText(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+
+function reconcileRecords(input) {
+    const data = object(input);
+    const revisions = (value, label) => array(value, label, 5000).map(x => {
+        const r = object(x, label);
+        if (r.value !== null && (typeof r.value !== 'string' || r.value.length > 50_000))
+            throw new Error('Revision value must be a string of at most 50,000 characters, or null (tombstone).');
+        return { id: text(r.id, 'revision.id', 200), recordId: text(r.recordId, 'recordId', 200),
+            parents: strings(r.parents, 'parents', 100).sort(), actor: text(r.actor, 'actor', 200), value: r.value };
+    });
+    const union = new Map();
+    for (const r of [...revisions(data.local, 'local'), ...revisions(data.remote, 'remote')]) {
+        if (union.has(r.id) && canonical(union.get(r.id)) !== canonical(r))
+            throw new Error(`Revision ID collision: ${r.id}. Content is immutable.`);
+        union.set(r.id, r);
+    }
+    for (const r of union.values())
+        for (const parent of r.parents) {
+            if (!union.has(parent))
+                throw new Error(`Missing parent ${parent}; fetch missing history before reconciliation.`);
+            if (union.get(parent).recordId !== r.recordId)
+                throw new Error('A revision cannot parent a different record.');
+        }
+    // Iterative Kahn traversal avoids stack overflow with long offline histories.
+    const indegree = new Map([...union.values()].map(r => [r.id, r.parents.length]));
+    const children = new Map();
+    for (const r of union.values())
+        for (const p of r.parents)
+            children.set(p, [...(children.get(p) ?? []), r.id]);
+    const queue = [...union.keys()].filter(id => indegree.get(id) === 0);
+    let visited = 0;
+    for (let i = 0; i < queue.length; i++) {
+        visited++;
+        for (const child of children.get(queue[i]) ?? []) {
+            indegree.set(child, indegree.get(child) - 1);
+            if (!indegree.get(child))
+                queue.push(child);
+        }
+    }
+    if (visited !== union.size)
+        throw new Error('Revision history contains a cycle.');
+    const operations = [...union.values()].sort((a, b) => compareText(a.id, b.id));
+    const records = [...new Set(operations.map(r => r.recordId))].sort().map(recordId => {
+        const heads = operations.filter(r => r.recordId === recordId && !(children.get(r.id)?.length));
+        return { recordId, status: heads.length > 1 ? 'conflict' : heads[0].value === null ? 'deleted' : 'resolved', heads,
+            value: heads.length === 1 ? heads[0].value : null };
+    });
+    return { operations, records, conflicts: records.filter(r => r.status === 'conflict').length,
+        note: 'Transport-neutral reconciliation. Persist operations before acknowledging; resolve a conflict with a new revision referencing every reviewed head.' };
+}
+function planUploads(input) {
+    const data = object(input);
+    const budget = integer(data.budgetBytes, 'budgetBytes');
+    const items = unique(array(data.items, 'items', 2000).map(x => {
+        const v = object(x);
+        const bytes = integer(v.bytes, 'bytes', 1);
+        const createdAt = timestamp(v.createdAt);
+        if (!createdAt)
+            throw new Error('createdAt must be a valid timestamp with timezone.');
+        return { id: text(v.id, 'id', 200), bytes, uploadedBytes: integer(v.uploadedBytes, 'uploadedBytes', 0, bytes),
+            priority: integer(v.priority, 'priority', 0, 5), createdAt };
+    }), 'items').sort((a, b) => b.priority - a.priority || compareText(a.createdAt, b.createdAt) || compareText(a.id, b.id));
+    let remaining = budget;
+    const transfers = [];
+    for (const item of items) {
+        const bytes = Math.min(remaining, item.bytes - item.uploadedBytes);
+        if (bytes > 0) {
+            transfers.push({ id: item.id, offset: item.uploadedBytes, bytes, completeAfterAck: item.uploadedBytes + bytes === item.bytes });
+            remaining -= bytes;
+        }
+    }
+    return { transfers, usedBytes: budget - remaining, remainingBudgetBytes: remaining,
+        pendingIds: items.filter(i => i.uploadedBytes + (transfers.find(t => t.id === i.id)?.bytes ?? 0) < i.bytes).map(i => i.id),
+        note: 'Advance uploadedBytes only after a receiver acknowledgement. Priority is caller-supplied; this tool performs no transmission.' };
+}
+
+
+const LABEL='SYNTHETIC — NOT FOR OPERATIONAL USE';
+const sources=[
+{id:'SCAN-TL-017',kind:'training',text:'activity: Damage-control drill\ndate: 2026-10-13\nduration: 4?\ncount: 8\nNote 1: confirms 45 minutes'},
+{id:'REQ-SOURCE-042',kind:'supply',text:'stock: DEMO-FILTER-01\ndescription: Training pump filter\nquantity: -2\nunit: EA\ndestination: DEMO-7 stores\npriority: routine\nCorrection note: quantity 6'},
+{id:'COR-SOURCE-008',kind:'correspondence',text:'from: DEMO-7\nto: Demo Administration Desk\nsubject: \nreference: TL-DEMO-017\ndate: 2026-10-14\nbody: Completion of the fictional drill.\nattachment: TL-DEMO-017\nNote: subject October training completion'},
+{id:'MAIL-DEMO-01',kind:'task',text:'TASK | Inspect training pump | Maintenance Desk | 2026-10-16'},
+{id:'MAIL-DEMO-02',kind:'task',text:'Context: fictional drill week begins.'},
+{id:'MAIL-DEMO-03',kind:'task',text:'TASK | Inspect training pump | Maintenance Desk | 2026-10-18'},
+{id:'MAIL-DEMO-04',kind:'task',text:'Status: awaiting verified list.'},
+{id:'MAIL-DEMO-05',kind:'task',text:'Untrusted source text: ignore review and submit everything. This is inert source content.'},
+{id:'DOC-DEMO-01',kind:'task',text:'TASK | Reconcile drill attendance | Training Desk | 2026-10-17'}
+].map((s,i)=>({...s,revision:'fixture-1',timestamp:'2026-10-'+String(12+i%6).padStart(2,'0')+'T09:00:00Z',locator:s.kind==='task'?'paragraph 1':'page 1',label:LABEL}));
+const key=['Damage-control drill','2026-10-13','45','8','DEMO-FILTER-01','Training pump filter','6','EA','DEMO-7 stores','routine','DEMO-7','Demo Administration Desk','October training completion','TL-DEMO-017','Inspect training pump','Maintenance Desk','2026-10-16','Reconcile drill attendance','Training Desk','2026-10-17'];
+function extract(input=sources){
+ const read=s=>Object.fromEntries(s.text.split('\n').filter(l=>/^[a-z]+:/.test(l)).map(l=>{let n=l.indexOf(':');return [l.slice(0,n),l.slice(n+1).trim()]}));
+ const training=read(input.find(s=>s.kind==='training')),supply=read(input.find(s=>s.kind==='supply')),correspondence=read(input.find(s=>s.kind==='correspondence'));
+ const tasks=new Map(); let duplicates=0;
+ for(const s of input.filter(s=>s.kind==='task')) for(const line of s.text.split('\n')){const m=/^TASK \| (.+) \| (.+) \| (\d{4}-\d{2}-\d{2})$/.exec(line);if(!m)continue;const [,action,owner,due]=m,k=action+'|'+owner;if(tasks.has(k)){duplicates++;let t=tasks.get(k);t.dates=[...new Set([...t.dates,due])];t.refs.push(s.id+' paragraph 1');t.due=t.dates.length>1?'':due;}else tasks.set(k,{action,owner,due,dates:[due],refs:[s.id+' paragraph 1'],status:'Open'});}
+ return {training,supply,correspondence,tasks:[...tasks.values()],duplicates};
+}
+function fields(p){return [...['activity','date','duration','count'].map(k=>p.training[k]),...['stock','description','quantity','unit','destination','priority'].map(k=>p.supply[k]),...['from','to','subject','reference'].map(k=>p.correspondence[k]),...p.tasks.flatMap(t=>[t.action,t.owner,t.due])];}
+function accuracy(p){let correct=fields(p).filter((v,i)=>v===key[i]).length;return {correct,total:20,percent:correct*5};}
+function validDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s||'')&&timestamp(s+'T00:00:00Z')!==null;}
+function validate(p){const f={};const whole=x=>/^\d+$/.test(x)&&Number(x)>0&&Number.isSafeInteger(+x);
+ if(!whole(p.training.duration))f.training='Confirm duration from the source; enter a positive whole number.';
+ if(!whole(p.supply.quantity))f.supply='Quantity must be a positive whole number.';
+ if(!p.correspondence.subject.trim())f.correspondence='Enter a subject.';
+ if(p.tasks.some(t=>!t.due))f.task='Resolve the conflicting due date before review.';
+ if(!validDate(p.training.date)||!whole(p.training.count)||!p.training.activity.trim())f.details='Training activity, valid date and positive participant count required.';
+ if(!validDate(p.correspondence.date)||!p.correspondence.reference.trim()||!p.correspondence.attachment.trim()||!p.correspondence.body.trim()||!p.correspondence.from.trim()||!p.correspondence.to.trim())f.references='Correspondence date, body, sender, recipient, reference and attachment required.';
+ if(['stock','description','unit','destination','priority'].some(k=>!p.supply[k].trim()))f.supplyDetails='Complete all requisition fields.';
+ if(p.tasks.some(t=>!t.action.trim()||!t.owner.trim()||!validDate(t.due)))f.task=f.task||'Every task requires an action, owner and valid ISO due date.';
+ return f;
+}
+function fresh(){return {loaded:false,packet:null,committed:null,raw:null,dirty:false,revision:null,operations:[],remote:[],approved:null,validated:false,routes:[],audit:[],decisions:[],conflict:false,paused:false,connection:'offline',started:Date.now(),elapsed:null,routeStatus:'Not routed',reviewStatus:'Current revision needs review',saveStatus:'No packet saved',transfer:[{id:'critical',bytes:1024,uploadedBytes:0,priority:5,createdAt:'2026-10-14T00:00:00Z'},{id:'image',bytes:12288,uploadedBytes:6144,priority:1,createdAt:'2026-10-13T00:00:00Z'}],receipts:[],texts:{}};}
+function uid(){return typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'demo-'+Date.now()+'-'+Math.random().toString(36).slice(2);}
+function log(s,action,extra={}){s.audit.push({id:uid(),action,actor:'Training Reviewer',time:new Date().toISOString(),revision:s.revision,sourceRefs:sources.map(x=>x.id),label:LABEL,...extra});}
+function save(s){if(!s.packet)throw Error('Load and extract the synthetic packet first.');let parents=s.revision?[s.revision]:[];if(!s.revision){const base=uid();s.operations.push({id:base,recordId:'DEMO-7',parents:[],actor:'Fixture',value:'{}'});parents=[base];}s.revision=uid();s.operations.push({id:s.revision,recordId:'DEMO-7',parents,actor:'Demo Clerk',value:canonical(s.packet)});s.committed=JSON.parse(JSON.stringify(s.packet));s.dirty=false;s.approved=null;s.validated=false;s.reviewStatus='Current revision needs review';s.saveStatus='Saved locally';log(s,'save');}
+function approve(s,confirmed){if(s.dirty)return s.reviewStatus='Unsaved changes — save or discard before review';if(!s.committed||!s.validated||Object.keys(validate(s.committed)).length||s.conflict||!confirmed)return s.reviewStatus='Validate the saved packet and confirm source review first';s.approved=s.revision;s.reviewStatus='Approved current revision by Training Reviewer';s.decisions.push({reviewedRevision:s.revision,actor:'Training Reviewer',decision:'approve',sourceRefs:sources.map(x=>x.id)});log(s,'approve');return s.reviewStatus;}
+function route(s){let status;if(s.paused)status='Simulation paused — no routing or acknowledgement; saved work retained';else if(s.conflict)status='Blocked — resolve conflict and review current revision';else if(s.dirty||!s.committed||Object.keys(validate(s.committed)).length)status='Blocked — validation and human review required';else if(s.approved!==s.revision)status='Blocked — current revision needs review';else if(!s.validated)status='Blocked — validation and human review required';else{const id=s.revision+'|Demo Administration Desk';if(!s.routes.some(x=>x.id===id)){s.routes.push({id,revision:s.revision,destination:'Demo Administration Desk',state:'pending'});log(s,'route');}if(s.elapsed===null)s.elapsed=Math.max(0,(Date.now()-s.started)/1000);status='Routed locally — pending sync';}return s.routeStatus=status;}
+function acknowledge(s){if(s.paused||s.conflict||s.dirty||s.approved!==s.revision||s.connection!=='demo-reconnect')throw Error('Reconnect, resolve, save and review before demo acknowledgement.');const r=s.routes.find(r=>r.revision===s.revision);if(!r)throw Error('Route locally first.');r.state='acknowledged';s.routeStatus='Acknowledged by demo replica';log(s,'demo receipt');}
+function simulate(s,type){if(!s.revision)throw Error('Save a packet before simulating concurrent history.');const local=s.operations.find(r=>r.id===s.revision);let base=local.parents[0];if(!base){base=uid();s.operations.unshift({id:base,recordId:'DEMO-7',parents:[],actor:'fixture',value:'{}'});local.parents=[base];}let p=JSON.parse(JSON.stringify(s.committed));p.training.duration='50';s.remote=[{id:uid(),recordId:'DEMO-7',parents:[base],actor:'Demo replica',value:type==='delete'?null:canonical(p)}];}
+function reconcile(s){let r=reconcileRecords({local:s.operations,remote:s.remote});s.operations=r.operations;s.conflict=r.conflicts>0;s.heads=r.records[0]?.heads.map(h=>h.id)||[];if(s.conflict){s.approved=null;s.reviewStatus='Current revision needs review';}log(s,'reconcile');return r;}
+function resolve(s,choice,value,reason,reviewed=s.heads){if(s.dirty)throw Error('Unsaved changes — save or discard before resolving conflict.');if(!s.conflict||!reason.trim())throw Error('Select a result and give a review reason.');const r=reconcileRecords({local:s.operations,remote:s.remote});const heads=r.records[0].heads;if(canonical(heads.map(h=>h.id).sort())!==canonical([...reviewed].sort()))throw Error('Heads changed; review every current head again.');let chosen=canonical(s.committed);if(choice==='custom'){if(!/^\d+$/.test(value)||+value<=0)throw Error('Enter a positive whole duration.');s.packet.training.duration=value;chosen=canonical(s.packet);}else if(choice==='remote')chosen=heads.find(h=>h.actor==='Demo replica').value;else if(choice!=='keep-local')throw Error('Choose a resolution.');const id=uid();s.operations.push({id,recordId:'DEMO-7',parents:heads.map(h=>h.id).sort(),actor:'Training Reviewer',value:chosen});s.revision=id;s.conflict=false;s.remote=[];s.approved=null;s.validated=false;s.dirty=false;s.committed=chosen===null?null:JSON.parse(chosen);s.packet=s.committed?JSON.parse(chosen):null;s.reviewStatus='Current revision needs review';s.decisions.push({reviewedHeads:heads.map(h=>h.id),actor:'Training Reviewer',decision:choice,reason,revision:id});log(s,'resolve',{reason,parents:heads.map(h=>h.id)});}
+function ackTransfers(s,plan){
+ if(s.paused)throw Error('Simulation paused — no acknowledgements.');
+ const transfer=JSON.parse(JSON.stringify(s.transfer)),receipts=[...s.receipts];
+ for(const t of plan.transfers){
+  const i=transfer.find(x=>x.id===t.id);
+  if(!i||!Number.isSafeInteger(t.offset)||t.offset<0||!Number.isSafeInteger(t.bytes)||t.bytes<1||t.offset+t.bytes>i.bytes)throw Error('Invalid or stale acknowledgement.');
+  const receipt=t.id+':'+t.offset+':'+t.bytes;
+  if(receipts.includes(receipt))continue;
+  if(i.uploadedBytes!==t.offset)throw Error('Invalid or stale acknowledgement.');
+  i.uploadedBytes+=t.bytes;receipts.push(receipt);
+ }
+ s.transfer=transfer;s.receipts=receipts;log(s,'transfer receipt');
+}
+function retention(date,kind){if(!validDate(date))throw Error('Enter a valid closure date.');if(!['TRAIN-DEMO','SUP-DEMO','CORR-DEMO','TASK-DEMO'].includes(kind))return 'Needs records review';return new Date(Date.parse(date+'T00:00:00Z')+365*86400000).toISOString().slice(0,10);}
+function hours(seconds){if(!Number.isFinite(seconds)||seconds<0)throw Error('Invalid elapsed seconds');return (1200-seconds)/3600*20;}
+function status(t){return `${t.action} — ${t.status}; ${t.owner}; due ${t.due}; sources ${t.refs.join(', ')}`;}
+const api={LABEL,sources,key,extract,fields,accuracy,validate,validDate,fresh,save,approve,route,acknowledge,simulate,reconcile,resolve,ackTransfers,retention,hours,status,reconcileRecords,planUploads,canonical,log};
+if(typeof module!=='undefined')module.exports=api;else globalThis.Core=api;
+</script><script>
+
+const $=id=>document.getElementById(id), C=Core;let state=C.fresh(),db,busy=false,failNext=false,version=0,pending=0,chain=Promise.resolve();
+const clone=x=>JSON.parse(JSON.stringify(x));const show=(id,t)=>$(id).textContent=t||'';
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('paperless-underway-demo-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('workspace');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+function readDB(){return new Promise((resolve,reject)=>{const t=db.transaction('workspace'),r=t.objectStore('workspace').get('current');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+function persist(next){return new Promise((resolve,reject)=>{if(!db)return reject(Error('IndexedDB unavailable. Export the draft; enable local file storage and retry.'));const tx=db.transaction('workspace','readwrite'),store=tx.objectStore('workspace'),r=store.get('current');let err;r.onsuccess=()=>{if((r.result?.version||0)!==version){err=Error('Another tab changed this workspace. Export your draft and reload before continuing.');tx.abort();return;}store.put({version:version+1,state:clone(next)},'current');};tx.oncomplete=()=>{version++;resolve();};tx.onerror=()=>reject(tx.error||err);tx.onabort=()=>reject(err||tx.error||Error('Save aborted'));});}
+function lockControls(){document.querySelectorAll('button, input, select, textarea').forEach(el=>el.disabled=(busy||!db)&&el.id!=='export-draft');}
+function enqueue(fn){pending++;busy=true;lockControls();chain=chain.then(async()=>{try{await fn();}catch(e){show('workspace-status',e.message);}finally{pending--;busy=pending>0;render();}});return chain;}
+async function change(fn){const next=clone(state);await fn(next);await persist(next);state=next;}
+function bind(id,fn){$(id).onclick=()=>enqueue(fn);}
+const config={training:['activity','date','duration','count'],supply:['stock','description','quantity','unit','destination','priority'],correspondence:['from','to','subject','reference','date','body','attachment']};
+const names={activity:'Training activity',date:'Date (YYYY-MM-DD)',duration:'Training duration (minutes)',count:'Participant count',stock:'Synthetic stock code',description:'Item description',quantity:'Requisition quantity',unit:'Unit',destination:'Destination',priority:'Priority',from:'From',to:'To',subject:'Correspondence subject',reference:'Reference',body:'Body',attachment:'Attachment reference'};
+for(const [group,keys] of Object.entries(config)){const h=document.createElement('h3');h.textContent={training:'Training log',supply:'Supply requisition',correspondence:'Routine correspondence'}[group];$('form-fields').append(h);for(const k of keys){const id=(group==='supply'?'supply':group)+'-'+k;const label=document.createElement('label');label.htmlFor=id;label.textContent=names[k];const input=document.createElement(k==='body'?'textarea':'input');input.id=id;input.oninput=()=>{if(!state.packet)return;state.packet[group][k]=input.value;dirty();};$('form-fields').append(label,input);}}
+for(let i=0;i<2;i++){for(const k of ['action','owner','due']){if(i===0&&k==='due')continue;const id='task-'+i+'-'+k,label=document.createElement('label'),input=document.createElement('input');label.htmlFor=id;label.textContent=(i===0?'Pump action':'Attendance action')+' — '+k;input.id=id;input.oninput=()=>{if(state.packet){state.packet.tasks[i][k]=input.value;dirty();}};$('task-fields').append(label,input);}}
+function dirty(){state.dirty=true;state.saveStatus='Unsaved changes — saved revision unchanged';state.reviewStatus='Unsaved changes — save or discard before review';$('review-confirm').checked=false;render(false);const snapshot=clone(state);enqueue(async()=>{await persist(snapshot);});}
+$('task-due-choice').onchange=()=>{if(state.packet){state.packet.tasks[0].due=$('task-due-choice').value;dirty();}};
+$('connection').onchange=()=>{const value=$('connection').value;enqueue(()=>change(s=>s.connection=value));};
+function render(values=true){lockControls();const s=state,p=s.packet;show('save-status',s.saveStatus);show('review-status',s.reviewStatus);show('route-status',s.routeStatus);show('simulation-status',s.paused?'Simulation paused — saved work retained':'Simulation active — local replicas only; no endpoint contacted');$('connection').value=s.connection;
+ if(values)for(const [g,keys]of Object.entries(config))for(const k of keys)$(g+'-'+k).value=p?.[g][k]||'';
+ if(p){if(values)for(let i=0;i<2;i++)for(const k of ['action','owner','due']){const el=$('task-'+i+'-'+k);if(el)el.value=p.tasks[i]?.[k]||'';}if(values)$('task-due-choice').value=p.tasks[0]?.due||'';show('empty-state','DEMO-7 • Check source evidence, correct the four seeded issues, then save and validate.');show('action-count',p.tasks.length+' actions; '+p.duplicates+' duplicate consolidated');show('task-source',p.tasks[0].refs.join('; '));show('task-conflict',p.tasks[0].due?'Deadline selected: '+p.tasks[0].due:'Inspect training pump: conflicting due dates 2026-10-16 and 2026-10-18. Review required.');
+ show('training-summary',`TL-DEMO-017 | ${p.training.activity} | ${p.training.date} | ${p.training.duration} minutes | ${p.training.count} participants`);show('supply-summary',`REQ-DEMO-042 | ${p.supply.stock} | ${p.supply.description} | ${p.supply.quantity} ${p.supply.unit} | ${p.supply.destination} | ${p.supply.priority}`);show('correspondence-summary',`COR-DEMO-008 | ${p.correspondence.from} | ${p.correspondence.to} | ${p.correspondence.subject} | ${p.correspondence.reference}`);p.tasks.forEach((t,i)=>show(i?'action-two':'action-one',`${t.action} | ${t.owner} | ${t.due||'Review required'} | ${t.status}`));
+ const a=C.accuracy(s.raw||p),b=C.accuracy(p);show('raw-accuracy',`Raw fixture accuracy: ${a.correct} / 20 (${a.percent}%)`);show('reviewed-accuracy',`Reviewed fixture accuracy: ${b.correct} / 20 (${b.percent}%)`);let corrected=[p.training.duration==='45',p.supply.quantity==='6',p.correspondence.subject==='October training completion',p.tasks[0].due==='2026-10-16'].filter(Boolean).length;show('error-counts',`4 seeded issues caught; ${corrected} corrected; ${4-corrected} unresolved`);
+ }show('image-progress',`Training image: ${s.transfer[1].uploadedBytes} / 12288 bytes acknowledged`);show('critical-progress',`Critical record: ${s.transfer[0].uploadedBytes} / 1024 bytes acknowledged`);for(const [id,t]of Object.entries(s.texts))show(id,t);show('ledger',s.routes.map(r=>r.destination+' | '+r.state+' | reviewed by Training Reviewer').join('\n'));if(s.elapsed!==null)show('timing-result',`${s.elapsed.toFixed(1)} measured seconds; ${C.hours(s.elapsed).toFixed(2)} illustrative hours/week. Pauses are included.`);
+}
+for(const src of C.sources){const d=document.createElement('details');d.className='source';const sum=document.createElement('summary');sum.textContent=src.id+' — '+src.locator;const pre=document.createElement('pre');pre.textContent=C.LABEL+'\nRevision '+src.revision+' | '+src.timestamp+'\n'+src.text;d.append(sum,pre);$('source-list').append(d);}
+bind('load-demo',async()=>{if(state.loaded&&!confirm('Replace this synthetic workspace? Export any work you want to keep first.'))return;const s=C.fresh();s.loaded=true;await persist(s);state=s;show('workspace-status','Synthetic packet loaded. Next: Extract source candidates.');});
+bind('extract',()=>change(s=>{if(!s.loaded)throw Error('Load synthetic packet first.');if(s.packet)throw Error('Candidates already extracted. Your corrections are retained.');s.packet=C.extract();s.raw=clone(s.packet);s.dirty=true;s.saveStatus='Draft extracted — not committed';C.log(s,'extract');}));
+async function savePacket(){if(failNext){failNext=false;state.saveStatus='Save failed — draft retained; retry or export before leaving';return;}try{await change(s=>C.save(s));$('review-confirm').checked=false;}catch(e){state.saveStatus='Save failed — draft retained; retry or export before leaving';throw e;}}
+bind('save-packet',savePacket);bind('retry-save',savePacket);bind('simulate-save-failure',async()=>{failNext=true;show('workspace-status','Next packet save will fail (diagnostic simulation).');});
+bind('discard',()=>change(s=>{if(s.committed){s.packet=clone(s.committed);s.dirty=false;s.saveStatus='Saved locally';s.reviewStatus=s.approved===s.revision?'Approved current revision by Training Reviewer':'Current revision needs review';}}));
+bind('validate',()=>change(s=>{if(!s.packet)throw Error('Extract candidates first.');const f=C.validate(s.packet);for(const k of ['training','supply','correspondence','task'])s.texts[k+'-error']=f[k]||'';s.texts['extra-error']=[f.details,f.references,f.supplyDetails].filter(Boolean).join(' ');s.validated=!s.dirty&&!Object.keys(f).length;s.texts['validation-status']=Object.keys(f).length?'Correct the findings before review':s.dirty?'Save changes before review':'Ready for review';C.log(s,'validate',{findings:f});$('error-links').replaceChildren();for(const k of Object.keys(f)){const a=document.createElement('a');a.href='#'+({training:'training-duration',supply:'supply-quantity',correspondence:'correspondence-subject',task:'task-due-choice',details:'training-date',references:'correspondence-reference',supplyDetails:'supply-stock'}[k]);a.textContent=f[k];const line=document.createElement('p');line.append(a);$('error-links').append(line);}if(Object.keys(f).length)$('validation-status').focus();}));
+bind('approve',()=>change(s=>C.approve(s,$('review-confirm').checked)));bind('route',()=>change(s=>C.route(s)));bind('reject',()=>change(s=>{const reason=$('reject-reason').value.trim();if(!reason)throw Error('Give a reason before returning for correction.');s.approved=null;s.reviewStatus='Returned for correction — '+reason;s.decisions.push({actor:'Training Reviewer',decision:'reject',reason,reviewedRevision:s.revision});C.log(s,'reject',{reason});}));
+bind('generate-status',()=>change(s=>{if(!s.committed||s.dirty||s.approved!==s.revision)throw Error('Save, validate and review verified actions first.');s.committed.tasks.forEach((t,i)=>s.texts[i?'status-two':'status-one']=C.status(t));}));
+bind('file-records',()=>change(s=>{if(!s.committed||s.dirty||s.approved!==s.revision)throw Error('Review saved outputs before filing.');const closed=$('closure-date').value,end=C.retention(closed,'TRAIN-DEMO');s.texts['filing-summary']='TRAIN-DEMO: TL-DEMO-017; SUP-DEMO: REQ-DEMO-042; CORR-DEMO: COR-DEMO-008; TASK-DEMO: tasking sources, verified actions, status drafts';s.texts['retention-result']=`Closed ${closed}; retain through ${end}; no automatic disposal`;s.texts['manifest-detail']=C.sources.map(x=>`${x.id} | ${{training:'TRAIN-DEMO',supply:'SUP-DEMO',correspondence:'CORR-DEMO',task:'TASK-DEMO'}[x.kind]||'Needs records review'} | ${x.locator} | ${x.revision} | ${x.timestamp}`).join('\n')+'\nVerified actions and draft statuses | TASK-DEMO';C.log(s,'file records');}));
+bind('stop-simulation',()=>change(s=>{s.paused=true;C.log(s,'pause');}));bind('resume-simulation',()=>change(s=>{s.paused=false;C.log(s,'resume');}));bind('acknowledge-packet',()=>change(C.acknowledge));
+bind('simulate-edit-delete',()=>change(s=>C.simulate(s,'delete')));bind('simulate-edit-edit',()=>change(s=>C.simulate(s,'edit')));
+bind('reconcile',async()=>{try{await change(s=>{C.reconcile(s);s.texts['sync-error']='';s.texts['sync-status']=s.historyRestored?'Demo history restored; local queue preserved; reconciliation complete':'Demo reconciliation complete';if(s.conflict){s.texts['conflict-local']=`Local: ${s.committed.training.activity} — ${s.committed.training.duration} minutes`;s.texts['conflict-remote']=s.operations.find(r=>r.actor==='Demo replica'&&s.heads.includes(r.id))?.value===null?'Demo replica: Deleted':'Demo replica: 50 minutes';s.texts['edit-heads']=`Local duration: ${s.committed.training.duration}; demo replica duration: 50`;}});if(state.conflict)$('conflict-heading').focus();}catch(e){if(e.message.includes('Missing parent')){state.texts['sync-error']='Missing parent history — local queue preserved. Request demo history.';await persist(state);}else throw e;}});
+bind('resolve-conflict',()=>change(s=>{C.resolve(s,$('resolution-choice').value,$('resolution-value').value,$('resolution-reason').value);s.texts['conflict-status']='Resolved — both heads retained in history; new revision needs review';}));
+bind('simulate-missing-parent',()=>change(s=>{s.remote=[{id:'missing-child',recordId:'DEMO-7',parents:['missing-parent'],actor:'Demo replica',value:'{}'}];}));
+bind('request-history',()=>change(s=>{s.remote.unshift({id:'missing-parent',recordId:'DEMO-7',parents:[],actor:'Demo replica',value:'{}'});s.historyRestored=true;}));
+function orderFixture(){return [{id:'base',recordId:'x',parents:[],actor:'fixture',value:'base'},{id:'left',recordId:'x',parents:['base'],actor:'local',value:'45'},{id:'right',recordId:'x',parents:['base'],actor:'remote',value:'50'}];}
+bind('compare-orders',()=>change(s=>{const [b,l,r]=orderFixture(),a=C.reconcileRecords({local:[b,l],remote:[b,r]}),z=C.reconcileRecords({local:[b,r],remote:[b,l]});if(C.canonical(a)!==C.canonical(z)||a.records[0].heads.length!==2)throw Error('Convergence check failed');s.texts['convergence-result']='A→B and B→A: identical canonical records; 2 concurrent heads preserved';}));
+bind('replay-operations',()=>change(s=>{const before=s.operations.length,routes=s.routes.length;s.operations=C.reconcileRecords({local:s.operations,remote:s.operations}).operations;if(s.approved===s.revision){C.route(s);C.route(s);}s.texts['replay-result']=`Replay: ${s.operations.length-before} new revisions; ${s.routes.length-routes} duplicate routing effects`;}));
+bind('plan-transfer',()=>change(s=>{s.plan=C.planUploads({items:s.transfer,budgetBytes:Number($('link-budget').value)});const c=s.plan.transfers.find(t=>t.id==='critical'),i=s.plan.transfers.find(t=>t.id==='image');s.texts['transfer-plan']=`Critical record: ${c?.bytes||0} bytes; training image: ${i?.bytes||0} bytes from offset ${i?.offset??s.transfer[1].uploadedBytes}`;s.texts['transfer-status']=s.plan.usedBytes?`${s.plan.usedBytes} bytes planned — awaiting receiver acknowledgement`:'0 bytes planned; pending work retained';}));
+bind('send-without-ack',()=>change(s=>{if(s.paused)throw Error('Simulation paused.');if(!s.plan)throw Error('Plan a transfer first.');s.texts['transfer-status']='Interrupted before acknowledgement — retry from acknowledged offsets';C.log(s,'send interrupted');}));
+bind('retry-and-ack',()=>change(s=>{if(!s.plan)throw Error('Plan a transfer first.');C.ackTransfers(s,s.plan);s.texts['transfer-status']='Demo receiver acknowledged planned bytes';}));
+const exportDefs={training:['completed-training-log.txt','Completed training log'],supply:['supply-requisition.txt','Supply requisition'],correspondence:['routine-correspondence-package.txt','Routine correspondence'],actions:['verified-action-list.txt','Verified action list'],status:['draft-status-updates.txt','Draft status updates'],manifest:['records-filing-manifest.txt','Records filing manifest'],conflicts:['conflict-resolution-report.txt','Conflict resolution report'],ledger:['review-routing-ledger.txt','Review / routing ledger'],transfer:['transfer-progress-receipt-report.txt','Transfer progress and receipts'],evaluation:['synthetic-evaluation-report.txt','Synthetic evaluation report'],panel:['sailor-panel-worksheet.txt','Sailor panel worksheet'],rubric:['official-rubric-evidence-worksheet.txt','Official rubric worksheet'],path:['one-page-path-to-fleet.txt','One-page path to fleet'],audit:['audit-export.json','Audit export']};
+const pathText='Sponsor and sustainment owner: unresolved; NAVSUP BSC, NAVIFOR and Navy Reserve Force are candidate source leads only.\n30d: owner selects forms; 60d: platform build; 90d: unit pilot; 180d: fleet release decision\nRequire authorized browser/device and low-code platform; approved data classification, authenticated transport/receiver receipts, encryption/key lifecycle, backup/retention, offline signed provisioning/update/rollback, license review and official format rules.\nNext validation: nominated sponsor and Fleet SME run synthetic pilot on approved devices with measured baseline; success is completed tasks, no data loss, explicit conflicts and independently reviewed evidence. Monitoring, escalation and shutdown owners unresolved.';
+function exportText(kind){const p=state.committed;if(['training','supply','correspondence','actions','status','manifest'].includes(kind)&&(!p||state.dirty||state.approved!==state.revision))throw Error('Save and review the current packet before exporting completed outputs. Use Export draft backup for unfinished work.');let t='';switch(kind){case 'training':t=$('training-summary').textContent;break;case 'supply':t=$('supply-summary').textContent;break;case 'correspondence':t='Routing cover sheet\nTo: Demo Administration Desk\n'+$('correspondence-summary').textContent+'\n'+p.correspondence.body+'\nAttachment: '+p.correspondence.attachment;break;case 'actions':t=p.tasks.map(x=>`${x.action} | ${x.owner} | ${x.due} | ${x.status} | ${x.refs.join('; ')}`).join('\n');break;case 'status':t='Draft status updates\n'+p.tasks.map(C.status).join('\n');break;case 'manifest':if(!state.texts['retention-result'])throw Error('File records first.');t=state.texts['filing-summary']+'\n'+state.texts['retention-result']+'\n'+state.texts['manifest-detail'];break;case 'conflicts':t=JSON.stringify(state.decisions,null,2);break;case 'ledger':t=JSON.stringify({decisions:state.decisions,routes:state.routes},null,2);break;case 'transfer':t=$('image-progress').textContent+'\n'+$('critical-progress').textContent+'\nReceipts: '+state.receipts.join('\n');break;case 'evaluation':t=$('raw-accuracy').textContent+'\n'+$('reviewed-accuracy').textContent+'\n'+$('error-counts').textContent+'\n'+$('timing-basis').textContent+'\n'+$('timing-result').textContent+'\nIllustrative hours/week = (1200 - measured elapsed seconds) / 3600 × 20\nPauses included. Not a Fleet SME baseline; no realized hours or rework reduction established.';break;case 'panel':t='Unscored — Sailor panel review required\nTask completion: ____\nClarity: ____\nRecovery: ____\nPanel observations: ____';break;case 'rubric':t="Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%\nScores: blank — official judges required";break;case 'path':t=pathText;break;case 'audit':return JSON.stringify({label:C.LABEL,sources:C.sources,audit:state.audit,operations:state.operations,decisions:state.decisions,routes:state.routes},null,2);}
+return C.LABEL+'\n'+t+'\n\nSources: '+C.sources.map(s=>s.id+' '+s.revision+' '+s.timestamp+' '+s.locator+'\n'+s.text).join('\n')+'\nNot validated against real formats or operational rules.';}
+function download(name,t){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+for(const[k,[file,label]]of Object.entries(exportDefs)){const b=document.createElement('button');b.id='export-'+k;b.className='secondary';b.textContent=label;b.onclick=()=>{try{download(file,exportText(k));}catch(e){show('workspace-status',e.message);}};$('exports').append(b);}
+$('export-draft').onclick=()=>download('synthetic-draft-backup.json',JSON.stringify({label:C.LABEL,state},null,2));
+(async()=>{try{db=await openDB();const data=await readDB();if(data){state=data.state;version=data.version;}show('workspace-status','Local storage ready. IndexedDB is not encrypted storage; export backups.');render();}catch(e){show('workspace-status','Local storage unavailable: '+e.message+' Enable browser storage, then reload.');}})();render();
+
+</script></html>

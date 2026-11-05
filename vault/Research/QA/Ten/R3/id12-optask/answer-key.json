@@ -1,0 +1,180 @@
+{
+  "disclosure": "Synthetic, not validated against the real format.",
+  "origin": "plan.md: Held-out synthetic set and pre-build answer key; planning-authored, not SME ground truth",
+  "raw": "FREQ/HF/2026-11-04T10:00+02:00/2026-11-04T11:00+02:00/RADIO/305.25/MHz/Invented net//\nCRYPTO/HC/2026-11-04T12:10Z/2026-11-04T12:20Z/RADIO/KEY-DEMO-H/Practice window//\nFLIGHT/HA/2026-11-04T23:50Z/2026-11-05T00:10Z/AIR/Deck exercise//\nNOTE/Synthetic, not validated against the real format.//\nUNKNOWN/no scheduled activity//",
+  "events": [
+    {
+      "id": "HF",
+      "category": "Frequency plan",
+      "startUtc": "2026-11-04T08:00:00.000Z",
+      "endUtc": "2026-11-04T09:00:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "FREQ",
+          "span": {
+            "start": 0,
+            "end": 4
+          }
+        },
+        "id": {
+          "sourceText": "HF",
+          "span": {
+            "start": 5,
+            "end": 7
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T10:00+02:00",
+          "span": {
+            "start": 8,
+            "end": 30
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-04T11:00+02:00",
+          "span": {
+            "start": 31,
+            "end": 53
+          }
+        },
+        "owner": {
+          "sourceText": "RADIO",
+          "span": {
+            "start": 54,
+            "end": 59
+          }
+        },
+        "value": {
+          "sourceText": "305.25",
+          "span": {
+            "start": 60,
+            "end": 66
+          }
+        },
+        "unit": {
+          "sourceText": "MHz",
+          "span": {
+            "start": 67,
+            "end": 70
+          }
+        },
+        "description": {
+          "sourceText": "Invented net",
+          "span": {
+            "start": 71,
+            "end": 83
+          }
+        }
+      }
+    },
+    {
+      "id": "HC",
+      "category": "Crypto change-over",
+      "startUtc": "2026-11-04T12:10:00.000Z",
+      "endUtc": "2026-11-04T12:20:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "CRYPTO",
+          "span": {
+            "start": 86,
+            "end": 92
+          }
+        },
+        "id": {
+          "sourceText": "HC",
+          "span": {
+            "start": 93,
+            "end": 95
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T12:10Z",
+          "span": {
+            "start": 96,
+            "end": 113
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-04T12:20Z",
+          "span": {
+            "start": 114,
+            "end": 131
+          }
+        },
+        "owner": {
+          "sourceText": "RADIO",
+          "span": {
+            "start": 132,
+            "end": 137
+          }
+        },
+        "demoLabel": {
+          "sourceText": "KEY-DEMO-H",
+          "span": {
+            "start": 138,
+            "end": 148
+          }
+        },
+        "description": {
+          "sourceText": "Practice window",
+          "span": {
+            "start": 149,
+            "end": 164
+          }
+        }
+      }
+    },
+    {
+      "id": "HA",
+      "category": "Flight quarters",
+      "startUtc": "2026-11-04T23:50:00.000Z",
+      "endUtc": "2026-11-05T00:10:00.000Z",
+      "fields": {
+        "type": {
+          "sourceText": "FLIGHT",
+          "span": {
+            "start": 167,
+            "end": 173
+          }
+        },
+        "id": {
+          "sourceText": "HA",
+          "span": {
+            "start": 174,
+            "end": 176
+          }
+        },
+        "start": {
+          "sourceText": "2026-11-04T23:50Z",
+          "span": {
+            "start": 177,
+            "end": 194
+          }
+        },
+        "end": {
+          "sourceText": "2026-11-05T00:10Z",
+          "span": {
+            "start": 195,
+            "end": 212
+          }
+        },
+        "owner": {
+          "sourceText": "AIR",
+          "span": {
+            "start": 213,
+            "end": 216
+          }
+        },
+        "description": {
+          "sourceText": "Deck exercise",
+          "span": {
+            "start": 217,
+            "end": 230
+          }
+        }
+      }
+    }
+  ],
+  "nonEventLines": 2,
+  "unsupportedWarnings": 1
+}

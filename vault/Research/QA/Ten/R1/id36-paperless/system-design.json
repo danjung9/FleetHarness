@@ -1,0 +1,104 @@
+{
+  "title": "Paperless Underway — synthetic offline training log",
+  "description": "Self-contained offline form with transactional local storage and explicitly simulated peer reconciliation/routing. No transport or operational endpoint.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Training log workspace",
+      "description": "Labeled synthetic form, draft/save status, validation and responsive review workspace.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "domain",
+      "label": "Validation and revision graph",
+      "description": "Deterministic validation, immutable revisions, all-head conflict resolution and review gates. Shared classic-script core embedded in HTML and exported for Node.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local transaction store",
+      "description": "IndexedDB stores revision graph, pending queue, draft, review and audit atomically before save acknowledgement. Unencrypted local prototype storage.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Conflict and human review",
+      "description": "Competing values including deletion, explicit choice, saved-content review and deliberate approval before simulated routing.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "simulator",
+      "label": "Simulated second replica and routing",
+      "description": "Labeled local fixtures, replay/order exercises and simulated receipt. No network transport or authenticated recipient.",
+      "kind": "integration",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "audit",
+      "label": "Action history and export",
+      "description": "Persist fictional actor decisions and revision references; inspect and export synthetic history with source reference.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "domain",
+      "label": "Validate draft and create revision"
+    },
+    {
+      "from": "domain",
+      "to": "store",
+      "label": "Atomic revisions, queue and audit commit"
+    },
+    {
+      "from": "store",
+      "to": "capture",
+      "label": "Committed state or actionable storage error"
+    },
+    {
+      "from": "simulator",
+      "to": "domain",
+      "label": "Synthetic peer immutable operations"
+    },
+    {
+      "from": "domain",
+      "to": "review",
+      "label": "All unresolved heads and current revision"
+    },
+    {
+      "from": "review",
+      "to": "domain",
+      "label": "Chosen resolution and explicit approval"
+    },
+    {
+      "from": "domain",
+      "to": "simulator",
+      "label": "Only current approved revision may route"
+    },
+    {
+      "from": "store",
+      "to": "audit",
+      "label": "Committed action history and source provenance"
+    }
+  ]
+}

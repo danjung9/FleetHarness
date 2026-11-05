@@ -1,0 +1,131 @@
+{
+  "time": "2026-11-04T21:33:29.904Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./browser-core.test.cjs\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: actual inline browser core and CommonJS core produce equivalent behavioral states\nok 1 - actual inline browser core and CommonJS core produce equivalent behavioral states\n  ---\n  duration_ms: 12.347667\n  type: 'test'\n  ...\n# Subtest: both actual cores reject inconsistent restored grant ownership and receipts\nok 2 - both actual cores reject inconsistent restored grant ownership and receipts\n  ---\n  duration_ms: 1.445291\n  type: 'test'\n  ...\n# Subtest: both cores retain rejection receipts when authorization disappears before resolution\nok 3 - both cores retain rejection receipts when authorization disappears before resolution\n  ---\n  duration_ms: 0.1965\n  type: 'test'\n  ...\n# Subtest: GOV-01 distinct eligibility failures and deliberate repair, no automatic execution\nok 4 - GOV-01 distinct eligibility failures and deliberate repair, no automatic execution\n  ---\n  duration_ms: 2.12075\n  type: 'test'\n  ...\n# Subtest: GOV-02 reversed arrival produces sensor winner, one exclusive lease, one action\nok 5 - GOV-02 reversed arrival produces sensor winner, one exclusive lease, one action\n  ---\n  duration_ms: 0.341959\n  type: 'test'\n  ...\n# Subtest: GOV-02 exact tie escalates in either order; saved promotion recovers\nok 6 - GOV-02 exact tie escalates in either order; saved promotion recovers\n  ---\n  duration_ms: 6.197625\n  type: 'test'\n  ...\n# Subtest: condition invalidates issued work; snapshot retains original policy\nok 7 - condition invalidates issued work; snapshot retains original policy\n  ---\n  duration_ms: 0.22275\n  type: 'test'\n  ...\n# Subtest: policy bounds, unsaved drafts and discard preserve committed authority\nok 8 - policy bounds, unsaved drafts and discard preserve committed authority\n  ---\n  duration_ms: 0.493791\n  type: 'test'\n  ...\n# Subtest: lease expiry is exclusive; release permits fresh ownership\nok 9 - lease expiry is exclusive; release permits fresh ownership\n  ---\n  duration_ms: 0.445792\n  type: 'test'\n  ...\n# Subtest: duplicate announcements and unregistered agents never allocate or execute\nok 10 - duplicate announcements and unregistered agents never allocate or execute\n  ---\n  duration_ms: 0.455917\n  type: 'test'\n  ...\n# Subtest: eligibility boundaries and malformed telemetry fail closed\nok 11 - eligibility boundaries and malformed telemetry fail closed\n  ---\n  duration_ms: 0.193292\n  type: 'test'\n  ...\n# Subtest: eligibility is rechecked at execution after grant\nok 12 - eligibility is rechecked at execution after grant\n  ---\n  duration_ms: 0.398958\n  type: 'test'\n  ...\n# Subtest: existing lease of another batch blocks conflicting allocation\nok 13 - existing lease of another batch blocks conflicting allocation\n  ---\n  duration_ms: 0.22425\n  type: 'test'\n  ...\n# Subtest: GOV-03 halt cancels pending and issued work, retains reports, persists and guards all mutations\nok 14 - GOV-03 halt cancels pending and issued work, retains reports, persists and guards all mutations\n  ---\n  duration_ms: 1.866083\n  type: 'test'\n  ...\n# Subtest: restore rejects corrupt schema, references, duplicate ownership and completed count\nok 15 - restore rejects corrupt schema, references, duplicate ownership and completed count\n  ---\n  duration_ms: 0.343416\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 76.86575\n\nBrowser journeys: 10/10 passed.\nRequirements: 3 demonstrated, 0 failed, 0 unverified.",
+  "durationMs": 6649,
+  "sourceHash": "03519f48ead1cf4f67908ae7a3422509486f604cd78136026660a846eb725e14",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "ebcab58b36404e05bf7d1ea01524446c0f29be0cbde9f6d7032d755298d4e637",
+    "status": "passed",
+    "requirementsMet": true,
+    "criteria": [
+      {
+        "criterionId": "GOV-01",
+        "requirement": "Reject unregistered or expired identities.",
+        "status": "passed",
+        "detail": "In the synthetic simulator, missing manifest, expired authorization lease (expiresAt=100 at t=100), and stale heartbeat each reject an intent with a distinct reason and zero executed actions. Explicit registration or renewal permits a fresh intent; repair subsequently executes exactly one action. These are simulated identity and authorization checks, not cryptographic verification. — demonstrated by eligibility-recovery at both viewport sizes."
+      },
+      {
+        "criterionId": "GOV-02",
+        "requirement": "Resolve resource contention deterministically.",
+        "status": "passed",
+        "detail": "At t=100 under demo-v1 cruising policy, sensor score 60 beats repair score 40 for pump-1 in either arrival order with only one lease and one action. A 60/60 tie grants no lease and escalates; explicit repair promotion to 80 resolves it. General quarters gives repair 70 over sensor 60; returning to cruising and adding promotion 40 gives repair 80. — demonstrated by reverse-contention, tie-recovery, condition-promotion at both viewport sizes."
+      },
+      {
+        "criterionId": "GOV-03",
+        "requirement": "Operator halt preempts all simulated agents.",
+        "status": "passed",
+        "detail": "After one completed action and two newly pending intents, one operator halt cancels pending work, records acknowledgement for both registered agents, rejects new intents and blocks execution. The executed count remains 1 and the completed sensor action remains visible, including after reload. This covers all agents in the local simulation and preserves a separate human review obligation. — demonstrated by halt-persistence at both viewport sizes."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "eligibility-recovery",
+        "title": "Reject missing, expired and stale authorization, then recover",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 28 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/eligibility-recovery-desktop.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/eligibility-recovery-desktop.zip"
+      },
+      {
+        "id": "eligibility-recovery",
+        "title": "Reject missing, expired and stale authorization, then recover",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 28 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/eligibility-recovery-narrow.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/eligibility-recovery-narrow.zip"
+      },
+      {
+        "id": "reverse-contention",
+        "title": "Resolve the same simultaneous requests in both arrival orders",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 14 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/reverse-contention-desktop.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/reverse-contention-desktop.zip"
+      },
+      {
+        "id": "reverse-contention",
+        "title": "Resolve the same simultaneous requests in both arrival orders",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 14 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/reverse-contention-narrow.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/reverse-contention-narrow.zip"
+      },
+      {
+        "id": "tie-recovery",
+        "title": "Escalate tied authority and recover through explicit promotion",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 14 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/tie-recovery-desktop.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/tie-recovery-desktop.zip"
+      },
+      {
+        "id": "tie-recovery",
+        "title": "Escalate tied authority and recover through explicit promotion",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 14 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/tie-recovery-narrow.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/tie-recovery-narrow.zip"
+      },
+      {
+        "id": "condition-promotion",
+        "title": "Change condition and promote repair with visible authority",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/condition-promotion-desktop.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/condition-promotion-desktop.zip"
+      },
+      {
+        "id": "condition-promotion",
+        "title": "Change condition and promote repair with visible authority",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/condition-promotion-narrow.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/condition-promotion-narrow.zip"
+      },
+      {
+        "id": "halt-persistence",
+        "title": "Halt pending work and keep the stop enforced after reload",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 22 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/halt-persistence-desktop.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/halt-persistence-desktop.zip"
+      },
+      {
+        "id": "halt-persistence",
+        "title": "Halt pending work and keep the stop enforced after reload",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 22 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/halt-persistence-narrow.png",
+        "trace": ".quality-evidence/91a61e1675d7-fa873e19-1eee-47ac-b12e-d934e0a1c0f9/halt-persistence-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

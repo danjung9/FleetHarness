@@ -1,0 +1,297 @@
+{
+ "title": "PB4T (Planning Board for Training) Autonomous Deconfliction Agent",
+ "status": "review",
+ "error": null,
+ "stages": [
+  {
+   "id": "intake",
+   "label": "Challenge intake",
+   "detail": "Problem & constraints",
+   "status": "complete"
+  },
+  {
+   "id": "research",
+   "label": "Research",
+   "detail": "Reuse & architecture",
+   "status": "complete"
+  },
+  {
+   "id": "plan",
+   "label": "Plan",
+   "detail": "Tasks & acceptance tests",
+   "status": "complete"
+  },
+  {
+   "id": "build",
+   "label": "Build",
+   "detail": "Implementation agent",
+   "status": "complete"
+  },
+  {
+   "id": "verify",
+   "label": "Verify",
+   "detail": "Tests & repair",
+   "status": "complete"
+  },
+  {
+   "id": "review",
+   "label": "Human review",
+   "detail": "Evidence & decision",
+   "status": "review"
+  },
+  {
+   "id": "deliver",
+   "label": "Deliver",
+   "detail": "Source & evidence bundle",
+   "status": "queued"
+  }
+ ],
+ "report": {
+  "time": "2026-11-04T21:53:56.427Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./domain.test.cjs\"",
+  "exitCode": 0,
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: UC11-1 SCH-01 DELIVERABLE11-1: five participants negotiate baseline, independent interval/load oracle\nok 1 - UC11-1 SCH-01 DELIVERABLE11-1: five participants negotiate baseline, independent interval/load oracle\n  ---\n  duration_ms: 2.363333\n  type: 'test'\n  ...\n# Subtest: SCH-02 missing qualification and unavailable person recover via actual input changes\nok 2 - SCH-02 missing qualification and unavailable person recover via actual input changes\n  ---\n  duration_ms: 0.811834\n  type: 'test'\n  ...\n# Subtest: SCH-03 impossible versus exhausted versus invalid input\nok 3 - SCH-03 impossible versus exhausted versus invalid input\n  ---\n  duration_ms: 1.413584\n  type: 'test'\n  ...\n# Subtest: SCH-04 four repeated cycles include cross-week deadline; overdue history must be explicit\nok 4 - SCH-04 four repeated cycles include cross-week deadline; overdue history must be explicit\n  ---\n  duration_ms: 0.468958\n  type: 'test'\n  ...\n# Subtest: SCH-02 daily boundary includes prior duty and policy change\nok 5 - SCH-02 daily boundary includes prior duty and policy change\n  ---\n  duration_ms: 0.536792\n  type: 'test'\n  ...\n# Subtest: SCH-02 block span, exact rest boundary, midnight and weekly accounting\nok 6 - SCH-02 block span, exact rest boundary, midnight and weekly accounting\n  ---\n  duration_ms: 0.114542\n  type: 'test'\n  ...\n# Subtest: SCH-01 SCH-05 edited collision is rejected, corrected allocation validates\nok 7 - SCH-01 SCH-05 edited collision is rejected, corrected allocation validates\n  ---\n  duration_ms: 0.213084\n  type: 'test'\n  ...\n# Subtest: SCH-02 resources, qualification validity, distinct role count and alternate crew\nok 8 - SCH-02 resources, qualification validity, distinct role count and alternate crew\n  ---\n  duration_ms: 0.217708\n  type: 'test'\n  ...\n# Subtest: actual rendered export strings use core assignments and counted duty\nok 9 - actual rendered export strings use core assignments and counted duty\n  ---\n  duration_ms: 0.182125\n  type: 'test'\n  ...\n# Subtest: SCH-03 malformed mandatory inputs are invalid, never feasible or silently dropped\nok 10 - SCH-03 malformed mandatory inputs are invalid, never feasible or silently dropped\n  ---\n  duration_ms: 0.788709\n  type: 'test'\n  ...\n# Subtest: SCH-01 board audit rejects duplicate occurrences and substituted resources\nok 11 - SCH-01 board audit rejects duplicate occurrences and substituted resources\n  ---\n  duration_ms: 0.210334\n  type: 'test'\n  ...\n# Subtest: SCH-01 SCH-02 touching intervals and independent personnel/resource collisions\nok 12 - SCH-01 SCH-02 touching intervals and independent personnel/resource collisions\n  ---\n  duration_ms: 0.222625\n  type: 'test'\n  ...\n# Subtest: SCH-02 exact duty budgets and block boundaries including adjacent weeks\nok 13 - SCH-02 exact duty budgets and block boundaries including adjacent weeks\n  ---\n  duration_ms: 0.161291\n  type: 'test'\n  ...\n# Subtest: SCH-04 exact occurrence set, due boundary and missing occurrence coverage\nok 14 - SCH-04 exact occurrence set, due boundary and missing occurrence coverage\n  ---\n  duration_ms: 0.466625\n  type: 'test'\n  ...\n# Subtest: SCH-05 actual controller preserves independent editor drafts and blocks acceptance\nok 15 - SCH-05 actual controller preserves independent editor drafts and blocks acceptance\n  ---\n  duration_ms: 4.314209\n  type: 'test'\n  ...\n# Subtest: SCH-05 actual controller prevents switching away from unsaved crew values\nok 16 - SCH-05 actual controller prevents switching away from unsaved crew values\n  ---\n  duration_ms: 1.110375\n  type: 'test'\n  ...\n# Subtest: SCH-03 actual controller locks mutating controls, stops without committing, then recovers\nok 17 - SCH-03 actual controller locks mutating controls, stops without committing, then recovers\n  ---\n  duration_ms: 1.461167\n  type: 'test'\n  ...\n# Subtest: SCH-05 controller acceptance binds revision, restores, rejects draft and saved conflict\nok 18 - SCH-05 controller acceptance binds revision, restores, rejects draft and saved conflict\n  ---\n  duration_ms: 2.45625\n  type: 'test'\n  ...\n# Subtest: SCH-05 saving another editor preserves an allocation draft and reload restores it\nok 19 - SCH-05 saving another editor preserves an allocation draft and reload restores it\n  ---\n  duration_ms: 2.428625\n  type: 'test'\n  ...\n# Subtest: UC11-1 SCH-01 SCH-02 SCH-04 independent allocation oracle across feasible samples\nok 20 - UC11-1 SCH-01 SCH-02 SCH-04 independent allocation oracle across feasible samples\n  ---\n  duration_ms: 0.877625\n  type: 'test'\n  ...\n1..20\n# tests 20\n# suites 0\n# pass 20\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 92.765334\n\nBrowser journeys: 20/20 passed.\nRequirements: 7 demonstrated, 0 failed, 0 unverified.",
+  "durationMs": 22741,
+  "sourceHash": "b1ce270eed27ca0c0fb482c2220e0a2416bc4099923fd7e44d982a44c762dbcd",
+  "quality": {
+   "schemaVersion": 1,
+   "contractHash": "8697bad3e62abf2667706e5b072cdc8c3feb33ed426f34e7cab9e98e93422716",
+   "status": "passed",
+   "requirementsMet": true,
+   "criteria": [
+    {
+     "criterionId": "UC11-1",
+     "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+     "status": "passed",
+     "detail": "The complete labeled synthetic PB4T workflow uses Engineering, Weapons, Combat Systems, Damage Control and Flight Operations Agents to propose, reject and accept allocations against shared crew, resources, operational windows, synthetic fatigue and explicit mandatory occurrences. The baseline resolves the C01/Training Room collision by moving Damage Control to Mon 11:00 C04; all five required drills are covered. Repeated, cross-week and overdue occurrences are visible. Real SFTRM, formats and operational rules remain unvalidated. \u2014 demonstrated by weekly-resolution, qualification-recovery, availability-recovery, recurrence-coverage, overdue-recovery, fatigue-policy at both viewport sizes."
+    },
+    {
+     "criterionId": "SCH-01",
+     "requirement": "No personnel or shared-resource double booking.",
+     "status": "passed",
+     "detail": "The baseline retains all five drills with zero personnel or resource interval overlaps and explicitly reports the resolved Damage Control collision. A conflicting board edit is rejected on validation and corrected without losing the occurrence. \u2014 demonstrated by weekly-resolution, edit-review at both viewport sizes."
+    },
+    {
+     "criterionId": "SCH-02",
+     "requirement": "Honor availability, qualifications, rest and duty budgets.",
+     "status": "passed",
+     "detail": "Assignments meet explicit qualifications, crew/resource/ship availability, distinct role counts, daily/weekly duty and synthetic block/rest limits including prior duty. Missing EOOW and unavailable flight crew block acceptance until corrected. A 4.5h daily load fails a 4h limit and passes only after a deliberate versioned synthetic policy edit to 4.5h; hard constraints never relax automatically. \u2014 demonstrated by qualification-recovery, availability-recovery, fatigue-policy at both viewport sizes."
+    },
+    {
+     "criterionId": "SCH-03",
+     "requirement": "Distinguish infeasible input from exhausted search.",
+     "status": "passed",
+     "detail": "An impossible DC deadline is reported infeasible over supplied candidates, a node budget of 1 reports search exhausted with feasibility unresolved, and budget 0 is invalid input. None authorizes acceptance. Correction to budget 50000 yields all five baseline occurrences; stopping preserves inputs without accepting a new schedule. \u2014 demonstrated by search-recovery, invalid-and-stop at both viewport sizes."
+    },
+    {
+     "criterionId": "SCH-04",
+     "requirement": "Preserve mandatory training periodicities.",
+     "status": "passed",
+     "detail": "Synthetic recurrence and explicit history expand into stable required occurrences: baseline five weekly drills; two-day DC fixture eight total with four DC deadlines, including DC-4 on 16 Nov due 17 Nov 00:00 beyond the displayed week. An overdue DC-0 remains uncovered and blocks acceptance until explicit fictional completion history is recorded. No real SFTRM integration or certification is claimed. \u2014 demonstrated by recurrence-coverage, overdue-recovery at both viewport sizes."
+    },
+    {
+     "criterionId": "SCH-05",
+     "requirement": "Have an operator accept the proposed schedule.",
+     "status": "passed",
+     "detail": "The operator reviews an editable board, load heatmap, conflicts and every explicit relaxation request, then deliberately records synthetic acceptance of a valid complete revision with reviewer alias. Acceptance persists across reload; an unsaved conflicting draft blocks acceptance, committed edits invalidate the old review, and only a revalidated revision can be accepted. This interaction is not actual human prototype acceptance or operational authority. \u2014 demonstrated by review-export, edit-review, fatigue-policy at both viewport sizes."
+    },
+    {
+     "criterionId": "DELIVERABLE11-1",
+     "requirement": "An interactive weekly schedule board showing automated conflict resolution across departments with one-click schedule optimization and personnel loading heatmaps.",
+     "status": "passed",
+     "detail": "A self-contained interactive Weekly PB4T Schedule Board provides one-click Optimize schedule, five departmental negotiation records, Conflict and Resolution Report, Periodicity Coverage Report, Personnel Loading Heatmap and Synthetic Schedule Review Record and Export. The literal baseline assignments yield weekly loads C01=2h, C02=1h, C03=1h, C04=2h, C05=0h, C06=1h; a readable download contains the same accepted revision, assignments, loads and synthetic warning. Optimization denotes bounded feasibility, with no global optimality claim. \u2014 demonstrated by weekly-resolution, review-export, edit-review at both viewport sizes."
+    }
+   ],
+   "journeys": [
+    {
+     "id": "weekly-resolution",
+     "title": "Negotiate the complete synthetic PB4T week",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 20 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/weekly-resolution-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/weekly-resolution-desktop.zip"
+    },
+    {
+     "id": "weekly-resolution",
+     "title": "Negotiate the complete synthetic PB4T week",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 20 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/weekly-resolution-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/weekly-resolution-narrow.zip"
+    },
+    {
+     "id": "review-export",
+     "title": "Accept, persist and export the reviewed revision",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 13 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/review-export-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/review-export-desktop.zip"
+    },
+    {
+     "id": "review-export",
+     "title": "Accept, persist and export the reviewed revision",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 13 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/review-export-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/review-export-narrow.zip"
+    },
+    {
+     "id": "edit-review",
+     "title": "Resolve competing board values and invalidate stale acceptance",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 25 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/edit-review-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/edit-review-desktop.zip"
+    },
+    {
+     "id": "edit-review",
+     "title": "Resolve competing board values and invalidate stale acceptance",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 25 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/edit-review-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/edit-review-narrow.zip"
+    },
+    {
+     "id": "qualification-recovery",
+     "title": "Correct missing EOOW qualification",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 12 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/qualification-recovery-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/qualification-recovery-desktop.zip"
+    },
+    {
+     "id": "qualification-recovery",
+     "title": "Correct missing EOOW qualification",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 12 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/qualification-recovery-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/qualification-recovery-narrow.zip"
+    },
+    {
+     "id": "availability-recovery",
+     "title": "Correct crew availability without dropping a drill",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 11 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/availability-recovery-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/availability-recovery-desktop.zip"
+    },
+    {
+     "id": "availability-recovery",
+     "title": "Correct crew availability without dropping a drill",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 11 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/availability-recovery-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/availability-recovery-narrow.zip"
+    },
+    {
+     "id": "search-recovery",
+     "title": "Distinguish impossible candidates, exhaustion and correction",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 16 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/search-recovery-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/search-recovery-desktop.zip"
+    },
+    {
+     "id": "search-recovery",
+     "title": "Distinguish impossible candidates, exhaustion and correction",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 16 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/search-recovery-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/search-recovery-narrow.zip"
+    },
+    {
+     "id": "recurrence-coverage",
+     "title": "Account for repeated and cross-week training deadlines",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 7 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/recurrence-coverage-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/recurrence-coverage-desktop.zip"
+    },
+    {
+     "id": "recurrence-coverage",
+     "title": "Account for repeated and cross-week training deadlines",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 7 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/recurrence-coverage-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/recurrence-coverage-narrow.zip"
+    },
+    {
+     "id": "overdue-recovery",
+     "title": "Keep overdue training visible and correct explicit history",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 12 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/overdue-recovery-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/overdue-recovery-desktop.zip"
+    },
+    {
+     "id": "overdue-recovery",
+     "title": "Keep overdue training visible and correct explicit history",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 12 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/overdue-recovery-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/overdue-recovery-narrow.zip"
+    },
+    {
+     "id": "fatigue-policy",
+     "title": "Correct a duty overload through explicit policy review",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 15 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/fatigue-policy-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/fatigue-policy-desktop.zip"
+    },
+    {
+     "id": "fatigue-policy",
+     "title": "Correct a duty overload through explicit policy review",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 15 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/fatigue-policy-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/fatigue-policy-narrow.zip"
+    },
+    {
+     "id": "invalid-and-stop",
+     "title": "Recover validation, cancel a search and preserve the draft",
+     "viewport": "desktop",
+     "status": "passed",
+     "detail": "Completed 12 steps at 1280\u00d7800; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/invalid-and-stop-desktop.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/invalid-and-stop-desktop.zip"
+    },
+    {
+     "id": "invalid-and-stop",
+     "title": "Recover validation, cancel a search and preserve the draft",
+     "viewport": "narrow",
+     "status": "passed",
+     "detail": "Completed 12 steps at 390\u00d7844; no browser errors or horizontal overflow.",
+     "screenshot": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/invalid-and-stop-narrow.png",
+     "trace": ".quality-evidence/331699cada2c-943dfa51-0b93-4d25-921b-ea13150a9352/invalid-and-stop-narrow.zip"
+    }
+   ],
+   "errors": []
+  }
+ },
+ "benchMinutes": 15,
+ "challengeId": "11",
+ "workspace": "~/fhexp/ud-r101/workspaces/228bf8cd-d93a-4b66-8c52-9db7ce27aaa5/c7727e2e-5bca-4d19-9379-0807568c7898"
+}

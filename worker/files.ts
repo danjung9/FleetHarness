@@ -2,6 +2,7 @@ import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { sourceHash } from '../electron/storage.js';
+import { createSourceHash } from '../shared/source-hash.js';
 
 export const artifactLimits = { count: 2000, fileBytes: 10 * 1024 * 1024, totalBytes: 20 * 1024 * 1024 } as const;
 const ignored = new Set(['node_modules', '.git', '.pi', '.DS_Store']);
@@ -92,16 +93,16 @@ export async function collectArtifacts(root: string, runId: string, epoch: numbe
 }
 
 export function bundleSourceHash(files: ArtifactFile[]) {
-  const hash = createHash('sha256');
+  const hash = createSourceHash();
   // Manifest paths stay POSIX, while the reused desktop verifier hashes and
-  // orders native paths. Match that evidence format without changing saved
-  // desktop hashes; on the Linux hosted runtime these paths remain unchanged.
+  // orders native paths. Share its versioned record encoding; on the Linux
+  // hosted runtime these paths remain unchanged.
   const ordered = [...files].sort((a, b) => path.normalize(a.path).localeCompare(path.normalize(b.path)));
   for (const file of ordered) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    hash.update(path.normalize(file.path)); hash.update(Buffer.from(file.base64, 'base64'));
+    hash.update(path.normalize(file.path), Buffer.from(file.base64, 'base64'));
   }
-  return hash.digest('hex');
+  return hash.digest();
 }
 
 export function validateBundle(bundle: ArtifactBundle, runId: string) {

@@ -1,0 +1,108 @@
+{
+  "title": "Synthetic mooring scenario review",
+  "description": "Offline synthetic intake, schematic layout and human review with engineering decisions blocked because authoritative models and signed references are absent. No operational integration or simulated calculation.",
+  "components": [
+    {
+      "id": "intake",
+      "label": "Scenario and environment intake",
+      "description": "Labeled synthetic selections, raw observations and explicitly unit-tagged numeric entry; preserve drafts.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "layout",
+      "label": "Illustrative pier layout",
+      "description": "Inline SVG ship, pier and line with pointer movement and equivalent position controls; display coordinates have no physical meaning.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "core",
+      "label": "Validation and review state",
+      "description": "Pure completeness and finite-number validation; revision-bound acknowledgement, deliberate save/discard and no engineering approval path.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "core.test.cjs"
+      ]
+    },
+    {
+      "id": "authority",
+      "label": "Engineering authority gate",
+      "description": "Always unavailable until a new approved model integration; unknown uncertainty, force, margins and recommendations stay unavailable. No model or remote AI.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "core.test.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Human review and synthetic summary",
+      "description": "Review committed inputs and authority gaps; explicitly acknowledge synthetic review only; download marked summary.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Local scenario storage",
+      "description": "Versioned localStorage draft and saved snapshot with revision-bound review state; recover from invalid or unavailable storage without false saved claims.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "core.test.cjs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "intake",
+      "to": "core",
+      "label": "Raw observations and declared values"
+    },
+    {
+      "from": "layout",
+      "to": "core",
+      "label": "Illustrative positions and selections"
+    },
+    {
+      "from": "core",
+      "to": "authority",
+      "label": "Validated snapshot; no calculation request allowed"
+    },
+    {
+      "from": "authority",
+      "to": "review",
+      "label": "Missing basis and unknown uncertainty"
+    },
+    {
+      "from": "core",
+      "to": "review",
+      "label": "Committed revision and review eligibility"
+    },
+    {
+      "from": "core",
+      "to": "storage",
+      "label": "Versioned draft, snapshot and acknowledgement"
+    },
+    {
+      "from": "storage",
+      "to": "core",
+      "label": "Validated restored local state"
+    },
+    {
+      "from": "review",
+      "to": "core",
+      "label": "Explicit synthetic acknowledgement or edit"
+    }
+  ]
+}

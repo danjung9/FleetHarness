@@ -1,0 +1,166 @@
+TAP version 13
+# Subtest: module: unsafe cumulative finish is rejected
+ok 1 - module: unsafe cumulative finish is rejected
+  ---
+  duration_ms: 1.303209
+  type: 'test'
+  ...
+# Subtest: module: saved analysis cannot disagree with displayed duration or graph case
+ok 2 - module: saved analysis cannot disagree with displayed duration or graph case
+  ---
+  duration_ms: 0.748792
+  type: 'test'
+  ...
+# Subtest: module: restored review must match note and acknowledgment
+ok 3 - module: restored review must match note and acknowledgment
+  ---
+  duration_ms: 0.883584
+  type: 'test'
+  ...
+# Subtest: module: exported brief retains all five change names and before/after values
+ok 4 - module: exported brief retains all five change names and before/after values
+  ---
+  duration_ms: 0.582541
+  type: 'test'
+  ...
+# Subtest: shipped inline: unsafe cumulative finish is rejected
+ok 5 - shipped inline: unsafe cumulative finish is rejected
+  ---
+  duration_ms: 0.413875
+  type: 'test'
+  ...
+# Subtest: shipped inline: saved analysis cannot disagree with displayed duration or graph case
+ok 6 - shipped inline: saved analysis cannot disagree with displayed duration or graph case
+  ---
+  duration_ms: 0.63575
+  type: 'test'
+  ...
+# Subtest: shipped inline: restored review must match note and acknowledgment
+ok 7 - shipped inline: restored review must match note and acknowledgment
+  ---
+  duration_ms: 0.274
+  type: 'test'
+  ...
+# Subtest: shipped inline: exported brief retains all five change names and before/after values
+ok 8 - shipped inline: exported brief retains all five change names and before/after values
+  ---
+  duration_ms: 0.4445
+  type: 'test'
+  ...
+# Subtest: controller: oversized draft blocks stale analysis and recovers without losing note
+ok 9 - controller: oversized draft blocks stale analysis and recovers without losing note
+  ---
+  duration_ms: 2.707083
+  type: 'test'
+  ...
+# Subtest: controller: save boundary, changed review, and restored state use actual handlers
+ok 10 - controller: save boundary, changed review, and restored state use actual handlers
+  ---
+  duration_ms: 2.385834
+  type: 'test'
+  ...
+# Subtest: module: baseline and each independent event expectation, immutable sources
+ok 11 - module: baseline and each independent event expectation, immutable sources
+  ---
+  duration_ms: 3.447
+  type: 'test'
+  ...
+# Subtest: module: null remains unknown, zero remains zero, shorter unknown branch propagates
+ok 12 - module: null remains unknown, zero remains zero, shorter unknown branch propagates
+  ---
+  duration_ms: 0.289459
+  type: 'test'
+  ...
+# Subtest: module: ties, own availability, zero margin, benign metadata
+ok 13 - module: ties, own availability, zero margin, benign metadata
+  ---
+  duration_ms: 0.277084
+  type: 'test'
+  ...
+# Subtest: module: structural and number failures block conclusions
+ok 14 - module: structural and number failures block conclusions
+  ---
+  duration_ms: 0.496875
+  type: 'test'
+  ...
+# Subtest: module: exact evidence closure, revisions and excerpt offsets
+ok 15 - module: exact evidence closure, revisions and excerpt offsets
+  ---
+  duration_ms: 0.316208
+  type: 'test'
+  ...
+# Subtest: module: unresolved, conflict, stable identity and timestamp boundaries
+ok 16 - module: unresolved, conflict, stable identity and timestamp boundaries
+  ---
+  duration_ms: 0.270375
+  type: 'test'
+  ...
+# Subtest: module: review fingerprint, actual brief and persistence validation
+ok 17 - module: review fingerprint, actual brief and persistence validation
+  ---
+  duration_ms: 0.946584
+  type: 'test'
+  ...
+# Subtest: shipped inline: baseline and each independent event expectation, immutable sources
+ok 18 - shipped inline: baseline and each independent event expectation, immutable sources
+  ---
+  duration_ms: 1.709667
+  type: 'test'
+  ...
+# Subtest: shipped inline: null remains unknown, zero remains zero, shorter unknown branch propagates
+ok 19 - shipped inline: null remains unknown, zero remains zero, shorter unknown branch propagates
+  ---
+  duration_ms: 0.251375
+  type: 'test'
+  ...
+# Subtest: shipped inline: ties, own availability, zero margin, benign metadata
+ok 20 - shipped inline: ties, own availability, zero margin, benign metadata
+  ---
+  duration_ms: 0.328875
+  type: 'test'
+  ...
+# Subtest: shipped inline: structural and number failures block conclusions
+ok 21 - shipped inline: structural and number failures block conclusions
+  ---
+  duration_ms: 0.266416
+  type: 'test'
+  ...
+# Subtest: shipped inline: exact evidence closure, revisions and excerpt offsets
+ok 22 - shipped inline: exact evidence closure, revisions and excerpt offsets
+  ---
+  duration_ms: 0.254375
+  type: 'test'
+  ...
+# Subtest: shipped inline: unresolved, conflict, stable identity and timestamp boundaries
+ok 23 - shipped inline: unresolved, conflict, stable identity and timestamp boundaries
+  ---
+  duration_ms: 0.244959
+  type: 'test'
+  ...
+# Subtest: shipped inline: review fingerprint, actual brief and persistence validation
+ok 24 - shipped inline: review fingerprint, actual brief and persistence validation
+  ---
+  duration_ms: 0.791917
+  type: 'test'
+  ...
+# Subtest: module: what-if provenance and storage failure preserve memory
+ok 25 - module: what-if provenance and storage failure preserve memory
+  ---
+  duration_ms: 0.570667
+  type: 'test'
+  ...
+# Subtest: shipped inline: what-if provenance and storage failure preserve memory
+ok 26 - shipped inline: what-if provenance and storage failure preserve memory
+  ---
+  duration_ms: 0.514792
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 106.623084

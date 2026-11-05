@@ -1,0 +1,7 @@
+{
+  "userIgnoreFilters": [
+    "Sources/raw/"
+  ],
+  "newFileLocation": "folder",
+  "newFileFolderPath": "Sessions"
+}

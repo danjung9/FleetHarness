@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC35-1",
+      "disposition": "deferred",
+      "expectedOutcome": "An isolated deployment completes evidence intake, review and transfer within an owner-approved constrained-link profile.",
+      "journeyIds": [],
+      "reason": "Only local synthetic review is planned; deployment environment, link profile and measured transport are absent."
+    },
+    {
+      "criterionId": "UC35-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Every applied change requires an authorized human decision on its exact content and can be restored to its verified prior configuration.",
+      "journeyIds": [],
+      "reason": "Prototype records synthetic proposal review and rollback instructions only; no authorized execution or rollback adapter exists."
+    },
+    {
+      "criterionId": "UC35-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Every operational intake, decision, change, verification and rollback action has attributable, retained and integrity-protected audit evidence.",
+      "journeyIds": [],
+      "reason": "Ordered local prototype events are exportable; authenticated attribution, operational coverage, retention and integrity infrastructure are absent."
+    },
+    {
+      "criterionId": "UC35-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Documented open input/output interfaces interoperate with an agreed external consumer while making no connection to live Navy networks.",
+      "journeyIds": [],
+      "reason": "Documented local synthetic JSON import/export and no network calls are planned; no external interoperability contract or consumer is supplied."
+    },
+    {
+      "criterionId": "UC35-5",
+      "disposition": "deferred",
+      "expectedOutcome": "The delivered solution runs offline, preserves human authority, cites evidence, logs actions, synchronizes on reconnect and includes a reviewed one-page path to fleet.",
+      "journeyIds": [],
+      "reason": "Local synthetic evidence, review, citations and handoff are demonstrated; reconnect transport, operational authority and reviewed fleet transition are absent."
+    },
+    {
+      "criterionId": "CYB-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Analyze the planning-defined synthetic baseline: LAB-A has auditEnabled=false and is the single seeded finding; LAB-B has auditEnabled=true and is benign. Explain each with exact asset/configuration and SYN-AUDIT r1 evidence; unknown values remain insufficient evidence. Preserve these citations through reviewed handoff, reject malformed input, and invalidate review after explanation edits.",
+      "journeyIds": [
+        "explain-and-handoff",
+        "recover-evidence",
+        "review-edited-explanation",
+        "recover-unknown"
+      ]
+    },
+    {
+      "criterionId": "CYB-02",
+      "disposition": "deferred",
+      "expectedOutcome": "After review, modifying any proposed patch content invalidates its old approval and an execution adapter rejects the stale approval.",
+      "journeyIds": [],
+      "reason": "Draft and digest-bound handoff review invalidation are demonstrated, but the required execution rejection cannot be established without a lab adapter and reviewed tests."
+    },
+    {
+      "criterionId": "CYB-03",
+      "disposition": "deferred",
+      "expectedOutcome": "A benign authorized lab change is applied, verified, reversed and verified again; its handoff and audit record show actual outcomes.",
+      "journeyIds": [],
+      "reason": "Handoff includes proposed checks and rollback steps marked not executed / not verified; actual apply/reverse and failed rollback or partial remediation tests require the absent lab."
+    },
+    {
+      "criterionId": "EVAL35-1",
+      "disposition": "deferred",
+      "expectedOutcome": "On an independently approved fixed corpus, report true seeded findings divided by all seeded findings and separately report false positives and unknowns.",
+      "journeyIds": [],
+      "reason": "Two planning-defined synthetic examples and an unknown case are exercised; no independently approved vulnerability corpus or domain coverage target exists. No general detection rate is claimed."
+    },
+    {
+      "criterionId": "EVAL35-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Measure elapsed time from evidence availability to an independently judged correct remediation plan using an agreed correctness rubric.",
+      "journeyIds": [],
+      "reason": "A proposal can be prepared locally; independent correctness rubric, analyst study and agreed timing protocol are absent."
+    },
+    {
+      "criterionId": "EVAL35-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Lab records demonstrate every change was applied only under current approval and cleanly rolled back to its prior state.",
+      "journeyIds": [],
+      "reason": "Synthetic review state is shown without any execution; authorized lab application and rollback evidence are absent."
+    },
+    {
+      "criterionId": "EVAL35-4",
+      "disposition": "deferred",
+      "expectedOutcome": "All required interactions and payload transfers complete over the agreed emulated low-bandwidth link within owner-approved limits.",
+      "journeyIds": [],
+      "reason": "Offline local use is planned; no emulator, bandwidth/latency/loss profile or pass thresholds are supplied."
+    },
+    {
+      "criterionId": "EVAL35-5",
+      "disposition": "deferred",
+      "expectedOutcome": "Audit reconciliation accounts for every required operational action, result, actor, revision and time with approved retention and integrity.",
+      "journeyIds": [],
+      "reason": "Prototype exports local workflow history; operational event specification, identity, retention and integrity remain undefined."
+    },
+    {
+      "criterionId": "EVAL35-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Authorized judges evaluate Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+      "journeyIds": [],
+      "reason": "Rubric is retained verbatim; scoring is reserved to human judges. No self-score substitutes for judging."
+    },
+    {
+      "criterionId": "DELIVERABLE35-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Comparable measured scenarios show shorter time from new requirement or vulnerability to independently verified remediation than the manual baseline.",
+      "journeyIds": [],
+      "reason": "No execution adapter, verified remediation or comparable manual timing baseline exists; the prototype ends at a proposal."
+    },
+    {
+      "criterionId": "DELIVERABLE35-2",
+      "disposition": "deferred",
+      "expectedOutcome": "A controlled comparison on the same network scenario shows fewer observed analyst hours than the manual baseline.",
+      "journeyIds": [],
+      "reason": "No observed manual baseline, representative workload or analyst-hours study is supplied; no savings are inferred."
+    },
+    {
+      "criterionId": "DELIVERABLE35-3",
+      "disposition": "deferred",
+      "expectedOutcome": "Commanders, system owners and data owners independently confirm that the explanation identifies impact, uncertainty, affected assets, accountable reviewer and a useful next action.",
+      "journeyIds": [],
+      "reason": "Plain-language synthetic impact and next steps are included in the handoff; actionability for these audiences requires independent owner review."
+    },
+    {
+      "criterionId": "DELIVERABLE35-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Every executed change has a complete attributable audit record and a demonstrated successful reversal to its verified prior state.",
+      "journeyIds": [],
+      "reason": "Proposal revisions, local events and rollback instructions are included; execution, audit assurance and actual reversibility remain unverified without the lab."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "explain-and-handoff",
+      "title": "Explain seeded and benign evidence, review and export a durable handoff",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-summary",
+          "text": "1 finding; 1 benign; 0 insufficient evidence."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-A",
+          "text": "LAB-A: Finding \u2014 auditEnabled=false; SYN-AUDIT r1 requires true."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-B",
+          "text": "LAB-B: No finding \u2014 auditEnabled=true matches SYN-AUDIT r1."
+        },
+        {
+          "action": "expectText",
+          "selector": "#citation-LAB-A",
+          "text": "CFG-A r1 | 2026-11-01T12:00:00Z | auditEnabled=false | SYN-AUDIT r1"
+        },
+        {
+          "action": "click",
+          "selector": "#create-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#change-summary",
+          "text": "LAB-A: auditEnabled false \u2192 true"
+        },
+        {
+          "action": "fill",
+          "selector": "#reviewer",
+          "value": "Training Reviewer"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed for handoff \u2014 revision 1; no execution authority."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed for handoff \u2014 revision 1; no execution authority."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-A",
+          "text": "LAB-A: Finding \u2014 auditEnabled=false; SYN-AUDIT r1 requires true."
+        },
+        {
+          "action": "expectText",
+          "selector": "#execution-status",
+          "text": "Not executed / not verified"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-handoff",
+          "fileName": "synthetic-cyber-handoff.json",
+          "text": "\"executionStatus\": \"not executed\""
+        }
+      ]
+    },
+    {
+      "id": "recover-evidence",
+      "title": "Reject malformed evidence, preserve it and recover with the synthetic sample",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#evidence-input",
+          "value": "{"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#evidence-error",
+          "text": "Enter valid synthetic evidence JSON."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#evidence-input",
+          "value": "{"
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-summary",
+          "text": "1 finding; 1 benign; 0 insufficient evidence."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-A",
+          "text": "LAB-A: Finding \u2014 auditEnabled=false; SYN-AUDIT r1 requires true."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-B",
+          "text": "LAB-B: No finding \u2014 auditEnabled=true matches SYN-AUDIT r1."
+        }
+      ]
+    },
+    {
+      "id": "review-edited-explanation",
+      "title": "Preserve draft rationale and invalidate review when committed content changes",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "click",
+          "selector": "#create-proposal"
+        },
+        {
+          "action": "fill",
+          "selector": "#reviewer",
+          "value": "Training Reviewer"
+        },
+        {
+          "action": "click",
+          "selector": "#approve-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed for handoff \u2014 revision 1; no execution authority."
+        },
+        {
+          "action": "fill",
+          "selector": "#proposal-rationale",
+          "value": "Review local logging gaps before any lab change."
+        },
+        {
+          "action": "click",
+          "selector": "#approve-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#proposal-error",
+          "text": "Save or discard draft changes before review."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#proposal-rationale",
+          "value": "Review local logging gaps before any lab change."
+        },
+        {
+          "action": "expectText",
+          "selector": "#draft-status",
+          "text": "Unsaved changes \u2014 review unavailable."
+        },
+        {
+          "action": "click",
+          "selector": "#save-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Review required \u2014 revision 2; previous review invalidated."
+        },
+        {
+          "action": "click",
+          "selector": "#approve-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Reviewed for handoff \u2014 revision 2; no execution authority."
+        },
+        {
+          "action": "expectText",
+          "selector": "#execution-status",
+          "text": "Not executed / not verified"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-handoff",
+          "fileName": "synthetic-cyber-handoff.json",
+          "text": "Review local logging gaps before any lab change."
+        }
+      ]
+    },
+    {
+      "id": "recover-unknown",
+      "title": "Expose insufficient evidence and recover without inventing compliance",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#evidence-input",
+          "value": "{\"schemaVersion\":1,\"synthetic\":true,\"bundleId\":\"SYN-UNKNOWN\",\"capturedAt\":\"2026-11-01T12:00:00Z\",\"assets\":[{\"assetId\":\"LAB-C\",\"type\":\"training-service\",\"evidenceId\":\"CFG-C\",\"revision\":\"r1\",\"sourceTimestamp\":\"2026-11-01T12:00:00Z\",\"controlId\":\"SYN-AUDIT\",\"controlRevision\":\"r1\",\"excerpt\":\"auditEnabled=unknown\",\"auditEnabled\":null}]}"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-summary",
+          "text": "0 findings; 0 benign; 1 insufficient evidence."
+        },
+        {
+          "action": "expectText",
+          "selector": "#finding-LAB-C",
+          "text": "LAB-C: Insufficient evidence \u2014 auditEnabled is unknown; obtain a current configuration snapshot."
+        },
+        {
+          "action": "click",
+          "selector": "#create-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#proposal-error",
+          "text": "A supported finding is required to create a proposal."
+        },
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-summary",
+          "text": "1 finding; 1 benign; 0 insufficient evidence."
+        },
+        {
+          "action": "click",
+          "selector": "#create-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#change-summary",
+          "text": "LAB-A: auditEnabled false \u2192 true"
+        }
+      ]
+    }
+  ]
+}

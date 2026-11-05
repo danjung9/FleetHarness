@@ -1,0 +1,108 @@
+{
+  "title": "Paperless Underway — synthetic offline packet workflow",
+  "description": "Dependency-free local application for both forms and tasking tracks. Local inbox routing and two-replica reconnect are explicitly simulated; no operational systems contacted.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Source capture and extraction review",
+      "description": "Synthetic handwritten image, requisition, correspondence and week tasking; cited candidates and corrections.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "domain",
+      "label": "Packet rules and named outputs",
+      "description": "Deterministic synthetic extraction, validation, filing, accuracy and six named outputs; no model authority.",
+      "kind": "logic",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "core.test.cjs"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Human review and local routing",
+      "description": "Exact-revision approval, visible local recipient inboxes and idempotent routing.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Durable offline workspace",
+      "description": "IndexedDB transactions for sources, drafts, immutable revisions, approvals, audit, queue and acknowledged bytes.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "sync",
+      "label": "Simulated reconnect and transfer",
+      "description": "Two local replicas; explicit conflict review, merge order independence and acknowledged bounded transfer. No network adapter.",
+      "kind": "integration",
+      "files": [
+        "index.html",
+        "core.cjs",
+        "core.test.cjs"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Packet exports and evidence",
+      "description": "Named outputs, source/audit export, invented metrics, assessment placeholders and one-page transition plan.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "README.md",
+        "path-to-fleet.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "domain",
+      "label": "Source text/image fixture and reviewed fields"
+    },
+    {
+      "from": "domain",
+      "to": "store",
+      "label": "Validated packet revision and source citations"
+    },
+    {
+      "from": "store",
+      "to": "review",
+      "label": "Saved current revision and findings"
+    },
+    {
+      "from": "review",
+      "to": "store",
+      "label": "Approval, local inbox receipt and audit atomically"
+    },
+    {
+      "from": "store",
+      "to": "sync",
+      "label": "Immutable queued operations and attachment offsets"
+    },
+    {
+      "from": "sync",
+      "to": "review",
+      "label": "Competing heads requiring explicit human choice"
+    },
+    {
+      "from": "sync",
+      "to": "store",
+      "label": "Persist merged histories and simulated acknowledgements"
+    },
+    {
+      "from": "store",
+      "to": "evidence",
+      "label": "Committed named outputs, citations, audit and metrics"
+    }
+  ]
+}

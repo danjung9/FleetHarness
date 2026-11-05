@@ -1,0 +1,137 @@
+{
+  "time": "2026-11-04T21:05:16.064Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./consistency.test.cjs\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: actual inline core and Node adapter execute frozen journey inputs with matching behavior\nok 1 - actual inline core and Node adapter execute frozen journey inputs with matching behavior\n  ---\n  duration_ms: 5.363042\n  type: 'test'\n  ...\n# Subtest: MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields\nok 2 - MSG-01: all tokens preserve UTF-16 offsets, mixed endings and empty fields\n  ---\n  duration_ms: 2.485417\n  type: 'test'\n  ...\n# Subtest: MSG-02: exact recovery messages and unknown dates\nok 3 - MSG-02: exact recovery messages and unknown dates\n  ---\n  duration_ms: 0.515708\n  type: 'test'\n  ...\n# Subtest: MSG-02: duplicate IDs flag every occurrence; malformed and reversed intervals block review\nok 4 - MSG-02: duplicate IDs flag every occurrence; malformed and reversed intervals block review\n  ---\n  duration_ms: 0.463667\n  type: 'test'\n  ...\n# Subtest: MSG-01: draft and category changes gate approval/export, discard restores reviewed snapshot\nok 5 - MSG-01: draft and category changes gate approval/export, discard restores reviewed snapshot\n  ---\n  duration_ms: 0.301417\n  type: 'test'\n  ...\n# Subtest: MSG-03: equal instants and complete cross-midnight export\nok 6 - MSG-03: equal instants and complete cross-midnight export\n  ---\n  duration_ms: 0.653333\n  type: 'test'\n  ...\n# Subtest: MSG-03: half-open midnight boundaries, point task and overlaps\nok 7 - MSG-03: half-open midnight boundaries, point task and overlaps\n  ---\n  duration_ms: 0.898875\n  type: 'test'\n  ...\n# Subtest: repair regression: failed oversized commit clears approval while preserving draft and prior evidence\nok 8 - repair regression: failed oversized commit clears approval while preserving draft and prior evidence\n  ---\n  duration_ms: 0.122292\n  type: 'test'\n  ...\n# Subtest: repair regression: UTC year spillover uses instant ordering and UTC clock labels\nok 9 - repair regression: UTC year spillover uses instant ordering and UTC clock labels\n  ---\n  duration_ms: 0.111584\n  type: 'test'\n  ...\n# Subtest: repair regression: embedded carriage returns cannot become valid field content\nok 10 - repair regression: embedded carriage returns cannot become valid field content\n  ---\n  duration_ms: 0.073875\n  type: 'test'\n  ...\n# Subtest: repair regression: evidence selectors avoid reserved fields and fallback ID collisions\nok 11 - repair regression: evidence selectors avoid reserved fields and fallback ID collisions\n  ---\n  duration_ms: 0.230708\n  type: 'test'\n  ...\n# Subtest: README sample walkthrough has independently specified reviewed rows and export evidence\nok 12 - README sample walkthrough has independently specified reviewed rows and export evidence\n  ---\n  duration_ms: 0.175416\n  type: 'test'\n  ...\n1..12\n# tests 12\n# suites 0\n# pass 12\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 96.16975\n\nBrowser journeys: 8/8 passed.\nRequirements: 3 demonstrated, 0 failed, 4 unverified.",
+  "durationMs": 4826,
+  "sourceHash": "94cff89336b5240f3abbab56e47255cee34396e9c24154f2e0c946934f6dfd7d",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "ac51203e0a7681459a22663bb6bae2fc845ff003c45b913ba1dd0719241c834a",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC12-1",
+        "requirement": "A parser that takes raw formatted military text (USMTF format), extracts frequency plans, crypto change-over windows, and flight quarters event times, and plots them on a consolidated visual timeline.",
+        "status": "unverified",
+        "detail": "No actual-format specification or SME-reviewed mapping is supplied. The implemented synthetic EVENT/TASK review and UTC timeline slice cannot establish USMTF extraction or domain category correctness."
+      },
+      {
+        "criterionId": "MSG-01",
+        "requirement": "Every extracted field has exact source offsets.",
+        "status": "passed",
+        "detail": "Every extracted field retains a half-open UTF-16 span whose slice equals its literal source text in the immutable original; the user can inspect source evidence and export it after explicit review. — demonstrated by trace-review-export, draft-approval-boundary at both viewport sizes."
+      },
+      {
+        "criterionId": "MSG-02",
+        "requirement": "Do not invent ambiguous timestamps.",
+        "status": "passed",
+        "detail": "Empty text, missing timezone, invalid calendar dates and unsupported lines produce specific issues and no approved schedule or invented timestamps; correcting the source permits deliberate review and a valid schedule. — demonstrated by invalid-source-recovery, draft-approval-boundary at both viewport sizes."
+      },
+      {
+        "criterionId": "MSG-03",
+        "requirement": "Normalize time zones without shifting the event.",
+        "status": "passed",
+        "detail": "09:00Z and 04:00-05:00 normalize to 2026-11-04T09:00:00.000Z. A 23:30Z–00:30Z interval remains 60 minutes, displays 23:30–24:00 on November 4 and 00:00–00:30 on November 5, and exports its original complete normalized interval. — demonstrated by utc-day-boundary at both viewport sizes."
+      },
+      {
+        "criterionId": "MSG-04",
+        "requirement": "Review output against an independent answer key.",
+        "status": "unverified",
+        "detail": "No independently authored held-out corpus, human reviewer, matching rules or agreed accuracy threshold is supplied. Planner-authored regression cases are protected from build drift but are not independent SME ground truth."
+      },
+      {
+        "criterionId": "MSG-05",
+        "requirement": "Keep the timeline usable offline.",
+        "status": "unverified",
+        "detail": "The self-contained local workflow and reviewed export are planned and exercised by trace-review-export, but the allowed declarative browser steps cannot disconnect the browser or prove network isolation. A witnessed disconnected end-to-end run is required; local packaging alone is only a partial demonstration."
+      },
+      {
+        "criterionId": "DELIVERABLE12-1",
+        "requirement": "A tool that seamlessly converts mock USMTF raw text into a synchronized 24-hour visual schedule for watchstanders and shipboard leaders.",
+        "status": "unverified",
+        "detail": "No reviewed mock-USMTF mapping or owner assessment of synchronized/seamless behavior is supplied. The demonstrated UTC 24-hour synthetic timeline and manual category review remain a partial slice, not the complete deliverable."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "trace-review-export",
+        "title": "Inspect exact source evidence and approve a synthetic schedule",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/trace-review-export-desktop.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/trace-review-export-desktop.zip"
+      },
+      {
+        "id": "trace-review-export",
+        "title": "Inspect exact source evidence and approve a synthetic schedule",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/trace-review-export-narrow.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/trace-review-export-narrow.zip"
+      },
+      {
+        "id": "utc-day-boundary",
+        "title": "Normalize equal instants and preserve a cross-midnight window",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/utc-day-boundary-desktop.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/utc-day-boundary-desktop.zip"
+      },
+      {
+        "id": "utc-day-boundary",
+        "title": "Normalize equal instants and preserve a cross-midnight window",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/utc-day-boundary-narrow.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/utc-day-boundary-narrow.zip"
+      },
+      {
+        "id": "invalid-source-recovery",
+        "title": "Reject empty, ambiguous, invalid and unsupported input, then recover",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 23 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/invalid-source-recovery-desktop.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/invalid-source-recovery-desktop.zip"
+      },
+      {
+        "id": "invalid-source-recovery",
+        "title": "Reject empty, ambiguous, invalid and unsupported input, then recover",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 23 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/invalid-source-recovery-narrow.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/invalid-source-recovery-narrow.zip"
+      },
+      {
+        "id": "draft-approval-boundary",
+        "title": "Prevent an edited source from exporting stale reviewed content",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 12 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/draft-approval-boundary-desktop.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/draft-approval-boundary-desktop.zip"
+      },
+      {
+        "id": "draft-approval-boundary",
+        "title": "Prevent an edited source from exporting stale reviewed content",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 12 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/draft-approval-boundary-narrow.png",
+        "trace": ".quality-evidence/10fe6d11ea71-85617333-9ad6-4d1e-abd0-3699fd316003/draft-approval-boundary-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

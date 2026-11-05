@@ -1,0 +1,94 @@
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'tail -n 14 verification-node.txt'"
+}
+verify tool bash completed
+"ok 26 - shipped inline: what-if provenance and storage failure preserve memory\n  ---\n  duration_ms: 0.514792\n  type: 'test'\n  ...\n1..26\n# tests 26\n# suites 0\n# pass 26\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 106.623084\n"
+verify text The new tests confirmed defects in oversized-input handling, cumulative timing arithmetic, restored-session consistency, and exported change history. I preserved the failing output and applied one bounded repair. All 26 application tests now pass with no skips, including tests that execute the shipped controller handlers through a DOM adapter. Desktop and narrow browser verification remains pendin
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"sed -n '95,160p' plan.md; cat path-to-fleet.md; cat research.md\""
+}
+verify tool bash completed
+"# Path to fleet - owner handoff\n\nThis is a synthetic, offline dependency-timing prototype. It has no operational connections and is not a validated mission-readiness model. No response or command decision is automated.\n\n**Ownership:** Naval Surface Forces / Task Force Hopper is the challenge's proposed sponsor and destination, not a confirmed sponsor or approved endpoint. Opera
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node -v; shasum -a 256 acceptance-plan.json ux-spec.json system-design.json; rg -n 'fetch\\\\(|XMLHttpRequest|https?://|<script[\"'^>]+src|<link'\"' index.html; rg -n '\"'^not ok|''^ok|# tests|# pass|# fail|# skipped'\"' verification-initial.txt verification-node.txt\""
+}
+verify tool bash completed
+"v26.0.0\ndyld[54757]: Library not loaded: /System/Library/Perl/5.34/darwin-thread-multi-2level/CORE/libperl.dylib\n  Referenced from: <2681FC54-21C9-3AF8-B86B-C9E699ADADD1> /usr/bin/perl\n  Reason: tried: '/System/Library/Perl/5.34/darwin-thread-multi-2level/CORE/libperl.dylib' (blocked by sandbox), not in dyld cache\nverification-node.txt:3:ok 1 - module: unsafe cumulative finish 
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > verification.md <<'EOF'\n# Verification record\n\nVerification phase, 2026-11-04. Status: generated and runnable in Node; application Node checks pass; browser gate UNVERIFIED / NOT PASSED. Reviewer acceptance and operational validation have not occurred. \"'`requirementsMet: false` because ten source criteria remain deferred. Prototype checks passing in N
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "workspace",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Analyst workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "snapshot",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic snapshots and provenance: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "analysis",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Dependency timing engine: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evidence",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Risk explanation and evidence resolution: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Human review and brief: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "storage",
+  "status": "generated",
+  "detail": "Mapped implementation files exist and remain consistent with preserved system-design.json. Bounded repair complete; 26 Node application checks pass. Desktop/narrow host browser evidence and human review pending; generated does not mean verified correctness."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local session storage: generated. The live diagram has been updated."}]
+verify text Applied one bounded repair and expanded coverage: **26 tests pass, zero skipped**. Frozen plans remain unchanged.
+
+[verification.md](verification.md) maps all 17 criteria to evidence and limitations. README and acceptance matrix are updated.
+
+Desktop/narrow browser journeys, screenshots, traces, and host-owned `test-report.json` remain pending. Ten criteria remain deferred; `requirementsMet` is fa
+verify info TAP version 13
+# Subtest: module: unsafe cumulative finish is rejected
+ok 1 - module: unsafe cumulative finish is rejected
+  ---
+  duration_ms: 0.889917
+  type: 'test'
+  ...
+# Subtest: module: saved analysis cannot disagree with displayed duration or graph case
+ok 2 - module: saved analysis cannot disagree with displayed duration or graph case
+  ---
+  duration_ms: 0.504333
+  type: 'test'
+  ...
+# S
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

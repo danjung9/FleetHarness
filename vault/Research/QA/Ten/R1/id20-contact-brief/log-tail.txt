@@ -1,0 +1,86 @@
+verify tool fleet_component_progress
+{
+  "componentId": "viewer",
+  "status": "building",
+  "detail": "Verification review of mapped index.html implementation and application tests; browser evidence remains host-owned."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Snapshot inspection: building. The live diagram has been updated."}]
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'node --version; node --test app.test.cjs; cat test-matrix.md verification.md; rg --files --hidden .fleet'"
+}
+verify tool bash completed
+"v26.0.0\n✔ RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata (2.026042ms)\n✔ RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots (0.292833ms)\n✔ RET-01: Unicode and markup remain exact literal source data (0.144166ms)\n✔ Identity is exact and ambiguous names are never merged (0.300834ms)\n✔ RE
+verify text The original seven tests pass against the actual inline application core. I found two gaps to test before repair: JavaScript can normalize impossible dates such as February 30, and citation resolution may accept incomplete metadata or throw on missing spans. Browser journeys and screenshots are still pending the host runner.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('app.test.cjs')\np.write_text(p.read_text()+'''\ntest('RET-02: impossible calendar dates are invalid rather than normalized',()=>{\n for(const sourceTime of ['2026-02-30T09:00:00Z','2026-11-01T24:00:00Z']){\n  const doc={...copy(C.snapshots[0]),sourceTime};\n  assert.equal(C.freshness(doc),'invalid');\n  assert.
+verify error bash failed
+"✔ RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata (2.137083ms)\n✔ RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots (0.287417ms)\n✔ RET-01: Unicode and markup remain exact literal source data (0.134584ms)\n✔ Identity is exact and ambiguous names are never merged (0.298916ms)\n✔ RET-02: stale 
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('index.html');s=p.read_text()\ns=s.replace(\\\"const parse=t=>typeof t==='string'&&/\"'^'\"\\\\\\\\d{4}-\\\\\\\\d{2}-\\\\\\\\d{2}T\\\\\\\\d{2}:\\\\\\\\d{2}:\\\\\\\\d{2}(?:\\\\\\\\.\\\\\\\\d{3})?Z\"'$/.test(t)?Date.parse(t):NaN;\", \"const parse=t=>{if(typeof t!=='\"'string'||\"'!/''^'\"\\\\\\\\d{4}-\\\\\\\\d{2}-
+verify tool bash completed
+"✔ RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata (2.935083ms)\n✔ RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots (0.381083ms)\n✔ RET-01: Unicode and markup remain exact literal source data (0.161875ms)\n✔ Identity is exact and ambiguous names are never merged (0.890125ms)\n✔ RET-02: sta
+verify text The new tests exposed two failures: an impossible date was labeled stale, and a citation with a blank locator was accepted. The single bounded repair now rejects normalized dates and incomplete citation records. All 10 tests pass with none skipped. I’ll record the failures, repair, and remaining browser checks in the verification notes.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md');s=p.read_text().replace('The recorded build run passed seven tests with none skipped. No tests were rerun for this documentation-only update.', 'The verification run passed 10 tests with none skipped after one bounded repair. Added adversarial checks reject impossible calendar dates, incomplete cita
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "query",
+  "status": "generated",
+  "detail": "Mapped index.html implementation exists and source review complete. Generated is implementation status; desktop/narrow browser verification pending host."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Contact lookup and identity selection: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "corpus",
+  "status": "generated",
+  "detail": "Mapped index.html implementation exists and source review complete. Generated is implementation status; desktop/narrow browser verification pending host."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic snapshot corpus: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "retrieval",
+  "status": "generated",
+  "detail": "Mapped index.html exists; bounded date/provenance validation repair complete; 10 Node application tests pass. Browser validation pending host."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Eligibility and lexical evidence core: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "brief",
+  "status": "generated",
+  "detail": "Mapped index.html implementation exists and source review complete. Generated is implementation status; desktop/narrow browser verification pending host."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Contact brief: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "viewer",
+  "status": "generated",
+  "detail": "Mapped index.html exists; bounded date/provenance validation repair complete; 10 Node application tests pass. Browser validation pending host."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Snapshot inspection: generated. The live diagram has been updated."}]
+verify text Completed verification and one bounded repair. All 10 Node tests pass; none skipped. Fixed impossible-date handling and incomplete citation validation.
+
+Updated verification.md, test-matrix.md and README.md. Frozen plans remain unchanged; all components are marked generated.
+
+Desktop/narrow browser journeys, screenshots and traces remain pending the host runner. Verification is not fully passed; r
+verify info TAP version 13
+# Subtest: RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata
+ok 1 - RET-01: eligible retrieval excludes a strictly stronger lexical match and resolves exact metadata
+  ---
+  duration_ms: 2.837667
+  type: 'test'
+  ...
+# Subtest: RET-01: citation references reject broken offsets, revisions, missing and duplicate snapshots
+ok 2 - RET-01: 
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

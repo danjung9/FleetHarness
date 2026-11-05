@@ -1,0 +1,30 @@
+✔ UI1 real controller default rows, edit commit, invalid text and reset (3.439792ms)
+✔ UI2 real controller review invalidation, manual conflict/recovery and exhausted status (1.849833ms)
+✔ UI3 actual import handler retains workspace on rejection and restores exact manual alternate (1.792167ms)
+✔ T1 default independent interval pairs, qualifications, totals and exact fixed assignments (1.652958ms)
+✔ T2 edits change calculations without changing original data (0.215667ms)
+✔ T3 missing qualifications and unavailable people are infeasible, not malformed (0.141667ms)
+✔ T4 distinct person and room collisions, with feasible control (0.560833ms)
+✔ T5 rest boundary in both input orders (0.203458ms)
+✔ T6 zero-rest adjacency and two-day total duty cap (0.174584ms)
+✔ T7 complete operating and person window containment, exact end boundary (0.153583ms)
+✔ T8 four distinct outcomes and exact node allowance semantics (0.176833ms)
+✔ T9 malformed fields are actionable, never silently repaired (0.351292ms)
+✔ T10 all outcomes preserve frozen exact inputs (0.31825ms)
+✔ V1 empty windows, alternate candidate backtracking and room adjacency (0.51125ms)
+✔ P1 HTML embeds byte-equal classic core with no external runtime references (1.313291ms)
+✔ P2 actual inline core computes defaults and edits in isolated VM (1.8885ms)
+✔ P3 UI disclosures and inert untrusted text; no adjacent runtime dependency (0.47425ms)
+✔ S1 any input edit/recompute or revert clears review and invalid JSON retains text (2.897167ms)
+✔ S2 manual selection checks all sessions, preserves unresolved selection, rejects unlisted start (0.705541ms)
+✔ S3 portable snapshots recover exact raw inputs and results, including all failure states (2.254ms)
+✔ S4 atomic rejection of tampered/stale snapshots; manual alternate restored, never re-solved away (1.497042ms)
+✔ S4b conflicting manual draft round-trip remains unresolved and review-free (0.178292ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.563833

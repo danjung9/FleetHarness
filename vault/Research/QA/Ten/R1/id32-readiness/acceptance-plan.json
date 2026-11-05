@@ -1,0 +1,535 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC32-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic source records remain immutable through all five local changes; the UI states that changes affect only the analysis copy, and the baseline remains SYN-21 r1. The application has no source-system write or network path.",
+      "journeyIds": [
+        "all-risk-evidence"
+      ]
+    },
+    {
+      "criterionId": "UC32-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Every flagged synthetic timing risk explains its causal prerequisite chain, finish and margin and resolves to its actual supporting source records. Both final flags show record IDs, revisions and exact excerpts; no unresolved source may support a flag.",
+      "journeyIds": [
+        "all-risk-evidence"
+      ]
+    },
+    {
+      "criterionId": "UC32-3",
+      "disposition": "implemented",
+      "expectedOutcome": "The analyst must acknowledge advisory synthetic analysis to record review; missing acknowledgment preserves the note and blocks review. Recorded review and exported brief require human decisions and execute no operational action.",
+      "journeyIds": [
+        "human-brief",
+        "review-recovery"
+      ]
+    },
+    {
+      "criterionId": "UC32-4",
+      "disposition": "deferred",
+      "expectedOutcome": "A synthetic last-synced snapshot is usable offline with its recorded sync time and provenance, with no operational data.",
+      "journeyIds": [],
+      "reason": "Bundled snapshots and local saved-session restoration are planned, but no source ingestion, synchronization or verified last-synced lifecycle exists. Synthetic-only is enforced; the full last-synced requirement remains unverified."
+    },
+    {
+      "criterionId": "UC32-5",
+      "disposition": "deferred",
+      "expectedOutcome": "The delivered solution runs offline, keeps humans in authority, cites sources, logs auditable actions, syncs on reconnect and includes a one-page path to fleet.",
+      "journeyIds": [],
+      "reason": "Offline local operation, advisory review, citations, local review log and path-to-fleet.md are planned slices. Authenticated source synchronization, operational audit assurances and the full Fleet-Ready composite are outside this synthetic-only boundary; remain unverified."
+    },
+    {
+      "criterionId": "DEP-01",
+      "disposition": "implemented",
+      "expectedOutcome": "The known radar path Parts \u2192 Repair \u2192 Radar test finishes day 9 with margin 12 at deadline 21. A casualty increases finish to 12 and margin to 9; a part delay increases finish to 23 and margin to -2. Watch qualification initially finishes day 7 with margin 14.",
+      "journeyIds": [
+        "known-path"
+      ]
+    },
+    {
+      "criterionId": "DEP-02",
+      "disposition": "implemented",
+      "expectedOutcome": "A blank repair duration becomes null and makes radar finish and margin UNKNOWN with only a lower-bound path, while watch finish stays 7. Restoring duration 3 yields radar finish 9 and margin 12. No missing prerequisite duration becomes a known zero.",
+      "journeyIds": [
+        "unknown-recovery"
+      ]
+    },
+    {
+      "criterionId": "DEP-03",
+      "disposition": "implemented",
+      "expectedOutcome": "A cycle blocks analysis with a cycle diagnostic; a missing-task dependency blocks analysis identifying repair and missing-task. Neither leaves stale results presented as current. Restoring the valid model yields finish 9 and margin 12.",
+      "journeyIds": [
+        "invalid-graph-recovery"
+      ]
+    },
+    {
+      "criterionId": "DEP-04",
+      "disposition": "deferred",
+      "expectedOutcome": "The operational owner signs off the capability-dependency model and a documented comparison to an SME-reviewed manual synthetic baseline.",
+      "journeyIds": [],
+      "reason": "No operational owner approval or SME-reviewed baseline is supplied. Planner arithmetic and toolkit calculations do not establish model validation."
+    },
+    {
+      "criterionId": "EVAL32-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Every injected risk and its rank agrees with an independently approved scenario answer key.",
+      "journeyIds": [],
+      "reason": "A five-change illustrative scenario and deterministic timing results are planned, but approved risk semantics, ranking policy and independent SME answer key are absent. No mission risk-ranking accuracy claim."
+    },
+    {
+      "criterionId": "EVAL32-2",
+      "disposition": "deferred",
+      "expectedOutcome": "False-alarm rate is measured as false positive flags divided by labeled benign injections, with the denominator disclosed and compared with an owner-approved threshold.",
+      "journeyIds": [],
+      "reason": "A benign metadata event can demonstrate unchanged arithmetic in Node tests, but there is no approved labeled noise corpus or acceptable threshold. A local zero-noise or single-case check cannot satisfy this evaluation."
+    },
+    {
+      "criterionId": "EVAL32-3",
+      "disposition": "implemented",
+      "expectedOutcome": "All two final flagged synthetic risks have inspectable source records: radar cites parts r2, casualty r1, maintenance r2, test r1 and schedule r2; watch cites manning r2, qualification r1 and schedule r2. Exact supporting excerpts and model links are retained.",
+      "journeyIds": [
+        "all-risk-evidence"
+      ]
+    },
+    {
+      "criterionId": "EVAL32-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Leadership brief assembly time is measured against a Fleet-SME-defined manual baseline under comparable task conditions.",
+      "journeyIds": [],
+      "reason": "Local brief generation is planned, but no Fleet SME baseline, timing endpoints or comparison protocol exists. Application timing is not evidence of time savings."
+    },
+    {
+      "criterionId": "EVAL32-5",
+      "disposition": "deferred",
+      "expectedOutcome": "Human judges assess Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%.",
+      "journeyIds": [],
+      "reason": "Only authorized human judges can assess the official rubric. No automated score or judging outcome is planned."
+    },
+    {
+      "criterionId": "DELIVERABLE32-1",
+      "disposition": "deferred",
+      "expectedOutcome": "A validated scenario demonstrates earlier identification of compounding mission-readiness risks before tasking is affected.",
+      "journeyIds": [],
+      "reason": "The synthetic five-event sequence exposes timing changes before an illustrative deadline; approved capability links, a reviewed scenario and operational earlier-warning evidence are missing. Timing is not mission readiness."
+    },
+    {
+      "criterionId": "DELIVERABLE32-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Leadership receives prioritized, explained response actions based on owner-approved readiness priorities and linked evidence.",
+      "journeyIds": [],
+      "reason": "The brief offers illustrative considerations ordered by known target margin, with unknowns separated; priority policy and response-option correctness have not been owner validated. Full leadership action prioritization stays unverified."
+    },
+    {
+      "criterionId": "DELIVERABLE32-3",
+      "disposition": "deferred",
+      "expectedOutcome": "A comparable manual-baseline study demonstrates less time spent assembling status.",
+      "journeyIds": [],
+      "reason": "A reproducible local synthetic brief is planned, but there is no manual baseline or study establishing reduced assembly time."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "known-path",
+      "title": "Calculate a known path and a delayed branch",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 9; deadline day 21; margin 12 days; WITHIN DEADLINE."
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-path",
+          "text": "Controlling path: Parts \u2192 Repair \u2192 Radar test."
+        },
+        {
+          "action": "expectText",
+          "selector": "#watch-result",
+          "text": "Watch qualification: finish day 7; deadline day 21; margin 14 days; WITHIN DEADLINE."
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 12; deadline day 21; margin 9 days; WITHIN DEADLINE."
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 23; deadline day 21; margin -2 days; LATE."
+        },
+        {
+          "action": "expectText",
+          "selector": "#margin-note",
+          "text": "Target margin is deadline minus target finish; it is not upstream slack."
+        }
+      ]
+    },
+    {
+      "id": "all-risk-evidence",
+      "title": "Trace both late targets through all five synthetic changes",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 25; deadline day 20; margin -5 days; LATE."
+        },
+        {
+          "action": "expectText",
+          "selector": "#watch-result",
+          "text": "Watch qualification: finish day 24; deadline day 20; margin -4 days; LATE."
+        },
+        {
+          "action": "expectText",
+          "selector": "#flag-count",
+          "text": "2 timing risks; mission readiness is not assessed."
+        },
+        {
+          "action": "click",
+          "selector": "#radar-evidence-toggle"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-evidence",
+          "text": "Radar evidence: SYN-PARTS r2 \u2014 Part available day 15.; SYN-CASUALTY r1 \u2014 Radar repair duration 6 days.; SYN-MAINT r2 \u2014 Repair duration increased to 8 days.; SYN-TEST r1 \u2014 Radar test duration 2 days.; SYN-SCHEDULE r2 \u2014 Mission deadline day 20."
+        },
+        {
+          "action": "click",
+          "selector": "#watch-evidence-toggle"
+        },
+        {
+          "action": "expectText",
+          "selector": "#watch-evidence",
+          "text": "Watch evidence: SYN-MANNING r2 \u2014 Two qualified personnel detach; illustrative replacement availability day 23.; SYN-QUAL r1 \u2014 Qualification review duration 1 day.; SYN-SCHEDULE r2 \u2014 Mission deadline day 20."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-boundary",
+          "text": "Synthetic sources are read-only. Changes affect a local analysis copy only."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-version",
+          "text": "Baseline SYN-21 r1 remains unchanged."
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-caveat",
+          "text": "Illustrative dependency timing only. No approved capability model or SME-reviewed scenario is available."
+        }
+      ]
+    },
+    {
+      "id": "human-brief",
+      "title": "Review, save locally and export an advisory brief",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-next"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "fill",
+          "selector": "#review-note",
+          "value": "Check part date with synthetic planner."
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Review recorded locally. No operational action was executed."
+        },
+        {
+          "action": "click",
+          "selector": "#save-session"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved local session restored."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#review-note",
+          "value": "Check part date with synthetic planner."
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 25; deadline day 20; margin -5 days; LATE."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-brief",
+          "fileName": "synthetic-readiness-brief.txt",
+          "text": "ADVISORY ONLY \u2014 Human decision required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-boundary",
+          "text": "Recommendations are considerations for human review. No command, maintenance, scheduling or source-system action can be executed."
+        }
+      ]
+    },
+    {
+      "id": "unknown-recovery",
+      "title": "Keep a missing estimate unknown and restore a known result",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "fill",
+          "selector": "#repair-duration",
+          "value": ""
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: UNKNOWN; repair duration is missing; finish and margin unavailable."
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-path",
+          "text": "Lower-bound path only; no proven controlling path."
+        },
+        {
+          "action": "expectText",
+          "selector": "#watch-result",
+          "text": "Watch qualification: finish day 7; deadline day 21; margin 14 days; WITHIN DEADLINE."
+        },
+        {
+          "action": "fill",
+          "selector": "#repair-duration",
+          "value": "3"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 9; deadline day 21; margin 12 days; WITHIN DEADLINE."
+        }
+      ]
+    },
+    {
+      "id": "invalid-graph-recovery",
+      "title": "Reject both cyclic and dangling dependencies then recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "click",
+          "selector": "#model-tools-toggle"
+        },
+        {
+          "action": "select",
+          "selector": "#model-case",
+          "value": "cycle"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-error",
+          "text": "Dependency cycle detected. Restore the valid model to continue."
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-status",
+          "text": "Analysis blocked; current results unavailable."
+        },
+        {
+          "action": "select",
+          "selector": "#model-case",
+          "value": "dangling"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-error",
+          "text": "Unknown dependency: missing-task referenced by repair. Restore the valid model to continue."
+        },
+        {
+          "action": "expectText",
+          "selector": "#analysis-status",
+          "text": "Analysis blocked; current results unavailable."
+        },
+        {
+          "action": "select",
+          "selector": "#model-case",
+          "value": "valid"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "expectText",
+          "selector": "#radar-result",
+          "text": "Radar restoration: finish day 9; deadline day 21; margin 12 days; WITHIN DEADLINE."
+        }
+      ]
+    },
+    {
+      "id": "review-recovery",
+      "title": "Preserve the review draft when acknowledgment is missing",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#analyze"
+        },
+        {
+          "action": "fill",
+          "selector": "#review-note",
+          "value": "Review synthetic assumptions."
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Acknowledge that this is advisory synthetic analysis before recording review."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#review-note",
+          "value": "Review synthetic assumptions."
+        },
+        {
+          "action": "check",
+          "selector": "#review-ack"
+        },
+        {
+          "action": "click",
+          "selector": "#record-review"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Review recorded locally. No operational action was executed."
+        }
+      ]
+    }
+  ]
+}

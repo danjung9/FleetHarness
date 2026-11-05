@@ -1,0 +1,109 @@
+verify tool fleet_reconcile_records
+{
+  "local": [
+    {
+      "id": "base",
+      "recordId": "synthetic",
+      "parents": [],
+      "actor": "Originator",
+      "value": "base"
+    },
+    {
+      "id": "edit",
+      "recordId": "synthetic",
+      "parents": [
+        "base"
+      ],
+      "actor": "Originator",
+      "value": "edited"
+    }
+  ],
+  "remote": [
+    {
+      "id": "base",
+      "recordId": "sy
+verify tool fleet_reconcile_records completed
+[{"type":"inputText","text":"{\n  \"operations\": [\n    {\n      \"id\": \"base\",\n      \"recordId\": \"synthetic\",\n      \"parents\": [],\n      \"actor\": \"Originator\",\n      \"value\": \"base\"\n    },\n    {\n      \"id\": \"delete\",\n      \"recordId\": \"synthetic\",\n      \"parents\": [\n        \"base\"\n      ],\n      \"actor\": \"Reviewer\",\n
+verify text The existing 10 application-core tests pass with no skips. The frozen browser journeys match the implemented controls and expected messages, but browser execution is still pending.
+
+I’m adding adversarial checks for every review action with unsaved changes, permission boundaries, input limits, and the actual inline UI handlers. The reconciliation tool also retained both edit/delete heads in a synt
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat >> core.test.cjs <<'EOF'\n\ntest('every review action rejects dirty content atomically and preserves the buffer',()=>{\n  const cases=[['submit',base(),'originator'],['approve',go(base(),'submit'),'division'],['return',go(base(),'submit'),'division'],['comment',base(),'originator'],['release',reviews(base()),'co']];\n  for(const [action,start,role] of cases)
+verify tool bash completed
+"✔ full return, revision, fresh all-role review and export journey (1.827291ms)\n✔ early release, wrong role, missing return comment and unsaved edits are atomic denials (0.817125ms)\n✔ approved revision changes invalidate all decisions and cannot use old authority (0.450333ms)\n✔ required fields, whitespace, limits, no-op save and markup round-trip (0.455166ms)\n✔ conflicting branc
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node --version; rg -n 'CORE_START|function merge|function step|function load|function commit|function exported|function linkedDraft|function render|function run|addEventListener|test\\\\(' index.html core.test.cjs; rg --files -g '*report*' -g '*trace*' -g '*.png' -g 'AGENTS.md'; cat build-checks.md\""
+}
+verify tool bash completed
+"v26.0.0\nindex.html:11:/* CORE_START */\nindex.html:17:function merge(local,remote){const m=new Map();for(const r of [...local,...remote]){if(!r.id||!r.recordId||!Array.isArray(r.parents)||!(r.value===null||typeof r.value==='string'))throw Error('Invalid revision.');if(m.has(r.id)&&JSON.stringify(m.get(r.id))!==JSON.stringify(r))throw Error('Revision ID collision.');m.set(r.id,clon
+verify text All 15 tests now pass with no skips, including the added permission, boundary, and inline-handler checks. No implementation repair was needed for these cases.
+
+I’m recording the evidence and updating the README. The completion gate remains unmet until the host runs all four browser journeys at desktop and narrow widths. Both deferred source criteria remain unverified.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md')\ns=p.read_text().replace('3. Inspect the test runner\\\\'s pass/fail summary. The build-phase run recorded 10 passing tests, zero failures and zero skips; this README-only update did not rerun them.', '3. Inspect the test runner\\\\'s pass/fail summary. Verification on 2026-11-04 with Node v26.0.0 r
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "workspace",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Draft and routing workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "workflow",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Revision-bound review engine: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "lineage",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Amendment and conflict review: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local persistence and audit: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "export",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated CO release and export: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "tests",
+  "status": "generated",
+  "detail": "Mapped files exist. Verification: 15 Node application tests passed, zero skips; coverage and evidence updated. Browser journeys await host; generated is not browser verification or operational acceptance."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Application core verification: generated. The live diagram has been updated."}]
+verify text Expanded verification coverage: **15 tests pass, zero failures or skips**. Updated [verification.md](verification.md), README and acceptance matrix. Frozen contracts and application source remain unchanged.
+
+Browser journeys, screenshots and traces await the host runner, so the completion gate remains unmet. Deferred criteria remain unverified; `requirementsMet` is false.
+verify info TAP version 13
+# Subtest: full return, revision, fresh all-role review and export journey
+ok 1 - full return, revision, fresh all-role review and export journey
+  ---
+  duration_ms: 1.903667
+  type: 'test'
+  ...
+# Subtest: early release, wrong role, missing return comment and unsaved edits are atomic denials
+ok 2 - early release, wrong role, missing return comment and unsaved edits are atomic deni
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

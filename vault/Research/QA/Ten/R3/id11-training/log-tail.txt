@@ -1,0 +1,89 @@
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat verification.md; rg -n 'Unavailable|unavailable|Verification|test' README.md; unzip -l .quality-evidence/e38e48c97500-6cbfd6ba-d62b-4dbf-a627-efbe96439714/constraint-recovery-desktop.zip\""
+}
+verify tool bash completed
+"# Primary deferrals\n\nAll source wording is preserved in the full inventory in test-matrix.md. Deferred obligations remain unverified even if every synthetic check passes.\n\n- **UC11-1** - Original wording: “The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraint
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib,json,zipfile\nfor name in ['acceptance-plan.json','ux-spec.json','system-design.json','test-report.json']:\n print(name,hashlib.sha256(Path(name).read_bytes()).hexdigest())\np=Path('core.cjs')\ns=p.read_text().replace(\\\"if(kind==='unavailable'){people[0].windows=[[0,480],[540,10080]];people[1].windows=
+verify tool bash completed
+"acceptance-plan.json f6436ee72460d3024a2cbf27e4518443df123773ed0ec3e63910d5e924fa21e8\nux-spec.json c1a77340261c7f3f1d213591e282d6f2985662b095753882800f04bcda2baa47\nsystem-design.json 9d408b40e564ab37e9e59e38f515dbb79791c3fa2bb6e5ca6c3cfa46a1c872b7\ntest-report.json de7262d352446c6a0c02c2b9f08d3aae0a2feeb3cc88388c1cffc8c8d4576eb5\nTrace contains actual ENG-1 availability failure: 
+verify text The desktop trace confirms the mismatch: the UI reported “ENG-1: no candidate fits personnel availability.” The repaired fixture keeps Engineering available and gives Weapons only an unavailable Blair candidate. Both delivered cores now return the exact expected Weapons message. All 15 local tests pass, including the real page handlers for the frozen constraint-recovery sequence under a Node DOM s
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('verification.md');s=p.read_text();s=s.replace('**Node: PASS (14 tests, 0 failures, 0 skipped). Browser gate: UNVERIFIED / not satisfied pending host execution. requirementsMet: false.**','**Node: PASS after browser-failure repair (15 tests, 0 failures, 0 skipped). Browser gate: FAILED in preserved host report (
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "board",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; retained implementation. Generated is implementation status only; repaired-source host browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Weekly PB4T board and personnel heatmap: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "agents",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; retained implementation. Generated is implementation status only; repaired-source host browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated departmental agents: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "constraints",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; retained implementation. Generated is implementation status only; repaired-source host browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Constraint and recurrence engine: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "solver",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; retained implementation. Generated is implementation status only; repaired-source host browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Bounded allocation search: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "fixtures",
+  "status": "generated",
+  "detail": "Repaired unavailable Weapons fixture exists in core.cjs and inline index.html; 15 local tests pass. Host browser rerun pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic policies, roster and drill proposals: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist; retained implementation. Generated is implementation status only; repaired-source host browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local draft, review and export: generated. The live diagram has been updated."}]
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib\nexpected={'acceptance-plan.json':'f6436ee72460d3024a2cbf27e4518443df123773ed0ec3e63910d5e924fa21e8','ux-spec.json':'c1a77340261c7f3f1d213591e282d6f2985662b095753882800f04bcda2baa47','system-design.json':'9d408b40e564ab37e9e59e38f515dbb79791c3fa2bb6e5ca6c3cfa46a1c872b7','test-report.json':'de7262d352446c
+verify tool bash completed
+"acceptance-plan.json: unchanged\nux-spec.json: unchanged\nsystem-design.json: unchanged\ntest-report.json: unchanged\n"
+verify text Repaired the unavailable-personnel fixture in both application cores so Weapons produces the frozen expected error.
+
+- Local tests: **15 passed, 0 failed, 0 skipped**.
+- Updated README, verification, and evidence matrix.
+- Frozen plans, architecture, and host evidence remain unchanged.
+- All components reported generated.
+
+Host browser rerun remains required; the preserved report shows 14/16 passi
+verify info TAP version 13
+# Subtest: exported: complete weekly answer key with independent interval and budget evidence
+ok 1 - exported: complete weekly answer key with independent interval and budget evidence
+  ---
+  duration_ms: 3.227084
+  type: 'test'
+  ...
+# Subtest: exported: diagnostics represent actual candidate and policy failures
+ok 2 - exported: diagnostics represent actual candidate and policy fai
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.
+verify error Process cleanup could not be confirmed. Run processes may still be active. Use the operator shutdown procedure before starting another run.

@@ -1,0 +1,102 @@
+{
+  "title": "Synthetic OPTASK extraction and daily schedule",
+  "description": "Offline synthetic-only mock USMTF workflow; no real-format validation or operational integrations.",
+  "components": [
+    {
+      "id": "source",
+      "label": "Preserved OPTASK source",
+      "description": "Labeled fictional message entry, immutable extraction revisions and stale-draft protection.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "parser",
+      "label": "Traceable category parser",
+      "description": "Direct pipe-grammar extraction of Frequency Plan, Crypto Change-over Window and Flight Quarters with exact field spans and strict timestamps.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Evidence and mapping review",
+      "description": "Field evidence, synthetic record-to-category mapping confirmation, issue exclusion and explicit committed review.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "schedule",
+      "label": "Synchronized 24-hour visual schedule",
+      "description": "Common UTC hourly axis and three category tracks, accessible list, overlap and cross-midnight clipping.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "session",
+      "label": "Local session state",
+      "description": "Local-only persisted drafts, revisions and review decisions; export blocking for stale or unresolved content; confirmed clear.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "exports",
+      "label": "Reviewed local exports",
+      "description": "Synthetic reviewed-schedule.csv and extraction-review.json generated locally from the same reviewed revision.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "source",
+      "to": "parser",
+      "label": "Exact raw revision"
+    },
+    {
+      "from": "parser",
+      "to": "review",
+      "label": "Fields, UTF-16 spans and issues"
+    },
+    {
+      "from": "review",
+      "to": "schedule",
+      "label": "Confirmed mapping and reviewed events"
+    },
+    {
+      "from": "source",
+      "to": "session",
+      "label": "Draft and revision state"
+    },
+    {
+      "from": "review",
+      "to": "session",
+      "label": "Explicit review decisions"
+    },
+    {
+      "from": "session",
+      "to": "exports",
+      "label": "Current reviewed revision gate"
+    },
+    {
+      "from": "schedule",
+      "to": "exports",
+      "label": "Selected UTC day and full intervals"
+    }
+  ]
+}

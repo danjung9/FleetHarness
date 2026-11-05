@@ -1,0 +1,90 @@
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Human review and synthetic summary: building. The live diagram has been updated."}]
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"sed -n '18,29p' index.html && cat path-to-fleet.md && cat research.md\""
+}
+verify tool bash completed
+"<svg id=\"draft-diagram\" class=\"diagram\" viewBox=\"0 0 400 220\" role=\"img\" aria-label=\"Illustrative draft ship beside a pier\"><rect x=\"0\" y=\"0\" width=\"400\" height=\"36\" fill=\"#8aa19b\"/><text x=\"16\" y=\"23\" fill=\"#183438\" font-size=\"13\">DEMO PIER · NO PHYSICAL SCALE</text><circle cx=\"200\" cy=\"45\" r=\"6\" fill=\"#806329\"/><line id=\"draft-line\" x1=\"200\
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"node - <<'JS'\nconst fs = require('node:fs');\nconst vm = require('node:vm');\nconst html = fs.readFileSync('index.html', 'utf8');\nconst scripts = [...html.matchAll(/<script\\\\b[\"'^>]*>(['\"\\\\s\\\\S]*?)<\\\\/script>/g)];\nfor (const [i, script] of scripts.entries()) new vm.Script(script[1], {filename:\"'`inline-${i}.js`});\nconsole.log(`Parsed ${scripts.len
+verify tool bash completed
+"Parsed 2 inline scripts successfully; not a browser execution.\nAll files mapped by 6 architecture components exist.\n"
+verify text All 25 tests pass with no failures or skips. The added cases cover review blocking for every editable field, committed-only export during edits, malformed stored records, and exact text and layout boundaries. They exposed no implementation defect. I’ll record these results and the remaining browser and manual checks in the verification notes.
+
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='README.md'\ns=open(p).read()\ns=s.replace('The recorded build run passed 17 tests with no failures or skips. This documentation update did not rerun them. These Node tests do not exercise the rendered browser UI. Host browser journeys, screenshots, offline opening and human usability checks remain pending in the available [verification.md](v
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"cat > verification.md <<'EOF'\n# Verification record - 2026-11-04\n\nThe local Node gate passes. The browser gate is unverified and the completion gate has not passed: no host-owned test-report.json, screenshots or traces were available to inspect. No browser runtime/tool is assigned to this phase. Node execution cannot establish rendered task completion. \"'`re
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "intake",
+  "status": "generated",
+  "detail": "Mapped implementation exists and was reviewed against source and guide. Generated is implementation status only; host desktop/narrow browser evidence remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Scenario and environment intake: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "layout",
+  "status": "generated",
+  "detail": "Mapped implementation exists and was reviewed against source and guide. Generated is implementation status only; host desktop/narrow browser evidence remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Illustrative pier layout: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "core",
+  "status": "generated",
+  "detail": "Mapped application files exist; expanded application suite passed 25 tests with zero failures/skips. Browser and adapter evidence remain pending; see verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Validation and review state: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "authority",
+  "status": "generated",
+  "detail": "Mapped implementation exists and was reviewed against source and guide. Generated is implementation status only; host desktop/narrow browser evidence remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Engineering authority gate: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation exists and was reviewed against source and guide. Generated is implementation status only; host desktop/narrow browser evidence remains pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Human review and synthetic summary: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "storage",
+  "status": "generated",
+  "detail": "Mapped application files exist; expanded application suite passed 25 tests with zero failures/skips. Browser and adapter evidence remain pending; see verification.md."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local scenario storage: generated. The live diagram has been updated."}]
+verify text Expanded application coverage: **25 tests passed, zero failures or skips**. No implementation repair was needed.
+
+Updated `verification.md`, `test-matrix.md`, and README. Preserved frozen contracts and architecture; reported all six components as generated.
+
+Browser verification remains pending the host’s desktop/narrow journeys, screenshots, and traces. The completion gate has not passed; deferre
+verify info TAP version 13
+# Subtest: valid synthetic summary and unknown engineering authority
+ok 1 - valid synthetic summary and unknown engineering authority
+  ---
+  duration_ms: 1.405333
+  type: 'test'
+  ...
+# Subtest: speed representation rejects missing malformed and nonfinite; accepts zero and decimals
+ok 2 - speed representation rejects missing malformed and nonfinite; accepts zero and decimals
+  ---
+
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

@@ -1,0 +1,35 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const C=require('./core.cjs');
+const ctx={};vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/index.html','utf8').match(/<script id="application-core">([\s\S]*?)<\/script>/)[1],ctx);const B=ctx.Core;
+const normalize=x=>JSON.parse(JSON.stringify(x));
+function corrected(c){const p=c.extract();p.training.duration='45';p.supply.quantity='6';p.correspondence.subject='October training completion';p.tasks[0].due='2026-10-16';return p;}
+function ready(c){const s=c.fresh();s.loaded=true;s.packet=corrected(c);c.save(s);s.validated=true;c.approve(s,true);return s;}
+for(const [name,c] of [['module',C],['inline browser core',B]]){
+ test(name+': bounded source extraction and independent key',()=>{const p=c.extract();assert.equal(c.accuracy(p).correct,16);assert.equal(p.tasks.length,2);assert.equal(p.duplicates,1);assert.equal(p.tasks[0].refs.length,2);assert.equal(p.tasks[0].due,'');const q=corrected(c);assert.equal(c.accuracy(q).correct,20);q.tasks[0].owner='Wrong';assert.equal(c.accuracy(q).correct,19);assert.equal(c.extract(c.sources.map(x=>({...x,text:x.kind==='task'?'No action here':x.text}))).tasks.length,0);});
+ test(name+': validation boundaries',()=>{const p=corrected(c);assert.deepEqual(normalize(c.validate(p)),{});for(const n of ['','0','-1','1.5']){p.training.duration=n;assert.ok(c.validate(p).training);}p.training.duration='45';p.correspondence.attachment='';assert.ok(c.validate(p).references);p.training.date='2026-02-30';assert.ok(c.validate(p).details);});
+ test(name+': exact revision approval, rejection guards, routing idempotence and pause',()=>{const s=ready(c);c.route(s);c.route(s);assert.equal(s.routes.length,1);s.dirty=true;c.approve(s,true);assert.equal(s.reviewStatus,'Unsaved changes — save or discard before review');assert.match(c.route(s),/Blocked/);c.save(s);s.validated=true;assert.equal(c.route(s),'Blocked — current revision needs review');c.approve(s,true);s.paused=true;assert.match(c.route(s),/Simulation paused/);assert.equal(s.routes.length,1);s.paused=false;c.route(s);s.connection='demo-reconnect';c.acknowledge(s);assert.equal(s.routeStatus,'Acknowledged by demo replica');});
+ test(name+': concurrent edit and tombstone preserve heads and review decision',()=>{for(const type of ['edit','delete']){const s=ready(c);c.simulate(s,type);c.reconcile(s);assert.equal(s.conflict,true);assert.equal(s.heads.length,2);assert.equal(s.approved,null);assert.throws(()=>c.resolve(s,'keep-local','',''),/reason/);assert.throws(()=>c.resolve(s,'keep-local','','reason',['stale']),/Heads changed/);const heads=[...s.heads];c.resolve(s,'custom','45','Source confirms 45 minutes');assert.deepEqual(normalize(s.operations.find(x=>x.id===s.revision).parents),normalize(heads.sort()));assert.equal(s.approved,null);assert.equal(s.decisions.at(-1).reason,'Source confirms 45 minutes');assert.equal(c.reconcileRecords({local:s.operations,remote:[]}).conflicts,0);}});
+ test(name+': merge order and replay plus malformed history do not mutate queue',()=>{const base={id:'r',recordId:'x',parents:[],actor:'demo',value:'a'},left={...base,id:'l',parents:['r'],value:'45'},right={...base,id:'z',parents:['r'],value:null};const a=c.reconcileRecords({local:[base,left],remote:[right]}),b=c.reconcileRecords({local:[base,right],remote:[left]});assert.equal(c.canonical(a),c.canonical(b));assert.equal(a.records[0].heads.length,2);assert.equal(c.canonical(c.reconcileRecords({local:a.operations,remote:a.operations})),c.canonical(a));const s=ready(c),before=c.canonical(s.operations);s.remote=[{...right,parents:['missing']}];assert.throws(()=>c.reconcile(s),/Missing parent/);assert.equal(c.canonical(s.operations),before);for(const remote of [[{...base,value:'collision'}],[{...right,parents:['r'],recordId:'other'}],[{...base,parents:['z']},right]])assert.throws(()=>c.reconcileRecords({local:[base],remote}));});
+ test(name+': priority bounded transfer and interrupted / duplicate acknowledgement',()=>{const s=c.fresh();assert.equal(c.planUploads({items:s.transfer,budgetBytes:0}).usedBytes,0);for(const budgetBytes of [-1,1.5])assert.throws(()=>c.planUploads({items:s.transfer,budgetBytes}));const p=c.planUploads({items:s.transfer,budgetBytes:4096});assert.deepEqual(normalize(p.transfers.map(x=>[x.id,x.offset,x.bytes])),[['critical',0,1024],['image',6144,3072]]);assert.equal(s.transfer[1].uploadedBytes,6144);c.ackTransfers(s,p);assert.equal(s.transfer[1].uploadedBytes,9216);c.ackTransfers(s,p);assert.equal(s.transfer[1].uploadedBytes,9216);const restored=normalize(s);c.ackTransfers(restored,c.planUploads({items:restored.transfer,budgetBytes:3072}));assert.equal(restored.transfer[1].uploadedBytes,12288);assert.throws(()=>c.planUploads({items:[{...s.transfer[1],uploadedBytes:13000}],budgetBytes:1}));s.paused=true;assert.throws(()=>c.ackTransfers(s,p),/paused/);});
+ test(name+': calendar retention, unknown class, illustrative arithmetic',()=>{assert.equal(c.retention('2026-10-18','TRAIN-DEMO'),'2027-10-18');assert.equal(c.retention('2024-02-29','TRAIN-DEMO'),'2025-02-28');assert.equal(c.retention('2026-10-18','UNKNOWN'),'Needs records review');assert.throws(()=>c.retention('2026-02-30','TRAIN-DEMO'));assert.equal(c.hours(1200),0);assert.ok(Math.abs(c.hours(60)-6.333333333333333)<1e-10);assert.ok(Math.abs(c.hours(1800)+3.333333333333333)<1e-10);});
+}
+test('same behavior in standalone inline and module implementation',()=>{assert.deepEqual(normalize(C.extract()),normalize(B.extract()));assert.deepEqual(normalize(C.validate(corrected(C))),normalize(B.validate(corrected(B))));assert.deepEqual(normalize(C.planUploads({items:C.fresh().transfer,budgetBytes:4096})),normalize(B.planUploads({items:B.fresh().transfer,budgetBytes:4096})));});
+
+for(const [name,c] of [['module',C],['inline browser core',B]]){
+ test(name+': whitespace-only required fields cannot pass review',()=>{
+  for(const [group,field] of [['supply','stock'],['correspondence','reference'],['correspondence','from']]){
+   const p=corrected(c);p[group][field]='   ';assert.ok(Object.keys(c.validate(p)).length,group+'.'+field);
+  }
+  const p=corrected(c);p.tasks[0].owner='   ';assert.ok(c.validate(p).task);
+ });
+ test(name+': conflict resolution preserves an unfinished draft until save or discard',()=>{
+  const s=ready(c);c.simulate(s,'delete');c.reconcile(s);s.packet.training.duration='47';s.dirty=true;
+  const before=c.canonical(s);assert.throws(()=>c.resolve(s,'keep-local','','reviewed'),/save or discard/i);assert.equal(c.canonical(s),before);
+ });
+ test(name+': invalid receipt batches are atomic and whole-byte only',()=>{
+  for(const bytes of [0,-1,1.5,NaN]){
+   const s=c.fresh(),before=c.canonical(s);assert.throws(()=>c.ackTransfers(s,{transfers:[{id:'image',offset:6144,bytes}]}));assert.equal(c.canonical(s),before);
+  }
+  const s=c.fresh(),before=c.canonical(s);
+  assert.throws(()=>c.ackTransfers(s,{transfers:[{id:'critical',offset:0,bytes:1024},{id:'image',offset:0,bytes:1}]}));assert.equal(c.canonical(s),before);
+ });
+}

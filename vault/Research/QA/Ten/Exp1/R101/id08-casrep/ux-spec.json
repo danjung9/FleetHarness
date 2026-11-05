@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "audience": "Fictional ship Sailor/LPO, Division Officer, Department Head, Engineer Officer/CHENG, XO and CO; a single evaluator switches simulated roles. No role selection authenticates an identity.",
+  "primaryTask": "Draft a synthetic CASREP, obtain command review, correct a return, reconcile competing amendments, and explicitly simulate CO release and export.",
+  "successOutcome": "Final committed revision has all six current approvals, a preserved return loop and recoverable lineage; both named synthetic exports identify the same released revision. No message is transmitted.",
+  "screens": [
+    {
+      "name": "CASREP workspace",
+      "purpose": "Persistent synthetic-only banner, local storage disclosure, labeled structured fields, message preview, draft state and current routing holder. Load fictional sample is the initial action.",
+      "primaryAction": "Save draft, then Submit to Division Officer"
+    },
+    {
+      "name": "Command review and history",
+      "purpose": "Show all six roles, current holder, revision-covered decisions, comments and returns. Role selector is labeled Simulation. Keep actions explicit and display why forbidden actions fail.",
+      "primaryAction": "Comment, Return for revision, or Approve and forward; CO checks confirmation before Simulate release"
+    },
+    {
+      "name": "Competing amendment review",
+      "purpose": "Secondary labeled simulator generates two amendments; show competing restoration and corrective-action values side by side or stacked on narrow screens, with editable chosen resolution. Retain both after resolution.",
+      "primaryAction": "Confirm reconciliation"
+    },
+    {
+      "name": "Release package and guidance",
+      "purpose": "Display immutable released message, history downloads, embedded live walkthrough and a printable one-page fielding brief also supplied as Markdown. Clearly state real validation and integration limitations.",
+      "primaryAction": "Download synthetic CASREP message and history"
+    }
+  ],
+  "states": {
+    "empty": "No report yet. Explain synthetic-only boundary and offer Load fictional CASREP (#load-sample); loading a sample into an occupied workspace requires explicit discard confirmation.",
+    "loading": "Local actions are immediate; disable duplicate submission while committing persistence, announce Saving locally, then Saved locally only on successful write. No network spinner or fake service.",
+    "error": "Specific field validation at #validation-error; transition errors at #transition-error. Preserve entered values. Show conflict and both competing values. Storage failure leaves last committed state intact and unsaved draft visible with recovery export; corrupted storage is quarantined rather than overwritten.",
+    "success": "Show Saved locally, current holder, route and next action. Return shows Returned for revision; resolved conflict retains sources; final status is Simulated release — not transmitted. Never imply official approval."
+  },
+  "persistence": "Versioned localStorage envelope persists committed records, immutable revisions, audit, conflicts, UI selection and separate unfinished form buffer on ordinary input. Reload restores unsaved buffer visibly. Save writes atomically before success; storage failures never advance in-memory committed state. Local-only, unencrypted and browser-dependent. Released snapshots are immutable; create a linked draft to amend.",
+  "recovery": "Dirty content blocks every routing decision until explicit Save or Discard changes. Return requires a reason. Conflict requires originator review of both values and explicit new child of both heads. Invalid linked report fields preserve inputs. Confirm cancellation/reset with clear history impact. Stop demonstration disables mutations until deliberate resume; no outbound escalation. Expiry is an explicit synthetic lifecycle action, never an invented automatic Navy deadline.",
+  "keyboard": "Use native labeled inputs/selects/buttons/checkboxes, logical Tab order, visible focus, Enter/Space native activation, error summary with focus and live status announcements. No drag-only interaction or color-only state. Narrow layout stacks fields, route and competing values without horizontal scrolling."
+}

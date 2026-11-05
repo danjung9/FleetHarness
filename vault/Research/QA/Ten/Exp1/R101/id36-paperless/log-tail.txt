@@ -1,0 +1,131 @@
+verify tool bash completed
+"✔ module: bounded source extraction and independent key (1.190083ms)\n✔ module: validation boundaries (1.371875ms)\n✔ module: exact revision approval, rejection guards, routing idempotence and pause (2.267459ms)\n✔ module: concurrent edit and tombstone preserve heads and review decision (0.926167ms)\n✔ module: merge order and replay plus malformed history do not mutate queue (0.706
+verify tool fleet_reconcile_records
+{
+  "local": [
+    {
+      "id": "base",
+      "recordId": "synthetic",
+      "parents": [],
+      "actor": "fixture",
+      "value": "45"
+    },
+    {
+      "id": "edit",
+      "recordId": "synthetic",
+      "parents": [
+        "base"
+      ],
+      "actor": "local",
+      "value": "47"
+    }
+  ],
+  "remote": [
+    {
+      "id": "delete",
+      "recordId": "synthetic",
+  
+verify tool fleet_reconcile_records completed
+[{"type":"inputText","text":"{\n  \"operations\": [\n    {\n      \"id\": \"base\",\n      \"recordId\": \"synthetic\",\n      \"parents\": [],\n      \"actor\": \"fixture\",\n      \"value\": \"45\"\n    },\n    {\n      \"id\": \"delete\",\n      \"recordId\": \"synthetic\",\n      \"parents\": [\n        \"base\"\n      ],\n      \"actor\": \"demo\",\n      \"v
+verify tool fleet_plan_uploads
+{
+  "budgetBytes": 4096,
+  "items": [
+    {
+      "id": "critical",
+      "bytes": 1024,
+      "uploadedBytes": 0,
+      "priority": 5,
+      "createdAt": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "image",
+      "bytes": 12288,
+      "uploadedBytes": 6144,
+      "priority": 1,
+      "createdAt": "2026-10-13T00:00:00Z"
+    }
+  ]
+}
+verify tool fleet_plan_uploads completed
+[{"type":"inputText","text":"{\n  \"transfers\": [\n    {\n      \"id\": \"critical\",\n      \"offset\": 0,\n      \"bytes\": 1024,\n      \"completeAfterAck\": true\n    },\n    {\n      \"id\": \"image\",\n      \"offset\": 6144,\n      \"bytes\": 3072,\n      \"completeAfterAck\": false\n    }\n  ],\n  \"usedBytes\": 4096,\n  \"remainingBudgetBytes\": 0,\n  \"pendi
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'cat README.md'"
+}
+verify tool bash completed
+"Primary deferrals - external portions remain unverified:\n\n| ID | Basis | Concrete dependency, impact and synthetic demonstration |\n| --- | --- | --- |\n| UC36-4 | real-systems | Authorized government device/browser policy and owner-selected low-code runtime are required to establish actual compatibility. Synthetic desktop/narrow workflow, reload and exports are implemented as sy
+verify text The repair passes 23 application tests with no skips. The new UI tests confirm that fields stay locked while a transaction is pending, unlock after success or failure, and retain subsequent corrections. They use a minimal DOM fixture; the host still needs to rerun all ten browser journeys at both sizes. I’ll preserve the failed report and its screenshots and traces.
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nimport json\np='README.md';s=open(p).read().replace('Controls are disabled while storage opens or a local operation runs.','Buttons and editable fields are disabled while storage opens or a local operation runs. Wait until they re-enable before entering the next correction; this prevents a pending transaction from overwriting an edit.').replace
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "capture",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Source capture and correction: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "tasking",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Tasking and records: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "review",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Review and local routing: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "storage",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Durable local workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "sync",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Reconciliation and transfer simulator: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evidence",
+  "status": "generated",
+  "detail": "Mapped implementation files exist. Shared UI queue now locks editable controls until pending transactions finish; 23 local application tests pass. Original host browser failures preserved; post-repair browser verification pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Evaluation and transition evidence: generated. The live diagram has been updated."}]
+verify text Repaired a transaction race that could overwrite field corrections. Updated the README, verification evidence, and component statuses.
+
+All 23 application tests pass with no skips. Frozen contracts and original host evidence remain unchanged.
+
+The host must rerun desktop and narrow browser journeys before prototype verification can pass. Deferred requirements remain unverified; `requirementsMet` i
+verify info TAP version 13
+# Subtest: module: bounded source extraction and independent key
+ok 1 - module: bounded source extraction and independent key
+  ---
+  duration_ms: 1.379375
+  type: 'test'
+  ...
+# Subtest: module: validation boundaries
+ok 2 - module: validation boundaries
+  ---
+  duration_ms: 1.74525
+  type: 'test'
+  ...
+# Subtest: module: exact revision approval, rejection guards, routing idempotenc
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

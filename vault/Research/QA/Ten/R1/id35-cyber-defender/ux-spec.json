@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Cyber/IT analysts and synthetic change reviewers preparing an offline evidence-linked handoff. Commander, system-owner and data-owner usefulness still needs human review.",
+  "primaryTask": "Analyze a synthetic configuration bundle, distinguish a seeded finding from a benign look-alike, review an exact proposal revision and export its analyst handoff.",
+  "successOutcome": "An exported handoff retains asset/control citations, uncertainties, current digest-bound review, local event history, verification and rollback instructions, and explicit not executed / not verified status.",
+  "screens": [
+    {
+      "name": "Evidence workbench",
+      "purpose": "Explain the synthetic-only boundary; load a sample or paste documented JSON, analyze it, inspect seeded, benign and insufficient-evidence results with citations.",
+      "primaryAction": "Analyze evidence"
+    },
+    {
+      "name": "Proposal and review",
+      "purpose": "Show exact affected asset and before/after setting, rationale, prerequisites, rollback and verification instructions; distinguish draft from committed content and explicit synthetic review.",
+      "primaryAction": "Save proposal, then Review for handoff"
+    },
+    {
+      "name": "Analyst handoff",
+      "purpose": "Review plain-language impact, unresolved facts, local event history and unexecuted status; download portable documented JSON.",
+      "primaryAction": "Export handoff"
+    }
+  ],
+  "states": {
+    "empty": "Show No evidence analyzed, the synthetic-only notice, and Load synthetic sample. No blank dashboard implies a completed investigation. Creating a proposal without a supported finding reports A supported finding is required to create a proposal.",
+    "loading": "Local parsing and analysis are immediate; set a brief accessible busy status during work and suppress duplicate actions. During digest calculation or export show Preparing review or Preparing handoff, disable duplicate submissions, preserve drafts and restore controls after failure.",
+    "error": "Malformed JSON reports Enter valid synthetic evidence JSON. near the evidence field without changing its contents or the last valid results. Unknown values yield insufficient evidence, never a finding or compliant result. Dirty review reports Save or discard draft changes before review. Storage/export failures preserve memory state and offer retry.",
+    "success": "Show exact finding counts and narrow per-asset explanations. Show committed revision, current review state, explicit local saved/unsaved state and Not executed / not verified. Offer Create proposal after supported findings and Export handoff after review."
+  },
+  "persistence": "Versioned localStorage stores raw evidence draft, last valid analysis, proposal draft and committed revision, review digest and ordered events on each ordinary interaction. Reload restores unfinished work and exact review validity. Disclose local-only, mutable storage, no sync and no authenticated identity. A denied/quota/corrupt store produces a visible memory-only or recovery warning, never a silent saved claim. No destructive reset is needed; replacing analyzed evidence with a proposal requires deliberate discard confirmation.",
+  "recovery": "Correct malformed JSON or load the sample without partial analysis. Preserve input on validation failure. A missing value is unknown; obtain a current snapshot and reanalyze. Unsaved proposal edits block review and export until Save proposal or Discard changes. Edits immediately suspend current review; saving increments revision and invalidates old review permanently; discard restores committed content and its prior review. Reviewer labels are required. Keep previous valid results labeled as such after failed input.",
+  "keyboard": "Use labeled native textarea, input and buttons in evidence \u2192 results \u2192 proposal \u2192 review \u2192 export order. All actions are reachable by Tab and activate with Enter/Space; visible high-contrast focus, associated errors and aria-live status. Move focus to the first error after validation and to the result heading after analysis. Narrow layouts stack panels without horizontal scrolling; citations and long text wrap."
+}

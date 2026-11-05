@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle2, CircleDot, FileCode2, Plus, Search } from 'lucide-react';
 import { challenges } from '../harness/catalog';
 import type { Project } from '../shared/types';
+import { getJourneyState } from '../shared/journey';
 import { Mark } from './Mark';
 import './home.css';
 
@@ -16,9 +17,15 @@ const examples = [
 const statusNames: Record<Project['status'], string> = { draft: 'Brief saved', running: 'Building', pausing: 'Saving checkpoint', paused: 'Paused', stopped: 'Stopped', failed: 'Needs attention', review: 'Needs review', approved: 'Approved', delivered: 'Delivered' };
 
 function BuildRow({ project, open }: { project: Project; open: (id: string) => void }) {
+  const nextAction = {
+    brief: 'Edit brief',
+    build: project.status === 'running' ? 'View build' : 'Inspect build',
+    review: 'Review build',
+    deliver: 'View delivery'
+  }[getJourneyState(project).current];
   return <button onClick={() => open(project.id)}>
     <FileCode2 size={24} aria-hidden="true"/>
-    <span className="home-build-copy"><strong>{project.title}</strong><small>{project.criteria.length} criteria · Updated {new Date(project.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</small></span>
+    <span className="home-build-copy"><strong>{project.title}</strong><small>{nextAction} · Updated {new Date(project.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</small></span>
     <span className={'badge ' + project.status}>{project.status === 'approved' || project.status === 'delivered' ? <CheckCircle2 size={13} aria-hidden="true"/> : <CircleDot size={13} aria-hidden="true"/>} {statusNames[project.status]}</span>
     <ArrowUpRight size={19} aria-hidden="true"/>
   </button>;

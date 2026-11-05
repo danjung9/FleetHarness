@@ -1,0 +1,11 @@
+# CASREP Command · prototype fielding brief
+
+**Purpose.** Demonstrate synthetic INITIAL drafting, a return/revision loop, ordered review and a local simulated release. The full source requirement and human-delivered walkthrough remain deferred.
+
+**Permission model.** Originator saves and submits. The notional route is Division Officer → Department Head → CHENG → XO → CO. Only the current holder can comment or decide; return requires a reason. CO uses Simulate release after all preceding decisions. Persona selection is training context, not authentication. Every decision records persona/role, time, revision and deterministic content digest. Any content revision clears current approvals while preserving prior audit. Unsaved content must be saved or discarded before review. Released snapshots cannot be overwritten.
+
+**Lineage.** Immutable snapshots retain their parent revisions. Synthetic competing amendments retain both texts; explicit resolution creates a child with both parents and no approvals. Local graph checks reject missing history, collisions and cycles. Local persistence is not multi-device synchronization or a tamper-resistant audit service.
+
+**Classification and integration.** Only synthetic data is allowed. Local storage is unencrypted and controlled by the browser user. No classified system, identity service, Microsoft 365 or Navy messaging connector is configured. A local text download is not an official release. Operational use needs an approved data-classification boundary, authenticated roles, durable integrity/retention, validated device/key design and authorized message transport with receiver acknowledgements.
+
+**Validation and fielding.** Ten actual-core Node tests passed locally; desktop/narrow browser checks, human acceptance and domain validation are pending. Approved NWP edition, category/field rules, UPDATE/CORRECT/CASCOR and lifecycle semantics, sponsor samples and routing authority are unresolved. No NWP compliance, installation approval or authorization to operate is claimed. The sponsor and sustainment owner must be named, approve a platform, validate all source obligations and demonstrate offline install/update/rollback and recovery before a trial. See path-to-fleet.md for responsible-owner work and success measures.

@@ -1,17 +1,55 @@
 export type StageId = 'intake' | 'research' | 'plan' | 'build' | 'verify' | 'review' | 'deliver';
 export type StageStatus = 'queued' | 'active' | 'complete' | 'failed' | 'review';
 export type RunStatus = 'draft' | 'running' | 'pausing' | 'paused' | 'stopped' | 'failed' | 'review' | 'approved' | 'delivered';
-export type View = 'portfolio' | 'factory' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'artifacts' | 'settings';
-export interface Stage { id: StageId; label: string; detail: string; status: StageStatus }
+export type View = 'portfolio' | 'factory' | 'design' | 'workspace' | 'agents' | 'requirements' | 'evidence' | 'delivery' | 'artifacts' | 'settings';
+/** Token counts reported by the engine, never estimates. Reasoning is part of output. */
+export interface StageTokenUsage {
+  inputTokens: number | null; cachedInputTokens: number | null; uncachedInputTokens: number | null;
+  outputTokens: number | null; reasoningOutputTokens: number | null; totalTokens: number | null;
+  uncachedPlusOutputTokens: number | null;
+}
+export interface StageMetrics {
+  startedAt: string; finishedAt: string | null; durationMs: number | null;
+  agentAttempts: number; inferenceDurationMs: number; usage: StageTokenUsage | null;
+}
+export interface Stage { id: StageId; label: string; detail: string; status: StageStatus; metrics?: StageMetrics }
 export interface ToolEvent { callId: string; name: string; phase: 'start' | 'complete' | 'error'; target?: string }
 export interface LogEntry { id: string; time: string; stage: StageId; kind: 'info' | 'text' | 'tool' | 'error'; text: string; tool?: ToolEvent }
 export interface TestReport {
   time: string; command: string; exitCode: number | null; passed: number; failed: number;
   skipped: number; total: number; output: string; durationMs: number; sourceHash: string;
+  stageMetrics?: (StageMetrics & { stage: StageId })[];
   quality?: import('./quality.js').QualityReport;
+  registeredTests?: { file: string; tests: number }[];
+  portableCommand?: string;
+  provenance?: { runner: string; args: string[]; cwd: string; environment: Record<string, string | undefined> };
+  testBaseline?: { hashes: Record<string, string>; changes: string[]; policy: string };
 }
 export interface BriefContext { resources?: string; links?: string[] }
+export interface RunCheckpoint {
+  version: 1;
+  briefHash: string;
+  requirementsHash: string;
+  packetHash: string;
+  context: string;
+  qualityHash?: string;
+  planHash?: string;
+  repairAttempts: number;
+  // Missing or interrupted shutdown evidence cannot authorize workspace recovery.
+  writerState?: 'active' | 'idle' | 'unconfirmed';
+  verificationAgent?: 'started' | 'complete';
+  repairStopped?: boolean;
+  buildTests?: Record<string, string>;
+  buildTestContents?: Record<string, string>;
+  lastTests?: Record<string, string>;
+  testChanges?: string[];
+  backgroundJob?: boolean;
+}
 export interface Project extends BriefContext {
+  processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };
+  verification?: { runId: string; reportHash: string };
+  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string };
+  runCheckpoint?: RunCheckpoint;
   qualityVersion?: 1;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
@@ -27,7 +65,7 @@ export interface Project extends BriefContext {
 }
 export type AgentBackend = 'pi' | 'codex';
 export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend }
-export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean }
+export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean }
 export interface ChatGPTAccount {
   status: 'disconnected' | 'connecting' | 'connected' | 'unavailable';
   email?: string; plan?: string; error?: string;
@@ -47,8 +85,9 @@ export interface FleetAPI {
   createProject(input: NewProject): Promise<Project>;
   updateProject(id: string, input: NewProject): Promise<Project>;
   startRun(id: string): Promise<void>;
-  stopRun(id: string): Promise<void>;
+  // Optional for web-only clients that cannot execute backend builds.
   resumeRun?(id: string): Promise<void>;
+  stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;
@@ -56,6 +95,7 @@ export interface FleetAPI {
   readArtifact(id: string, file: string): Promise<string>;
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
+  setDeveloperMode?(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
   removeKey?(): Promise<Bootstrap>;
   shareProject?(id: string): Promise<string>;

@@ -124,6 +124,19 @@ test('POSIX bundle paths retain native verification hashes across nested and pun
   for (const [name, bytes] of contents) assert.equal(await fs.readFile(path.join(restored, name), 'utf8'), bytes);
 });
 
+test('checkpoint hashes reject an ambiguous rename even when individual file digests are valid', async t => {
+  const root = await temporary(t), workspace = path.join(root, 'workspace');
+  await fs.mkdir(workspace); await fs.writeFile(path.join(workspace, 'a'), 'bc');
+  const runId = randomUUID(), bundle = await collectArtifacts(workspace, runId, 1);
+  const forged = structuredClone(bundle), content = Buffer.from('c');
+  forged.files[0] = { path: 'ab', size: content.length, sha256: digest(content), base64: content.toString('base64') };
+  // The legacy unframed source encoding was "abc" for both file sets.
+  assert.throws(() => validateBundle(forged, runId), /source hash/);
+  await assert.rejects(restoreArtifacts(path.join(root, 'forged'), forged, runId), /source hash/);
+  await assert.rejects(fs.access(path.join(root, 'forged')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(workspace, 'a'), 'utf8'), 'bc');
+});
+
 test('pause rolls back an interrupted phase and resume preserves completed phases through real verification', { timeout: 30_000 }, async t => {
   const root = await temporary(t);
   const input = inputFor(newProject({ title: 'Task parser', description: 'Parse a task from a synthetic message.', criteria: ['Parse a task and recover from empty input.'] }));

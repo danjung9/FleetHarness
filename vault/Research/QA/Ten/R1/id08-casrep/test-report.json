@@ -1,0 +1,125 @@
+{
+  "time": "2026-11-04T21:16:39.800Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: full return, revision, fresh all-role review and export journey\nok 1 - full return, revision, fresh all-role review and export journey\n  ---\n  duration_ms: 1.903667\n  type: 'test'\n  ...\n# Subtest: early release, wrong role, missing return comment and unsaved edits are atomic denials\nok 2 - early release, wrong role, missing return comment and unsaved edits are atomic denials\n  ---\n  duration_ms: 0.815792\n  type: 'test'\n  ...\n# Subtest: approved revision changes invalidate all decisions and cannot use old authority\nok 3 - approved revision changes invalidate all decisions and cannot use old authority\n  ---\n  duration_ms: 0.47075\n  type: 'test'\n  ...\n# Subtest: required fields, whitespace, limits, no-op save and markup round-trip\nok 4 - required fields, whitespace, limits, no-op save and markup round-trip\n  ---\n  duration_ms: 0.475708\n  type: 'test'\n  ...\n# Subtest: conflicting branches persist and resolution references every head without approvals\nok 5 - conflicting branches persist and resolution references every head without approvals\n  ---\n  duration_ms: 8.806959\n  type: 'test'\n  ...\n# Subtest: immutable graph merge is replay-idempotent and order independent, including delete conflict\nok 6 - immutable graph merge is replay-idempotent and order independent, including delete conflict\n  ---\n  duration_ms: 0.265709\n  type: 'test'\n  ...\n# Subtest: merge rejects missing history, ID collisions, cross-record parents and cycles without mutation\nok 7 - merge rejects missing history, ID collisions, cross-record parents and cycles without mutation\n  ---\n  duration_ms: 0.191917\n  type: 'test'\n  ...\n# Subtest: durable reload, unfinished draft recovery and transactional storage failure\nok 8 - durable reload, unfinished draft recovery and transactional storage failure\n  ---\n  duration_ms: 1.008541\n  type: 'test'\n  ...\n# Subtest: damaged storage and stale generations preserve original bytes and local work\nok 9 - damaged storage and stale generations preserve original bytes and local work\n  ---\n  duration_ms: 0.292417\n  type: 'test'\n  ...\n# Subtest: released snapshot is immutable and linked drafts require all fresh reviews\nok 10 - released snapshot is immutable and linked drafts require all fresh reviews\n  ---\n  duration_ms: 0.457792\n  type: 'test'\n  ...\n# Subtest: every review action rejects dirty content atomically and preserves the buffer\nok 11 - every review action rejects dirty content atomically and preserves the buffer\n  ---\n  duration_ms: 0.486084\n  type: 'test'\n  ...\n# Subtest: all route roles enforce ownership; comments retain route and exact revision authority\nok 12 - all route roles enforce ownership; comments retain route and exact revision authority\n  ---\n  duration_ms: 2.957583\n  type: 'test'\n  ...\n# Subtest: equipment and category exact limits, trimming, type rejection and blank resolution preserve history\nok 13 - equipment and category exact limits, trimming, type rejection and blank resolution preserve history\n  ---\n  duration_ms: 0.710792\n  type: 'test'\n  ...\n# Subtest: actual UI handlers render validation, retain drafts on persona/panel changes and recover by discard\nok 14 - actual UI handlers render validation, retain drafts on persona/panel changes and recover by discard\n  ---\n  duration_ms: 2.794417\n  type: 'test'\n  ...\n# Subtest: actual UI handlers retain editable work and committed state after storage failure\nok 15 - actual UI handlers retain editable work and committed state after storage failure\n  ---\n  duration_ms: 0.738041\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 113.994291\n\nBrowser journeys: 8/8 passed.\nRequirements: 3 demonstrated, 0 failed, 2 unverified.",
+  "durationMs": 6135,
+  "sourceHash": "50358606a4a575f5efa5b22e3034f835a3a6230b7b3871c1bd1b8f540c5ce849",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "ff76407c11791e13f41b7a6605cdaa6b71da6dcc0266dcbcb62e0b4ca2418542",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC8-1",
+        "requirement": "The tool must support role-based access for the originator (Sailor/LPO), Division Officer, Department Head, Engineer Officer/CHENG, XO, and CO as releasing authority, with each role able to comment, return for revision, or approve and forward. Drafts must enforce NWP 1-03.1 CASREP formatting (report types such as INITIAL, UPDATE, CORRECT, and CASCOR, plus category and required fields), keep a full version history and audit trail of every comment and approval, and show at a glance where each report is in the routing chain. The prototype must use notional, unclassified data only.",
+        "status": "unverified",
+        "detail": "Only a synthetic INITIAL workflow is planned. Approved NWP edition, required fields/categories, all report-type semantics and routing rules are missing; local persona selection is not authenticated access control. No compliance claim. The demonstrated subset is checked under WFL-01/02/03; full source coverage remains unverified."
+      },
+      {
+        "criterionId": "WFL-01",
+        "requirement": "Reject invalid state transitions and stale approvals.",
+        "status": "passed",
+        "detail": "An early or out-of-order release is denied without advancing state. Changing an approved revision removes every current approval, restarts review, and prevents release using the old decision. The corrected revision can complete fresh review and simulated CO release. Unsaved edits cannot be submitted or approved without deliberate save or discard. — demonstrated by stale-approval, recover-draft at both viewport sizes."
+      },
+      {
+        "criterionId": "WFL-02",
+        "requirement": "Retain record lineage and conflicts.",
+        "status": "passed",
+        "detail": "Two amendments from revision 1 remain separately readable across reload, with their common base visible. Explicit resolution stores the chosen combined text with both amendment heads as parents; both source contents survive reload and no prior approval carries into revision 4. — demonstrated by resolve-amendments at both viewport sizes."
+      },
+      {
+        "criterionId": "WFL-03",
+        "requirement": "Complete the owner-specific workflow.",
+        "status": "passed",
+        "detail": "A reviewer can create an INITIAL synthetic report, return revision 1 with a retained reason, save revision 2, complete Division Officer, Department Head, CHENG, XO and CO review, reload the simulated released state and download the corrected content with traceable revision and review history. Human workflow acceptance remains separately pending. — demonstrated by review-return-release, recover-draft at both viewport sizes."
+      },
+      {
+        "criterionId": "DELIVERABLE8-1",
+        "requirement": "A working prototype that walks one mock CASREP from initial draft through every approval role to CO release, including at least one \"returned for revision\" loop. Teams should also submit a short demo video or live walkthrough and a one-page brief covering the role/permission model, how the tool would handle classification and integration with existing Navy messaging systems, and what it would take to field it.",
+        "status": "unverified",
+        "detail": "The build will supply a synthetic all-role simulated-release workflow, walkthrough script and one-page fielding brief, but no human-delivered walkthrough/video, acceptance of that brief or authorized formal CO release is available in this unattended local phase. The entire source deliverable remains unverified rather than equating a script/download with its completion."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "review-return-release",
+        "title": "Create, return, revise and route through every reviewer to export",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 30 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/review-return-release-desktop.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/review-return-release-desktop.zip"
+      },
+      {
+        "id": "review-return-release",
+        "title": "Create, return, revise and route through every reviewer to export",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 30 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/review-return-release-narrow.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/review-return-release-narrow.zip"
+      },
+      {
+        "id": "stale-approval",
+        "title": "Reject early release and invalidate approval after a content change",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 32 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/stale-approval-desktop.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/stale-approval-desktop.zip"
+      },
+      {
+        "id": "stale-approval",
+        "title": "Reject early release and invalidate approval after a content change",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 32 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/stale-approval-narrow.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/stale-approval-narrow.zip"
+      },
+      {
+        "id": "recover-draft",
+        "title": "Correct missing input and preserve unsaved edits at the review boundary",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 16 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/recover-draft-desktop.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/recover-draft-desktop.zip"
+      },
+      {
+        "id": "recover-draft",
+        "title": "Correct missing input and preserve unsaved edits at the review boundary",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 16 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/recover-draft-narrow.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/recover-draft-narrow.zip"
+      },
+      {
+        "id": "resolve-amendments",
+        "title": "Preserve competing amendments and deliberately resolve their contents",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 24 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/resolve-amendments-desktop.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/resolve-amendments-desktop.zip"
+      },
+      {
+        "id": "resolve-amendments",
+        "title": "Preserve competing amendments and deliberately resolve their contents",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 24 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/resolve-amendments-narrow.png",
+        "trace": ".quality-evidence/d642907377b8-b35f1ace-d433-4c1b-a3ed-9764fce3e101/resolve-amendments-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

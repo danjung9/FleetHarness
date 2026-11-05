@@ -3,6 +3,7 @@ import type { Artifact, NewProject, Project, Settings, StageId } from '../shared
 import { stageDefinitions } from '../shared/types.js';
 import { normalizeProjectInput } from '../shared/project-input.js';
 import { reportPassed } from '../shared/verification.js';
+import { createSourceHash } from '../shared/source-hash.js';
 import { bundledNorfolkCatalog, getChallenge } from '../harness/catalog.js';
 import type { NorfolkCatalog } from '../harness/norfolk.js';
 import { HttpError, requireUuid } from './http.js';
@@ -59,12 +60,13 @@ export function assertManifest(run: HostedRun, manifest: ArtifactManifest): void
   if (total > MAX_BUNDLE) throw new HttpError(413, 'The artifact bundle exceeds 30 MB.');
 }
 export function hashSourceFiles(files: { path: string; content: Buffer }[]): string {
-  const hash = createHash('sha256');
+  const hash = createSourceHash();
+  // Hosted object keys and Linux worker verification use canonical POSIX paths.
   for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    hash.update(file.path); hash.update(file.content);
+    hash.update(file.path, file.content);
   }
-  return hash.digest('hex');
+  return hash.digest();
 }
 
 /** Only instantiate server-side. Every browser-facing lookup carries the verified auth user ID. */

@@ -1,0 +1,106 @@
+{
+  "title": "Synthetic dependency review and leadership brief",
+  "description": "Offline, read-only synthetic snapshot analysis. Illustrative DAG timing is distinct from mission readiness; no operational connectors or automated decisions.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "Analyst workspace",
+      "description": "Load synthetic snapshot, inspect changes, edit a local what-if duration and recover from invalid models.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "snapshot",
+      "label": "Synthetic snapshots and provenance",
+      "description": "Immutable baseline, five ordered illustrative changes, exact record revisions and evidence excerpts. Local working copy only.",
+      "kind": "data",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "analysis",
+      "label": "Dependency timing engine",
+      "description": "Validate DAG, propagate unknowns, calculate finish and target margin, preserve tied paths. Adapt supplied primitive semantics into browser-compatible core.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Risk explanation and evidence resolution",
+      "description": "Resolve all prerequisite sources and identify freshness and identity gaps before producing bounded timing explanations.",
+      "kind": "logic",
+      "files": [
+        "core.cjs",
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Human review and brief",
+      "description": "Evidence detail, human acknowledgment, local review log and downloadable synthetic brief. Deterministic text; no model service.",
+      "kind": "interface",
+      "files": [
+        "index.html",
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Local session storage",
+      "description": "Versioned local snapshot, draft, analysis and review context; visible failure if storage unavailable. No source synchronization.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "snapshot",
+      "to": "workspace",
+      "label": "Bundled synthetic baseline and ordered events"
+    },
+    {
+      "from": "workspace",
+      "to": "analysis",
+      "label": "Validated local working model and deadline"
+    },
+    {
+      "from": "snapshot",
+      "to": "evidence",
+      "label": "Stable asset IDs, record revisions and exact excerpts"
+    },
+    {
+      "from": "analysis",
+      "to": "evidence",
+      "label": "Known timing, unknown prerequisites and paths"
+    },
+    {
+      "from": "evidence",
+      "to": "review",
+      "label": "Source-linked explanations and bounded options"
+    },
+    {
+      "from": "workspace",
+      "to": "storage",
+      "label": "Persist local draft and selected scenario"
+    },
+    {
+      "from": "storage",
+      "to": "workspace",
+      "label": "Restore local session with saved status"
+    },
+    {
+      "from": "review",
+      "to": "storage",
+      "label": "Local review acknowledgment and audit entries"
+    }
+  ]
+}

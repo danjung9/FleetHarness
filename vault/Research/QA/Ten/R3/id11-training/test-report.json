@@ -1,0 +1,209 @@
+{
+  "time": "2026-11-04T22:26:19.292Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./core.test.cjs\"",
+  "exitCode": 0,
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: exported: complete weekly answer key with independent interval and budget evidence\nok 1 - exported: complete weekly answer key with independent interval and budget evidence\n  ---\n  duration_ms: 3.227084\n  type: 'test'\n  ...\n# Subtest: exported: diagnostics represent actual candidate and policy failures\nok 2 - exported: diagnostics represent actual candidate and policy failures\n  ---\n  duration_ms: 0.870333\n  type: 'test'\n  ...\n# Subtest: exported: saved review boundaries and duration recovery\nok 3 - exported: saved review boundaries and duration recovery\n  ---\n  duration_ms: 0.56575\n  type: 'test'\n  ...\n# Subtest: exported: edits, resource adjacency, due edges and malformed inventory\nok 4 - exported: edits, resource adjacency, due edges and malformed inventory\n  ---\n  duration_ms: 0.281416\n  type: 'test'\n  ...\n# Subtest: browser inline: complete weekly answer key with independent interval and budget evidence\nok 5 - browser inline: complete weekly answer key with independent interval and budget evidence\n  ---\n  duration_ms: 1.552334\n  type: 'test'\n  ...\n# Subtest: browser inline: diagnostics represent actual candidate and policy failures\nok 6 - browser inline: diagnostics represent actual candidate and policy failures\n  ---\n  duration_ms: 0.768208\n  type: 'test'\n  ...\n# Subtest: browser inline: saved review boundaries and duration recovery\nok 7 - browser inline: saved review boundaries and duration recovery\n  ---\n  duration_ms: 0.5925\n  type: 'test'\n  ...\n# Subtest: browser inline: edits, resource adjacency, due edges and malformed inventory\nok 8 - browser inline: edits, resource adjacency, due edges and malformed inventory\n  ---\n  duration_ms: 0.308291\n  type: 'test'\n  ...\n# Subtest: both delivered factories return identical domain results for all supplied scenarios\nok 9 - both delivered factories return identical domain results for all supplied scenarios\n  ---\n  duration_ms: 0.954791\n  type: 'test'\n  ...\n# Subtest: exported: malformed temporal data is invalid and never reviewable\nok 10 - exported: malformed temporal data is invalid and never reviewable\n  ---\n  duration_ms: 0.938125\n  type: 'test'\n  ...\n# Subtest: exported: prior duty, cross-midnight, horizon and exclusive resources\nok 11 - exported: prior duty, cross-midnight, horizon and exclusive resources\n  ---\n  duration_ms: 0.239083\n  type: 'test'\n  ...\n# Subtest: browser inline: malformed temporal data is invalid and never reviewable\nok 12 - browser inline: malformed temporal data is invalid and never reviewable\n  ---\n  duration_ms: 1.164208\n  type: 'test'\n  ...\n# Subtest: browser inline: prior duty, cross-midnight, horizon and exclusive resources\nok 13 - browser inline: prior duty, cross-midnight, horizon and exclusive resources\n  ---\n  duration_ms: 0.306125\n  type: 'test'\n  ...\n# Subtest: actual page startup recovers from malformed storage; handlers optimize and export synthetic content\nok 14 - actual page startup recovers from malformed storage; handlers optimize and export synthetic content\n  ---\n  duration_ms: 2.939875\n  type: 'test'\n  ...\n# Subtest: actual page constraint recovery handlers satisfy all frozen literal outcomes (DOM shim only)\nok 15 - actual page constraint recovery handlers satisfy all frozen literal outcomes (DOM shim only)\n  ---\n  duration_ms: 1.728959\n  type: 'test'\n  ...\n1..15\n# tests 15\n# suites 0\n# pass 15\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 104.72875\n\nBrowser journeys: 16/16 passed.\nRequirements: 4 demonstrated, 0 failed, 3 unverified.",
+  "durationMs": 13446,
+  "sourceHash": "ee50d088a8045cf3b61eced218324e62d903679abefac3b25c7b392b09e9512f",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "ed19712d57d72fd9b6f5fc5c735a542fe61616c2c923ca69143e6d46335e7913",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC11-1",
+        "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+        "status": "unverified",
+        "detail": "real-data: Applicable SFTRM rules, approved fatigue policy, actual training history and qualified roster are outside the synthetic-only boundary. Withhold assurance of actual SFTRM compliance; demonstrate all named departmental negotiation, collision, alternate-allocation, window, qualification, fatigue and recurrence behaviors synthetically."
+      },
+      {
+        "criterionId": "SCH-01",
+        "requirement": "No personnel or shared-resource double booking.",
+        "status": "passed",
+        "detail": "The six-occurrence weekly answer key has zero personnel and resource overlaps, including concurrent Mon 10:00 Weapons and Combat Systems using different people and resources. A board edit to the competing preferred Weapons allocation is rejected; selecting its alternate restores validity. — demonstrated by weekly-board, board-edit-recovery at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-02",
+        "requirement": "Honor availability, qualifications, rest and duty budgets.",
+        "status": "passed",
+        "detail": "The application rejects missing Fire Party Leader qualification, unavailable personnel, 59-minute rest and 181-minute duty with distinct reasons; accepts exactly 60 minutes rest and 180 minutes duty including prior work. The weekly fixture respects all qualifications, availability and declared fatigue constraints; invalid duration is recoverable. — demonstrated by weekly-board, constraint-recovery, duration-recovery at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-03",
+        "requirement": "Distinguish infeasible input from exhausted search.",
+        "status": "passed",
+        "detail": "A fully explored two-request shared-person/shared-resource conflict yields Infeasible; a one-node weekly search yields Search budget exhausted — feasibility unknown; 5000 nodes yields six scheduled occurrences with unchanged hard constraints. — demonstrated by search-recovery at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-04",
+        "requirement": "Preserve mandatory training periodicities.",
+        "status": "unverified",
+        "detail": "real-data: Applicable owner-supplied recurrence rules and completion history are unavailable within the synthetic-only boundary. Withhold actual mandatory-periodicity validation; demonstrate explicit synthetic recurrence expansion, carry-in history, due dates and complete occurrence coverage."
+      },
+      {
+        "criterionId": "SCH-05",
+        "requirement": "Have an operator accept the proposed schedule.",
+        "status": "unverified",
+        "detail": "human-authority: An authorized PB4T operator must actually review and accept a specific calendar. Withhold actual operator approval and release; demonstrate editable review, load inspection, pending policy requests and a local synthetic acceptance record."
+      },
+      {
+        "criterionId": "DELIVERABLE11-1",
+        "requirement": "An interactive weekly schedule board showing automated conflict resolution across departments with one-click schedule optimization and personnel loading heatmaps.",
+        "status": "passed",
+        "detail": "One Optimize schedule action automatically resolves three cross-department proposal conflict pairs into the literal six-event seven-day board, with original versus alternate allocations and named agent negotiation. Personnel heatmaps show Alex 180/180 including prior duty, Blair 120/120 and Casey 120/120. Editable review, labeled export, recurrence and failure recovery are usable; bounded feasibility is disclosed rather than global optimality. — demonstrated by weekly-board, duration-recovery, search-recovery, constraint-recovery, recurrence-recovery, review-revision, board-edit-recovery, policy-change-recovery at both viewport sizes."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "weekly-board",
+        "title": "Negotiate the complete synthetic PB4T week",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 20 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/weekly-board-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/weekly-board-desktop.zip"
+      },
+      {
+        "id": "weekly-board",
+        "title": "Negotiate the complete synthetic PB4T week",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 20 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/weekly-board-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/weekly-board-narrow.zip"
+      },
+      {
+        "id": "duration-recovery",
+        "title": "Correct an invalid drill duration without losing the draft",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/duration-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/duration-recovery-desktop.zip"
+      },
+      {
+        "id": "duration-recovery",
+        "title": "Correct an invalid drill duration without losing the draft",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/duration-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/duration-recovery-narrow.zip"
+      },
+      {
+        "id": "search-recovery",
+        "title": "Distinguish impossible allocations from exhausted search",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 15 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/search-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/search-recovery-desktop.zip"
+      },
+      {
+        "id": "search-recovery",
+        "title": "Distinguish impossible allocations from exhausted search",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 15 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/search-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/search-recovery-narrow.zip"
+      },
+      {
+        "id": "constraint-recovery",
+        "title": "Reject qualification, availability, rest and duty violations then honor exact boundaries",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 25 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/constraint-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/constraint-recovery-desktop.zip"
+      },
+      {
+        "id": "constraint-recovery",
+        "title": "Reject qualification, availability, rest and duty violations then honor exact boundaries",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 25 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/constraint-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/constraint-recovery-narrow.zip"
+      },
+      {
+        "id": "recurrence-recovery",
+        "title": "Expose missing policy and missing mandatory work then recover",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 13 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/recurrence-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/recurrence-recovery-desktop.zip"
+      },
+      {
+        "id": "recurrence-recovery",
+        "title": "Expose missing policy and missing mandatory work then recover",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 13 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/recurrence-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/recurrence-recovery-narrow.zip"
+      },
+      {
+        "id": "review-revision",
+        "title": "Save, inspect and record a synthetic review; edits invalidate acceptance",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 23 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/review-revision-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/review-revision-desktop.zip"
+      },
+      {
+        "id": "review-revision",
+        "title": "Save, inspect and record a synthetic review; edits invalidate acceptance",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 23 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/review-revision-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/review-revision-narrow.zip"
+      },
+      {
+        "id": "board-edit-recovery",
+        "title": "Resolve a competing board allocation through explicit save and revalidation",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 15 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/board-edit-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/board-edit-recovery-desktop.zip"
+      },
+      {
+        "id": "board-edit-recovery",
+        "title": "Resolve a competing board allocation through explicit save and revalidation",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 15 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/board-edit-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/board-edit-recovery-narrow.zip"
+      },
+      {
+        "id": "policy-change-recovery",
+        "title": "Keep a requested hard-policy relaxation explicit and unapproved",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 14 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/policy-change-recovery-desktop.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/policy-change-recovery-desktop.zip"
+      },
+      {
+        "id": "policy-change-recovery",
+        "title": "Keep a requested hard-policy relaxation explicit and unapproved",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 14 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/policy-change-recovery-narrow.png",
+        "trace": ".quality-evidence/e38e48c97500-aad13a39-d59e-491d-911b-16dbccc6ccf9/policy-change-recovery-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

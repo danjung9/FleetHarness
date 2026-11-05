@@ -1,0 +1,248 @@
+TAP version 13
+# Subtest: module: unsafe cumulative finish is rejected
+not ok 1 - module: unsafe cumulative finish is rejected
+  ---
+  duration_ms: 2.01025
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:9:2'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:9:136)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.start (node:internal/test_runner/test:1096:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+  ...
+# Subtest: module: saved analysis cannot disagree with displayed duration or graph case
+not ok 2 - module: saved analysis cannot disagree with displayed duration or graph case
+  ---
+  duration_ms: 0.464333
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:10:2'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:10:357)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ...
+# Subtest: module: restored review must match note and acknowledgment
+not ok 3 - module: restored review must match note and acknowledgment
+  ---
+  duration_ms: 1.993458
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:11:2'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + {
+    +   ack: true,
+    +   at: '2026-11-04T01:00:00Z',
+    +   fingerprint: '{"schemaVersion":1,"classification":"synthetic","id":"SYN-21","revision":"r1","modelId":"ILLUSTRATIVE-DAG-1","assetId":"SYN-DDG-01","epoch":"2026-11-04T00:00:00Z","timeUnit":"day","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","deadline":21,"targetIds":["radar","watch"],"nodes":[{"id":"parts","label":"Parts","deps":[],"readyAt":4,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-PARTS","revision":"r1"}]},{"id":"repair","label":"Repair","deps":["parts"],"readyAt":0,"duration":3,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MAINT","revision":"r1"}]},{"id":"radar","label":"Radar test","deps":["repair"],"readyAt":0,"duration":2,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-TEST","revision":"r1"}]},{"id":"staff","label":"Qualified personnel","deps":[],"readyAt":6,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MANNING","revision":"r1"}]},{"id":"watch","label":"Qualification review","deps":["staff"],"readyAt":0,"duration":1,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-QUAL","revision":"r1"}]}],"records":[{"recordId":"SYN-PARTS","revision":"r1","excerpt":"Part available day 4.","excerptStart":0,"excerptEnd":21,"assetId":"SYN-DDG-01","reportType":"SYN-PARTS","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MAINT","revision":"r1","excerpt":"Repair duration 3 days.","excerptStart":0,"excerptEnd":23,"assetId":"SYN-DDG-01","reportType":"SYN-MAINT","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-TEST","revision":"r1","excerpt":"Radar test duration 2 days.","excerptStart":0,"excerptEnd":27,"assetId":"SYN-DDG-01","reportType":"SYN-TEST","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MANNING","revision":"r1","excerpt":"Qualified personnel available day 6.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-MANNING","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-QUAL","revision":"r1","excerpt":"Qualification review duration 1 day.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-QUAL","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-SCHEDULE","revision":"r1","excerpt":"Mission deadline day 21.","excerptStart":0,"excerptEnd":24,"assetId":"SYN-DDG-01","reportType":"SYN-SCHEDULE","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true}],"scheduleRef":{"recordId":"SYN-SCHEDULE","revision":"r1"},"appliedEvents":[]}',
+    +   note: 'Earlier note'
+    + }
+    - null
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    fingerprint: '{"schemaVersion":1,"classification":"synthetic","id":"SYN-21","revision":"r1","modelId":"ILLUSTRATIVE-DAG-1","assetId":"SYN-DDG-01","epoch":"2026-11-04T00:00:00Z","timeUnit":"day","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","deadline":21,"targetIds":["radar","watch"],"nodes":[{"id":"parts","label":"Parts","deps":[],"readyAt":4,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-PARTS","revision":"r1"}]},{"id":"repair","label":"Repair","deps":["parts"],"readyAt":0,"duration":3,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MAINT","revision":"r1"}]},{"id":"radar","label":"Radar test","deps":["repair"],"readyAt":0,"duration":2,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-TEST","revision":"r1"}]},{"id":"staff","label":"Qualified personnel","deps":[],"readyAt":6,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MANNING","revision":"r1"}]},{"id":"watch","label":"Qualification review","deps":["staff"],"readyAt":0,"duration":1,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-QUAL","revision":"r1"}]}],"records":[{"recordId":"SYN-PARTS","revision":"r1","excerpt":"Part available day 4.","excerptStart":0,"excerptEnd":21,"assetId":"SYN-DDG-01","reportType":"SYN-PARTS","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MAINT","revision":"r1","excerpt":"Repair duration 3 days.","excerptStart":0,"excerptEnd":23,"assetId":"SYN-DDG-01","reportType":"SYN-MAINT","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-TEST","revision":"r1","excerpt":"Radar test duration 2 days.","excerptStart":0,"excerptEnd":27,"assetId":"SYN-DDG-01","reportType":"SYN-TEST","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MANNING","revision":"r1","excerpt":"Qualified personnel available day 6.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-MANNING","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-QUAL","revision":"r1","excerpt":"Qualification review duration 1 day.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-QUAL","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-SCHEDULE","revision":"r1","excerpt":"Mission deadline day 21.","excerptStart":0,"excerptEnd":24,"assetId":"SYN-DDG-01","reportType":"SYN-SCHEDULE","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true}],"scheduleRef":{"recordId":"SYN-SCHEDULE","revision":"r1"},"appliedEvents":[]}'
+    note: 'Earlier note'
+    ack: true
+    at: '2026-11-04T01:00:00Z'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:11:324)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: module: exported brief retains all five change names and before/after values
+not ok 4 - module: exported brief retains all five change names and before/after values
+  ---
+  duration_ms: 5.778167
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:12:2'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(brief.includes(e.name))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:12:321)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: shipped inline: unsafe cumulative finish is rejected
+not ok 5 - shipped inline: unsafe cumulative finish is rejected
+  ---
+  duration_ms: 0.737333
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:9:2'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:9:136)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: shipped inline: saved analysis cannot disagree with displayed duration or graph case
+not ok 6 - shipped inline: saved analysis cannot disagree with displayed duration or graph case
+  ---
+  duration_ms: 0.42875
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:10:2'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:10:357)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: shipped inline: restored review must match note and acknowledgment
+not ok 7 - shipped inline: restored review must match note and acknowledgment
+  ---
+  duration_ms: 0.397041
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:11:2'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + {
+    +   ack: true,
+    +   at: '2026-11-04T01:00:00Z',
+    +   fingerprint: '{"schemaVersion":1,"classification":"synthetic","id":"SYN-21","revision":"r1","modelId":"ILLUSTRATIVE-DAG-1","assetId":"SYN-DDG-01","epoch":"2026-11-04T00:00:00Z","timeUnit":"day","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","deadline":21,"targetIds":["radar","watch"],"nodes":[{"id":"parts","label":"Parts","deps":[],"readyAt":4,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-PARTS","revision":"r1"}]},{"id":"repair","label":"Repair","deps":["parts"],"readyAt":0,"duration":3,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MAINT","revision":"r1"}]},{"id":"radar","label":"Radar test","deps":["repair"],"readyAt":0,"duration":2,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-TEST","revision":"r1"}]},{"id":"staff","label":"Qualified personnel","deps":[],"readyAt":6,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MANNING","revision":"r1"}]},{"id":"watch","label":"Qualification review","deps":["staff"],"readyAt":0,"duration":1,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-QUAL","revision":"r1"}]}],"records":[{"recordId":"SYN-PARTS","revision":"r1","excerpt":"Part available day 4.","excerptStart":0,"excerptEnd":21,"assetId":"SYN-DDG-01","reportType":"SYN-PARTS","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MAINT","revision":"r1","excerpt":"Repair duration 3 days.","excerptStart":0,"excerptEnd":23,"assetId":"SYN-DDG-01","reportType":"SYN-MAINT","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-TEST","revision":"r1","excerpt":"Radar test duration 2 days.","excerptStart":0,"excerptEnd":27,"assetId":"SYN-DDG-01","reportType":"SYN-TEST","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MANNING","revision":"r1","excerpt":"Qualified personnel available day 6.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-MANNING","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-QUAL","revision":"r1","excerpt":"Qualification review duration 1 day.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-QUAL","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-SCHEDULE","revision":"r1","excerpt":"Mission deadline day 21.","excerptStart":0,"excerptEnd":24,"assetId":"SYN-DDG-01","reportType":"SYN-SCHEDULE","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true}],"scheduleRef":{"recordId":"SYN-SCHEDULE","revision":"r1"},"appliedEvents":[]}',
+    +   note: 'Earlier note'
+    + }
+    - null
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    fingerprint: '{"schemaVersion":1,"classification":"synthetic","id":"SYN-21","revision":"r1","modelId":"ILLUSTRATIVE-DAG-1","assetId":"SYN-DDG-01","epoch":"2026-11-04T00:00:00Z","timeUnit":"day","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","deadline":21,"targetIds":["radar","watch"],"nodes":[{"id":"parts","label":"Parts","deps":[],"readyAt":4,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-PARTS","revision":"r1"}]},{"id":"repair","label":"Repair","deps":["parts"],"readyAt":0,"duration":3,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MAINT","revision":"r1"}]},{"id":"radar","label":"Radar test","deps":["repair"],"readyAt":0,"duration":2,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-TEST","revision":"r1"}]},{"id":"staff","label":"Qualified personnel","deps":[],"readyAt":6,"duration":0,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-MANNING","revision":"r1"}]},{"id":"watch","label":"Qualification review","deps":["staff"],"readyAt":0,"duration":1,"assetId":"SYN-DDG-01","sourceRefs":[{"recordId":"SYN-QUAL","revision":"r1"}]}],"records":[{"recordId":"SYN-PARTS","revision":"r1","excerpt":"Part available day 4.","excerptStart":0,"excerptEnd":21,"assetId":"SYN-DDG-01","reportType":"SYN-PARTS","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MAINT","revision":"r1","excerpt":"Repair duration 3 days.","excerptStart":0,"excerptEnd":23,"assetId":"SYN-DDG-01","reportType":"SYN-MAINT","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-TEST","revision":"r1","excerpt":"Radar test duration 2 days.","excerptStart":0,"excerptEnd":27,"assetId":"SYN-DDG-01","reportType":"SYN-TEST","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-MANNING","revision":"r1","excerpt":"Qualified personnel available day 6.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-MANNING","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-QUAL","revision":"r1","excerpt":"Qualification review duration 1 day.","excerptStart":0,"excerptEnd":36,"assetId":"SYN-DDG-01","reportType":"SYN-QUAL","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true},{"recordId":"SYN-SCHEDULE","revision":"r1","excerpt":"Mission deadline day 21.","excerptStart":0,"excerptEnd":24,"assetId":"SYN-DDG-01","reportType":"SYN-SCHEDULE","observedAt":"2026-11-04T00:00:00Z","lastSyncAt":"2026-11-04T00:00:00Z","synthetic":true}],"scheduleRef":{"recordId":"SYN-SCHEDULE","revision":"r1"},"appliedEvents":[]}'
+    note: 'Earlier note'
+    ack: true
+    at: '2026-11-04T01:00:00Z'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:11:324)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: shipped inline: exported brief retains all five change names and before/after values
+not ok 8 - shipped inline: exported brief retains all five change names and before/after values
+  ---
+  duration_ms: 0.699375
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:12:2'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(brief.includes(e.name))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:12:321)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: controller: oversized draft blocks stale analysis and recovers without losing note
+not ok 9 - controller: oversized draft blocks stale analysis and recovers without losing note
+  ---
+  duration_ms: 3.699833
+  type: 'test'
+  location: '/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Users/mukul/fhten/ud-r1/workspaces/2e4dbca5-8eb4-40e8-abbc-2225208ae2c3/984dcb85-d472-4871-a546-e44fec2cdf7e/adversarial.test.cjs:16:266)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+    Test.postRun (node:internal/test_runner/test:1330:19)
+    Test.run (node:internal/test_runner/test:1258:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+# Subtest: controller: save boundary, changed review, and restored state use actual handlers
+ok 10 - controller: save boundary, changed review, and restored state use actual handlers
+  ---
+  duration_ms: 2.268333
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 1
+# fail 9
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 115.700333

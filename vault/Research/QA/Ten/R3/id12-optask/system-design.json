@@ -1,0 +1,108 @@
+{
+  "title": "Synthetic OPTASK extraction and 24-hour schedule",
+  "description": "Offline, synthetic-only raw-message extraction, source review and daily schedule. No operational integrations; not validated against the real format.",
+  "components": [
+    {
+      "id": "capture",
+      "label": "Synthetic message workspace",
+      "description": "Preserved raw input, sample loading, explicit source revisions and draft state.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "parser",
+      "label": "Traceable category parser",
+      "description": "Invented FREQ, CRYPTO and FLIGHT grammar; UTF-16 spans, strict timestamps and review issues.",
+      "kind": "logic",
+      "files": [
+        "core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "Source and mapping review",
+      "description": "Inspect every field, correct source in a new revision, exclude unsupported content and explicitly confirm review.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "timeline",
+      "label": "UTC daily schedule",
+      "description": "Normalize instants, clip intervals into selected UTC day and render three category lanes with continuation labels.",
+      "kind": "logic",
+      "files": [
+        "core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Local snapshot and export",
+      "description": "Local-only saved revisions, reviewed schedule JSON with provenance and disclosure; no server integration.",
+      "kind": "data",
+      "files": [
+        "core.js",
+        "index.html"
+      ]
+    },
+    {
+      "id": "benchmark",
+      "label": "Synthetic answer-key comparison",
+      "description": "Compare actual parser output against planning-authored held-out examples and show precision, recall and field discrepancies; no SME validation.",
+      "kind": "logic",
+      "files": [
+        "core.js",
+        "answer-key.json",
+        "core.test.cjs",
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "capture",
+      "to": "parser",
+      "label": "Exact raw text and revision ID"
+    },
+    {
+      "from": "parser",
+      "to": "review",
+      "label": "Fields, source spans and unresolved issues"
+    },
+    {
+      "from": "review",
+      "to": "capture",
+      "label": "New corrected source revision"
+    },
+    {
+      "from": "review",
+      "to": "timeline",
+      "label": "Explicitly reviewed records and UTC day"
+    },
+    {
+      "from": "review",
+      "to": "storage",
+      "label": "Committed review snapshot"
+    },
+    {
+      "from": "storage",
+      "to": "capture",
+      "label": "Reload saved source and review state"
+    },
+    {
+      "from": "timeline",
+      "to": "storage",
+      "label": "Reviewed 24-hour schedule with full intervals"
+    },
+    {
+      "from": "parser",
+      "to": "benchmark",
+      "label": "Actual extracted records versus independent synthetic key"
+    }
+  ]
+}

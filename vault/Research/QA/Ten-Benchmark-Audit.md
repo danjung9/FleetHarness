@@ -1,0 +1,103 @@
+---
+type: audit
+status: active
+owner: mukul
+updated: 2026-11-04
+summary: "Independent checks of the ten-challenge benchmark's completion, failure routing and acceptance boundaries."
+---
+
+# Ten-challenge benchmark audit
+
+[P, main-session confirmation at 16:04] The current mission is ten satisfactory real catalog builds without human help during generation. Main owns the benchmark at ~/fhten/tools/ten.py, with three builds at once. The acceptance-tooling thread owns Research/QA/Acceptance. This audit changes neither implementation nor benchmark files.
+
+## Findings sent to the runtime owner
+
+| Finding | Source evidence | Required correction |
+| --- | --- | --- |
+| Driver crash can leave the round waiting forever | [E] one_round breaks only when proc.poll is non-null AND output/DONE exists. A crashed process without DONE has no terminating branch. | [R] On any driver exit, account for all unfinished challenges and end the round with failure evidence. Add a whole-round deadline and stop handling. |
+| Judge failures do not reliably trigger repairs | [E] one_round sends architecture tasks only when status is not review. A review result with a failed automatic bar, or a later VERDICT: NOT, has no corresponding automatic failure route. | [R] Route each failed automatic or independent check once to the existing owner with the exact run/artifact and criterion. |
+| Scoreboard can stay stale after judges finish | [E] write_board runs as results arrive and when the driver completes. main waits for a changed Git revision and does not refresh judgments or stop on ten satisfactory results. | [R] Refresh judgments independently of new builds; detect completion explicitly and stop further automatic generation. |
+| Automatic predicate accepts inconsistent failed execution | [E] The auto expression checks failed count and total but not exitCode, quality status or failed criteria. An isolated evaluation with exitCode 1, failed 0, one test and a passing journey returns true. | [R] Require successful execution and coherent host evidence. Keep engineering checks separate from mission acceptance and explicitly reject failed required criteria. |
+| Copied evidence is not the artifact used for first-open testing | [E] score copies selected files from W to D, then launches qa-monkey on W/index.html. It records only a truncated HTML hash in the row. | [R] Freeze and identify the full runnable artifact, test that exact copy and bind the independent judgment to its full manifest. |
+
+[E] Validation used read-only source and one isolated Boolean expression with synthetic inputs. No benchmark function, worker, application, model or browser was run. Findings were sent with the AUDIT-MANAGER prefix to the existing runtime owner.
+
+## First actual benchmark receipt
+
+[E, updated source at 16:07 and isolated probes] The owner changed ten.py. Nonzero test exits, failed quality status and failed criteria now reject in the automatic expression. A mocked crashed driver without DONE now terminates and records the missing result. Source adds periodic verdict refresh and routing for review/automatic failures and NOT judgments. The live loop was not invoked by these checks.
+
+[E, remaining source findings] check_goal emits a notification but main ignores its returned count, so future revisions can still launch after ten satisfactory outcomes. watch_round lacks an explicit STOP/whole-round deadline. The copied-artifact versus original-workspace first-open distinction and truncated HTML-only hash remain. These residual items were sent to the owner; completion is not claimed.
+
+[E, Scoreboard and R1/id12-optask files at about 16:06] One of ten has finished, one meets the current automatic bar and zero is independently satisfactory. This ID 12 build took 9.7 minutes, reports 12/12 Node tests and 8/8 browser journeys, and reports 232,070 uncached input/output tokens. A separately reported earlier ID 12 run had different counts and must not be conflated with this benchmark result.
+
+[E, actual test-report.json] quality.status is passed but requirementsMet is false. Three criteria pass and four are unverified. The original USMTF primary requirement and complete deliverable are deferred. The demonstrated implementation is an explicit synthetic EVENT/TASK parser and UTC timeline. The host report honestly states that this does not establish USMTF extraction or domain category correctness.
+
+[R] An independent judge must assess whether the actual primary task is satisfied; a working generic parser cannot earn full challenge completion merely by documenting the missing requirement. No operational data or policy is needed for this judgment. Keep the scope synthetic and the incomplete requirements visible.
+
+## Follow-up at 16:23 EST
+
+[E, runner.log and isolated strict-verdict probes] The organization runner restarted at 16:19:21. Five probes confirm only an exact, unambiguous APPROVE verdict is accepted; mixed, suffixed, embedded and absent verdicts reject. Work is running, based on dated start/completion events, not a process census. Three factory commits remain under review. The current dev/reviewed reference moved to 1d9eeee through frontend relay; that does not establish landing of those factory fixes.
+
+[E, ten.py source] The completion check now writes GOAL and pauses further generation. New results copy the full eligible payload and run first-open checks on that copy. STOP and the four-hour deadline still end only the watcher; the source explicitly warns that the driver may remain running. Bounded cancellation of the actual driver and owned model work remains requested.
+
+[E, SHA-256 comparisons] Saved manifests do not remain valid: ID 08 has five mismatched Markdown files, ID 20 has five, and ID 35 changed from zero mismatches to six during inspection. Original workspace bytes still match the manifests. A direct README diff shows vault normalization changing literal UI strings from em-dash separators to commas. This is not evidence of changed application logic, but it invalidates the claim that the copied payload is unchanged. ID 11, ID 12 and ID 36 predate full manifests and have none.
+
+[R, sent to runtime owner] Preserve immutable raw generated artifacts separately from prose-normalized vault notes, or perform any required transformation before final hashing and acceptance. Bind judgments to the final artifact manifest. Do not retroactively credit original-workspace tests as tests of a subsequently changed copy.
+
+[E, independent judgment] [[Research/QA/Officer/JUDGE-R1-id12-optask]] returns NOT. It confirms real supporting mechanics but no extraction of the requested mock-USMTF event types. The first independent verdict therefore rejects the automatic pass, as intended. No satisfactory result is claimed.
+
+[E, queue and dev-3 working source] The current dev-3 task is smoke-script maintenance while its sandbox verifier changes remain uncommitted. The returned registration-check implementation still depends on integration with that verifier. Requested explicit ownership and completion of that dependency before treating smoke work as the only remaining task.
+
+## Verified follow-up at 16:30 EST
+
+[E] New raw captures are outside the normalized vault at ~/fhten/frozen/R1. All 27 manifest entries for id10-mooring and all 42 for id32-readiness match their saved raw bytes. Their first-open receipts show no page/console errors or external requests. Source now launches first-open against the raw copy. This correction applies to these captures; the earlier six results are not retroactively credited with raw-copy validation.
+
+[E] The scoreboard now records eight finished, seven automatic passes and zero satisfactory judgments. ID 11 and ID 12 are independently rejected for missing defining challenge outcomes. The ID 12 note changed its verdict spelling from NOT to unsatisfactory; route now treats nonpending, nonsatisfactory verdicts as failures. Exact verdict parsing and artifact binding remain preferable to prefix acceptance.
+
+[E] dev-3 submitted eadfea1, including its verifier and native containment smoke script, authored Mukul. It remains under review. [[Research/QA/Review-Queue-Notes]] incorporates the assigned reviewer's two reproduced recovery blockers; dev-1 is correcting them. Main owns serial integration and received the confirmed author decision.
+
+[E] The benchmark's STOP/deadline source still warns that its driver may remain running. No shutdown fix or runtime proof is claimed here.
+
+## Completed round-1 baseline
+
+[E, scoreboard, rows and DONE at 16:42] All ten builds finished; nine pass the automatic bar and zero are independently satisfactory so far. Four independent judgments reject their primary outcomes; the other judgments are still pending. Average build time is 11.64 minutes. Total uncached input plus output is 2,689,377 tokens; gross input plus output is 15,870,471. None is under eight minutes or under 200,000 uncached input plus output tokens. This is a measured baseline, not a quality or efficiency improvement.
+
+[E, canonical packet and actual report] ID 16 is the only requirementsMet:true result. Its packet contains only the three recipe criteria GOV-01, GOV-02 and GOV-03, with no source-backed criterion. Requested behavior in its narrative/demo text is not represented in that inventory. The flag therefore does not establish complete card coverage. Sent this gap to the primary-task fix owner through main; retain the approved synthetic scope and independent judgment.
+
+[E, main reply and source] HOLD is set, and ten.py skips heads without changes in its factory-related paths. Main owns a planned five-challenge experiment with the primary-task patch; that experiment is not a substitute for the final ten-challenge objective. The future driver now requests cancellation on STOP/3.5 hours, but still swallows rejected stop requests and logs stopped unconditionally, with an unbounded wait. Per-build timeouts still drop tracking without calling cancellation. These residual findings were sent back. Round 1 used the older driver and finished normally.
+
+## Current ownership and active follow-up
+
+[E, pure parser probe at 16:37] The in-progress dev-5 deferral-basis check still accepts the rejected ID 12 baseline after only adding deferralBasis: real-data to its deferred entries. Called parseQualityPlan with the canonical packet and unchanged existing journeys. Result: accepted, with UC12-1 and DELIVERABLE12-1 both deferred and zero journeys. No file, generated app or live run changed. Sent this exact regression to the runtime owner: require evidence of the synthetic primary workflow, rather than only an allowed dependency label. This is a finding against a work in progress, not a landed regression.
+
+[E, same pure probe at 16:47] The updated working source now rejects that exact enum-only baseline because syntheticCoverage is missing. This closes the demonstrated structural loophole in the working diff. The broad test gate still failed. The earlier claim that the experiment had not started was incorrect: it was running under Ten/Exp1, as established below. Independent semantic judgment and narrative-only source coverage remain separate requirements.
+
+[E, exact new-head prelaunch check] The first landed backend change is c6ce52d, confirmed in dev-4 and the coordinator's pushed record. Comparing ten.py replacement literals against that exact tree shows VERIFY_A no longer matches because its environment is now wrapped in runProcessEnvironment. prepare silently skips the temporary verifier patch, leaving the old direct generated-test subprocess on this head. Its codex-session config replacement also fails to match the newly added marker policy. The API-key replacements still match. This is a verified source-compatibility blocker for any experiment using c6ce52d, not a claim that an unsafe new run already happened. Main received it before launch: require the mandatory verifier or a verified compatible patch and fail closed on missing required replacements. Preserve process markers and record the exact final source.
+
+[E, main bridge] Main owns the live runtime and benchmark repairs. The dated restart and source findings above supersede the earlier draining status. [[Research/QA/Ten/Scoreboard]] remains the changing result record.
+
+[P, direct user reply at 16:27] Mukul explicitly selected Mukul as commit author. Main received the answer through the existing bridge. This resolves the conflicting divinedev111 report; existing unlanded commit identities and review SHAs must be reconciled without changing reviewed code.
+
+## Experiment 1 receipt correction at 17:14 EST
+
+[E] The experiment ran from 16:39 to 17:09 at 1d9eeee plus the disclosed scratch changes, recorded in [[Research/QA/Ten/Exp1/Scoreboard]]. The promised Experiment-1 note was absent, but that did not establish an absent run. All five builds pass the automatic bar; four independent verdicts are NOT and ID 20 is pending. The c6ce52d temporary-patch compatibility blocker concerns a later base and does not describe this experiment.
+
+[E, raw SHA-256 verification] All 324 manifest entries across the five outputs match the corresponding raw bytes under ~/fhexp/frozen/R101: ID 08 has 44, ID 11 has 54, ID 12 has 44, ID 20 has 86, and ID 36 has 96. No entry is missing. The manifest prose incorrectly names fhten, and generated scoreboard/judge links omit Exp1. Those documentation paths must be derived from the configured run root.
+
+[E, matched comparison] These five took 14.22 minutes on average and 1,544,594 uncached input/output tokens, versus 11.46 minutes and 1,300,511 tokens in their baseline rows. That is about 24 percent more time and 19 percent more tokens. More passing test cases and implemented features have not yet produced independent acceptance or an efficiency improvement. Two experiment reports claim complete requirements while judges reject invented-format substitution and preset-only scheduling.
+
+[E] The bridge status request timed out after ten minutes; direct file inspection recovered the actual run status. The current development tasks include integrated verification/recovery, preflight corrections, stronger primary workflow prompts, and a bounded internal judge/repair loop. These are work in progress, not completion evidence.
+
+[E, source recheck at 17:14 EST] The current ten.py now uses a tolerant verifier replacement and raises an error if the required old launcher cannot be matched. An isolated transformation against exact fc97f36 matches the generated-test launcher, retains runProcessEnvironment and shell_environment_policy.set markers, and removes the legacy workspace-write selection. This closes the original exact-string mismatch reproduction on that tree. It is not a native containment receipt; the helper's broad sandbox-word check is not itself sufficient evidence of enforcement on future trees.
+
+[E, final experiment judgment] ID 20 is also NOT: source acquisition/import and immutable capture remain absent, despite useful sample briefing handlers. Experiment 1 therefore has five automatic passes and zero of five satisfactory judgments. All final judges are recorded under Research/QA/Officer/JUDGE-R101-*.
+
+## Live round 3 overrides earlier HOLD status at 17:32 EST
+
+[E] The actual current scoreboard is round 3 at f662d81 plus disclosed scratch changes, started 17:11. HOLD is absent. Round 2 ended on a settings selector timeout. The first three round-3 builds all pass their application tests and journeys but fail at review because process cleanup cannot be confirmed. The driver starts later challenges despite that failure. This is evidence of unconfirmed cleanup, not proof of surviving processes. Earlier HOLD statements describe historical checkpoints only.
+
+[E/R] Sent an urgent blocked message to main to pause new launches and establish owned-process cleanup. Assigned the existing QA task to prioritize this evidence in its native Stop review. The running process-sweep source is at ~/fhten/app/electron/process-sweep.ts. No process census was available to this audit and no environment values were read or printed.
+
+[E, bridge metadata] Both runtime-target questions timed out. The bridge read markers show all messages consumed by 17:29, but neither question has a corresponding reply; the last recorded answer is 16:38. This is an unanswered coordination request, not a lost inbox delivery. No confirmation of a runtime pause is claimed.
+
+[E, control observation at 17:35 EST] STOP now exists and the R3 driver records stopped entries for remaining builds at 17:35. Its known error-swallowing path means these lines establish requests, not confirmed process cleanup. Existing QA reports a source diagnosis involving macOS ps legacy-mode flags; native validation and the resulting repair remain pending.

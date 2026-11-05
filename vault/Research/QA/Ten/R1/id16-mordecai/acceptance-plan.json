@@ -1,0 +1,492 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "GOV-01",
+      "disposition": "implemented",
+      "expectedOutcome": "In the synthetic simulator, missing manifest, expired authorization lease (expiresAt=100 at t=100), and stale heartbeat each reject an intent with a distinct reason and zero executed actions. Explicit registration or renewal permits a fresh intent; repair subsequently executes exactly one action. These are simulated identity and authorization checks, not cryptographic verification.",
+      "journeyIds": [
+        "eligibility-recovery"
+      ]
+    },
+    {
+      "criterionId": "GOV-02",
+      "disposition": "implemented",
+      "expectedOutcome": "At t=100 under demo-v1 cruising policy, sensor score 60 beats repair score 40 for pump-1 in either arrival order with only one lease and one action. A 60/60 tie grants no lease and escalates; explicit repair promotion to 80 resolves it. General quarters gives repair 70 over sensor 60; returning to cruising and adding promotion 40 gives repair 80.",
+      "journeyIds": [
+        "reverse-contention",
+        "tie-recovery",
+        "condition-promotion"
+      ]
+    },
+    {
+      "criterionId": "GOV-03",
+      "disposition": "implemented",
+      "expectedOutcome": "After one completed action and two newly pending intents, one operator halt cancels pending work, records acknowledgement for both registered agents, rejects new intents and blocks execution. The executed count remains 1 and the completed sensor action remains visible, including after reload. This covers all agents in the local simulation and preserves a separate human review obligation.",
+      "journeyIds": [
+        "halt-persistence"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "eligibility-recovery",
+      "title": "Reject missing, expired and stale authorization, then recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#eligibility-case",
+          "value": "missing"
+        },
+        {
+          "action": "click",
+          "selector": "#load-case"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Rejected: agent ghost is not registered."
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#repair-eligibility"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Pending: ghost requests pump-1."
+        },
+        {
+          "action": "select",
+          "selector": "#eligibility-case",
+          "value": "expired"
+        },
+        {
+          "action": "click",
+          "selector": "#load-case"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Rejected: repair authorization lease expired at t=100."
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#repair-eligibility"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Pending: repair requests pump-1."
+        },
+        {
+          "action": "select",
+          "selector": "#eligibility-case",
+          "value": "stale"
+        },
+        {
+          "action": "click",
+          "selector": "#load-case"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Rejected: repair heartbeat is stale at t=100."
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#repair-eligibility"
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Pending: repair requests pump-1."
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-latest",
+          "text": "Executed: repair / pump-1 / inspect at t=100."
+        }
+      ]
+    },
+    {
+      "id": "reverse-contention",
+      "title": "Resolve the same simultaneous requests in both arrival orders",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-winner",
+          "text": "sensor"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "sensor wins pump-1: 60 > 40 under demo-v1 / cruising."
+        },
+        {
+          "action": "expectText",
+          "selector": "#lease-owner",
+          "text": "sensor"
+        },
+        {
+          "action": "click",
+          "selector": "#clear-batch"
+        },
+        {
+          "action": "select",
+          "selector": "#arrival-order",
+          "value": "repair-first"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-winner",
+          "text": "sensor"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "sensor wins pump-1: 60 > 40 under demo-v1 / cruising."
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-latest",
+          "text": "Executed: sensor / pump-1 / inspect at t=100."
+        }
+      ]
+    },
+    {
+      "id": "tie-recovery",
+      "title": "Escalate tied authority and recover through explicit promotion",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#promotion",
+          "value": "20"
+        },
+        {
+          "action": "click",
+          "selector": "#save-promotion"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-winner",
+          "text": "None"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "Escalate pump-1: repair 60 = sensor 60. No lease granted."
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "0"
+        },
+        {
+          "action": "fill",
+          "selector": "#promotion",
+          "value": "40"
+        },
+        {
+          "action": "click",
+          "selector": "#save-promotion"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "repair wins pump-1: 80 > 60 under demo-v1 / cruising."
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-latest",
+          "text": "Executed: repair / pump-1 / inspect at t=100."
+        }
+      ]
+    },
+    {
+      "id": "condition-promotion",
+      "title": "Change condition and promote repair with visible authority",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#condition",
+          "value": "general-quarters"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-condition"
+        },
+        {
+          "action": "expectText",
+          "selector": "#roster-order",
+          "text": "repair 70; sensor 60"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "repair wins pump-1: 70 > 60 under demo-v1 / general-quarters."
+        },
+        {
+          "action": "click",
+          "selector": "#clear-batch"
+        },
+        {
+          "action": "select",
+          "selector": "#condition",
+          "value": "cruising"
+        },
+        {
+          "action": "click",
+          "selector": "#apply-condition"
+        },
+        {
+          "action": "expectText",
+          "selector": "#roster-order",
+          "text": "sensor 60; repair 40"
+        },
+        {
+          "action": "fill",
+          "selector": "#promotion",
+          "value": "40"
+        },
+        {
+          "action": "click",
+          "selector": "#save-promotion"
+        },
+        {
+          "action": "expectText",
+          "selector": "#roster-order",
+          "text": "repair 80; sensor 60"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#decision-reason",
+          "text": "repair wins pump-1: 80 > 60 under demo-v1 / cruising."
+        }
+      ]
+    },
+    {
+      "id": "halt-persistence",
+      "title": "Halt pending work and keep the stop enforced after reload",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#clear-batch"
+        },
+        {
+          "action": "click",
+          "selector": "#queue-contenders"
+        },
+        {
+          "action": "expectText",
+          "selector": "#pending-count",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#halt"
+        },
+        {
+          "action": "expectText",
+          "selector": "#halt-status",
+          "text": "Halted: future simulated actions blocked."
+        },
+        {
+          "action": "expectText",
+          "selector": "#pending-count",
+          "text": "0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#halt-acks",
+          "text": "repair: acknowledged; sensor: acknowledged"
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#execution-result",
+          "text": "Blocked: operator halt is active."
+        },
+        {
+          "action": "click",
+          "selector": "#submit-intent"
+        },
+        {
+          "action": "expectText",
+          "selector": "#intent-result",
+          "text": "Rejected: operator halt is active."
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "1"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#halt-status",
+          "text": "Halted: future simulated actions blocked."
+        },
+        {
+          "action": "click",
+          "selector": "#execute"
+        },
+        {
+          "action": "expectText",
+          "selector": "#execution-result",
+          "text": "Blocked: operator halt is active."
+        },
+        {
+          "action": "expectText",
+          "selector": "#executed-count",
+          "text": "1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-latest",
+          "text": "Executed: sensor / pump-1 / inspect at t=100."
+        }
+      ]
+    }
+  ]
+}

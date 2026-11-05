@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Watchstanders and human reviewers evaluating synthetic contact evidence offline; no operational decisions are supported.",
+  "primaryTask": "Look up a synthetic vessel by name, IMO or MMSI, resolve ambiguous names explicitly, review a concise brief and inspect its exact supporting evidence.",
+  "successOutcome": "The selected identity has a readable brief with cited supported fields, explicit UNKNOWN fields and stale historical evidence clearly separated from current facts.",
+  "screens": [
+    {
+      "name": "Contact lookup and brief",
+      "purpose": "Enter an identifier, choose a candidate when needed, and read identity, flag, destination and sanctions-status fields. Display Synthetic data \u2014 prototype prominently, along with the fixed demonstration reference time and freshness convention.",
+      "primaryAction": "Look up contact"
+    },
+    {
+      "name": "Source inspection panel",
+      "purpose": "Inspect the exact cited span and full permitted synthetic source text with document ID, revision, locator, source time, capture time and UTF-16 offsets; retain the brief beneath the panel.",
+      "primaryAction": "Return to brief"
+    }
+  ],
+  "states": {
+    "empty": "Show a labeled identifier-type select (name default, IMO, MMSI), identifier input and Look up contact button. Offer Synthetic Lumen and Synthetic Ember as examples. No brief or default factual assertions before lookup.",
+    "loading": "All computation is local and normally immediate. Set the form busy during lookup and prevent duplicate activation; always clear busy on completion or failure. No network spinner or artificial delay.",
+    "error": "Empty input shows Enter a vessel name, IMO or MMSI. Preserve the draft. Unknown identity shows UNKNOWN \u2014 no permitted identity matches this identifier. Ambiguous names show distinct native candidate buttons and no generated brief. Missing, future or invalid source times cannot supply current facts. A broken source reference shows Source unavailable \u2014 fact UNKNOWN. and removes current support.",
+    "success": "Show the selected identity, current flag only when supported, UNKNOWN for unsupported destination and sanctions status, and one citation per factual field. Stale records appear as historical evidence with an explicit STALE notice and current flag UNKNOWN. Citation inspection exposes exact source text without leaving the application."
+  },
+  "persistence": "Session-only state: preserve identifier, selected identity and brief when opening/closing a source panel and while correcting validation errors. A new submitted lookup clears the prior brief and source panel to prevent cross-contact leakage. Reload intentionally starts a clean lookup; disclose that nothing is saved. No save, approval or export boundary is included.",
+  "recovery": "Correct input and retry with Enter or Look up contact. Ambiguous names require explicit selection; never merge candidates. Source inspection returns to the same brief. Unexpected corpus/reference failure shows a readable error and permits a new lookup without exposing excluded text. No interpretation is automatically generated; a separate Human interpretation guidance section says Intent and sanctions clearance are not assessed.",
+  "keyboard": "Use native labeled form controls and candidate/citation buttons, logical Tab order and visible focus. Enter submits lookup; candidate buttons activate with Enter/Space. Source panel is an inline region with a heading, focus moves to its heading on open and returns to the citation on close. Errors use a live status region and focus the invalid input. At narrow widths stack fields and wrap source text without horizontal page scrolling; use readable contrast and no color-only stale indicator."
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "Sailor tool builders and transition coordinators preparing synthetic draft evidence for command, hosting, authorization and sustainment reviewers.",
+  "primaryTask": "Create and save a fictional tool transition record, review unresolved barriers and download a draft package and reusable playbook.",
+  "successOutcome": "A saved revision shows all eight unresolved barriers with proposed fixes and ownership status. Downloaded Markdown preserves the synthetic label, sources, evidence gaps and external approval gates.",
+  "screens": [
+    {
+      "name": "Transition workspace",
+      "purpose": "Explain synthetic-only and local-only scope; capture fictional identity, baseline and proposed transition topics, evidence references and editable barrier actions.",
+      "primaryAction": "Save record"
+    },
+    {
+      "name": "Saved record review",
+      "purpose": "Show the saved revision, evidence gaps, eight barriers and one-page path summary; separate draft review from operational approval.",
+      "primaryAction": "Download draft package; Download reusable playbook"
+    }
+  ],
+  "states": {
+    "empty": "Show a short introduction, empty tool name/version and Load synthetic example. Eight known unresolved barrier rows are always present. Explain that missing actual tool/device/owners prevent fielding.",
+    "loading": "Local validation and saving are immediate; briefly prevent duplicate saves/download actions while processing. No remote calls or indefinite spinners. Restore storage before allowing review.",
+    "error": "Show specific validation messages in #form-error, retain all draft input, and focus the first invalid field. #review-error explains unsaved changes. Storage failure stays visible and prevents claiming durable save; malformed stored data offers explicit reset after confirmation and session-only work. Download failure offers retry without changing saved content.",
+    "success": "#save-status names saved revision and fictional tool; #draft-status distinguishes saved from unsaved. Review shows Synthetic draft — not authorized for fielding, evidence status, barrier count and a clear next download action."
+  },
+  "persistence": "Use versioned localStorage for both unfinished draft and committed snapshot; persist edits and reload without discarding them. Save explicitly commits a new revision. Discard changes restores the committed snapshot. Local browser storage is neither secure operational storage nor sync. If unavailable, disclose session-only mode and offer export without claiming durable persistence.",
+  "recovery": "Reject blank fictional tool name and blank barrier proposed fixes; whitespace is blank. Preserve other fields. Block review and export whenever draft differs from saved content; Save or Discard changes must precede review. Loading a synthetic sample when content exists requires explicit replacement confirmation. Never turn proposed evidence or a populated field into operational approval.",
+  "keyboard": "Native labeled inputs, selects, buttons and textareas in logical Tab order; visible focus; Enter/Space activates buttons. Validation focuses the invalid control and announces errors through a live region. Review action focuses the review heading, and Back to edit retains all work. Narrow layout stacks fields and wraps long references without horizontal scrolling."
+}

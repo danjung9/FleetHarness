@@ -1,0 +1,311 @@
+{
+  "time": "2026-11-04T20:47:03.339Z",
+  "command": "node \"--test\" \"--test-reporter=tap\" \"./application.test.cjs\" \"./core.test.cjs\" \"./packaging.test.cjs\" \"./ui.test.cjs\"",
+  "exitCode": 0,
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "skipped": 0,
+  "output": "TAP version 13\n# Subtest: portable actual round trip preserves candidate order and exact input/draft\nok 1 - portable actual round trip preserves candidate order and exact input/draft\n  ---\n  duration_ms: 5.067917\n  type: 'test'\n  ...\n# Subtest: import rejects malformed, foreign, oversized and forged drafts without mutating work\nok 2 - import rejects malformed, foreign, oversized and forged drafts without mutating work\n  ---\n  duration_ms: 1.358583\n  type: 'test'\n  ...\n# Subtest: nonfeasible claims must replay exactly, no partial assignments\nok 3 - nonfeasible claims must replay exactly, no partial assignments\n  ---\n  duration_ms: 2.752125\n  type: 'test'\n  ...\n# Subtest: review requires a complete checked draft and edit/restoration clear it\nok 4 - review requires a complete checked draft and edit/restoration clear it\n  ---\n  duration_ms: 0.250958\n  type: 'test'\n  ...\n# Subtest: malformed assignment entries fail the actual checker safely\nok 5 - malformed assignment entries fail the actual checker safely\n  ---\n  duration_ms: 0.369417\n  type: 'test'\n  ...\n# Subtest: baseline all four exact intervals and independent oracle\nok 6 - baseline all four exact intervals and independent oracle\n  ---\n  duration_ms: 3.590583\n  type: 'test'\n  ...\n# Subtest: alternate allocation and edited duration use current inputs without mutation\nok 7 - alternate allocation and edited duration use current inputs without mutation\n  ---\n  duration_ms: 0.599292\n  type: 'test'\n  ...\n# Subtest: invalid, impossible and exhausted are distinct; exact final-node success\nok 8 - invalid, impossible and exhausted are distinct; exact final-node success\n  ---\n  duration_ms: 0.295958\n  type: 'test'\n  ...\n# Subtest: qualification, whole-window and whole-horizon failures\nok 9 - qualification, whole-window and whole-horizon failures\n  ---\n  duration_ms: 0.249958\n  type: 'test'\n  ...\n# Subtest: rest boundaries and touching zero-rest intervals\nok 10 - rest boundaries and touching zero-rest intervals\n  ---\n  duration_ms: 1.446958\n  type: 'test'\n  ...\n# Subtest: checker rejects tampered identities, missing assignments, collisions and totals\nok 11 - checker rejects tampered identities, missing assignments, collisions and totals\n  ---\n  duration_ms: 0.445833\n  type: 'test'\n  ...\n# Subtest: input shape, unsafe arithmetic, empty and duplicate identities rejected\nok 12 - input shape, unsafe arithmetic, empty and duplicate identities rejected\n  ---\n  duration_ms: 0.357042\n  type: 'test'\n  ...\n# Subtest: adjacent boundary values and complete window endpoints\nok 13 - adjacent boundary values and complete window endpoints\n  ---\n  duration_ms: 0.413125\n  type: 'test'\n  ...\n# Subtest: bounded adversarial combinations match independent explicit two-session feasibility arithmetic\nok 14 - bounded adversarial combinations match independent explicit two-session feasibility arithmetic\n  ---\n  duration_ms: 5.074833\n  type: 'test'\n  ...\n# Subtest: actual embedded classic core computes baseline, edited and boundary results consistently\nok 15 - actual embedded classic core computes baseline, edited and boundary results consistently\n  ---\n  duration_ms: 4.789292\n  type: 'test'\n  ...\n# Subtest: all delivered classic scripts parse without imports or external runtime dependencies\nok 16 - all delivered classic scripts parse without imports or external runtime dependencies\n  ---\n  duration_ms: 0.874458\n  type: 'test'\n  ...\n# Subtest: actual UI imports and restores infeasible/exhausted snapshots without missing diagnostic crashes\nok 17 - actual UI imports and restores infeasible/exhausted snapshots without missing diagnostic crashes\n  ---\n  duration_ms: 23.486958\n  type: 'test'\n  ...\n# Subtest: actual UI clears review on every input category and recomputes current duration\nok 18 - actual UI clears review on every input category and recomputes current duration\n  ---\n  duration_ms: 19.881291\n  type: 'test'\n  ...\n# Subtest: actual UI invalid text survives recovery and corrections preserve all requests\nok 19 - actual UI invalid text survives recovery and corrections preserve all requests\n  ---\n  duration_ms: 6.974708\n  type: 'test'\n  ...\n# Subtest: actual UI invalidates staged comparisons on edits; failed import and cancel preserve reviewed work\nok 20 - actual UI invalidates staged comparisons on edits; failed import and cancel preserve reviewed work\n  ---\n  duration_ms: 4.109834\n  type: 'test'\n  ...\n# Subtest: actual UI storage failure still initiates portable download and discloses recovery limit\nok 21 - actual UI storage failure still initiates portable download and discloses recovery limit\n  ---\n  duration_ms: 3.933708\n  type: 'test'\n  ...\n1..21\n# tests 21\n# suites 0\n# pass 21\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 232.15375\n\nBrowser journeys: 22/22 passed.\nRequirements: 12 demonstrated, 0 failed, 3 unverified.",
+  "durationMs": 27580,
+  "sourceHash": "b4e979562b29af93064d767db224ad056a2586dba6a7dd72d76cadd999d79a2f",
+  "quality": {
+    "schemaVersion": 1,
+    "contractHash": "14e1fa793da758c54a8f74aa736c5c010e9305558ae0789ab59bcf160eb005cd",
+    "status": "passed",
+    "requirementsMet": false,
+    "criteria": [
+      {
+        "criterionId": "UC11-1",
+        "requirement": "The tool must deploy collaborative departmental agents (Engineering Agent, Weapons Agent, Combat Systems Agent, etc.) that negotiate drill schedules against shared constraints: ship operational windows, qualified personnel rosters (e.g., Fire Party Leader, EOOW, TAO), and fatigue policies. The multi-agent solver identifies personnel collisions, proposes alternate schedule allocations, and ensures all SFTRM-mandated training periodicities are satisfied.",
+        "status": "unverified",
+        "detail": "Deferred in full: four synthetic sessions demonstrate bounded feasibility only. Departmental agents/negotiation, owner-approved operational fatigue rules, interfaces and SFTRM semantics are absent."
+      },
+      {
+        "criterionId": "SCH-01",
+        "requirement": "No personnel or shared-resource double booking.",
+        "status": "passed",
+        "detail": "No pair sharing a person or room overlaps. Baseline A is 0–60, B is 90–150, C is 0–60, D is 1440–1500; simultaneous A/C share neither person nor room. — demonstrated by baseline, collision at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-02",
+        "requirement": "Honor availability, qualifications, rest and duty budgets.",
+        "status": "passed",
+        "detail": "Full sessions fit operating and person windows, qualifications are covered, rest and whole-horizon budgets hold. Baseline P01 rest is exactly 30, each total 120. Rest 31, budget 119, missing Q-A and window end 1499 fail; end 1500 permits D. — demonstrated by baseline, rest-budget, qualification, windows at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-03",
+        "requirement": "Distinguish infeasible input from exhausted search.",
+        "status": "passed",
+        "detail": "B start 0 only is infeasible after complete search; budget 1 reports search limit reached with feasibility unknown; budget 50000 finds B at 90. — demonstrated by collision, search-limit at both viewport sizes."
+      },
+      {
+        "criterionId": "SCH-04",
+        "requirement": "Preserve mandatory training periodicities.",
+        "status": "unverified",
+        "detail": "Deferred: owner recurrence/deadline rules and SFTRM authority are absent. Four explicit sessions do not establish periodicity compliance; future integration must expand and check every occurrence."
+      },
+      {
+        "criterionId": "SCH-05",
+        "requirement": "Have an operator accept the proposed schedule.",
+        "status": "passed",
+        "detail": "A coordinator inspects the synthetic board and loads and deliberately marks the current feasible draft reviewed. Any edit clears review. No automatic constraint relaxation is available. Actual revision acceptance remains a human review obligation. — demonstrated by baseline, edit-review at both viewport sizes."
+      },
+      {
+        "criterionId": "DELIVERABLE11-1",
+        "requirement": "An interactive weekly schedule board showing automated conflict resolution across departments with one-click schedule optimization and personnel loading heatmaps.",
+        "status": "unverified",
+        "detail": "Deferred in full: this two-day feasibility draft and totals are not a weekly departmental optimization board or heatmaps. Objectives, negotiation and operational calendar integrations are absent."
+      },
+      {
+        "criterionId": "USER11-1",
+        "requirement": "Shows all four synthetic requests A, B, C and D and the whole-horizon minutes for each person.",
+        "status": "passed",
+        "detail": "All four baseline intervals and fixed assignments appear, with P01 and P02 each 120 minutes across both days. — demonstrated by baseline at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-2",
+        "requirement": "Every result is computed from the current input, with no canned answer, and valid edits recompute it.",
+        "status": "passed",
+        "detail": "Current inputs drive computation. Editing D duration 60 to 30 recomputes end 1470 and P02 total 90; editing a window can make the problem infeasible with no stale current draft. — demonstrated by edit-review, windows at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-3",
+        "requirement": "Feasible, infeasible, invalid input and search limit reached are four distinct, plainly worded outcomes.",
+        "status": "passed",
+        "detail": "Feasible draft, Infeasible, Invalid input, and Search limit reached with feasibility unknown are distinct plainly worded outcomes matching the literal journey messages. — demonstrated by baseline, invalid, collision, search-limit at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-4",
+        "requirement": "Never drops or reassigns a request, relaxes a limit or invents a qualification to make a draft fit.",
+        "status": "passed",
+        "detail": "Search keeps A–D, exact people/rooms, qualification requirements and limits; impossible cases retain the problem rather than dropping requests, reassigning or silently relaxing constraints. — demonstrated by collision, qualification, rest-budget at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-5",
+        "requirement": "Invalid input keeps an actionable error, and infeasibility keeps all requests for correction.",
+        "status": "passed",
+        "detail": "B duration 0 stays entered with an actionable positive-whole-number error. Impossible B starts retain four requests. Correction recovers feasibility; failed import preserves current work. — demonstrated by invalid, collision, bad-import at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-6",
+        "requirement": "A person can mark the current draft reviewed, and any relevant edit clears that review.",
+        "status": "passed",
+        "detail": "Review is bound to the current checked feasible inputs and draft. Relevant edits clear review immediately; imported content never restores trusted review. — demonstrated by edit-review, portable at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-7",
+        "requirement": "Save and import round-trips the exact inputs and draft, and the app works offline from one self-contained index.html.",
+        "status": "passed",
+        "detail": "Version-1 synthetic JSON round-trips exact structured inputs and draft. Saved D duration 30 recovers after reload and import with end 1470 and P02 load 90. One self-contained index.html works offline without external assets. Node deep-equality round-trip and manual local-file reopen supplement the browser journey. — demonstrated by portable, bad-import at both viewport sizes."
+      },
+      {
+        "criterionId": "USER11-8",
+        "requirement": "The app and README state the omissions listed in the brief and label everything synthetic and not an issued schedule.",
+        "status": "passed",
+        "detail": "App and practical README label synthetic practice and not an issued schedule and contain all omissions, limited feasibility and owner-policy warnings in the literal limitations journey. — demonstrated by limitations at both viewport sizes."
+      }
+    ],
+    "journeys": [
+      {
+        "id": "baseline",
+        "title": "Generate all four sessions",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 8 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/baseline-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/baseline-desktop.zip"
+      },
+      {
+        "id": "baseline",
+        "title": "Generate all four sessions",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 8 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/baseline-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/baseline-narrow.zip"
+      },
+      {
+        "id": "edit-review",
+        "title": "Review and recompute changed duration",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 11 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/edit-review-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/edit-review-desktop.zip"
+      },
+      {
+        "id": "edit-review",
+        "title": "Review and recompute changed duration",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 11 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/edit-review-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/edit-review-narrow.zip"
+      },
+      {
+        "id": "invalid",
+        "title": "Correct invalid duration",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/invalid-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/invalid-desktop.zip"
+      },
+      {
+        "id": "invalid",
+        "title": "Correct invalid duration",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/invalid-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/invalid-narrow.zip"
+      },
+      {
+        "id": "collision",
+        "title": "Restore a feasible alternate start",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 10 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/collision-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/collision-desktop.zip"
+      },
+      {
+        "id": "collision",
+        "title": "Restore a feasible alternate start",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 10 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/collision-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/collision-narrow.zip"
+      },
+      {
+        "id": "rest-budget",
+        "title": "Recover rest and whole-horizon budget boundaries",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 15 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/rest-budget-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/rest-budget-desktop.zip"
+      },
+      {
+        "id": "rest-budget",
+        "title": "Recover rest and whole-horizon budget boundaries",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 15 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/rest-budget-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/rest-budget-narrow.zip"
+      },
+      {
+        "id": "qualification",
+        "title": "Restore supplied qualification without reassignment",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 9 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/qualification-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/qualification-desktop.zip"
+      },
+      {
+        "id": "qualification",
+        "title": "Restore supplied qualification without reassignment",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 9 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/qualification-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/qualification-narrow.zip"
+      },
+      {
+        "id": "windows",
+        "title": "Require complete session window containment",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 13 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/windows-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/windows-desktop.zip"
+      },
+      {
+        "id": "windows",
+        "title": "Require complete session window containment",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 13 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/windows-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/windows-narrow.zip"
+      },
+      {
+        "id": "search-limit",
+        "title": "Recover from exhausted search without claiming infeasibility",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 9 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/search-limit-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/search-limit-desktop.zip"
+      },
+      {
+        "id": "search-limit",
+        "title": "Recover from exhausted search without claiming infeasibility",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 9 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/search-limit-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/search-limit-narrow.zip"
+      },
+      {
+        "id": "portable",
+        "title": "Save, reload and import exact edited snapshot",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 18 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/portable-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/portable-desktop.zip"
+      },
+      {
+        "id": "portable",
+        "title": "Save, reload and import exact edited snapshot",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 18 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/portable-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/portable-narrow.zip"
+      },
+      {
+        "id": "bad-import",
+        "title": "Preserve work after failed or cancelled import",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 12 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/bad-import-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/bad-import-desktop.zip"
+      },
+      {
+        "id": "bad-import",
+        "title": "Preserve work after failed or cancelled import",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 12 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/bad-import-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/bad-import-narrow.zip"
+      },
+      {
+        "id": "limitations",
+        "title": "Read synthetic limitations and README",
+        "viewport": "desktop",
+        "status": "passed",
+        "detail": "Completed 4 steps at 1280×800; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/limitations-desktop.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/limitations-desktop.zip"
+      },
+      {
+        "id": "limitations",
+        "title": "Read synthetic limitations and README",
+        "viewport": "narrow",
+        "status": "passed",
+        "detail": "Completed 4 steps at 390×844; no browser errors or horizontal overflow.",
+        "screenshot": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/limitations-narrow.png",
+        "trace": ".quality-evidence/270f837a45c3-0db7e125-8185-42e5-8868-fb138cd2250e/limitations-narrow.zip"
+      }
+    ],
+    "errors": []
+  }
+}

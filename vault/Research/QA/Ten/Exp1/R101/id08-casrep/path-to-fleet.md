@@ -1,0 +1,12 @@
+# Owner handoff
+
+Primary deferrals: none. Implemented scope is a synthetic demonstration; operational requirements remain unvalidated.
+
+- **Sponsor / sustainment:** unresolved. A Navy CASREP process sponsor must name a command workflow owner and a funded technical sustainment owner before a pilot.
+- **Users / route:** Sailor/LPO through CO; current artifact runs by opening index.html on a desktop or narrow browser. Government devices, hosting and file-origin storage behavior require approval and validation. No installation authorization is established.
+- **Offline delivery:** all code is inline, no dependencies or network requests. Proposed managed distribution is a signed versioned artifact after approval; retain prior approved versions and export data before upgrades. Schema migrations, managed updates and rollback are not implemented. PouchDB/CouchDB and Yjs were evaluated in research.md; neither is needed for the local simulator. Real replication needs an established authenticated adapter, not the simulator.
+- **Data / dependencies:** synthetic-only; no authorized classification level beyond this boundary. Local storage is unencrypted and user-editable. Need approved identity/delegation, device/key design if encryption is required, retention/disposal, audit integrity, authoritative NWP/JSN rules, Navy messaging interfaces/signatures/acknowledgements, and any Microsoft 365 licensing/connector decisions.
+- **Evidence:** actual inline-core Node tests cover domain, storage double and lifecycle behaviors; see verification.md. Host browser journeys, visual/keyboard review, security tests, domain acceptance and operational authorization remain pending. No reviewer signature or approval is supplied.
+- **Next validation:** workflow sponsor to observe the walkthrough with six role representatives, confirm fields and routing against authoritative rules, and record corrections and task success. Sustainment owner to validate browser reload/quota/corruption recovery on approved devices. Integration owner to demonstrate authenticated send/acknowledgement and retention in an authorized test environment. Security owner to assess classification, identity, integrity and authorization. Success measures must be approved by these owners; zero lost edits in agreed failure scenarios and exact authorized routing are proposed measures.
+
+No deployment, operational-system access, CAC authentication or external transmission was performed.

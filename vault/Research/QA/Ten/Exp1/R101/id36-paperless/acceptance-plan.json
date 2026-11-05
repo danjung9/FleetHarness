@@ -1,0 +1,1312 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "All three synthetic forms and tasking outputs are saved offline, survive reload, route locally after review, and reach an acknowledged local demo replica after explicit conflict resolution. No real sync is claimed.",
+      "journeyIds": [
+        "forms-route",
+        "tasking-records",
+        "conflict-review",
+        "save-recovery"
+      ]
+    },
+    {
+      "criterionId": "UC36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Invalid, unsaved, conflicted and changed revisions cannot route; explicit review of the saved current revision precedes each local route. A changed approved duration requires renewed review.",
+      "journeyIds": [
+        "validation-recovery",
+        "conflict-review"
+      ]
+    },
+    {
+      "criterionId": "UC36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Audit export and review/routing ledger retain source-linked immutable revision actions, Training Reviewer decisions, reasons and local routing/receipt states.",
+      "journeyIds": [
+        "evaluation-exports",
+        "conflict-review"
+      ]
+    },
+    {
+      "criterionId": "UC36-4",
+      "disposition": "deferred",
+      "expectedOutcome": "Authorized government device/browser policy and owner-selected low-code runtime are required to establish actual compatibility. Synthetic desktop/narrow workflow, reload and exports are demonstrated; they cannot certify those systems.",
+      "journeyIds": [],
+      "reason": "Authorized government device/browser policy and owner-selected low-code runtime are required to establish actual compatibility. Synthetic desktop/narrow workflow, reload and exports are demonstrated; they cannot certify those systems.",
+      "deferralBasis": "real-systems"
+    },
+    {
+      "criterionId": "UC36-5",
+      "disposition": "implemented",
+      "expectedOutcome": "The application and exports use fictional DEMO records, no personal information, and visible synthetic/nonoperational labels; pause blocks routing and acknowledgement.",
+      "journeyIds": [
+        "safety-stop",
+        "forms-route",
+        "evaluation-exports"
+      ]
+    },
+    {
+      "criterionId": "UC36-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Labeled synthetic workflow operates from the local file offline with citations, reviewed routing, inspectable audit, simulated reconnect and a downloadable one-page path to fleet. This is not operational Fleet-Ready certification.",
+      "journeyIds": [
+        "forms-route",
+        "tasking-records",
+        "conflict-review",
+        "evaluation-exports"
+      ]
+    },
+    {
+      "criterionId": "OFF-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Replaying immutable operations adds zero revisions and zero duplicate routing effects.",
+      "journeyIds": [
+        "replay-converge"
+      ]
+    },
+    {
+      "criterionId": "OFF-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Concurrent edit/edit values 45 and 50 and edit/delete heads remain visible until a reasoned reviewer choice creates a new revision referencing every reviewed head.",
+      "journeyIds": [
+        "replay-converge",
+        "conflict-review"
+      ]
+    },
+    {
+      "criterionId": "OFF-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Opposite delivery orders yield identical canonical record state with both concurrent heads preserved. Missing history preserves the queue until restored.",
+      "journeyIds": [
+        "replay-converge",
+        "missing-history"
+      ]
+    },
+    {
+      "criterionId": "OFF-04",
+      "disposition": "implemented",
+      "expectedOutcome": "Zero budget retains work; send without acknowledgement leaves image at 6144 bytes; acknowledged 4096-byte budget sends critical 1024 and image 3072, reaching 9216; next 3072 completes 12288 after reload.",
+      "journeyIds": [
+        "transfer-resume"
+      ]
+    },
+    {
+      "criterionId": "OFF-05",
+      "disposition": "implemented",
+      "expectedOutcome": "Saved edits and acknowledged offsets survive browser reload offline; reconnect conflicts require explicit choice and renewed review before routing, with reviewer decision exported. Physical restart, eviction and device loss remain unverified.",
+      "journeyIds": [
+        "forms-route",
+        "save-recovery",
+        "conflict-review",
+        "transfer-resume"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Against the planner-defined 20-field synthetic answer key, raw extraction is 16/20 (80%); after source-based correction reviewed accuracy is 20/20 (100%). No general OCR or real-data accuracy is claimed.",
+      "journeyIds": [
+        "evaluation-exports",
+        "tasking-records"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-2",
+      "disposition": "implemented",
+      "expectedOutcome": "All four seeded issues (ambiguous duration, negative quantity, missing subject, conflicting task due date) block routing, survive correction, and result in 4 caught, 4 corrected and 0 unresolved before approval.",
+      "journeyIds": [
+        "validation-recovery",
+        "evaluation-exports"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-3",
+      "disposition": "deferred",
+      "expectedOutcome": "A Fleet SME must authorize the official manual baseline; synthetic elapsed timing, assumed 1200-second comparison and arithmetic cannot establish that authorized comparison.",
+      "journeyIds": [],
+      "reason": "A Fleet SME must authorize the official manual baseline; synthetic elapsed timing, assumed 1200-second comparison and arithmetic cannot establish that authorized comparison.",
+      "deferralBasis": "human-authority"
+    },
+    {
+      "criterionId": "EVAL36-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Both synthetic tracks complete offline, survive reload, resolve competing heads explicitly and acknowledge the reviewed local packet on simulated reconnect without duplicate effects. No operational transport is implied.",
+      "journeyIds": [
+        "forms-route",
+        "tasking-records",
+        "conflict-review",
+        "replay-converge"
+      ]
+    },
+    {
+      "criterionId": "EVAL36-5",
+      "disposition": "deferred",
+      "expectedOutcome": "An actual Sailor panel must judge usability. Complete task flows and an unscored panel worksheet are demonstrated; software cannot supply panel judgment.",
+      "journeyIds": [],
+      "reason": "An actual Sailor panel must judge usability. Complete task flows and an unscored panel worksheet are demonstrated; software cannot supply panel judgment.",
+      "deferralBasis": "human-authority"
+    },
+    {
+      "criterionId": "EVAL36-6",
+      "disposition": "deferred",
+      "expectedOutcome": "Official judges must assign the rubric scores. A worksheet with exact categories/weights and blank scores is demonstrated; it cannot confer official scores.",
+      "journeyIds": [],
+      "reason": "Official judges must assign the rubric scores. A worksheet with exact categories/weights and blank scores is demonstrated; it cannot confer official scores.",
+      "deferralBasis": "human-authority"
+    },
+    {
+      "criterionId": "DELIVERABLE36-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Observed unit workload and time-use data are needed to establish hours actually returned. Measured prototype timing and fictional 20-packet illustrative savings cannot establish realized benefit.",
+      "journeyIds": [],
+      "reason": "Observed unit workload and time-use data are needed to establish hours actually returned. Measured prototype timing and fictional 20-packet illustrative savings cannot establish realized benefit.",
+      "deferralBasis": "real-data"
+    },
+    {
+      "criterionId": "DELIVERABLE36-2",
+      "disposition": "deferred",
+      "expectedOutcome": "Comparable unit baseline and follow-up error/rework observations are needed to establish actual reductions. Four seeded issues caught/corrected demonstrate synthetic prevention, not operational improvement.",
+      "journeyIds": [],
+      "reason": "Comparable unit baseline and follow-up error/rework observations are needed to establish actual reductions. Four seeded issues caught/corrected demonstrate synthetic prevention, not operational improvement.",
+      "deferralBasis": "real-data"
+    },
+    {
+      "criterionId": "DELIVERABLE36-3",
+      "disposition": "implemented",
+      "expectedOutcome": "Completed training log, supply requisition and routine correspondence/routing cover sheet are downloadable and routed to a named local demo queue while offline, clearly pending sync.",
+      "journeyIds": [
+        "forms-route"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "id": "forms-route",
+      "title": "Complete and route all three forms offline",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-summary",
+          "text": "TL-DEMO-017 | Damage-control drill | 2026-10-13 | 45 minutes | 8 participants"
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-summary",
+          "text": "REQ-DEMO-042 | DEMO-FILTER-01 | Training pump filter | 6 EA | DEMO-7 stores | routine"
+        },
+        {
+          "action": "expectText",
+          "selector": "#correspondence-summary",
+          "text": "COR-DEMO-008 | DEMO-7 | Demo Administration Desk | October training completion | TL-DEMO-017"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-status",
+          "text": "Ready for review"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally — pending sync"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally — pending sync"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-training",
+          "fileName": "completed-training-log.txt",
+          "text": "Damage-control drill"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-supply",
+          "fileName": "supply-requisition.txt",
+          "text": "6 EA"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-correspondence",
+          "fileName": "routine-correspondence-package.txt",
+          "text": "Routing cover sheet"
+        }
+      ]
+    },
+    {
+      "id": "tasking-records",
+      "title": "Extract a week of tasking and file reviewed outputs",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-conflict",
+          "text": "Inspect training pump: conflicting due dates 2026-10-16 and 2026-10-18. Review required."
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-source",
+          "text": "MAIL-DEMO-01 paragraph 1; MAIL-DEMO-03 paragraph 1"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-count",
+          "text": "2 actions; 1 duplicate consolidated"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-one",
+          "text": "Inspect training pump | Maintenance Desk | 2026-10-16 | Open"
+        },
+        {
+          "action": "expectText",
+          "selector": "#action-two",
+          "text": "Reconcile drill attendance | Training Desk | 2026-10-17 | Open"
+        },
+        {
+          "action": "click",
+          "selector": "#generate-status"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status-one",
+          "text": "Inspect training pump — Open; Maintenance Desk; due 2026-10-16; sources MAIL-DEMO-01 paragraph 1, MAIL-DEMO-03 paragraph 1"
+        },
+        {
+          "action": "click",
+          "selector": "#file-records"
+        },
+        {
+          "action": "expectText",
+          "selector": "#filing-summary",
+          "text": "TRAIN-DEMO: TL-DEMO-017; SUP-DEMO: REQ-DEMO-042; CORR-DEMO: COR-DEMO-008; TASK-DEMO: tasking sources, verified actions, status drafts"
+        },
+        {
+          "action": "expectText",
+          "selector": "#retention-result",
+          "text": "Closed 2026-10-18; retain through 2027-10-18; no automatic disposal"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-actions",
+          "fileName": "verified-action-list.txt",
+          "text": "Reconcile drill attendance"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-status",
+          "fileName": "draft-status-updates.txt",
+          "text": "Draft status updates"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-manifest",
+          "fileName": "records-filing-manifest.txt",
+          "text": "2027-10-18"
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Catch seeded errors and invalidate stale approval",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked — validation and human review required"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#training-error",
+          "text": "Confirm duration from the source; enter a positive whole number."
+        },
+        {
+          "action": "expectText",
+          "selector": "#supply-error",
+          "text": "Quantity must be a positive whole number."
+        },
+        {
+          "action": "expectText",
+          "selector": "#correspondence-error",
+          "text": "Enter a subject."
+        },
+        {
+          "action": "expectText",
+          "selector": "#task-error",
+          "text": "Resolve the conflicting due date before review."
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally — pending sync"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "46"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Unsaved changes — save or discard before review"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked — current revision needs review"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Approved current revision by Training Reviewer"
+        }
+      ]
+    },
+    {
+      "id": "conflict-review",
+      "title": "Recover from concurrent edit and delete on reconnect",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-edit-delete"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "demo-reconnect"
+        },
+        {
+          "action": "click",
+          "selector": "#reconcile"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-local",
+          "text": "Local: Damage-control drill — 45 minutes"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-remote",
+          "text": "Demo replica: Deleted"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Blocked — resolve conflict and review current revision"
+        },
+        {
+          "action": "select",
+          "selector": "#resolution-choice",
+          "value": "keep-local"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution-reason",
+          "value": "Retain reviewed training evidence"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflict"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Resolved — both heads retained in history; new revision needs review"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Routed locally — pending sync"
+        },
+        {
+          "action": "click",
+          "selector": "#acknowledge-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Acknowledged by demo replica"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-conflicts",
+          "fileName": "conflict-resolution-report.txt",
+          "text": "Retain reviewed training evidence"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Approved current revision by Training Reviewer"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-ledger",
+          "fileName": "review-routing-ledger.txt",
+          "text": "Training Reviewer"
+        }
+      ]
+    },
+    {
+      "id": "replay-converge",
+      "title": "Replay and reverse delivery preserve canonical state",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "click",
+          "selector": "#compare-orders"
+        },
+        {
+          "action": "expectText",
+          "selector": "#convergence-result",
+          "text": "A→B and B→A: identical canonical records; 2 concurrent heads preserved"
+        },
+        {
+          "action": "click",
+          "selector": "#replay-operations"
+        },
+        {
+          "action": "expectText",
+          "selector": "#replay-result",
+          "text": "Replay: 0 new revisions; 0 duplicate routing effects"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-edit-edit"
+        },
+        {
+          "action": "click",
+          "selector": "#reconcile"
+        },
+        {
+          "action": "expectText",
+          "selector": "#edit-heads",
+          "text": "Local duration: 45; demo replica duration: 50"
+        },
+        {
+          "action": "select",
+          "selector": "#resolution-choice",
+          "value": "custom"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution-value",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#resolution-reason",
+          "value": "Source confirms 45 minutes"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve-conflict"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-status",
+          "text": "Resolved — both heads retained in history; new revision needs review"
+        }
+      ]
+    },
+    {
+      "id": "missing-history",
+      "title": "Preserve queued work on invalid history and recover",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-missing-parent"
+        },
+        {
+          "action": "click",
+          "selector": "#reconcile"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-error",
+          "text": "Missing parent history — local queue preserved. Request demo history."
+        },
+        {
+          "action": "click",
+          "selector": "#request-history"
+        },
+        {
+          "action": "click",
+          "selector": "#reconcile"
+        },
+        {
+          "action": "expectText",
+          "selector": "#sync-status",
+          "text": "Demo history restored; local queue preserved; reconciliation complete"
+        }
+      ]
+    },
+    {
+      "id": "transfer-resume",
+      "title": "Resume priority transfers from receiver acknowledgements",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "click",
+          "selector": "#open-transfers"
+        },
+        {
+          "action": "expectText",
+          "selector": "#image-progress",
+          "text": "Training image: 6144 / 12288 bytes acknowledged"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#plan-transfer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "0 bytes planned; pending work retained"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "4096"
+        },
+        {
+          "action": "click",
+          "selector": "#plan-transfer"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-plan",
+          "text": "Critical record: 1024 bytes; training image: 3072 bytes from offset 6144"
+        },
+        {
+          "action": "click",
+          "selector": "#send-without-ack"
+        },
+        {
+          "action": "expectText",
+          "selector": "#image-progress",
+          "text": "Training image: 6144 / 12288 bytes acknowledged"
+        },
+        {
+          "action": "expectText",
+          "selector": "#transfer-status",
+          "text": "Interrupted before acknowledgement — retry from acknowledged offsets"
+        },
+        {
+          "action": "click",
+          "selector": "#retry-and-ack"
+        },
+        {
+          "action": "expectText",
+          "selector": "#image-progress",
+          "text": "Training image: 9216 / 12288 bytes acknowledged"
+        },
+        {
+          "action": "expectText",
+          "selector": "#critical-progress",
+          "text": "Critical record: 1024 / 1024 bytes acknowledged"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#image-progress",
+          "text": "Training image: 9216 / 12288 bytes acknowledged"
+        },
+        {
+          "action": "fill",
+          "selector": "#link-budget",
+          "value": "3072"
+        },
+        {
+          "action": "click",
+          "selector": "#plan-transfer"
+        },
+        {
+          "action": "click",
+          "selector": "#retry-and-ack"
+        },
+        {
+          "action": "expectText",
+          "selector": "#image-progress",
+          "text": "Training image: 12288 / 12288 bytes acknowledged"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-transfer",
+          "fileName": "transfer-progress-receipt-report.txt",
+          "text": "12288 / 12288"
+        }
+      ]
+    },
+    {
+      "id": "evaluation-exports",
+      "title": "Inspect synthetic accuracy, assumptions and unscored worksheets",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "expectText",
+          "selector": "#raw-accuracy",
+          "text": "Raw fixture accuracy: 16 / 20 (80%)"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "click",
+          "selector": "#open-evaluation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#reviewed-accuracy",
+          "text": "Reviewed fixture accuracy: 20 / 20 (100%)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error-counts",
+          "text": "4 seeded issues caught; 4 corrected; 0 unresolved"
+        },
+        {
+          "action": "expectText",
+          "selector": "#timing-basis",
+          "text": "Measured: start to approved local route. Assumed manual baseline: 1200 seconds. Fictional volume: 20 packets/week. Operational savings unverified."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-evaluation",
+          "fileName": "synthetic-evaluation-report.txt",
+          "text": "Illustrative hours/week = (1200 - measured elapsed seconds) / 3600 × 20"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-panel",
+          "fileName": "sailor-panel-worksheet.txt",
+          "text": "Unscored — Sailor panel review required"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-rubric",
+          "fileName": "official-rubric-evidence-worksheet.txt",
+          "text": "Warfighting 30%; Speed to Fleet 20%; Scalability 20%; Barrier Removal 15%; Judges' Discretion 15%"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-path",
+          "fileName": "one-page-path-to-fleet.txt",
+          "text": "30d: owner selects forms; 60d: platform build; 90d: unit pilot; 180d: fleet release decision"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-audit",
+          "fileName": "audit-export.json",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        }
+      ]
+    },
+    {
+      "id": "save-recovery",
+      "title": "Failed durable save preserves draft then recovers",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "select",
+          "selector": "#connection",
+          "value": "offline"
+        },
+        {
+          "action": "click",
+          "selector": "#extract"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "45"
+        },
+        {
+          "action": "fill",
+          "selector": "#supply-quantity",
+          "value": "6"
+        },
+        {
+          "action": "fill",
+          "selector": "#correspondence-subject",
+          "value": "October training completion"
+        },
+        {
+          "action": "select",
+          "selector": "#task-due-choice",
+          "value": "2026-10-16"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "click",
+          "selector": "#simulate-save-failure"
+        },
+        {
+          "action": "fill",
+          "selector": "#training-duration",
+          "value": "47"
+        },
+        {
+          "action": "click",
+          "selector": "#save-packet"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Save failed — draft retained; retry or export before leaving"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#training-duration",
+          "value": "47"
+        },
+        {
+          "action": "click",
+          "selector": "#retry-save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-status",
+          "text": "Saved locally"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectValue",
+          "selector": "#training-duration",
+          "value": "47"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Current revision needs review"
+        }
+      ]
+    },
+    {
+      "id": "safety-stop",
+      "title": "Inspect boundary and pause simulated routing",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-demo"
+        },
+        {
+          "action": "expectText",
+          "selector": "#boundary",
+          "text": "SYNTHETIC — NOT FOR OPERATIONAL USE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-boundary",
+          "text": "Not validated against real formats or operational rules. Fixture transcription is not general OCR. Local storage is not demonstrated encryption."
+        },
+        {
+          "action": "click",
+          "selector": "#stop-simulation"
+        },
+        {
+          "action": "click",
+          "selector": "#route"
+        },
+        {
+          "action": "expectText",
+          "selector": "#route-status",
+          "text": "Simulation paused — no routing or acknowledgement; saved work retained"
+        },
+        {
+          "action": "click",
+          "selector": "#resume-simulation"
+        },
+        {
+          "action": "expectText",
+          "selector": "#simulation-status",
+          "text": "Simulation active — local replicas only; no endpoint contacted"
+        }
+      ]
+    }
+  ]
+}

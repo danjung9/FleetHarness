@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Training coordinators, departmental representatives and synthetic reviewing operators preparing a fictional weekly PB4T meeting offline.",
+  "primaryTask": "Inspect fictional proposals and policy, optimize a deconflicted weekly drill calendar, review all required occurrences and crew loads, correct conflicts, then accept and export the exact synthetic revision.",
+  "successOutcome": "Every required occurrence is covered by a qualified, available, conflict-free allocation under explicit synthetic fatigue rules; five agent responses and named reports explain the result; deliberate synthetic acceptance binds to the saved valid revision and survives reload.",
+  "screens": [
+    {
+      "name": "PB4T workspace",
+      "purpose": "Load a labeled synthetic week; inspect/edit roster, operations, resources, proposals, history, search budget and versioned fatigue/recurrence policy.",
+      "primaryAction": "Load synthetic sample"
+    },
+    {
+      "name": "Weekly PB4T Schedule Board",
+      "purpose": "Show Monday–Sunday assignments, cross-week required occurrences, initial collisions, bounded search status, competing saved/draft edits and correction paths.",
+      "primaryAction": "Optimize schedule"
+    },
+    {
+      "name": "Reports and synthetic review",
+      "purpose": "Review Departmental Negotiation Log, Conflict and Resolution Report, Periodicity Coverage Report, Personnel Loading Heatmap and Synthetic Schedule Review Record and Export.",
+      "primaryAction": "Accept synthetic schedule"
+    }
+  ],
+  "states": {
+    "empty": "On first open show the synthetic-only warning and Load synthetic sample; no accepted schedule or invented history. Empty reports explain the next action. Confirm replacement/reset of nonempty work with explicit in-page confirm/cancel controls.",
+    "loading": "Validate locally first; show Searching and node budget, disable duplicate Optimize actions, keep Stop search reachable. Yield between bounded search chunks; allow a visible stop before committing results. Once Stop is requested, discard any uncommitted result and preserve drafts and the last valid revision.",
+    "error": "Show field-specific input errors and occurrence-specific conflicts inline with a linked summary. Distinguish invalid input, infeasible over supplied candidates, search exhausted and stopped. Keep uncovered/overdue drills visible. Preserve draft controls and last valid board; stale results must be visibly marked and cannot be accepted.",
+    "success": "Show complete audited board, remaining-conflict count, coverage, per-person daily/weekly loading and five participant responses. Label valid awaiting review versus accepted exact revision. Exports state synthetic status, policy, revision, search and review state; acceptance never authorizes executing drills."
+  },
+  "persistence": "Store versioned fictional inputs, drafts, committed board, policy, reports and exact review record in localStorage on deliberate saves/acceptance; restore on reload, disclose browser-local storage and export. Draft edits are marked Unsaved and preserved during interactions. On storage failure show a warning and permit downloadable review without claiming persistence. Corrupt storage offers explicit reset confirmation. No external file fetch or network dependency.",
+  "recovery": "Board preview shows saved and draft time/person together. Save or Discard is mandatory before acceptance; saving any input or policy edit invalidates validation/acceptance and requires regeneration or full validation. Resolve conflicts by selecting/editing visible competing values. Missing qualifications, availability, overdue history, budgets and fatigue constraints have editable correction paths. Relaxation requests show old/new values and remain unapplied until a deliberate versioned policy save with reason. Stop preserves inputs. Reset/replacement requires confirmation; no automatic hard-constraint override.",
+  "keyboard": "Use labeled native inputs, selects, buttons and checkbox; logical Tab order through inputs, optimize/stop, board edits, reports and review. Visible focus; Enter/Space activate native buttons. Focus error summary on failed submissions and announce search/review status with live regions. No drag-only editing; stacked day cards and textual heatmap values at narrow widths. Colors supplement labels; headings and table headers identify all named reports."
+}

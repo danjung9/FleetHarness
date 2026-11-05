@@ -1,0 +1,91 @@
+verify error bash failed
+"✔ SHA-256 known vectors, UTF-8 and exact original UTF-16 spans (5.644416ms)\n✔ atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans (2.30575ms)\n✔ identity normalization, exact joins, ambiguity and abstention (10.915625ms)\n✔ denied strongest lexical hit excluded before scoring, future filtered and no export leakage (2.856875ms)\n✔ time boundary separat
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('application.test.cjs');s=p.read_text();s=s.replace(\\\"document:{getElementById:get,createElement:()=>element()}\\\",\\\"document:{getElementById:get,createElement:()=>{const node=element();Object.defineProperty(node,'id',{get(){return this.elementId;},set(id){this.elementId=id;elements.set(id,this);}});return 
+verify tool bash completed
+"✔ SHA-256 known vectors, UTF-8 and exact original UTF-16 spans (3.539833ms)\n✔ atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans (2.146166ms)\n✔ identity normalization, exact joins, ambiguity and abstention (9.704709ms)\n✔ denied strongest lexical hit excluded before scoring, future filtered and no export leakage (2.71025ms)\n✔ time boundary separ
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('README.md');s=p.read_text();s=s.replace('REG-A fails its digest check. Affected owner facts become UNKNOWN and export is blocked.', 'REG-A fails its digest check. Identity is resolved again from verified snapshots, affected owner facts become UNKNOWN, the old viewer is cleared and export is blocked.');s=s.repla
+verify tool bash completed
+"completed"
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"unzip -p .quality-evidence/419425fd76c5-a90c2d5a-3066-4ca2-9fec-5fe33cc8374a/integrity-recovery-desktop.zip trace.trace | rg 'integrity failure|pageError|pageerror' | head -2\""
+}
+verify tool bash completed
+"{\"type\":\"frame-snapshot\",\"snapshot\":{\"callId\":\"uyyz@21306\",\"phase\":\"after\",\"pageId\":\"page@33ca77e4843a4b763b373b4edecec904\",\"frameId\":\"frame@044b2ee835966e9512d7ad7280ffcae4\",\"frameUrl\":\"http://127.0.0.1:63532/b4928b8b11e13ff9b3929da2d5ddd2089632ec3f938ba425\",\"doctype\":\"html\",\"html\":[\"HTML\",{\"__playwright_scroll_top_\":\"429\",\"lang\":\"en\"},[[3
+verify text All 18 application tests now pass with no skipped checks. The added regression executes the actual UI handlers through tampering, blocked export, and restoration; it uses a minimal DOM adapter, so it does not establish a browser pass. I’m updating the evidence record for the host rerun.
+
+
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\np=Path('verification.md');old=p.read_text();disclosure=old.split('\\\\n\\\\n')[0]; hashes=old[old.index('- acceptance-plan.json:'):old.index('\\\\n\\\\nThe system shasum')];p.write_text(disclosure+'''\n\n# Verification - bounded host-failure repair, 2026-11-04\n\n**requirementsMet: false.** Generated implementation: co
+verify tool bash completed
+"acceptance-plan.json f98577ecc6d959a2d9a539aff5e9f60d3cdd9fb73ee07684533fa96996d7f49a\nux-spec.json e372e2eec1fea6a5172c719e39a2e56425817e9b7f85402af6344a1cda9ccd55\nsystem-design.json e93545a0fc1bb1db2044f4d3271cb45ff49d20ef84447a49a8275db5bdae0d84\n"
+verify tool fleet_component_progress
+{
+  "componentId": "workspace",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Contact research workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "corpus",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Simulated maritime snapshot corpus: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "retrieval",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Identity and permitted lexical retrieval: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "brief",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Cited Contact Brief assembler: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evidence",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Snapshot viewer and portable export: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "evaluation",
+  "status": "generated",
+  "detail": "Mapped files exist. Host-failure repair complete; 18 local application tests pass. Browser rerun pending; generated is implementation status only."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Synthetic evaluation and local status: generated. The live diagram has been updated."}]
+verify text Repaired changed-snapshot recovery and narrow evaluation layout. Updated README, test matrix, and verification.md.
+
+All 18 local application tests pass; none skipped. Frozen plans and host evidence remain unchanged. All components are marked generated.
+
+Host browser rerun remains required. `requirementsMet` remains false: real-source grounding (UC20-1) and owner evaluation (RET-03) are unverified.
+verify info TAP version 13
+# Subtest: SHA-256 known vectors, UTF-8 and exact original UTF-16 spans
+ok 1 - SHA-256 known vectors, UTF-8 and exact original UTF-16 spans
+  ---
+  duration_ms: 3.234708
+  type: 'test'
+  ...
+# Subtest: atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans
+ok 2 - atomic validation rejects missing metadata, duplicate IDs, malformed dates and spans
+  ---
+
+review info Application tests and planned browser journeys passed. Inspect requirement coverage, deferred items and the preview before approving prototype delivery.

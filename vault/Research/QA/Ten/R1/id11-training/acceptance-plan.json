@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "criteria": [
+    {
+      "criterionId": "UC11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "Collaborative departmental agents negotiate schedules under operational windows, qualified rosters and owner-approved fatigue rules, identify collisions, propose alternate allocations and ensure every applicable SFTRM periodicity is satisfied.",
+      "journeyIds": [],
+      "reason": "The slice demonstrates deterministic feasibility for synthetic departmental requests only. No collaborating agents, authoritative fatigue policy, SFTRM rules or completion history are supplied. Full source requirement remains unverified."
+    },
+    {
+      "criterionId": "SCH-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Every complete proposal has zero overlapping interval pairs sharing personnel or an exclusive resource. In the planned two-request example, Damage Control occupies Monday 09:00\u201310:00 UTC and Engineering moves from 09:00 to 10:30\u201311:30 UTC; both use Alex and Room A without overlap. Proposal edits invalidate prior review.",
+      "journeyIds": [
+        "resolve-collision",
+        "review-revision"
+      ]
+    },
+    {
+      "criterionId": "SCH-02",
+      "disposition": "implemented",
+      "expectedOutcome": "Within explicit synthetic inputs, every assigned interval is contained in a ship operating window and every assigned person availability window, all required qualifications are covered by assigned people, every same-person pair satisfies supplied rest and total horizon duty does not exceed budget. Missing FPL, availability ending at minute 600, rest 31 and duty budget 119 prevent the two-request proposal; restoring availability to 1020, rest 30 and budget 120 yields both requests and exactly 120 duty minutes. These are demonstration values, not approved policy.",
+      "journeyIds": [
+        "recover-qualification",
+        "recover-availability",
+        "recover-fatigue"
+      ]
+    },
+    {
+      "criterionId": "SCH-03",
+      "disposition": "implemented",
+      "expectedOutcome": "An exhaustive search of the impossible two-request candidate set reports Infeasible: no complete schedule within supplied candidates. A one-node budget reports Search limit reached: feasibility is unknown. Neither exposes an approvable partial proposal. Invalid duration is rejected as validation, separate from either solver result. Correcting inputs or increasing budget recovers a complete feasible proposal.",
+      "journeyIds": [
+        "recover-exhaustion",
+        "recover-impossible",
+        "recover-invalid"
+      ]
+    },
+    {
+      "criterionId": "SCH-04",
+      "disposition": "deferred",
+      "expectedOutcome": "Expand every applicable owner-supplied mandatory recurrence rule into uniquely identified occurrences and due windows, accounting for completion history and horizon boundaries; every mandated occurrence is scheduled by its deadline with no omissions.",
+      "journeyIds": [],
+      "reason": "Owner-approved periodicity rules, applicability and completion history are missing. Two explicit synthetic occurrences do not establish recurrence completeness or SFTRM compliance. No mandatory-compliance indicator will be shown."
+    },
+    {
+      "criterionId": "SCH-05",
+      "disposition": "deferred",
+      "expectedOutcome": "An authorized PB4T operator reviews the editable proposal, personnel loading and every requested constraint change and explicitly accepts that exact validated schedule; any changed input requires renewed review.",
+      "journeyIds": [],
+      "reason": "Local revision-bound acceptance and edit protection are demonstrated, but automated interaction cannot establish actual operator acceptance. No authorized operator or human acceptance evidence is supplied. Hard constraints are never relaxed automatically."
+    },
+    {
+      "criterionId": "DELIVERABLE11-1",
+      "disposition": "deferred",
+      "expectedOutcome": "An interactive weekly board automatically resolves cross-department conflicts, provides one-click schedule optimization under an agreed objective, and displays correct personnel loading heatmaps.",
+      "journeyIds": [],
+      "reason": "The prototype supplies a weekly editable board, conflict comparison, one-action feasible allocation and numeric heatmap. Bounded first-feasible search has no optimization objective or optimality guarantee; the full deliverable remains unverified pending owner definition and implementation of optimization."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "resolve-collision",
+      "title": "Resolve a shared person and room collision",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "expectText",
+          "selector": "#original-conflicts",
+          "text": "1 personnel collision; 1 resource collision."
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-dc",
+          "text": "Damage Control | Mon 09:00\u201310:00 UTC | Alex | Room A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-eng",
+          "text": "Engineering | Mon 10:30\u201311:30 UTC | Alex | Room A"
+        },
+        {
+          "action": "expectText",
+          "selector": "#audit-summary",
+          "text": "0 personnel overlaps; 0 resource overlaps; 0 constraint violations."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-alex",
+          "text": "Alex: 120 / 120 minutes (100%)"
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-bea",
+          "text": "Bea: 0 / 120 minutes (0%)"
+        }
+      ]
+    },
+    {
+      "id": "recover-qualification",
+      "title": "Restore a missing assigned-person qualification",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-qualifications",
+          "value": "EOOW"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#constraint-detail",
+          "text": "Engineering requires FPL; assigned personnel do not hold FPL."
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-qualifications",
+          "value": "EOOW, FPL"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#audit-summary",
+          "text": "0 personnel overlaps; 0 resource overlaps; 0 constraint violations."
+        }
+      ]
+    },
+    {
+      "id": "recover-availability",
+      "title": "Restore the assigned person availability window",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-available-end",
+          "value": "600"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#constraint-detail",
+          "text": "Alex is unavailable for Engineering at every supplied candidate."
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-available-end",
+          "value": "1020"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#allocation-eng",
+          "text": "Engineering | Mon 10:30\u201311:30 UTC | Alex | Room A"
+        }
+      ]
+    },
+    {
+      "id": "recover-fatigue",
+      "title": "Enforce exact rest and horizon-duty boundaries",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-rest",
+          "value": "31"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#constraint-detail",
+          "text": "No supplied allocation gives Alex 31 minutes of rest."
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-rest",
+          "value": "30"
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-budget",
+          "value": "119"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#constraint-detail",
+          "text": "Alex requires 120 duty minutes; budget is 119."
+        },
+        {
+          "action": "fill",
+          "selector": "#alex-budget",
+          "value": "120"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "expectText",
+          "selector": "#rest-alex",
+          "text": "Alex: minimum gap 30 minutes; required 30 minutes."
+        },
+        {
+          "action": "expectText",
+          "selector": "#load-alex",
+          "text": "Alex: 120 / 120 minutes (100%)"
+        }
+      ]
+    },
+    {
+      "id": "recover-exhaustion",
+      "title": "Retry an inconclusive bounded search",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Search limit reached: feasibility is unknown."
+        },
+        {
+          "action": "expectText",
+          "selector": "#proposal-state",
+          "text": "No current proposal to review."
+        },
+        {
+          "action": "fill",
+          "selector": "#search-budget",
+          "value": "1000"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        }
+      ]
+    },
+    {
+      "id": "recover-impossible",
+      "title": "Repair a finite candidate set with no feasible allocation",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-candidates",
+          "value": "540"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#proposal-state",
+          "text": "No current proposal to review."
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-candidates",
+          "value": "540, 630"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        }
+      ]
+    },
+    {
+      "id": "recover-invalid",
+      "title": "Correct invalid duration without losing the request",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#validation-error",
+          "text": "Engineering duration must be an integer from 1 to 480 minutes."
+        },
+        {
+          "action": "expectValue",
+          "selector": "#eng-candidates",
+          "value": "540, 630"
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-duration",
+          "value": "60"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        }
+      ]
+    },
+    {
+      "id": "review-revision",
+      "title": "Persist a proposal and prevent stale local acceptance",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-sample"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Locally accepted revision 1; not operational approval."
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Locally accepted revision 1; not operational approval."
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-candidates",
+          "value": "540"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-error",
+          "text": "Save or discard unsaved changes before review."
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Revision 2 needs a new feasible proposal and review."
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Infeasible: no complete schedule within supplied candidates."
+        },
+        {
+          "action": "expectText",
+          "selector": "#proposal-state",
+          "text": "No current proposal to review."
+        },
+        {
+          "action": "fill",
+          "selector": "#eng-candidates",
+          "value": "540, 630"
+        },
+        {
+          "action": "click",
+          "selector": "#save-inputs"
+        },
+        {
+          "action": "click",
+          "selector": "#find-schedule"
+        },
+        {
+          "action": "expectText",
+          "selector": "#solve-status",
+          "text": "Feasible: all 2 requests scheduled."
+        },
+        {
+          "action": "check",
+          "selector": "#review-confirm"
+        },
+        {
+          "action": "click",
+          "selector": "#accept-proposal"
+        },
+        {
+          "action": "expectText",
+          "selector": "#review-status",
+          "text": "Locally accepted revision 3; not operational approval."
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export-proposal",
+          "fileName": "pb4t-proposal.json",
+          "text": "\"classification\": \"synthetic\""
+        }
+      ]
+    }
+  ]
+}

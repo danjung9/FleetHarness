@@ -1,4 +1,4 @@
-.phase-details{font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.phase-details{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
 .phase-details section{margin:20px 0}
 .phase-details h3{font-family:inherit;font-size:13px;font-weight:600;margin:0 0 8px}
 .phase-details p{margin:0;color:var(--muted)}
@@ -6,6 +6,6 @@
 .phase-details li+li{margin-top:4px}
 .phase-details .phase-resources{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:5px 10px}
 .phase-resources li+li{margin-top:0}
-.phase-resources code{font:11px/1.7 var(--mono,monospace);color:inherit}
+.phase-resources code{font:12px/1.7 var(--mono,monospace);color:inherit}
 .phase-details .phase-gate{border-top:1px solid var(--line);padding-top:18px}
 .phase-details .phase-note{padding-bottom:16px;border-bottom:1px solid var(--line)}

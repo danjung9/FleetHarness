@@ -1,0 +1,44 @@
+{
+ "U3": {
+  "visible": "Message to mission timeline",
+  "aria": "Start a brief: Electronic OPTASK (Operational Tasking) Message Parser & Timeline Visualizer",
+  "ariaIncludesVisible": false
+ },
+ "U1": {
+  "query": "Message to mission timeline",
+  "cardsFound": 0,
+  "noMatchHeading": 1
+ },
+ "engineRadios": [
+  {
+   "name": "Codex ChatGPT subscription",
+   "checked": true
+  },
+  {
+   "name": "Pi Model providers",
+   "checked": false
+  }
+ ],
+ "consent": "Start Pi build Pi will plan, implement, and verify Paperless Underway using fleet-fixture/fixture-model. The agents can edit files and execute shell commands on this Mac. They work in a new project folder, which is not an OS sandbox. Your configured model provider receives the brief and tool context; provider usage charges may apply. Prior run folders are preserved. This starts fresh from the current requirements. Cancel Run Pi agents",
+ "statusAfterStart": "running",
+ "U2": {
+  "homeStopButtons": 0,
+  "homeRunningIndicator": 0,
+  "afterReload": {
+   "status": "running",
+   "homeStopButtons": 0,
+   "homeRunningIndicator": 0
+  },
+  "clicksFromHomeToStop": "My builds, search or scan, open build, Stop run",
+  "stopVisibleInRunView": 1
+ },
+ "stop": {
+  "status": "stopped",
+  "msToStopped": 3,
+  "requestsAtClick": 1,
+  "requestsAtStopped": 1,
+  "requestsEightSecondsLater": 1,
+  "statusEightSecondsLater": "stopped"
+ },
+ "passed": true
+}
