@@ -105,6 +105,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | STOP-DETACHED-01 native receipt 6b784ff0 at 16a6940 | Evidence dataset | Independently verified bounded native shutdown, control and artifact hashes, identity, timing and cleanup separation | Existing runtime owner | 2026-11-05 |
 | Overnight detached Pi Stop fixture revision 1 | QA tool | Removed the fixed commit and checkout pin, records actual clean revision/build identity, retains all measured Stop assertions | Team-created acceptance fixture | 2026-11-05 |
 | Existing parallel QA reviewers, overnight source mapping | Review workflow | Read-only UI inventory and test evidence mapping for combined merge-dan; two existing event-key reviewers, no runtime or repository edits | Existing event-key review agents | 2026-11-05 |
+| Collaboration task tools, session version unspecified | Local parallel review | One bounded read-only reviewer checks committed browser-helper merge for lost behavior while the coordinator audit proceeds | OpenAI | 2026-11-05 |
 
 ## Data and sources
 
