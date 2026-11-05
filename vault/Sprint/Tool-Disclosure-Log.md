@@ -131,6 +131,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Delivered Morning training brief acceptance checker v1, preparation | Test script | Prepare independent native archive, source values, source-scoped review, graceful restart and offered import checks; runtime remains with main | Project QA scripts | 2026-11-05 |
 | @electron/asar 3.4.1 | Library | Inspect archive API and prepare read-only payload comparison in the native delivered-app checker; no packaged app executed here | Electron project | 2026-11-05 |
 | macOS ditto and PlistBuddy, bundled versions | System tools | Prepared owned-archive extraction and executable-name lookup for the native checker owner; not executed during preparation | Apple | 2026-11-05 |
+| R7 and latest QA records | project evidence | prioritization | project QA. | 2026-11-05 |
 
 ## Data and sources
 
