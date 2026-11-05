@@ -1,0 +1,42 @@
+{
+  "id": "64bc867b-1e95-4b17-873f-321114c5d35f",
+  "title": "Synthetic native delivery 12f30922-8f50-4e5e-a7ea-fc7dc467f9c0",
+  "runId": "34b8f83a-e92f-4fea-bacb-7a13a2719ee3",
+  "workspace": "/private/var/folders/xn/rz9mb6t14x7fbtym_170m4xw0000gn/T/tmp.ig2HNQ6QP1/fleet-native-delivery-EpsRM1/state/workspaces/64bc867b-1e95-4b17-873f-321114c5d35f/34b8f83a-e92f-4fea-bacb-7a13a2719ee3",
+  "status": "running",
+  "stages": [
+    {
+      "id": "intake",
+      "status": "complete"
+    },
+    {
+      "id": "research",
+      "status": "complete"
+    },
+    {
+      "id": "plan",
+      "status": "active"
+    },
+    {
+      "id": "build",
+      "status": "queued"
+    },
+    {
+      "id": "verify",
+      "status": "queued"
+    },
+    {
+      "id": "review",
+      "status": "queued"
+    },
+    {
+      "id": "deliver",
+      "status": "queued"
+    }
+  ],
+  "feedback": "",
+  "runtimeProfile": "browser",
+  "processCleanup": "pending",
+  "processRunId": "34b8f83a-e92f-4fea-bacb-7a13a2719ee3",
+  "writerState": "idle"
+}
