@@ -42,7 +42,7 @@ export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(wind
     p.stages.forEach(stage => { stage.status = stage.id === 'intake' ? 'complete' : 'queued'; });
     save(nextState); return p;
   },
-  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
+  startRun: desktopOnly, stopRun: desktopOnly, approve: desktopOnly, requestChanges: desktopOnly, exportProject: desktopOnly, downloadExecutable: desktopOnly, openWorkspace: desktopOnly,
   artifacts: async () => [], readArtifact: desktopOnly, preview: async () => null, saveSettings: desktopOnly,
   setDeveloperMode: async enabled => {
     if (typeof enabled !== 'boolean') throw new Error('Developer mode must be enabled or disabled.');

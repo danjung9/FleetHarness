@@ -16,6 +16,7 @@ import { ProjectLead, briefHash, projectBrief } from './conversation.js';
 import { ClarificationBroker } from './clarifications.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
 import { randomUUID } from 'node:crypto';
+import { recordReview, reviewFeedback } from './review.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -74,12 +75,12 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
   catch (error) { Object.assign(p, previous); notify(); throw error; }
   notify(); return p;
 }
-async function startRun(id: string, fromConversation = false) {
+async function startRun(id: string, fromConversation = false, feedback?: string) {
   if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
   requireIdle(id, fromConversation);
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
-  try { await backend.start(id); }
+  try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
@@ -157,6 +158,9 @@ function registerIPC() {
   });
   handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
   handle('fleet:start', (id: string) => startRun(id));
+  handle('fleet:request-changes', (id: string, feedback: string) => {
+    reviewFeedback(feedback); return startRun(id, false, feedback);
+  });
   handle('fleet:stop', (id: string) => backend.stop(id));
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
@@ -169,12 +173,9 @@ function registerIPC() {
     const error = await shell.openPath(p.workspace); if (error) throw new Error(error);
   });
   handle('fleet:approve', async (id: string, feedback: string) => {
-    if (typeof feedback !== 'string' || feedback.trim().length < 10 || feedback.length > 10000) throw new Error('Add a review note of at least 10 characters.');
+    reviewFeedback(feedback);
     const p = await assertVerified(id);
-    p.feedback = feedback.trim(); p.approvedAt = new Date().toISOString(); p.status = 'approved';
-    p.stages.find(s => s.id === 'review')!.status = 'complete';
-    await fs.writeFile(path.join(p.workspace!, 'review.json'), JSON.stringify({ approvedAt: p.approvedAt, feedback: p.feedback, scope: 'Prototype delivery only. Operational readiness is unverified.', sourceHash: p.report!.sourceHash }, null, 2));
-    await store.save(); notify();
+    await recordReview(store, p, 'approved', feedback); notify();
   });
   handle('fleet:export', async (id: string) => {
     const project = requireIdle(id), p = structuredClone(project), controller = new AbortController();

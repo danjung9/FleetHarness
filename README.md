@@ -8,6 +8,8 @@ AppYard has one interface: the original desktop app and its browser preview. The
 
 The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with one repair attempt. Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
+Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities through a separate sandbox, with no network and output confined to `.agent-output/`.
+
 **Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.

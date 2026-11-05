@@ -12,7 +12,12 @@ export interface TestReport {
 }
 export interface BriefDataInput { name: string; kind: 'file' | 'text'; content: string }
 export interface BriefContext { inputs?: string; outputs?: string; resources?: string; links?: string[]; dataInputs?: BriefDataInput[] }
+export interface ReviewRecord {
+  id: string; runId: string; decision: 'approved' | 'changes_requested'; feedback: string; createdAt: string;
+  sourceHash?: string; nextRunId?: string;
+}
 export interface Project extends BriefContext {
+  reviewHistory?: ReviewRecord[];
   conversation?: import('./conversation.js').ProjectConversation;
   qualityVersion?: 1 | 2;
   runtimeProfile?: 'browser' | 'cli' | 'service';
@@ -55,6 +60,7 @@ export interface FleetAPI {
   startRun(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
+  requestChanges(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;

@@ -1,10 +1,31 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { AgentSessionEvent, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import type { AgentSessionEvent, AgentToolResult, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { StageSession } from './agent-runner.js';
 import { CHATGPT_ACCESS_TOKEN_ENV, CHATGPT_MODEL_PROVIDER, CodexRpc, type CodexCredentials, type RpcMessage } from './codex-rpc.js';
 
-type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<{ content: { type: string; text?: string }[] }> };
+type Tool = Pick<ToolDefinition, 'name' | 'description' | 'parameters'> & { execute: (id: string, args: any, signal?: AbortSignal) => Promise<Pick<AgentToolResult, 'content' | 'isError'>> };
+// Bundled Codex app-server 0.166: v2/DynamicToolCallOutputContentItem.
+type CodexToolContent = { type: 'inputText'; text: string } | { type: 'inputImage'; imageUrl: string };
+const MAX_TOOL_IMAGE_BYTES = 10 * 1024 * 1024;
+function toolContent(content: AgentToolResult['content']): CodexToolContent[] {
+  let imageBytes = 0;
+  return content.map(item => {
+    if (item.type === 'text') {
+      if (typeof item.text !== 'string') throw new Error('Tool returned invalid text content.');
+      return { type: 'inputText', text: item.text };
+    }
+    if (item.type !== 'image') throw new Error('Tool returned unsupported content.');
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(item.mimeType)) throw new Error('Tool returned an unsupported image format. Use PNG, JPEG, WebP, or GIF.');
+    if (typeof item.data !== 'string' || !item.data.length || item.data.length % 4 !== 0) throw new Error('Tool returned invalid base64 image data.');
+    if (item.data.length > Math.ceil(MAX_TOOL_IMAGE_BYTES / 3) * 4) throw new Error('Tool images exceed the 10 MiB result limit.');
+    const bytes = Buffer.from(item.data, 'base64');
+    if (bytes.toString('base64') !== item.data) throw new Error('Tool returned invalid base64 image data.');
+    imageBytes += bytes.length;
+    if (imageBytes > MAX_TOOL_IMAGE_BYTES) throw new Error('Tool images exceed the 10 MiB result limit.');
+    return { type: 'inputImage', imageUrl: `data:${item.mimeType};base64,${item.data}` };
+  });
+}
 export async function createCodexSession(options: {
   home: string; cwd: string; model: string; signal: AbortSignal; tools: ToolDefinition[]; skillPaths?: string[];
   conversationInstructions?: string;
@@ -50,7 +71,7 @@ export async function createCodexSession(options: {
       if (!tool) throw new Error('Unknown AppYard tool: ' + params.tool);
       const result = await tool.execute(params.callId, params.arguments, controller.signal);
       controller.signal.throwIfAborted();
-      source.send({ id: message.id, result: { contentItems: result.content.filter(c => c.type === 'text').map(c => ({ type: 'inputText', text: c.text || '' })), success: true } });
+      source.send({ id: message.id, result: { contentItems: toolContent(result.content), success: result.isError !== true } });
     } catch (error) { source.send({ id: message.id, result: { contentItems: [{ type: 'inputText', text: error instanceof Error ? error.message : String(error) }], success: false } }); }
   }
   function receive(source: CodexRpc, message: RpcMessage) {

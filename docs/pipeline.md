@@ -114,7 +114,7 @@ Sixteen skills live under `skills/`: intake, data preparation, research, plannin
 
 `harness/phases.ts` defines two levels of tool access. The packet saves `globalTools` once, while each phase's `tools` contains only its additional tools. Effective access is the deduplicated union of both lists. A fresh Pi session receives exact tool names, never the `fleet_*` wildcard; the Codex adapter receives only the selected custom tools alongside its native workspace tools.
 
-**Global tools:** `read`, `write`, `edit`, `bash`. These workspace capabilities are inherited by every agent phase. They do not imply permission to deploy, change requirements or access operational systems, and phase allocation is not an OS sandbox.
+**Global tools:** `read`, `write`, `edit`, `bash`, `fleet_helpers`, `fleet_run_helper`. Every agent phase inherits workspace capabilities plus discovery, testing and sandboxed execution of [project-local agent helpers](agent-helpers.md). Helpers are authored in `.agent-tools/`, tested before use, and reused across phases. They do not imply permission to deploy, change requirements or access operational systems. The helper runner enforces its own sandbox; phase allocation and Pi's general shell are not OS sandboxes.
 
 | Phase | Assigned skills | Additional phase tools |
 |---|---|---|

@@ -94,6 +94,72 @@ async function harness(t, options = {}) {
   return { root, store, project, backend, broker, sessions, snapshots, run, settle, assertSettled };
 }
 
+test('review changes start another verified iteration with the comments and previous source', { timeout: workflowTimeout * 2 }, async t => {
+  const h = await harness(t);
+  h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
+  await h.run(); await h.assertSettled('review');
+  const oldRunId = h.project.runId, oldWorkspace = h.project.workspace, oldSource = await fs.readFile(path.join(oldWorkspace, 'core.cjs'), 'utf8');
+  const oldSessionCount = h.sessions.length;
+  const comments = 'Keep the entered message visible when validation fails.';
+  await h.backend.requestChanges(h.project.id, comments); await h.settle(); await h.assertSettled('review');
+  assert.notEqual(h.project.runId, oldRunId); assert.notEqual(h.project.workspace, oldWorkspace);
+  assert.equal(h.project.reviewHistory[0].decision, 'changes_requested');
+  assert.equal(h.project.reviewHistory[0].runId, oldRunId);
+  assert.equal(h.project.reviewHistory[0].nextRunId, h.project.runId);
+  assert.equal(h.project.approvedAt, undefined); assert.equal(h.project.exportedTo, undefined); assert.equal(h.project.executable, undefined);
+  assert.equal(await fs.readFile(path.join(oldWorkspace, 'core.cjs'), 'utf8'), oldSource);
+  assert.equal(await fs.readFile(path.join(h.project.workspace, '.review-source', 'core.cjs'), 'utf8'), oldSource);
+  assert.ok((await fs.readFile(path.join(h.project.workspace, 'requirements.md'), 'utf8')).includes(comments));
+  for (const session of h.sessions.slice(oldSessionCount)) assert.ok(session.prompts[0].includes(comments), session.stage + ' received reviewer comments');
+  assert.equal(h.project.report.command.includes('.review-source'), false);
+  const saved = JSON.parse(await fs.readFile(path.join(h.root, 'state.json'), 'utf8')).projects.find(project => project.id === h.project.id);
+  assert.equal(saved.reviewHistory[0].feedback, comments);
+});
+
+test('a review change request preserves the current build and saved comments when startup fails', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t);
+  await h.run(); await h.assertSettled('review');
+  const current = { runId: h.project.runId, workspace: h.project.workspace, report: structuredClone(h.project.report) };
+  h.backend.runtime.hasConfiguredAuth = () => false;
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Keep the entered message visible.'), /comments were saved.*could not start.*connect its provider/);
+  assert.equal(h.project.status, 'review'); assert.equal(h.project.runId, current.runId); assert.equal(h.project.workspace, current.workspace); assert.deepEqual(h.project.report, current.report);
+  assert.equal(h.project.feedback, 'Keep the entered message visible.');
+  assert.equal(h.project.reviewHistory[0].nextRunId, undefined);
+  assert.equal(h.backend.active.has(h.project.id), false);
+  h.backend.runtime.hasConfiguredAuth = () => true;
+  h.backend.resourcesRoot = path.join(h.root, 'missing-resources');
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Also explain how to correct invalid messages.'), /comments were saved.*could not start/);
+  assert.equal(h.project.status, 'review'); assert.equal(h.project.runId, current.runId); assert.equal(h.project.workspace, current.workspace); assert.deepEqual(h.project.report, current.report);
+  assert.equal(h.project.reviewHistory.length, 2); assert.equal(h.project.reviewHistory[1].nextRunId, undefined);
+  assert.equal(h.backend.active.has(h.project.id), false);
+});
+
+test('failed verification can request changes, while incomplete or approved builds cannot', { timeout: workflowTimeout }, async t => {
+  const h = await harness(t);
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+  await h.run(); await h.assertSettled('review');
+  for (const status of ['draft', 'running', 'approved', 'delivered']) {
+    h.project.status = status;
+    await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /completed, unapproved/);
+  }
+  h.project.status = 'failed'; h.project.report.failed = 1;
+  h.backend.runtime.hasConfiguredAuth = () => false;
+  await assert.rejects(h.backend.requestChanges(h.project.id, 'Fix the application workflow.'), /comments were saved/);
+  assert.equal(h.project.status, 'failed'); assert.equal(h.project.reviewHistory.length, 1);
+});
+
+test('iteration agents cannot change preserved review source', { timeout: workflowTimeout }, async t => {
+  let changeSource = false;
+  const h = await harness(t, { scenario: async ({ cwd, stage }) => {
+    if (changeSource && stage === 'research') await fs.writeFile(path.join(cwd, '.review-source', 'core.cjs'), 'Altered reference source');
+    return false;
+  } });
+  await h.run(); await h.assertSettled('review');
+  changeSource = true;
+  await h.backend.requestChanges(h.project.id, 'Keep the entered message visible.'); await h.settle(); await h.assertSettled('failed');
+  assert.match(h.project.error, /previous build source changed/);
+});
+
 test('clarification-enabled automatic builds do not create extra model sessions or prompts', { timeout: workflowTimeout }, async t => {
   const h = await harness(t, { clarifications: true });
   h.project.dataInputs = [{ name: 'message.txt', kind: 'text', content: 'TASK: inspect pump' }];
@@ -272,8 +338,8 @@ test('the no-data specialist finishes within intake before downstream agents rec
   assert.match(specialist.prompts[0], /scope\.md/);
   assert.match(h.sessions.find(session => session.stage === 'build').prompts[0], /data\/synthetic-data\.json/);
   assert.equal(specialist.disposed, true);
-  assert.deepEqual(specialist.tools, ['read', 'write', 'edit', 'bash']);
-  assert.deepEqual(specialist.customTools, []);
+  assert.deepEqual(specialist.tools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
+  assert.deepEqual(specialist.customTools.map(tool => tool.name), ['fleet_helpers', 'fleet_run_helper']);
   assert.deepEqual(specialist.skills, ['fleet-data']);
   assert.equal(h.project.stages.length, 7, 'The specialist does not add a user-facing build phase');
 });
@@ -333,7 +399,7 @@ test('the complete workflow advances in order and persists real test evidence be
   assert.equal(h.sessions.find(s => s.stage === 'build').prompts.length, 2);
   assert.match(await fs.readFile(path.join(h.project.workspace, 'README.md'), 'utf8'), /No installation is required/);
   assert.ok(h.snapshots.every(p => p.stages.filter(s => s.status === 'active').length <= 1), 'Only one phase may execute at a time');
-  assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash']);
+  assert.deepEqual(h.project.globalTools, ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper']);
   const packet = JSON.parse(await fs.readFile(path.join(h.project.workspace, '.fleet/packet.json'), 'utf8'));
   assert.deepEqual(h.project.phasePlan, packet.stages);
   assert.deepEqual(h.project.globalTools, packet.globalTools);
@@ -342,7 +408,7 @@ test('the complete workflow advances in order and persists real test evidence be
     const phase = packet.stages.find(phase => phase.id === session.stage);
     assert.deepEqual(session.tools, [...packet.globalTools, ...phase.tools]);
     assert.deepEqual(session.skills.sort(), [...phase.skills].sort());
-    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools].sort());
+    assert.deepEqual(session.customTools.map(tool => tool.name).sort(), [...phase.tools, 'fleet_helpers', 'fleet_run_helper'].sort());
     assert.match(session.prompts[0], /Global workspace tools inherited by every agent phase/);
   }
 });

@@ -2,7 +2,7 @@ import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager
 import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
+import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { normalizeDataInputs } from '../shared/project-input.js';
 import { Store, safeFile, sourceHash } from './storage.js';
@@ -22,8 +22,10 @@ import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt, freezeSyntheticData, syntheticDataFiles, syntheticDataInstruction, validateSyntheticData, type BriefDataSnapshot } from './brief-data.js';
 import { ClarificationBroker, createClarificationTools, clarificationPrompt } from './clarifications.js';
+import { copyReviewSource, recordReview, reviewFeedback, reviewIterationPrompt } from './review.js';
+import { AgentHelperRuntime } from './agent-helpers.js';
 
-type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; repairUsed?: boolean; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string };
+type ActiveRun = { backend: AgentBackend; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; repairUsed?: boolean; helpers?: AgentHelperRuntime; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; review?: ReviewRecord; reviewSourceHash?: string };
 interface BackendOptions {
   clarifications?: ClarificationBroker;
   codex?: CodexAccount;
@@ -65,7 +67,27 @@ export class FleetBackend {
       this.notify();
     }
   }
-  async start(id: string) {
+  async requestChanges(id: string, feedback: string) {
+    reviewFeedback(feedback);
+    const p = this.store.project(id);
+    if (this.active.has(id) || !['review', 'failed'].includes(p.status) || !p.runId || !p.workspace || !p.report || p.approvedAt) {
+      throw new Error('Request changes from a completed, unapproved build with test evidence.');
+    }
+    const review = await recordReview(this.store, p, 'changes_requested', feedback);
+    this.notify();
+    const previous = structuredClone(p);
+    try { await this.start(id, { review, workspace: p.workspace }); }
+    catch (error) {
+      // Starting an iteration must not replace the reviewable build when setup fails.
+      // Preserve conversation messages that may have arrived while model auth was checked.
+      const conversation = p.conversation;
+      for (const key of Object.keys(p)) delete (p as unknown as Record<string, unknown>)[key];
+      Object.assign(p, previous, { conversation });
+      await this.store.save(); this.notify();
+      throw new Error('Your review comments were saved, but the next iteration could not start. ' + (error instanceof Error ? error.message : String(error)));
+    }
+  }
+  async start(id: string, revision?: { review: ReviewRecord; workspace: string }) {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
@@ -79,7 +101,7 @@ export class FleetBackend {
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, controller: new AbortController(), done, resolve };
+    const run: ActiveRun = { backend, controller: new AbortController(), done, resolve, review: revision?.review };
     this.active.set(id, run);
     try {
       p.runId = randomUUID();
@@ -92,6 +114,10 @@ export class FleetBackend {
       p.model = provider + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
+      if (revision) {
+        run.reviewSourceHash = await copyReviewSource(revision.workspace, path.join(p.workspace, '.review-source'));
+        this.check(run);
+      }
       p.dataInputs = normalizeDataInputs(p.dataInputs);
       run.data = await prepareBriefData(p.workspace, p.dataInputs);
       this.check(run);
@@ -108,7 +134,8 @@ export class FleetBackend {
           ? 'User-provided inputs are copied into inputs/. Read inputs/manifest.json for names, formats and paths. Preserve the supplied contents and provenance.'
           : 'No input data supplied. A dedicated synthetic data agent will create use-case-specific fixtures during intake in data/synthetic-data.json and data/README.md.', '',
         ...p.dataInputs.map(input => '- ' + input.name + ' (' + input.kind + ', ' + Buffer.byteLength(input.content, 'utf8') + ' bytes)'), '',
-        'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.'
+        'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.',
+        ...(run.review ? ['', reviewIterationPrompt(run.review)] : [])
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
         criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
@@ -117,6 +144,10 @@ export class FleetBackend {
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ChatGPT subscription' : 'Pi SDK') + ' · ' + p.model);
+      if (run.review) {
+        run.review.nextRunId = p.runId;
+        this.log(p, 'review', 'info', 'Changes requested for run ' + run.review.runId + '. Starting another iteration with the saved reviewer comments and previous source.');
+      }
       await this.changed(p);
       this.check(run);
       void this.execute(p, run, provider, modelId);
@@ -144,7 +175,8 @@ export class FleetBackend {
       await runAgentStage({
         label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: this.options.agentLimits,
         create: async signal => {
-          const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined), ...createSystemDesignTools(p, stage, signal, () => this.changed(p)),
+          const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined),
+            ...(run.helpers ??= new AgentHelperRuntime(p.workspace!, this.executable)).tools(signal), ...createSystemDesignTools(p, stage, signal, () => this.changed(p)),
             ...(broker && clarificationPhase ? createClarificationTools(broker, p, clarificationPhase, signal, () => { requestedClarification = true; }) : [])];
           if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
             home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
@@ -208,7 +240,7 @@ export class FleetBackend {
             }
             if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
           };
-          await complete([run.context, briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage),
+          await complete([run.context, run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);
           if (awaitingClarification()) return;
           if (followUp) {
@@ -296,6 +328,9 @@ export class FleetBackend {
     await assertBriefDataIntegrity(p.workspace!, run.data!);
     if (run.quality) await assertQualityContract(p.workspace!, run.quality);
     if (run.foundation) await assertFoundationIntegrity(p.workspace!, run.foundation);
+    if (run.reviewSourceHash && await sourceHash(path.join(p.workspace!, '.review-source')) !== run.reviewSourceHash) {
+      throw new Error('The previous build source changed during the run. Preserve .review-source/ as review reference material.');
+    }
     if (run.clarifications !== undefined && await fs.readFile(await safeFile(p.workspace!, 'clarifications.json'), 'utf8') !== run.clarifications) {
       throw new Error('The user clarification answers changed during the run. Preserve clarifications.json.');
     }

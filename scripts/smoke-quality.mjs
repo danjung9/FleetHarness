@@ -41,14 +41,37 @@ try {
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   const context = await browser.newContext({ viewport: { width: 1512, height: 982 }, reducedMotion: 'reduce' });
   await context.addInitScript(state => {
-    let current = state; const listeners = new Set();
-    window.qualityFixtureCalls = { approvals: [], exports: [], downloads: [] };
+    const reloadKey = 'quality-fixture-reload';
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(reloadKey) || 'null');
+      localStorage.removeItem(reloadKey);
+    } catch { /* The initial blank page has no local storage. */ }
+    let current = saved ?? state; const listeners = new Set();
+    window.qualityFixtureCalls = { approvals: [], changes: [], exports: [], downloads: [] };
+    window.failNextQualityChangeRequest = !saved;
     window.fleetHarness = { bootstrap: async () => ({ state: current, models: [], storagePath: 'UI fixture', credentialStatus: '', runtime: 'UI fixture' }),
       onState: listener => { listeners.add(listener); return () => listeners.delete(listener); }, preview: async () => null, artifacts: async () => [],
       approve: async (id, feedback) => {
         window.qualityFixtureCalls.approvals.push(id);
         const project = current.projects.find(project => project.id === id);
         project.status = 'approved'; project.approvedAt = new Date().toISOString(); project.feedback = feedback;
+        current = structuredClone(current); for (const listener of listeners) listener(current);
+      },
+      requestChanges: async (id, feedback) => {
+        const project = current.projects.find(project => project.id === id);
+        if (window.failNextQualityChangeRequest) {
+          window.failNextQualityChangeRequest = false;
+          project.reviewHistory = [...(project.reviewHistory ?? []), { id: 'quality-pending-request', runId: project.runId,
+            decision: 'changes_requested', feedback, createdAt: new Date().toISOString(), sourceHash: project.report.sourceHash }];
+          current = structuredClone(current); for (const listener of listeners) listener(current);
+          localStorage.setItem(reloadKey, JSON.stringify(current));
+          throw new Error('Choose a configured model before starting another iteration.');
+        }
+        window.qualityFixtureCalls.changes.push({ id, feedback });
+        project.reviewHistory.at(-1).nextRunId = 'quality-requested-iteration';
+        project.status = 'running'; project.runId = 'quality-requested-iteration'; project.report = undefined;
+        project.stages.forEach(stage => { stage.status = stage.id === 'intake' ? 'active' : 'queued'; });
         current = structuredClone(current); for (const listener of listeners) listener(current);
       },
       exportProject: async id => { window.qualityFixtureCalls.exports.push(id); return '/synthetic/runnable-package.zip'; },
@@ -60,6 +83,53 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.httpServer.address().port}`);
   await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
+  await page.getByText('Verification needs attention', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true, 'A change request requires comments');
+  await page.getByLabel('Review notes').fill('          ');
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isDisabled(), true, 'Whitespace is not reviewer feedback');
+  const changeNotes = 'Fix task extraction so it displays the entered task instead of the placeholder.';
+  await page.getByLabel('Review notes').fill(changeNotes);
+  assert.equal(await page.getByLabel('I inspected the application, test evidence, and limitations.').isChecked(), false);
+  assert.equal(await page.getByRole('button', { name: 'Approve prototype', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'Failed checks and an unchecked acknowledgment do not block requesting changes');
+  await page.evaluate(() => document.fonts.ready);
+  for (const viewport of [{ name: 'desktop', width: 1512, height: 982 }, { name: 'minimum', width: 1120, height: 720 }]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.getByRole('button', { name: 'Request changes', exact: true }).scrollIntoViewIfNeeded();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    assert.equal(await page.locator('.review-decision').evaluate(element => element.scrollWidth > element.clientWidth + 1), false);
+    await page.screenshot({ path: path.join(output, `request-changes-${viewport.name}.png`), animations: 'disabled' });
+  }
+  await page.getByRole('button', { name: 'Request changes', exact: true }).click();
+  await page.getByRole('alert').filter({ hasText: 'Choose a configured model before starting another iteration.' }).waitFor();
+  assert.equal(await page.getByLabel('Review notes').inputValue(), changeNotes, 'A failed submission preserves the review comments');
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'A failed submission can be retried');
+  assert.equal(await page.getByRole('heading', { name: 'Review', exact: true }).isVisible(), true, 'Failed submission keeps the reviewer in Review');
+  assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls.changes), [], 'A failed submission has not started an iteration');
+  await page.getByRole('button', { name: 'Request changes', exact: true }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(output, 'request-changes-retry-minimum.png'), animations: 'disabled' });
+  await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
+  await page.waitForFunction(key => JSON.parse(sessionStorage.getItem(key) || 'null')?.reviewed === true, `appyard-review:${project.id}:${project.runId}`);
+  // Remove only the app's review draft, then reload its JavaScript to simulate
+  // a new session. The fixture restores the backend's saved review history.
+  await page.evaluate(({ id, runId }) => sessionStorage.removeItem(`appyard-review:${id}:${runId}`), { id: project.id, runId: project.runId });
+  await page.reload();
+  await page.locator('.app-shell').waitFor();
+  await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
+  await page.getByRole('status').filter({ hasText: 'Your change request is saved. The next iteration has not started; you can retry below.' }).waitFor();
+  assert.equal(await page.getByLabel('Review notes').inputValue(), changeNotes, 'Saved change-request comments survive a fresh app session without a review draft');
+  assert.equal(await page.getByLabel('I inspected the application, test evidence, and limitations.').isChecked(), false, 'Saved comments do not restore the approval acknowledgment');
+  assert.equal(await page.getByRole('button', { name: 'Request changes', exact: true }).isEnabled(), true, 'A saved request can be retried after restarting');
+  await page.locator('.review-pending').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(output, 'request-changes-restored-minimum.png'), animations: 'disabled' });
+  await page.getByRole('button', { name: 'Request changes', exact: true }).click();
+  await page.locator('.build-flow').waitFor();
+  assert.equal(await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Build', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls.changes), [{ id: project.id, feedback: changeNotes }]);
+  await page.setViewportSize({ width: 1512, height: 982 });
+  await page.evaluate(value => window.setQualityFixture(value), state);
   await page.getByRole('navigation', { name: 'Challenge progress', exact: true }).getByRole('button', { name: 'Review', exact: true }).click();
   await page.getByText('Verification needs attention', { exact: true }).waitFor();
   await page.getByLabel('Review notes').fill('Reviewed the synthetic fixture, including the explicit integration gap.');
@@ -154,9 +224,11 @@ try {
   await page.screenshot({ path: path.join(output, 'cli-delivery-desktop.png'), animations: 'disabled' });
   await exportButton.click();
   await page.waitForFunction(() => window.qualityFixtureCalls.exports.length === 1);
-  assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls), { approvals: [project.id], exports: [project.id], downloads: [] });
+  assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls), { approvals: [project.id], changes: [{ id: project.id, feedback: changeNotes }], exports: [project.id], downloads: [] });
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, browserFailureBlocksApproval: true, explicitRequirementGaps: true, missingQualityBlocksApproval: true,
+  console.log(JSON.stringify({ passed: true, browserFailureBlocksApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
+    failedChangeRequestPreservesDraft: true, savedChangeRequestSurvivesRestart: true, changeRequestsRetry: true, changeRequestsReturnToBuild: true,
+    explicitRequirementGaps: true, missingQualityBlocksApproval: true,
     requiredCapabilityBlocksApproval: true, coreDeferralBlocksApproval: true, missingEvaluationBlocksApproval: true, cleanRuntimeRequired: true,
     evaluationMetricsAndProvenance: true, cliApprovesWithoutBrowserJourneys: true, cliExportsRunnablePackage: true, screenshots: output }));
 } finally { await browser?.close(); await new Promise(resolve => server.httpServer.close(resolve)); }

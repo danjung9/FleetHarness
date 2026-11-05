@@ -6,7 +6,7 @@ export { reportPassed } from '../shared/verification.js';
 
 export interface VerificationLimits { timeoutMs: number; maxOutputBytes: number }
 export async function applicationTestFiles(root: string) {
-  return (await listArtifacts(root)).filter(f => f.size > 0 && !/^\.fleet(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
+  return (await listArtifacts(root)).filter(f => f.size > 0 && !/^\.(?:fleet|review-source|agent-tools|agent-output)(?:\/|\\)/.test(f.path) && /(?:^|\/)[^/]+\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(f.path)).map(f => f.path);
 }
 export function summarizeTap(output: string) {
   const count = (name: string) => Number(output.match(new RegExp('^# ' + name + ' (\\d+)', 'm'))?.[1] ?? 0);
