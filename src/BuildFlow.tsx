@@ -1,8 +1,9 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { Activity, ArrowRight, Check, ChevronRight, FileText, Pause, RefreshCw, XCircle } from 'lucide-react';
+import { Activity, ArrowRight, Check, ChevronRight, FileText, Pause, Play, RefreshCw, XCircle } from 'lucide-react';
 import type { Artifact, Project, StageId, StageStatus } from '../shared/types';
 import { buildActivity } from '../shared/activity';
-import { api } from './api';
+import { getResumeStage, resumeLabel } from '../shared/journey';
+import { api, isDesktop } from './api';
 import { ActivityFeed } from './ActivityFeed';
 import { PhaseDetails, projectPhases } from './PhaseDetails';
 import { SystemDesign } from './SystemDesign';
@@ -22,6 +23,8 @@ const phases: { id: BuildPhaseId; name: string; purpose: string; files: string[]
 
 function stateOf(project: Project, id: BuildPhaseId): PhaseState {
   if (project.status === 'draft') return 'queued';
+  // A checkpoint may be saved just before its stage status is updated.
+  if (getResumeStage(project) === id) return project.status === 'stopped' ? 'stopped' : 'failed';
   if (project.status === 'running' && project.conversation?.questions.some(question => question.status === 'pending' && question.runId === project.runId && question.phase === id)) return 'waiting';
   const state = project.stages.find(stage => stage.id === id)?.status ?? 'queued';
   return project.status === 'stopped' && (state === 'active' || state === 'failed') ? 'stopped' : state;
@@ -35,18 +38,23 @@ function PhaseMarker({ state, number }: { state: PhaseState; number: number }) {
   return state === 'complete' ? <Check size={16} aria-hidden="true"/> : state === 'active' ? <Activity size={16} aria-hidden="true"/> : state === 'failed' ? <XCircle size={16} aria-hidden="true"/> : state === 'stopped' || state === 'waiting' ? <Pause size={15} aria-hidden="true"/> : <span aria-hidden="true">{number}</span>;
 }
 
-export function BuildFlow({ project, developerMode = false, onPreview, onArtifact, onReview, onEditBrief }: {
+export function BuildFlow({ project, developerMode = false, busy, configured, resuming, onResume, onPreview, onArtifact, onReview, onEditBrief }: {
   project: Project;
   developerMode?: boolean;
+  busy: boolean;
+  configured: boolean;
+  resuming: boolean;
+  onResume: () => void;
   onPreview: () => void;
   onArtifact: (path: string) => void;
   onReview: () => void;
   onEditBrief: () => void;
 }) {
   const detailId = useId();
+  const resumeStage = getResumeStage(project);
   const runKey = project.id + ':' + (project.runId ?? 'new') + (project.status === 'draft' ? ':draft' : '');
   const stageRevision = project.stages.map(stage => stage.id + ':' + stage.status).join('|');
-  const currentId = (project.status === 'draft' ? 'intake' :
+  const currentId = (project.status === 'draft' ? 'intake' : resumeStage ??
     phases.find(phase => ['active', 'waiting', 'failed', 'stopped'].includes(stateOf(project, phase.id)))?.id ??
     phases.find(phase => stateOf(project, phase.id) !== 'complete')?.id ?? 'verify') as BuildPhaseId;
   const [inspection, setInspection] = useState<{ key: string; id: BuildPhaseId } | null>(null);
@@ -113,7 +121,12 @@ export function BuildFlow({ project, developerMode = false, onPreview, onArtifac
       {!following && <div className="build-inspection-note"><span>{project.status === 'running' ? currentName + ' is running.' : 'Viewing another phase.'}</span><button className="text-button" type="button" onClick={() => setInspection(null)}>Back to current phase <ArrowRight size={14}/></button></div>}
       <header className="build-detail-heading"><h2 id={detailId + '-title'}>{selected.name}</h2><span className={'build-detail-state ' + selectedState}>{stateLabel(selectedState, !!project.runId && project.status !== 'draft')}</span></header>
       <p className="build-purpose">{selected.purpose}</p>
-      {blocked ? <div className="build-phase-problem" role="status"><strong>{selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{project.error && <p>{project.error}</p>}<p>Saved outputs remain available. Start a new build when you’re ready to try again.</p></div> :
+      {blocked ? <div className="build-phase-problem" role="status"><strong>{selectedState === 'stopped' ? 'This build was stopped.' : 'This phase needs attention.'}</strong>{project.error && <p>{project.error}</p>}
+        <p className="build-recovery-note">{resumeStage ? 'Resume this phase using the saved files. Completed phases stay complete.' : 'Saved outputs remain available. Start a new build when you’re ready to try again.'}</p>
+        {resumeStage === selectedId && <div className="build-phase-recovery"><button className="primary" disabled={busy || !configured || !isDesktop} onClick={onResume}><Play size={15}/>{resuming ? 'Resuming…' : resumeLabel(resumeStage)}</button>
+          {!isDesktop ? <p>Open the desktop app to resume this phase.</p> : !configured && <p>Connect a model in Settings to resume this phase.</p>}
+        </div>}
+      </div> :
         <p className="build-next-phase" role={intakeStatus || selectedState === 'waiting' ? 'status' : undefined}>{selectedState === 'waiting' ? 'Open Project lead to answer the question. This phase continues after your answer.' : intakeStatus || (repair ? 'Fixing failed checks · repair attempt 1 of 1. AppYard will run the checks again automatically.' : selectedState === 'complete' ? selectedId === 'verify' ? 'Automated checks are complete. Review the app and evidence before approving delivery.' : 'AppYard has finished this phase.' : selected.next)}</p>}
 
       <section className="build-phase-output" aria-labelledby={detailId + '-outputs'}>

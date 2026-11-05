@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "4ff88e6917992f75e9dc00e48ce83c48e42be2384b20ed5670ffc413b5737f78",
+  "electron/pi-backend.ts": "aad9cdf0f345f9c1fed21d75b6ae7605e3d07ffd4631c20497816bbc0da97520",
   "electron/storage.ts": "7263d62c94092880ee91504548ceaf15c68dbc75c0ed30ac57076d4f2f4d7c9a",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
@@ -25,15 +25,16 @@ const errorInventory = {
   "shared/project-input.ts": "1a23f20193ae26f5d491ac2f2d8f694dd1777d2dcf4f2a012e49ae78a00d2b90",
   "shared/host-files.ts": "709cd3d66687f5e526551fdffb7a45fba11b2017fce4753698e04b36e71cd5c6",
   "electron/process-sweep.ts": "a7b3483a476cb222e1a911795137f865b543cda4303977d3e5db68966ccc7d6f",
-  "electron/verification.ts": "bceaadd0006131d8d58dabbcc41d0fd8b51d6f73083fb75a262680a90a7c63d8",
+  "electron/verification.ts": "178b4eb1e1eeb3668c257ea29961c43e195c29934985ebfa0c7e6a09ab34a132",
   "electron/quality.ts": "e100b5dd0c605254e394faf36c035d2737aa19de8994f37a04a1de0dde75a853",
   "harness/quality-contract.ts": "3c6bd49f01f12fff1f11ad61663abe4a3ba9b90ff5a3055ccaee1db847d18066",
   "harness/solution-contract.ts": "c821253be013d2cd94d5e1da9be7a5d8cd1f7d1502d89022105661305a4f006a",
   "electron/browser-verification.ts": "f4b4688364370ada03a7ba31fc23fb04c6acdee99896eb62b023c36ce998801d",
   "electron/preview.ts": "3708d08bafc1abc5df8e0b3835e5795ce3353bc33973f4e15fdaa40eb1b0eb58",
-  "electron/solution-runtime.ts": "4036e1a3fd71660c62c2bbecb46a716de637805726f3b7fe384e6f949d4379f7",
-  "electron/agent-runner.ts": "96a5395500d7ff77bc5ff118d295d025e0de93cc6399a41f3ccb1f312b2c193b",
-  "harness/integration.ts": "4b950ceeac0ddf7ff3764093ca3297b49e66c1c84b2596bd9638e22ebde54947",
+  "electron/solution-runtime.ts": "4f6657ffd75fb576423b1d48c0a7b28e6f401fa3bb535e058d033ebef4d6165b",
+  "electron/visual-review.ts": "4f3f4aade42b2032aa0bf27774110cf9c2393c04b8a85f927c1b2367ee64eac9",
+  "electron/agent-runner.ts": "cd2dda17f8cef33368a53bf9aa2f7430d76c12318760dc846089db0bfd476025",
+  "harness/integration.ts": "dcf498a183b90defa591068b54ee13485230a5359ded4d030cd0cd023b00cf34",
   "harness/planner.ts": "d4277229e364ca18355db9c8bc6054e494c972a9e7d69f48e45ddd63e816aa31",
   "harness/tool-registry.ts": "4d4a49881e35b191d59801482244e17d08d543d0d48aafa904d00f59ebaa9169",
   "harness/tools/messages.ts": "415afbdc50c49397c4b657c29f912fdb558359c8a0c27719f76684a92fb56ef7",
@@ -50,15 +51,17 @@ const errorInventory = {
   "electron/codex-rpc.ts": "f2da4ca9b44dd2cc0d648cc8d0b7be00152c9a115136fd0a4e07fe40e32e7f07",
   "electron/codex-account.ts": "2d711e84ada731b8f50b15e977dd642e78711eec8eb8492c4eeae62ae7ceeded",
   "electron/chatgpt-oauth.ts": "0ca0327dadc0c210ab712024aa614ed49b4760a28a7ab6292b5789fa6473e9dd",
-  "electron/independent-judge.ts": "8d6585d1fe6664f12450d177ccfa86581790c2e6ed716a2886cbc0d44155548d",
+  "electron/independent-judge.ts": "52ea21cd4c379094666ee4ee905110f49e1af4352aa5e501fe37d00ebd427eb6",
   "electron/delivery.ts": "c563ef3aec35ee6118502c8ff3d53afb02981b8ba4e31bcf6773b60eb5d03d86",
   "electron/delivery-secrets.ts": "cceca542c59784e7c57e0e18a7e95edea4259f52abb061d64547c994a8e908d1",
   "electron/test-baseline.ts": "6c7f91885cb4fbf34534fc2e1dfede54425ec0791a8fbf75ec851a45a8596554",
   "electron/brief-data.ts": "239b786cb83136e2f3f5afed08c26ec2a50a3b26ea33b45de888420527081611",
-  "electron/clarifications.ts": "0638662e599e73da30c32e4c3b3000769bd272114f6d74672700e8c715891972",
+  "electron/clarifications.ts": "70234658664a60f91a2755b228fb76342b2029e1794435356f2914e51a83f8d8",
   "electron/review.ts": "80d2f26d1eac2cc3c71657b4c867aea3bd267155bceb66bf9c2137e9b5391168",
   "electron/agent-helpers.ts": "c1366645d3f2ffb0f4013f120752cc9ba5d01b02f9b4b1549181af252ba81a7e",
-  "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4"
+  "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4",
+  "electron/agent-browser.ts": "45a0354595d3cc152c0adb150fa2b1ca3a297943a8e7076917e98a1e7e3e2ad4",
+  "electron/run-checkpoint.ts": "9b33234a062aff1763bcd5b674311b07639b1d3941fa8b3d1365a2eb6a03139f"
 };
 // fail(message) is the local agent-runner error wrapper. Its literal/template
 // inputs need the same mapping checks as direct constructors. Dynamic arguments

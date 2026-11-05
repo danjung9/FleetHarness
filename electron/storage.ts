@@ -74,7 +74,9 @@ export class Store {
       await this.recoverProcesses(scope.marker);
       p.processScope.cleanup = 'confirmed'; p.status = 'stopped';
       if (p.runCheckpoint) p.runCheckpoint.writerState = 'idle';
-      p.error = 'The previous run was interrupted. Its processes have been stopped. Resume or start a new run.';
+      p.error = 'The previous run was interrupted. Its processes have been stopped. ' + (p.resumeStage
+        ? 'Resume the phase to continue with your saved work.'
+        : p.runCheckpoint ? 'Resume or start a new run.' : 'This older run has no recovery checkpoint; start a new build from the saved requirements.');
     } catch { /* Keep the unresolved marker for a later Stop or restart retry. */ }
     await this.save();
   }
@@ -121,11 +123,12 @@ export async function safeFile(root: string, relative: string) {
   return resolved;
 }
 export type ArtifactManifest = { path: string; contents: Buffer }[];
-export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
+export async function artifactManifest(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean; requireEntryPoint?: boolean } = {}): Promise<ArtifactManifest> {
   const files: ArtifactManifest = [];
   for (const file of await listArtifacts(root)) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
-    if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
+    if (options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') continue;
+    if (options.excludeEvidence && (/^\.(?:quality-evidence|browser-observations)(?:\/|\\)/.test(file.path) || file.path === 'visual-review.json')) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     const handle = await fs.open(await safeFile(root, file.path), constants.O_RDONLY | constants.O_NOFOLLOW);
     let contents: Buffer;
@@ -144,6 +147,6 @@ export function manifestHash(files: ArtifactManifest) {
   for (const file of files) hash.update(file.path, file.contents);
   return hash.digest();
 }
-export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
+export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean } = {}) {
   return manifestHash(await artifactManifest(root, options));
 }

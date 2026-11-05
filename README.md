@@ -10,6 +10,8 @@ The Electron app now runs **Pi coding agents** for intake, research, planning, i
 
 Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities with full access, including self-hosted browsers and servers. Helpers inherit the run process marker for Stop and final cleanup.
 
+Build and verification agents can [open and interact with their app](docs/agent-browser.md) in a host-managed browser. They receive actual screenshots, page controls and console errors, then can edit the source and reopen the app to inspect the changes. Pi and Codex both support this loop with image-capable models.
+
 **Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
 For development: npm ci, then npm run dev (Node 22.19+). Build packages with npm run dist.

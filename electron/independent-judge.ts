@@ -64,12 +64,12 @@ async function judgeSnapshot(workspace: string, report: TestReport) {
   try { packet = JSON.parse(await fs.readFile(await safeFile(workspace, '.fleet/packet.json'), 'utf8')); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   const delivered = new Set<string>();
-  if (report.quality?.schemaVersion === 2) {
+  if ((report.quality?.schemaVersion ?? 0) >= 2) {
     const solution = parseSolutionContract(JSON.parse(await fs.readFile(await safeFile(workspace, 'solution-contract.json'), 'utf8')), packet?.acceptance ?? []);
     for (const name of solution.runtime.files) delivered.add(name);
   }
   const named = new Set(['requirements.md', 'index.html', 'README.md', 'verification.md', 'path-to-fleet.md',
-    'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'foundation-plan.json', 'clarifications.json', 'test-matrix.md']);
+    'acceptance-plan.json', 'ux-spec.json', 'solution-contract.json', 'foundation-plan.json', 'clarifications.json', 'test-matrix.md', 'visual-review.json']);
   for (const file of await listArtifacts(workspace)) {
     const name = file.path.replaceAll(path.sep, '/');
     if (!delivered.has(name) && !named.has(name) && !tests.has(file.path) && !/^\.quality-evidence\/.*\.(?:json|txt|md)$/.test(name)
@@ -83,7 +83,7 @@ async function judgeSnapshot(workspace: string, report: TestReport) {
     files.set('acceptance-inventory.json', JSON.stringify(packet.acceptance, null, 2));
   }
   files.set('test-report.json', JSON.stringify(report, null, 2));
-  for (const required of ['requirements.md', ...(report.quality?.schemaVersion === 2 ? ['solution-contract.json'] : ['index.html'])]) if (!files.has(required)) throw new Error('Missing judge input: ' + required);
+  for (const required of ['requirements.md', ...((report.quality?.schemaVersion ?? 0) >= 2 ? ['solution-contract.json'] : ['index.html'])]) if (!files.has(required)) throw new Error('Missing judge input: ' + required);
   for (const required of delivered) if (!files.has(required)) throw new Error('Missing judge input: ' + required);
   return files;
 }

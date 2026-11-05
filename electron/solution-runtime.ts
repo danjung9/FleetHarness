@@ -35,7 +35,7 @@ export interface SolutionRuntime {
 
 const defaults: SolutionRuntimeLimits = { totalTimeoutMs: 300_000, startupTimeoutMs: 15_000,
   invocationTimeoutMs: 15_000, installTimeoutMs: 120_000, maxOutputBytes: 2_000_000, maxPackageBytes: 100_000_000 };
-const forbidden = /(?:^|\/)(?:\.fleet|\.git|\.quality-evidence|\.solution-evidence|node_modules|\.venv)(?:\/|$)|(?:^|\/)(?:solution-contract|evaluation-plan|acceptance-plan|ux-spec|packet)\.json$|(?:^|\/)inputs\/manifest\.json$|(?:^|\/)\.env[^/]*(?:\/|$)/i;
+const forbidden = /(?:^|\/)(?:\.fleet|\.git|\.quality-evidence|\.solution-evidence|\.browser-observations|node_modules|\.venv)(?:\/|$)|(?:^|\/)(?:solution-contract|evaluation-plan|acceptance-plan|ux-spec|packet|visual-review)\.json$|(?:^|\/)inputs\/manifest\.json$|(?:^|\/)\.env[^/]*(?:\/|$)/i;
 const reservedEnv = /^(?:PATH|HOME|TMPDIR|TMP|TEMP|NODE_OPTIONS|NODE_PATH|PYTHONPATH|PYTHONHOME|LD_.*|DYLD_.*|ELECTRON_.*|HOST|PORT|npm_.*|NPM_.*|PIP_.*|VIRTUAL_ENV)$/;
 function relativeFile(file: string) {
   if (!file || file.includes('\\') || file.includes('\0') || path.isAbsolute(file) || file.split('/').some(p => !p || p === '.' || p === '..') || forbidden.test(file)) throw new Error('Invalid runtime file: ' + file);

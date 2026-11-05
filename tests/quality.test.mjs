@@ -11,6 +11,7 @@ import { gzipSync } from 'node:zlib';
 import { loadQualityContract, assertQualityContract, sealEvaluationPlan, restoreEvaluationPlan, verifyApplication } from '../dist-electron/electron/quality.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
+import { assertReviewState, verifiedManifest, reportHash } from '../dist-electron/electron/delivery.js';
 
 test('shared parser fixture preserves primary approval deferral with synthetic journey evidence', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-fixture-contract-'));
@@ -88,6 +89,19 @@ test('browser evidence is excluded only during execution and bound to delivery s
   const verified = await sourceHash(root);
   await fs.writeFile(path.join(root, '.quality-evidence', 'desktop.png'), 'tampered screenshot');
   assert.notEqual(await sourceHash(root), verified);
+});
+
+test('restoring the sealed evaluation plan preserves the verified tree comparison without accepting later source edits', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-final-evidence-hash-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.writeFile(path.join(root, 'index.html'), '<h1>Reviewed application</h1>');
+  await fs.writeFile(path.join(root, 'visual-review.json'), '{"hostEvidence":"reviewed"}');
+  const verified = await sourceHash(root);
+  await fs.writeFile(path.join(root, 'evaluation-plan.json'), '{"frozen":"expectations"}');
+  assert.notEqual(await sourceHash(root), verified);
+  assert.equal(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
+  await fs.appendFile(path.join(root, 'index.html'), '<button>Unreviewed change</button>');
+  assert.notEqual(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
 });
 
 const acceptance = [{ id: 'R1', requirement: 'Compute totals for arbitrary input lists.', method: 'automated', scenario: 'Compare independently calculated totals.' }];
@@ -217,6 +231,83 @@ test('version 2 gate rejects failed or missing computational evidence even with 
   const cli = v2Report(); cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
   cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
   assert.equal(reportPassed(cli, true), true);
+});
+
+function visuallyReviewedReport() {
+  const report = v2Report(), filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64), sessionId = 'verifier';
+  Object.assign(report.quality, { schemaVersion: 3, contractHash });
+  report.quality.package.filesHash = filesHash;
+  report.quality.solutionEvaluation.runtime.filesHash = filesHash;
+  const captures = [], reviews = [], time = '2026-11-05T12:00:00.000Z';
+  for (const [index, viewport] of ['desktop', 'narrow', 'desktop', 'narrow'].entries()) {
+    const captureId = 'capture-' + index;
+    captures.push({ id: captureId, sessionId, stage: 'verify', viewport, screenshot: '.browser-observations/' + captureId + '.png',
+      screenshotHash: 'c'.repeat(64), filesHash, capturedAt: time, sequence: index * 2 + 1 });
+    reviews.push({ id: 'review-' + index, sessionId, stage: 'verify', viewport, captureId, round: index < 2 ? 'initial' : 'recheck',
+      expected: 'The result and recovery controls fit the viewport.', observed: 'The result and recovery controls are visible without clipping.',
+      findings: [], resolutions: [], reviewedAt: time, sequence: index * 2 + 2 });
+  }
+  report.quality.visualReview = { schemaVersion: 1, runId: 'current-run', contractHash, status: 'passed', filesHash, activeSessionId: sessionId,
+    sessions: [{ id: sessionId, stage: 'verify', startedAt: time, status: 'passed', filesHash, errors: [] }], captures, reviews };
+  return report;
+}
+
+test('the authoritative approval gate keeps visual review, judge and same-run cleanup together', () => {
+  const project = { qualityVersion: 3, runId: 'current-run', workspace: 'synthetic-gate-only', status: 'review',
+    stages: [{ id: 'review', status: 'review' }], processScope: { runId: 'current-run', cleanup: 'confirmed' }, report: visuallyReviewedReport() };
+  const bind = () => { project.verification = { runId: project.runId, reportHash: reportHash(project.report) }; };
+  bind(); assert.doesNotThrow(() => assertReviewState(project));
+  project.report = v2Report(); bind();
+  assert.throws(() => assertReviewState(project), /Passing automated tests/);
+  project.report = visuallyReviewedReport(); project.report.independentJudge = { verdict: 'NOT' }; bind();
+  assert.throws(() => assertReviewState(project), /Passing automated tests/);
+  project.report = visuallyReviewedReport(); bind(); project.processScope.cleanup = 'pending';
+  assert.throws(() => assertReviewState(project), /cleanup must be confirmed/);
+  project.processScope.cleanup = 'confirmed'; project.processScope.runId = 'other-run';
+  assert.throws(() => assertReviewState(project), /cleanup must be confirmed/);
+});
+
+test('version 3 CLI delivery uses the validated manifest without requiring a root HTML page', async t => {
+  const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-v3-manifest-'));
+  t.after(() => fs.rm(workspace, { recursive: true, force: true }));
+  await fs.writeFile(path.join(workspace, 'engine.mjs'), 'console.log(2);');
+  const report = v2Report(); report.quality.schemaVersion = 3;
+  report.quality.package.profile = 'cli'; report.quality.solutionEvaluation.runtime.profile = 'cli';
+  report.quality.expectedJourneys = 0; report.quality.journeys = [];
+  report.sourceHash = await sourceHash(workspace);
+  const project = { title: 'Synthetic manifest fixture', qualityVersion: 3, runId: 'current-run', workspace, status: 'review', report,
+    stages: [{ id: 'review', status: 'review' }], processScope: { runId: 'current-run', cleanup: 'confirmed' },
+    verification: { runId: 'current-run', reportHash: reportHash(report) } };
+  assert.deepEqual((await verifiedManifest(project)).map(file => file.path), ['engine.mjs']);
+  await fs.appendFile(path.join(workspace, 'engine.mjs'), '// Unverified edit');
+  await assert.rejects(verifiedManifest(project), /changed after verification/);
+});
+
+test('version 3 approval gate requires complete verifier comparisons of the delivered revision', () => {
+  assert.equal(reportPassed(visuallyReviewedReport(), 3), true);
+  const mutations = [
+    report => { delete report.quality.visualReview; },
+    report => { report.quality.schemaVersion = 2; },
+    report => { report.quality.visualReview.contractHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.status = 'pending'; },
+    report => { report.quality.visualReview.sessions[0].status = 'failed'; },
+    report => { report.quality.visualReview.sessions[0].errors = ['A visual finding is still open.']; },
+    report => { report.quality.visualReview.captures.at(-1).filesHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.reviews.pop(); },
+    report => { report.quality.visualReview.reviews[2].captureId = report.quality.visualReview.reviews[0].captureId; },
+    report => { report.quality.visualReview.reviews[0].findings = [{ id: 'clipping', description: 'The action is clipped.' }]; },
+    report => {
+      const visual = report.quality.visualReview;
+      for (const item of [...visual.sessions, ...visual.captures, ...visual.reviews]) item.stage = 'build';
+    }
+  ];
+  for (const mutate of mutations) { const report = visuallyReviewedReport(); mutate(report); assert.equal(reportPassed(report, 3), false, String(mutate)); }
+  assert.equal(reportPassed(v2Report(), 2), true, 'Legacy reports remain readable without claiming visual review.');
+  assert.equal(reportPassed(v2Report(), 3), false, 'New projects cannot downgrade their required evidence version.');
+  const cli = v2Report(); cli.quality.schemaVersion = 3;
+  cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
+  cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
+  assert.equal(reportPassed(cli, 3), true, 'CLI delivery has no visual review requirement.');
 });
 
 test('clean CLI verification passes real computation and rejects a hardcoded demo despite passing developer tests', async t => {

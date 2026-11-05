@@ -12,6 +12,7 @@ import * as verification from '../../dist-electron/electron/verification.js';
 import { atomicHostWrite } from '../../dist-electron/shared/host-files.js';
 import * as executable from '../../dist-electron/electron/executable.js';
 import { exportVerifiedBundle } from '../../dist-electron/electron/source-export.js';
+import { readVisualCapture } from '../../dist-electron/electron/visual-review.js';
 
 // Exercise the actual IPC handlers. Only Electron's window/IPC transport and
 // unrelated startup services are replaced. Filesystem and delivery gates are real.
@@ -26,7 +27,7 @@ export async function mainHarness(store, backend = { active: new Map() }, source
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
-    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, fs, disk: fs, path, fileURLToPath, process,
+    redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },

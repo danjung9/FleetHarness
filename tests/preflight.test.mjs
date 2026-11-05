@@ -86,11 +86,15 @@ for (const engine of ['pi', 'codex']) {
   });
   test(`${engine} Resume can Stop while readiness is pending without later inference`, async t => {
     const h = await savedResume(t, engine), entered = deferred(), release = deferred();
+    const saved = structuredClone(h.project);
     h.backend.options.preflight.browser = async () => { entered.resolve(); await release.promise; };
     const pending = h.backend.resume(h.project.id);
     const rejected = assert.rejects(pending, /build was stopped/);
     await entered.promise; await h.backend.stop(h.project.id); await rejected;
-    assert.equal(h.project.status, 'stopped'); assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
+    // Stop cancelled admission. The previous failed run and all its evidence are
+    // retained unchanged because no resumed writer was ever admitted.
+    assert.equal(h.project.status, saved.status); assert.deepEqual(h.project, saved);
+    assert.equal(h.calls(), 0); assert.equal(h.backend.active.size, 0);
     release.resolve(); await new Promise(resolve => setImmediate(resolve)); assert.equal(h.calls(), 0);
   });
   test(`${engine} Resume chooses and saves the advertised default without losing earlier metrics`, async t => {

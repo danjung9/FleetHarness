@@ -20,6 +20,17 @@ export function humanize(value: string) {
 export function toolLabel(name = '') {
   return ({ read: 'Read file', write: 'Write file', edit: 'Edit file', bash: 'Run command', grep: 'Search contents', find: 'Find files', ls: 'List files' } as Record<string, string>)[name] || humanize(name);
 }
+
+/** Model-facing results retain images; persisted activity keeps only their metadata. */
+export function summarizeToolResult(result: unknown, limit = 8000): string {
+  return (JSON.stringify(result, (_key, value: unknown) => {
+    if (value && typeof value === 'object' && 'type' in value && (value.type === 'image' || value.type === 'inputImage')) {
+      return { type: value.type, ...('mimeType' in value ? { mimeType: value.mimeType } : {}), note: 'Image delivered to the agent; inspect the saved screenshot artifact.' };
+    }
+    if (typeof value === 'string' && value.startsWith('data:image/')) return '[Image attachment omitted from activity]';
+    return value;
+  }) ?? '').slice(0, limit);
+}
 function toolEvent(log: LogEntry) {
   const newline = log.text.indexOf('\n');
   const header = newline < 0 ? log.text : log.text.slice(0, newline);

@@ -100,17 +100,31 @@ test('SATISFACTORY performs no repair and records verify time and actual tokens'
   assert.equal(h.measurements[0].usage.uncachedPlusOutputTokens, 120);
 });
 
-for (const profile of ['node-service', 'python-service', 'cli']) {
-  test(`judge reads the complete ${profile} delivery without a root browser entrypoint`, async t => {
+for (const schemaVersion of [2, 3]) for (const profile of ['node-service', 'python-service', 'cli']) {
+  test(`judge reads the complete ${profile} delivery without a root browser entrypoint (quality ${schemaVersion})`, async t => {
     const runtimeProfile = profile === 'cli' ? 'cli' : 'service';
     const journeys = profile === 'cli' ? [] : ['primary', 'recovery'].flatMap(id => ['desktop', 'narrow'].map(viewport => ({ id, viewport, status: 'passed' })));
-    const quality = { schemaVersion: 2, status: 'passed', requirementsMet: true, errors: [], journeys, expectedJourneys: journeys.length,
+    const filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64);
+    const quality = { schemaVersion, contractHash, status: 'passed', requirementsMet: true, errors: [], journeys, expectedJourneys: journeys.length,
       criteria: [{ criterionId: 'R1', status: 'passed', capabilityIds: ['compute'] }],
       capabilities: [{ id: 'compute', required: true, status: 'passed', criterionIds: ['R1'], evaluationIds: ['examples'] }],
-      package: { status: 'passed', cleanCopy: true, profile: runtimeProfile, filesHash: 'fixture-hash' },
-      solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime: { profile: runtimeProfile, filesHash: 'fixture-hash' },
+      package: { status: 'passed', cleanCopy: true, profile: runtimeProfile, filesHash },
+      solutionEvaluation: { schemaVersion: 1, status: 'passed', errors: [], runtime: { profile: runtimeProfile, filesHash },
         capabilities: [{ id: 'compute', required: true, status: 'passed' }],
         evaluations: [{ id: 'examples', capabilityId: 'compute', status: 'passed', actual: 1, threshold: 1, trials: 1, cases: [{ passed: true }, { passed: true }] }] } };
+    if (schemaVersion === 3 && runtimeProfile !== 'cli') {
+      const sessionId = 'synthetic-verifier', time = '2026-11-05T12:00:00.000Z';
+      const captures = [], reviews = [];
+      for (const [index, viewport] of ['desktop', 'narrow', 'desktop', 'narrow'].entries()) {
+        const captureId = 'capture-' + index;
+        captures.push({ id: captureId, sessionId, stage: 'verify', viewport, screenshot: '.browser-observations/' + captureId + '.png',
+          screenshotHash: 'c'.repeat(64), filesHash, capturedAt: time, sequence: index * 2 + 1 });
+        reviews.push({ id: 'review-' + index, sessionId, stage: 'verify', viewport, captureId, round: index < 2 ? 'initial' : 'recheck',
+          expected: 'Synthetic fixture layout.', observed: 'Synthetic fixture comparison.', findings: [], resolutions: [], reviewedAt: time, sequence: index * 2 + 2 });
+      }
+      quality.visualReview = { schemaVersion: 1, runId: 'synthetic-run', contractHash, status: 'passed', filesHash, activeSessionId: sessionId,
+        sessions: [{ id: sessionId, stage: 'verify', startedAt: time, status: 'passed', filesHash, errors: [] }], captures, reviews };
+    }
     let runtime;
     const h = await fixture(t, [satisfactory], { quality, onPrompt: async ({ config, prompt }) => {
       const read = config.customTools[0];

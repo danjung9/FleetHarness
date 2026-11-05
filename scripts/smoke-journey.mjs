@@ -17,7 +17,7 @@ fixture.setDelay(200);
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: {
   'fleet-fixture': {
     baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
-    models: [{ id: 'fixture-model', name: 'Local journey fixture', reasoning: false, input: ['text'],
+    models: [{ id: 'fixture-model', name: 'Local journey fixture', reasoning: false, input: ['text', 'image'],
       contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
   }
 } }));

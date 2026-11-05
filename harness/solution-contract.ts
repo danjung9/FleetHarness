@@ -12,8 +12,8 @@ export const solutionLimits = Object.freeze({
 
 const kinds: readonly CapabilityKind[] = ['algorithm', 'optimization', 'prediction', 'retrieval', 'generation', 'workflow', 'stateful'];
 const evaluators: readonly EvaluatorKind[] = ['exact', 'numeric', 'classification', 'schedule', 'retrieval'];
-const hostFiles = new Set(['solution-contract.json', 'evaluation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'packet.json']);
-const hostDirectories = new Set(['.fleet', '.git', '.quality-evidence', '.solution-evidence', 'node_modules', '.venv']);
+const hostFiles = new Set(['solution-contract.json', 'evaluation-plan.json', 'acceptance-plan.json', 'ux-spec.json', 'packet.json', 'visual-review.json']);
+const hostDirectories = new Set(['.fleet', '.git', '.quality-evidence', '.solution-evidence', '.browser-observations', 'node_modules', '.venv']);
 const reservedEnv = /^(?:PATH|HOME|TMPDIR|TMP|TEMP|NODE_OPTIONS|NODE_PATH|PYTHONPATH|PYTHONHOME|LD_.*|DYLD_.*|ELECTRON_.*|HOST|PORT|npm_.*|NPM_.*|PIP_.*|VIRTUAL_ENV)$/;
 
 function object(value: unknown, name: string, keys?: readonly string[]): Record<string, unknown> {
