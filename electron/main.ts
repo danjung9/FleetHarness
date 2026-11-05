@@ -20,6 +20,7 @@ import { ClarificationBroker } from './clarifications.js';
 import { RunProcessSweep } from './process-sweep.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
 import { randomUUID } from 'node:crypto';
+import { recordReview, reviewFeedback } from './review.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -98,13 +99,13 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
   catch (error) { Object.assign(p, previous); notify(); throw error; }
   notify(); return p;
 }
-async function startRun(id: string, fromConversation = false, resuming = false) {
+async function startRun(id: string, fromConversation = false, resuming = false, feedback?: string) {
   if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
   await stopPreview(id);
   requireIdle(id, fromConversation);
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
-  try { if (resuming) await backend.resume(id); else await backend.start(id); }
+  try { if (resuming) await backend.resume(id); else if (feedback !== undefined) await backend.requestChanges(id, feedback); else await backend.start(id); }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
 async function readArtifact(id: string, file: string) {
@@ -192,6 +193,9 @@ function registerIPC() {
     await stopPreview(id);
     await Promise.all([backend.stop(id), delivery?.done]);
   });
+  handle('fleet:request-changes', (id: string, feedback: string) => {
+    reviewFeedback(feedback); return startRun(id, false, false, feedback);
+  });
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
   handle('fleet:preview', async (id: string) => {
@@ -212,28 +216,12 @@ function registerIPC() {
     const error = await shell.openPath(p.workspace); if (error) throw new Error(error);
   });
   handle('fleet:approve', async (id: string, feedback: string) => {
-    if (typeof feedback !== 'string' || feedback.trim().length < 10 || feedback.length > 10000) throw new Error('Add a review note of at least 10 characters.');
+    reviewFeedback(feedback);
     await stopPreview(id);
     const p = requireIdle(id);
     approvals.add(id);
-    let wrote = false;
-    try {
-      await verifiedManifest(p);
-      const next = structuredClone(p);
-      next.feedback = feedback.trim(); next.approvedAt = new Date().toISOString(); next.status = 'approved';
-      next.stages.find(s => s.id === 'review')!.status = 'complete';
-      next.approval = { runId: next.runId!, approvedAt: next.approvedAt, feedback: next.feedback,
-        scope: 'Prototype delivery only. Operational readiness is unverified.', sourceHash: next.report!.sourceHash, reportHash: next.verification!.reportHash };
-      await atomicHostWrite(p.workspace!, 'review.json', evidenceJson(next.approval)); wrote = true;
-      await verifiedManifest(next, true);
-      await store.saveProject(next);
-    } catch (error) {
-      if (wrote) {
-        if (p.approval) await atomicHostWrite(p.workspace!, 'review.json', evidenceJson(p.approval)).catch(() => {});
-        else await fs.rm(path.join(p.workspace!, 'review.json'), { force: true }).catch(() => {});
-      }
-      throw error;
-    } finally { approvals.delete(id); notify(); }
+    try { await recordReview(store, p, 'approved', feedback); }
+    finally { approvals.delete(id); notify(); }
   });
   handle('fleet:export', async (id: string) => {
     await stopPreview(id);

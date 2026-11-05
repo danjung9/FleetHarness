@@ -14,7 +14,7 @@ export interface PhaseContract {
 }
 
 /** Shared workspace capabilities. Phase tools extend this baseline; they never replace it. */
-export const globalAgentTools = ['read', 'write', 'edit', 'bash'];
+export const globalAgentTools = ['read', 'write', 'edit', 'bash', 'fleet_helpers', 'fleet_run_helper'];
 
 export function toolsForPhase(phase: PhaseContract, globalTools: readonly string[] = globalAgentTools): string[] {
   return phase.owner === 'agent' ? [...new Set([...globalTools, ...phase.tools])] : [];
@@ -73,6 +73,7 @@ export function phasePrompt(phase: PhaseContract, globalTools: readonly string[]
     `Global workspace tools inherited by every agent phase: ${phase.owner === 'agent' ? globalTools.join(', ') : 'none'}.`,
     `Additional tools specific to this phase: ${phase.tools.join(', ') || 'none'}.`,
     `Effective tool access: ${toolsForPhase(phase, globalTools).join(', ') || 'none'}.`,
+    ...(phase.owner === 'agent' ? ['Use fleet_helpers to discover reusable project helpers. When a capability is missing, read .fleet/helper-guide.md, create a helper in .agent-tools/, test it with fleet_run_helper, then run it. Helpers are optional, inherit the phase scope, and never replace independent application verification.'] : []),
     `Inputs: ${phase.inputs.join(', ')}. Required outputs: ${phase.outputs.join(', ')}.`,
     `Completion gate: ${phase.exit}`
   ].join('\n');

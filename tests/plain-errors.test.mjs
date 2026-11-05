@@ -17,15 +17,15 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "fd7b0f559e647115dae9a5d374db31b9a207719c20a7b87a2872814cad9fd58d",
+  "electron/pi-backend.ts": "4ff88e6917992f75e9dc00e48ce83c48e42be2384b20ed5670ffc413b5737f78",
   "electron/storage.ts": "7263d62c94092880ee91504548ceaf15c68dbc75c0ed30ac57076d4f2f4d7c9a",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
   "harness/norfolk.ts": "da08994d91c5fb94a96a7e154d39b42c232f4659c6848ecfe80e0c8ee1b478cb",
   "shared/project-input.ts": "1a23f20193ae26f5d491ac2f2d8f694dd1777d2dcf4f2a012e49ae78a00d2b90",
   "shared/host-files.ts": "709cd3d66687f5e526551fdffb7a45fba11b2017fce4753698e04b36e71cd5c6",
-  "electron/process-sweep.ts": "e831588206cd1f8e0b63a584518b8bec49549d85675e5dab7764c2c20f44858e",
-  "electron/verification.ts": "fb1100268382362d1bf4cb4ba82434dafcb1ae3eb5a74539ef3ec6e1c5035b3c",
+  "electron/process-sweep.ts": "a7b3483a476cb222e1a911795137f865b543cda4303977d3e5db68966ccc7d6f",
+  "electron/verification.ts": "bceaadd0006131d8d58dabbcc41d0fd8b51d6f73083fb75a262680a90a7c63d8",
   "electron/quality.ts": "e100b5dd0c605254e394faf36c035d2737aa19de8994f37a04a1de0dde75a853",
   "harness/quality-contract.ts": "3c6bd49f01f12fff1f11ad61663abe4a3ba9b90ff5a3055ccaee1db847d18066",
   "harness/solution-contract.ts": "c821253be013d2cd94d5e1da9be7a5d8cd1f7d1502d89022105661305a4f006a",
@@ -43,9 +43,10 @@ const errorInventory = {
   "harness/tools/evidence.ts": "e846cbdd98e07c52fa07f1bdb262f37c3a597ab27a67b1a01ee84a055eeed350",
   "harness/tools/readiness.ts": "75b22f00b2e461ee825c265fa610d575fa20297b3cf3df3a71cf846c851ebbe4",
   "harness/foundations.ts": "c2c7b63d208c13d3e588411f476cd26b05e57d02a85ed7f080a39bbec5ca4a30",
+  "harness/agent-helpers.ts": "4c18f5b8e15f94e2d7275c8d9c0ad318126e4a690622f943209ebb153d0860fb",
   "electron/system-design.ts": "1e5acf572539828fc251c8af1e9dff1f4c9fc195e18074cf948376fcd5db6e5a",
   "shared/system-design.ts": "cd310003c4d1ef82fd9e3479a0e42210ebcb657ff6cff481fd539da86520040d",
-  "electron/codex-session.ts": "f317a39b5ecfd2be4cab1d67e1fef10ef7f11decd8e3e09f951bd813bf316018",
+  "electron/codex-session.ts": "eeab551e90dd4d8e930fe1c7fa1ec02f1d6d22e7e39aacdc94a5d54a9fd84c53",
   "electron/codex-rpc.ts": "f2da4ca9b44dd2cc0d648cc8d0b7be00152c9a115136fd0a4e07fe40e32e7f07",
   "electron/codex-account.ts": "2d711e84ada731b8f50b15e977dd642e78711eec8eb8492c4eeae62ae7ceeded",
   "electron/chatgpt-oauth.ts": "0ca0327dadc0c210ab712024aa614ed49b4760a28a7ab6292b5789fa6473e9dd",
@@ -54,7 +55,10 @@ const errorInventory = {
   "electron/delivery-secrets.ts": "cceca542c59784e7c57e0e18a7e95edea4259f52abb061d64547c994a8e908d1",
   "electron/test-baseline.ts": "6c7f91885cb4fbf34534fc2e1dfede54425ec0791a8fbf75ec851a45a8596554",
   "electron/brief-data.ts": "239b786cb83136e2f3f5afed08c26ec2a50a3b26ea33b45de888420527081611",
-  "electron/clarifications.ts": "0638662e599e73da30c32e4c3b3000769bd272114f6d74672700e8c715891972"
+  "electron/clarifications.ts": "0638662e599e73da30c32e4c3b3000769bd272114f6d74672700e8c715891972",
+  "electron/review.ts": "80d2f26d1eac2cc3c71657b4c867aea3bd267155bceb66bf9c2137e9b5391168",
+  "electron/agent-helpers.ts": "c1366645d3f2ffb0f4013f120752cc9ba5d01b02f9b4b1549181af252ba81a7e",
+  "electron/helper-execution.ts": "28353fd31cc621f515979f3bc0a766b14b6e5c544b18f0273f630d1d2dcbbeb4"
 };
 // fail(message) is the local agent-runner error wrapper. Its literal/template
 // inputs need the same mapping checks as direct constructors. Dynamic arguments

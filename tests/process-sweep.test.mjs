@@ -8,7 +8,22 @@ import path from 'node:path';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store } from '../dist-electron/electron/storage.js';
 import { createCodexSession } from '../dist-electron/electron/codex-session.js';
-import { RunProcessSweep, runProcessEnvironment, markedPsProcesses } from '../dist-electron/electron/process-sweep.js';
+import { RunProcessSweep, runProcessEnvironment, markedPsProcesses, deferRunCleanup } from '../dist-electron/electron/process-sweep.js';
+
+for (const confirmed of [true, false]) test(`scratch cleanup waits for confirmed process exit: ${confirmed}`, async () => {
+  let cleaned = 0;
+  const scope = new RunProcessSweep({graceMs:1, killMs:60, scan:async () => {
+    assert.equal(cleaned, 0, 'Runtime files must remain until process inspection confirms exit');
+    if (!confirmed) throw new Error('Synthetic inspection failure');
+    return [];
+  }});
+  scope.run(() => {
+    runProcessEnvironment({});
+    assert.equal(deferRunCleanup(async () => { cleaned++; }), true);
+  });
+  if (confirmed) { await scope.stop(); await scope.stop(); assert.equal(cleaned, 1); }
+  else { await assert.rejects(scope.stop(), /cleanup could not be confirmed/); assert.equal(cleaned, 0); }
+});
 
 // Real detached processes and OS signals; discovery is injected because the seat
 // sandbox prohibits ps. Native discovery and the GUI fixture belong to the overseer.

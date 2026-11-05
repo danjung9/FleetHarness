@@ -34,6 +34,14 @@ const messages = {
 } as const;
 type PlainCode = keyof typeof messages;
 const rules: [PlainCode, RegExp][] = [
+  ['changed', /previous build source changed|Helper (?:files changed|changed while being inspected)/i],
+  ['input', /Add a review note|Build an app before recording a review|Request changes from a completed/i],
+  ['recovery', /Your review comments were saved, but the next iteration could not start/i],
+  ['stopped', /Helper execution stopped/i],
+  ['capacity', /Another helper is running/i],
+  ['files', /Helper (?:catalog and package paths|symlinks|contains a non-regular file|output must|workspace must)/i],
+  ['limits', /Helper input must be JSON of at most/i],
+  ['tool', /Helper (?:name must|entrypoint does not exist|test does not exist|is missing|requires nonempty|command|test files)|Unsupported helper (?:path segment|runtime flag)|tool\.json|version must use semantic version|tests must (?:contain|not contain)|Test modules must|must be a relative \.mjs or \.cjs|records must be an array|Tool returned|Inspect requires a helper|Choose test or run|This helper revision has not passed|Could not start the helper|must be a positive integer/i],
   ['shutdown', /Runtime workers did not close|Invalid saved run process marker/i],
   ['changed', /evaluation answer key changed|user clarification answers changed|sealed evaluation plan was recreated|acceptance plan, UX specification|Deployment files changed|Declared runtime files changed|Foundation provenance changed|prepared brief inputs.*changed|^Content changed\.|Approval does not match|Authoritative verification evidence|Artifacts changed after verification/i],
   ['recovery', /frozen brief data checkpoint is missing|Codex could not restore the build conversation/i],

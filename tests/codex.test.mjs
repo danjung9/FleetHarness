@@ -37,6 +37,7 @@ async function temp(t) { const root = await fs.mkdtemp(path.join(os.tmpdir(), 'f
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 const fixtureCredentials = () => Promise.resolve({ accessToken: 'fixture-subscription-token', expiresAt: Date.now() + 3600_000 });
+const screenshotPng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';
 
 test('API-key accounts connect and complete Codex work without ChatGPT sign-in', async t => {
   const rpc = new FakeRpc(), root = await temp(t);
@@ -180,6 +181,55 @@ test('Codex streams activity, invokes Fleet tools and waits for successful termi
   assert.equal(events[1].assistantMessageEvent.delta, 'Working');
   const second = value.prompt('Finish'); await tick(); rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await second;
 });
+test('Codex preserves structured helper execution failures', async t => {
+  const { value, rpc } = await session(t, new FakeRpc(), [{ name: 'fleet_run_helper', description: 'Run helper', parameters: { type: 'object' },
+    async execute() { return { content: [{ type: 'text', text: 'Self-tests failed.' }], isError: true }; }
+  }]);
+  const prompt = value.prompt('Test the helper'); await tick();
+  rpc.emit('item/tool/call', { threadId: 'thread-1', tool: 'fleet_run_helper', callId: 'helper-1', arguments: {} }, 77); await tick();
+  assert.equal(rpc.sent.at(-1).result.success, false);
+  assert.equal(rpc.sent.at(-1).result.contentItems[0].text, 'Self-tests failed.');
+  rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await prompt;
+});
+
+for (const isError of [false, true]) test(`Codex returns actual browser images alongside text with success=${!isError}`, async t => {
+  const { value, rpc } = await session(t, new FakeRpc(), [{ name: 'fleet_browser', description: 'Inspect browser', parameters: { type: 'object' },
+    async execute() { return { content: [{ type: 'text', text: 'Console error: fixture failure' }, { type: 'image', data: screenshotPng, mimeType: 'image/png' }, { type: 'text', text: '' }], isError }; }
+  }]);
+  const prompt = value.prompt('Inspect the app'); await tick();
+  rpc.emit('item/tool/call', { threadId: 'thread-1', tool: 'fleet_browser', callId: 'browser-1', arguments: {} }, 81); await tick();
+  assert.deepEqual(rpc.sent.at(-1), { id: 81, result: { contentItems: [
+    { type: 'inputText', text: 'Console error: fixture failure' },
+    { type: 'inputImage', imageUrl: `data:image/png;base64,${screenshotPng}` },
+    { type: 'inputText', text: '' }
+  ], success: !isError } });
+  rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await prompt;
+});
+
+test('Codex rejects malformed and oversized tool images instead of silently dropping or coercing them', async t => {
+  const cases = [
+    [[{ type: 'image', data: screenshotPng, mimeType: 'text/html' }], /unsupported image format/],
+    [[{ type: 'image', data: '!!!!', mimeType: 'image/png' }], /invalid base64/],
+    [[{ type: 'image', data: {}, mimeType: 'image/png' }], /invalid base64/],
+    [[{ type: 'text', text: { value: 'not text' } }], /invalid text/],
+    [[{ type: 'image', data: 'A'.repeat(14 * 1024 * 1024), mimeType: 'image/png' }], /10 MiB/],
+    [Array.from({ length: 2 }, () => ({ type: 'image', data: Buffer.alloc(6 * 1024 * 1024).toString('base64'), mimeType: 'image/png' })), /10 MiB/]
+  ];
+  let content;
+  const { value, rpc } = await session(t, new FakeRpc(), [{ name: 'fleet_browser', description: 'Inspect browser', parameters: { type: 'object' }, async execute() { return { content }; } }]);
+  const prompt = value.prompt('Inspect the app'); await tick();
+  for (const [invalid, message] of cases) {
+    content = invalid;
+    rpc.emit('item/tool/call', { threadId: 'thread-1', tool: 'fleet_browser', callId: 'browser-invalid', arguments: {} }, 82); await tick();
+    const result = rpc.sent.at(-1).result;
+    assert.equal(result.success, false);
+    assert.equal(result.contentItems.length, 1);
+    assert.equal(result.contentItems[0].type, 'inputText');
+    assert.match(result.contentItems[0].text, message);
+  }
+  rpc.emit('turn/completed', { threadId: 'thread-1', turn: { id: 'turn-1', status: 'completed' } }); await prompt;
+});
+
 test('the conversational Codex coordinator stays read-only and retains its narrow tool policy after credential refresh', async t => {
   let token = 'conversation-token', calls = 0;
   const processes = [];
@@ -296,6 +346,7 @@ test('RPC handles correlation, timeouts and process death without hanging', asyn
 
 for (const conversationMode of [false, true]) test(conversationMode ? 'bundled Codex project lead disables command and edit tools across credential rotation' : 'bundled Codex uses SIWC HTTP transport and restores history and dynamic tools after token rotation', { timeout: 15000 }, async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-siwc-transport-'));
+  const processClosures = [];
   const requests = [];
   const server = createServer(async (request, response) => {
     let body = ''; for await (const part of request) body += part;
@@ -324,7 +375,9 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
         const { args, env } = codexProcessConfig(directory, credentials);
         // Only this local test replaces the production endpoint; no hosted inference is requested.
         args.push('-c', `model_providers.${CHATGPT_MODEL_PROVIDER}.base_url="http://127.0.0.1:${server.address().port}/v1"`);
-        return new CodexRpc(spawn(codexExecutable(), args, { cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true }));
+        const child = spawn(codexExecutable(), args, { cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
+        processClosures.push(new Promise(resolve => child.once('close', resolve)));
+        return new CodexRpc(child);
       }
     });
     await value.prompt('First synthetic fixture turn.');
@@ -345,6 +398,8 @@ for (const conversationMode of [false, true]) test(conversationMode ? 'bundled C
   } finally {
     await value?.dispose(); server.closeAllConnections();
     await new Promise(resolve => server.close(resolve));
+    // dispose initiates shutdown; wait until Codex stops writing its local state.
+    await Promise.all(processClosures);
     await fs.rm(home, { recursive: true, force: true });
   }
 });

@@ -48,12 +48,19 @@ export interface RunCheckpoint {
   buildTestContents?: Record<string, string>;
   lastTests?: Record<string, string>;
   testChanges?: string[];
-  backgroundJob?: boolean;
+  backgroundJob?: boolean; // Legacy metadata; cleanup evidence determines safe resume.
+  review?: ReviewRecord;
+  reviewSourceHash?: string;
+}
+export interface ReviewRecord {
+  id: string; runId: string; decision: 'approved' | 'changes_requested'; feedback: string; createdAt: string;
+  sourceHash?: string; nextRunId?: string;
 }
 export interface Project extends BriefContext {
+  reviewHistory?: ReviewRecord[];
   processScope?: { runId: string; marker: string; cleanup: 'pending' | 'confirmed' | 'unconfirmed' };
   verification?: { runId: string; reportHash: string };
-  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string };
+  approval?: { runId: string; sourceHash: string; reportHash: string; approvedAt: string; feedback: string; scope: string; id?: string; decision?: ReviewRecord['decision']; createdAt?: string; history?: ReviewRecord[] };
   runCheckpoint?: RunCheckpoint;
   conversation?: import('./conversation.js').ProjectConversation;
   qualityVersion?: 1 | 2;
@@ -100,6 +107,7 @@ export interface FleetAPI {
   resumeRun?(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
+  requestChanges(id: string, feedback: string): Promise<void>;
   exportProject(id: string): Promise<string | null>;
   downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;

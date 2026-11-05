@@ -95,12 +95,17 @@ export class RunProcessSweep {
   private used = false;
   private closed = false;
   private stopping?: Promise<void>;
+  private cleanups: (() => Promise<void>)[] = [];
   constructor(private options: SweepOptions = {}) {
     this.marker = options.marker ?? randomUUID();
     if (!/^[a-zA-Z0-9-]{1,100}$/.test(this.marker)) throw new Error('Invalid saved run process marker.');
     this.used = options.marker !== undefined;
   }
   run<T>(work: () => T): T { return current.run(this, work); }
+  afterCleanup(work: () => Promise<void>) {
+    if (this.closed) throw new Error('Run process scope is closed; no further processes may start.');
+    this.cleanups.push(work);
+  }
   environment(base: NodeJS.ProcessEnv) {
     if (this.closed) throw new Error('Run process scope is closed; no further processes may start.');
     if (!this.options.scan && !['darwin', 'linux'].includes(process.platform)) throw new Error('Run process inspection is unavailable on this platform; process launch refused.');
@@ -109,7 +114,11 @@ export class RunProcessSweep {
   }
   stop(): Promise<void> {
     this.closed = true;
-    return this.stopping ??= this.sweep();
+    return this.stopping ??= (async () => {
+      await this.sweep();
+      for (const cleanup of this.cleanups) await cleanup();
+      this.cleanups = [];
+    })();
   }
   private async sweep() {
     if (!this.used) return;
@@ -150,4 +159,11 @@ export class RunProcessSweep {
 }
 export function runProcessEnvironment(base: NodeJS.ProcessEnv = process.env) {
   return current.getStore()?.environment(base) ?? base;
+}
+/** Keep helper runtime directories available to descendants until the run ends. */
+export function deferRunCleanup(work: () => Promise<void>): boolean {
+  const scope = current.getStore();
+  if (!scope) return false;
+  scope.afterCleanup(work);
+  return true;
 }

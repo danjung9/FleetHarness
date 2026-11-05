@@ -2,7 +2,7 @@ import { createAgentSession, createBashToolDefinition, DefaultResourceLoader, Mo
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import type { AgentBackend, AgentModel, Project, StageId, ToolEvent } from '../shared/types.js';
+import type { AgentBackend, AgentModel, Project, ReviewRecord, StageId, ToolEvent } from '../shared/types.js';
 import { stageDefinitions } from '../shared/types.js';
 import { Store, safeFile, listArtifacts, sourceHash } from './storage.js';
 import { applicationTestFiles, reportPassed, VerificationShutdownError } from './verification.js';
@@ -28,17 +28,10 @@ import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string };
+type ActiveRun = { backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; retried?: Set<StageId>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null]));
-const foregroundPolicy = 'Do not start background or detached jobs. Keep shell commands in the foreground and wait for them to finish. Do not use nohup, disown, setsid, Start-Job, Start-Process or trailing &. Stop tracks foreground calls only; an operator must inspect and stop remaining jobs if background activity is detected.';
-const backgroundShellCommand = /\b(?:nohup|disown|setsid|Start-Job|Start-Process)\b|(?<![&>\\])&(?![&>])/i;
-// Visible-command heuristic only, not a process containment claim. Ignore
-// quoted data and literal heredocs used to write HTML containing ampersands.
-function shellLaunchText(command: string) {
-  return command.replace(/<<-?\s*(['"])([A-Za-z_]\w*)\1[^\n]*\n[\s\S]*?\n\t*\2(?=\r?\n|$)/g, '')
-    .replace(/'[^']*'|"(?:\\.|[^"\\])*"|\\./gs, '');
-}
+const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
 // Retry transport/provider interruptions, never artifact, integrity or safety failures.
 function transientFailure(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -51,6 +44,8 @@ import { redactedSessionManager } from './session-logs.js';
 import { protectRuntimeCredentials } from './pi-credentials.js';
 import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt, freezeSyntheticData, syntheticDataFiles, syntheticDataInstruction, validateSyntheticData, type BriefDataSnapshot } from './brief-data.js';
 import { ClarificationBroker, createClarificationTools, clarificationPrompt } from './clarifications.js';
+import { copyReviewSource, recordReview, reviewFeedback, reviewIterationPrompt } from './review.js';
+import { AgentHelperRuntime } from './agent-helpers.js';
 
 interface BackendOptions {
   clarifications?: ClarificationBroker;
@@ -166,9 +161,32 @@ export class FleetBackend {
       this.notify();
     }
   }
+  async requestChanges(id: string, feedback: string) {
+    reviewFeedback(feedback);
+    const p = this.store.project(id);
+    if (this.active.has(id) || !['review', 'failed'].includes(p.status) || !p.runId || !p.workspace || !p.report || p.approvedAt) {
+      throw new Error('Request changes from a completed, unapproved build with test evidence.');
+    }
+    const review = await recordReview(this.store, p, 'changes_requested', feedback);
+    this.notify();
+    const previous = structuredClone(p);
+    try { await this.begin(id, false, { review, workspace: p.workspace }); }
+    catch (error) {
+      // Starting an iteration must not replace the reviewable build when setup fails.
+      // Preserve conversation messages that may have arrived while model auth was checked.
+      if (p.processScope && p.processScope.cleanup !== 'confirmed') throw error;
+      const conversation = p.conversation;
+      for (const key of Object.keys(p)) delete (p as unknown as Record<string, unknown>)[key];
+      Object.assign(p, previous, { conversation });
+      this.log(p, 'review', 'error', plainError(error).detail);
+      await this.store.save(); this.notify();
+      const message = error instanceof Error && error.cause ? error.message : plainError(error).message;
+      throw new Error('Your review comments were saved, but the next iteration could not start. ' + message, { cause: error });
+    }
+  }
   async start(id: string) { return this.begin(id, false); }
   async resume(id: string) { return this.begin(id, true); }
-  private async begin(id: string, resuming: boolean) {
+  private async begin(id: string, resuming: boolean, revision?: { review: ReviewRecord; workspace: string }) {
     if (this.active.has(id)) throw new Error('This challenge already has an active run.');
     if (this.active.size >= 3) throw new Error('Three runs are already active. Stop a run before starting another.');
     const p = this.store.project(id);
@@ -180,7 +198,7 @@ export class FleetBackend {
     let { provider, model: modelId } = settings;
     let resolve!: () => void;
     const done = new Promise<void>(settled => { resolve = settled; });
-    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve };
+    const run: ActiveRun = { backend, processes: this.options.processSweep?.() ?? new RunProcessSweep(), controller: new AbortController(), done, resolve, review: revision?.review };
     this.active.set(id, run);
     try {
       p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined;
@@ -233,6 +251,10 @@ export class FleetBackend {
       p.model = (route?.provider ?? provider) + '/' + modelId;
       await fs.mkdir(p.workspace, { recursive: true, mode: 0o700 });
       this.check(run);
+      if (revision) {
+        run.reviewSourceHash = await copyReviewSource(revision.workspace, path.join(p.workspace, '.review-source'));
+        this.check(run);
+      }
       p.dataInputs = normalizeDataInputs(p.dataInputs);
       run.data = await prepareBriefData(p.workspace, p.dataInputs);
       this.check(run);
@@ -249,7 +271,8 @@ export class FleetBackend {
           ? 'User-provided inputs are copied into inputs/. Read inputs/manifest.json for names, formats and paths. Preserve the supplied contents and provenance.'
           : 'No input data supplied. A dedicated synthetic data agent will create use-case-specific fixtures during intake in data/synthetic-data.json and data/README.md.', '',
         ...p.dataInputs.map(input => '- ' + input.name + ' (' + input.kind + ', ' + Buffer.byteLength(input.content, 'utf8') + ' bytes)'), '',
-        'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.'
+        'Use only explicitly supplied brief inputs and clearly labeled synthetic examples. Reference links do not authorize access to remote systems. Operational readiness requires independent domain review.',
+        ...(run.review ? ['', reviewIterationPrompt(run.review)] : [])
       ].join('\n'));
       const packet = await prepareFleetWorkspace({ workspace: p.workspace, title: p.title, description: p.description,
         criteria: p.criteria, inputs: p.inputs, outputs: p.outputs, resources: p.resources, links: p.links, dataInputs: p.dataInputs, challengeId: p.challengeId, sourceChallenge: p.sourceChallenge, resourcesRoot: this.resourcesRoot });
@@ -257,9 +280,14 @@ export class FleetBackend {
       run.acceptance = packet.acceptance;
       run.requirements = await fs.readFile(path.join(p.workspace, 'requirements.md'), 'utf8');
       p.runCheckpoint = { version: 1, briefHash: briefHash(p), requirementsHash: digest(run.requirements),
-        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', data: run.data };
+        packetHash: packet.packetHash, context: packet.context, repairAttempts: 0, writerState: 'idle', data: run.data,
+        ...(run.review ? { review: run.review, reviewSourceHash: run.reviewSourceHash } : {}) };
       this.check(run);
       this.log(p, 'intake', 'info', 'Requirements saved. Backend: ' + (run.backend === 'codex' ? 'Codex · ' + (route?.label ?? 'ChatGPT subscription') : 'Pi SDK') + ' · ' + p.model);
+      if (run.review) {
+        run.review.nextRunId = p.runId;
+        this.log(p, 'review', 'info', 'Changes requested for run ' + run.review.runId + '. Starting another iteration with the saved reviewer comments and previous source.');
+      }
       await this.changed(p);
       this.check(run);
       void run.processes.run(() => this.execute(p, run, provider, modelId));
@@ -277,7 +305,7 @@ export class FleetBackend {
   }
   private async restore(p: Project, run: ActiveRun) {
     const checkpoint = p.runCheckpoint!;
-    if (checkpoint.backgroundJob) throw new Error('Possible background job detected; an operator must inspect and stop remaining jobs before starting a new run in a fresh workspace.');
+    run.review = checkpoint.review; run.reviewSourceHash = checkpoint.reviewSourceHash;
     if (checkpoint.writerState !== 'idle') throw new Error('Writer shutdown was not confirmed for this workspace. Stop and clean up the old workers, then start a new run in a fresh workspace.');
     if (briefHash(p) !== checkpoint.briefHash) throw new Error('The brief changed after this build started. Start a new run with the changed brief.');
     const first = p.stages.find(s => s.status !== 'complete');
@@ -405,7 +433,8 @@ export class FleetBackend {
         label: engine + ' ' + agentLabel, signal: run.controller.signal, limits: this.options.agentLimits,
         onMetrics: measured => this.recordInference(p, stage, measured),
         create: async signal => {
-          const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined), ...createSystemDesignTools(p, stage, signal, () => this.changed(p)),
+          const customTools = [...createFleetTools(allowedTools, p.sourceChallenge ? [p.sourceChallenge] : undefined),
+            ...(run.helpers ??= new AgentHelperRuntime(p.workspace!, this.executable)).tools(signal), ...createSystemDesignTools(p, stage, signal, () => this.changed(p)),
             ...(broker && clarificationPhase ? createClarificationTools(broker, p, clarificationPhase, signal, () => { requestedClarification = true; }) : [])];
           if (run.backend === 'codex') return (this.options.createCodexSession ?? createCodexSession)({
             home: this.options.codex!.home, getCredentials: () => this.options.codex!.credentials(), cwd: p.workspace!, model: modelId, signal, tools: customTools, skillPaths: phase.skills.map(skill => path.join(p.workspace!, '.fleet', 'skills', skill))
@@ -439,11 +468,6 @@ export class FleetBackend {
         if (event.type === 'tool_execution_start') {
             const args = event.args as Record<string, unknown> | null;
             const target = args?.path ?? args?.file_path ?? args?.command;
-          const command = args?.command ?? args?.cmd;
-          if (['bash', 'shell', 'shell_command', 'exec_command'].includes(event.toolName) && typeof command === 'string' && backgroundShellCommand.test(shellLaunchText(command))) {
-            p.runCheckpoint!.backgroundJob = true;
-            this.log(p, stage, 'error', 'Possible background job detected in a shell call. Stop tracks foreground calls only. An operator must inspect and stop remaining jobs before a new run.');
-          }
             this.log(p, stage, 'tool', event.toolName + '\n' + redactSecrets(JSON.stringify(event.args, null, 2)).slice(0, 6000), {
               callId: event.toolCallId, name: event.toolName, phase: 'start',
               ...(typeof target === 'string' ? { target: redactSecrets(target).slice(0, 1000) } : {})
@@ -458,7 +482,7 @@ export class FleetBackend {
           if (event.type === 'compaction_end') this.log(p, stage, event.errorMessage ? 'error' : 'info', event.errorMessage || 'Agent context compaction completed.');
         },
         work: async (prompt, signal, hostWork) => {
-          const check = () => { this.check(run); signal.throwIfAborted(); if (p.runCheckpoint!.backgroundJob) throw new Error('Possible background job detected; an operator must inspect and stop remaining jobs before continuing.'); };
+          const check = () => { this.check(run); signal.throwIfAborted(); };
           const validateOutputs = async (required: string[], requireComponents: boolean) => {
             const missing = await this.missingFiles(p, run, stage, required, tests, requireComponents);
             if (!missing.length && variant) {
@@ -481,7 +505,7 @@ export class FleetBackend {
             }
             if (missing.length) throw new Error(engine + ' did not produce the required artifacts after one completion attempt: ' + missing.join(', ') + '. Inspect the session and start a new run.');
           };
-          await complete([run.context, briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), foregroundPolicy, stage === 'verify' ? testBaselinePolicy : '', variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage),
+          await complete([run.context, run.review ? reviewIterationPrompt(run.review) : '', briefDataPrompt(run.data!), 'Acceptance IDs: ' + run.acceptance!.map(criterion => criterion.id).join(', '), phasePrompt(phase, run.globalTools), processPolicy, stage === 'verify' ? testBaselinePolicy : '', variant ? '' : fleetStagePrompt(stage), instruction, variant ? '' : systemDesignPrompt(stage),
             broker && clarificationPhase ? clarificationPrompt : '', broker?.context(p, p.runId!)].filter(Boolean).join('\n\n'), files, !followUp?.coreGate);
           if (awaitingClarification()) return;
           if (followUp) {
@@ -583,6 +607,9 @@ export class FleetBackend {
     if (run.quality) await assertQualityContract(p.workspace!, run.quality);
     if (run.planHash && await this.planningHash(p) !== run.planHash) throw new Error('The frozen plan changed after planning. Restore it or start a new run.');
     if (run.foundation) await assertFoundationIntegrity(p.workspace!, run.foundation);
+    if (run.reviewSourceHash && await sourceHash(path.join(p.workspace!, '.review-source')) !== run.reviewSourceHash) {
+      throw new Error('The previous build source changed during the run. Preserve .review-source/ as review reference material.');
+    }
     if (run.clarifications !== undefined && await fs.readFile(await safeFile(p.workspace!, 'clarifications.json'), 'utf8') !== run.clarifications) {
       throw new Error('The user clarification answers changed during the run. Preserve clarifications.json.');
     }
@@ -592,9 +619,10 @@ export class FleetBackend {
   }
   private async testSnapshot(p: Project) {
     const snapshot: Record<string, string> = {};
-    for (const file of (await listArtifacts(p.workspace!)).filter(file => !/^\.fleet(?:\/|\\)/.test(file.path) && /\.(?:test|spec)\.(?:cjs|mjs|js)$/.test(file.path))) {
-      if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
-      snapshot[file.path] = createHash('sha256').update(await fs.readFile(await safeFile(p.workspace!, file.path))).digest('hex');
+    for (const file of await applicationTestFiles(p.workspace!, true)) {
+      const fullPath = await safeFile(p.workspace!, file);
+      if ((await fs.stat(fullPath)).size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
+      snapshot[file] = createHash('sha256').update(await fs.readFile(fullPath)).digest('hex');
     }
     return snapshot;
   }

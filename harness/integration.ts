@@ -12,6 +12,7 @@ import { qualityContractGuide } from './quality-contract.js';
 import { solutionContractGuide } from './solution-contract.js';
 import { syntheticDataPhase } from './phases.js';
 import { prepareFoundationPacket } from './foundations.js';
+import { agentHelperGuide } from './agent-helpers.js';
 export { fleetStagePrompt } from './planner.js';
 
 export interface PrepareFleetWorkspaceInput extends BriefContext {
@@ -34,6 +35,7 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   files.set('tool-schemas.json',json(toolRegistry.map(({name,description,parameters}) => ({name,description,inputSchema:parameters}))));
   files.set('quality-contract.md',qualityContractGuide);
   files.set('solution-contract.md',solutionContractGuide);
+  files.set('helper-guide.md',agentHelperGuide);
   for (const [name, body] of await prepareFoundationPacket(packet.recipe.id, input.resourcesRoot)) files.set(name, body);
   files.set('README.md',`# AppYard challenge packet\n\nSource: ${packet.challenge.sourceUrl || 'User-supplied problem'}\nRecipe: ${packet.recipe.title}\n\nAll fixture data is synthetic. Source requirements and prototype scope are separate in packet.json.\n\nRead the selected skills before implementation. toolkit/ contains dependency-free JavaScript calculation primitives; these do not supply production persistence, transport, identity or complete applications. Do not edit this directory during the run.\n\nToolkit tests are not evidence that the generated application works. Write application tests against its actual code.\n`);
   files.set('toolkit/package.json',json({type:'module',private:true}));
