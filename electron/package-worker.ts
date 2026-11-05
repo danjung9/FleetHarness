@@ -23,7 +23,8 @@ async function main(job: PackageJob) {
   const [output] = await packager({
     dir: job.source, out: job.output, tmpdir: path.dirname(job.output), name: job.name, appBundleId: job.appId,
     platform, arch, electronVersion: job.electronVersion,
-    asar: true, prune: false, quiet: true,
+    // Services and their dependencies must be ordinary files for bundled Node.
+    asar: !job.service, prune: false, quiet: true,
     electronZipDir,
     ...(process.platform === 'darwin' ? { osxSign: { identity: '-', identityValidation: false, preAutoEntitlements: false, preEmbedProvisioningProfile: false, continueOnError: false, optionsForFile: () => ({ hardenedRuntime: false }) } } : {})
   });

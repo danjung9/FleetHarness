@@ -180,7 +180,7 @@ function DeliveryContent({ project, busy, action, onReview, onChangesRequested }
       <section className="delivery-app" aria-labelledby="delivery-app-heading">
         <h2 id="delivery-app-heading">{savedApp ? 'Your app is saved' : 'Your prototype is approved'}</h2>
         <p className="delivery-approved">Approved {date(project.approvedAt!)}<button className="text-button" onClick={onReview}>View review</button></p>
-        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, project.runtimeProfile && project.runtimeProfile !== 'browser' ? 'export' : 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to save it.</p>}
+        {isDesktop ? <ExecutableDownload project={project} api={api} busy={busy} action={work => deliver(work, project.runtimeProfile === 'cli' ? 'export' : 'download')} buttonClassName="primary"/> : <p className="muted">Open this challenge in the AppYard desktop app to save it.</p>}
       </section>
       <section className="delivery-source" aria-labelledby="delivery-source-heading">
         <div><h2 id="delivery-source-heading">Source and evidence</h2><p>Export the app source, test results, and your review for inspection or further development.</p></div>
