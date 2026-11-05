@@ -3,17 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Prioritize fresh benchmark failures and preserve bounded native passes."
+summary: "Accept completed QA reviews and request one bounded update for landed recovery changes."
 ---
 
 # Quality decisions
 
-[E, current Scoreboard and R5 finals] Three of ten builds finished, zero passed automatically and zero are satisfactory. The run uses f2e5422 plus a disclosed scratch patch. IDs 12/36 log frozen-plan changes before final cleanup errors; ID 11 fails independent computation. These are fresh failures, not proof the old detached-Pi defect returned.
+[E, feed-189 and retained reports] Both QA assignments finished. Accept the runner's IDs 12/36 chronology and the officer's canonical ID 11 NOT judgment. The supplied key contradicts public ordering; missing sealed evaluator evidence prevents full failure attribution. [R] Retire duplicate judgments. Engineering's existing builder owns the generic planning-consistency correction.
 
-[R] Assign two bounded reviews: runner reconciles IDs 12/36 failure chronology and missing native evidence; officer independently checks ID 11's claimed ordering contradiction. Preserve failed receipts and frozen expectations. Route demonstrated defects once through main/Engineering; do not tune fixtures or hand-edit generated apps.
+[E, Scoreboard and R5 tails] Four builds failed, zero passed automatically and zero are satisfactory. ID 20 also records plan rejection before shutdown uncertainty; ID 11 retains a shutdown warning alongside failed computation. [R] Runner gets one report update covering these omissions and current recovery behavior. Officer idles until new evidence warrants judgment.
 
-[E, Review-3da8ad8] Four native/browser passes hold within scope. Later 7c8b663 receipts report PASS. The charter reports f2e5422's 934 unit, 94 harness and 16 screen passes; the separate sandbox gate failed dependency installation. [R] Keep identities and environments distinct. Passing fixtures do not close R5 or establish delivered-app acceptance.
+[E, relay patch] mvp 5f4eb39 restores frozen planning notes and uses process evidence after failed stages. [R] Replace the obsolete unconditional-rejection regression with valid-restoration controls and unavailable/corrupt-restoration plus unconfirmed-shutdown rejection. Source changes do not close native failures.
 
-[R] Main retains builds, native execution and shutdown recovery. Existing acceptance ownership retains delivery and persisted-baseline checkers. Architect's historical one-shot analysis remains separate. Retire old duplicate audits and containment requirements; full access is settled.
+[R] Main retains native execution, real builds and shutdown recovery. Existing Acceptance ownership retains delivery and persisted-baseline checks. Require exact source, scratch, compiled and artifact identities. Preserve earlier bounded passes without transferring them to this revision. The fixture report lists 15 screen scripts against the charter's 16; main reconciles that claim.
 
-[R] Preserve Dan's merged UI, input/capability flow and sign-in. GenAI.mil remains framework only. Closing relay separates unmerged budgets/Windows and hosted prod. Keep noon freeze, exact-byte human approval and 2 PM submission. No new frontend work or duplicate packaging effort.
+[R] Preserve Dan's frontend, delivery callback and new smoke assertions. No duplicate packaging or integration work. Keep full access, noon freeze, human artifact acceptance and 2 PM submission authority.
