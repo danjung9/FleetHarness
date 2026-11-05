@@ -12,6 +12,10 @@ Last updated 2026-11-05, after resumed integration coordination. Dated entries b
 
 ## Latest session
 
+- [E, November 5 combined acceptance preparation] [[Research/QA/Acceptance/Overnight]] maps 23 function areas to exact checks and gaps. Three scripts are ready under Research/QA/Overnight: native input/auth controls, browser recovery and unpinned detached Pi Stop. Syntax and pure controls pass; main owns execution on a clean landed combined build. Full host/network access follows Mukul's decision and is not a defect. No combined acceptance result is claimed.
+
+- [E, current independent checks at 01:25 Nov 5] [[Research/QA/GUI-16a6940/Detached-Stop-Review]] closes the bounded detached Pi Stop reproduction with native receipt 6b784ff0 and seven passing checks. New integration 8053707 has a separate evidence-binding gap: an injected production-function probe retains a satisfactory verdict after a late application mutation without reverification. Main received [[Research/Backend-Audit/Merge-Evidence-Review]]; broader combined-app acceptance remains pending.
+
 - [E, resumed owner reply at 01:01 Nov 5] Work now proceeds through the backend audit and combined integration in fh-org/astra-merge. The old organization pool was deliberately paused and restarts after landing. Main reports mvp 16a6940, current committed integration 8053707, and further 29ac921 merge work. Last reported full native run had 588/596 unit and 84/84 harness passes; focused follow-ups do not establish a full rerun. Existing automatic QA is stale and must not certify this candidate.
 
 - [E, current scope and review] Main reports Mukul chose full-access build agents and removed product execution containment. Earlier containment requirements describe historical decisions; cleanup, approval and truthful evidence still apply. A read-only merge review and [[Research/Backend-Audit/Submission-Claims-Review]] check those behaviors and stale submission wording. Existing QA owns fresh native receipt and Stop review. See [[Sessions/2026-11-05-resumed-coordination]].

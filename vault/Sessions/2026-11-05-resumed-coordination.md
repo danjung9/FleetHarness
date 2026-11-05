@@ -29,3 +29,5 @@ summary: "Resumed observation of current integration and evidence readiness."
 ## Next
 
 [R] Return material merge findings to the integration owner. Verify the final revision against full native and smoke receipts, independent challenge judgments and Stop evidence. Update final claims against those bytes and retain human approval for submission.
+
+[E, 01:25 follow-up] Recovered and inspected the newer native Stop receipt 6b784ff0: all seven checks pass at clean 16a6940, independently reviewed by existing QA. Corrected submission-review wording to credit that bounded closure. The current combined build remains a separate acceptance target. The pinned merge review found an evidence-binding gap; an isolated production-function probe reproduced a retained satisfactory verdict after an injected application mutation, with zero reverifications. See [[Research/Backend-Audit/Merge-Evidence-Review]].

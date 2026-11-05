@@ -9,6 +9,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
+import { get as httpGet } from 'node:http';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const payload = (name, text) => ({ name, mimeType: 'text/plain', buffer: Buffer.isBuffer(text) ? text : Buffer.from(text) });
@@ -24,7 +25,7 @@ const cases = [
   { id: 'ATOMIC-REJECTED-BATCH', files: [payload('valid.txt', 'synthetic valid input'), payload('invalid.txt', Buffer.from([0xff]))], error: /UTF-8/i },
 ];
 function verdict(rows, error, stable, cleanup) {
-  if (error || !stable || cleanup !== 'PASS') return 'ERROR';
+  if (error || !stable || cleanup !== 'PASS' || rows.some(r => r.result === 'ERROR')) return 'ERROR';
   return rows.some(r => r.result === 'FAIL') ? 'FAIL' : rows.length ? 'PASS' : 'ERROR';
 }
 if (process.argv[2] === '--validate-only') {
@@ -35,6 +36,7 @@ if (process.argv[2] === '--validate-only') {
   assert.equal(verdict([{ result: 'PASS' }, { result: 'FAIL' }], false, true, 'PASS'), 'FAIL');
   assert.equal(verdict([{ result: 'PASS' }], false, false, 'PASS'), 'ERROR');
   assert.equal(verdict([{ result: 'PASS' }], false, true, 'UNCONFIRMED'), 'ERROR');
+  assert.equal(verdict([{ result: 'PASS' }, { result: 'ERROR' }], false, true, 'PASS'), 'ERROR');
   console.log(JSON.stringify({ validationOnly: true, passed: true, rejectedInputCases: cases.map(c => c.id), runtimeExecuted: false }));
   process.exit(0);
 }
@@ -71,10 +73,20 @@ async function poll(check, message, ms = 5000) {
   do { if (await check()) return; await new Promise(resolve => setTimeout(resolve, 50)); } while (Date.now() < end);
   assert.fail(message);
 }
+function freshProbe(url) {
+  return new Promise(resolve => {
+    const request = httpGet(url, { agent: false, timeout: 1000 }, response => {
+      response.resume(); response.once('end', () => resolve({ status: response.statusCode }));
+      response.once('error', error => resolve({ errorCode: error.code || 'RESPONSE_ERROR' }));
+    });
+    request.once('timeout', () => { const error = new Error('Loopback probe timed out.'); error.code = 'PROBE_TIMEOUT'; request.destroy(error); });
+    request.once('error', error => resolve({ errorCode: error.code || 'REQUEST_ERROR' }));
+  });
+}
 async function row(id, fn) {
   const item = { id, startedAt: new Date().toISOString() }; result.rows.push(item);
   try { item.evidence = await fn(); item.result = 'PASS'; }
-  catch (error) { item.result = 'FAIL'; item.error = String(error.message).slice(0, 1600); }
+  catch (error) { item.result = error.code === 'ERR_ASSERTION' ? 'FAIL' : 'ERROR'; item.error = String(error.message).slice(0, 1600); item.requiresReceiptReview = true; }
   item.finishedAt = new Date().toISOString();
   try { await page.screenshot({ path: path.join(output, id + '.png'), timeout: 5000 }); item.screenshot = id + '.png'; }
   catch { item.screenshotUnavailable = true; }
@@ -161,9 +173,13 @@ try {
   });
   await row('OAUTH-START-REOPEN-CANCEL', async () => {
     await app.evaluate(({ shell }) => {
-      globalThis.__qaOAuth = { openings: [], loopbackOrigin: null };
+      globalThis.__qaOAuth = { openings: [], loopbackOrigin: null, firstFingerprint: null, reopenedSameURL: false };
       shell.openExternal = async value => {
         const url = new URL(value);
+        const { createHash } = await import('node:crypto');
+        const fingerprint = createHash('sha256').update(value).digest('hex');
+        if (globalThis.__qaOAuth.firstFingerprint === null) globalThis.__qaOAuth.firstFingerprint = fingerprint;
+        else globalThis.__qaOAuth.reopenedSameURL = fingerprint === globalThis.__qaOAuth.firstFingerprint;
         // Keep only noncredential routing metadata, never authorization queries.
         globalThis.__qaOAuth.openings.push({ protocol: url.protocol, host: url.hostname, path: url.pathname });
         if (url.searchParams.has('redirect_uri')) {
@@ -182,7 +198,7 @@ try {
       const callback = await app.evaluate(() => globalThis.__qaOAuth.loopbackOrigin);
       assert.ok(callback, 'Login must establish its loopback callback.');
       const probe = callback + '/__qa_unknown_path__';
-      assert.equal((await fetch(probe, { signal: AbortSignal.timeout(3000) })).status, 404);
+      assert.equal((await freshProbe(probe)).status, 404);
       const state = await page.evaluate(async () => {
         const account = (await window.fleetHarness.bootstrap()).chatgpt;
         return { status: account.status, containsCredentialFields: /authUrl|access_token|refresh_token|code_verifier|code_challenge/.test(JSON.stringify(account)) };
@@ -192,13 +208,12 @@ try {
       assert.equal(await page.getByRole('radio', { name: 'Pi Model providers' }).isDisabled(), true);
       await page.getByRole('button', { name: 'Reopen browser', exact: true }).click();
       assert.equal(await app.evaluate(() => globalThis.__qaOAuth.openings.length), 2);
+      assert.equal(await app.evaluate(() => globalThis.__qaOAuth.reopenedSameURL), true, 'Reopen must use the same login URL.');
       await cancel.click(); await cancel.waitFor({ state: 'hidden' });
       assert.equal(await page.evaluate(async () => (await window.fleetHarness.bootstrap()).chatgpt.status), 'disconnected');
       // A timeout is not evidence of a closed listener. Require connection refusal.
-      let probeError;
-      try { await fetch(probe, { signal: AbortSignal.timeout(3000) }); } catch (error) { probeError = error; }
-      assert.equal(probeError?.cause?.code, 'ECONNREFUSED', 'Cancelled login must close the owned callback listener.');
-      return { realLoopbackStartAndCancel: true, externalOpeningIntercepted: true, reopenCount: 2, listenerClosed: true, completedLogin: false };
+      await poll(async () => (await freshProbe(probe)).errorCode === 'ECONNREFUSED', 'Cancelled login must close the owned callback listener.', 5000);
+      return { realLoopbackStartAndCancel: true, externalOpeningIntercepted: true, reopenCount: 2, sameLoginURL: true, listenerClosed: true, completedLogin: false };
     } finally {
       if (await cancel.isVisible()) { await cancel.click(); await cancel.waitFor({ state: 'hidden' }); }
     }
@@ -229,7 +244,7 @@ try {
     assert.equal(await section.getByRole('button', { name: 'Attach files', exact: true }).isEnabled(), true);
     return { acceptedCount: 10, overflowControlsDisabled: true, removingOneReenablesAttach: true };
   });
-  await row('VALID-INPUT-PERSISTENCE', async () => {
+  await row('VALID-INPUT-RENDERER-RELOAD', async () => {
     const { dialog, section, chooser } = await freshIntake(); const title = 'Synthetic input boundary ' + randomUUID();
     await dialog.getByLabel('Challenge title', { exact: true }).fill(title);
     await dialog.getByLabel('Problem statement', { exact: true }).fill('Use these synthetic text records to demonstrate attached data survives saving a brief.');
@@ -239,7 +254,7 @@ try {
     const expected = [{ name: 'sample.csv', kind: 'file', content: text }];
     const read = () => page.evaluate(async title => (await window.fleetHarness.bootstrap()).state.projects.find(p => p.title === title)?.dataInputs, title);
     assert.deepEqual(await read(), expected); await page.reload(); await page.locator('.app-shell').waitFor(); assert.deepEqual(await read(), expected);
-    return { createdThroughUI: true, persistedReadVia: 'read-only bootstrap IPC', exactUnicodeAndCRLF: true, retainedAfterReload: true };
+    return { createdThroughUI: true, readVia: 'read-only bootstrap IPC', exactUnicodeAndCRLF: true, retainedAfterRendererReload: true, mainProcessRestarted: false };
   });
   if (result.pageErrors.length) result.rows.push({ id: 'NO-UNHANDLED-RENDERER-ERRORS', result: 'FAIL', errors: result.pageErrors });
 } catch (error) { result.error = String(error.message).slice(0, 2000); }
