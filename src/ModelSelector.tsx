@@ -13,7 +13,6 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
   const id = useId();
   const settings = data.state.settings;
   const backend = settings.backend ?? (settings.provider ? 'pi' : 'codex');
-  const engine = backend === 'pi' ? 'Pi' : 'Codex';
   const models = data.models.filter(model => (model.backend ?? 'pi') === backend);
   const selected = models.find(model => model.provider === settings.provider && model.id === settings.model);
   const connected = models.filter(model => model.configured);
@@ -33,8 +32,8 @@ export function ModelSelector({ data, api, busy, action, updated, desktop, openS
   }
 
   return <div className="model-selector">
-    <label htmlFor={id} title={`${engine}${settings.provider ? ` · ${settings.provider}` : ''}`}>
-      {engine} model{settings.provider && <span> · {settings.provider}</span>}{running && <span> · In use</span>}
+    <label htmlFor={id} title={`Model account${settings.provider ? ` · ${settings.provider}` : ''}`}>
+      Build model{settings.provider && <span> · {settings.provider}</span>}{running && <span> · In use</span>}
     </label>
     <div className="model-selector-control">
       <select id={id} aria-label="Build model" aria-describedby={`${id}-hint`} value={value}

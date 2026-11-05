@@ -84,6 +84,7 @@ try {
   step('launch');
   let launched = await launch(); app = launched.application; let page = launched.page;
   await openConnectors(page);
+  await page.getByText('Event builds use sample data; live connections support local preview only.', { exact: true }).waitFor();
   await page.locator('.connector-card').first().waitFor();
   assert.equal(await page.locator('.connector-card').count(), 7);
   for (const name of ['Gmail', 'Google Calendar', 'Google Drive', 'Outlook', 'Outlook Calendar', 'OneDrive', 'Your own data service']) {
@@ -195,7 +196,7 @@ try {
 
   step('restart and refresh done');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
+  await page.getByRole('tab', { name: 'Other model providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
   await page.getByText('Model settings saved.', { exact: true }).waitFor();

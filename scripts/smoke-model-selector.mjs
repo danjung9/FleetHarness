@@ -45,7 +45,7 @@ try {
   assert.equal(await selector.inputValue(), '');
   await selector.selectOption('settings');
   await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
-  assert.deepEqual(await page.getByRole('tab').allTextContents(), ['ChatGPT', 'API key', 'GenAI.mil', 'Other providers']);
+  assert.deepEqual(await page.getByRole('tab').allTextContents(), ['ChatGPT', 'API key', 'GenAI.mil', 'Other model providers']);
   await page.getByRole('tab', { name: 'ChatGPT', exact: true }).click();
   assert.equal(await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).isVisible(), true);
   assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).count(), 0);
@@ -57,7 +57,7 @@ try {
   assert.equal(await page.getByLabel('Service address', { exact: true }).inputValue(), 'https://api.genai.mil/v1');
   assert.equal(await page.getByText('Not connected', { exact: true }).isVisible(), true);
   assert.equal(await page.getByRole('button', { name: 'Save and connect', exact: true }).isDisabled(), true);
-  await page.getByRole('tab', { name: 'Other providers', exact: true }).click();
+  await page.getByRole('tab', { name: 'Other model providers', exact: true }).click();
   await page.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
   await page.getByLabel('Model', { exact: true }).selectOption('fixture-a');
   await page.getByRole('button', { name: 'Save model settings', exact: true }).click();
@@ -80,7 +80,7 @@ try {
   await capture(page, 'home-desktop.png');
 
   await page.getByRole('button', { name: 'Preview — generated app', exact: true }).click();
-  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Settings', 'Home — challenge portfolio'];
+  const screens = ['Build', 'Preview — generated app', 'Activity — agent work', 'Review', 'Brief', 'Deliver', 'Files — artifacts', 'Settings', 'Home \u2014 challenge portfolio'];
   for (const screen of screens) {
     const navigation = ['Build', 'Review', 'Brief', 'Deliver'].includes(screen) ? page.getByRole('navigation', { name: 'Challenge progress', exact: true }) : page;
     await navigation.getByRole('button', { name: screen, exact: true }).click();
@@ -113,7 +113,14 @@ try {
   await page.getByRole('switch', { name: 'Developer mode', exact: true, checked: true }).waitFor();
   assert.equal((await page.evaluate(() => window.fleetHarness.bootstrap())).state.settings.developerMode, true);
   assert.equal(await selector.isDisabled(), true, 'Changing developer mode does not unlock the build model');
-  await page.evaluate(id => window.fleetHarness.stopRun(id), id);
+  for (const screen of ['Home \u2014 challenge portfolio', 'Connectors', 'Settings']) {
+    await page.getByRole('button', { name: screen, exact: true }).click();
+    const header = page.locator('header[aria-label="Running build"]');
+    assert.equal(await header.getByRole('button', { name: 'Stop build', exact: true }).isVisible(), true, screen);
+    assert.ok((await header.innerText()).includes(qualityFixtureProject.title));
+    await capture(page, 'running-' + screen.split(' ')[0].toLowerCase() + '.png');
+  }
+  await page.locator('header[aria-label="Running build"]').getByRole('button', { name: 'Stop build', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('[aria-label="Build model"]').disabled);
 
   // A failed save leaves the previous model selected and reports the failure.
