@@ -2,20 +2,20 @@
 type: memo
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Close review returns and integrate Dan's inputs without losing existing protections."
+updated: 2026-11-05
+summary: "Finish current returns and add one planning consistency gate on the merged baseline."
 ---
 
 # Engineering decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds govern work. [E, QA records] R101 has five automatic passes and five NOT judgments; its pending ID 20 cell is stale. R3 now has three completed builds, all failing at review because cleanup could not be confirmed.
+[E, closing relay and Git] Current mvp is 5f4eb39. Cleanup confirmation, frozen-plan restoration, offline packaging, containers and post-delivery changes are landed. Preserve them; do not assign replacement implementations.
 
-[R] Finish existing work. Assign only builder's interrupted-usage return in two exclusive files. Coalesce duplicate returns and verifier implementations.
+[E, current Scoreboard] R5 finished four builds with four failures and zero satisfactory results, using f2e5422 plus scratch changes. Those failures and older fixture passes do not certify 5f4eb39.
 
-[E, e6b5000 review] Recovery checks pass, but desktop hashing rejects unchanged hosted checkpoints. [R] Dev-1 coordinates all hash producers through main and the existing hosted owner, preserving export hardening. Dev-3 supplies its verifier delta.
+[E, JUDGE-R5-id11-training] Prepared expectations contradict the public protocol; retained output follows it. The sealed evaluator key is missing. [R] Assign builder one generic consistency audit before freezing new plans. Preserve ordered assertions and old failures; never tune answers to generated output. Main supplies missing evidence and owns real reruns.
 
-[R] Dev-2 closes persistence deadlines, dynamic-error coverage and default reachability. Dev-5 fixes smoke reopening, then reconciles source coverage with Dan's capability contract. Dev-4 finishes its bounded internal judge; external QA and human acceptance remain separate.
+[E, live org state] Code seats are disabled; dev-1/2/3 retain file claims. [R] Keep their existing artifact-retry, smoke-label and connector-wording returns. Resolve gate failures against the exact baseline on a capable host; do not dismiss all 123 failures as environmental or expand these seats into runtime repairs.
 
-[E, closing relay e27ad6a] Dan adds brief inputs and capability mappings on a separate branch. The relay reports missing solution-contract wiring. [R] Preserve his UI and conditional data preparation. Integrate through current owners, retaining shutdown, deferral and approval protections absent from the older branch comparison. Require exact integrated tests.
+[R] Protect Dan's frontend. Dev-1 retains the landed delivery callback; dev-2 preserves new smoke-quality assertions. Account-switch, lost-draft and global Stop findings stay with Dan.
 
-[R] Main resolves cleanup uncertainty before affected workspaces resume and obtains native detached-Stop proof. No suppressed errors, invented format conformance or new research/deployment allocation. Keep Thursday noon freeze and final-byte review.
+[R] Architect's other proposals remain backlog. Dev-4/5 stay unassigned. Main owns cleanup/native delivery, persisted-baseline evidence and benchmark execution. Quality's existing chronology should include newly finished ID 20. Require overseer enablement and exclusive files before builder starts. Keep noon freeze and human approval of final bytes.

@@ -2,50 +2,50 @@
 type: directive
 status: active
 owner: mukul
-updated: 2026-11-04
-summary: "Finish one source-coverage correction, one bounded internal judge and the returned telemetry fix."
+updated: 2026-11-05
+summary: "Plan one bounded consistency audit before freezing new evaluation contracts; keep other proposals and duplicate repairs idle."
 ---
 
-# Agentic development instructions
+# Agentic directive
 
-[P] [[Research/Agentic/Flow-Goals]] remains the measure: ten satisfactory catalog builds without human help during generation. This replaces the previous directive. [E, R101 audit and all five officer judgments] Five automatic passes produced zero satisfactory results. Matched time and uncached/output tokens increased by about 24 percent and 19 percent. A new internal judge or shorter notes has no measured benefit until a matching experiment demonstrates it.
+## Decision and evidence
 
-## Existing owners and the sole dispatch
+[P] [[Research/Agentic/Flow-Goals]] governs: ten satisfactory catalog builds without human repair. [E, closing [[Research/QA/Ten/Scoreboard]]] R5 ended with four failures and zero satisfactory results at f2e5422 plus scratch changes. Its newest ID 20 cleanup failure belongs in the existing Quality chronology, not a new cleanup implementation.
 
-[R] Agentic-builder receives only the existing df9ff1d interrupted-usage return in electron/agent-runner.ts and tests/agent-runner.test.mjs. Follow the JSON done conditions and [[Ops/Directors/Directive-development]] ownership table. Coalesce any equivalent queued task. Preserve its previously tested effort, note limits, turn ordering and terminal persistence. Missing follow-up usage must be unknown before Stop/timeout metrics are saved; observed usage must remain observed. Do not edit Codex-session or shared backend files without a later explicit transfer.
+[E, [[Research/QA/Officer/JUDGE-R5-id11-training]]] The prepared key conflicts with the public ordering and report schema. Retained host output follows the checked public rules. The sealed evaluation plan is absent, so the report does not prove that reordering one array would pass the host gate. [R] Accept this canonical NOT judgment, preserve its evidence and request the missing sealed evaluator/input identity through main. Do not rerun its judgment or alter its frozen key.
 
-[R] Agentic-architect finishes currently routed diagnoses in [[Research/Agentic/09-Primary-Task-Deferral]], adding only evidence that changes the repair. Dev-5 remains the canonical source-coverage owner. Earlier proposals naming builder for primary-task repairs are superseded. No new parser, nineteen-file implementation, duplicate ID 32/36 audit or per-challenge app patch is dispatched. Keep original failure receipts and identify the smallest shared factory regression.
+[E, source at 5f4eb39] electron/pi-backend.ts validates and loads the planning contracts, then seals them. electron/independent-judge.ts judges semantics after verification passes. No independent consistency audit before sealing was found in those inspected paths. [R] Make that bounded gap the only new allocation.
 
-[R] Dev-4 already owns the internal judge. Require a fresh read-only context, complete original card plus narrative obligations, immutable source/evidence identity, actionable gaps and fail-closed treatment of missing or malformed verdicts. Preserve rejection of writes and forged evidence. Host tests rerun after each repair, with at most two repairs under the shared persistent budget. Stop must cancel judging without starting a repair. Internal SATISFACTORY only informs progression to review; independent QA still judges the final artifact and a person retains approval authority.
+## Builder: one current task
 
-## Correct the acceptance meaning
+[R] After overseer enablement and exclusive file release, implement one read-only consistency audit of a newly produced plan before its answer key is sealed and implementation starts. Reuse the existing independent judge machinery; retain the final judge. Work only in:
 
-[E, current diagnosis] At 0da7ce9 the parser constrains deferral reasons, but implemented rows can still replace original outcomes with easier ones. The separately reported stronger syntheticCoverage correction is not established in that inspected checkout. [R] Dev-5 integrates the canonical correction once after closing the smoke return. Keep useful landed guidance and fixture compatibility, while correcting instructions that permit an invented format to satisfy a named standard. An allowed reason prefix, label, disclaimer or passing self-written test cannot establish source coverage.
+- electron/independent-judge.ts
+- electron/pi-backend.ts
+- skills/fleet-judge/SKILL.md
+- tests/independent-judge.test.mjs
+- tests/pi-backend.test.mjs
 
-| Evidence to retain | Required factory behavior |
-| --- | --- |
-| R101 IDs 8/12: assumed output format and invented input grammar pass | Independently checked synthetic examples must preserve the requested format. Check complete output, not fragments. Missing permitted format evidence leaves the obligation incomplete; do not invent standard conformance. |
-| R101 ID 11: all rows implemented, preset alternatives only | Require fresh roster alternatives, independently scored optimization and changed recurrence inputs. Fixed assignments cannot stand in for departmental scheduling. |
-| R101 ID 36: canned capture and sender-local acknowledgement | Require new synthetic input, revision-bound review, durable transfer to a separate local workspace and receiver-originated evidence. Do not weaken browser containment to simulate proof. |
-| R101 ID 20: fixed source snapshots and mutable source/fingerprint pair | Require independently supplied synthetic source ingestion, protected capture identity, full exported claim/timestamp checks and refusal after source alteration. Hard-coded citation coverage is not evidence. |
-| R1 IDs 16/37: missing narrative obligations or starting application | Preserve source narrative coverage. Check prerequisites before build; a recipe-only pass or fielding checklist cannot replace the missing task. |
+[R] Compare the original obligations, declared public invocation rules, prepared synthetic inputs/expectations, proposed evaluation inputs/expectations and expected output projection. Require specific evidence for ordering, schema and rule agreement. No application code/output may serve as the expected-answer oracle. Give the audit immutable inputs and a read-only tool; do not expose sealed answers in later builder context or public diagnostics.
 
-[R] Check implemented and deferred rows against original obligations. Freeze independent expected results outside builder authority, bind them to source/fixture/artifact identity and invalidate them on change or resume mismatch. Structural validation cannot prove semantics. Missing real authority remains a genuine blocker; synthetic demonstration never grants real approval, access or transmission.
+[R] Keep this change small: one bounded audit attempt for a new plan, explicit failure with useful gaps if inconsistent or unavailable, no new autonomous planning-repair loop. Record duration and known/unknown usage through existing accounting. Use current cancellation and time limits. Do not assume the separate whole-build budget branch is integrated.
 
-## Questions, measurement and scope
+[R] Bind audit evidence to the actual protocol, inputs, expectations and evaluator version. A passed audit cannot authorize changed bytes. Preserve existing frozen-plan restoration, persisted test baselines and Resume behavior; distinguish an older checkpoint without this new evidence instead of silently labeling it audited. If broader checkpoint/schema work is necessary, return the exact minimal file delta for serial ownership before changing another seat's file.
 
-[R] Answer to the architect's owner proposals: dev-5, after current review and shared-file release. Answer to format gaps: no invented standard or false positive fixture; retain an honest incomplete result. Answer to the builder's prerequisite: reuse dev-1's integrated single sandbox execution and host-owned registered-test evidence. Answer to judge design: use dev-4's existing implementation, with independent external acceptance retained and no multiplied repair allowance.
+[R] Write meaningful failing-first host-path tests. Independently authored generic synthetic cases must distinguish request order, window order and lexical ID order; include one item matching two windows, endpoint-only non-overlap and an unchanged control. A window-first key and a narrative-witness substitute for a structured result must be identified as inconsistent. A conformant plan proceeds. Prove NOT, malformed/missing verdict, timeout, Stop and input mutation prevent sealing/build; Stop starts no repair. Assert the audit's actual snapshot/tool inputs and the host transition, not merely prompt strings or a canned pass.
 
-[E, [[Research/Agentic/10-App-Starter]]] A tested starter is a stated project direction. [R] Preserve any explicit overseer assignment for it, but this meeting adds no parallel starter owner while current returns remain. An unfilled domain slot must fail, domain logic must determine results, and shared shell tests cannot satisfy a challenge. Compare time/tokens and independent outcomes before claiming savings. Do not narrow original requirements to shorten planning.
+[R] Preserve ordered equality and all original failures. No benchmark-specific IDs, answers or generated-app edits in production. Tests establish host enforcement under controlled verdicts, not reliable semantic judgment by a live model. Main must run a new versioned real planning/build attempt and Quality independently judge its artifact before any improvement claim.
 
-[R] Main owns regeneration, benchmark records and runtime execution. R3 cleanup failures take priority over efficiency claims; never remove a cleanup gate to reach review. The next measured experiment must identify the integrated commit and scratch changes, preserve full raw artifacts, report all journeys and source obligations, then receive an independent verdict. R101's stale pending ID 20 cell and links omitting Exp1 need coordinator reconciliation, not another judge task.
+## Architect and existing work
 
-[R] Preserve Dan's frontend, 0da7ce9 fixture/smoke changes and the distinct 5a9d7d1 checkpoint work. Shared hash compatibility must be fixed through existing owners, not bypassed for resume. RandE novelty, connectors and new walkthrough work stay deferred. Keep human approval, monitoring, escalation and shutdown visible. Thursday noon freeze and exact-byte acceptance remain; no external action or generated-app hand edit is allocated.
+[R] Accept [[Research/Agentic/One-Shot-Gaps]] as the completed architecture input. Of its three proposals, prioritize only consistency before freeze. Broader original-obligation auditing, adversarial task coverage and complete receiver/download verification remain follow-up unless a current benchmark failure makes them necessary. No new architecture seat turn is assigned.
 
-## Closing adaptation to Dan's inputs and capabilities
+[R] Do not revive the historical nineteen-file primary-task implementation or parallel judge/recovery work. Preserve landed input preparation, foundation selection, narrative/capability coverage, sealed evaluation, visual review, final judgment, test protection and bounded repair. Main retains cleanup, packaging, containers, post-delivery changes and all real runs. Builder must coalesce with any equivalent later main assignment instead of opening a second implementation.
 
-[E, e27ad6a relay and patch] Briefs now support attached/pasted input and a conditional synthetic-data session; version 2 plans can map criteria to capabilities. The relay reports missing solution-contract and host-report wiring. [R] Adapt the existing dev-5 correction to this contract through main and serial ownership, not a second schema. Preserve original obligations, frozen input provenance, shutdown and independent judgments.
+## Questions and acceptance
 
-[R] No attached data means the additional session must produce validated typical, edge and invalid fixtures before research. Links alone do not supply data. Supplied inputs and generated fixtures must survive unchanged through resume or cause refusal. Count that session's effort, usage and cancellation; do not assume the old fixed session count. Synthetic fixtures chosen during generation are useful examples, not independent acceptance keys or proof of conformance to a named format.
+[R] Architect's prioritization question is answered above. Builder's previous telemetry return is superseded as an assignment; report only a demonstrated remaining defect on current mvp. Feed-169 contains no literal QUESTIONS line. Missing sealed evidence limits historical causal attribution, but independent generic regressions can be prepared without copying that missing key.
 
-[R] Capability-only evidence needs a real protected evaluator and complete host-report wiring. Missing, failed, forged or stale evidence must prevent a full pass. A browser requirement still needs its required browser checks. Preserve the human review boundary and existing independent challenge judgments. Keep Dan's frontend intact and require one exact integrated receipt before claiming the new route works.
+[P] Full-access builds are the current human decision; do not add execution containment back. A deliberately read-only evaluator role does not change build-agent access. Dan retains frontend ownership. Synthetic/public data only, no credentials or external transmissions. Keep visible approval, monitoring, escalation and Stop; human approval remains required after internal judgment.
+
+[R] Noon freeze applies. Report exact source, failing/passing commands, audit cancellation and unchanged regression results. Main obtains current native/benchmark evidence. Final app acceptance, measured benefit and human submission approval remain separate.
