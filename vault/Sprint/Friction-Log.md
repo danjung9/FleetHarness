@@ -52,6 +52,8 @@ Type is one of: policy, data, authority, infrastructure, acquisition, technical.
 
 - [E, 2026-11-05 combined acceptance] Integration moved from a6d42c6 to 8053707 while source mapping was in progress. Old login selectors and two smoke success labels overstate coverage. Acceptance records current source assertions separately from runtime proof and requires actual clean HEAD/build identity. Native execution remains with main; no sandbox workaround was attempted.
 
+- [E, 2026-11-05 d6f8750 receipt review] Model Settings changed from radios to four tabs, blocking three native QA paths before their intended assertions. The owned OAuth opener also used dynamic import in an inspector/eval context without an import callback. Updated selectors and an import-free self-checked interceptor preserve the actual expectations. Browser recovery separately reproduces a product failure. See Research/QA/Acceptance/Review-d6f8750.
+
 - [E, 2026-11-05 01:25 EST] Pinned integration 8053707 refreshes passing judge evidence after a late application mutation. An injected production-function probe reproduces SATISFACTORY with changed source and zero reverifications. Main received the probe and exact source review before release; actual native late-writer behavior and final approval were not executed.
 
 - [E, 2026-11-05 01:37 EST] Both-parent source review found a service-preview startup Stop race and filename-triggered corruption of persisted Resume test baselines at 8053707. Exact source and regression conditions are in Research/Backend-Audit/Merge-Parent-Review. Main owns integration and execution; the unfinished next merge was not treated as lost behavior.

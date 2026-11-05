@@ -110,6 +110,9 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Overnight browser storage recovery checker revision 1 | QA tool | Prepared five isolated local-preview storage cases with independent recovery controls and source/build identities; syntax and pure controls only here | Team-created QA fixture using installed Playwright and Chrome | 2026-11-05 |
 | Judge evidence-binding probe revision 1 | Local diagnostic | Inject a synthetic late application change into the pinned production judge persistence function to check evidence identity | Project-local Node tooling | 2026-11-05 |
 | Overnight native Stop restart Resume checker revision 1 | QA tool | Prepared real-UI Stop, full Electron restart and resumed implementation using owned phase-gated local provider and saved-artifact comparisons; pure validation only here | Team-created QA fixture reusing the repository synthetic provider | 2026-11-05 |
+| Overnight GUI checker adapters revision 2 | QA tool | Adapted desktop key and OAuth controls, detached Stop and native Resume to the four Model connection tabs while retaining their substantive assertions | Team-created fixtures using installed Electron and Playwright | 2026-11-05 |
+| Node.js built-in inspector and vm checker probes | QA diagnostic | Reproduced unsupported dynamic import in the OAuth interceptor and validated an import-free replacement with synthetic routing data; no app or network listener | Node.js built-in modules | 2026-11-05 |
+| d6f8750 combined acceptance receipts | Synthetic QA dataset | Reviewed four native/browser receipts and screenshots to separate stale test adapters from a reproduced saved-state startup defect | Main-owned local acceptance execution | 2026-11-05 |
 
 ## Data and sources
 
