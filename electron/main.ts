@@ -14,7 +14,7 @@ import { challenges, getChallenge, refreshNorfolkCatalog } from '../harness/cata
 import { exportVerifiedBundle } from './source-export.js';
 import { ConnectorService, registerConnectorIPC } from './connectors/index.js';
 import { ConnectorStore } from './connectors/store.js';
-import { connectorConfiguration, fixtureSource } from './connectors/config.js';
+import { connectorConfiguration, connectorEncryption, fixtureSource } from './connectors/config.js';
 import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -258,7 +258,10 @@ app.whenReady().then(async () => {
     store = new Store(app.getPath('userData'));
     await store.init();
     const connectorConfig = connectorConfiguration(app.isPackaged, process.env);
-    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), safeStorage), [], 120_000, {
+    const encryption = connectorEncryption(app.isPackaged, process.env, safeStorage);
+    // The fixture key stays in the host encryptor, never in build child environments.
+    delete process.env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY;
+    connectors = new ConnectorService(new ConnectorStore(path.join(store.root, 'connectors'), encryption), [], 120_000, {
       allowConnections: true,
       openBrowser: async address => {
         const url = new URL(address);

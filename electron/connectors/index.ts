@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { ConnectorAdapter, ConnectorKind, ConnectUi, SecretStore } from './types.js';
 import type { ConnectorCard, ConnectorFilters, ConnectorPreview, ConnectorProgress, SavedConnection } from '../../shared/connectors.js';
-import { ConnectorStore } from './store.js';
+import { ConnectorStore, ConnectorStorageError } from './store.js';
 import { connectorCatalog, sampleAdapter } from './sample-data.js';
 import { sanitizeItems } from './sanitize.js';
 import { snapshotDigest, validateSnapshot } from './snapshot.js';
@@ -12,7 +12,7 @@ import { connectorConfiguration, installedAdapters } from './config.js';
 class PublicError extends Error {}
 const failure = () => new PublicError('The data could not be prepared. Try sample data again.');
 function publicMessage(error: unknown) {
-  return error instanceof PublicError || error instanceof ConnectorError || error instanceof ServiceError ? error.message : failure().message;
+  return error instanceof PublicError || error instanceof ConnectorError || error instanceof ServiceError || error instanceof ConnectorStorageError ? error.message : failure().message;
 }
 const noSecrets: SecretStore = { get: async () => undefined, set: async () => { throw failure(); }, remove: async () => {} };
 function kindOf(kind: ConnectorKind) {
@@ -122,6 +122,7 @@ export class ConnectorService {
   async connect(kind: ConnectorKind, address?: string) {
     kindOf(kind); const adapter = this.adapters.get(kind);
     if (!this.options.allowConnections || !adapter?.available()) throw new PublicError('Sign-in is not set up for this source. Ask your administrator to enable it.');
+    this.store.assertEncryptionAvailable();
     if (address !== undefined && (kind !== 'custom-api' || typeof address !== 'string' || address.length > 2_000)) throw new PublicError('This address is not valid. Paste the service address or its documentation link.');
     const { op, previous } = this.begin(kind, 'connecting'), id = randomUUID();
     const timer = setTimeout(() => op.controller.abort(), 300_000);

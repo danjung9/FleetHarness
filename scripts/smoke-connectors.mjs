@@ -1,15 +1,17 @@
 import { _electron as electron } from 'playwright';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { startFixtureProvider } from './mock-provider.mjs';
 import { qualityFixtureProject } from './quality-fixture.mjs';
 import { assertContext } from '../dist-electron/electron/connectors/snapshot.js';
 import { startConnectorServers } from '../tests/fixtures/connector-servers.mjs';
 import { startDataServiceServer } from '../tests/fixtures/data-service-server.mjs';
 
+const electronBinary = createRequire(import.meta.url)('electron');
 // Run after npm run build, on a host permitted to launch Electron, Chrome,
 // sandbox-exec and ps. No live model, account or data-service calls.
 const output = path.resolve('output/connectors-smoke'); await fs.mkdir(output, { recursive: true });
@@ -19,12 +21,14 @@ const stateDir = path.join(root, 'state');
 const fixture = await startFixtureProvider();
 const accounts = await startConnectorServers({ echoSecrets: true });
 const serviceKey = 'synthetic-smoke-service-' + randomUUID();
+const testEncryptionKey = randomBytes(32).toString('hex');
 const dataService = await startDataServiceServer({ key: serviceKey, mode: 'header', description: 'openapi' });
 const env = { ...process.env, FLEET_USER_DATA: stateDir, PI_CODING_AGENT_DIR: piDir, NODE_ENV: 'test', APPYARD_CONNECTOR_TEST_MODE: '1',
+  APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: testEncryptionKey,
   APPYARD_CONNECTOR_TEST_SERVERS: JSON.stringify({ accounts: accounts.base, dataService: dataService.origin }) };
 const errors = [], logs = [];
 function assertNoSecrets(value) {
-  for (const secret of [serviceKey, accounts.distinctive]) assert.equal(value.includes(secret), false, 'A synthetic credential escaped its encrypted store.');
+  for (const secret of [serviceKey, accounts.distinctive, testEncryptionKey]) assert.equal(value.includes(secret), false, 'A synthetic credential escaped its encrypted store.');
 }
 async function scanSaved(directory) {
   for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
@@ -47,6 +51,7 @@ async function launch() {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => logs.push(message.text()));
   await page.locator('.app-shell').waitFor();
+  assert.equal(await application.evaluate(() => process.env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY === undefined), true);
   return { application, page };
 }
 async function openConnectors(page) {
@@ -73,6 +78,7 @@ async function checkAndSave(card) {
 try {
   let launched = await launch(); app = launched.application; let page = launched.page;
   await openConnectors(page);
+  await page.locator('.connector-card').first().waitFor();
   assert.equal(await page.locator('.connector-card').count(), 7);
   for (const name of ['Gmail', 'Google Calendar', 'Google Drive', 'Outlook', 'Outlook Calendar', 'OneDrive', 'Your own data service']) {
     const card = page.getByRole('article', { name, exact: true });
@@ -102,19 +108,23 @@ try {
 
   // Exercise the real OS encryption implementation through the real store.
   // Return only booleans, never the distinctive synthetic value or ciphertext.
-  const nativeStorage = await app.evaluate(async ({ safeStorage }, args) => {
-    const { ConnectorStore } = await import(args.module);
-    const crypto = await import('node:crypto'), fs = await import('node:fs/promises'), path = await import('node:path');
-    const id = crypto.randomUUID(), value = 'synthetic-native-secret-' + crypto.randomUUID();
-    const store = new ConnectorStore(args.root, safeStorage); await store.init();
-    const secrets = store.secrets(id); await secrets.set('access', value);
-    const restored = await secrets.get('access');
-    const names = await fs.readdir(path.join(args.root, 'secrets', id));
-    const encrypted = await fs.readFile(path.join(args.root, 'secrets', id, names[0]));
-    await store.remove(id);
-    return { restored: restored === value, encrypted: !encrypted.includes(Buffer.from(value)), removed: (await secrets.get('access')) === undefined };
-  }, { module: pathToFileURL(path.resolve('dist-electron/electron/connectors/store.js')).href, root: path.join(root, 'native-storage-check') });
-  assert.deepEqual(nativeStorage, { restored: true, encrypted: true, removed: true });
+  const nativeRun = await new Promise(resolve => execFile(electronBinary, [path.resolve('scripts/connector-native-check.mjs'), path.join(root, 'native-storage-check')],
+    { env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined }, timeout: 60_000 }, (error, stdout) => resolve({ error, stdout: String(stdout) })));
+  assertNoSecrets(nativeRun.stdout);
+  const reports = [...nativeRun.stdout.matchAll(/^NATIVE (.*)$/gm)];
+  assert.equal(reports.length, 1, 'The native storage check must return one result.');
+  const nativeResult = JSON.parse(reports[0][1]);
+  let nativeStorage;
+  if (nativeResult.error === 'Secure storage is unavailable. Use sample data.') {
+    assert.deepEqual(nativeResult, { error: 'Secure storage is unavailable. Use sample data.' });
+    assert.equal(nativeRun.error?.code, 1); assert.equal(nativeRun.error?.killed, false); assert.equal(nativeRun.error?.signal, null);
+    nativeStorage = { exercised: false, reason: 'OS secure storage is unavailable' };
+    console.log('Native secure storage check not exercised: OS secure storage is unavailable. Connector fixtures use test-only encryption.');
+  } else {
+    assert.equal(nativeRun.error, null, 'The native storage check failed.');
+    assert.deepEqual(nativeResult, { restored: true, encrypted: true, removed: true });
+    nativeStorage = nativeResult;
+  }
 
   // All actions below go through the real screen, preload, IPC and adapters.
   // Sign-in opens the ordinary system browser. The local provider redirects to

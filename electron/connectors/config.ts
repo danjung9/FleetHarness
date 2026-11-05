@@ -2,6 +2,8 @@ import type { ConnectorAdapter, ConnectorKind } from './types.js';
 import { GmailConnector, GoogleCalendarConnector, GoogleDriveConnector, type GoogleTestOptions } from './google.js';
 import { OutlookConnector, OutlookCalendarConnector, OneDriveConnector, type MicrosoftConfig, type MicrosoftTestOptions } from './microsoft.js';
 import { CustomApiConnector } from './custom-api.js';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import type { Encryption } from './store.js';
 
 /** Host-only input. Saved settings and renderer requests are never consulted. */
 export function connectorConfiguration(isPackaged: boolean, env: NodeJS.ProcessEnv) {
@@ -43,4 +45,29 @@ export function fixtureSource(configuration: ReturnType<typeof connectorConfigur
   if (!configuration.fixture) return false;
   if (kind !== 'custom-api') return true;
   try { return new URL(address ?? '').origin === configuration.fixture.dataService; } catch { return false; }
+}
+
+/** Only the unpackaged fixture host may replace unavailable OS storage. The
+ * smoke runner keeps this ephemeral key in memory across app restarts. */
+export function connectorEncryption(isPackaged: boolean, env: NodeJS.ProcessEnv, native: Encryption): Encryption {
+  if (isPackaged || env.APPYARD_CONNECTOR_TEST_MODE !== '1') return native;
+  if (!connectorConfiguration(isPackaged, env).fixture) return native;
+  if (native.isEncryptionAvailable() && native.getSelectedStorageBackend?.() !== 'basic_text') return native;
+  const encoded = env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY;
+  if (!encoded || !/^[a-f0-9]{64}$/.test(encoded)) throw new Error('Local test encryption is not configured. Start the connector smoke script again.');
+  const key = Buffer.from(encoded, 'hex'), header = Buffer.from('appyard-connector-test-v1\0');
+  return {
+    isEncryptionAvailable: () => true,
+    encryptString(value) {
+      const nonce = randomBytes(12), cipher = createCipheriv('aes-256-gcm', key, nonce);
+      cipher.setAAD(header);
+      return Buffer.concat([header, nonce, cipher.update(value, 'utf8'), cipher.final(), cipher.getAuthTag()]);
+    },
+    decryptString(value) {
+      if (value.length < header.length + 28 || !value.subarray(0, header.length).equals(header)) throw new Error('Local test data cannot be opened. Start the connector smoke script again.');
+      const decipher = createDecipheriv('aes-256-gcm', key, value.subarray(header.length, header.length + 12));
+      decipher.setAAD(header); decipher.setAuthTag(value.subarray(-16));
+      return Buffer.concat([decipher.update(value.subarray(header.length + 12, -16)), decipher.final()]).toString('utf8');
+    }
+  };
 }

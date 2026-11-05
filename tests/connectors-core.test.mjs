@@ -13,7 +13,7 @@ import { normalizeProjectInput } from '../dist-electron/shared/project-input.js'
 import { briefHash } from '../dist-electron/electron/pi-backend.js';
 import { sourceHash } from '../dist-electron/electron/storage.js';
 import { exportVerifiedBundle } from '../dist-electron/electron/source-export.js';
-import { connectorConfiguration, installedAdapters, fixtureSource } from '../dist-electron/electron/connectors/config.js';
+import { connectorConfiguration, connectorEncryption, installedAdapters, fixtureSource } from '../dist-electron/electron/connectors/config.js';
 import { startConnectorServers } from './fixtures/connector-servers.mjs';
 import { startDataServiceServer } from './fixtures/data-service-server.mjs';
 
@@ -66,6 +66,16 @@ async function question(service, kind) {
 function configuration(accounts, dataService) {
   return connectorConfiguration(false, { NODE_ENV: 'test', APPYARD_CONNECTOR_TEST_MODE: '1', APPYARD_CONNECTOR_TEST_SERVERS: JSON.stringify({ accounts, dataService }) });
 }
+const unavailableStorage = {
+  isEncryptionAvailable: () => false,
+  encryptString() { throw new Error('Unavailable storage must not encrypt.'); },
+  decryptString() { throw new Error('Unavailable storage must not decrypt.'); }
+};
+function encryptionEnvironment() {
+  return { NODE_ENV: 'test', APPYARD_CONNECTOR_TEST_MODE: '1', APPYARD_CONNECTOR_TEST_SERVERS: JSON.stringify({ accounts: 'http://127.0.0.1:1', dataService: 'http://127.0.0.1:2' }),
+    APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: randomBytes(32).toString('hex') };
+}
+function fixtureEncryption() { return connectorEncryption(false, encryptionEnvironment(), unavailableStorage); }
 const item = body => ({ id: 'synthetic', title: 'Synthetic training', kind: 'file', body });
 async function allBytes(root) {
   const output = [];
@@ -96,8 +106,53 @@ test('packaged apps ignore test endpoint settings, even malformed ones', () => {
   assert.equal(fixtureSource(local, 'custom-api', 'http://127.0.0.1:12/ships'), true);
   assert.equal(fixtureSource(local, 'custom-api', 'http://127.0.0.1:13/ships'), false);
 });
-test('real account adapter connects through IPC, fetches, refreshes after restart, and removes secrets', async t => {
-  const crypto = encryption(), { store, root } = await setup(t, crypto);
+test('packaged and production hosts refuse unavailable secure storage without enabling the fixture encryptor', async t => {
+  const fixtureEnv = encryptionEnvironment(), sentinel = 'synthetic-plain-secret-' + randomUUID();
+  for (const [packaged, env] of [
+    [true, fixtureEnv], [true, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_SERVERS: '{bad', APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: 'invalid' }],
+    [false, { ...fixtureEnv, NODE_ENV: 'production', APPYARD_CONNECTOR_TEST_MODE: undefined }],
+    [false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_MODE: '0' }]
+  ]) {
+    const selected = connectorEncryption(packaged, env, unavailableStorage);
+    assert.equal(selected, unavailableStorage);
+    const { root, store } = await setup(t, selected), id = randomUUID();
+    await assert.rejects(store.secrets(id).set('access', sentinel), { message: 'Secure storage is unavailable. Use sample data.' });
+    const service = new ConnectorService(store, installedAdapters(connectorConfiguration(true, {})), 5000, { allowConnections: true });
+    t.after(() => service.shutdown());
+    await assert.rejects(ipc(service)('connect', 'custom-api', 'http://127.0.0.1:1/unused'), { message: 'Secure storage is unavailable. Use sample data.' });
+    assert.deepEqual(await store.connections(), []);
+    assert.equal((await saved(service)).items.length, 2);
+    assert.equal((await allBytes(root)).includes(Buffer.from(sentinel)), false);
+  }
+  const native = encryption();
+  assert.equal(connectorEncryption(false, fixtureEnv, native), native);
+  assert.throws(() => connectorEncryption(false, { ...fixtureEnv, NODE_ENV: 'production' }, unavailableStorage), /not enabled/);
+  assert.throws(() => connectorEncryption(false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: undefined }, unavailableStorage), /Local test encryption is not configured/);
+  assert.throws(() => connectorEncryption(false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: 'invalid' }, unavailableStorage), /Local test encryption is not configured/);
+});
+test('fixture encryption survives reopening, authenticates ciphertext and keeps fake secrets and its key off disk', async t => {
+  const env = encryptionEnvironment(), selected = connectorEncryption(false, env, unavailableStorage);
+  assert.notEqual(selected, unavailableStorage);
+  const { root, store } = await setup(t, selected), id = randomUUID();
+  const values = ['synthetic-access-' + randomUUID(), 'synthetic-service-key-' + randomUUID()];
+  await store.secrets(id).set('access', values[0]); await store.secrets(id).set('service', values[1]);
+  const reopened = new ConnectorStore(store.root, connectorEncryption(false, { ...env }, unavailableStorage));
+  await reopened.init();
+  assert.equal(await reopened.secrets(id).get('access'), values[0]);
+  assert.equal(await reopened.secrets(id).get('service'), values[1]);
+  const bytes = await allBytes(root);
+  for (const value of [...values, env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY]) assert.equal(bytes.includes(Buffer.from(value)), false);
+  assert.equal(bytes.includes(Buffer.from(env.APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY, 'hex')), false);
+  const first = selected.encryptString(values[0]), second = selected.encryptString(values[0]);
+  assert.notDeepEqual(first, second);
+  const modified = Buffer.from(first); modified[modified.length - 1] ^= 1;
+  assert.throws(() => selected.decryptString(modified));
+  assert.throws(() => fixtureEncryption().decryptString(first));
+  await reopened.remove(id); await assert.rejects(fs.access(path.join(store.root, 'secrets', id)), { code: 'ENOENT' });
+});
+for (const [boundary, encryptor] of [['unit encryption', encryption], ['fixture fallback encryption', fixtureEncryption]]) {
+test('real account adapter connects through IPC, fetches, refreshes after restart, and removes secrets with ' + boundary, async t => {
+  const crypto = encryptor(), { store, root } = await setup(t, crypto);
   const provider = await startConnectorServers({ echoSecrets: true }); t.after(() => provider.close());
   const config = configuration(provider.base, provider.base);
   // The unit host opens the actual local authorization and callback URLs. The
@@ -132,8 +187,8 @@ test('real account adapter connects through IPC, fetches, refreshes after restar
   assert.deepEqual(await store.list(), []); assert.deepEqual(await store.connections(), []);
   await assert.rejects(fs.access(path.join(store.root, 'secrets', next.id)), { code: 'ENOENT' });
 });
-test('data service questions keep keys private, survive restart and cancel without a partial connection', async t => {
-  const crypto = encryption(), { store, root } = await setup(t, crypto), key = 'synthetic-service-' + randomUUID();
+test('data service questions keep keys private, survive restart and cancel without a partial connection with ' + boundary, async t => {
+  const crypto = encryptor(), { store, root } = await setup(t, crypto), key = 'synthetic-service-' + randomUUID();
   const server = await startDataServiceServer({ key, mode: 'header', description: 'openapi' }); t.after(() => server.close());
   const config = configuration(server.origin, server.origin), options = { allowConnections: true };
   const service = new ConnectorService(store, installedAdapters(config), 5000, options), call = ipc(service);
@@ -173,6 +228,7 @@ test('data service questions keep keys private, survive restart and cancel witho
   await restarted.disconnect(preview.id); assert.deepEqual(await store.connections(), []); assert.deepEqual(await store.list(), []);
   await assert.rejects(fs.access(path.join(store.root, 'secrets', preview.id)), { code: 'ENOENT' });
 });
+}
 test('government sign-in displays the user code and cancelling clears it without saving credentials', async t => {
   const { store } = await setup(t), provider = await startConnectorServers(); t.after(() => provider.close());
   const config = configuration(provider.base, provider.base);
