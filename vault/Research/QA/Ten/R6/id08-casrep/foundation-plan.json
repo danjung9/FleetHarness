@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "templateId": "node-service",
+  "version": "1.0.0",
+  "computePack": "offline",
+  "reason": "Use the supported local Node HTTP/browser foundation and immutable revision DAG reconciler. Extend the backend with synthetic CASREP parsing, review permissions, durable journal and exports. No external dependencies or model required; the pack does not supply persistence, field conflicts or release authority."
+}

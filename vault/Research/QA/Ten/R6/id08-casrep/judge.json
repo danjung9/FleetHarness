@@ -1,0 +1,78 @@
+{
+  "stage": "verify",
+  "verdict": "NOT",
+  "gaps": [
+    {
+      "requirement": "UC8-1 / SCOPE8-6 — Enforce NWP 1-03.1 CASREP formatting",
+      "evidence": "casrep.mjs implements fifteen fictional KEY=value fields. data/README.md explicitly states this grammar is not a transcription of NWP 1-03.1. domain.test.mjs and the passing format receipt validate that substitute grammar, not the named standard.",
+      "fix": "Implement parsing, validation and rendering against an authorized, domain-reviewed NWP rule set. Add independently reviewed synthetic examples and meaningful invalid cases for all four report types without revising existing test expectations."
+    },
+    {
+      "requirement": "UC8-1 / SCOPE8-5 — Role-based access and CO releasing authority",
+      "evidence": "public/app.js lets anyone select ACT-01 through ACT-06. server.mjs and store.mjs accept the supplied actorId without authenticated identity or workspace membership checks. The workflow enforces claimed roles, not access permissions.",
+      "fix": "Bind synthetic test users to server-side identities, roles and workspace permissions. Test that an originator cannot impersonate reviewers or CO by changing actorId, including direct API requests."
+    },
+    {
+      "requirement": "WFL-02 — Retain competing amendments and conflicts",
+      "evidence": "store.mjs rejects stale saves before retaining input.message; its rejection stores only metadata. Branches enter the workspace only through the fixed conflict scenario, and resolution uses that fixture's revision identifiers and repair field. Actual competing submitted amendments are not both recoverable from durable history.",
+      "fix": "Persist stale amendments as immutable branches against their submitted base, expose arbitrary conflicting fields for review, and create resolutions referencing all reviewed heads. Test two changed, non-preset submissions across restart and export."
+    },
+    {
+      "requirement": "UC8-1 / SCOPE8-6 — Full approval audit trail",
+      "evidence": "store.mjs command() substitutes fixture timestamps and approval text whenever action, actor and revision match the sample prefix. Consequently, an approval can record canned rationale instead of the text actually entered. Save metadata similarly borrows fixture timestamps and change reasons.",
+      "fix": "Record actual submitted rationale and server-generated event times for user actions. Confine fixture metadata to explicitly identified scenario setup, and test novel approval notes and revision reasons through reload and export."
+    },
+    {
+      "requirement": "DESC8-1 / DESC8-3 / DELIVERABLE8-1 / SCOPE8-9 — Release the reviewed CASREP as a message",
+      "evidence": "casrep.mjs mockRelease only changes local state. public/index.html explicitly says it sends no message; store.mjs exports a synthetic JSON package. The passing release tests establish local transitions and export bytes, not receiving-system delivery.",
+      "fix": "Add an explicitly non-operational receiving sandbox and authorized release adapter that transmits the reviewed message, retains receiver acknowledgement and handles failure without claiming delivery. Demonstrate the complete return/revision/approval/release path using synthetic data; keep operational transmission disabled pending human authorization."
+    }
+  ],
+  "attempts": [
+    {
+      "verdict": "NOT",
+      "gaps": [
+        {
+          "requirement": "UC8-1 / SCOPE8-6 — Enforce NWP 1-03.1 CASREP formatting",
+          "evidence": "casrep.mjs implements fifteen fictional KEY=value fields. data/README.md explicitly states this grammar is not a transcription of NWP 1-03.1. domain.test.mjs and the passing format receipt validate that substitute grammar, not the named standard.",
+          "fix": "Implement parsing, validation and rendering against an authorized, domain-reviewed NWP rule set. Add independently reviewed synthetic examples and meaningful invalid cases for all four report types without revising existing test expectations."
+        },
+        {
+          "requirement": "UC8-1 / SCOPE8-5 — Role-based access and CO releasing authority",
+          "evidence": "public/app.js lets anyone select ACT-01 through ACT-06. server.mjs and store.mjs accept the supplied actorId without authenticated identity or workspace membership checks. The workflow enforces claimed roles, not access permissions.",
+          "fix": "Bind synthetic test users to server-side identities, roles and workspace permissions. Test that an originator cannot impersonate reviewers or CO by changing actorId, including direct API requests."
+        },
+        {
+          "requirement": "WFL-02 — Retain competing amendments and conflicts",
+          "evidence": "store.mjs rejects stale saves before retaining input.message; its rejection stores only metadata. Branches enter the workspace only through the fixed conflict scenario, and resolution uses that fixture's revision identifiers and repair field. Actual competing submitted amendments are not both recoverable from durable history.",
+          "fix": "Persist stale amendments as immutable branches against their submitted base, expose arbitrary conflicting fields for review, and create resolutions referencing all reviewed heads. Test two changed, non-preset submissions across restart and export."
+        },
+        {
+          "requirement": "UC8-1 / SCOPE8-6 — Full approval audit trail",
+          "evidence": "store.mjs command() substitutes fixture timestamps and approval text whenever action, actor and revision match the sample prefix. Consequently, an approval can record canned rationale instead of the text actually entered. Save metadata similarly borrows fixture timestamps and change reasons.",
+          "fix": "Record actual submitted rationale and server-generated event times for user actions. Confine fixture metadata to explicitly identified scenario setup, and test novel approval notes and revision reasons through reload and export."
+        },
+        {
+          "requirement": "DESC8-1 / DESC8-3 / DELIVERABLE8-1 / SCOPE8-9 — Release the reviewed CASREP as a message",
+          "evidence": "casrep.mjs mockRelease only changes local state. public/index.html explicitly says it sends no message; store.mjs exports a synthetic JSON package. The passing release tests establish local transitions and export bytes, not receiving-system delivery.",
+          "fix": "Add an explicitly non-operational receiving sandbox and authorized release adapter that transmits the reviewed message, retains receiver acknowledgement and handles failure without claiming delivery. Demonstrate the complete return/revision/approval/release path using synthetic data; keep operational transmission disabled pending human authorization."
+        }
+      ],
+      "durationMs": 52791,
+      "tokens": {
+        "inputTokens": 416085,
+        "cachedInputTokens": 330546,
+        "uncachedInputTokens": 85539,
+        "outputTokens": 1605,
+        "reasoningOutputTokens": 256,
+        "totalTokens": 417690,
+        "uncachedPlusOutputTokens": 87144
+      },
+      "sourceHash": "57d0b020ad7f2f866622ad79ee64333fa5f892bae688965e195505c2d3fa0461"
+    }
+  ],
+  "repairs": 0,
+  "repairLimitReached": true,
+  "durationMs": 52791,
+  "evaluatorRetries": 0
+}

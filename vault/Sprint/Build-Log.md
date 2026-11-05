@@ -212,3 +212,4 @@ Call log:
 - 04:19 [E] Container proof passes on a real round 6 service app: image builds and runs, health 200, main page 200 with 33,985 bytes, stops cleanly. Base image pulled from Docker Hub for this test.
 - 04:19 [E] Found: planners chose the service runtime for all three of those builds, and Download app refuses services, so a person would need Node or Docker. An agent is making Node service apps double-clickable and offline.
 - 04:30 Astra service-app finished, exit 0. Report: `Research/Backend-Audit/service-app.md`
+- 04:35 Real build, round 6, id08-casrep: failed in 29.6 minutes, tests 17/17, journeys 12/12. The app did not pass its checks; review the failed checks in the activity log before trying again.

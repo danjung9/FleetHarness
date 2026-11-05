@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "audience": "Originating Sailor/LPO and five reviewing roles evaluating fictional CASREPs; a visible actor selector simulates identity.",
+  "primaryTask": "Write and validate a synthetic CASREP, save, submit, inspect return feedback, revise, obtain all current-revision reviews and explicitly mock-release.",
+  "successOutcome": "RELEASED, holder NONE, two immutable revisions and five valid approvals; downloadable synthetic message/audit package matches the saved release.",
+  "screens": [
+    {
+      "name": "CASREP workspace",
+      "purpose": "Report list, message authoring/preview, current holder and six-stage route, visible local save state; expose review actions beside current content.",
+      "primaryAction": "Save draft, then Submit; downstream Approve and forward; CO Approve then Mock release"
+    },
+    {
+      "name": "Version and conflict review",
+      "purpose": "Inspect old/new field values, comments, both branches and approval validity before explicitly selecting a merged repair value.",
+      "primaryAction": "Resolve reviewed branches"
+    },
+    {
+      "name": "Guide and fielding brief",
+      "purpose": "Live walkthrough, full permission table, data provenance, source link, classification and integration boundary and fielding prerequisites.",
+      "primaryAction": "Open live walkthrough"
+    }
+  ],
+  "states": {
+    "empty": "Explain synthetic local workspace and offer Start INITIAL. Sample type loader offers all four exact supplied messages; replacing a dirty editor requires Save or Discard.",
+    "loading": "Disable duplicate action while API request/atomic save is pending, announce Saving or Reviewing; no Saved indicator before acknowledgement.",
+    "error": "Show precise field/role/storage error inline and in live status; preserve editable text, durable snapshot and audit. Release blocked with reason and next actor. Conflict view presents competing values with explicit selection.",
+    "success": "Confirm Saved revision or next holder; route status and count update after commit. Mock release explicitly says no transmission. Display synthetic disclaimer on every screen and export."
+  },
+  "persistence": "Service journal survives reload/restart outside deployment manifest. Browser local draft buffer preserves unfinished text; mark Unsaved changes separately. Switching actor, sample or report cannot approve different saved content while dirty: deliberate Save or Discard. Export only durable snapshot. Reset requires confirmation and never silently overwrites other reports.",
+  "recovery": "Correct invalid message then retry. Labeled local fault selector exercises failed save/export and recovery. Conflict sample is explicit scenario setup, not a successful release; compare fields, choose/edit resolution, save with both parents and restart review. Preserve all branches. Local blocked-work notice escalates to current reviewer without sending messages. Stop halts processing; startup never replays release.",
+  "keyboard": "Native labeled inputs/selects/buttons, logical Tab order, Enter/Space activation, visible focus, errors associated with textarea and polite status region; focus error or next action. Desktop master/detail becomes stacked list/editor at narrow width without page overflow. Tables wrap or scroll locally, route labels remain textual; no color-only status. Restrained system typography and clear primary action hierarchy."
+}

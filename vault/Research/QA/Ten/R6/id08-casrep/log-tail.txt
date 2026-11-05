@@ -1,0 +1,94 @@
+verify tool bash completed
+"✔ all exact supplied messages use actual shared parser (1.954125ms)\n✔ complete release response and empty protocol (0.567666ms)\n✔ shape, unsupported, impossible calendar, missing keys, inert narrative (0.235167ms)\n✔ rejected route retains complete accepted prefix (0.163292ms)\n✔ full reconcile object ordered conflicts, unilateral and identical novel edits (0.119958ms)\n✔ DAG ide
+verify tool bash
+{
+  "command": "/bin/zsh -lc \"python3 - <<'PY'\np='README.md';s=open(p).read();anchor='## Find your way around';s=s.replace(anchor,'While the service acknowledges a load, validation, save, decision or export request, all form controls are temporarily disabled. Wait for the acknowledgement before editing the next message or return reason. Failed requests re-enable the form and retain your dra
+verify tool bash completed
+"completed"
+verify tool fleet_component_progress
+{
+  "componentId": "workspace",
+  "status": "generated",
+  "detail": "Pending-request form lock repaired; mapped runtime files present, 17 local/clean-copy tests pass, both viewport visual findings resolved. Independent host rerun pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Draft and review workspace: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "api",
+  "status": "generated",
+  "detail": "Mapped implementation files retained and present; existing shared backend tests pass. No implementation change in this UI repair; host acceptance remains separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local HTTP service: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "domain",
+  "status": "generated",
+  "detail": "Mapped implementation files retained and present; existing shared backend tests pass. No implementation change in this UI repair; host acceptance remains separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"CASREP rules and routing: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "lineage",
+  "status": "generated",
+  "detail": "Mapped implementation files retained and present; existing shared backend tests pass. No implementation change in this UI repair; host acceptance remains separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Immutable revision reconciliation: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "store",
+  "status": "generated",
+  "detail": "Mapped implementation files retained and present; existing shared backend tests pass. No implementation change in this UI repair; host acceptance remains separate."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Local durable journal: generated. The live diagram has been updated."}]
+verify tool fleet_component_progress
+{
+  "componentId": "outputs",
+  "status": "generated",
+  "detail": "Pending-request form lock repaired; mapped runtime files present, 17 local/clean-copy tests pass, both viewport visual findings resolved. Independent host rerun pending."
+}
+verify tool fleet_component_progress completed
+[{"type":"inputText","text":"Mock release and review outputs: generated. The live diagram has been updated."}]
+verify tool bash
+{
+  "command": "/bin/zsh -lc 'head -12 verification.md; git status --short'"
+}
+verify error bash failed
+"# Primary deferrals\n\nNone are formally deferred in the frozen plan for the synthetic prototype. This does **not** establish the original real-format requirement: UC8-1 and SCOPE8-6 include “Drafts must enforce NWP 1-03.1 CASREP formatting”; only the disclosed fictional grammar is demonstrated, and NWP conformance remains unverified. Identity, real CO release, Navy integration, appro
+verify tool fleet_browser
+{
+  "action": "close"
+}
+verify tool fleet_browser completed
+[{"type":"inputText","text":"{\"action\":\"close\",\"status\":\"closed\",\"scope\":\"Development observation only; independent verification is still required.\"}"}]
+verify text Repaired the request race that erased return reasons and new message edits.
+
+- 17 tests pass locally and in a clean runtime copy.
+- Desktop release and narrow failure/retry flows exercised.
+- Both visual reviews completed; no open findings.
+- README and verification.md updated.
+
+Independent host acceptance rerun remains pending. Owner approval is required before delivery or deployment.
+verify info Post-build test changes (verify). Human review required. Since previous stage: added: ui-acknowledgement.test.mjs. Since build: added: ui-acknowledgement.test.mjs; added: verifier-boundaries.test.mjs.
+verify info TAP version 13
+# Subtest: all exact supplied messages use actual shared parser
+ok 1 - all exact supplied messages use actual shared parser
+  ---
+  duration_ms: 1.012167
+  type: 'test'
+  ...
+# Subtest: complete release response and empty protocol
+ok 2 - complete release response and empty protocol
+  ---
+  duration_ms: 0.587084
+  type: 'test'
+  ...
+# Subtest: shape, unsupported, impossible calendar,
+verify info Starting fresh independent judge 1 with read-only evidence tools.
+verify info Independent judge: NOT; 5 gaps; 52791 ms; tokens 417690.
+verify error Error: Independent judgment did not pass. Inspect judge evidence; delivery remains blocked.
+    at FleetBackend.execute (file://~/fhten/app/dist-electron/electron/pi-backend.js:1258:23)

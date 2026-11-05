@@ -3,14 +3,14 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Ten-challenge benchmark, round 6 at 5f4eb39: 9 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
+summary: "Ten-challenge benchmark, round 6 at 5f4eb39: 10 of 10 finished, 0 passed the automatic bar, 0 judged satisfactory."
 ---
 
 # Ten-challenge benchmark, round 6
 
 [P] Mukul's measure of success: real challenges built from the catalog card with no human help, start to finish, until satisfactory.
 
-[E, automatic, code `5f4eb39` plus scratch patch to block list proven, codex-rpc.ts: keep the block list, codex-session.ts: Mac block list, started 03:39, in progress EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
+[E, automatic, code `5f4eb39` plus scratch patch to block list proven, codex-rpc.ts: keep the block list, codex-session.ts: Mac block list, started 03:39, finished 04:36 EST] Live model `gpt-6.1-sol` on the event login, card text as-is, at most 3 at once.
 
 **Automatic bar:** reached review alone; generated tests pass with none skipped; every planned browser journey passes; first open offline shows no page errors, no outside requests and a non-blank page. **Satisfactory:** that bar plus an independent judge's verdict, in `Research/QA/Officer/JUDGE-R<round>-<challenge>.md`.
 
@@ -25,6 +25,7 @@ summary: "Ten-challenge benchmark, round 6 at 5f4eb39: 9 of 10 finished, 0 passe
 | [[Research/QA/Ten/R6/id10-mooring/final\|id10-mooring]] | failed | None | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
 | [[Research/QA/Ten/R6/id16-mordecai/final\|id16-mordecai]] | failed | 0.5 | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
 | [[Research/QA/Ten/R6/id37-fielding/final\|id37-fielding]] | failed | None | - | 0/0 | 0 / 0 / 0 | no | 0 | 0 | FAIL | pending |
+| [[Research/QA/Ten/R6/id08-casrep/final\|id08-casrep]] | failed at verify | 29.6 | 17/17 | 12/12 | 9 / 8 / 0 | yes | 0 | 733449 | FAIL | pending |
 
 ## What failed
 
@@ -46,3 +47,4 @@ Call log:
 Call log:
   - waiting for getByRole('button', { name: /^Home/ })
     - locator resolved to <button class="" aria-label="Home - challe Open: {"pageErrors": null, "external": null, "blank": null}. Details: `Research/QA/Ten/R6/id37-fielding/log-tail.txt`
+- [E] `id08-casrep`: status failed, stage verify. The app did not pass its checks; review the failed checks in the activity log before trying again. Open: {"pageErrors": null, "external": null, "blank": false}. Details: `Research/QA/Ten/R6/id08-casrep/log-tail.txt`

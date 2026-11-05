@@ -1,0 +1,727 @@
+{
+  "schemaVersion": 2,
+  "criteria": [
+    {
+      "criterionId": "UC8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Synthetic CASREP workspace completes the named source obligation: all six actors, comments and return loop, revised immutable snapshots, five current-revision approvals, explicit local mock CO release, holder and audit visibility; INITIAL/UPDATE/CORRECT/CASCOR obey the disclosed invented grammar. Exact supplied messages and exports remain labeled synthetic. NWP conformance and operational authority remain unverified.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "casrep-format",
+        "review-route",
+        "revision-conflicts"
+      ]
+    },
+    {
+      "criterionId": "WFL-01",
+      "disposition": "implemented",
+      "expectedOutcome": "Wrong-role, skipped-role, stale-revision and duplicate/released transitions are rejected without changing successful audit. Editing B after EV-001-07 invalidates that approval and sets DRAFT; release is blocked until all five reviewers approve the new revision.",
+      "journeyIds": [
+        "return-release",
+        "io-recovery"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "WFL-02",
+      "disposition": "implemented",
+      "expectedOutcome": "C and D branch from B and differ in repair. Display base 2026-10-13T18:00:00Z, left 2026-10-14T12:00:00Z and right 2026-10-15T12:00:00Z. Explicit left choice produces E with both parents, five retained revisions, no valid approvals and DRAFT; submit restarts at Division Officer.",
+      "journeyIds": [
+        "conflict-resolution"
+      ],
+      "capabilityIds": [
+        "revision-conflicts"
+      ]
+    },
+    {
+      "criterionId": "WFL-03",
+      "disposition": "implemented",
+      "expectedOutcome": "Reviewer completes actual draft, submit, comment, return, revised save, resubmit, five approvals and explicit CO mock release, then downloads the saved message/audit package matching B.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DELIVERABLE8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Actual interactions walk mock INITIAL A through return to originator, corrected B, all five downstream reviewers and explicit CO mock release. Final RELEASED/NONE, two revisions, five current approvals and exact supplied synthetic export. Accessible live walkthrough guide and one-page fielding brief cover role permissions, classification handling, Navy messaging integration approach and fielding prerequisites; live execution remains a human review activity.",
+      "journeyIds": [
+        "return-release",
+        "documentation"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DESC8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "One workspace displays saved message, current revision, current holder, route and historical comments/approvals; full return-release path ends in a downloaded synthetic message/audit package, with no email or external release required for this local demonstration.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DESC8-2",
+      "disposition": "implemented",
+      "expectedOutcome": "Fictional casualty impact and parts-priority narrative remain visible beside returned feedback; the sailor edits once and retains both versions. No measured readiness or time improvement is claimed.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "DESC8-3",
+      "disposition": "implemented",
+      "expectedOutcome": "CASREP is actually written, submitted, commented on, returned, revised to B and routed through the named six-role chain in one workspace, ending in explicit local mock release and matching message/audit export.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SUMMARY8-1",
+      "disposition": "implemented",
+      "expectedOutcome": "Drafting, comments, A/B revision history and complete chain-of-command decisions remain in one durable report workspace; return-release journey yields RELEASED/NONE and reload preserves all five valid approvals.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-4",
+      "disposition": "implemented",
+      "expectedOutcome": "Requirements heading is preserved as source traceability; all child obligations map to six-role routing, four-type synthetic validation, history/audit, current holder and synthetic-only data checks.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE8-5",
+      "disposition": "implemented",
+      "expectedOutcome": "All six named roles have comment capability on unreleased content; only originator edits/submits, downstream current holder returns or approves/forwards, CO approves then explicitly mock-releases. Self-return/CO-forward restrictions and unauthorized actor are visible and rejected server-side. Role selection is labeled simulation.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-6",
+      "disposition": "implemented",
+      "expectedOutcome": "Exact supplied INITIAL, UPDATE, CORRECT and CASCOR texts parse and render; missing equipment, invalid type/category/timestamp/marking are rejected. A/B history, every comment and approval and routing/current holder remain inspectable. Invented grammar is fully disclosed; actual NWP 1-03.1 conformance remains unverified.",
+      "journeyIds": [
+        "four-types",
+        "return-release"
+      ],
+      "capabilityIds": [
+        "casrep-format"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-7",
+      "disposition": "implemented",
+      "expectedOutcome": "Only exact fictional supplied samples and labeled synthetic edits are used; every screen and message/audit export says Synthetic — not validated against the real CASREP format. Prohibited marking test rejects the fabricated placeholder.",
+      "journeyIds": [
+        "return-release",
+        "validation-recovery"
+      ],
+      "capabilityIds": [
+        "casrep-format"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-8",
+      "disposition": "implemented",
+      "expectedOutcome": "Expected deliverables heading is preserved as traceability; child deliverables include actual six-role return/revision/mock-release journey, live walkthrough guide and one-page fielding brief, inspected through documentation journey.",
+      "journeyIds": [
+        "documentation",
+        "return-release"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE8-9",
+      "disposition": "implemented",
+      "expectedOutcome": "Mock INITIAL A is saved/submitted, commented on and returned, revised to B, resubmitted, approved by Division Officer, Department Head, Engineer Officer/CHENG, XO and CO then explicitly mock-released. RELEASED/NONE, two revisions, five valid approvals, exact export and reload state are observable.",
+      "journeyIds": [
+        "return-release"
+      ],
+      "capabilityIds": [
+        "review-route"
+      ]
+    },
+    {
+      "criterionId": "SCOPE8-10",
+      "disposition": "implemented",
+      "expectedOutcome": "Live walkthrough guide and one-page fielding brief describe all six role permissions, classification boundary, Navy messaging integration approach and fielding prerequisites; both accessible in UI and delivered as documents.",
+      "journeyIds": [
+        "documentation"
+      ],
+      "capabilityIds": []
+    },
+    {
+      "criterionId": "SCOPE8-11",
+      "disposition": "implemented",
+      "expectedOutcome": "Source is linked and quoted with original provenance intact.",
+      "journeyIds": [
+        "documentation"
+      ],
+      "capabilityIds": []
+    }
+  ],
+  "journeys": [
+    {
+      "id": "return-release",
+      "title": "Write, return, revise, approve all roles and mock-release",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#start-initial"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-02"
+        },
+        {
+          "action": "fill",
+          "selector": "#decision-text",
+          "value": "Identify spare seal location and transfer estimate."
+        },
+        {
+          "action": "click",
+          "selector": "#comment"
+        },
+        {
+          "action": "fill",
+          "selector": "#decision-text",
+          "value": "Add spare seal location and transfer estimate."
+        },
+        {
+          "action": "click",
+          "selector": "#return"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "RETURNED"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Originator (Sailor/LPO)"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-01"
+        },
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\nEND\n"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-02"
+        },
+        {
+          "action": "click",
+          "selector": "#approveForward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-03"
+        },
+        {
+          "action": "click",
+          "selector": "#approveForward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-04"
+        },
+        {
+          "action": "click",
+          "selector": "#approveForward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-05"
+        },
+        {
+          "action": "click",
+          "selector": "#approveForward"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-06"
+        },
+        {
+          "action": "click",
+          "selector": "#approve"
+        },
+        {
+          "action": "click",
+          "selector": "#mockRelease"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "RELEASED"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "NONE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-count",
+          "text": "2"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\nEND"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "SYN-CR-001.synthetic.json",
+          "text": "{\n  \"classification\": \"synthetic\",\n  \"provenance\": \"Synthetic — not validated against the real CASREP format.\",\n  \"routeId\": \"ROUTE-LANTERN\",\n  \"routeVersion\": \"synthetic-route-1\",\n  \"ruleVersion\": \"synthetic-casrep-1\",\n  \"reportId\": \"SYN-CR-001\",\n  \"releasedRevisionId\": \"REV-001-B\",\n  \"status\": \"RELEASED\",\n  \"currentHolder\": \"NONE\",\n  \"message\": \"MARKING=Synthetic — not validated against the real CASREP format.\\nREPORT=SYN-CR-001\\nFAMILY=SYN-FAM-001\\nTYPE=INITIAL\\nRELATED=NONE\\nUNIT=FS Lantern\\nCATEGORY=2\\nEQUIPMENT=EQ-CHW-02\\nCASUALTY=Chilled-water pump seal leakage\\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\\nOCCURRED=2026-10-12T08:00:00Z\\nREPAIR=2026-10-13T18:00:00Z\\nSTATUS=DEGRADED\\nJSN=SYN-JSN-26012\\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\\nEND\\n\",\n  \"revisions\": [\n    {\n      \"revisionId\": \"REV-001-A\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionIds\": [],\n      \"content\": {\n        \"marking\": \"Synthetic — not validated against the real CASREP format.\",\n        \"reportId\": \"SYN-CR-001\",\n        \"familyId\": \"SYN-FAM-001\",\n        \"reportType\": \"INITIAL\",\n        \"relatedReportId\": \"NONE\",\n        \"unit\": \"FS Lantern\",\n        \"category\": \"2\",\n        \"equipmentId\": \"EQ-CHW-02\",\n        \"casualty\": \"Chilled-water pump seal leakage\",\n        \"impact\": \"One cooling loop unavailable; fictional training load reduced to 60 percent.\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"repair\": \"2026-10-13T18:00:00Z\",\n        \"equipmentStatus\": \"DEGRADED\",\n        \"jsn\": \"SYN-JSN-26012\",\n        \"narrative\": \"Seal inspection complete; replacement requested. Parts priority: training support.\"\n      },\n      \"sourceMessage\": \"MARKING=Synthetic — not validated against the real CASREP format.\\nREPORT=SYN-CR-001\\nFAMILY=SYN-FAM-001\\nTYPE=INITIAL\\nRELATED=NONE\\nUNIT=FS Lantern\\nCATEGORY=2\\nEQUIPMENT=EQ-CHW-02\\nCASUALTY=Chilled-water pump seal leakage\\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\\nOCCURRED=2026-10-12T08:00:00Z\\nREPAIR=2026-10-13T18:00:00Z\\nSTATUS=DEGRADED\\nJSN=SYN-JSN-26012\\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support.\\nEND\\n\",\n      \"actorId\": \"ACT-01\",\n      \"timestamp\": \"2026-10-12T09:00:00Z\",\n      \"changeReason\": \"Initial draft\"\n    },\n    {\n      \"revisionId\": \"REV-001-B\",\n      \"reportId\": \"SYN-CR-001\",\n      \"parentRevisionIds\": [\n        \"REV-001-A\"\n      ],\n      \"content\": {\n        \"marking\": \"Synthetic — not validated against the real CASREP format.\",\n        \"reportId\": \"SYN-CR-001\",\n        \"familyId\": \"SYN-FAM-001\",\n        \"reportType\": \"INITIAL\",\n        \"relatedReportId\": \"NONE\",\n        \"unit\": \"FS Lantern\",\n        \"category\": \"2\",\n        \"equipmentId\": \"EQ-CHW-02\",\n        \"casualty\": \"Chilled-water pump seal leakage\",\n        \"impact\": \"One cooling loop unavailable; fictional training load reduced to 60 percent.\",\n        \"occurredAt\": \"2026-10-12T08:00:00Z\",\n        \"repair\": \"2026-10-13T18:00:00Z\",\n        \"equipmentStatus\": \"DEGRADED\",\n        \"jsn\": \"SYN-JSN-26012\",\n        \"narrative\": \"Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\"\n      },\n      \"sourceMessage\": \"MARKING=Synthetic — not validated against the real CASREP format.\\nREPORT=SYN-CR-001\\nFAMILY=SYN-FAM-001\\nTYPE=INITIAL\\nRELATED=NONE\\nUNIT=FS Lantern\\nCATEGORY=2\\nEQUIPMENT=EQ-CHW-02\\nCASUALTY=Chilled-water pump seal leakage\\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\\nOCCURRED=2026-10-12T08:00:00Z\\nREPAIR=2026-10-13T18:00:00Z\\nSTATUS=DEGRADED\\nJSN=SYN-JSN-26012\\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\\nEND\\n\",\n      \"actorId\": \"ACT-01\",\n      \"timestamp\": \"2026-10-12T09:04:00Z\",\n      \"changeReason\": \"Address Division Officer parts-location comment\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eventId\": \"EV-001-01\",\n      \"actorId\": \"ACT-01\",\n      \"role\": \"Originator (Sailor/LPO)\",\n      \"timestamp\": \"2026-10-12T09:00:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-A\",\n      \"action\": \"save\",\n      \"text\": \"Initial draft\",\n      \"priorStatus\": \"EMPTY\",\n      \"newStatus\": \"DRAFT\",\n      \"currentHolder\": \"Originator (Sailor/LPO)\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-02\",\n      \"actorId\": \"ACT-01\",\n      \"role\": \"Originator (Sailor/LPO)\",\n      \"timestamp\": \"2026-10-12T09:01:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-A\",\n      \"action\": \"submit\",\n      \"text\": \"Submit INITIAL\",\n      \"priorStatus\": \"DRAFT\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"Division Officer\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-03\",\n      \"actorId\": \"ACT-02\",\n      \"role\": \"Division Officer\",\n      \"timestamp\": \"2026-10-12T09:02:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-A\",\n      \"action\": \"comment\",\n      \"text\": \"Identify spare seal location and transfer estimate.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"Division Officer\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-04\",\n      \"actorId\": \"ACT-02\",\n      \"role\": \"Division Officer\",\n      \"timestamp\": \"2026-10-12T09:03:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-A\",\n      \"action\": \"return\",\n      \"text\": \"Add spare seal location and transfer estimate.\",\n   "
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "fileName": "SYN-CR-001.synthetic.json",
+          "text": "   \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"RETURNED\",\n      \"currentHolder\": \"Originator (Sailor/LPO)\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-05\",\n      \"actorId\": \"ACT-01\",\n      \"role\": \"Originator (Sailor/LPO)\",\n      \"timestamp\": \"2026-10-12T09:04:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"save\",\n      \"text\": \"Address Division Officer parts-location comment\",\n      \"priorStatus\": \"RETURNED\",\n      \"newStatus\": \"DRAFT\",\n      \"currentHolder\": \"Originator (Sailor/LPO)\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-06\",\n      \"actorId\": \"ACT-01\",\n      \"role\": \"Originator (Sailor/LPO)\",\n      \"timestamp\": \"2026-10-12T09:05:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"submit\",\n      \"text\": \"Resubmit revised INITIAL\",\n      \"priorStatus\": \"DRAFT\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"Division Officer\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-07\",\n      \"actorId\": \"ACT-02\",\n      \"role\": \"Division Officer\",\n      \"timestamp\": \"2026-10-12T09:06:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"approveForward\",\n      \"text\": \"Parts context now clear.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"Department Head\",\n      \"approvalValid\": true,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-08\",\n      \"actorId\": \"ACT-03\",\n      \"role\": \"Department Head\",\n      \"timestamp\": \"2026-10-12T09:07:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"approveForward\",\n      \"text\": \"Department review complete.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"Engineer Officer/CHENG\",\n      \"approvalValid\": true,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-09\",\n      \"actorId\": \"ACT-04\",\n      \"role\": \"Engineer Officer/CHENG\",\n      \"timestamp\": \"2026-10-12T09:08:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"approveForward\",\n      \"text\": \"Engineering review complete.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"XO\",\n      \"approvalValid\": true,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-10\",\n      \"actorId\": \"ACT-05\",\n      \"role\": \"XO\",\n      \"timestamp\": \"2026-10-12T09:09:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"approveForward\",\n      \"text\": \"Ready for CO review.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"IN_REVIEW\",\n      \"currentHolder\": \"CO\",\n      \"approvalValid\": true,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-11\",\n      \"actorId\": \"ACT-06\",\n      \"role\": \"CO\",\n      \"timestamp\": \"2026-10-12T09:10:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"approve\",\n      \"text\": \"Approved current revision for simulated release.\",\n      \"priorStatus\": \"IN_REVIEW\",\n      \"newStatus\": \"APPROVED\",\n      \"currentHolder\": \"CO\",\n      \"approvalValid\": true,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    },\n    {\n      \"eventId\": \"EV-001-12\",\n      \"actorId\": \"ACT-06\",\n      \"role\": \"CO\",\n      \"timestamp\": \"2026-10-12T09:11:00Z\",\n      \"reportId\": \"SYN-CR-001\",\n      \"revisionId\": \"REV-001-B\",\n      \"action\": \"mockRelease\",\n      \"text\": \"CO release simulated locally; no transmission.\",\n      \"priorStatus\": \"APPROVED\",\n      \"newStatus\": \"RELEASED\",\n      \"currentHolder\": \"NONE\",\n      \"approvalValid\": false,\n      \"routeVersion\": \"synthetic-route-1\",\n      \"ruleVersion\": \"synthetic-casrep-1\"\n    }\n  ],\n  \"validApprovalEventIds\": [\n    \"EV-001-07\",\n    \"EV-001-08\",\n    \"EV-001-09\",\n    \"EV-001-10\",\n    \"EV-001-11\"\n  ]\n}\n"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "RELEASED"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-count",
+          "text": "5"
+        }
+      ]
+    },
+    {
+      "id": "validation-recovery",
+      "title": "Correct missing equipment without losing draft",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#start-initial"
+        },
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support.\nEND\n"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "equipmentId: required"
+        },
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support.\nEND\n"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "DRAFT"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support.\nEND"
+        }
+      ]
+    },
+    {
+      "id": "conflict-resolution",
+      "title": "Review competing amendments and choose repair estimate",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-conflict-scenario"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "IN_REVIEW"
+        },
+        {
+          "action": "click",
+          "selector": "#compare-branches"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-field",
+          "text": "repair"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-base",
+          "text": "2026-10-13T18:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-left",
+          "text": "2026-10-14T12:00:00Z"
+        },
+        {
+          "action": "expectText",
+          "selector": "#conflict-right",
+          "text": "2026-10-15T12:00:00Z"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-01"
+        },
+        {
+          "action": "select",
+          "selector": "#repair-choice",
+          "value": "left"
+        },
+        {
+          "action": "click",
+          "selector": "#resolve"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-revision",
+          "text": "REV-001-E"
+        },
+        {
+          "action": "expectText",
+          "selector": "#revision-count",
+          "text": "5"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-count",
+          "text": "0"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "DRAFT"
+        },
+        {
+          "action": "expectText",
+          "selector": "#repair-result",
+          "text": "2026-10-14T12:00:00Z"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "expectText",
+          "selector": "#holder",
+          "text": "Division Officer"
+        }
+      ]
+    },
+    {
+      "id": "io-recovery",
+      "title": "Retain unsaved edits through failed save/export and retry explicitly",
+      "kind": "recovery",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#load-approved-prefix"
+        },
+        {
+          "action": "select",
+          "selector": "#actor",
+          "value": "ACT-01"
+        },
+        {
+          "action": "fill",
+          "selector": "#message",
+          "value": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-14T12:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support. Spare seal at fictional depot; transfer expected 2026-10-13T10:00:00Z.\nEND\n"
+        },
+        {
+          "action": "select",
+          "selector": "#fault",
+          "value": "save"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "save: simulated storage failure"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-revision",
+          "text": "REV-001-B"
+        },
+        {
+          "action": "expectText",
+          "selector": "#save-state",
+          "text": "Unsaved changes"
+        },
+        {
+          "action": "select",
+          "selector": "#fault",
+          "value": "export"
+        },
+        {
+          "action": "click",
+          "selector": "#export"
+        },
+        {
+          "action": "expectText",
+          "selector": "#error",
+          "text": "export: simulated export failure"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-revision",
+          "text": "REV-001-B"
+        },
+        {
+          "action": "select",
+          "selector": "#fault",
+          "value": "none"
+        },
+        {
+          "action": "click",
+          "selector": "#save"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-revision",
+          "text": "REV-001-C"
+        },
+        {
+          "action": "expectText",
+          "selector": "#status",
+          "text": "DRAFT"
+        },
+        {
+          "action": "expectText",
+          "selector": "#approval-count",
+          "text": "0"
+        },
+        {
+          "action": "expectDownload",
+          "selector": "#export",
+          "text": "REV-001-C"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectText",
+          "selector": "#current-revision",
+          "text": "REV-001-C"
+        }
+      ]
+    },
+    {
+      "id": "four-types",
+      "title": "Validate linked CASREP message types and inspect lifecycle meaning",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "select",
+          "selector": "#sample-type",
+          "value": "INITIAL"
+        },
+        {
+          "action": "click",
+          "selector": "#load-message"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#type-result",
+          "text": "INITIAL"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-001\nFAMILY=SYN-FAM-001\nTYPE=INITIAL\nRELATED=NONE\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Seal inspection complete; replacement requested. Parts priority: training support.\nEND"
+        },
+        {
+          "action": "select",
+          "selector": "#sample-type",
+          "value": "UPDATE"
+        },
+        {
+          "action": "click",
+          "selector": "#load-message"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#type-result",
+          "text": "UPDATE"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-002\nFAMILY=SYN-FAM-001\nTYPE=UPDATE\nRELATED=SYN-CR-001\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=2026-10-14T12:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Synthetic UPDATE: spare seal delayed; revised repair estimate 2026-10-14T12:00:00Z.\nEND"
+        },
+        {
+          "action": "select",
+          "selector": "#sample-type",
+          "value": "CORRECT"
+        },
+        {
+          "action": "click",
+          "selector": "#load-message"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#type-result",
+          "text": "CORRECT"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-003\nFAMILY=SYN-FAM-001\nTYPE=CORRECT\nRELATED=SYN-CR-002\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T07:45:00Z\nREPAIR=2026-10-13T18:00:00Z\nSTATUS=DEGRADED\nJSN=SYN-JSN-26012\nNARRATIVE=Synthetic CORRECT: occurrence time in linked UPDATE should read 2026-10-12T07:45:00Z; equipment remains degraded.\nEND"
+        },
+        {
+          "action": "select",
+          "selector": "#sample-type",
+          "value": "CASCOR"
+        },
+        {
+          "action": "click",
+          "selector": "#load-message"
+        },
+        {
+          "action": "click",
+          "selector": "#validate"
+        },
+        {
+          "action": "expectText",
+          "selector": "#type-result",
+          "text": "CASCOR"
+        },
+        {
+          "action": "expectText",
+          "selector": "#message-preview",
+          "text": "MARKING=Synthetic — not validated against the real CASREP format.\nREPORT=SYN-CR-004\nFAMILY=SYN-FAM-001\nTYPE=CASCOR\nRELATED=SYN-CR-003\nUNIT=FS Lantern\nCATEGORY=2\nEQUIPMENT=EQ-CHW-02\nCASUALTY=Chilled-water pump seal leakage\nIMPACT=One cooling loop unavailable; fictional training load reduced to 60 percent.\nOCCURRED=2026-10-12T08:00:00Z\nREPAIR=COMPLETE\nSTATUS=RESTORED\nJSN=SYN-JSN-26012\nNARRATIVE=Synthetic CASCOR: seal replaced; fictional cooling loop test passed at 2026-10-14T11:00:00Z.\nEND"
+        }
+      ]
+    },
+    {
+      "id": "documentation",
+      "title": "Inspect live walkthrough and one-page fielding brief",
+      "kind": "primary",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#open-guide"
+        },
+        {
+          "action": "expectText",
+          "selector": "#guide-summary",
+          "text": "Live walkthrough: draft, return, revise, review and simulated CO release."
+        },
+        {
+          "action": "click",
+          "selector": "#open-brief"
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-authority",
+          "text": "Demo roles simulate permissions; they do not authenticate users. Owner approval is required before delivery or deployment."
+        },
+        {
+          "action": "expectText",
+          "selector": "#brief-integration",
+          "text": "No Navy messaging connection. Fielding requires approved identity, message rules, classification handling, retention and release adapters."
+        },
+        {
+          "action": "expectText",
+          "selector": "#source-link",
+          "text": "Source: https://cdao.hackathon.maximus.com/event/norfolk/use-cases/8"
+        }
+      ]
+    }
+  ]
+}

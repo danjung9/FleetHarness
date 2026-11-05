@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "objective": "Transform labeled synthetic CASREP messages through validated authoring, immutable review, return/revision, conflict resolution and local mock release with traceable exports.",
+  "invocation": {
+    "input": "Object with action string. action=parse requires message:string. action=workflow requires reportId:string, revisions:array of revision snapshots and commands:array of command objects defined in rules. action=reconcile requires base,left,right objects of fifteen string content fields. No optional fields, defaults or null inputs except ignored extra properties; empty revisions/commands permitted.",
+    "output": "Exactly the action-specific JSON object defined in rules; invalid envelope/shape returns exactly {error:string}. parse validation failures use its normal envelope. workflow command failures use its normal last-accepted-state envelope. reconcile merged has all fifteen content strings; conflicts array canonical field order.",
+    "rules": [
+      "All actions are deterministic synthetic calculations, never model calls or official transmission. POST /api/invoke receives the raw object. No action may trust expected, state or approval flags from fixture data. Extra object properties are ignored. Missing required properties, wrong types or null return {\"error\":\"input: invalid shape\"}; unknown action returns {\"error\":\"action: unsupported\"}. Shape checks precede domain checks. No throws for domain failures.",
+      "Nested workflow shape checks require reportId matching SYN-CR-NNN, revisions and commands arrays; every revision has the eight documented properties of their documented types, content has the fifteen required string fields, parentRevisionIds an array of strings; all six command fields are strings, timestamp a real UTC timestamp. Duplicate revision IDs or parent/content/source inconsistencies are domain lineage errors on save. For reconcile, each of base/left/right must have all fifteen string fields. For parse, message must be string (empty string is permitted and yields grammar error). Any nested shape failure returns only {\"error\":\"input: invalid shape\"}.",
+      "parse uses exactly the fictional grammar documented in data/README.md: UTF-8, fifteen ordered KEY=value lines then END and terminal LF. Split first equals; preserve values literally. Output exactly {parsedFields,validationErrors,renderedMessage}. parsedFields contains all fifteen string fields in canonical order (missing values empty). renderedMessage is canonical text on success and null on any error. validationErrors is an ordered string array.",
+      "Grammar errors precede value errors and produce only [\"message: expected canonical KEY=value lines and END\"]. A missing known key is treated as an empty field, not grammar failure; all other remaining keys must retain order. Unknown/duplicate/out-of-order keys, CR, missing END or terminal LF are grammar failures. Empty or missing value yields \"<field>: required\" except marking uses \"marking: synthetic marking required\". Value errors accumulate in canonical field order, one error per field.",
+      "MARKING must equal \"Synthetic — not validated against the real CASREP format.\". REPORT matches ^SYN-CR-[0-9]{3}$, FAMILY matches ^SYN-FAM-[0-9]{3}$; errors \"reportId: expected SYN-CR-NNN\" and \"familyId: expected SYN-FAM-NNN\". TYPE enum INITIAL, UPDATE, CORRECT, CASCOR, otherwise \"reportType: expected INITIAL, UPDATE, CORRECT or CASCOR\". CATEGORY string 2/3/4 else \"category: expected 2, 3 or 4\".",
+      "INITIAL RELATED=NONE; other types RELATED matches report ID grammar and differs from REPORT; error \"relatedReportId: invalid link\". Parse checks no runtime predecessor. All other text fields nonempty and preserved without trimming. OCCURRED real calendar UTC timestamp exactly YYYY-MM-DDTHH:mm:ssZ; error \"occurredAt: expected a real UTC timestamp YYYY-MM-DDTHH:mm:ssZ\". REPAIR same format and >= OCCURRED, otherwise \"repair: expected UTC timestamp at or after occurredAt\"; CASCOR instead requires COMPLETE or \"repair: CASCOR requires COMPLETE\". STATUS DEGRADED/UNAVAILABLE, or CASCOR RESTORED; errors \"equipmentStatus: expected DEGRADED or UNAVAILABLE\" and \"equipmentStatus: CASCOR requires RESTORED\".",
+      "workflow starts EMPTY with currentRevisionId NONE, holder Originator (Sailor/LPO), no audit or approvals. revisions supplies immutable snapshots, not initial state. Replay commands in input order; save introduces referenced revision. Command fields: eventId, actorId, timestamp, revisionId, action, text (all strings); text may be empty except return/comment. Timestamp must be real UTC. eventId unique. Supported commands save, submit, comment, return, approveForward, approve, mockRelease. Unsupported command yields \"action: unsupported\". Stop at first rejected command and return last accepted state plus one rejection. Never accept caller role, status or approval flags.",
+      "workflow output exactly {status,holder,currentRevisionId,revisionIds,auditEventIds,validApprovalEventIds,invalidatedApprovalEventIds,renderedMessage,errors,rejections}. status EMPTY/DRAFT/IN_REVIEW/RETURNED/APPROVED/RELEASED; holder uses six named roles or NONE; revisionIds are successfully saved revision IDs in save order; audit IDs and approvals in command order; invalidated IDs in original approval order. renderedMessage null before save, otherwise current canonical message. errors empty or [first rejection reason]; rejections empty or [{actorId,action,revisionId,reason}].",
+      "Actors ACT-01 through ACT-06 map in order to Originator (Sailor/LPO), Division Officer, Department Head, Engineer Officer/CHENG, XO, CO; any other actor rejected \"actorId: role is not permitted\". Role simulation is not authentication. Only originator saves/submits. Other misuse is \"actorId: role is not permitted\". For decision actions, current holder must act; error \"currentHolder: <holder> must act next\".",
+      "Precedence after shape/command validation: unauthorized actor; duplicate eventId (\"eventId: duplicate\"); released (mockRelease: \"status: report already released\", all others \"status: released report is immutable; create a linked report\"); non-save revision mismatch (\"revisionId: current revision is <id>\"); originator return (\"action: originator cannot return its own draft\"); CO approveForward (\"action: CO has no next reviewer\"); action-specific guards below. Failed command appends no successful audit and changes no accepted state.",
+      "save validates referenced revision sourceMessage and content equality; errors from parse first, else \"revision: invalid lineage\" for absent snapshot, mismatched report/content/source, duplicate ID, or parents not exactly current ID (first save parents empty). Revisions use revisionId,reportId,parentRevisionIds,content,sourceMessage,actorId,timestamp,changeReason as in data/README.md. A save resets DRAFT and originator holder; invalidates every prior valid approval. comment from any of six roles preserves status, content and holder; requires text.trim nonempty else \"text: required\". return requires IN_REVIEW and holder downstream, nonblank reason, resets RETURNED and originator holder and invalidates all approvals.",
+      "submit requires DRAFT or RETURNED else \"status: submission requires DRAFT or RETURNED\"; sends to Division Officer, IN_REVIEW. approveForward requires IN_REVIEW and current holder Division Officer through XO, appends approval and advances one role. approve requires CO holder and IN_REVIEW, appends approval, sets APPROVED with CO holder. Invalid status for these decisions returns \"status: review requires IN_REVIEW\". return has same status error. approve by non-CO returns \"actorId: role is not permitted\".",
+      "mockRelease requires CO. If DRAFT/RETURNED or approvals were invalidated, error \"approvals: current revision requires all five reviewer approvals\"; otherwise without current CO approval error \"approvals: CO approval required for current revision\". All five approvals must match current revision. Success RELEASED/NONE, frozen content. It is separate from approve and does not add an approval. No automatic transitions.",
+      "reconcile accepts base,left,right content objects with all fifteen string fields. Output exactly {conflicts,merged}. Iterate canonical content field order. When left==right use it; when left==base use right; when right==base use left; otherwise append {field,base,left,right} and retain base value in merged. No clock-based winner. This field comparison is used above the foundation DAG validation in the actual app. Empty conflicts does not mean approved.",
+      "UI durable commands use the same workflow logic before atomic commit. File state is outside runtime allowlist in a local data directory; acknowledge Saved only after fsync/rename. Serialize commits and reject stale base revision, preserving draft. Failed saves/exports never append successful events or partial downloads. Rejections persist separately with monotonic attemptId, actorId,action,revisionId,reason and server UTC timestamp. No credentials. Client dirty buffer persists locally and requires save/discard before approving committed content.",
+      "UI supports linked INITIAL→UPDATE→CORRECT→CASCOR using predecessor released, same family/equipment/JSN and new IDs, no inherited approval. CASCOR closes family only after its mock release. Explicit supersession/cancellation/expiry are local lifecycle notices retaining released snapshots and audit; no operational deadlines invented. Foundation core invocation remains pure; browser persistence and these lifecycle operations are tested as integration requirements, not accepted from precomputed states.",
+      "A valid workflow envelope with empty commands returns EMPTY, originator holder, currentRevisionId NONE, empty revisionIds/auditEventIds/approval arrays/errors/rejections, renderedMessage null. Only saved revisions appear in revisionIds. Workflow validation errors on save are the first parse validation error in canonical order. A missing referenced save snapshot yields \"revision: invalid lineage\". An unsupported command action returns workflow errors [\"action: unsupported\"] and one rejection, preserving accepted prefix. Nonempty trimmed decision text is required for comment/return; other action texts may be empty. Extra fields are ignored even on content objects; required fifteen content fields define comparison and rendering."
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "casrep-format",
+      "kind": "algorithm",
+      "description": "Parse and render all four synthetic CASREP types, validate canonical fields and preserve inert narrative.",
+      "criterionIds": [
+        "UC8-1",
+        "SCOPE8-6",
+        "SCOPE8-7"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "format-cases"
+      ]
+    },
+    {
+      "id": "review-route",
+      "kind": "workflow",
+      "description": "Replay explicit actor decisions, enforce six roles, current revision, return loop and five fresh approvals before local mock release.",
+      "criterionIds": [
+        "UC8-1",
+        "WFL-01",
+        "WFL-03",
+        "DELIVERABLE8-1",
+        "DESC8-1",
+        "DESC8-2",
+        "DESC8-3",
+        "SUMMARY8-1",
+        "SCOPE8-5",
+        "SCOPE8-9"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "route-cases"
+      ]
+    },
+    {
+      "id": "revision-conflicts",
+      "kind": "stateful",
+      "description": "Retain immutable branches, expose differing fields and require a resolution referencing both heads.",
+      "criterionIds": [
+        "WFL-02",
+        "UC8-1"
+      ],
+      "required": true,
+      "evaluationIds": [
+        "conflict-cases"
+      ]
+    }
+  ],
+  "runtime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json",
+      "casrep.mjs",
+      "store.mjs",
+      "data/synthetic-data.json",
+      "data/README.md",
+      "walkthrough.md",
+      "fielding-brief.md"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  }
+}

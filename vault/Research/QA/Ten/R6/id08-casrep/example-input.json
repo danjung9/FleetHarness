@@ -1,0 +1,38 @@
+{
+  "local": [
+    {
+      "id": "rev-1",
+      "recordId": "form-1",
+      "parents": [],
+      "actor": "device-a",
+      "value": "Draft"
+    },
+    {
+      "id": "rev-a",
+      "recordId": "form-1",
+      "parents": [
+        "rev-1"
+      ],
+      "actor": "device-a",
+      "value": "Local edit"
+    }
+  ],
+  "remote": [
+    {
+      "id": "rev-1",
+      "recordId": "form-1",
+      "parents": [],
+      "actor": "device-a",
+      "value": "Draft"
+    },
+    {
+      "id": "rev-b",
+      "recordId": "form-1",
+      "parents": [
+        "rev-1"
+      ],
+      "actor": "device-b",
+      "value": "Remote edit"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "title": "CASREP Command — synthetic review workspace",
+  "description": "Local synthetic CASREP authoring, immutable review and simulated CO release; no operational transmission.",
+  "components": [
+    {
+      "id": "workspace",
+      "label": "Draft and review workspace",
+      "description": "Embedded supplied synthetic inputs, role simulation, message editor, route, comparison, comments and deliberate release.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "Local HTTP service",
+      "description": "Foundation health/API and static assets; serializes durable writes before reporting success.",
+      "kind": "integration",
+      "files": [
+        "server.mjs"
+      ]
+    },
+    {
+      "id": "domain",
+      "label": "CASREP rules and routing",
+      "description": "Single backend parser/renderer, role enforcement, event replay, approval invalidation, linked lifecycle and export used by UI and tests.",
+      "kind": "logic",
+      "files": [
+        "compute.mjs",
+        "casrep.mjs"
+      ]
+    },
+    {
+      "id": "lineage",
+      "label": "Immutable revision reconciliation",
+      "description": "Reuse offline pack; retain competing heads and require reviewed human resolution.",
+      "kind": "logic",
+      "files": [
+        "lib/validation.js",
+        "lib/offline.js",
+        "casrep.mjs"
+      ]
+    },
+    {
+      "id": "store",
+      "label": "Local durable journal",
+      "description": "Atomic filesystem snapshots outside deployment files; drafts, revisions, successful audit and separate rejection monitor.",
+      "kind": "data",
+      "files": [
+        "store.mjs"
+      ]
+    },
+    {
+      "id": "outputs",
+      "label": "Mock release and review outputs",
+      "description": "Synthetic message/audit download, live walkthrough guide and one-page operational prerequisites; simulated integration only.",
+      "kind": "interface",
+      "files": [
+        "public/index.html",
+        "public/app.js",
+        "walkthrough.md",
+        "fielding-brief.md"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "workspace",
+      "to": "api",
+      "label": "Validate, save and review requests"
+    },
+    {
+      "from": "api",
+      "to": "domain",
+      "label": "Shared invocation protocol"
+    },
+    {
+      "from": "domain",
+      "to": "lineage",
+      "label": "Immutable DAG and head validation"
+    },
+    {
+      "from": "api",
+      "to": "store",
+      "label": "Atomic commit then acknowledge"
+    },
+    {
+      "from": "store",
+      "to": "workspace",
+      "label": "Restore last durable revision via API"
+    },
+    {
+      "from": "domain",
+      "to": "outputs",
+      "label": "Revision-bound message, audit and local mock release"
+    },
+    {
+      "from": "outputs",
+      "to": "workspace",
+      "label": "Reviewable downloads; no external transmission"
+    }
+  ]
+}
