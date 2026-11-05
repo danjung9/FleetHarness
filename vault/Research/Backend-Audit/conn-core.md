@@ -44,3 +44,15 @@ Existing frontend changes:
 [Every removed and added frontend line](~/Documents/CDAO/fh-org/astra-c1/docs/connectors-frontend-lines.md). [Full results and limitations](~/Documents/CDAO/fh-org/astra-c1/docs/connectors-core-report.md).
 
 COMMIT: Wire real connector flows and fix empty connector checkpoints
+
+## 19:55 report
+
+Added fixture-only encryption with an ephemeral key kept off disk. Packaged and production apps still refuse unavailable secure storage.
+
+Preserved the overseer’s scripts. The smoke reports native storage as “not exercised” only for the exact unavailable-storage failure; everything else fails.
+
+Passed: 30 core tests, frontend and Electron type checks, both script syntax checks. Tests verify fake secrets remain encrypted on disk.
+
+Could not run native Electron, browser or keychain checks here. Changes remain uncommitted. No frontend changes.
+
+COMMIT: Add guarded encryption fallback for connector smoke tests

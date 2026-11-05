@@ -125,3 +125,4 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 19:48 Astra genai finished, exit 0. Report: `Research/Backend-Audit/genai.md`
 - 19:51 Astra merge-dan started: Your last turn was cut off when the machine slept. The overseer committed your working tree as 62d26bf and merged the te
 - 19:51 Astra conn-core started: Small fix so the real connector screen test can run. The overseer changed scripts/smoke-connectors.mjs and added scripts
+- 19:55 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`
