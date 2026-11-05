@@ -1,0 +1,165 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943b\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture\nNative delivery fixture\nConnect a provider…\nUsed for new builds. Completed builds keep their recorded model.\nSynthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943b\nReview build\nBrief\nBuild\n3\nReview\n4\nDeliver\n\nYour review is needed. Try the app and check the evidence.\n\nApp preview\nBack to build\nApp preview\nReload preview",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943bOperational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "4b2a40ad-b582-40e3-b92c-a252423a4b51"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": false,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Review build",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Back to build ",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Open source folder",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Reload preview",
+      "disabled": false,
+      "value": ""
+    }
+  ],
+  "frames": [
+    {
+      "title": "Generated application preview",
+      "src": "http://127.0.0.1:63879/5d13358962a6a724ddb323aaa40cef5f22b3ff99b0b85c03/index.html"
+    }
+  ]
+}

@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Finish current repairs and independent R6 review; keep research idle."
+summary: "Finish delivered-app evidence, retire duplicate audit work and refresh one submission package."
 ---
 
 # Product decisions
 
-[E, Scoreboard and R6 finals] Nine attempts finished, all failed; zero satisfactory. IDs 11/12 pass generated tests and journeys but retain final NOT judgments. Six failures concern service connection or Home navigation.
+[E, Scoreboard] R7 has four finished builds, one automatic pass and zero independently satisfactory. Quality's completed ID 11 judgment resolves Engineering's pending review request: scheduling works, but terminal setup, JSON editing and minute offsets defeat unaided use.
 
-[R] Accept Quality's single independent review of IDs 11/12, already running. Separate missing authoritative requirements, software defects and actual human acceptance. Return unsupported judge claims with exact evidence; preserve failed receipts. Missing authority cannot be supplied by another repair or generated acknowledgment.
+[R] Keep NOT. Existing factory/delivery owners must prove a changed-input journey from the actual download, readable results, review and reopening. Do not hand-edit the generated app or Dan's frontend. Morning training browser evidence cannot certify R7's service app.
 
-[R] Accept both completed runner triages. Main and existing Engineering owners must return native failure blocks, reconciled counts and targeted closure. The seven named problems, six reported failures and one unclassified test remain unresolved. Do not repeat triage or excuse native failures as sandbox restrictions.
+[R] Accept the R6 handoff: domain specifications remain prerequisites; SCH-05 is later human acceptance. Do not invent policy or treat missing approval as a software defect.
 
-[R] Keep the queued planning audit and current dev returns. Main resolves benchmark startup failures before affected retries and serializes shared-file changes. ID 36's ordering conflict remains unverified; guard-held files are incomplete shared evidence, not absent functionality.
+[E, R7-Plan-Completion] The structural rejection precedes the existing advisory audit. Combined mapping diagnostics are a bounded proposal, not proven historical rescue. [R] Engineering owns that next correction after exclusive release. Main must retire obsolete builder queue 1793864960828 before enablement; no second audit or extra repair loop.
 
-[R] Research idles. Preserve Dan's labels, retained drafts, delivery callback and smoke assertions. Existing Acceptance/main ownership retains preview persistence, delivery and baseline Resume. No new tasks or frontend allocation.
+[R] Accept six bounded 4a57562 receipts and retire duplicate preview/Resume repairs. Quality's running service triage and main's actual delivery, judge-NOT and service-package checks remain necessary for ed90894.
 
-[R] Keep full access, noon freeze and 1:15 PM submission target. Writer uses one dated package. Human artifact acceptance, missing domain authority, user benefit and submission decisions remain explicit.
+[R] Assign one writer refresh because the package still presents f2e5422/round 5 as current. Research idles. Preserve full access, verified shutdown, noon freeze, 1:15 PM target and human artifact/submission approval.

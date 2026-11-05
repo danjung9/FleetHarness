@@ -1,0 +1,201 @@
+{
+  "url": "file:///Users/mukul/Documents/CDAO/fh-org/astra-test/dist/index.html",
+  "title": "AppYard",
+  "text": "Connectors\nHome\nPreview\nActivity\nFiles\nSettings\nSynthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943b\nOperational-message parser\nTraining deconfliction\nOffline-first workflow\nProject lead\nBuild model · fleet-fixture\nNative delivery fixture\nConnect a provider…\nUsed for new builds. Completed builds keep their recorded model.\nSynthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943b\nBrief\nBuild\n3\nReview\n4\nDeliver\n\nYour review is needed. Try the app and check the evidence.\n\nReview\n\nTry the app, inspect its evidence, then approve the prototype or request changes.\n\nVisual review\nRecorded\n\nSaved screenshots and the agent’s comparison with the expected result. The host checks these records and their source version; the observations are the agent’s assessment.\n\nBuild review\nRecorded\nVerification review\nRecorded\nBuild review\nRecorded\n4 reviews\nVerification review\nRecorded\n4 reviews\nVerification review · Attempt 2\nRecorded\n4 reviews\nDesktop\n1280 × 800\nInitial review\nExpand image\nNov 5, 05:39 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nRecheck\nExpand image\nNov 5, 05:39 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured desktop viewport (1280 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nNarrow\n390 × 844\nInitial review\nExpand image\nNov 5, 05:39 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nRecheck\nExpand image\nNov 5, 05:39 AM\nSource dde1619d\nExpected\nThe application heading, labeled inputs, primary action and result area remain readable within the viewport.\nObserved\nThe captured narrow viewport (390 pixels wide) shows Fixture parser Local synthetic integration-test fixture. No publication or operational approval. Message Parse message Prepare synthetic review draft. 3 controls are present.\n\nNo findings recorded in this review.\n\nTry the app\n\nUse the main workflow and check the result against your brief.\n\nOpen preview\nCheck evidence and limitations\n\nAutomated checks passed\nNode tests: 1 passed · 0 failed · 0 skipped · Browser journeys: 4/4 passed\n\nInspect test evidence · 4 requirements unverified\nRequirement coverage\n\n3 demonstrated · 0 failed · 4 unverified. Prototype approval does not accept or complete the unverified requirements.\n\nComputational capabilities\n\nThe declared package ran in a fresh environment. Host evaluation, browser journeys and developer tests use separate fresh packages with matching declared files, dependencies and runtime configuration.\n\nparse-cases\nPassed\n\ncase_pass_rate: 1.000 · required 1.000\n\ntask-parser · version 1 · synthetic · 4 trial results\nUCcustom-1\nDemonstrated\n\nParse a synthetic task and recover from empty input.\n\nParse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes; host evaluations for parse.\nUCcustom-2\nUnverified\n\nPublication of the synthetic review draft requires owner approval.\n\nhuman-authority: Synthetic test dependency: publication needs owner approval, which this fixture cannot grant. No publication occurs; a synthetic review draft of the parsed task is demonstrated.\nWFL-01\nUnverified\n\nReject invalid state transitions and stale approvals.\n\nhuman-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.\nWFL-02\nUnverified\n\nRetain record lineage and conflicts.\n\nhuman-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.\nWFL-03\nUnverified\n\nComplete the owner-specific workflow.\n\nhuman-authority: The owner must assess this recipe outcome separately; the parser lifecycle fixture does not establish it or authorize release.\nSUMMARYcustom-1\nDemonstrated\n\nParse the invented TASK: prefix, retain a task across reload and prepare a synthetic review draft.\n\nParse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes.\nSUMMARYcustom-2\nDemonstrated\n\nNo publication or operational-format validation is performed.\n\nParse a synthetic task and recover from empty input. - demonstrated by browser journeys parse-task, recover-empty at both viewport sizes.\nBrowser journeys · 4 / 4 passed\nTest runner output\nExit 0\nnode \"--no-global-search-paths\" \"--test\" \"--test-reporter=data:text/javascript;base64,CmltcG9ydCB7IHRhcCB9IGZyb20gJ25vZGU6dGVzdC9yZXBvcnRlcnMnOwpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiogKGV2ZW50cykgewogIGNvbnN0IHN1bW1hcmllcyA9IFtdOwogIGFzeW5jIGZ1bmN0aW9uKiBvYnNlcnZlKCkgewogICAgZm9yIGF3YWl0IChjb25zdCBldmVudCBvZiBldmVudHMpIHsKICAgICAgaWYgKGV2ZW50LnR5cGUgPT09ICd0ZXN0OnN1bW1hcnknICYmIGV2ZW50LmRhdGEuZmlsZSkgc3VtbWFyaWVzLnB1c2goZXZlbnQuZGF0YSk7CiAgICAgIHlpZWxkIGV2ZW50OwogICAgfQogIH0KICBmb3IgYXdhaXQgKGNvbnN0IHRleHQgb2YgdGFwKG9ic2VydmUoKSkpIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ291dHB1dCcsIHRleHQgfSkgKyAnXG4nOwogIHlpZWxkIEpTT04uc3RyaW5naWZ5KHsgdHlwZTogJ3JlZ2lzdGVyZWQnLCBzdW1tYXJpZXMgfSkgKyAnXG4nOwp9Cg==\" \"./parser.test.cjs\"\nTAP version 13\n# Subtest: extracts a task\nok 1 - extracts a task\n  ---\n  duration_ms: 0.472125\n  type: 'test'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 53.640792\n\nClean package: passed.\nCapabilities: 1/1 passed.\nBrowser journeys: 4/4 passed.\nVisual review: passed; initial captures and rechecks required at desktop and narrow sizes.\nRequirements: 3 demonstrated, 0 failed, 4 unverified.\nPlanning audit: could not confirm planning coverage; human review is required.\nPlanning audit 1: unavailable.\nPlanning audit response was unreadable: expected approval or concrete corrections. Coverage remains unconfirmed.\nRemaining gaps: Planning coverage is unconfirmed. Earlier corrections, if any, remain unconfirmed.\nPlanning correction turns used: 0 of 1. The build continues with this evidence.\nIndependent judge: SATISFACTORY. Human review is required.\nJudgment 1: SATISFACTORY\nJudge repairs: 0.\n\nVerified Nov 5, 05:39 AM · 2.54s\n\nOperational readiness is unverified. Synthetic tests and prototype review do not validate production integrations, security accreditation, or field performance.\n\nRecord your review\nReview notes\n\nUse at least 10 characters. Request changes sends these notes back for another build and test cycle.\n\nI inspected the application, test evidence, and limitations.\nApprove prototype\nRequest changes\n\nTo approve: Add at least 10 characters describing what you checked and any limitations.\n\nTo request changes: Add at least 10 characters describing what needs to change.",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "Connectors",
+      "type": null,
+      "ariaLabel": "Connectors",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Home",
+      "type": null,
+      "ariaLabel": "Home — challenge portfolio",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Preview",
+      "type": null,
+      "ariaLabel": "Preview — generated app",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Activity",
+      "type": null,
+      "ariaLabel": "Activity — agent work",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Files",
+      "type": null,
+      "ariaLabel": "Files — artifacts",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Settings",
+      "type": null,
+      "ariaLabel": "Settings",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Synthetic native delivery 56d11c42-33c3-4931-927e-a84caf20943bOperational-message parserTraining deconflictionOffline-first workflow",
+      "type": null,
+      "ariaLabel": "Current challenge",
+      "disabled": false,
+      "value": "4b2a40ad-b582-40e3-b92c-a252423a4b51"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Project lead",
+      "type": "button",
+      "ariaLabel": "Project lead",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Native delivery fixtureConnect a provider…",
+      "type": null,
+      "ariaLabel": "Build model",
+      "disabled": false,
+      "value": "[\"fleet-fixture\",\"fixture-model\"]"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "Find challenge (⌘K)",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "type": null,
+      "ariaLabel": "New challenge",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Brief",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Build",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "3Review",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "4Deliver",
+      "type": "button",
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand desktop initial review screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand desktop recheck screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand narrow initial review screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Expand image",
+      "type": "button",
+      "ariaLabel": "Expand narrow recheck screenshot",
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Open preview",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": "",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": false,
+      "value": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "type": "checkbox",
+      "ariaLabel": null,
+      "disabled": false,
+      "checked": false,
+      "value": "on"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Approve prototype",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Request changes",
+      "type": null,
+      "ariaLabel": null,
+      "disabled": true,
+      "value": ""
+    }
+  ],
+  "frames": []
+}

@@ -133,6 +133,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | macOS ditto and PlistBuddy, bundled versions | System tools | Prepared owned-archive extraction and executable-name lookup for the native checker owner; not executed during preparation | Apple | 2026-11-05 |
 | R7 and latest QA records | project evidence | prioritization | project QA. | 2026-11-05 |
 | Meeting-198, R7 and paired gate records | project evidence | QA allocation | project runner/QA. | 2026-11-05 |
+| Meeting-198/R7/acceptance records | project evidence | coordination review | project reporting and QA. | 2026-11-05 |
 
 ## Data and sources
 

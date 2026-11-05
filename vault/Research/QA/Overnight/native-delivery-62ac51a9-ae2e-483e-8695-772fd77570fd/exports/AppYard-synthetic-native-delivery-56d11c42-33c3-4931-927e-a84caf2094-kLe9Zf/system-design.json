@@ -1,0 +1,50 @@
+{
+  "title": "Synthetic message parser",
+  "description": "A local browser interface sends synthetic messages to a parser and presents structured tasks for review.",
+  "components": [
+    {
+      "id": "review-ui",
+      "label": "Message review",
+      "description": "Paste a synthetic message and inspect extracted tasks.",
+      "kind": "interface",
+      "files": [
+        "index.html"
+      ]
+    },
+    {
+      "id": "parser",
+      "label": "Task extraction",
+      "description": "Extract a task from the synthetic message format.",
+      "kind": "logic",
+      "files": [
+        "core.cjs"
+      ]
+    },
+    {
+      "id": "local-history",
+      "label": "Local history",
+      "description": "Remember that a parse was saved using browser storage.",
+      "kind": "data",
+      "files": [
+        "index.html"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "review-ui",
+      "to": "parser",
+      "label": "Synthetic message text"
+    },
+    {
+      "from": "review-ui",
+      "to": "local-history",
+      "label": "Save parse history locally"
+    },
+    {
+      "from": "parser",
+      "to": "review-ui",
+      "label": "Structured task for review"
+    }
+  ]
+}

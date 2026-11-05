@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "evaluations": [
+    {
+      "id": "parse-cases",
+      "capabilityId": "parse",
+      "description": "Independent synthetic extraction examples.",
+      "dataset": {
+        "name": "task-parser",
+        "version": "1",
+        "provenance": "synthetic"
+      },
+      "evaluator": "exact",
+      "threshold": 1,
+      "trials": 1,
+      "cases": [
+        {
+          "id": "pump",
+          "input": "TASK: inspect pump",
+          "expected": "inspect pump"
+        },
+        {
+          "id": "valve",
+          "input": "TASK: close valve",
+          "expected": "close valve"
+        },
+        {
+          "id": "empty",
+          "input": "",
+          "expected": null
+        },
+        {
+          "id": "not-task",
+          "input": "STATUS: ready",
+          "expected": null
+        }
+      ]
+    }
+  ]
+}

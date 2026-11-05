@@ -1,0 +1,26 @@
+{
+  "stage": "verify",
+  "verdict": "SATISFACTORY",
+  "gaps": [],
+  "attempts": [
+    {
+      "verdict": "SATISFACTORY",
+      "gaps": [],
+      "durationMs": 80,
+      "tokens": {
+        "inputTokens": 0,
+        "cachedInputTokens": 0,
+        "uncachedInputTokens": 0,
+        "outputTokens": 0,
+        "reasoningOutputTokens": null,
+        "totalTokens": 0,
+        "uncachedPlusOutputTokens": 0
+      },
+      "sourceHash": "2cae375c1351031d619f4a5aa26fdf7b9b70849898ec6ec4dd5d52a8c7e73fff"
+    }
+  ],
+  "repairs": 0,
+  "repairLimitReached": false,
+  "durationMs": 80,
+  "evaluatorRetries": 0
+}

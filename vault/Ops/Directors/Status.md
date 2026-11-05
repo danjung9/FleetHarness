@@ -3,21 +3,21 @@ type: status
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Meeting 194: nine R6 failures, completed triages and one independent review in progress."
+summary: "Meeting 198: zero satisfactory R7 builds, bounded recovery passes and current delivery proof pending."
 ---
 
 # Team status
 
-[E, [[Research/QA/Ten/Scoreboard]] and R6 finals] Nine of ten attempts finished, all failed; zero automatic passes or satisfactory results. IDs 11/12 pass 40/40 and 26/26 generated tests plus 10/10 and 12/12 journeys, but final judges say NOT. Three service-disconnected failures and three Home-navigation timeouts need main's recovery. R6 used 5f4eb39 plus scratch changes; exact execution identity remains incomplete.
+[E, [[Research/QA/Ten/Scoreboard]]] R7 has four finished builds: three failures, one automatic pass, zero independently satisfactory. It ran 4a57562 plus scratch changes. ID 11 passes 21/21 tests and 20/20 journeys, but [[Research/QA/Officer/JUDGE-R7-id11-training]] says NOT: technical setup, JSON editing and unexplained time offsets block unaided use. Six challenges have no finished result on this board.
 
-[E] Done: runner completed R5 chronology and native 5f4eb39 triage. [[Research/RandE/UX/Merged-Walkthrough]] supplies six source/screenshot findings. [[Research/QA/Acceptance/Review-0666861]] records four bounded input/recovery/Stop/restart passes, a corrected Resume selector awaiting rerun and a real native preview-reload persistence failure. Approval/export were not reached.
+[E] Done: [[Research/QA/Officer/Handoff-R6]] preserves both NOT judgments and separates missing domain rules from later human approval. [[Research/QA/Acceptance/Review-4a57562]] confirms six bounded receipts, including preview reload, saved test baselines and fixture source delivery. Eleven retained Markdown files differ; application/report bytes match. These passes do not certify the current release.
 
-[E, [[Research/QA/Auto/5f4eb39]]] Native fixtures pass compilation, types, 94/94 harness tests and 14/15 screen scripts. Units report 971 total, 964 passes and six failures, alongside seven problem names. One test remains unclassified. Smoke-electron times out. Causes and count reconciliation remain open.
+[E, relay/state] mvp is ed90894. Teammates landed Node-service offline download support, packaging fixes, a recorded independent fixture check and preview diagnostics. Dan's work through 29ac921 remains integrated. Current sandbox gate reports 1053 passes/128 failures; Quality identified one added service-package failure name. Cause and native closure remain pending.
 
-[E, relay] mvp 5f4eb39 adds frozen-plan restoration and process-evidence shutdown after landed local packaging, service containers and post-delivery changes. Dan's work through 29ac921 remains integrated. Later 0666861/022977b evidence is separately identified; it does not establish current mvp acceptance.
+[E/R, queue] Engineering's contract report is complete; Quality's service triage is running. ID 08 failed before the advisory audit; combined diagnostics are proposed, historical rescue unproved. Main retains actual Morning training delivery, judge-NOT and Node-service proof. Code seats remain disabled; dev-1/dev-3 returns and dev-2 claims need reconciliation.
 
-[E/R, queue and chair] Quality's independent R6 IDs 11/12 review is running. Builder's planning audit and dev-1/dev-3 gate returns remain queued; code seats are disabled. Main resolves dev-2's retained claims, native repairs and benchmark recovery. Existing Acceptance owns delivery/Resume checks. Research and runner idle. No duplicate tasks; preserve Dan's work. Writer maintains one dated package.
+[R] Decided: retire the obsolete builder audit before enablement; retain existing owners, finished scoped repairs and Dan's frontend. Research idles. Assign one writer refresh of the stale submission package, then idle.
 
-[R] Person-only: supply releasable domain authority or decide disclosed partial scope; accept final bytes; confirm user/process and measured burden, portal/team/form/terms/category, rights, owners/resources and submission approval. No invented policy or approval. Keep noon freeze, 1:15 PM target and 2 PM EST deadline.
+[R] Person-only: supply releasable domain specifications or decide disclosed partial scope; confirm user/process and burden evidence, portal/team/form/terms/category, rights and owners/resources; accept final bytes and authorize submission. Keep noon freeze, 1:15 PM target and 2 PM EST deadline.
 
-[E, snapshot-194, 04:16 EST] Organization usage: 21,587,540 of 1,000,000,000 tokens, up 572,773 since snapshot-189. Later usage and dollar cost are unknown. Central updates are staged in [[Ops/Directors/Sprint/Product-Meeting-194]].
+[E, snapshot-198, 05:31 EST] Organization usage: 22,172,787 of 1,000,000,000 tokens, up 585,247 since snapshot-194. Meeting-only usage and dollar cost are unavailable. Central updates await transfer from [[Ops/Directors/Sprint/Product-Meeting-198]].

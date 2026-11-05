@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "recommendation": {
+    "schemaVersion": 1,
+    "templateId": "node-service",
+    "version": "1.0.0",
+    "computePack": "offline",
+    "reason": "The workflow specialist starts with a local service and the existing offline calculation primitive."
+  },
+  "templates": [
+    {
+      "id": "node-service",
+      "version": "1.0.0",
+      "title": "Node service with browser interface",
+      "files": [
+        "server.mjs",
+        "compute.mjs",
+        "package.json",
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css",
+        "FOUNDATION.md"
+      ],
+      "runtime": "node",
+      "dependencies": "None; Node 22.19 or later",
+      "description": "Local HTTP API, browser client, validation/error handling and a replaceable backend computation module.",
+      "source": "Bundled AppYard original template; no upstream starter code is vendored.",
+      "references": [
+        "https://nodejs.org/api/http.html",
+        "https://vite.dev/guide/",
+        "https://github.com/fastify/create-fastify"
+      ],
+      "runtimeManifest": {
+        "profile": "service",
+        "command": {
+          "runtime": "node",
+          "entrypoint": "server.mjs",
+          "args": []
+        },
+        "files": [
+          "server.mjs",
+          "compute.mjs",
+          "package.json",
+          "public/index.html",
+          "public/app.js",
+          "public/styles.css",
+          "FOUNDATION.md",
+          "foundation-lock.json"
+        ],
+        "requiredEnv": [],
+        "healthPath": "/health",
+        "invokePath": "/api/invoke"
+      }
+    },
+    {
+      "id": "python-service",
+      "version": "1.0.0",
+      "title": "Python computation service with browser interface",
+      "files": [
+        "server.py",
+        "compute.py",
+        "public/index.html",
+        "public/app.js",
+        "public/styles.css",
+        "FOUNDATION.md"
+      ],
+      "runtime": "python",
+      "dependencies": "None; installed Python 3.10 or later",
+      "description": "Local standard-library HTTP adapter for Python calculations. Implement the domain math in compute.py.",
+      "source": "Bundled AppYard original template; no upstream starter code is vendored.",
+      "references": [
+        "https://docs.python.org/3/library/http.server.html",
+        "https://github.com/fastapi/full-stack-fastapi-template"
+      ],
+      "runtimeManifest": {
+        "profile": "service",
+        "command": {
+          "runtime": "python",
+          "entrypoint": "server.py",
+          "args": []
+        },
+        "files": [
+          "server.py",
+          "compute.py",
+          "public/index.html",
+          "public/app.js",
+          "public/styles.css",
+          "FOUNDATION.md",
+          "foundation-lock.json"
+        ],
+        "requiredEnv": [],
+        "healthPath": "/health",
+        "invokePath": "/api/invoke"
+      }
+    }
+  ],
+  "computationPacks": {
+    "messages": {
+      "module": "messages",
+      "fn": "extractMessages",
+      "fixture": "fleet_extract_messages",
+      "additionalRuntimeFiles": [
+        "lib/validation.js",
+        "lib/messages.js",
+        "example-input.json"
+      ]
+    },
+    "scheduling": {
+      "module": "scheduling",
+      "fn": "solveSchedule",
+      "fixture": "fleet_solve_schedule",
+      "additionalRuntimeFiles": [
+        "lib/validation.js",
+        "lib/scheduling.js",
+        "example-input.json"
+      ]
+    },
+    "offline": {
+      "module": "offline",
+      "fn": "reconcileRecords",
+      "fixture": "fleet_reconcile_records",
+      "additionalRuntimeFiles": [
+        "lib/validation.js",
+        "lib/offline.js",
+        "example-input.json"
+      ]
+    },
+    "evidence": {
+      "module": "evidence",
+      "fn": "searchEvidence",
+      "fixture": "fleet_search_evidence",
+      "additionalRuntimeFiles": [
+        "lib/validation.js",
+        "lib/evidence.js",
+        "example-input.json"
+      ]
+    },
+    "readiness": {
+      "module": "readiness",
+      "fn": "analyzeDependencies",
+      "fixture": "fleet_analyze_dependencies",
+      "additionalRuntimeFiles": [
+        "lib/validation.js",
+        "lib/readiness.js",
+        "example-input.json"
+      ]
+    }
+  },
+  "recommendedRuntime": {
+    "profile": "service",
+    "command": {
+      "runtime": "node",
+      "entrypoint": "server.mjs",
+      "args": []
+    },
+    "files": [
+      "server.mjs",
+      "compute.mjs",
+      "package.json",
+      "public/index.html",
+      "public/app.js",
+      "public/styles.css",
+      "FOUNDATION.md",
+      "foundation-lock.json",
+      "lib/validation.js",
+      "lib/offline.js",
+      "example-input.json"
+    ],
+    "requiredEnv": [],
+    "healthPath": "/health",
+    "invokePath": "/api/invoke"
+  },
+  "custom": "Use templateId custom, version 1.0.0 and computePack custom only when no bundled service fits. Explain the concrete incompatibility."
+}

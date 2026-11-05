@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "selection": {
+    "schemaVersion": 1,
+    "templateId": "custom",
+    "version": "1.0.0",
+    "computePack": "custom",
+    "reason": "This regression fixture deliberately exercises the existing browser-only runtime and inline evaluator, without a backend service."
+  },
+  "templateHash": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+  "files": {},
+  "copiedFiles": 0,
+  "copiedBytes": 0,
+  "scope": "Original starter bytes before agent edits; not application verification or measured token savings."
+}
