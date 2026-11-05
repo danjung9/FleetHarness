@@ -3,21 +3,21 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Finish current benchmark repairs and delivery evidence without duplicate work."
+summary: "Finish current benchmark and delivery proof while preserving the latest merged work."
 ---
 
 # Product decisions
 
-[P, Flow-Goals] Ten satisfactory catalog builds remain the goal. [E, Scoreboard] R5 has three failures, zero automatic passes and zero satisfactory results at f2e5422 plus scratch changes.
+[P, Flow-Goals] Ten satisfactory catalog builds remain the goal. [E, Scoreboard] R5 has three failures and zero satisfactory results at f2e5422 plus scratch changes.
 
-[E, JUDGE-R5-id11-training] The prepared key contradicts public ordering; retained output follows the protocol. The sealed evaluator key is missing, so full causation remains unverified. [R] Accept this completed NOT judgment. Return the planning inconsistency to the existing factory owner, preserve frozen evidence and retire duplicate judgments.
+[E, JUDGE-R5-id11-training] The prepared key contradicts public ordering; retained output follows the protocol. The sealed evaluator key is missing. [R] Accept the completed NOT judgment and return one planning-consistency regression to the existing owner. Preserve failed evidence; retire duplicate judgments.
 
-[R] Quality's runner finishes IDs 12/36 chronology, separating frozen-plan errors from cleanup rejection. Main owns shutdown recovery, missing native evidence and real runs. Do not revive historical review returns without current proof.
+[E, closing relay] mvp advanced to 5f4eb39 with process-based shutdown confirmation, frozen-plan restoration, local packaging, service containers and changes after delivery. [R] Require native and benchmark proof on this target. Dev-1 preserves the landed App.tsx delivery callback; dev-2 preserves new smoke-quality assertions. Serialize those overlaps.
 
-[E, Merged-Walkthrough] Six operator findings are complete as a source/screenshot handoff. [R] Prioritize lost brief edits and account-switch clarity for Dan, then reachable Stop. No duplicate walkthrough or competing frontend edit.
+[R] Quality's runner finishes IDs 12/36 chronology. Main owns cleanup recovery, missing evaluator evidence and real runs. No second implementation of landed work.
 
-[R] Keep research idle and existing integration, packaging and writer ownership intact. Architect's planning-consistency proposal now has a concrete failure to address. Do not launch three parallel enhancements.
+[E, Merged-Walkthrough] Six operator findings are complete as source/screenshot evidence. [R] Prioritize lost brief edits and account-switch clarity for Dan, then reachable Stop. No duplicate walkthrough or competing frontend edit.
 
-[E, Auto/f2e5422] 934 unit and 94 harness tests pass with fixtures. Its table lists 15 screen scripts; the charter says 16. [R] Reconcile the count without inferring a product failure.
+[E, Auto/f2e5422] 934 unit and 94 harness tests pass with fixtures. Its 15 screen rows differ from the charter's 16. [R] Reconcile counts without transferring passes to 5f4eb39.
 
-[R] Preserve Dan's merged work, noon freeze, 1:15 PM submission target and human acceptance. New-task JSON is empty because useful work already has owners.
+[R] Keep research idle, existing owners, noon freeze, 1:15 PM submission target and human acceptance. New-task JSON is empty.
