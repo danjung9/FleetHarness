@@ -4,6 +4,10 @@ import { api } from './api';
 import './connectors.css';
 
 const plainFailure = 'The data could not be loaded. Try again.';
+const upcomingConnectors = [
+  { id: 'war-data-platform', label: 'War Data Platform', summary: 'Planned connection to War Data Platform.' },
+  { id: 'maven-smart-system', label: 'Maven Smart System', summary: 'Planned connection to Maven Smart System.' }
+];
 // Connector IPC returns only fixed, public messages. Never display arbitrary provider errors.
 function message(error: unknown) {
   if (!(error instanceof Error)) return plainFailure;
@@ -135,7 +139,15 @@ export function Connectors() {
     <p>Event builds use sample data; live connections support local preview only.</p>
     <p>All samples are invented Navy training examples. Check each sample, choose Use this, then select it in your brief.</p>
     {error && <p role="alert" className="form-error">{error} {api.connectors && <button className="text-button" onClick={() => void refresh()}>Try again</button>}</p>}
-    <div className="connector-grid">{cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}</div>
+    <div className="connector-grid">
+      {upcomingConnectors.map(card => <article className="connector-card" key={card.id} aria-labelledby={card.id + '-title'}>
+        <h2 id={card.id + '-title'}>{card.label}</h2>
+        <p className="connector-coming-soon" id={card.id + '-status'}>Coming soon</p>
+        <p>{card.summary}</p>
+        <div className="connector-actions"><button className="secondary" type="button" disabled aria-describedby={card.id + '-status'}>Connect</button></div>
+      </article>)}
+      {cards.map(card => <SourceCard key={card.kind} card={card} refresh={refresh} model={model}/>)}
+    </div>
   </div>;
 }
 export function ConnectedDataSection({ value, onChange, disabled }: { value: ConnectedDataSelection[]; onChange: (value: ConnectedDataSelection[]) => void; disabled: boolean }) {
