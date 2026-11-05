@@ -38,3 +38,7 @@ summary: "Cross-session QA resumed, newer cleanup source reviewed and automatic 
 [E] Main received the ready note and three script paths through the bridge. Tool disclosures were added. No combined native receipt has arrived yet.
 
 [R] Next: review main's clean landed revision, compilation identity and actual receipts; fix checker artifacts separately from real defects; update Overnight with results. Complete actual sign-in/build, interruption/resume, changed-input review and fresh-delivery journeys before accepting the combined app.
+
+[E] The clean-target/receipt bridge question timed out after ten minutes. Source remains at 8053707 with 13 unmerged index paths. Native restart/resume fixture preparation continues; this is a test-preparation handoff, not completed acceptance.
+
+[E] Added the fourth ready script, `Research/QA/Overnight/qa-native-resume.mjs`. It acknowledges held implementation and verification requests, drives real Stop and Resume, fully closes/restarts Electron and checks saved run/checkpoint/artifact identities. It stops before verification and makes no crash-recovery, live-authentication or delivered-app claim. Independent source review, syntax and pure controls pass. Four final hashes and exact runtime commands are recorded in Overnight. Native results remain pending.

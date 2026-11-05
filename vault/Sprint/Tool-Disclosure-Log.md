@@ -109,6 +109,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Overnight desktop input and OAuth GUI checker revision 1 | QA tool | Prepared synthetic native input limits, key-field rejection and clearing, and real loopback login start/reopen/cancel; syntax and pure controls only here | Team-created QA fixture using installed Electron and Playwright | 2026-11-05 |
 | Overnight browser storage recovery checker revision 1 | QA tool | Prepared five isolated local-preview storage cases with independent recovery controls and source/build identities; syntax and pure controls only here | Team-created QA fixture using installed Playwright and Chrome | 2026-11-05 |
 | Judge evidence-binding probe revision 1 | Local diagnostic | Inject a synthetic late application change into the pinned production judge persistence function to check evidence identity | Project-local Node tooling | 2026-11-05 |
+| Overnight native Stop restart Resume checker revision 1 | QA tool | Prepared real-UI Stop, full Electron restart and resumed implementation using owned phase-gated local provider and saved-artifact comparisons; pure validation only here | Team-created QA fixture reusing the repository synthetic provider | 2026-11-05 |
 
 ## Data and sources
 
