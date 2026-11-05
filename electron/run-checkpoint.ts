@@ -34,6 +34,7 @@ export interface RunCheckpoint {
   review?: ReviewRecord;
   reviewSourceHash?: string;
   visualReview?: import('../shared/visual-review.js').VisualReviewReport;
+  answerCorrections?: import('./independent-judge.js').AnswerCorrection[];
 }
 
 export function briefFingerprint(project: Project) {

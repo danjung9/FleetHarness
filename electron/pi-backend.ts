@@ -25,14 +25,15 @@ import type { CodexAccount } from './codex-account.js';
 import { runPreflight, refusalSaveTimeoutMs, type PreflightOptions } from './preflight.js';
 import { plainError, recordProjectError } from './plain-errors.js';
 import { RunProcessSweep, runProcessEnvironment } from './process-sweep.js';
-import { runIndependentJudge, runPlanningAudit, planningAuditSummary, planningAuditEvidence, type PlanningAuditRecord } from './independent-judge.js';
+import { runAnswerCheck, runIndependentJudge, runPlanningAudit, planningAuditSummary, planningAuditEvidence, type AnswerCorrection, type AnswerDispute, type PlanningAuditRecord } from './independent-judge.js';
 import { GENAI_MIL_PROVIDER, type GenAiMil } from './genai-mil.js';
 import type { ConnectorStore } from './connectors/store.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { reportHash } from './delivery.js';
 import { assertTestBaseline, captureTestBaseline, restoreTestBaseline, testBaselinePolicy } from './test-baseline.js';
 
-type ActiveRun = { judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
+const judgeRepairCopy = { recursive: true, force: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fsConstants.COPYFILE_FICLONE };
+type ActiveRun = { answerCorrections?: AnswerCorrection[]; judgeRepairing?: boolean; planningSnapshot?: RunCheckpoint["planningSnapshot"]; planningAudit?: PlanningAuditRecord; planBodies?: [string, string][]; backend: AgentBackend; processes: RunProcessSweep; outcome?: Project['status']; controller: AbortController; done: Promise<void>; resolve: () => void; context?: string; phases?: PhaseContract[]; globalTools?: string[]; packetHash?: string; requirements?: string; acceptance?: AcceptanceCriterion[]; quality?: QualityContract; planHash?: string; stageRetries?: Map<StageId, number>; data?: BriefDataSnapshot; foundation?: FoundationSnapshot; clarifications?: string; helpers?: AgentHelperRuntime; review?: ReviewRecord; reviewSourceHash?: string; foundationPlan?: string; briefHash?: string; checkpointStage?: StageId; resumedStage?: StageId; previousError?: string; visualReview?: VisualReviewReport; preparingResume?: boolean };
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs ?? '', p.outputs ?? '', p.dataInputs ?? [], p.resources ?? '', p.links ?? [], p.challengeId ?? null, p.sourceChallenge ?? null, ...(p.connectedData?.length ? [p.connectedData] : [])]));
 const processPolicy = 'You may start local servers and self-hosted browsers to build and diagnose the app. Preserve the inherited process environment in every child so Stop and final cleanup can end the run processes. Use background launch output files or ignored stdio so a server does not hold a shell call open.';
@@ -123,7 +124,7 @@ export class FleetBackend {
       context: run.context, phases: run.phases, globalTools: run.globalTools, packetHash: run.packetHash, requirements: run.requirements,
       acceptance: run.acceptance, data: run.data, quality: run.quality, foundation: run.foundation,
       foundationPlan: run.foundationPlan, planningAudit: run.planningAudit, planningSnapshot: run.planningSnapshot,
-      clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview };
+      clarifications: run.clarifications, review: run.review, reviewSourceHash: run.reviewSourceHash, visualReview: run.visualReview, answerCorrections: run.answerCorrections };
     await writeRunCheckpoint(this.store.root, p, checkpoint);
     run.checkpointStage = stage;
     p.resumeStage = stage;
@@ -401,6 +402,7 @@ export class FleetBackend {
     run.planningAudit = saved?.planningAudit;
     run.planningSnapshot = saved?.planningSnapshot;
     run.visualReview = saved?.visualReview; run.foundationPlan = saved?.foundationPlan;
+    run.answerCorrections = saved?.answerCorrections;
     const first = p.stages.find(s => s.status !== 'complete');
     if (!first || !['intake', 'research', 'plan', 'build', 'verify', 'review'].includes(first.id)) throw new Error('No incomplete build stage can resume. Start a new run.');
     if (!Number.isSafeInteger(checkpoint.repairAttempts) || checkpoint.repairAttempts < 0 || checkpoint.repairAttempts > 4) throw new Error('Invalid recovery checkpoint. Start a new run.');
@@ -437,6 +439,7 @@ export class FleetBackend {
     run.planHash = checkpoint.planHash;
     run.planBodies = checkpoint.planBodies;
     if (!run.quality && run.planningSnapshot) await this.loadPlannedQuality(p, run);
+    await this.undoInterruptedJudgeRepair(p, run);
     await this.checkRecoveryInputs(p, run);
     run.phases = run.phases!.map(phase => resolvePhaseForRuntime(phase, run.quality?.solution?.runtime.profile));
   }
@@ -737,6 +740,7 @@ export class FleetBackend {
                 await this.recordTestChanges(p, 'core repair');
                 passed = await hostWork(() => this.evaluateCore(p, run));
               }
+              if (!passed && await hostWork(() => this.checkFrozenAnswers(p, run, provider, modelId))) passed = await hostWork(() => this.evaluateCore(p, run));
               if (!passed) throw new Error('The required computational capabilities failed independent evaluation. Application completion and delivery remain blocked. Inspect .quality-evidence/core-report.json.');
             }
             this.log(p, stage, 'info', 'Core evaluation passed. Completing the application and README.md user guide before verification.');
@@ -802,7 +806,7 @@ export class FleetBackend {
     let report: unknown, passed = false;
     try {
       runtime = await prepareSolutionRuntime(p.workspace!, run.quality!.solution!.runtime, this.executable, run.controller.signal);
-      const result = await runSolutionEvaluation(runtime, run.quality!.solution!, run.quality!.evaluation!, run.controller.signal);
+      const result = await runSolutionEvaluation(runtime, run.quality!.solution!, this.answerKey(run), run.controller.signal);
       report = result; passed = result.status === 'passed';
     } catch (error) {
       this.check(run);
@@ -817,6 +821,56 @@ export class FleetBackend {
     await atomicHostWrite(p.workspace!, '.quality-evidence/core-report.json', JSON.stringify(redactValue(report), null, 2));
     this.log(p, 'build', 'info', 'Independent core evaluation: ' + (passed ? 'passed' : 'failed') + '. Evidence: .quality-evidence/core-report.json');
     return passed;
+  }
+  /** Corrections sit beside the frozen key, which itself never changes. */
+  private answerKey(run: ActiveRun) {
+    const key = run.quality!.evaluation!;
+    if (!run.answerCorrections?.length) return key;
+    return { ...key, evaluations: key.evaluations.map(evaluation => ({ ...evaluation, cases: evaluation.cases.map(entry => {
+      const correction = run.answerCorrections!.find(item => item.evaluationId === evaluation.id && item.caseId === entry.id);
+      return correction ? { ...entry, expected: correction.expected as typeof entry.expected } : entry;
+    }) })) } as typeof key;
+  }
+  /** Last chance after the repair: the build fails unless a separate reader finds that every failed answer contradicts the plan's own written rules. */
+  private async checkFrozenAnswers(p: Project, run: ActiveRun, provider: string, model: string) {
+    if (run.answerCorrections?.length) return false;
+    this.check(run);
+    let report;
+    try { report = JSON.parse(await fs.readFile(path.join(p.workspace!, '.quality-evidence/core-report.json'), 'utf8')); }
+    catch { return false; }
+    if (report.errors?.length || !Array.isArray(report.evaluations)) return false;
+    const disputes: (AnswerDispute & { evaluationId: string; caseId: string; output: unknown })[] = [];
+    for (const result of report.evaluations) {
+      if (result.status === 'passed') continue;
+      const frozen = run.quality!.evaluation!.evaluations.find(item => item.id === result.id);
+      if (!frozen || frozen.evaluator !== 'exact' || !Array.isArray(result.cases)) return false;
+      for (const failed of result.cases) {
+        if (failed.passed || disputes.some(item => item.evaluationId === frozen.id && item.caseId === failed.id)) continue;
+        const entry = frozen.cases.find(item => item.id === failed.id);
+        if (!entry || failed.output === undefined) return false;
+        disputes.push({ id: frozen.id + '/' + entry.id, evaluationId: frozen.id, caseId: entry.id, input: entry.input, frozenAnswer: entry.expected,
+          appOutput: failed.output, output: failed.output, mismatch: String(failed.detail ?? '') });
+      }
+    }
+    if (!disputes.length || disputes.length > 10) return false;
+    this.log(p, 'build', 'info', 'The core evaluation still fails after the repair. Checking whether its frozen answers follow the plan\'s own rules.');
+    const rulings = await runAnswerCheck({ workspace: p.workspace!, signal: run.controller.signal, limits: this.options.agentLimits,
+      onMetrics: measured => this.recordInference(p, 'build', measured),
+      engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
+        codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession } },
+      disputes.map(({ id, input, frozenAnswer, appOutput, mismatch }) => ({ id, input, frozenAnswer, appOutput, mismatch })));
+    this.check(run);
+    if (!rulings) { this.log(p, 'build', 'info', 'The frozen answers stand. The application did not pass.'); return false; }
+    run.answerCorrections = disputes.map((dispute, index) => ({ evaluationId: dispute.evaluationId, caseId: dispute.caseId, expected: dispute.output, rule: rulings[index].rule, why: rulings[index].why }));
+    const checkpoint = p.runCheckpoint!;
+    for (const correction of run.answerCorrections) {
+      const message = `An independent check corrected a frozen test answer, because it contradicted the plan's written rule. Human review required. Case ${correction.caseId}: ${correction.why} Rule: ${correction.rule}`;
+      (checkpoint.testChanges ??= []).push(message);
+      this.log(p, 'build', 'info', message);
+    }
+    await this.checkpoint(p, run); await this.changed(p);
+    this.check(run);
+    return true;
   }
   private async checkInputs(p: Project, run: ActiveRun) {
     if (p.connectedData?.length && (!run.data?.connectedContextHash || !run.data.connectedSources?.length)) throw new Error('Connected data is missing. Start a new build.');
@@ -872,7 +926,7 @@ export class FleetBackend {
       let confirmed = true;
       try {
         if (run.visualReview) await atomicHostWrite(p.workspace!, 'visual-review.json', JSON.stringify(redactValue(run.visualReview), null, 2) + '\n');
-        return await verifyApplication(p.workspace!, this.executable, run.quality!, run.controller.signal, {
+        return await verifyApplication(p.workspace!, this.executable, { ...run.quality!, evaluation: this.answerKey(run) }, run.controller.signal, {
           ...this.options.verificationLimits, requireVisualReview: p.qualityVersion === 3, visualReview: run.visualReview
         });
       }
@@ -880,27 +934,51 @@ export class FleetBackend {
       finally { checkpoint.writerState = confirmed ? 'idle' : 'unconfirmed'; await this.changed(p); }
     });
   }
+  /** Outside the workspace and durable, so a Stop or crash during a judge repair can still return to the version that passed. */
+  private judgeRepairBackup(p: Project) { return path.join(this.store.root, 'judge-repairs', p.runId!); }
   /** A judge repair starts from an application that passed verification, and a failed repair must not cost the person that application. */
   private async saveBeforeJudgeRepair(p: Project, run: ActiveRun) {
-    const checkpoint = p.runCheckpoint!, workspace = p.workspace!;
-    const copy = { recursive: true, force: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fsConstants.COPYFILE_FICLONE };
-    const saved = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-judge-repair-'));
+    const checkpoint = p.runCheckpoint!, saved = this.judgeRepairBackup(p);
     const discard = () => fs.rm(saved, { recursive: true, force: true, maxRetries: 3 });
-    try { await fs.cp(workspace, saved, copy); }
-    catch {
+    try {
+      await run.processes.quiesce?.();
       await discard();
-      this.log(p, 'verify', 'info', 'Could not save a copy before the judge repair, so a failed repair cannot be undone.');
+      await fs.mkdir(saved, { recursive: true, mode: 0o700 });
+      await fs.cp(p.workspace!, path.join(saved, 'workspace'), { ...judgeRepairCopy, filter: async source => {
+        const stat = await fs.lstat(source);
+        return stat.isFile() || stat.isDirectory() || stat.isSymbolicLink();
+      } });
+      // Written last, so its presence means the copy is complete.
+      await atomicHostWrite(saved, 'state.json', JSON.stringify({ visualReview: run.visualReview, lastTests: checkpoint.lastTests, testChanges: checkpoint.testChanges }));
+    } catch {
+      await discard().catch(() => {});
+      this.log(p, 'verify', 'info', 'Could not save a copy before the judge repair, so the repair was skipped and this version goes to review with its gaps.');
       return undefined;
     }
-    const state = structuredClone({ visualReview: run.visualReview, lastTests: checkpoint.lastTests, testChanges: checkpoint.testChanges });
     return { discard, writerIdle: () => checkpoint.writerState === 'idle',
       restore: async () => {
-        for (const entry of await fs.readdir(workspace)) await fs.rm(path.join(workspace, entry), { recursive: true, force: true, maxRetries: 3 });
-        await fs.cp(saved, workspace, copy);
-        run.visualReview = state.visualReview; p.visualReview = state.visualReview ? structuredClone(state.visualReview) : undefined;
-        checkpoint.lastTests = state.lastTests; checkpoint.testChanges = state.testChanges;
-        await this.checkpoint(p, run); await this.changed(p);
+        // A background writer that outlived its session must not overwrite the restored files.
+        try { await run.processes.quiesce?.(); }
+        catch (error) { checkpoint.writerState = 'unconfirmed'; await this.changed(p); throw error; }
+        await this.restoreJudgeRepair(p, run);
       } };
+  }
+  private async restoreJudgeRepair(p: Project, run: ActiveRun) {
+    const checkpoint = p.runCheckpoint!, workspace = p.workspace!, saved = this.judgeRepairBackup(p);
+    const state = JSON.parse(await fs.readFile(path.join(saved, 'state.json'), 'utf8'));
+    for (const entry of await fs.readdir(workspace)) await fs.rm(path.join(workspace, entry), { recursive: true, force: true, maxRetries: 3 });
+    await fs.cp(path.join(saved, 'workspace'), workspace, judgeRepairCopy);
+    run.visualReview = state.visualReview; p.visualReview = state.visualReview ? structuredClone(state.visualReview) : undefined;
+    checkpoint.lastTests = state.lastTests; checkpoint.testChanges = state.testChanges;
+    await this.checkpoint(p, run); await this.changed(p);
+  }
+  /** The unfinished repair never passed anything, so Resume returns to the version that did. */
+  private async undoInterruptedJudgeRepair(p: Project, run: ActiveRun) {
+    const saved = this.judgeRepairBackup(p);
+    try { await fs.access(path.join(saved, 'state.json')); } catch { return; }
+    this.log(p, 'verify', 'info', 'Undoing the judge repair that was interrupted and returning to the version that passed.');
+    await this.restoreJudgeRepair(p, run);
+    await fs.rm(saved, { recursive: true, force: true, maxRetries: 3 });
   }
   private appendTestChanges(p: Project) {
     p.report!.testBaseline = { hashes: { ...p.runCheckpoint!.buildTests! }, changes: [...p.runCheckpoint!.testChanges ?? []], policy: testBaselinePolicy };
@@ -1091,6 +1169,7 @@ export class FleetBackend {
         repairLimit: 2,
         canRepair: () => p.runCheckpoint!.repairAttempts < 4 && !p.runCheckpoint!.repairStopped,
         saveBeforeRepair: () => this.saveBeforeJudgeRepair(p, run),
+        humanNotes: run.answerCorrections?.map(correction => 'Check the test answer an independent check corrected for case ' + correction.caseId + ': ' + correction.why),
         onMetrics: measured => this.recordInference(p, 'verify', measured),
         engine: { backend: run.backend, model, provider, runtime: this.runtime, agentDir: path.join(this.store.root, 'pi'),
           codexHome: this.options.codex?.home, getCodexCredentials: () => this.options.codex!.credentials(), createSession: this.options.createSession },
