@@ -50,7 +50,9 @@ export class Store {
         p.executable.error = 'Packaging was interrupted. Download the app again to retry.';
       }
       if (p.status === 'running') {
-        p.status = 'stopped'; p.error = 'The previous run was interrupted. Start a new run to continue from the saved requirements.';
+        p.status = 'stopped'; p.error = p.resumeStage
+          ? 'The previous run was interrupted. Resume the phase to continue with your saved work.'
+          : 'The previous run was interrupted. This older run has no recovery checkpoint; start a new build from the saved requirements.';
         p.stages.filter(s => s.status === 'active').forEach(s => { s.status = 'failed'; });
       }
     }
@@ -90,10 +92,11 @@ export async function safeFile(root: string, relative: string) {
   if (!resolved.startsWith(base + path.sep)) throw new Error('Artifact must stay inside its workspace.');
   return resolved;
 }
-export async function sourceHash(root: string, options: { excludeEvidence?: boolean } = {}) {
+export async function sourceHash(root: string, options: { excludeEvidence?: boolean; excludeEvaluationPlan?: boolean } = {}) {
   const hash = createHash('sha256');
   for (const file of await listArtifacts(root)) {
     if (['test-report.json', 'review.json', 'DELIVERY.md'].includes(file.path)) continue;
+    if (options.excludeEvaluationPlan && file.path === 'evaluation-plan.json') continue;
     if (options.excludeEvidence && /^\.quality-evidence(?:\/|\\)/.test(file.path)) continue;
     if (file.size > 10 * 1024 * 1024) throw new Error('An artifact exceeds the 10 MB verification limit.');
     hash.update(file.path); hash.update(await fs.readFile(await safeFile(root, file.path)));

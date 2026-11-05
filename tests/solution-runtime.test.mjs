@@ -53,7 +53,7 @@ test('copy rejects symlink files, symlink directories, traversal and host evalua
   await fs.symlink(path.join(root, 'real/engine.mjs'), path.join(root, 'engine.mjs'));
   await assert.rejects(prepareSolutionRuntime(root, cli(), process.execPath), /symlink/);
   await fs.symlink(path.join(root, 'real'), path.join(root, 'linked'));
-  for (const file of ['linked/engine.mjs', '../engine.mjs', 'evaluation-plan.json', '.fleet/packet.json', 'inputs/manifest.json']) {
+  for (const file of ['linked/engine.mjs', '../engine.mjs', 'evaluation-plan.json', '.fleet/packet.json', '.browser-observations/capture.png', 'inputs/manifest.json']) {
     await assert.rejects(prepareSolutionRuntime(root, { ...cli([file]), command: { runtime: 'node', entrypoint: file, args: [] } }, process.execPath), /symlink|Invalid runtime file/);
   }
 });

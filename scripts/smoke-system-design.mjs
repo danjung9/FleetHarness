@@ -125,7 +125,7 @@ const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-design-ui-'));
 const output = path.resolve('output/playwright'); await fs.mkdir(output, { recursive: true });
 const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
 const fixture = await startFixtureProvider(); fixture.setDelay(1000);
-await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': { baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] } } }));
+await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': { baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] } } }));
 let app, browser, server;
 try {
   app = await electron.launch({ args: ['.'], env: { ...process.env, FLEET_USER_DATA: path.join(root, 'state'), PI_CODING_AGENT_DIR: piDir }, timeout: 45000 });

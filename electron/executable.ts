@@ -17,7 +17,7 @@ export function executableFileName(project: Pick<Project, 'title'>) {
 }
 export async function assertExecutableSource(project: Project) {
   if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this prototype before downloading the app.');
-  if (!project.workspace || !reportPassed(project.report, project.qualityVersion !== undefined)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
+  if (!project.workspace || !reportPassed(project.report, project.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
   if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
   const solution = await deliveredSolution(project.workspace);
   if (solution && solution.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');

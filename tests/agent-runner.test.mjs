@@ -67,7 +67,20 @@ test('continuous activity cannot bypass the absolute deadline', async t => {
   assert.equal(s.aborts, 1); assert.equal(s.disposals, 1);
 });
 
-test('a looping agent is terminated at its turn budget even if prompt and abort hang', async () => {
+test('worker agents can exceed 40 turns across prompts without an explicit turn budget', async () => {
+  for (const limits of [undefined, { idleMs: 1000, timeoutMs: 10_000 }, { maxTurns: undefined }]) {
+    let turns = 0;
+    const s = session(s => {
+      for (let i = 0; i < 80; i++) { s.emit({ type: 'turn_start' }); s.emit(assistant()); s.emit({ type: 'turn_end' }); }
+    });
+    await run(s, { limits, onEvent: event => { if (event.type === 'turn_start') turns++; },
+      work: async prompt => { await prompt('Implementation'); await prompt('Complete the user guide'); } });
+    assert.equal(turns, 160); assert.equal(s.prompts.length, 2);
+    assert.equal(s.aborts, 0); assert.equal(s.disposals, 1); assert.equal(s.listeners, 0);
+  }
+});
+
+test('an explicit turn budget still terminates a looping agent even if prompt and abort hang', async () => {
   const s = session(); const rejected = assert.rejects(run(s), /3-turn limit/); await setImmediate();
   for (let i = 0; i < 4; i++) s.emit({ type: 'turn_start' });
   await rejected; assert.equal(s.aborts, 1); assert.equal(s.listeners, 0);
@@ -109,7 +122,7 @@ for (const [reason, expected] of [['error', /provider unavailable/], ['aborted',
   });
 }
 
-test('artifact completion shares the original deadline and turn budget', async () => {
+test('artifact completion shares an explicitly configured turn budget', async () => {
   const s = session(s => { s.emit({ type: 'turn_start' }); s.emit({ type: 'turn_start' }); });
   await assert.rejects(run(s, { work: async prompt => { await prompt('Initial'); await prompt('Missing artifacts'); } }), /3-turn limit/);
   assert.equal(s.prompts.length, 2);

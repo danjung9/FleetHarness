@@ -5,6 +5,7 @@ import { reportPassed } from '../shared/verification';
 import { api, isDesktop } from './api';
 import { ExecutableDownload } from './ExecutableDownload';
 import { QualityEvidence } from './QualityEvidence';
+import { VisualReview } from './VisualReview';
 import './review-flow.css';
 
 type Action = (work: () => Promise<unknown>, success?: string) => Promise<boolean>;
@@ -44,7 +45,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
   const gateId = useId();
   const changesGateId = useId();
   const report = project.report;
-  const passed = reportPassed(report, project.qualityVersion !== undefined);
+  const passed = reportPassed(report, project.qualityVersion ?? false);
   const unverified = report?.quality?.criteria.filter(criterion => criterion.status === 'unverified').length || 0;
   const approved = !!project.approvedAt;
   const submitting = approving || requestingChanges;
@@ -99,6 +100,7 @@ function ReviewContent({ project, busy, action, onPreview, onApproved, onChanges
       <div className="page-heading"><div><h1>Review</h1><p>{approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the prototype or request changes.'}</p></div></div>
       {pendingRequest && !submitting && <p className="review-pending" role="status">Your change request is saved. The next iteration has not started; you can retry below.</p>}
       {changeRequest && <details className="review-request"><summary>Changes requested for this iteration</summary><p className="review-recorded-notes">{changeRequest.feedback}</p><p className="review-report-time">Requested {date(changeRequest.createdAt)}</p></details>}
+      <VisualReview projectId={project.id} report={project.visualReview ?? report?.quality?.visualReview} runtimeProfile={project.runtimeProfile} runStatus={project.status}/>
       {!report ? <div className="review-empty"><ClipboardCheck size={26}/><h2>No test evidence yet</h2><p>{project.status === 'running' ? 'The build is still running. Review will be ready after verification.' : 'Test results appear after a build reaches verification.'}</p></div> : <ol className="review-steps">
         <li>
           <div className="review-step-heading"><div><h2>Try the app</h2><p>Use the main workflow and check the result against your brief.</p></div><button className="secondary" onClick={onPreview}><Code2 size={16}/>Open preview</button></div>

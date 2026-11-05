@@ -9,7 +9,7 @@ const root=await fs.mkdtemp(path.join(os.tmpdir(),'fleet-electron-'));
 const piDir=path.join(root,'pi');await fs.mkdir(piDir);
 const output=path.resolve('output/playwright');await fs.mkdir(output,{recursive:true});
 const fixture=await startFixtureProvider();
-await fs.writeFile(path.join(piDir,'models.json'),JSON.stringify({providers:{'fleet-fixture':{baseUrl:fixture.baseUrl,api:'openai-completions',apiKey:'local-fixture-only',models:[{id:'fixture-model',name:'Local test fixture',reasoning:false,input:['text'],contextWindow:64000,maxTokens:8000,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]}}}));
+await fs.writeFile(path.join(piDir,'models.json'),JSON.stringify({providers:{'fleet-fixture':{baseUrl:fixture.baseUrl,api:'openai-completions',apiKey:'local-fixture-only',models:[{id:'fixture-model',name:'Local test fixture',reasoning:false,input:['text','image'],contextWindow:64000,maxTokens:8000,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]}}}));
 const executablePath=process.env.FLEET_EXECUTABLE;
 let app;
 try {

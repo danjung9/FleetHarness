@@ -19,7 +19,8 @@ export interface ReviewRecord {
 export interface Project extends BriefContext {
   reviewHistory?: ReviewRecord[];
   conversation?: import('./conversation.js').ProjectConversation;
-  qualityVersion?: 1 | 2;
+  qualityVersion?: 1 | 2 | 3;
+  visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
@@ -30,6 +31,8 @@ export interface Project extends BriefContext {
   sourceChallenge?: import('../harness/types.js').Challenge;
   id: string; title: string; description: string; criteria: string[]; createdAt: string; updatedAt: string;
   status: RunStatus; stages: Stage[]; logs: LogEntry[]; runId?: string; workspace?: string;
+  /** Stage backed by a private host recovery checkpoint; offers resume after failure or Stop. */
+  resumeStage?: StageId;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
 export type AgentBackend = 'pi' | 'codex';
@@ -58,6 +61,7 @@ export interface FleetAPI {
   createProject(input: NewProject): Promise<Project>;
   updateProject(id: string, input: NewProject): Promise<Project>;
   startRun(id: string): Promise<void>;
+  resumeRun(id: string): Promise<void>;
   stopRun(id: string): Promise<void>;
   approve(id: string, feedback: string): Promise<void>;
   requestChanges(id: string, feedback: string): Promise<void>;
@@ -65,6 +69,7 @@ export interface FleetAPI {
   downloadExecutable(id: string): Promise<string | null>;
   artifacts(id: string): Promise<Artifact[]>;
   readArtifact(id: string, file: string): Promise<string>;
+  visualReviewImage(id: string, captureId: string): Promise<string>;
   preview(id: string): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode(enabled: boolean): Promise<Bootstrap>;

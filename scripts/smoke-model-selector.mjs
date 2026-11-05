@@ -12,7 +12,7 @@ const output = path.resolve('output/playwright/model-selector');
 await fs.mkdir(piDir);
 await fs.mkdir(output, { recursive: true });
 const fixture = await startFixtureProvider();
-const model = (id, name) => ({ id, name, reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } });
+const model = (id, name) => ({ id, name, reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } });
 const provider = models => ({ baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only', models });
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: {
   'fleet-fixture': provider([model('fixture-a', 'Fixture model A'), model('fixture-b', 'Fixture model B')]),

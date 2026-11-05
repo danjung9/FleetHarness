@@ -81,7 +81,7 @@ export interface PackageEvidence {
 }
 
 export interface QualityReport {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   contractHash: string;
   status: 'passed' | 'failed';
   requirementsMet: boolean;
@@ -93,4 +93,6 @@ export interface QualityReport {
   capabilities?: CapabilityResult[];
   solutionEvaluation?: SolutionEvaluationReport;
   package?: PackageEvidence;
+  /** Version 3 requires host-recorded visual review for browser/service delivery. */
+  visualReview?: import('./visual-review.js').VisualReviewReport;
 }

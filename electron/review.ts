@@ -50,7 +50,7 @@ export async function recordReview(store: Store, project: Project, decision: Rev
 
 // Prior source is reference material. Old test results and evaluation answer keys must not
 // become evidence for the iteration, and old tests must not execute from this directory.
-const excluded = new Set(['test-report.json', 'review.json', 'DELIVERY.md', 'evaluation-plan.json']);
+const excluded = new Set(['test-report.json', 'review.json', 'DELIVERY.md', 'evaluation-plan.json', 'visual-review.json']);
 export async function copyReviewSource(from: string, to: string): Promise<string> {
   await fs.mkdir(to, { recursive: true, mode: 0o700 });
   for (const file of await listArtifacts(from)) {

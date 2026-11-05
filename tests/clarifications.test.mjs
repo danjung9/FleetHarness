@@ -86,6 +86,100 @@ test('cancel wakes all waiters, records cancellation, and rejects late answers',
   await broker.cancel(project, project.runId); assert.equal(project.conversation.messages.length, count);
 });
 
+test('resuming a stopped phase reopens unanswered questions while preserving answers and round limits', async t => {
+  const { root, project, broker } = await fixture(t);
+  const [answered, interrupted] = await broker.request(project, 'research', [question, question]);
+  await broker.answer(project.id, answered.id, 'Operator');
+  await broker.cancel(project, project.runId);
+  project.status = 'stopped';
+  await assert.rejects(broker.resume(project, project.runId, 'research'), /current running build/);
+  project.status = 'running';
+  await broker.resume(project, project.runId, 'research');
+  assert.equal(answered.status, 'answered'); assert.equal(answered.answer, 'Operator');
+  assert.equal(interrupted.status, 'pending'); assert.equal(interrupted.round, 1);
+  assert.equal(JSON.parse(await fs.readFile(path.join(root, 'state.json'), 'utf8')).projects[0].conversation.questions[1].status, 'pending');
+  let resumed = false;
+  const wait = broker.wait(project, project.runId, 'research', new AbortController().signal).then(() => { resumed = true; });
+  await Promise.resolve(); assert.equal(resumed, false);
+  await broker.answer(project.id, interrupted.id, 'Analyst'); await wait;
+  const [secondRound] = await broker.request(project, 'research', [question]);
+  assert.equal(secondRound.round, 2);
+  await broker.answer(project.id, secondRound.id, 'Operator');
+  await broker.cancel(project, project.runId); await broker.resume(project, project.runId, 'research');
+  await assert.rejects(broker.request(project, 'research', [question]), /two clarification rounds/);
+  assert.equal(project.conversation.messages.filter(message => message.role === 'user').length, 3);
+});
+
+test('resume is scoped to the current phase and run; later phases do not reopen old questions', async t => {
+  const { project, broker } = await fixture(t);
+  const [research] = await broker.request(project, 'research', [question]);
+  await broker.cancel(project, project.runId);
+  const priorRun = { ...research, id: 'older-question', runId: 'older-run' };
+  project.conversation.questions.push(priorRun);
+  project.stages.find(stage => stage.id === 'research').status = 'complete';
+  project.stages.find(stage => stage.id === 'plan').status = 'active';
+  await broker.resume(project, project.runId, 'plan');
+  const [planning] = await broker.request(project, 'plan', [question]);
+  await broker.cancel(project, project.runId);
+  await broker.resume(project, project.runId, 'plan');
+  assert.equal(planning.status, 'pending'); assert.equal(research.status, 'cancelled'); assert.equal(priorRun.status, 'cancelled');
+  await broker.cancel(project, project.runId);
+  await broker.resume(project, project.runId, 'build');
+  assert.equal(planning.status, 'cancelled');
+  await assert.rejects(broker.resume(project, 'older-run', 'research'), /current running build/);
+  await assert.rejects(broker.resume(structuredClone(project), project.runId, 'plan'), /current running build/);
+});
+
+test('questions cancelled on app restart can resume and accept answers in a fresh broker', async t => {
+  const { root, project, broker } = await fixture(t);
+  const [interrupted] = await broker.request(project, 'research', [question]);
+  const restored = new Store(root); await restored.init();
+  const restoredProject = restored.project(project.id);
+  assert.equal(restoredProject.conversation.questions[0].status, 'cancelled');
+  restoredProject.status = 'running';
+  restoredProject.stages.find(stage => stage.id === 'research').status = 'active';
+  const reconnected = new ClarificationBroker(restored, () => {});
+  await reconnected.resume(restoredProject, restoredProject.runId, 'research');
+  const wait = reconnected.wait(restoredProject, restoredProject.runId, 'research', new AbortController().signal);
+  await reconnected.answer(restoredProject.id, interrupted.id, 'Analyst'); await wait;
+  assert.match(reconnected.context(restoredProject, restoredProject.runId), /Analyst/);
+});
+
+test('failed resume persistence leaves questions cancelled and allows a later retry', async t => {
+  const { project, store, broker } = await fixture(t);
+  const [interrupted] = await broker.request(project, 'research', [question]);
+  await broker.cancel(project, project.runId);
+  const previousDetail = project.stages.find(stage => stage.id === 'research').detail;
+  const save = store.save.bind(store);
+  store.save = async () => { throw new Error('Disk unavailable'); };
+  await assert.rejects(broker.resume(project, project.runId, 'research'), /Disk unavailable/);
+  assert.equal(interrupted.status, 'cancelled');
+  assert.equal(project.stages.find(stage => stage.id === 'research').detail, previousDetail);
+  await assert.rejects(broker.request(project, 'research', [question]), /cancelled/);
+  store.save = save;
+  await broker.resume(project, project.runId, 'research');
+  await broker.answer(project.id, interrupted.id, 'Operator');
+  assert.equal(interrupted.status, 'answered');
+});
+
+test('answers remain blocked during resume persistence and a concurrent stop keeps them cancelled', async t => {
+  const { project, store, broker } = await fixture(t);
+  const [interrupted] = await broker.request(project, 'research', [question]);
+  await broker.cancel(project, project.runId);
+  const save = store.save.bind(store);
+  let release;
+  const saving = new Promise(resolve => { release = resolve; });
+  let firstSave = true;
+  store.save = async () => { if (firstSave) { firstSave = false; await saving; } await save(); };
+  const resuming = assert.rejects(broker.resume(project, project.runId, 'research'), /stopped before/);
+  await assert.rejects(broker.answer(project.id, interrupted.id, 'Operator'), /cancelled/);
+  await assert.rejects(broker.resume(project, project.runId, 'research'), /already resuming/);
+  await broker.cancel(project, project.runId);
+  release(); await resuming;
+  assert.equal(interrupted.status, 'cancelled');
+  await assert.rejects(broker.request(project, 'research', [question]), /cancelled/);
+});
+
 test('abort interrupts a human wait promptly and stale runs or inactive phases cannot accept answers', async t => {
   const { project, broker } = await fixture(t);
   const [q] = await broker.request(project, 'research', [question]);

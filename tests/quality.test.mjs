@@ -48,6 +48,19 @@ test('browser evidence is excluded only during execution and bound to delivery s
   assert.notEqual(await sourceHash(root), verified);
 });
 
+test('restoring the sealed evaluation plan preserves the verified tree comparison without accepting later source edits', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fleet-final-evidence-hash-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.writeFile(path.join(root, 'index.html'), '<h1>Reviewed application</h1>');
+  await fs.writeFile(path.join(root, 'visual-review.json'), '{"hostEvidence":"reviewed"}');
+  const verified = await sourceHash(root);
+  await fs.writeFile(path.join(root, 'evaluation-plan.json'), '{"frozen":"expectations"}');
+  assert.notEqual(await sourceHash(root), verified);
+  assert.equal(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
+  await fs.appendFile(path.join(root, 'index.html'), '<button>Unreviewed change</button>');
+  assert.notEqual(await sourceHash(root, { excludeEvaluationPlan: true }), verified);
+});
+
 const acceptance = [{ id: 'R1', requirement: 'Compute totals for arbitrary input lists.', method: 'automated', scenario: 'Compare independently calculated totals.' }];
 
 function computationalFixture(broken = false) {
@@ -175,6 +188,52 @@ test('version 2 gate rejects failed or missing computational evidence even with 
   const cli = v2Report(); cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
   cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
   assert.equal(reportPassed(cli, true), true);
+});
+
+function visuallyReviewedReport() {
+  const report = v2Report(), filesHash = 'a'.repeat(64), contractHash = 'b'.repeat(64), sessionId = 'verifier';
+  Object.assign(report.quality, { schemaVersion: 3, contractHash });
+  report.quality.package.filesHash = filesHash;
+  report.quality.solutionEvaluation.runtime.filesHash = filesHash;
+  const captures = [], reviews = [], time = '2026-11-05T12:00:00.000Z';
+  for (const [index, viewport] of ['desktop', 'narrow', 'desktop', 'narrow'].entries()) {
+    const captureId = 'capture-' + index;
+    captures.push({ id: captureId, sessionId, stage: 'verify', viewport, screenshot: '.browser-observations/' + captureId + '.png',
+      screenshotHash: 'c'.repeat(64), filesHash, capturedAt: time, sequence: index * 2 + 1 });
+    reviews.push({ id: 'review-' + index, sessionId, stage: 'verify', viewport, captureId, round: index < 2 ? 'initial' : 'recheck',
+      expected: 'The result and recovery controls fit the viewport.', observed: 'The result and recovery controls are visible without clipping.',
+      findings: [], resolutions: [], reviewedAt: time, sequence: index * 2 + 2 });
+  }
+  report.quality.visualReview = { schemaVersion: 1, runId: 'current-run', contractHash, status: 'passed', filesHash, activeSessionId: sessionId,
+    sessions: [{ id: sessionId, stage: 'verify', startedAt: time, status: 'passed', filesHash, errors: [] }], captures, reviews };
+  return report;
+}
+
+test('version 3 approval gate requires complete verifier comparisons of the delivered revision', () => {
+  assert.equal(reportPassed(visuallyReviewedReport(), 3), true);
+  const mutations = [
+    report => { delete report.quality.visualReview; },
+    report => { report.quality.schemaVersion = 2; },
+    report => { report.quality.visualReview.contractHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.status = 'pending'; },
+    report => { report.quality.visualReview.sessions[0].status = 'failed'; },
+    report => { report.quality.visualReview.sessions[0].errors = ['A visual finding is still open.']; },
+    report => { report.quality.visualReview.captures.at(-1).filesHash = 'd'.repeat(64); },
+    report => { report.quality.visualReview.reviews.pop(); },
+    report => { report.quality.visualReview.reviews[2].captureId = report.quality.visualReview.reviews[0].captureId; },
+    report => { report.quality.visualReview.reviews[0].findings = [{ id: 'clipping', description: 'The action is clipped.' }]; },
+    report => {
+      const visual = report.quality.visualReview;
+      for (const item of [...visual.sessions, ...visual.captures, ...visual.reviews]) item.stage = 'build';
+    }
+  ];
+  for (const mutate of mutations) { const report = visuallyReviewedReport(); mutate(report); assert.equal(reportPassed(report, 3), false, String(mutate)); }
+  assert.equal(reportPassed(v2Report(), 2), true, 'Legacy reports remain readable without claiming visual review.');
+  assert.equal(reportPassed(v2Report(), 3), false, 'New projects cannot downgrade their required evidence version.');
+  const cli = v2Report(); cli.quality.schemaVersion = 3;
+  cli.quality.package.profile = 'cli'; cli.quality.solutionEvaluation.runtime.profile = 'cli';
+  cli.quality.expectedJourneys = 0; cli.quality.journeys = [];
+  assert.equal(reportPassed(cli, 3), true, 'CLI delivery has no visual review requirement.');
 });
 
 test('clean CLI verification passes real computation and rejects a hardcoded demo despite passing developer tests', async t => {

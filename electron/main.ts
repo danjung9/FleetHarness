@@ -17,6 +17,7 @@ import { ClarificationBroker } from './clarifications.js';
 import type { ClarificationAnswer } from '../shared/conversation.js';
 import { randomUUID } from 'node:crypto';
 import { recordReview, reviewFeedback } from './review.js';
+import { readVisualCapture } from './visual-review.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', 'app-icon-512.png');
@@ -64,10 +65,10 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
   const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
   const normalized = validateInput(input, catalog);
   const previous = structuredClone({ ...projectBrief(p), sourceChallenge: p.sourceChallenge, status: p.status, runtimeProfile: p.runtimeProfile,
-    report: p.report, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error,
+    report: p.report, visualReview: p.visualReview, approvedAt: p.approvedAt, exportedTo: p.exportedTo, executable: p.executable, error: p.error, resumeStage: p.resumeStage,
     systemDesign: p.systemDesign, phasePlan: p.phasePlan, globalTools: p.globalTools, stages: p.stages, updatedAt: p.updatedAt });
   Object.assign(p, normalized, { sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, catalog) : undefined });
-  p.status = 'draft'; p.runtimeProfile = undefined; p.report = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
+  p.status = 'draft'; p.resumeStage = undefined; p.runtimeProfile = undefined; p.report = undefined; p.visualReview = undefined; p.approvedAt = undefined; p.exportedTo = undefined; p.executable = undefined; p.error = undefined;
   p.systemDesign = undefined; p.phasePlan = undefined; p.globalTools = undefined;
   p.stages.forEach(s => { s.status = s.id === 'intake' ? 'complete' : 'queued'; });
   p.updatedAt = new Date().toISOString();
@@ -83,6 +84,14 @@ async function startRun(id: string, fromConversation = false, feedback?: string)
   try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
+async function resumeRun(id: string) {
+  if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
+  requireIdle(id);
+  let resolve!: () => void;
+  const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
+  try { await backend.resume(id); }
+  finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
+}
 async function readArtifact(id: string, file: string) {
   const p = store.project(id);
   if (!p.workspace) throw new Error('Start a run to create artifacts.');
@@ -92,7 +101,7 @@ async function readArtifact(id: string, file: string) {
 }
 async function assertVerified(id: string) {
   const p = requireIdle(id);
-  if (!p.workspace || !reportPassed(p.report, p.qualityVersion !== undefined)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
+  if (!p.workspace || !reportPassed(p.report, p.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
   if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before approving or exporting.');
   return p;
 }
@@ -158,12 +167,24 @@ function registerIPC() {
   });
   handle('fleet:update', (id: string, input: NewProject) => updateProject(id, input));
   handle('fleet:start', (id: string) => startRun(id));
+  handle('fleet:resume', (id: string) => resumeRun(id));
   handle('fleet:request-changes', (id: string, feedback: string) => {
     reviewFeedback(feedback); return startRun(id, false, feedback);
   });
   handle('fleet:stop', (id: string) => backend.stop(id));
   handle('fleet:artifacts', async (id: string) => { const p = store.project(id); return p.workspace ? listArtifacts(p.workspace) : []; });
   handle('fleet:read', readArtifact);
+  handle('fleet:visual-review-image', async (id: string, captureId: string) => {
+    if (typeof captureId !== 'string' || !captureId || captureId.length > 200) throw new Error('Choose a recorded screenshot.');
+    const p = store.project(id);
+    if (!p.workspace) throw new Error('This build has no saved screenshots.');
+    const evidence = p.visualReview ?? p.report?.quality?.visualReview;
+    if (!evidence || evidence.runId !== p.runId) throw new Error('Screenshot evidence does not belong to this build.');
+    const capture = evidence.captures.find(item => item.id === captureId);
+    if (!capture) throw new Error('This screenshot was not recorded by the host for this build.');
+    const bytes = await readVisualCapture(p.workspace, capture);
+    return 'data:image/png;base64,' + bytes.toString('base64');
+  });
   handle('fleet:preview', async (id: string) => {
     try { const p = store.project(id); return p.workspace ? await previews.url(p.workspace) : null; }
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || !store.project(id).workspace) return null; throw error; }
@@ -185,7 +206,7 @@ function registerIPC() {
     let destination: string | undefined, committed = false;
     try {
       if (!p.approvedAt || !['approved', 'delivered'].includes(p.status)) throw new Error('Review and approve this prototype before export.');
-      if (!p.workspace || !reportPassed(p.report, p.qualityVersion !== undefined)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
+      if (!p.workspace || !reportPassed(p.report, p.qualityVersion ?? false)) throw new Error('Passing required capability, runtime and application checks are required before delivery.');
       if (await sourceHash(p.workspace) !== p.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before exporting.');
       controller.signal.throwIfAborted();
       const result = await dialog.showOpenDialog(window!, { title: 'Choose a delivery folder', properties: ['openDirectory', 'createDirectory'] });
@@ -198,7 +219,7 @@ function registerIPC() {
           'Automated result: ' + p.report!.passed + '/' + p.report!.total + ' passed.',
           ...(p.report!.quality ? [
             'Browser journeys: ' + p.report!.quality.journeys.filter(journey => journey.status === 'passed').length + '/' + p.report!.quality.journeys.length + ' passed. Evidence: test-report.json and .quality-evidence/.',
-            ...(p.report!.quality.schemaVersion === 2 ? [
+            ...(p.report!.quality.schemaVersion >= 2 ? [
               'Runtime profile: ' + p.report!.quality.package?.profile + '. Clean-package check: ' + p.report!.quality.package?.status + '.',
               'Computational evaluation: ' + p.report!.quality.solutionEvaluation?.status + '. Datasets, metrics, thresholds and per-case evidence: test-report.json.'
             ] : []),

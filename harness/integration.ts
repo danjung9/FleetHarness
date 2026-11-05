@@ -19,12 +19,42 @@ export interface PrepareFleetWorkspaceInput extends BriefContext {
   sourceChallenge?: Challenge;
   workspace:string; challengeId?:string; title:string; description:string; criteria:string[]; resourcesRoot:string;
 }
+
+type PacketFile = { body: Buffer; executable: number };
+const skillModesFile = 'skill-modes.json';
+
+/** Read complete skill packets without following links or opening special files. */
+async function readDirectory(root: string, label: string): Promise<Map<string, PacketFile>> {
+  const files = new Map<string, PacketFile>();
+  async function walk(directory: string, prefix: string) {
+    const stat = await fs.lstat(directory);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`${label}: ordinary directories required; symbolic links are forbidden.`);
+    for (const entry of (await fs.readdir(directory)).sort(compareText)) {
+      const file = path.join(directory, entry), name = prefix + entry;
+      const info = await fs.lstat(file);
+      if (info.isDirectory()) await walk(file, name + '/');
+      else if (info.isFile()) files.set(name, { body: await fs.readFile(file), executable: info.mode & 0o111 });
+      else throw new Error(`${label}: only ordinary files and directories are supported; symbolic links are forbidden: ${name}`);
+    }
+  }
+  await walk(root, '');
+  return files;
+}
+
+/** Preserve the v1 text-packet digest while hashing binary assets without UTF-8 conversion. */
+function packetHash(files: Iterable<[string, string | Buffer]>) {
+  const digest = createHash('sha256');
+  for (const [name, body] of [...files].sort(([a], [b]) => compareText(a, b))) digest.update(name + '\0').update(body).update('\0');
+  return digest.digest('hex');
+}
+
 export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
   if (input.sourceChallenge && input.sourceChallenge.id !== input.challengeId) throw new Error('The saved Norfolk source does not match this challenge.');
   const packet = input.sourceChallenge ? packetFor(input.sourceChallenge, input.criteria) : input.challengeId ? createPacket(input.challengeId, input.criteria) : customPacket(input);
   const workspace = await fs.realpath(input.workspace);
   const target = path.join(workspace,'.fleet');
-  const files = new Map<string,string>();
+  const files = new Map<string,string | Buffer>();
+  const executable = new Map<string, number>();
   const json = (data:unknown) => JSON.stringify(data,null,2)+'\n';
   const hasInputs = !!input.dataInputs?.length;
   files.set('packet.json',json({...packet, dataPolicy: hasInputs ? 'user-provided-or-synthetic' : packet.dataPolicy,
@@ -44,22 +74,34 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
     files.set(`toolkit/${name}.js`,await fs.readFile(source,'utf8'));
   }
   const skills = [...new Set([...packet.stages.flatMap(phase => phase.skills), ...syntheticDataPhase.skills])];
+  const skillsRoot = path.join(input.resourcesRoot, 'skills');
+  const rootStat = await fs.lstat(skillsRoot);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error('Skill root must be an ordinary directory without symbolic links.');
   for (const skill of skills) {
-    const content = await fs.readFile(path.join(input.resourcesRoot,'skills',skill,'SKILL.md'),'utf8');
-    files.set(`skills/${skill}/SKILL.md`,content);
+    const contents = await readDirectory(path.join(skillsRoot, skill), `Skill ${skill}`);
+    if (!contents.has('SKILL.md')) throw new Error(`Skill ${skill} is missing SKILL.md.`);
+    for (const [relative, file] of contents) {
+      const name = `skills/${skill}/${relative}`;
+      files.set(name, file.body);
+      if (file.executable) executable.set(name, file.executable);
+    }
   }
-  const digest = createHash('sha256');
-  for (const [name,body] of [...files].sort(([a],[b]) => compareText(a,b))) digest.update(name+'\0'+body+'\0');
-  const hash = digest.digest('hex');
+  // Executable bits are covered by the trusted content hash, not the editable manifest.
+  // Omit this file for text-only v1 packets so their bytes and digest remain unchanged.
+  if (executable.size) files.set(skillModesFile, json(Object.fromEntries([...executable].sort(([a], [b]) => compareText(a, b)))));
+  const hash = packetHash(files);
   files.set('manifest.json',json({version:1,hash,files:[...files.keys()],challengeId:input.challengeId ?? null}));
   try {
     const existing = await fs.lstat(target);
     if (existing.isSymbolicLink() || !existing.isDirectory()) throw new Error('.fleet must be an ordinary directory.');
     // Idempotency permits an identical preparation; never overwrite changed context.
+    const current = await readDirectory(target, 'Existing .fleet packet');
     for (const [name,body] of files) {
-      const resolved = await fs.realpath(path.join(target,name));
-      if (!resolved.startsWith(target+path.sep) || await fs.readFile(resolved,'utf8') !== body) throw new Error('Existing .fleet packet differs; start a new run workspace.');
+      const file = current.get(name);
+      if (!file) throw new Error('Existing .fleet packet is incomplete; start a new run workspace.');
+      if (!file.body.equals(Buffer.from(body)) || file.executable !== (executable.get(name) ?? 0)) throw new Error('Existing .fleet packet differs; start a new run workspace.');
     }
+    if (current.size !== files.size) throw new Error('Existing .fleet packet differs; start a new run workspace.');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     // Existing but incomplete packets are not overwritten.
@@ -71,7 +113,9 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
       for (const [name,body] of files) {
         const file = path.join(temporary,name);
         await fs.mkdir(path.dirname(file),{recursive:true});
-        await fs.writeFile(file,body,{flag:'wx',mode:0o600});
+        const mode = 0o600 | (executable.get(name) ?? 0);
+        await fs.writeFile(file,body,{flag:'wx',mode});
+        if (mode !== 0o600) await fs.chmod(file, mode);
       }
       await fs.rename(temporary,target);
     } finally { await fs.rm(temporary,{recursive:true,force:true}); }
@@ -83,18 +127,11 @@ export async function prepareFleetWorkspace(input: PrepareFleetWorkspaceInput) {
 /** Compare against a hash retained by the host, not a hash chosen by generated code. */
 export async function assertFleetPacketIntegrity(workspace: string, expectedHash: string) {
   const base=path.join(await fs.realpath(workspace),'.fleet');
-  const digest=createHash('sha256');
-  const entries: [string,string][]=[];
-  async function walk(dir: string, prefix='') {
-    for (const entry of await fs.readdir(dir,{withFileTypes:true})) {
-      if (entry.isSymbolicLink()) throw new Error('Fleet packet integrity failed: symbolic link.');
-      const name=prefix+entry.name;
-      if (entry.isDirectory()) await walk(path.join(dir,entry.name),name+'/');
-      else if (entry.isFile() && name!=='manifest.json') entries.push([name,await fs.readFile(path.join(dir,entry.name),'utf8')]);
-    }
+  const files = await readDirectory(base, 'Fleet packet integrity failed');
+  const entries = [...files].filter(([name]) => name !== 'manifest.json');
+  if (packetHash(entries.map(([name, file]) => [name, file.body])) !== expectedHash) throw new Error('Fleet packet integrity failed: source context, skills or reference toolkit changed. Start a new run with reviewed inputs.');
+  const modes: Record<string, number> = files.has(skillModesFile) ? JSON.parse(files.get(skillModesFile)!.body.toString('utf8')) : {};
+  for (const [name, file] of files) {
+    if (file.executable !== (modes[name] ?? 0)) throw new Error('Fleet packet integrity failed: executable permissions changed: ' + name);
   }
-  if ((await fs.lstat(base)).isSymbolicLink()) throw new Error('Fleet packet integrity failed: symbolic link.');
-  await walk(base);
-  for (const [name,body] of entries.sort(([a],[b]) => compareText(a,b))) digest.update(name+'\0'+body+'\0');
-  if (digest.digest('hex')!==expectedHash) throw new Error('Fleet packet integrity failed: source context, skills or reference toolkit changed. Start a new run with reviewed inputs.');
 }
