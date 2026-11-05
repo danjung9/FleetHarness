@@ -27,7 +27,7 @@ async function emailText(part: Json, attachment: (id: string) => Promise<string>
     const charset = contentType.match(/charset\s*=\s*["']?([^\s;"']+)/i)?.[1] || 'utf-8';
     let decoded: string;
     try { decoded = new TextDecoder(charset, { fatal: true }).decode(Buffer.from(data, 'base64url')); }
-    catch { throw new ConnectorError('An email uses a text format AppYard could not read. Exclude that message or provide a plain-text copy.'); }
+    catch { throw new ConnectorError('An email uses a text format AppYard could not read. Exclude that message.'); }
     return mime === 'text/html' ? plainText(decoded) : decoded;
   }
   const parts = array(part.parts).slice(0, 100);

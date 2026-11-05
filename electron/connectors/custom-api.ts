@@ -57,7 +57,7 @@ const messages = {
   large: 'This service returned too much data. Use an address for a smaller set of records.',
   auth: 'This service did not accept the sign-in details. Check them and connect again.',
   html: 'This address returned a web page instead of records. Paste the data address from the service documentation.',
-  data: 'This service did not return readable records. Use an address that returns JSON or CSV data.',
+  data: 'This service did not return readable records. Paste the data address from the service documentation.',
   scope: 'This service points to a different address. Connect to that address separately.',
   requests: 'This service needs too many requests to read safely. Use a more direct data address.',
   missing: 'This service is not connected. Connect it before using its data.',
@@ -249,7 +249,7 @@ class Requests {
 }
 function validHeader(name: string): string {
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(name) || /^(?:host|cookie|proxy.*|connection|content.*|transfer.*|accept.*|origin|referer|upgrade|te|trailer)$/i.test(name)) {
-    fail('This service asks for a sign-in method that is not supported. Ask its owner for a read-only header key or token.');
+    fail('This service asks for a sign-in method that is not supported. Ask its owner to set up read-only access.');
   }
   return name;
 }
@@ -275,7 +275,7 @@ function describedAuth(doc: JsonObject, operation: JsonObject): DataServiceAuth 
     if (schema.type === 'basic' || schema.type === 'http' && schema.scheme?.toLowerCase() === 'basic') return { type: 'basic' };
     if (['oauth2', 'openIdConnect'].includes(schema.type) || schema.type === 'http' && schema.scheme?.toLowerCase() === 'bearer') return { type: 'bearer' };
   }
-  return fail('This service needs a sign-in method that is not supported. Ask its owner for a read-only header key or token.');
+  return fail('This service needs a sign-in method that is not supported. Ask its owner to set up read-only access.');
 }
 function describedConnection(doc: JsonObject, descriptionUrl: string, suppliedUrl: URL): Connection | undefined {
   if (!(doc.openapi || doc.swagger) || !object(doc.paths)) return undefined;

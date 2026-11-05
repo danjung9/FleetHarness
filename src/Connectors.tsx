@@ -93,7 +93,7 @@ function SourceCard({ card, refresh, model }: { card: ConnectorCard; refresh: ()
   return <article className="connector-card" aria-label={card.label}>
     <h2>{card.label}</h2><p>{card.summary}</p>
     <p className="connector-readonly">AppYard can only read. It cannot send, change or delete anything.</p>
-    {!card.available && <p>Sign-in is not set up for this source. Ask your administrator to enable it, or try sample data.</p>}
+    {!card.available && <p>Sign-in is not set up for this source. Ask your administrator to turn it on.</p>}
     {card.signedIn && <p role="status">Connected. Choose what to include below.</p>}
     {card.connection && <p className="connector-saved" role="status">{card.connection.sample ? 'Sample data ready' : 'Data ready'}: {card.connection.count} items.</p>}
     {card.kind === 'custom-api' && <label className="connector-address">Service address or documentation link<input type="url" maxLength={2000} value={address} disabled={busy} placeholder="https://example.org/data" onChange={event => setAddress(event.target.value)}/></label>}
