@@ -92,3 +92,19 @@ Could not run native ps, Chrome/Electron smokes, keychain checks or complete Cod
 [Test results and adaptations](docs/connectors-genai-integration.md).
 
 COMMIT: Integrate connectors and GenAI.mil with shared lifecycle and credential protection
+
+## 02:25 report
+
+Fixed all five as fixture or script issues; production behavior remains unchanged.
+
+- **brief-data:** Parser capability now maps to an implemented obligation, not a deferred recipe criterion.
+- **conversation:** Waits for both `stopped` and the proposal’s `applied` status.
+- **electron:** Expects the current connection-first preflight message.
+- **journey:** Requires five utilities, including Connectors, and explicitly checks System design stays hidden.
+- **phases:** Checks exact tool lists separately for intake, synthetic data and the independent judge.
+
+Codex teardown now awaits disposal and child closure, then retries directory removal within a bounded limit. No assertions weakened or timeouts raised.
+
+All three type checks, 65 focused tests and eight script syntax checks passed. Native GUI scripts remain unrun because this sandbox blocks Chrome/Electron. No git writes.
+
+COMMIT: Fix smoke fixture contracts and asynchronous teardown checks

@@ -10,6 +10,32 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { get as httpGet } from 'node:http';
+import { runInNewContext } from 'node:vm';
+
+const connectionTabs = ['ChatGPT', 'API key', 'GenAI.mil', 'Other providers'];
+// Serialized into Electron's inspector/eval context. No module imports here:
+// dynamic import there has no VM import callback. Compare URLs only in memory;
+// never include their query strings or the retained first value in evidence.
+function installOAuthProbe({ shell }) {
+  let firstURL;
+  globalThis.__qaOAuth = { openings: [], loopbackOrigin: null, reopenedSameURL: false, interceptorError: null };
+  shell.openExternal = async value => {
+    try {
+      const url = new URL(value);
+      if (firstURL === undefined) firstURL = value;
+      else globalThis.__qaOAuth.reopenedSameURL = value === firstURL;
+      globalThis.__qaOAuth.openings.push({ protocol: url.protocol, host: url.hostname, path: url.pathname });
+      if (url.searchParams.has('redirect_uri')) {
+        const callback = new URL(url.searchParams.get('redirect_uri'));
+        if (callback.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(callback.hostname)) throw new Error('Expected owned loopback callback.');
+        callback.hostname = '127.0.0.1'; globalThis.__qaOAuth.loopbackOrigin = callback.origin;
+      }
+    } catch (error) {
+      globalThis.__qaOAuth.interceptorError = { name: error.name, code: error.code ?? 'QA_INTERCEPTOR_ERROR' };
+      throw new Error('QA OAuth interceptor could not inspect routing metadata.');
+    }
+  };
+}
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const payload = (name, text) => ({ name, mimeType: 'text/plain', buffer: Buffer.isBuffer(text) ? text : Buffer.from(text) });
@@ -37,7 +63,18 @@ if (process.argv[2] === '--validate-only') {
   assert.equal(verdict([{ result: 'PASS' }], false, false, 'PASS'), 'ERROR');
   assert.equal(verdict([{ result: 'PASS' }], false, true, 'UNCONFIRMED'), 'ERROR');
   assert.equal(verdict([{ result: 'PASS' }, { result: 'ERROR' }], false, true, 'PASS'), 'ERROR');
-  console.log(JSON.stringify({ validationOnly: true, passed: true, rejectedInputCases: cases.map(c => c.id), runtimeExecuted: false }));
+  const context = { URL, shell: {} };
+  runInNewContext('(' + installOAuthProbe.toString() + ')({shell})', context);
+  const syntheticURL = 'https://auth.openai.com/api/accounts/authorize?redirect_uri=http%3A%2F%2F127.0.0.1%3A12345%2Fauth%2Fcallback&state=qa-synthetic';
+  await context.shell.openExternal(syntheticURL); await context.shell.openExternal(syntheticURL);
+  assert.equal(context.__qaOAuth.reopenedSameURL, true);
+  assert.equal(context.__qaOAuth.loopbackOrigin, 'http://127.0.0.1:12345');
+  assert.equal(context.__qaOAuth.interceptorError, null);
+  assert.equal(JSON.stringify(context.__qaOAuth).includes('qa-synthetic'), false, 'Authorization query data must never enter retained metadata.');
+  await context.shell.openExternal(syntheticURL + '-changed'); assert.equal(context.__qaOAuth.reopenedSameURL, false);
+  await assert.rejects(context.shell.openExternal('https://auth.openai.com/?redirect_uri=https%3A%2F%2Fexample.test'));
+  assert.equal(context.__qaOAuth.interceptorError.code, 'QA_INTERCEPTOR_ERROR');
+  console.log(JSON.stringify({ validationOnly: true, passed: true, rejectedInputCases: cases.map(c => c.id), oauthProbe: ['runs without import callback', 'same URL', 'changed URL detected', 'loopback metadata', 'queries not retained', 'bad callback recorded'], runtimeExecuted: false }));
   process.exit(0);
 }
 if (!process.argv[2] || !process.argv[3]) throw new Error('Supply a landed checkout and an existing output directory.');
@@ -106,6 +143,11 @@ async function attach(section, chooser, files) {
   await chooser.setInputFiles(files);
   await poll(async () => (await section.getAttribute('aria-busy')) === 'false', 'File read did not finish.');
 }
+async function selectConnectionTab(name) {
+  const tab = page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name, exact: true });
+  await tab.click(); assert.equal(await tab.getAttribute('aria-selected'), 'true');
+  await page.getByRole('tabpanel', { name, exact: true }).waitFor();
+}
 try {
   const pkg = JSON.parse(await fs.readFile(path.join(repo, 'package.json'), 'utf8'));
   assert.equal(pkg.name, 'fleetharness'); assert.equal(pkg.main, 'dist-electron/electron/main.js');
@@ -146,7 +188,7 @@ try {
   });
   await row('KEY-PASSWORD-AND-BLANK', async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await page.getByRole('radio', { name: 'Codex ChatGPT or API key' }).check();
+    await selectConnectionTab('API key');
     const input = page.getByPlaceholder('OpenAI API key', { exact: true });
     assert.equal(await input.getAttribute('type'), 'password'); assert.equal(await input.getAttribute('autocomplete'), 'off');
     assert.equal(await input.inputValue(), '');
@@ -154,6 +196,7 @@ try {
     return { passwordType: true, emptySubmissionDisabled: true, realAuthentication: false };
   });
   await row('KEY-CLEARED-AFTER-REJECTION', async () => {
+    await selectConnectionTab('API key');
     const input = page.getByPlaceholder('OpenAI API key', { exact: true }); await input.fill('QA noncredential input');
     await page.getByRole('button', { name: 'Sign in with API key', exact: true }).click();
     await page.getByText(/Synthetic sign-in rejection for UI verification/).waitFor();
@@ -164,35 +207,34 @@ try {
     return { ...observed, rejectedBy: 'owned IPC fixture', inputCleared: true, realAuthentication: false };
   });
   await row('KEY-CLEARED-ON-ENGINE-CHANGE', async () => {
+    await selectConnectionTab('API key');
     await page.getByPlaceholder('OpenAI API key', { exact: true }).fill('QA noncredential input');
-    await page.getByRole('radio', { name: 'Pi Model providers' }).check();
+    await selectConnectionTab('Other providers');
     assert.equal(await page.getByPlaceholder('Provider API key', { exact: true }).inputValue(), '');
-    await page.getByRole('radio', { name: 'Codex ChatGPT or API key' }).check();
+    await selectConnectionTab('API key');
     assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).inputValue(), '');
     return { bothFieldsCleared: true, noSettingsSaved: true };
   });
   await row('OAUTH-START-REOPEN-CANCEL', async () => {
-    await app.evaluate(({ shell }) => {
-      globalThis.__qaOAuth = { openings: [], loopbackOrigin: null, firstFingerprint: null, reopenedSameURL: false };
-      shell.openExternal = async value => {
-        const url = new URL(value);
-        const { createHash } = await import('node:crypto');
-        const fingerprint = createHash('sha256').update(value).digest('hex');
-        if (globalThis.__qaOAuth.firstFingerprint === null) globalThis.__qaOAuth.firstFingerprint = fingerprint;
-        else globalThis.__qaOAuth.reopenedSameURL = fingerprint === globalThis.__qaOAuth.firstFingerprint;
-        // Keep only noncredential routing metadata, never authorization queries.
-        globalThis.__qaOAuth.openings.push({ protocol: url.protocol, host: url.hostname, path: url.pathname });
-        if (url.searchParams.has('redirect_uri')) {
-          const callback = new URL(url.searchParams.get('redirect_uri'));
-          if (callback.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(callback.hostname)) throw new Error('Expected owned loopback callback.');
-          callback.hostname = '127.0.0.1'; globalThis.__qaOAuth.loopbackOrigin = callback.origin;
-        }
-      };
+    await selectConnectionTab('ChatGPT');
+    await app.evaluate(installOAuthProbe);
+    const selfCheck = await app.evaluate(async ({ shell }) => {
+      const value = 'https://auth.openai.com/api/accounts/authorize?redirect_uri=http%3A%2F%2F127.0.0.1%3A12345%2Fauth%2Fcallback&state=qa-synthetic';
+      await shell.openExternal(value); await shell.openExternal(value);
+      return { calls: globalThis.__qaOAuth.openings.length, sameURL: globalThis.__qaOAuth.reopenedSameURL,
+        loopbackOrigin: globalThis.__qaOAuth.loopbackOrigin, interceptorError: globalThis.__qaOAuth.interceptorError };
     });
+    try { assert.deepEqual(selfCheck, { calls: 2, sameURL: true, loopbackOrigin: 'http://127.0.0.1:12345', interceptorError: null }); }
+    catch { throw new Error('QA OAuth interceptor self-check failed; no sign-in verdict is available.'); }
+    await app.evaluate(installOAuthProbe); // Discard synthetic self-check state.
     const cancel = page.getByRole('button', { name: 'Cancel sign-in', exact: true });
     try {
       await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).click();
-      await cancel.waitFor({ timeout: 20000 });
+      try { await cancel.waitFor({ timeout: 20000 }); }
+      catch (error) {
+        result.oauthStartDiagnostics = await app.evaluate(() => globalThis.__qaOAuth);
+        throw error;
+      }
       const opening = await app.evaluate(() => globalThis.__qaOAuth.openings[0]);
       assert.equal(opening.protocol, 'https:'); assert.equal(opening.host, 'auth.openai.com');
       const callback = await app.evaluate(() => globalThis.__qaOAuth.loopbackOrigin);
@@ -204,8 +246,7 @@ try {
         return { status: account.status, containsCredentialFields: /authUrl|access_token|refresh_token|code_verifier|code_challenge/.test(JSON.stringify(account)) };
       });
       assert.deepEqual(state, { status: 'connecting', containsCredentialFields: false });
-      assert.equal(await page.getByRole('radio', { name: 'Codex ChatGPT or API key' }).isDisabled(), true);
-      assert.equal(await page.getByRole('radio', { name: 'Pi Model providers' }).isDisabled(), true);
+      for (const name of connectionTabs) assert.equal(await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name, exact: true }).isDisabled(), true);
       await page.getByRole('button', { name: 'Reopen browser', exact: true }).click();
       assert.equal(await app.evaluate(() => globalThis.__qaOAuth.openings.length), 2);
       assert.equal(await app.evaluate(() => globalThis.__qaOAuth.reopenedSameURL), true, 'Reopen must use the same login URL.');
@@ -213,7 +254,7 @@ try {
       assert.equal(await page.evaluate(async () => (await window.fleetHarness.bootstrap()).chatgpt.status), 'disconnected');
       // A timeout is not evidence of a closed listener. Require connection refusal.
       await poll(async () => (await freshProbe(probe)).errorCode === 'ECONNREFUSED', 'Cancelled login must close the owned callback listener.', 5000);
-      return { realLoopbackStartAndCancel: true, externalOpeningIntercepted: true, reopenCount: 2, sameLoginURL: true, listenerClosed: true, completedLogin: false };
+      return { interceptorSelfCheck: true, realLoopbackStartAndCancel: true, externalOpeningIntercepted: true, reopenCount: 2, sameLoginURL: true, listenerClosed: true, completedLogin: false };
     } finally {
       if (await cancel.isVisible()) { await cancel.click(); await cancel.waitFor({ state: 'hidden' }); }
     }
