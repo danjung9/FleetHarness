@@ -147,6 +147,7 @@ function Development({ project, action, onBuild }: { project: Project; action: A
 }
 function Artifacts({ project, action, requested }: { project: Project; action: Action; requested: string }) {
   const [files, setFiles] = useState<Artifact[]>([]), [selected, setSelected] = useState(''), [content, setContent] = useState('');
+  const [readError, setReadError] = useState(false), [readAttempt, setReadAttempt] = useState(0);
   const consumedRequest = useRef('');
   useEffect(() => { let current = true; void action(async () => { const f = await api.artifacts(project.id); if (current) setFiles(f); }); return () => { current = false; }; }, [project.id, project.runId, project.status]);
   useEffect(() => {
@@ -156,12 +157,17 @@ function Artifacts({ project, action, requested }: { project: Project; action: A
   }, [requested, files]);
   useEffect(() => {
     if (!selected) return;
-    let current = true; setContent('Loading…');
-    void action(async () => { const value = await api.readArtifact(project.id, selected); if (current) setContent(value); });
+    let current = true; setContent('Loading…'); setReadError(false);
+    void action(async () => {
+      try { const value = await api.readArtifact(project.id, selected); if (current) setContent(value); }
+      catch (error) { if (current) setReadError(true); throw error; }
+    });
     return () => { current = false; };
-  }, [project.id, project.runId, selected]);
+  }, [project.id, project.runId, selected, readAttempt]);
   return <div className="page artifact-page"><div className="page-heading"><div><h1>Files</h1></div><button className="secondary" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={16}/> Open folder</button></div>
-    {!files.length ? <Empty icon={<Archive size={30}/>} title="No generated artifacts">Files appear after the first build.</Empty> : <div className="artifact-browser"><div className="file-list">{files.map(f => <button key={f.path} className={selected === f.path ? 'selected' : ''} onClick={() => setSelected(f.path)}><FileCode2 size={15}/><span>{f.path}</span><small>{Math.ceil(f.size / 1024)} KB</small></button>)}</div><div className="file-content"><h3>{selected || 'Select a file'}</h3><pre>{selected ? content || 'This file is empty.' : 'Choose an artifact to inspect its saved contents.'}</pre></div></div>}
+    {!files.length ? <Empty icon={<Archive size={30}/>} title="No generated artifacts">Files appear after the first build.</Empty> : <div className="artifact-browser"><div className="file-list">{files.map(f => <button key={f.path} className={selected === f.path ? 'selected' : ''} onClick={() => setSelected(f.path)}><FileCode2 size={15}/><span>{f.path}</span><small>{Math.ceil(f.size / 1024)} KB</small></button>)}</div><div className="file-content"><h3>{selected || 'Select a file'}</h3>
+      {readError ? <div role="alert"><p>Could not open this file. Try again.</p><button type="button" className="secondary" onClick={() => setReadAttempt(value => value + 1)}>Retry</button></div> : <pre>{selected ? content || 'This file is empty.' : 'Choose an artifact to inspect its saved contents.'}</pre>}
+    </div></div>}
   </div>;
 }
 function AgentSessions({ project, onReview }: { project: Project; onReview: () => void }) {
