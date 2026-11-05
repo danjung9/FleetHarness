@@ -466,6 +466,19 @@ export async function runIndependentJudge(options: Options): Promise<JudgedRepor
       options.signal.throwIfAborted(); await options.checkInputs();
       report = await options.verify(); options.signal.throwIfAborted();
       options.log(report.output);
+      if (saved && !reportPassed(report, true)) {
+        // The fix for the gaps is usually right and only trips a check that passed a moment ago, so it gets one pass at that before it is undone.
+        options.log('The judge repair broke a check that passed before it. Giving it one pass to fix that.');
+        await options.repair([
+          'Your last repair addressed the independent evaluator\'s gaps but broke checks that passed before it. Keep those fixes and make these checks pass again.',
+          'Read acceptance-plan.json for the planned steps of any failed journey. Never edit acceptance-plan.json or ux-spec.json. Do not weaken, delete or skip tests.',
+          JSON.stringify({ node: { exitCode: report.exitCode, failed: report.failed, output: report.output.slice(-6000) }, errors: report.quality?.errors,
+            journeys: report.quality?.journeys.filter(journey => journey.status !== 'passed') }, null, 2)
+        ].join('\n\n'));
+        options.signal.throwIfAborted(); await options.checkInputs();
+        report = await options.verify(); options.signal.throwIfAborted();
+        options.log(report.output);
+      }
       if (!reportPassed(report, true)) failure = 'Host verification failed after judge repair.';
     } catch (error) {
       // Stop and an unconfirmed writer still end the run. Any other failed repair still has the verified copy to return to.

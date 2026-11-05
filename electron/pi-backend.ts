@@ -405,7 +405,7 @@ export class FleetBackend {
     run.answerCorrections = saved?.answerCorrections;
     const first = p.stages.find(s => s.status !== 'complete');
     if (!first || !['intake', 'research', 'plan', 'build', 'verify', 'review'].includes(first.id)) throw new Error('No incomplete build stage can resume. Start a new run.');
-    if (!Number.isSafeInteger(checkpoint.repairAttempts) || checkpoint.repairAttempts < 0 || checkpoint.repairAttempts > 4) throw new Error('Invalid recovery checkpoint. Start a new run.');
+    if (!Number.isSafeInteger(checkpoint.repairAttempts) || checkpoint.repairAttempts < 0 || checkpoint.repairAttempts > 6) throw new Error('Invalid recovery checkpoint. Start a new run.');
     await assertFleetPacketIntegrity(p.workspace!, checkpoint.packetHash);
     run.packetHash = checkpoint.packetHash;
     run.requirements = await fs.readFile(await safeFile(p.workspace!, 'requirements.md'), 'utf8');
@@ -572,7 +572,7 @@ export class FleetBackend {
     if (stage === 'verify') {
       const checkpoint = p.runCheckpoint!;
       if (checkpoint.verificationAgent) {
-        if (checkpoint.repairAttempts >= (run.judgeRepairing ? 4 : 2)) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
+        if (checkpoint.repairAttempts >= (run.judgeRepairing ? 6 : 2)) throw new Error('Verification did not pass. The repair limit is exhausted; start a new run before another fixing agent.');
         checkpoint.repairAttempts++;
       }
       checkpoint.verificationAgent ??= 'started'; await this.changed(p); this.check(run);

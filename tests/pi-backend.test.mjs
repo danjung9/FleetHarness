@@ -53,7 +53,7 @@ import { syntheticBrowser } from './helpers/synthetic-browser.mjs';
 import { runtimeFilesHash } from '../dist-electron/electron/visual-review.js';
 import { CodexRpc } from '../dist-electron/electron/codex-rpc.js';
 import { completeFixtureVisualReview } from '../scripts/visual-review-fixture.mjs';
-const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') ? 'repair'
+const stageOf = prompt => prompt.includes('The independent test run failed') || prompt.includes('repairing gaps from an independent') || prompt.includes('broke checks that passed before it') ? 'repair'
   : prompt.includes('You are the synthetic data agent') ? 'synthetic-data'
   : prompt.includes('You are the intake agent') ? 'intake'
   : prompt.includes('You are the research agent') ? 'research'
@@ -531,6 +531,23 @@ test('the judge stops after its own two repairs and the build goes to review wit
   assert.equal(h.project.report.independentJudge.verdict, 'NOT');
   assert.equal(h.project.report.independentJudge.repairLimitReached, true);
   assert.equal(reportPassed(h.project.report, true), true);
+});
+
+test('a judge repair that trips a check gets one pass to fix it and keeps its work', async t => {
+  let repairs = 0;
+  const broken = p => fs.access(path.join(p.workspace, 'repair-left.txt')).then(() => true, () => false);
+  const h = await harness(t, { judgeAnswers: [judgeNot], verify: async (p, run) => syntheticReport(p, run, await broken(p)),
+    scenario: async ({ stage, cwd }) => {
+      if (stage !== 'repair') return;
+      if (++repairs === 1) { await fs.writeFile(path.join(cwd, 'repair-left.txt'), 'broke a check'); await fs.writeFile(path.join(cwd, 'gap-fixed.txt'), 'the gap fix'); }
+      else await fs.rm(path.join(cwd, 'repair-left.txt'), { force: true });
+    } });
+  await h.run(); await h.assertSettled('review');
+  assert.equal(repairs, 2);
+  await fs.access(path.join(h.project.workspace, 'gap-fixed.txt'));
+  assert.equal(h.project.report.independentJudge.repairs, 1);
+  assert.equal(h.project.report.independentJudge.verdict, 'SATISFACTORY');
+  assert.equal(h.judgeSessions.length, 2);
 });
 
 test('a judge repair that breaks verification is undone and the verified application reaches review', async t => {
