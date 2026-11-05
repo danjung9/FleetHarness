@@ -47,7 +47,8 @@ try {
   await page.screenshot({ path: path.join(output, 'home-desktop.png'), scale: 'css' });
   await page.getByRole('region', { name: 'Home workspace', exact: true }).getByRole('button', { name: 'New challenge', exact: true }).click();
   assert.equal(await page.getByRole('dialog', { name: 'New challenge', exact: true }).isVisible(), true);
-  await page.getByRole('button', { name: `Norfolk catalog · ${challenges.length}`, exact: true }).click();
+  await page.getByRole('dialog', { name: 'New challenge', exact: true }).getByRole('group', { name: 'Challenge source', exact: true }).getByRole('button', { name: /^Norfolk catalog\b/ }).click();
+  await page.getByRole('dialog', { name: 'New challenge', exact: true }).getByText(`${challenges.length} of ${challenges.length} challenges`, { exact: true }).waitFor();
   assert.equal(await page.locator('.catalog-results>button').count(), challenges.length);
   await page.getByPlaceholder('Search title, category, or challenge ID').fill('Paperless');
   assert.equal(await page.locator('.catalog-results>button').count(), 1);

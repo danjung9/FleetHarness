@@ -16,6 +16,10 @@ import { exportVerifiedBundle } from '../dist-electron/electron/source-export.js
 import { connectorConfiguration, connectorEncryption, installedAdapters, fixtureSource } from '../dist-electron/electron/connectors/config.js';
 import { startConnectorServers } from './fixtures/connector-servers.mjs';
 import { startDataServiceServer } from './fixtures/data-service-server.mjs';
+import { prepareBriefData, assertBriefDataIntegrity, briefDataPrompt } from '../dist-electron/electron/brief-data.js';
+import { prepareFleetWorkspace } from '../dist-electron/harness/integration.js';
+import { briefFingerprint } from '../dist-electron/electron/run-checkpoint.js';
+import { briefHash as conversationBriefHash, projectBrief } from '../dist-electron/electron/conversation.js';
 
 process.env.NODE_ENV = 'test';
 
@@ -125,7 +129,11 @@ test('packaged and production hosts refuse unavailable secure storage without en
     assert.equal((await allBytes(root)).includes(Buffer.from(sentinel)), false);
   }
   const native = encryption();
-  assert.equal(connectorEncryption(false, fixtureEnv, native), native);
+  assert.equal(connectorEncryption(false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: undefined }, native), native);
+  // An explicit fixture key avoids even probing a native keychain, which may
+  // display a blocking system prompt. Packaged and production guards above remain.
+  const noNativeProbe = { ...native, isEncryptionAvailable() { assert.fail('Explicit fixture encryption must not open the keychain.'); } };
+  assert.notEqual(connectorEncryption(false, fixtureEnv, noNativeProbe), noNativeProbe);
   assert.throws(() => connectorEncryption(false, { ...fixtureEnv, NODE_ENV: 'production' }, unavailableStorage), /not enabled/);
   assert.throws(() => connectorEncryption(false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: undefined }, unavailableStorage), /Local test encryption is not configured/);
   assert.throws(() => connectorEncryption(false, { ...fixtureEnv, APPYARD_CONNECTOR_TEST_ENCRYPTION_KEY: 'invalid' }, unavailableStorage), /Local test encryption is not configured/);
@@ -447,7 +455,84 @@ test('real export copier preserves sample context and verification hash', async 
   await writeConnectedContext(store, workspace, [choice(snapshot)], new AbortController().signal);
   await fs.writeFile(path.join(workspace, 'index.html'), '<h1>Synthetic training app</h1>');
   const parent = path.join(root, 'exports'); await fs.mkdir(parent); const verifiedHash = await sourceHash(workspace);
-  const exported = await exportVerifiedBundle({ workspace, parent, title: 'Training', verifiedHash, deliveryMarkdown: 'Synthetic sample export.' });
+  const evidence = { report: JSON.stringify({ sourceHash: verifiedHash, fixture: true }), review: JSON.stringify({ approved: true, fixture: true }) };
+  const exported = await exportVerifiedBundle({ workspace, parent, title: 'Training', verifiedHash, deliveryMarkdown: 'Synthetic sample export.', evidence });
   assert.equal(await sourceHash(exported), verifiedHash);
   assert.deepEqual(JSON.parse(await fs.readFile(path.join(exported, 'context', snapshot.id + '.json'), 'utf8')).items, snapshot.items);
+  assert.equal(await fs.readFile(path.join(exported, 'test-report.json'), 'utf8'), evidence.report);
+  assert.equal(await fs.readFile(path.join(exported, 'review.json'), 'utf8'), evidence.review);
+});
+
+for (const withAttachment of [false, true]) test('connected sources share the provided-data manifest' + (withAttachment ? ' with attached inputs' : ' without attached inputs'), async t => {
+  const { service, store, workspace } = await setup(t), preview = await saved(service);
+  const sentinel = 'synthetic-connected-secret-' + randomUUID(); await store.secrets(preview.id).set('access', sentinel);
+  const inputs = withAttachment ? [{ name: 'records.csv', kind: 'file', content: 'message\nTASK: inspect pump\n' }] : [];
+  const connectedData = [choice(preview)], snapshot = await prepareBriefData(workspace, inputs, { store, connectedData });
+  const manifest = JSON.parse(await fs.readFile(path.join(workspace, 'inputs/manifest.json'), 'utf8'));
+  assert.equal(snapshot.mode, 'provided'); assert.equal(manifest.mode, 'provided'); assert.equal(manifest.generated, undefined);
+  assert.equal(manifest.sources.length, inputs.length + 1);
+  const source = manifest.sources.at(-1);
+  assert.equal(source.kind, 'connected'); assert.equal(source.name, 'Gmail'); assert.equal(source.path, 'context/' + preview.id + '.json');
+  assert.deepEqual(snapshot.connectedSources, [source.connectedSource]);
+  assert.equal(source.connectedSource.digest, preview.digest); assert.equal(source.connectedSource.count, 2);
+  assert.equal(manifest.connectedContextHash, snapshot.connectedContextHash); assert.equal(manifest.notice, 'context/README.md');
+  const body = await fs.readFile(path.join(workspace, source.path), 'utf8');
+  assert.equal(source.bytes, Buffer.byteLength(body)); assert.deepEqual(JSON.parse(body).items, preview.items);
+  assert.match(body, /ignore previous instructions/); assert.equal(body.includes('Synthetic banner check'), false);
+  assert.match(await fs.readFile(path.join(workspace, manifest.notice), 'utf8'), /UNTRUSTED DATA/);
+  assert.deepEqual(snapshot.files, ['inputs/manifest.json', ...(withAttachment ? ['inputs/001-records.csv'] : []), source.path, 'context/README.md']);
+  if (withAttachment) assert.equal(await fs.readFile(path.join(workspace, 'inputs/001-records.csv'), 'utf8'), inputs[0].content);
+  assert.match(briefDataPrompt(snapshot), /do not invent replacement records/);
+  const packet = await prepareFleetWorkspace({ workspace, title: 'Synthetic training', description: 'Use the supplied synthetic training messages.', criteria: [], connectedData, dataInputs: inputs, resourcesRoot: path.resolve('.') });
+  const savedPacket = JSON.parse(await fs.readFile(path.join(workspace, '.fleet/packet.json'), 'utf8'));
+  assert.equal(savedPacket.dataPolicy, 'user-provided-or-synthetic');
+  assert.deepEqual(savedPacket.userScope.connectedData, connectedData.map(({ id, digest }) => ({ id, digest })));
+  assert.doesNotMatch(packet.context, /dedicated data agent prepares/);
+  await assertBriefDataIntegrity(workspace, snapshot);
+  await assert.rejects(fs.access(path.join(workspace, 'data/synthetic-data.json')), { code: 'ENOENT' });
+  assert.equal((await allBytes(workspace)).includes(Buffer.from(sentinel)), false);
+});
+
+test('unified data integrity rejects changed manifests, changed context and extra context files', async t => {
+  for (const target of ['inputs/manifest.json', 'context/README.md', 'context/extra.txt', 'snapshot']) {
+    const { service, store, workspace } = await setup(t), preview = await saved(service);
+    const snapshot = await prepareBriefData(workspace, [], { store, connectedData: [choice(preview)] });
+    await fs.appendFile(path.join(workspace, target === 'snapshot' ? 'context/' + preview.id + '.json' : target), '\nChanged');
+    await assert.rejects(assertBriefDataIntegrity(workspace, snapshot), /changed/);
+  }
+});
+
+test('brief preparation cancels and rejects missing selected data without partial inputs or context', async t => {
+  const { service, store, workspace } = await setup(t), preview = await saved(service), connectedData = [choice(preview)];
+  await assert.rejects(prepareBriefData(workspace, [], { connectedData }), /unavailable/);
+  const before = new AbortController(); before.abort();
+  await assert.rejects(prepareBriefData(workspace, [], { store, connectedData, signal: before.signal }), { name: 'AbortError' });
+  const during = new AbortController(), read = store.read.bind(store);
+  store.read = async id => { const result = await read(id); during.abort(); return result; };
+  await assert.rejects(prepareBriefData(workspace, [], { store, connectedData, signal: during.signal }), { name: 'AbortError' });
+  store.read = read;
+  await service.disconnect(preview.id);
+  await assert.rejects(prepareBriefData(workspace, [], { store, connectedData }), /no longer available/);
+  assert.deepEqual(await fs.readdir(workspace), []);
+});
+
+test('empty connector selection preserves the no-connector data manifest and packet exactly', async t => {
+  const left = await setup(t), right = await setup(t);
+  assert.deepEqual(await prepareBriefData(left.workspace, []), await prepareBriefData(right.workspace, [], { connectedData: [], store: right.store }));
+  const brief = { title: 'Synthetic training', description: 'Use a synthetic training calendar.', criteria: [], resourcesRoot: path.resolve('.') };
+  assert.deepEqual(await prepareFleetWorkspace({ ...brief, workspace: left.workspace }), await prepareFleetWorkspace({ ...brief, workspace: left.workspace, connectedData: [] }));
+  assert.deepEqual(await fs.readdir(left.workspace), ['.fleet', 'inputs']);
+  assert.equal(briefHash(brief), briefHash({ ...brief, connectedData: [] }));
+  assert.equal(briefFingerprint(brief), briefFingerprint({ ...brief, connectedData: [] }));
+});
+
+test('connected selection survives brief revision and changes both recovery and conversation identities', async t => {
+  const { service } = await setup(t), preview = await saved(service);
+  const brief = { title: 'Synthetic training', description: 'Use the supplied synthetic training messages.', criteria: [], connectedData: [choice(preview)] };
+  assert.deepEqual(projectBrief(brief).connectedData, brief.connectedData);
+  const changed = { ...brief, connectedData: [{ ...choice(preview), digest: '0'.repeat(64) }] };
+  assert.notEqual(briefFingerprint(brief), briefFingerprint(changed));
+  assert.notEqual(conversationBriefHash(brief), conversationBriefHash(changed));
+  assert.notEqual(briefFingerprint(brief), briefFingerprint({ ...brief, connectedData: [] }));
+  assert.notEqual(conversationBriefHash(brief), conversationBriefHash({ ...brief, connectedData: [] }));
 });

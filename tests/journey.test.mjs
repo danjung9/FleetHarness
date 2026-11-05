@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getJourneyState } from '../dist-electron/shared/journey.js';
+import { getJourneyState, getResumeStage, resumeLabel } from '../dist-electron/shared/journey.js';
 import { stageDefinitions } from '../dist-electron/shared/types.js';
 
 const report = (overrides = {}) => ({
@@ -73,6 +73,38 @@ test('stopped and failed runs stay in Build even if a passing report was retaine
     assert.match(state.message, /start a new build/i);
     assert.doesNotMatch(state.message, /automatically/);
   }
+});
+
+test('failed and stopped phases offer resume with saved work and preserve the Build milestone', () => {
+  for (const status of ['failed', 'stopped']) {
+    for (const stage of ['intake', 'research', 'plan', 'build', 'verify']) {
+      const state = getJourneyState(project({ status, runId: 'same-run', workspace: '/workspace', resumeStage: stage,
+        stages: atStage(stage, 'failed'), report: report() }));
+      assert.equal(state.current, 'build');
+      assert.equal(state.activeStage, stage);
+      assert.equal(state.resumeStage, stage);
+      assert.deepEqual(state.completed, ['brief']);
+      assert.match(state.message, new RegExp(resumeLabel(stage)));
+      assert.match(state.message, /saved work/);
+      assert.doesNotMatch(state.message, /new build|automatically/);
+    }
+  }
+});
+
+test('only a persisted build-stage checkpoint on a stopped or failed run offers resume', () => {
+  const saved = project({ status: 'failed', runId: 'run', workspace: '/workspace', resumeStage: 'build', stages: atStage('build', 'failed') });
+  assert.equal(getResumeStage(saved), 'build');
+  for (const changes of [
+    { resumeStage: undefined }, { resumeStage: 'review' }, { resumeStage: 'deliver' },
+    { workspace: undefined }, { runId: undefined },
+    ...['draft', 'running', 'review', 'approved', 'delivered'].map(status => ({ status }))
+  ]) assert.equal(getResumeStage({ ...saved, ...changes }), undefined, JSON.stringify(changes));
+  const changedBrief = getJourneyState({ ...saved, status: 'draft' });
+  assert.equal(changedBrief.resumeStage, undefined);
+  assert.match(changedBrief.message, /new build/);
+  const legacy = getJourneyState({ ...saved, resumeStage: undefined });
+  assert.equal(legacy.resumeStage, undefined);
+  assert.match(legacy.message, /new build/);
 });
 
 test('Review requires usable verification evidence for the applicable quality contract', () => {

@@ -24,7 +24,7 @@ export interface AcceptanceCriterion {
   method: 'automated' | 'human' | 'integration';
   scenario: string;
   provenance?: Array<{
-    kind: 'requirement' | 'evaluation' | 'deliverable' | 'user' | 'recipe';
+    kind: 'requirement' | 'evaluation' | 'deliverable' | 'user' | 'recipe' | 'description' | 'summary';
     id: string;
     path: string;
   }>;
@@ -44,7 +44,7 @@ export interface PipelinePacket {
   schemaVersion: 1;
   challenge: Challenge;
   recipe: Recipe;
-  dataPolicy: 'synthetic-only';
+  dataPolicy: 'synthetic-only' | 'user-provided-or-synthetic';
   globalTools: string[];
   acceptance: AcceptanceCriterion[];
   stages: import('./phases.js').PhaseContract[];

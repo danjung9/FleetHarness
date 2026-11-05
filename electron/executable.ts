@@ -1,11 +1,14 @@
-import { promises as fs } from 'node:fs';
+import { assertCredentialFreeDelivery } from './delivery-secrets.js';
+import { redactSecrets } from './secrets.js';
+import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import type { Project } from '../shared/types.js';
-import { safeFile, sourceHash } from './storage.js';
-import { reportPassed } from './verification.js';
+import { verifiedManifest } from './delivery.js';
+import { atomicHostWrite } from '../shared/host-files.js';
+import { parseSolutionContract } from '../harness/solution-contract.js';
 
 export function executableName(project: Pick<Project, 'title'>) {
   // Prefix also avoids Windows reserved device names.
@@ -15,13 +18,21 @@ export function executableFileName(project: Pick<Project, 'title'>) {
   return `${executableName(project)}-${process.platform}-${process.arch}.zip`;
 }
 export async function assertExecutableSource(project: Project) {
-  if (!project.approvedAt || !['approved', 'delivered'].includes(project.status)) throw new Error('Review and approve this prototype before downloading the app.');
-  if (!project.workspace || !reportPassed(project.report, project.qualityVersion === 1)) throw new Error('Passing automated tests and required browser journeys are required before delivery.');
-  if (await sourceHash(project.workspace) !== project.report!.sourceHash) throw new Error('Artifacts changed after verification. Start a new run before downloading the app.');
+  const manifest = await verifiedManifest(project, true);
+  const solution = deliveredSolution(manifest);
+  if (solution && solution.runtime.profile !== 'browser') throw new Error('This solution uses a CLI or service runtime. Export the runnable source package and follow its README instead of downloading a browser-only app.');
+  return manifest;
 }
 
-// This is host-owned code. Generated code only runs inside the sandboxed renderer.
-export function standaloneMain(title: string, appId: string) {
+function deliveredSolution(manifest: Awaited<ReturnType<typeof verifiedManifest>>) {
+  const body = manifest.find(file => file.path === 'solution-contract.json')?.contents;
+  if (!body) return undefined;
+  const packet = JSON.parse(manifest.find(file => file.path === '.fleet/packet.json')!.contents.toString('utf8'));
+  return parseSolutionContract(JSON.parse(body.toString('utf8')), packet.acceptance);
+}
+
+// This is host-owned code. Generated code runs in the browser renderer.
+export function standaloneMain(title: string, appId: string, files: string[] = ['index.html'], payloadDirectory: '' | 'application' = '') {
   return `const { app, BrowserWindow, protocol, Menu } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -29,9 +40,12 @@ app.setName(${JSON.stringify(title)});
 app.setPath('userData', path.join(app.getPath('appData'), ${JSON.stringify(appId)}));
 protocol.registerSchemesAsPrivileged([{ scheme: 'fleet-app', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 let window;
+const allowedFiles = new Set(${JSON.stringify(files)});
+const payloadRoot = path.join(__dirname, ${JSON.stringify(payloadDirectory)});
+const contentTypes = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.wasm':'application/wasm'};
 function openWindow() {
   window = new BrowserWindow({ title: ${JSON.stringify(title)}, width: 1200, height: 800,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webviewTag: false } });
+    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: false, webviewTag: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.on('will-frame-navigate', event => event.preventDefault());
@@ -43,10 +57,11 @@ function openWindow() {
 app.whenReady().then(() => {
   protocol.handle('fleet-app', async request => {
     const url = new URL(request.url);
-    if (url.host !== 'app' || url.pathname !== '/index.html' || request.method !== 'GET') return new Response('', { status: 404 });
-    return new Response(await fs.readFile(path.join(__dirname, 'index.html')), { headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
+    const relative = decodeURIComponent(url.pathname).slice(1);
+    const type = contentTypes[path.extname(relative)];
+    if (url.host !== 'app' || !allowedFiles.has(relative) || !type || request.method !== 'GET') return new Response('', { status: 404 });
+    return new Response(await fs.readFile(path.join(payloadRoot, relative)), { headers: {
+      'Content-Type': type,
     } });
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -63,20 +78,29 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 export interface PackageJob { source: string; output: string; archive: string; electronVersion: string; name: string; appId: string }
 
 export async function stageExecutable(project: Project, root: string) {
-  await assertExecutableSource(project);
+  const manifest = await assertExecutableSource(project);
   const source = path.join(root, 'source');
   await fs.mkdir(source);
-  const file = await safeFile(project.workspace!, 'index.html');
-  const html = await fs.readFile(file);
-  if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs a self-contained index.html between 1 byte and 2 MB, matching the app preview.');
+  const html = manifest.find(file => file.path === 'index.html')!.contents;
+  if (!html.length || html.length > 2_000_000) throw new Error('The standalone app needs an index.html between 1 byte and 2 MB, matching the app preview.');
   const name = executableName(project);
   const appId = 'dev.fleetharness.generated.' + createHash('sha256').update(project.id).digest('hex').slice(0, 24);
-  // An allowlist deliberately leaves out agent code, dependencies, sessions and credentials.
-  await fs.writeFile(path.join(source, 'index.html'), html);
-  await fs.writeFile(path.join(source, 'main.cjs'), standaloneMain(project.title, appId));
-  await fs.writeFile(path.join(source, 'package.json'), JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
+  const solution = deliveredSolution(manifest);
+  const declared = solution?.runtime.files ?? ['index.html'];
+  const payloadDirectory = solution ? 'application' : '';
+  const payloadRoot = path.join(source, payloadDirectory);
+  if (payloadDirectory) await fs.mkdir(payloadRoot);
+  // Generated manifests and main scripts remain payload data; only the host wrapper is an Electron entrypoint.
+  await atomicHostWrite(payloadRoot, 'index.html', html);
+  for (const relative of declared.filter(file => file !== 'index.html')) {
+    const target = path.join(payloadRoot, relative);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await atomicHostWrite(payloadRoot, relative, manifest.find(file => file.path === relative)!.contents);
+  }
+  await atomicHostWrite(source, 'main.cjs', standaloneMain(project.title, appId, declared, payloadDirectory));
+  await atomicHostWrite(source, 'package.json', JSON.stringify({ name, productName: project.title, version: '1.0.0', main: 'main.cjs', private: true }));
   await assertExecutableSource(project);
-  if (!html.equals(await fs.readFile(await safeFile(project.workspace!, 'index.html')))) throw new Error('Application changed while preparing the download. Start a new run.');
+  await assertCredentialFreeDelivery(source);
   return { source, name, appId };
 }
 
@@ -93,7 +117,7 @@ export async function runPackageWorker(job: PackageJob, executable: string, sign
       detached: process.platform !== 'win32', windowsHide: true
     });
     let output = '', failure: Error | undefined;
-    const collect = (data: Buffer) => { output = (output + data.toString()).slice(-8000); };
+    const collect = (data: Buffer) => { output = redactSecrets(output + data.toString()).slice(-8000); };
     child.stdout.on('data', collect); child.stderr.on('data', collect);
     const stop = (message: string) => {
       failure = new Error(message);
@@ -114,14 +138,38 @@ export async function runPackageWorker(job: PackageJob, executable: string, sign
   });
 }
 
-export async function saveExecutable(archive: string, destination: string, workspace: string) {
+export async function saveExecutable(archive: string, destination: string, workspace: string, signal?: AbortSignal,
+  commit?: (target: string) => Promise<void>) {
+  signal?.throwIfAborted();
   const parent = await fs.realpath(path.dirname(destination)), base = await fs.realpath(workspace);
   if (parent === base || parent.startsWith(base + path.sep)) throw new Error('Save the download outside the agent workspace.');
   const target = path.join(parent, path.basename(destination));
-  const temporary = path.join(parent, '.' + randomUUID() + '.download');
+  const staging = await fs.mkdtemp(path.join(parent, '.appyard-download-'));
+  const temporary = path.join(staging, 'archive'), previous = path.join(staging, 'previous');
+  let backedUp = false, published = false, preserveBackup = false;
   try {
-    await fs.copyFile(archive, temporary);
+    await fs.copyFile(archive, temporary, constants.COPYFILE_EXCL);
+    signal?.throwIfAborted();
+    try {
+      if ((await fs.lstat(target)).isDirectory()) throw new Error('Choose an archive file, not a directory.');
+      await fs.rename(target, previous); backedUp = true;
+    }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    signal?.throwIfAborted();
     await fs.rename(temporary, target);
-  } finally { await fs.rm(temporary, { force: true }); }
+    published = true;
+    signal?.throwIfAborted();
+    await commit?.(target);
+    signal?.throwIfAborted();
+  } catch (error) {
+    try {
+      if (published) await fs.rm(target, { force: true });
+      if (backedUp) await fs.rename(previous, target);
+    } catch (restoreError) {
+      preserveBackup = backedUp;
+      throw new Error('Could not roll back the download.' + (backedUp ? ' The previous file is retained at ' + previous : ''), { cause: restoreError });
+    }
+    throw error;
+  } finally { if (!preserveBackup) await fs.rm(staging, { recursive: true, force: true }); }
   return target;
 }

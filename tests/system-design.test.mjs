@@ -69,7 +69,7 @@ test('cancelled stages cannot publish and symlinked sources cannot claim complet
     await fs.writeFile(path.join(root, 'outside.cjs'), 'outside');
     await fs.symlink(path.join(root, 'outside.cjs'), path.join(p.workspace, 'core.cjs'));
     const update = createSystemDesignTools(p, 'build', controller.signal, async () => {})[0];
-    await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'generated', detail: 'Done' }), /inside its workspace/);
+    await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'generated', detail: 'Done' }), /Artifact symlinks are not allowed/);
     controller.abort();
     await assert.rejects(publish.execute('publish', fixtureSystemDesign));
     await assert.rejects(update.execute('progress', { componentId: 'parser', status: 'building', detail: 'Working' }));

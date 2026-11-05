@@ -11,6 +11,7 @@ import { prepareFleetWorkspace, assertFleetPacketIntegrity } from '../harness/in
 import { parseQualityPlan, parseUxSpec, qualityContractGuide } from '../harness/quality-contract.js';
 import type { AcceptanceCriterion, Challenge } from '../harness/types.js';
 import type { QualityPlan, UxSpec } from '../shared/quality.js';
+import type { SolutionContract } from '../shared/solution.js';
 
 const challenge: Challenge = {
   id: 'sample', title: 'Review records', summary: 'A complete local review workflow.', category: null,
@@ -281,18 +282,41 @@ test('UX contracts require the complete task, screen, state and recovery specifi
   for (const spec of invalid) assert.throws(() => parseUxSpec(spec));
 });
 
+// Extend the archived fixture with explicit unverified narrative coverage. Original
+// expectations stay unchanged; these synthetic assertions do not claim real-format validation.
+function addId12Narrative(plan: QualityPlan, inventory: AcceptanceCriterion[]) {
+  const phrases: Record<string, string> = { 'DESC12-1': 'formatted telecommunication messages', 'DESC12-2': 'scheduled for events', 'SUMMARY12-1': 'consolidated daily timeline' };
+  const steps: QualityPlan['journeys'][number]['steps'] = [{ action: 'click', selector: '#synthetic-narrative' }];
+  const rows: QualityPlan['criteria'] = [];
+  for (const source of inventory.filter(item => !plan.criteria.some(row => row.criterionId === item.id))) {
+    const name = phrases[source.id];
+    assert.ok(name, 'Every added narrative span needs explicit fixture coverage: ' + source.id);
+    assert.ok(source.requirement.includes(name));
+    rows.push({ criterionId: source.id, disposition: 'deferred', expectedOutcome: source.requirement, journeyIds: [],
+      reason: 'real-data: Vetted reference records are unavailable; real-format validation remains unverified.',
+      syntheticCoverage: { assumptions: 'Fictional narrative schema fixture only, not real-format validation.', journeyIds: ['synthetic-narrative'], outputs: [{ sourceCriterionId: source.id, name }] } });
+    steps.push({ action: 'expectText', selector: '#' + source.id, text: 'Synthetic ' + name });
+  }
+  // Keep the archived first and last criterion positions used by the adversarial cases.
+  plan.criteria.splice(1, 0, ...rows);
+  plan.journeys.push({ id: 'synthetic-narrative', title: 'Synthetic narrative outputs', kind: 'primary', steps });
+}
+
 test('ID 12 generic-only baseline is rejected even with allowed real-data dependency reasons', async () => {
   // Archived rejected plan, with current allowed reason prefixes added only in this test.
   const plan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
   const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
   for (const criterion of plan.criteria) if (criterion.disposition === 'deferred') criterion.reason = 'real-data: Vetted reference records are unavailable; real-format validation is withheld.';
   assert.deepEqual(plan.criteria.filter((item: any) => item.disposition === 'implemented').map((item: any) => item.criterionId), ['MSG-01', 'MSG-02', 'MSG-03']);
+  assert.throws(() => parseQualityPlan(plan, inventory), /Missing acceptance criteria: DESC12-1, DESC12-2, SUMMARY12-1/);
+  addId12Narrative(plan, inventory);
   assert.throws(() => parseQualityPlan(plan, inventory), /UC12-1.*syntheticCoverage/);
 });
 
 async function syntheticId12Plan(): Promise<{ plan: QualityPlan; inventory: AcceptanceCriterion[] }> {
   const plan: QualityPlan = JSON.parse(await fs.readFile(path.join(process.cwd(), 'tests/fixtures/id12-deferred-plan.json'), 'utf8'));
   const inventory = packetFor(challenges.find(item => item.id === '12')!).acceptance;
+  addId12Narrative(plan, inventory);
   const outputs = [
     { sourceCriterionId: 'UC12-1', name: 'frequency plans' },
     { sourceCriterionId: 'UC12-1', name: 'crypto change-over windows' },
@@ -346,7 +370,7 @@ test('synthetic coverage cannot be replaced by generic journeys, labels, inputs 
     { change: plan => { plan.criteria[0].syntheticCoverage!.outputs = [plan.criteria[0].syntheticCoverage!.outputs.at(-1)!]; }, error: /own deferred source/ },
     { change: plan => { plan.criteria[0].syntheticCoverage!.journeyIds.push('synthetic-usmtf'); }, error: /duplicates/ },
     { change: plan => { plan.criteria[0].syntheticCoverage!.outputs.push(plan.criteria[0].syntheticCoverage!.outputs[0]); }, error: /duplicates/ },
-    { change: plan => { plan.criteria[1].syntheticCoverage = structuredClone(plan.criteria[0].syntheticCoverage); }, error: /allowed only for a deferred/ },
+    { change: plan => { plan.criteria.find(item => item.disposition === 'implemented')!.syntheticCoverage = structuredClone(plan.criteria[0].syntheticCoverage); }, error: /allowed only for a deferred/ },
     { change: plan => { plan.journeys.at(-1)!.steps = [
       { action: 'fill', selector: '#source-input', value: original.criteria[0].syntheticCoverage!.outputs.map(output => output.name).join(', ') },
       { action: 'click', selector: '#parse' }, { action: 'expectText', selector: '#result', text: 'Saved generic record' }
@@ -359,4 +383,54 @@ test('synthetic coverage cannot be replaced by generic journeys, labels, inputs 
     const plan = structuredClone(original); change(plan);
     assert.throws(() => parseQualityPlan(plan, inventory), error);
   }
+});
+
+function solutionPlan(): { plan: QualityPlan; solution: SolutionContract } {
+  const plan = validPlan();
+  plan.schemaVersion = 2;
+  plan.criteria = plan.criteria.map(({ syntheticCoverage, reason, ...criterion }) => ({ ...criterion, disposition: 'implemented', journeyIds: [], capabilityIds: ['engine'] }));
+  plan.journeys = [];
+  return { plan, solution: {
+    schemaVersion: 1, objective: 'Compute the required result.',
+    capabilities: [{ id: 'engine', kind: 'algorithm', description: 'Compute the result for each input.', criterionIds: ['UCsample-1', 'USERsample-1'], required: true, evaluationIds: ['reference-cases'] }],
+    runtime: { profile: 'cli', files: ['engine.mjs'], requiredEnv: [], command: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } }
+  } };
+}
+
+test('version 2 accepts computational-only CLI criteria with frozen capability mappings', () => {
+  const { plan, solution } = solutionPlan();
+  assert.deepEqual(parseQualityPlan(plan, acceptance, solution), plan);
+  assert.throws(() => parseQualityPlan(plan, acceptance), /requires solution-contract/);
+  assert.throws(() => parseQualityPlan(validPlan(), acceptance, solution), /schemaVersion 2/);
+});
+
+test('required capabilities cannot be deferred or replaced by green browser coverage', () => {
+  const { solution } = solutionPlan();
+  solution.capabilities[0].criterionIds = ['UCsample-1'];
+  solution.runtime = { profile: 'browser', files: ['index.html', 'engine.mjs'], requiredEnv: [], entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+  const plan = validPlan(); plan.schemaVersion = 2;
+  delete plan.criteria[1].syntheticCoverage;
+  plan.criteria[1] = { ...plan.criteria[1], disposition: 'implemented', journeyIds: ['create', 'recover', 'synthetic-identity'], capabilityIds: [] };
+  plan.criteria[0] = { ...plan.criteria[0], disposition: 'deferred', journeyIds: [], capabilityIds: [], reason: 'real-system: The UI demonstrates a sample result.' };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /Required capability engine.*cannot be deferred/);
+  plan.criteria[0] = { ...plan.criteria[0], disposition: 'implemented', journeyIds: ['create'], capabilityIds: [] };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /Required capability engine.*mapped/);
+  plan.criteria[0].capabilityIds = ['engine'];
+  assert.equal(parseQualityPlan(plan, acceptance, solution).schemaVersion, 2);
+});
+
+test('version 2 rejects invented evidence mappings and missing browser journeys', () => {
+  const { plan, solution } = solutionPlan();
+  plan.criteria[0].capabilityIds = ['unknown'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /unknown capability/);
+  plan.criteria[0].capabilityIds = ['engine', 'engine'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /capabilityIds contains duplicates/);
+  plan.criteria[0].capabilityIds = ['engine'];
+  solution.capabilities[0].criterionIds = ['USERsample-1'];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /without its criterion mapping/);
+  solution.capabilities[0].criterionIds = ['UCsample-1'];
+  solution.runtime = { profile: 'browser', files: ['index.html', 'engine.mjs'], requiredEnv: [], entrypoint: 'index.html', evaluator: { runtime: 'node', entrypoint: 'engine.mjs', args: [] } };
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /require primary and recovery/);
+  plan.journeys = [validPlan().journeys[0]];
+  assert.throws(() => parseQualityPlan(plan, acceptance, solution), /primary journey and one recovery/);
 });

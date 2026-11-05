@@ -26,8 +26,8 @@ export function tokenUsage(raw: unknown, engine: 'pi' | 'codex'): StageTokenUsag
     reasoningOutputTokens: count(engine === 'pi' ? u.reasoning : u.reasoningOutputTokens), totalTokens: count(u.totalTokens),
     uncachedPlusOutputTokens: add(uncachedInputTokens, outputTokens) };
 }
-export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns: number }
-export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000, maxTurns: 40 };
+export interface AgentLimits { timeoutMs: number; idleMs: number; maxTurns?: number }
+export const defaultAgentLimits: AgentLimits = { timeoutMs: 30 * 60_000, idleMs: 5 * 60_000 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
 
 /** Bound setup, model/tool work and artifact recovery even when the SDK ignores abort. */
@@ -36,7 +36,7 @@ export async function runAgentStage(options: {
   signal: AbortSignal;
   limits?: Partial<AgentLimits>;
   create: (signal: AbortSignal) => Promise<StageSession>;
-  work: (prompt: (text: string) => Promise<void>, signal: AbortSignal) => Promise<void>;
+  work: (prompt: (text: string) => Promise<void>, signal: AbortSignal, hostWork: <T>(work: () => Promise<T>) => Promise<T>) => Promise<void>;
   onEvent: (event: StageEvent) => void;
   onMetrics?: (metrics: { durationMs: number; usage: StageTokenUsage | null }) => void;
 }) {
@@ -48,6 +48,7 @@ export async function runAgentStage(options: {
   };
   const limits = { ...defaultAgentLimits, ...options.limits };
   for (const [key, value] of Object.entries(limits)) {
+    if (key === 'maxTurns' && value === undefined) continue;
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Invalid agent limit: ${key}`);
   }
   if (options.signal.aborted) throw new Error(stoppedMessage);
@@ -55,6 +56,7 @@ export async function runAgentStage(options: {
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
   let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
   let lastActivity = 'initializing the agent session';
+  let hostWorking = false;
   let idleTimer: ReturnType<typeof setTimeout>;
   let rejectInterrupted!: (error: Error) => void;
   const interrupted = new Promise<never>((_resolve, reject) => { rejectInterrupted = reject; });
@@ -66,6 +68,7 @@ export async function runAgentStage(options: {
   };
   const heartbeat = () => {
     clearTimeout(idleTimer);
+    if (hostWorking) return;
     idleTimer = setTimeout(() => fail(`${options.label} made no progress for ${limits.idleMs / 1000} seconds while ${lastActivity}. Inspect the saved activity and start a new run.`), limits.idleMs);
   };
   const abort = () => fail(stoppedMessage);
@@ -73,7 +76,7 @@ export async function runAgentStage(options: {
   const release = (target: StageSession, cancel: boolean) => {
     // abort() waits for idle in Pi. Cleanup must not depend on that promise settling.
     if (cancel) { try { void Promise.resolve(target.abort()).catch(() => {}); } catch {} }
-    try { target.dispose(); } catch {}
+    try { void Promise.resolve(target.dispose()).catch(() => {}); } catch {}
   };
   options.signal.addEventListener('abort', abort, { once: true });
   const deadline = setTimeout(() => fail(`${options.label} exceeded the ${limits.timeoutMs / 60_000}-minute limit. Inspect the saved artifacts before retrying.`), limits.timeoutMs);
@@ -110,7 +113,7 @@ export async function runAgentStage(options: {
         case 'tool_execution_start':
           lastActivity = `running ${event.toolName}`; heartbeat(); break;
         case 'turn_start':
-          if (++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. Inspect its artifacts before retrying.`); return; }
+          if (limits.maxTurns !== undefined && ++turns > limits.maxTurns) { fail(`${options.label} reached the ${limits.maxTurns}-turn limit. Inspect its artifacts before retrying.`); return; }
           lastActivity = 'waiting for the model'; heartbeat(); break;
       }
       // A transient provider error can be followed by a successful SDK retry or compaction.
@@ -136,7 +139,11 @@ export async function runAgentStage(options: {
       check();
       if (assistantError) throw new Error(assistantError);
       lastActivity = 'checking stage artifacts'; heartbeat();
-    }, controller.signal);
+    }, controller.signal, async hostWork => {
+      check(); hostWorking = true; clearTimeout(idleTimer);
+      try { return await hostWork(); }
+      finally { hostWorking = false; if (!closed && !failure) heartbeat(); }
+    });
     check();
   })();
   try { await Promise.race([work, interrupted]); succeeded = true; }

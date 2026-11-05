@@ -1,5 +1,6 @@
 import type { AcceptanceCriterion } from './types.js';
 import type { BrowserJourney, BrowserStep, QualityPlan, UxSpec } from '../shared/quality.js';
+import type { SolutionContract } from '../shared/solution.js';
 
 const limits = { criteria: 512, journeys: 12, steps: 40, screens: 12, description: 4_000, selector: 512, value: 10_000 };
 
@@ -36,7 +37,7 @@ function version(value: unknown, name: string) {
 }
 
 function step(value: unknown, name: string): BrowserStep {
-  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName']);
+  const entry = object(value, name, ['action', 'selector', 'value', 'key', 'text', 'fileName', 'fresh']);
   const action = text(entry.action, `${name}.action`, 32);
   const selector = () => text(entry.selector, `${name}.selector`, limits.selector).trim();
   const fields = (...keys: string[]) => object(value, name, ['action', ...keys]);
@@ -60,10 +61,14 @@ function step(value: unknown, name: string): BrowserStep {
       fields('selector', 'text');
       return { action, selector: selector(), text: text(entry.text, `${name}.text`, limits.value) };
     case 'expectDownload': {
-      fields('selector', 'fileName', 'text');
+      fields('selector', 'fileName', 'text', 'fresh');
       const result: Extract<BrowserStep, { action: 'expectDownload' }> = { action, selector: selector() };
       if (Object.hasOwn(entry, 'fileName')) result.fileName = text(entry.fileName, `${name}.fileName`, 255);
       if (Object.hasOwn(entry, 'text')) result.text = text(entry.text, `${name}.text`, limits.value);
+      if (Object.hasOwn(entry, 'fresh')) {
+        if (typeof entry.fresh !== 'boolean') throw new Error(`${name}.fresh must be a boolean.`);
+        result.fresh = entry.fresh;
+      }
       return result;
     }
     default: throw new Error(`${name}.action is unsupported: ${action}. Use only the documented browser actions; JavaScript and navigation are not allowed.`);
@@ -139,20 +144,24 @@ function syntheticCoverage(value: unknown, name: string, criterionId: string,
   return { assumptions, journeyIds: ids, outputs };
 }
 
-/** Parse the complete host-owned acceptance inventory into a bounded browser test contract. */
-export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion[]): QualityPlan {
+/** Parse the complete host-owned acceptance inventory into a bounded evidence contract. */
+export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion[], solution?: SolutionContract): QualityPlan {
   const plan = object(value, 'acceptance-plan.json', ['schemaVersion', 'criteria', 'journeys']);
-  version(plan.schemaVersion, 'acceptance-plan.json');
+  if (plan.schemaVersion !== 1 && plan.schemaVersion !== 2) throw new Error('acceptance-plan.json.schemaVersion must be 1 or 2.');
+  if (plan.schemaVersion === 2 && !solution) throw new Error('A version 2 acceptance plan requires solution-contract.json.');
+  if (solution && plan.schemaVersion !== 2) throw new Error('A solution contract requires acceptance-plan.json schemaVersion 2 with capabilityIds.');
   const inventory = new Set(acceptance.map(criterion => criterion.id));
   if (!inventory.size || inventory.size !== acceptance.length || inventory.size > limits.criteria) throw new Error('The acceptance inventory must have 1–512 unique criterion IDs.');
-  const journeys = array(plan.journeys, 'journeys', 2, limits.journeys).map((value, i) => journey(value, `journeys[${i}]`));
+  const journeys = array(plan.journeys, 'journeys', plan.schemaVersion === 1 ? 2 : 0, limits.journeys).map((value, i) => journey(value, `journeys[${i}]`));
+  if (solution?.runtime.profile !== 'cli' && plan.schemaVersion === 2 && !journeys.length) throw new Error('Browser and service delivery profiles require primary and recovery browser journeys.');
+  if (solution?.runtime.profile === 'cli' && journeys.length) throw new Error('A CLI delivery profile cannot declare browser journeys. Use a browser or service profile for an interface.');
   const journeyIds = new Set(journeys.map(item => item.id));
   if (journeyIds.size !== journeys.length) throw new Error('Journey IDs must be unique.');
-  if (!journeys.some(item => item.kind === 'primary') || !journeys.some(item => item.kind === 'recovery')) throw new Error('Include at least one primary journey and one recovery journey.');
+  if (journeys.length && (!journeys.some(item => item.kind === 'primary') || !journeys.some(item => item.kind === 'recovery'))) throw new Error('Include at least one primary journey and one recovery journey.');
   const seen = new Set<string>(), referenced = new Set<string>();
   const criteria: QualityPlan['criteria'] = array(plan.criteria, 'criteria', 1, limits.criteria).map((value, i) => {
     const name = `criteria[${i}]`;
-    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason', 'syntheticCoverage']);
+    const entry = object(value, name, ['criterionId', 'disposition', 'expectedOutcome', 'journeyIds', 'reason', 'syntheticCoverage', ...(plan.schemaVersion === 2 ? ['capabilityIds'] : [])]);
     const criterionId = identifier(entry.criterionId, `${name}.criterionId`);
     if (!inventory.has(criterionId)) throw new Error(`${name} names an unknown criterion: ${criterionId}.`);
     if (seen.has(criterionId)) throw new Error(`Duplicate criterion: ${criterionId}.`);
@@ -162,14 +171,24 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
     const ids = array(entry.journeyIds, `${name}.journeyIds`, 0, limits.journeys).map((value, j) => identifier(value, `${name}.journeyIds[${j}]`));
     if (new Set(ids).size !== ids.length) throw new Error(`${name}.journeyIds contains duplicates.`);
     for (const id of ids) if (!journeyIds.has(id)) throw new Error(`${name} references an unknown journey: ${id}.`);
+    const capabilityIds = plan.schemaVersion === 2
+      ? array(entry.capabilityIds, `${name}.capabilityIds`, 0, 64).map((value, j) => identifier(value, `${name}.capabilityIds[${j}]`)) : [];
+    if (new Set(capabilityIds).size !== capabilityIds.length) throw new Error(`${name}.capabilityIds contains duplicates.`);
+    for (const id of capabilityIds) {
+      const capability = solution?.capabilities.find(item => item.id === id);
+      if (!capability) throw new Error(`${name} references an unknown capability: ${id}.`);
+      if (!capability.criterionIds.includes(criterionId)) throw new Error(`${name} references capability ${id} without its criterion mapping in the solution contract.`);
+    }
     const reason = Object.hasOwn(entry, 'reason') ? text(entry.reason, `${name}.reason`) : undefined;
+    const requiredCapability = solution?.capabilities.find(capability => capability.required && capability.criterionIds.includes(criterionId));
+    if (requiredCapability && entry.disposition === 'deferred') throw new Error(`Required capability ${requiredCapability.id} must be implemented and mapped by criterion ${criterionId}; core capabilities cannot be deferred.`);
     if (entry.disposition === 'deferred') {
-      if (!reason || ids.length) throw new Error(`${name}: a deferred criterion requires a nonempty reason and no journeyIds.`);
+      if (!reason || ids.length || capabilityIds.length) throw new Error(`${name}: a deferred criterion requires a nonempty reason and no journeyIds or capabilityIds.`);
       if (!/^(real-system|real-data|human-authority):\s*\S/.test(reason)) {
         throw new Error(`${name} (${criterionId}): deferral reason must start with real-system:, real-data:, or human-authority: followed by a concrete dependency. Missing specifications or experts require a labeled synthetic stand-in, not deferral.`);
       }
     } else {
-      if (!ids.length) throw new Error(`${name}: an implemented criterion must map to at least one journey.`);
+      if (!ids.length && !capabilityIds.length) throw new Error(`${name}: an implemented criterion must map to at least one journey or capability.`);
       ids.forEach(id => referenced.add(id));
     }
     let synthetic: QualityPlan['criteria'][number]['syntheticCoverage'];
@@ -178,7 +197,7 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
       synthetic = syntheticCoverage(entry.syntheticCoverage, name, criterionId, acceptance, journeys);
       synthetic.journeyIds.forEach(id => referenced.add(id));
     }
-    return { criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids, ...(reason !== undefined ? { reason } : {}), ...(synthetic ? { syntheticCoverage: synthetic } : {}) };
+    return { ...(plan.schemaVersion === 2 ? { capabilityIds } : {}), criterionId, disposition: entry.disposition, expectedOutcome, journeyIds: ids, ...(reason !== undefined ? { reason } : {}), ...(synthetic ? { syntheticCoverage: synthetic } : {}) };
   });
   const missing = [...inventory].filter(id => !seen.has(id));
   if (missing.length) throw new Error(`Missing acceptance criteria: ${missing.join(', ')}.`);
@@ -190,7 +209,13 @@ export function parseQualityPlan(value: unknown, acceptance: AcceptanceCriterion
   }
   const unused = [...journeyIds].filter(id => !referenced.has(id));
   if (unused.length) throw new Error(`Every journey must map to an implemented criterion or deferred syntheticCoverage. Unmapped journeys: ${unused.join(', ')}.`);
-  return { schemaVersion: 1, criteria, journeys };
+  for (const capability of solution?.capabilities ?? []) for (const criterionId of capability.criterionIds) {
+    const criterion = criteria.find(item => item.criterionId === criterionId)!;
+    if (capability.required && (criterion.disposition !== 'implemented' || !criterion.capabilityIds?.includes(capability.id))) {
+      throw new Error(`Required capability ${capability.id} must be implemented and mapped by criterion ${criterionId}; core capabilities cannot be deferred.`);
+    }
+  }
+  return { schemaVersion: plan.schemaVersion, criteria, journeys };
 }
 
 export function parseUxSpec(value: unknown): UxSpec {
@@ -210,13 +235,13 @@ export function parseUxSpec(value: unknown): UxSpec {
   };
 }
 
-export const qualityContractGuide = `# Application quality contract (schema version 1)
+export const qualityContractGuide = `# Application and solution quality contract (schema version 2)
 
-Write acceptance-plan.json and ux-spec.json during planning, before application implementation. Use valid JSON without comments or extra fields. The host validates and freezes these contracts for browser verification; implementation and repair must satisfy the planned outcomes rather than rewrite them to match observed behavior.
+Write acceptance-plan.json (schemaVersion 2), ux-spec.json (schemaVersion 1), solution-contract.json and evaluation-plan.json during planning, before implementation. Read solution-contract.md for runtime and host evaluator schemas. Use valid JSON without comments or extra fields. The host validates and freezes all four contracts; implementation and repair must satisfy planned outcomes rather than rewrite them. Evaluation answer keys are sealed outside the implementation workspace after planning. Do not recreate evaluation-plan.json during implementation or repair. The host restores it for final delivery.
 
 ## acceptance-plan.json
 
-Include every canonical ID from packet.json acceptance exactly once in criteria. Each entry has criterionId, disposition (implemented or deferred), expectedOutcome (an independently established complete outcome), journeyIds (array of journey IDs), and optional reason. An implemented criterion needs at least one journey. A deferred criterion needs a nonempty reason and an empty journeyIds array. At least one criterion must be implemented. Provenance identifies repeated source entries combined under one canonical ID; do not add alias IDs as separate criteria.
+Include every canonical ID from packet.json acceptance exactly once in criteria. Each entry has criterionId, disposition (implemented or deferred), expectedOutcome (an independently established complete outcome), journeyIds (array of journey IDs), capabilityIds for version 2 (array of solution capability IDs), and optional reason. An implemented criterion needs at least one journey or capability. Required capabilities must be implemented and mapped by their criteria. A deferred criterion needs a nonempty reason and an empty journeyIds array. At least one criterion must be implemented. Provenance identifies repeated source entries combined under one canonical ID; do not add alias IDs as separate criteria.
 
 ${primaryDeferralPolicy}
 
@@ -232,7 +257,7 @@ For every deferral, start reason with exactly one allowed category followed by a
 
 Put a Primary deferrals section first in scope.md, plan.md, verification.md, the user guide and the review summary. List every deferred primary requirement and expected deliverable by canonical ID, original wording, allowed dependency, withheld action and demonstrated stand-in, or explicitly state none. Keep the full inventory in test-matrix.md. A deferred criterion remains unverified and prevents a claim that all requirements are met. Preserve source meaning: implemented synthetic prototype behavior must cover all named behaviors and outputs under an explicit synthetic scope. A partial demonstration cannot count as the whole requirement, and a requirement explicitly demanding real integration, real data validation or approval remains deferred until that dependency is satisfied. Do not rewrite or drop a requirement to manufacture completion.
 
-Include 2 to 12 journeys. Each has a unique id, title, kind (primary or recovery), and 2 to 40 ordered steps. Include both primary and recovery journeys; every journey must be referenced by an implemented criterion or deferred syntheticCoverage. Each journey must interact via click, press, check, select or expectDownload and then assert the outcome. Filling a field and reading its value alone does not establish a working application. A primary journey must assert a literal result with expectText, expectValue or expectDownload with text; expectVisible alone is insufficient. Choose narrow result selectors and independent expected values. A recovery journey should induce invalid input or another failure, observe it, then recover and verify success. All journeys run at desktop and narrow widths against the delivered application.
+CLI delivery uses no browser journeys and requires computational capability evidence. Browser and service delivery include 2 to 12 journeys. Each has a unique id, title, kind (primary or recovery), and 2 to 40 ordered steps. Include both primary and recovery journeys; every journey must be referenced by an implemented criterion or deferred syntheticCoverage. Each journey must interact via click, press, check, select or expectDownload and then assert the outcome. Filling a field and reading its value alone does not establish a working application. A primary journey must assert a literal result with expectText, expectValue or expectDownload with text; expectVisible alone is insufficient. Choose narrow result selectors and independent expected values. A recovery journey should induce invalid input or another failure, observe it, then recover and verify success. All journeys run at desktop and narrow widths against the delivered application.
 
 Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"fill","selector":"#title","value":"Inspect pump"}
@@ -246,12 +271,12 @@ Allowed steps (selector is ordinary CSS identifying one element):
 - {"action":"expectVisible","selector":"#validation-error"}
 - {"action":"expectDownload","selector":"#export","fileName":"records.csv","text":"Inspect pump"}
 
-expectText compares the exact visible innerText after whitespace normalization. expectValue compares the exact value. expectDownload clicks the selected control and checks the download; optional fileName must match the suggested filename exactly, and optional text is a literal substring of the UTF-8 file contents. No evaluate, JavaScript, navigation, URLs, arbitrary commands, timeouts or custom step fields are supported. Use local synthetic inputs. Values for fill and expectValue may be empty for validation/reset checks; all other strings must be nonempty. IDs start with a letter and contain letters, digits, underscores or hyphens (maximum 80 characters). Descriptions and expectedOutcome are at most 4,000 characters, titles 200, selectors 512, values/expected text 10,000, keys 80, filenames 255. At most 512 criteria are supported.
+expectText compares the exact visible innerText after whitespace normalization. expectValue compares the exact value. expectDownload captures the selected control once and reuses its file for further assertions on that selector until fill, click, select, press, check or reload. Set fresh: true to require another capture without an edit. Every assertion checks the captured bytes; optional fileName must match the suggested filename exactly, and optional text is a literal substring of the UTF-8 file contents. No evaluate, JavaScript, navigation, URLs, arbitrary commands, timeouts or custom step fields are supported. Use local synthetic inputs. Values for fill and expectValue may be empty for validation/reset checks; all other strings must be nonempty. IDs start with a letter and contain letters, digits, underscores or hyphens (maximum 80 characters). Descriptions and expectedOutcome are at most 4,000 characters, titles 200, selectors 512, values/expected text 10,000, keys 80, filenames 255. At most 512 criteria are supported.
 
 Example shape (replace UCcustom-1 and add every remaining packet criterion; do not copy sample outcomes unless they describe the actual requested workflow):
 {
-  "schemaVersion": 1,
-  "criteria": [{"criterionId":"UCcustom-1","disposition":"implemented","expectedOutcome":"A saved task is visible and empty titles are rejected without losing the draft.","journeyIds":["save-task","recover-title"]}],
+  "schemaVersion": 2,
+  "criteria": [{"criterionId":"UCcustom-1","disposition":"implemented","expectedOutcome":"A saved task is visible and empty titles are rejected without losing the draft.","journeyIds":["save-task","recover-title"],"capabilityIds":["task-storage"]}],
   "journeys": [
     {"id":"save-task","title":"Create a task","kind":"primary","steps":[{"action":"fill","selector":"#title","value":"Inspect pump"},{"action":"click","selector":"#save"},{"action":"expectText","selector":"#result","text":"Saved: Inspect pump"}]},
     {"id":"recover-title","title":"Recover from an empty title","kind":"recovery","steps":[{"action":"fill","selector":"#title","value":""},{"action":"click","selector":"#save"},{"action":"expectText","selector":"#validation-error","text":"Enter a title."},{"action":"fill","selector":"#title","value":"Inspect valve"},{"action":"click","selector":"#save"},{"action":"expectText","selector":"#result","text":"Saved: Inspect valve"}]}
@@ -274,4 +299,5 @@ All fields below are required, nonempty strings (maximum 4,000 characters), exce
 }
 
 Passing these contracts checks the declared browser behavior. Review must still assess whether the planned expected outcomes express every defining source requirement and whether declared deferral dependencies are genuine. Expert validation is a separate evidence boundary, never a prerequisite for building the synthetic workflow. A passed browser run does not establish real-format or operational validation or certify deferred integrations.
+Passing requires executed Node tests, all required host capability evaluations, a clean runtime prepared from declared delivery files, and all declared browser journeys at both viewport sizes. For version 2, the host copies application test files into the clean installed runtime and runs them there with only the declared runtime environment. Include any test helper modules and data fixtures in runtime.files; test files cannot rely on ambient workspace files, host toolkit internals or evaluation answer keys. A green browser cannot override a failed computational evaluation. Domain experts still need to assess whether planned expectations and datasets express the source requirements. Synthetic benchmarks establish declared behavior; representative reviewed data is needed to establish operational usefulness. Version 1 browser-only contracts remain readable for earlier runs.
 `;

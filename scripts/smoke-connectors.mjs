@@ -8,12 +8,13 @@ import { createRequire } from 'node:module';
 import { startFixtureProvider } from './mock-provider.mjs';
 import { qualityFixtureProject } from './quality-fixture.mjs';
 import { assertContext } from '../dist-electron/electron/connectors/snapshot.js';
+import { assertBriefDataIntegrity } from '../dist-electron/electron/brief-data.js';
 import { startConnectorServers } from '../tests/fixtures/connector-servers.mjs';
 import { startDataServiceServer } from '../tests/fixtures/data-service-server.mjs';
 
 const electronBinary = createRequire(import.meta.url)('electron');
 // Run after npm run build, on a host permitted to launch Electron, Chrome,
-// sandbox-exec and ps. No live model, account or data-service calls.
+// and ps. No live model, account or data-service calls.
 const output = path.resolve('output/connectors-smoke'); await fs.mkdir(output, { recursive: true });
 const root = await fs.mkdtemp(path.join(output, 'run-'));
 const piDir = path.join(root, 'pi'); await fs.mkdir(piDir);
@@ -40,7 +41,7 @@ async function scanSaved(directory) {
 }
 await fs.writeFile(path.join(piDir, 'models.json'), JSON.stringify({ providers: { 'fleet-fixture': {
   baseUrl: fixture.baseUrl, api: 'openai-completions', apiKey: 'local-fixture-only',
-  models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
+  models: [{ id: 'fixture-model', name: 'Local test fixture', reasoning: false, input: ['text', 'image'], contextWindow: 64000, maxTokens: 8000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }]
 } } }));
 let app;
 async function launch() {
@@ -210,6 +211,7 @@ try {
     assert.equal(await checkbox.isChecked(), false); await checkbox.check();
   }
   assert.match(await brief.locator('.connected-data-section').innerText(), /Local test fixture/);
+  assert.match(await brief.locator('.brief-data-empty').innerText(), /Your build will use the connected data selected below/);
   await brief.getByRole('button', { name: 'Save challenge', exact: true }).click();
   await page.getByText('Challenge saved.', { exact: true }).waitFor();
   const id = await page.evaluate(async () => (await window.fleetHarness.bootstrap()).state.projects[0].id);
@@ -229,11 +231,28 @@ try {
   assert.equal(final.status, 'review', String(final.error ?? 'no error recorded'));
   assert.equal(final.report.passed, 1); assert.equal(final.connectedData.length, 4);
   assert.ok(final.runCheckpoint.connectedContextHash); await assertContext(final.workspace, final.runCheckpoint.connectedContextHash);
+  assert.equal(final.runCheckpoint.data.mode, 'provided');
+  assert.equal(final.runCheckpoint.data.connectedContextHash, final.runCheckpoint.connectedContextHash);
+  await assertBriefDataIntegrity(final.workspace, final.runCheckpoint.data);
+  const manifest = JSON.parse(await fs.readFile(path.join(final.workspace, 'inputs/manifest.json'), 'utf8'));
+  assert.equal(manifest.mode, 'provided'); assert.equal(manifest.sources.length, 4);
+  assert.equal(manifest.generated, undefined);
+  assert.deepEqual(manifest.sources.map(source => source.connectedSource), final.runCheckpoint.data.connectedSources);
+  assert.deepEqual(manifest.sources.map(source => source.connectedSource.digest), final.connectedData.map(source => source.digest));
+  await assert.rejects(fs.access(path.join(final.workspace, 'data/synthetic-data.json')), { code: 'ENOENT' });
+  assert.equal(fixture.requests.some(request => request.messages.some(message => message.role === 'user' &&
+    (typeof message.content === 'string' ? message.content : JSON.stringify(message.content)).includes('You are the synthetic data agent.'))), false);
+  const plan = JSON.parse(await fs.readFile(path.join(final.workspace, 'acceptance-plan.json'), 'utf8'));
+  assert.equal(plan.schemaVersion, 2);
+  const solution = JSON.parse(await fs.readFile(path.join(final.workspace, 'solution-contract.json'), 'utf8'));
+  assert.equal(solution.runtime.profile, 'browser'); assert.equal(solution.capabilities.length, 1);
+  assert.equal(final.report.quality.status, 'passed');
+  assert.equal(final.report.quality.capabilities.find(capability => capability.id === 'parse').status, 'passed');
   const requirements = await fs.readFile(path.join(final.workspace, 'requirements.md'), 'utf8');
   assert.match(requirements, /## Connected data/);
   const readme = await fs.readFile(path.join(final.workspace, 'context/README.md'), 'utf8');
   assert.match(readme, /UNTRUSTED DATA/);
-  for (const label of selections) { assert.ok(readme.includes(label)); assert.ok(final.logs.some(log => log.text.includes('This build uses sample data from') && log.text.includes(label))); }
+  for (const label of selections) { assert.ok(readme.includes(label)); assert.ok(final.logs.some(log => log.text.includes('This build uses supplied data from') && log.text.includes(label))); }
   for (const selected of final.connectedData) {
     const context = JSON.parse(await fs.readFile(path.join(final.workspace, 'context', selected.id + '.json'), 'utf8'));
     assert.equal(context.digest, selected.digest); assert.equal(context.sample, true); assert.equal(context.items.length, 2);
@@ -255,7 +274,7 @@ try {
   await app.close(); app = undefined;
   await scanSaved(stateDir); await scanSaved(final.workspace); assertNoSecrets(JSON.stringify({ logs, errors }));
   assert.deepEqual(errors, []);
-  const receipt = { passed: true, sampleCards: 7, selectedSources: 4, workspaceContext: true, signIns: accounts.state.pkceVerified, dataService: true, restart: true, cancellation: true, noLeakedCredentials: true, nativeEncryption: nativeStorage, nativeProcessCleanup: true, fixtureBuild: final.status, rendererErrors: errors.length };
+  const receipt = { passed: true, sampleCards: 7, selectedSources: 4, workspaceContext: true, providedData: true, acceptancePlanVersion: plan.schemaVersion, solutionContract: true, signIns: accounts.state.pkceVerified, dataService: true, restart: true, cancellation: true, noLeakedCredentials: true, nativeEncryption: nativeStorage, nativeProcessCleanup: true, fixtureBuild: final.status, rendererErrors: errors.length };
   await fs.writeFile(path.join(output, 'receipt.json'), JSON.stringify(receipt, null, 2));
   console.log(JSON.stringify(receipt, null, 2));
 } finally {

@@ -7,6 +7,10 @@ export function ExecutableDownload({ project, api, busy, action, buttonClassName
   action: (task: () => Promise<unknown>) => Promise<unknown>;
 }) {
   const download = project.executable, packaging = download?.status === 'packaging';
+  if (project.runtimeProfile && project.runtimeProfile !== 'browser') return <div className="executable-download">
+    <button className={buttonClassName} disabled={busy || !project.approvedAt || project.status === 'running'} onClick={() => void action(() => api.exportProject(project.id))}><Download size={16}/>Export runnable package</button>
+    <p>Includes the {project.runtimeProfile === 'cli' ? 'command-line engine' : 'application service'}, dependency files, startup instructions, and verification evidence. Follow README.md to configure and run it.</p>
+  </div>;
   return <div className="executable-download">
     <button className={buttonClassName} disabled={busy || packaging || !project.approvedAt || project.status === 'running'}
       onClick={() => void action(() => api.downloadExecutable(project.id))}>

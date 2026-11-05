@@ -1,3 +1,5 @@
+import type { RuntimeManifest, SolutionEvaluationReport } from './solution.js';
+
 export type BrowserStep =
   | { action: 'fill'; selector: string; value: string }
   | { action: 'click'; selector: string }
@@ -8,7 +10,7 @@ export type BrowserStep =
   | { action: 'expectText'; selector: string; text: string }
   | { action: 'expectValue'; selector: string; value: string }
   | { action: 'expectVisible'; selector: string }
-  | { action: 'expectDownload'; selector: string; fileName?: string; text?: string };
+  | { action: 'expectDownload'; selector: string; fileName?: string; text?: string; fresh?: boolean };
 
 export interface BrowserJourney {
   id: string;
@@ -18,12 +20,14 @@ export interface BrowserJourney {
 }
 
 export interface QualityPlan {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   criteria: Array<{
     criterionId: string;
     disposition: 'implemented' | 'deferred';
     expectedOutcome: string;
     journeyIds: string[];
+    /** Required in version 2; references the frozen solution contract. */
+    capabilityIds?: string[];
     reason?: string;
     syntheticCoverage?: {
       assumptions: string;
@@ -51,6 +55,16 @@ export interface CriterionResult {
   requirement: string;
   status: 'passed' | 'failed' | 'unverified';
   detail: string;
+  capabilityIds?: string[];
+}
+
+export interface CapabilityResult {
+  id: string;
+  required: boolean;
+  criterionIds: string[];
+  evaluationIds: string[];
+  status: 'passed' | 'failed' | 'unverified';
+  detail: string;
 }
 
 export interface JourneyResult {
@@ -63,12 +77,27 @@ export interface JourneyResult {
   trace?: string;
 }
 
+export interface PackageEvidence {
+  status: 'passed' | 'failed';
+  cleanCopy: boolean;
+  profile: RuntimeManifest['profile'];
+  filesHash?: string;
+  detail: string;
+}
+
 export interface QualityReport {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2 | 3;
   contractHash: string;
   status: 'passed' | 'failed';
   requirementsMet: boolean;
   criteria: CriterionResult[];
   journeys: JourneyResult[];
   errors: string[];
+  /** Version 2 records the expected count so omitted browser checks cannot pass. */
+  expectedJourneys?: number;
+  capabilities?: CapabilityResult[];
+  solutionEvaluation?: SolutionEvaluationReport;
+  package?: PackageEvidence;
+  /** Version 3 requires host-recorded visual review for browser/service delivery. */
+  visualReview?: import('./visual-review.js').VisualReviewReport;
 }

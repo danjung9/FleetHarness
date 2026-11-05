@@ -8,7 +8,22 @@ import path from 'node:path';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
 import { Store } from '../dist-electron/electron/storage.js';
 import { createCodexSession } from '../dist-electron/electron/codex-session.js';
-import { RunProcessSweep, runProcessEnvironment, markedPsProcesses } from '../dist-electron/electron/process-sweep.js';
+import { RunProcessSweep, runProcessEnvironment, markedPsProcesses, deferRunCleanup } from '../dist-electron/electron/process-sweep.js';
+
+for (const confirmed of [true, false]) test(`scratch cleanup waits for confirmed process exit: ${confirmed}`, async () => {
+  let cleaned = 0;
+  const scope = new RunProcessSweep({graceMs:1, killMs:60, scan:async () => {
+    assert.equal(cleaned, 0, 'Runtime files must remain until process inspection confirms exit');
+    if (!confirmed) throw new Error('Synthetic inspection failure');
+    return [];
+  }});
+  scope.run(() => {
+    runProcessEnvironment({});
+    assert.equal(deferRunCleanup(async () => { cleaned++; }), true);
+  });
+  if (confirmed) { await scope.stop(); await scope.stop(); assert.equal(cleaned, 1); }
+  else { await assert.rejects(scope.stop(), /cleanup could not be confirmed/); assert.equal(cleaned, 0); }
+});
 
 // Real detached processes and OS signals; discovery is injected because the seat
 // sandbox prohibits ps. Native discovery and the GUI fixture belong to the overseer.
@@ -79,6 +94,76 @@ test('a single empty snapshot at the deadline is still refused', async () => {
     scan: async () => { await delay(30); return ++scans < 3 ? [{ pid: 987654, started: 'fixture' }] : []; } });
   scope.run(() => runProcessEnvironment());
   await assert.rejects(scope.stop(), /did not settle/);
+});
+
+for (const failure of ['ps timeout', 'changed snapshot']) test(`${failure} is retried before confirming two clean snapshots`, async () => {
+  let scans = 0;
+  const signals = [];
+  const scope = new RunProcessSweep({
+    scan: async marker => {
+      if (++scans === 1) {
+        if (failure === 'ps timeout') throw new Error('synthetic ps timeout');
+        const row = command => `987654 Wed Nov  4 16:08:30 2026 Ss ${command}\n`;
+        return markedPsProcesses(row('node worker'), row('node worker APPYARD_RUN_PROCESS=' + marker), marker, row('node changed'));
+      }
+      return [];
+    },
+    signal: (...args) => signals.push(args),
+  });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(scans, 3, 'Cleanup needs two clean snapshots after the failed inspection');
+  assert.deepEqual(signals, []);
+});
+
+test('an inspection failure resets the consecutive clean snapshot count', async () => {
+  let scans = 0;
+  const scope = new RunProcessSweep({ scan: async () => {
+    if (++scans === 2) throw new Error('synthetic inspection failure');
+    return [];
+  } });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(scans, 4, 'Clean snapshots separated by a failed inspection cannot confirm cleanup');
+});
+
+test('a transient identity recheck failure requires fresh ownership before any signal', async () => {
+  let scans = 0, alive = true;
+  const signals = [];
+  const scope = new RunProcessSweep({
+    scan: async () => {
+      if (++scans === 2) throw new Error('synthetic recheck timeout');
+      return alive ? [{ pid: 987654, started: 'fixture' }] : [];
+    },
+    signal: (pid, signal) => { signals.push({ pid, signal, scans }); alive = false; },
+  });
+  scope.environment({});
+  await scope.stop();
+  assert.equal(signals.length, 1);
+  assert.equal(signals[0].pid, 987654);
+  assert.equal(signals[0].scans, 4, 'The failed ownership recheck must never authorize a signal');
+  assert.equal(scans, 6, 'Two clean snapshots are required after the signal');
+});
+
+test('inspection failure at the deadline fails closed even after an empty snapshot', async () => {
+  for (const firstEmpty of [false, true]) {
+    let scans = 0;
+    const scope = new RunProcessSweep({ graceMs: 1, killMs: 10, scan: async () => {
+      scans++;
+      if (scans === 1) {
+        await delay(30);
+        if (firstEmpty) return [];
+      }
+      throw new Error('synthetic private environment');
+    } });
+    scope.environment({});
+    await assert.rejects(scope.stop(), error => {
+      assert.match(error.message, /cleanup could not be confirmed: cannot inspect/);
+      assert.doesNotMatch(error.message, /synthetic private environment/);
+      return true;
+    });
+    assert.equal(scans, 2, 'The failed first inspection must be retried before giving up');
+  }
 });
 
 test('a detached job that ignores TERM is killed and repeated Stop shares cleanup', { timeout: 10000 }, async t => {
@@ -165,7 +250,9 @@ test('macOS discovery matches only environment markers with the same start ident
 });
 
 for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 'cleanup-failure']) {
-  test(`${engine}: ${outcome} waits for cleanup and persists the truthful outcome`, { timeout: 10000 }, async t => {
+  // Failed cleanup also runs startup recovery, which can spend its full retry
+  // window after the session's five-second abort allowance.
+  test(`${engine}: ${outcome} waits for cleanup and persists the truthful outcome`, { timeout: outcome === 'cleanup-failure' ? 20000 : 10000 }, async t => {
     await fs.mkdir('.tmp', { recursive: true });
     const root = await fs.mkdtemp(path.resolve('.tmp/sweep-run-'));
     const store = new Store(root); await store.init();
@@ -181,12 +268,16 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       entered();
       if (outcome === 'failure') throw new Error('synthetic stage failure');
     };
-    const never = () => new Promise(() => {});
+    let cancelPrompt;
+    const cancelled = new Promise(resolve => { cancelPrompt = resolve; });
     let prematureStatus = false;
     const backend = new FleetBackend(store, process.execPath, () => {
       if (['stopped', 'review'].includes(project.status) && owned && !owned.exited) prematureStatus = true;
     }, path.resolve('.'), {
-      codex: { home: root, models: [{ id: 'fixture', configured: true }], async refresh() {} },
+      codex: { home: root, account: { status: 'connected', planUsageEnabled: true }, credentials: async () => ({ accessToken: 'synthetic-test-token', expiresAt: Date.now() + 60000 }), models: [{ id: 'fixture', name: 'Fixture', backend: 'codex', provider: 'chatgpt', configured: true }], async refresh() {} },
+      // This fixture checks process ownership and cleanup. Native readiness and
+      // discovery are covered separately and require the permitted-host run.
+      preflight: { browser: async () => {}, freeBytes: async () => 1024 ** 3 },
       processSweep: () => new RunProcessSweep({ graceMs: 1, killMs: outcome === 'cleanup-failure' ? 20 : 500,
         scan: async marker => jobs.filter(j => !j.exited && j.env.APPYARD_RUN_PROCESS === marker)
           .map(j => ({ pid: j.child.pid, started: 'fixture' })),
@@ -194,12 +285,12 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       }),
       createSession: async ({ customTools }) => ({
         session: {
-          subscribe: () => () => {}, abort() {}, dispose() {},
+          subscribe: () => () => {}, abort() { cancelPrompt(); }, dispose() {},
           async prompt() {
             const bash = customTools.find(tool => tool.name === 'bash');
             const result = await bash.execute('marker-fixture', { command: 'printf "%s" "$APPYARD_RUN_PROCESS"' });
             await begin({ APPYARD_RUN_PROCESS: result.content.find(c => c.type === 'text').text });
-            await never();
+            await cancelled;
           },
         },
       }),
@@ -234,8 +325,29 @@ for (const engine of ['pi', 'codex']) for (const outcome of ['stop', 'failure', 
       assert.match(project.error, /processes may still be active/);
       assert.doesNotMatch(project.error, /Run stopped by you/);
     } else assert.doesNotMatch(project.error ?? '', /cleanup could not be confirmed/);
+    if (engine === 'pi' && outcome === 'stop') {
+      assert.equal(project.runCheckpoint.writerState, 'idle');
+      assert.match(project.error, /build was stopped/);
+      assert.doesNotMatch(project.error, /may still be active|could not confirm/);
+    }
+    if (engine === 'codex' && outcome !== 'cleanup-failure') {
+      // A clean process sweep is distinct from the adapter's conservative
+      // refusal to authorize Resume without writer-exit evidence.
+      assert.equal(project.runCheckpoint.writerState, 'unconfirmed');
+      assert.match(project.error, /could not confirm that all build work stopped/);
+      assert.match(project.error, /operator shutdown procedure/);
+    }
     const restored = new Store(root); await restored.init();
-    assert.equal(restored.project(project.id).status, project.status);
-    assert.equal(restored.project(project.id).error, project.error);
+    const recovered = restored.project(project.id);
+    if (outcome === 'cleanup-failure' && recovered.processScope.cleanup === 'confirmed') {
+      assert.equal(recovered.status, 'stopped');
+      assert.equal(owned.exited, true, 'Startup claimed cleanup while the worker remained live');
+      assert.match(recovered.error, /processes have been stopped/);
+    } else {
+      assert.equal(recovered.status, project.status);
+      assert.equal(recovered.error, project.error);
+      assert.equal(recovered.runCheckpoint.writerState, project.runCheckpoint.writerState);
+      assert.equal(recovered.processScope.cleanup, project.processScope.cleanup);
+    }
   });
 }

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AppState, NewProject, Settings } from '../shared/types.js';
+import type { ClarificationAnswer } from '../shared/conversation.js';
 contextBridge.exposeInMainWorld('fleetHarness', {
   connectors: {
     list: () => ipcRenderer.invoke('fleet:connectors:list'),
@@ -11,6 +12,11 @@ contextBridge.exposeInMainWorld('fleetHarness', {
     cancel: (kind: string) => ipcRenderer.invoke('fleet:connectors:cancel', kind),
     disconnect: (id: string) => ipcRenderer.invoke('fleet:connectors:disconnect', id)
   },
+  sendMessage: (id: string, text: string) => ipcRenderer.invoke('fleet:conversation:send', id, text),
+  cancelMessage: (id: string) => ipcRenderer.invoke('fleet:conversation:cancel', id),
+  answerClarification: (id: string, questionId: string, answer: string | ClarificationAnswer) => ipcRenderer.invoke('fleet:conversation:answer', id, questionId, answer),
+  applyConversationAction: (id: string, actionId: string) => ipcRenderer.invoke('fleet:conversation:apply', id, actionId),
+  dismissConversationAction: (id: string, actionId: string) => ipcRenderer.invoke('fleet:conversation:dismiss', id, actionId),
   bootstrap: () => ipcRenderer.invoke('fleet:bootstrap'),
   refreshNorfolkCatalog: () => ipcRenderer.invoke('fleet:norfolk:refresh'),
   createProject: (input: NewProject) => ipcRenderer.invoke('fleet:create', input),
@@ -19,15 +25,21 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   resumeRun: (id: string) => ipcRenderer.invoke('fleet:resume', id),
   stopRun: (id: string) => ipcRenderer.invoke('fleet:stop', id),
   approve: (id: string, feedback: string) => ipcRenderer.invoke('fleet:approve', id, feedback),
+  requestChanges: (id: string, feedback: string) => ipcRenderer.invoke('fleet:request-changes', id, feedback),
   exportProject: (id: string) => ipcRenderer.invoke('fleet:export', id),
   downloadExecutable: (id: string) => ipcRenderer.invoke('fleet:download-executable', id),
   artifacts: (id: string) => ipcRenderer.invoke('fleet:artifacts', id),
   readArtifact: (id: string, file: string) => ipcRenderer.invoke('fleet:read', id, file),
+  visualReviewImage: (id: string, captureId: string) => ipcRenderer.invoke('fleet:visual-review-image', id, captureId),
   preview: (id: string) => ipcRenderer.invoke('fleet:preview', id),
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
   setDeveloperMode: (enabled: boolean) => ipcRenderer.invoke('fleet:developer-mode', enabled),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),
-  connectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:connect'),
+  connectChatGPT: (accountId?: string) => ipcRenderer.invoke('fleet:chatgpt:connect', accountId),
+  selectChatGPTAccount: (accountId: string) => ipcRenderer.invoke('fleet:chatgpt:select', accountId),
+  reopenChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:reopen'),
+  manageChatGPTUsage: () => ipcRenderer.invoke('fleet:chatgpt:usage'),
+  connectCodexKey: (apiKey: string) => ipcRenderer.invoke('fleet:codex:connect-key', apiKey),
   cancelChatGPTLogin: () => ipcRenderer.invoke('fleet:chatgpt:cancel'),
   disconnectChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:disconnect'),
   refreshChatGPT: () => ipcRenderer.invoke('fleet:chatgpt:refresh'),
