@@ -86,7 +86,7 @@ try {
     return main.scrollHeight > main.clientHeight;
   }), false);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, centeredBrand: true, recentBuilds: true, threeExamples: true, fullCatalogAccess: true, catalogBriefToBuild: true, resumeBuild: true, persistence: true, rendererErrors: 0, screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, centeredBrand: true, recentBuilds: true, threeExamples: true, fullCatalogAccess: true, catalogBriefOpensBuildView: true, reopensProject: true, projectCountPersistsAfterReload: true, rendererErrors: 0, screenshots: output }, null, 2));
 } finally {
   await app?.close();
   await fs.rm(root, { recursive: true, force: true });

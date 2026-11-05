@@ -226,9 +226,9 @@ try {
   await page.waitForFunction(() => window.qualityFixtureCalls.exports.length === 1);
   assert.deepEqual(await page.evaluate(() => window.qualityFixtureCalls), { approvals: [project.id], changes: [{ id: project.id, feedback: changeNotes }], exports: [project.id], downloads: [] });
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, browserFailureBlocksApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
-    failedChangeRequestPreservesDraft: true, savedChangeRequestSurvivesRestart: true, changeRequestsRetry: true, changeRequestsReturnToBuild: true,
-    explicitRequirementGaps: true, missingQualityBlocksApproval: true,
-    requiredCapabilityBlocksApproval: true, coreDeferralBlocksApproval: true, missingEvaluationBlocksApproval: true, cleanRuntimeRequired: true,
-    evaluationMetricsAndProvenance: true, cliApprovesWithoutBrowserJourneys: true, cliExportsRunnablePackage: true, screenshots: output }));
+  console.log(JSON.stringify({ passed: true, rendererFixtureOnly: true, failedBrowserReportDisablesApproval: true, failedChecksAllowChangeRequests: true, changeRequestsRequireComments: true,
+    failedChangeRequestPreservesDraft: true, savedChangeRequestRestoredAfterReload: true, changeRequestRetryInvoked: true, changeRequestOpensBuildView: true,
+    unverifiedRequirementDisplayed: true, missingQualityReportDisablesApproval: true,
+    failedCapabilityReportDisablesApproval: true, unverifiedCoreRequirementDisablesApproval: true, missingEvaluationReportDisablesApproval: true, uncleanPackageReportDisablesApproval: true,
+    evaluationMetricsAndProvenanceDisplayed: true, cliFixtureApprovalInvokedWithoutBrowserJourneys: true, exportInvoked: true, screenshots: output }));
 } finally { await browser?.close(); await new Promise(resolve => server.httpServer.close(resolve)); }
