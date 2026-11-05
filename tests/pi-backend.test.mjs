@@ -942,6 +942,21 @@ test('each Resume after the automatic repairs adds exactly one repair and no mor
   }
 });
 
+test('a builder can correct its own test during a core repair, and the freeze starts when the build stage ends', { timeout: 15000 }, async t => {
+  let core = 0;
+  const h = await harness(t, { verify: syntheticReport, scenario: async ({ cwd, stage, session }) => {
+    if (stage !== 'build') return false;
+    await artifacts(cwd, stage);
+    await fs.writeFile(path.join(cwd, 'own.test.mjs'), session.prompts.at(-1).includes('independent core evaluation failed') ? 'corrected' : 'first guess');
+    return true;
+  } });
+  h.backend.evaluateCore = async () => ++core > 1;
+  await h.run(); await h.assertSettled('review');
+  assert.equal(await fs.readFile(path.join(h.project.workspace, 'own.test.mjs'), 'utf8'), 'corrected');
+  assert.equal(h.project.runCheckpoint.coreRepairAttempts, 1);
+  assert.ok(h.project.runCheckpoint.buildTests['own.test.mjs'], 'The corrected test is what gets frozen');
+});
+
 test('a core repair leaves the finished app its two repairs', { timeout: 10000 }, async t => {
   let core = 0, verifications = 0;
   const h = await harness(t, { verify: (p, run) => syntheticReport(p, run, ++verifications < 3),

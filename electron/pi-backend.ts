@@ -724,12 +724,6 @@ export class FleetBackend {
           if (awaitingClarification()) return;
           if (followUp) {
             if (followUp.coreGate) {
-              if (!p.runCheckpoint!.buildTests) {
-                const baseline = await captureTestBaseline(p.workspace!);
-                p.runCheckpoint!.buildTests = baseline.hashes; p.runCheckpoint!.buildTestContents = baseline.contents;
-                p.runCheckpoint!.lastTests = { ...baseline.hashes }; p.runCheckpoint!.testChanges = [];
-                await this.changed(p);
-              }
               let passed = await hostWork(() => this.evaluateCore(p, run));
               check();
               if (!passed) {
@@ -738,8 +732,7 @@ export class FleetBackend {
                 if (coreRepairs >= 2 || p.runCheckpoint!.repairStopped) throw new Error('The shared repair budget is exhausted.');
                 p.runCheckpoint!.coreRepairAttempts = coreRepairs + 1; await this.changed(p);
                 this.log(p, stage, 'info', 'Core evaluation failed. Using a repair attempt before completing the application.');
-                await complete('The independent core evaluation failed. Read .quality-evidence/core-report.json and the public invocation protocol in solution-contract.json. Use mismatch paths to check response shapes, literal statuses/errors and array ordering as well as computational logic. Repair the actual runtime implementation without changing solution-contract.json, acceptance-plan.json, ux-spec.json or host expectations. Do not substitute canned responses or copied test-only code. This consumes the shared repair attempt.', files, false);
-                await this.recordTestChanges(p, 'core repair');
+                await complete('The independent core evaluation failed. Read .quality-evidence/core-report.json and the public invocation protocol in solution-contract.json. Use mismatch paths to check response shapes, literal statuses/errors and array ordering as well as computational logic. Repair the actual runtime implementation without changing solution-contract.json, acceptance-plan.json, ux-spec.json or host expectations. Do not substitute canned responses or copied test-only code. Your own tests from this stage are not frozen yet: if the host report shows one asserts the wrong thing, correct it. The host expectations stay. This uses one core repair attempt.', files, false);
                 passed = await hostWork(() => this.evaluateCore(p, run));
               }
               if (!passed && await hostWork(() => this.checkFrozenAnswers(p, run, provider, modelId))) passed = await hostWork(() => this.evaluateCore(p, run));
@@ -1123,7 +1116,7 @@ export class FleetBackend {
           instruction: 'Implementation is complete. The core passed host evaluation. Complete the planned application interactions using this exact core, then write README.md as a practical user guide for the software you just built. Inspect the declared runtime, applicable interface, source, sample data and tests so the instructions describe implemented behavior. Write for a first-time user, with clear sections covering: what the application does and who it is for; prerequisites and exact startup commands for the declared runtime, dependency installation and required model settings; numbered instructions for each main workflow using the actual screen, field and button names; a reproducible walkthrough using the prepared input or synthetic sample data and the expected output, with accurate provenance; supported input formats and validation; how to save, export, reset or recover data where supported, and whether data survives reloads; troubleshooting common errors; known limitations and unimplemented integrations; and developer test instructions with commands matching the actual test files. Distinguish using the app from running developer tests, which require Node. Explain unsupported features honestly; do not invent controls or claim tests or browser checks passed without evidence. Link to verification.md for verification notes and path-to-fleet.md for field-validation prerequisites. Preserve requirements.md, .fleet and frozen contracts. Keep the computational core and tests meaningful while finishing the UI and guide.',
           files: ['README.md']
         });
-      if (p.runCheckpoint!.buildTests) await this.recordTestChanges(p, 'application completion');
+      // The builder's tests stay its own until this stage ends, because the host evaluation can prove one of them wrong.
       const baseline = await captureTestBaseline(p.workspace!);
       p.runCheckpoint!.buildTests = baseline.hashes; p.runCheckpoint!.buildTestContents = baseline.contents;
       p.runCheckpoint!.lastTests = { ...baseline.hashes }; p.runCheckpoint!.testChanges ??= [];
