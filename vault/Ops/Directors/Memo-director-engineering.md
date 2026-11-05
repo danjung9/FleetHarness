@@ -3,19 +3,17 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Finish current returns and add one planning consistency gate on the merged baseline."
+summary: "Keep existing owners, adapt QA to landed restoration and request current evidence."
 ---
 
 # Engineering decisions
 
-[E, closing relay and Git] Current mvp is 5f4eb39. Cleanup confirmation, frozen-plan restoration, offline packaging, containers and post-delivery changes are landed. Preserve them; do not assign replacement implementations.
+[E, feed/snapshot-189 and current queue] Code seats remain disabled. Dev-1/3 have gate returns; builder already has the planning-consistency assignment. Dev-2 retains smoke-file claims without a queued task or pending review. [R] Add no duplicate assignments. Main reconciles dev-2's completed return before another seat receives those files.
 
-[E, current Scoreboard] R5 finished four builds with four failures and zero satisfactory results, using f2e5422 plus scratch changes. Those failures and older fixture passes do not certify 5f4eb39.
+[E, Scoreboard] R5 finished four failed builds, zero automatic passes and zero satisfactory results on f2e5422 plus scratch changes. [R] Preserve those failures and the canonical training NOT verdict. Builder keeps the single pre-freeze consistency audit; architect's other proposals stay deferred.
 
-[E, JUDGE-R5-id11-training] Prepared expectations contradict the public protocol; retained output follows it. The sealed evaluator key is missing. [R] Assign builder one generic consistency audit before freezing new plans. Preserve ordered assertions and old failures; never tune answers to generated output. Main supplies missing evidence and owns real reruns.
+[E, QA runner triage] IDs 12/36 show plan rejection followed by shutdown uncertainty. Native cause remains unproved. [E, relay patch] 5f4eb39 now restores frozen planning notes and uses process evidence for failed-stage shutdown. [R] Main verifies these landed paths. Adapt the proposed regression: valid restoration may proceed; unavailable or corrupt restoration plus unconfirmed shutdown must retain both failures and block progress. Do not restore obsolete rejection behavior.
 
-[E, live org state] Code seats are disabled; dev-1/2/3 retain file claims. [R] Keep their existing artifact-retry, smoke-label and connector-wording returns. Resolve gate failures against the exact baseline on a capable host; do not dismiss all 123 failures as environmental or expand these seats into runtime repairs.
+[R] Dev-1 preserves the new delivery callback; dev-2 preserves new smoke assertions. Dev-3 retains only its necessary wording exceptions. Require baseline comparisons for gate failures, not blanket environmental exemptions.
 
-[R] Protect Dan's frontend. Dev-1 retains the landed delivery callback; dev-2 preserves new smoke-quality assertions. Account-switch, lost-draft and global Stop findings stay with Dan.
-
-[R] Architect's other proposals remain backlog. Dev-4/5 stay unassigned. Main owns cleanup/native delivery, persisted-baseline evidence and benchmark execution. Quality's existing chronology should include newly finished ID 20. Require overseer enablement and exclusive files before builder starts. Keep noon freeze and human approval of final bytes.
+[R] Main owns native execution, integration and real reruns. Keep Dan's frontend, current full access, noon freeze and human acceptance. Missing sealed evaluator identity, exact R5 execution bytes and new-target runtime evidence remain explicit gaps.
