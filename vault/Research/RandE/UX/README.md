@@ -2,17 +2,21 @@
 type: research
 status: complete
 owner: mukul
-updated: 2026-11-04
-summary: "Current AppYard walkthrough at d0f4c69, linked candidate receipts and pending human acceptance, with earlier interfaces retained as history."
+updated: 2026-11-05
+summary: "Merged f2e5422 officer walkthrough with six operator defects for Dan; older handoffs remain revision-specific history."
 ---
 
 # UX handoff for AppYard
 
 ## Bottom line
 
+[E] [Merged walkthrough at f2e5422](Merged-Walkthrough.md) is the current assigned review: 12 supplied real-app screenshots and clean merged source, with six ranked defects and the smallest changes for Dan. [R] Address lost brief edits and the hidden ChatGPT-to-API-key switch first. [E] The report covers every requested setup, connector, build, review and delivery step; account transitions and failure branches remain source-only. No frontend changes or live account actions were performed.
+
+## Prior handoff at d0f4c69
+
 [R, meeting 31] Prepare the factory through **Home -> New challenge -> Norfolk catalog -> search 11 -> select #11 -> review brief -> Save challenge -> Flow**. [E, source-only] Those labels and routing come from pinned `d0f4c69`; saving does not start generation. [E, existing receipts] The modified factory build and candidate checks have run, including fresh offline draft import on both candidates, so blanket task NOT RUN claims are obsolete. [R] Show the task first and its factory evidence second, retaining Pipeline-run1 as primary and CLI-route as backup; neither is human accepted.
 
-## Current handoff
+## Prior handoff records
 
 | Note | Use and evidence status |
 | --- | --- |

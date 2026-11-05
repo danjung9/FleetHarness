@@ -16,4 +16,4 @@ summary: "Prioritize fresh benchmark failures and preserve bounded native passes
 
 [R] Main retains builds, native execution and shutdown recovery. Existing acceptance ownership retains delivery and persisted-baseline checkers. Architect's historical one-shot analysis remains separate. Retire old duplicate audits and containment requirements; full access is settled.
 
-[R] Preserve Dan's merged UI, input/capability flow and sign-in. GenAI.mil remains framework only. Older relay analysis and director memos are historical. Keep noon freeze, exact-byte human approval and 2 PM submission. No new frontend work or duplicate packaging effort.
+[R] Preserve Dan's merged UI, input/capability flow and sign-in. GenAI.mil remains framework only. Closing relay separates unmerged budgets/Windows and hosted prod. Keep noon freeze, exact-byte human approval and 2 PM submission. No new frontend work or duplicate packaging effort.
