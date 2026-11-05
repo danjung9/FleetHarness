@@ -3,19 +3,19 @@ type: memo
 status: active
 owner: mukul
 updated: 2026-11-05
-summary: "Preserve current owners and triage newly reported native failures before claiming readiness."
+summary: "Finish current repairs and independent R6 review; keep research idle."
 ---
 
 # Product decisions
 
-[E, Auto/5f4eb39, 03:53 EST] Current native fixture QA fails unit tests and smoke-electron. It reports 971 tests, 964 passes and six failures, with seven named problem tests. Harness passes 94/94; 14 of 15 screen scripts pass. [R] Reconcile the count and causes. Earlier green receipts cannot certify this revision.
+[E, Scoreboard and R6 finals] Nine attempts finished, all failed; zero satisfactory. IDs 11/12 pass generated tests and journeys but retain final NOT judgments. Six failures concern service connection or Home navigation.
 
-[R] Assign one bounded qa-runner report after Quality's completed R5 update. Return exact failure evidence and the smallest checks to main/Engineering's existing owners. No parallel repair or new checker. Packaging owners retain packaging failures; main retains native execution and shutdown recovery.
+[R] Accept Quality's single independent review of IDs 11/12, already running. Separate missing authoritative requirements, software defects and actual human acceptance. Return unsupported judge claims with exact evidence; preserve failed receipts. Missing authority cannot be supplied by another repair or generated acknowledgment.
 
-[E, Scoreboard] R5 finished four failures, zero automatic passes and zero satisfactory results. [R] Preserve these and ID 11's canonical NOT judgment. Builder keeps the sole pre-freeze consistency audit; missing sealed evaluator evidence still prevents complete attribution.
+[R] Accept both completed runner triages. Main and existing Engineering owners must return native failure blocks, reconciled counts and targeted closure. The seven named problems, six reported failures and one unclassified test remain unresolved. Do not repeat triage or excuse native failures as sandbox restrictions.
 
-[R] Accept valid frozen-plan restoration. Missing/corrupt restoration plus unconfirmed shutdown must block progress and retain both errors. Do not reinstate unconditional plan-edit rejection.
+[R] Keep the queued planning audit and current dev returns. Main resolves benchmark startup failures before affected retries and serializes shared-file changes. ID 36's ordering conflict remains unverified; guard-held files are incomplete shared evidence, not absent functionality.
 
-[R] Research idles. Reuse the six UX findings, prioritizing lost drafts, account-switch clarity and reachable Stop for Dan. Dev-1 preserves the delivery callback; dev-2 preserves new smoke assertions. Main reconciles existing returns and file claims before transfer.
+[R] Research idles. Preserve Dan's labels, retained drafts, delivery callback and smoke assertions. Existing Acceptance/main ownership retains preview persistence, delivery and baseline Resume. No new tasks or frontend allocation.
 
-[R] Keep full access, noon freeze, 1:15 PM submission target, human acceptance and one evidence-backed submission package. Native failures and benchmark failures remain separate.
+[R] Keep full access, noon freeze and 1:15 PM submission target. Writer uses one dated package. Human artifact acceptance, missing domain authority, user benefit and submission decisions remain explicit.

@@ -124,6 +124,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Overnight native checker compatibility revision 3 | QA scripts | Support old and new provider-tab labels, correct Resume testing selector and explicitly reset owned input drafts between cases; native execution remains with main | Event team QA | 2026-11-05 |
 | Retained R6/native QA records | project evidence | prioritization | project QA. | 2026-11-05 |
 | R6/native QA and meeting-194 records | project evidence | QA allocation | project QA/runner. | 2026-11-05 |
+| R6 and native QA records | project evidence | coordination review | project QA. | 2026-11-05 |
 
 ## Data and sources
 
