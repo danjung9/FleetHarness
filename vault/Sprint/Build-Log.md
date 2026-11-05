@@ -118,3 +118,5 @@ summary: "Running record of what the team and its agents did and proved, minute 
 - 18:42 Astra conn-core finished, exit 0. Report: `Research/Backend-Audit/conn-core.md`
 - 18:43 Astra genai started: Model settings tabs and the GenAI.mil framework.
 - 19:39 Mukul decided: build agents get full access (read, write, network) and the locks come out, including Pi containment and the sandbox around generated tests. Stop's process cleanup, secret redaction, safe writes, approval gates and repair baselines stay.
+- 19:40 Astra merge-dan finished, exit 143. Report: `Research/Backend-Audit/merge-dan.md`
+- 19:40 Astra genai finished, exit 143. Report: `Research/Backend-Audit/genai.md`
