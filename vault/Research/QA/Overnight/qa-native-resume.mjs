@@ -313,8 +313,8 @@ try {
   await launch();
   await row('UI-SETUP-AND-HELD-IMPLEMENTATION', async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: 'Other providers', exact: true }).click();
-    const modelPanel = page.getByRole('tabpanel', { name: 'Other providers', exact: true });
+    await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: /^Other (?:model )?providers$/, exact: true }).click();
+    const modelPanel = page.getByRole('tabpanel', { name: /^Other (?:model )?providers$/, exact: true });
     await modelPanel.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
     await modelPanel.getByLabel('Model', { exact: true }).selectOption('fixture-model');
     await modelPanel.getByRole('button', { name: 'Save model settings', exact: true }).click();

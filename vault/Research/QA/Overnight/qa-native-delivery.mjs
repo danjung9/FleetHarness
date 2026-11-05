@@ -247,8 +247,8 @@ try {
     };
   }, path.join(output, 'exports'));
   await row('NATIVE-COMPLETE-BUILD', async evidence => {
-    await page.getByRole('button', { name: 'Settings', exact: true }).click(); await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: 'Other providers', exact: true }).click();
-    const panel = page.getByRole('tabpanel', { name: 'Other providers', exact: true }); await panel.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture'); await panel.getByLabel('Model', { exact: true }).selectOption('fixture-model');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click(); await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: /^Other (?:model )?providers$/, exact: true }).click();
+    const panel = page.getByRole('tabpanel', { name: /^Other (?:model )?providers$/, exact: true }); await panel.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture'); await panel.getByLabel('Model', { exact: true }).selectOption('fixture-model');
     await panel.getByRole('button', { name: 'Save model settings', exact: true }).click(); await page.getByText('Model settings saved.', { exact: true }).waitFor();
     await page.locator('header.topbar').getByRole('button', { name: 'New challenge', exact: true }).click(); const intake = page.getByRole('dialog', { name: 'New challenge', exact: true }); await intake.getByRole('button', { name: 'Custom problem', exact: true }).click();
     const title = 'Synthetic native delivery ' + randomUUID(); result.projectTitle = title; await intake.getByLabel('Challenge title', { exact: true }).fill(title); await intake.getByLabel('Problem statement', { exact: true }).fill(fixtureModule.qualityFixtureProject.description);

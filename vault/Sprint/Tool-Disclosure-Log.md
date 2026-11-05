@@ -119,6 +119,7 @@ Some entries are held back pending Mukul's review before they are shared here, s
 | Screens-f2e5422 | synthetic screenshot dataset | walkthrough evidence | Project QA. | 2026-11-05 |
 | R5 synthetic benchmark records | evidence dataset | QA prioritization | project benchmark. | 2026-11-05 |
 | Local patch interface, version unavailable | document editing | amended local records | session runtime. | 2026-11-05 |
+| Auto/5f4eb39 | synthetic QA evidence | current-failure triage | project QA. | 2026-11-05 |
 
 ## Data and sources
 

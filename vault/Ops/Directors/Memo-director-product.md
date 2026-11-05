@@ -10,7 +10,7 @@ summary: "Preserve current owners and triage newly reported native failures befo
 
 [E, Auto/5f4eb39, 03:53 EST] Current native fixture QA fails unit tests and smoke-electron. It reports 971 tests, 964 passes and six failures, with seven named problem tests. Harness passes 94/94; 14 of 15 screen scripts pass. [R] Reconcile the count and causes. Earlier green receipts cannot certify this revision.
 
-[R] Assign one bounded qa-runner report after Quality's existing R5 update. Return exact failure evidence and the smallest checks to main/Engineering's existing owners. No parallel repair or new checker. Packaging owners retain packaging failures; main retains native execution and shutdown recovery.
+[R] Assign one bounded qa-runner report after Quality's completed R5 update. Return exact failure evidence and the smallest checks to main/Engineering's existing owners. No parallel repair or new checker. Packaging owners retain packaging failures; main retains native execution and shutdown recovery.
 
 [E, Scoreboard] R5 finished four failures, zero automatic passes and zero satisfactory results. [R] Preserve these and ID 11's canonical NOT judgment. Builder keeps the sole pre-freeze consistency audit; missing sealed evaluator evidence still prevents complete attribution.
 

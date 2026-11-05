@@ -12,7 +12,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { get as httpGet } from 'node:http';
 import { runInNewContext } from 'node:vm';
 
-const connectionTabs = ['ChatGPT', 'API key', 'GenAI.mil', 'Other providers'];
+const connectionTabs = ['ChatGPT', 'API key', 'GenAI.mil', /^Other (?:model )?providers$/];
 // Serialized into Electron's inspector/eval context. No module imports here:
 // dynamic import there has no VM import callback. Compare URLs only in memory;
 // never include their query strings or the retained first value in evidence.
@@ -209,7 +209,7 @@ try {
   await row('KEY-CLEARED-ON-ENGINE-CHANGE', async () => {
     await selectConnectionTab('API key');
     await page.getByPlaceholder('OpenAI API key', { exact: true }).fill('QA noncredential input');
-    await selectConnectionTab('Other providers');
+    await selectConnectionTab(/^Other (?:model )?providers$/);
     assert.equal(await page.getByPlaceholder('Provider API key', { exact: true }).inputValue(), '');
     await selectConnectionTab('API key');
     assert.equal(await page.getByPlaceholder('OpenAI API key', { exact: true }).inputValue(), '');

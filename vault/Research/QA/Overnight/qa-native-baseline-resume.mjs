@@ -381,8 +381,8 @@ try {
   await launch();
   await row('UI-BUILD-AND-HELD-VERIFICATION', async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: 'Other providers', exact: true }).click();
-    const modelPanel = page.getByRole('tabpanel', { name: 'Other providers', exact: true });
+    await page.getByRole('tablist', { name: 'Model connection', exact: true }).getByRole('tab', { name: /^Other (?:model )?providers$/, exact: true }).click();
+    const modelPanel = page.getByRole('tabpanel', { name: /^Other (?:model )?providers$/, exact: true });
     await modelPanel.getByLabel('Provider', { exact: true }).selectOption('fleet-fixture');
     await modelPanel.getByLabel('Model', { exact: true }).selectOption('fixture-model');
     await modelPanel.getByRole('button', { name: 'Save model settings', exact: true }).click();
@@ -447,7 +447,7 @@ try {
     return { snapshot: restored, firstProcessExited: true, launchPids: result.launches.map(item => item.pid), sameProfile: true, rawOriginalBaselineUnredacted: true };
   });
   await row('NATIVE-RESUME-VERIFICATION-MAKES-PROGRESS', async () => {
-    const resume = page.locator('.build-phase-recovery').getByRole('button', { name: 'Resume verification', exact: true });
+    const resume = page.locator('.build-phase-recovery').getByRole('button', { name: 'Resume testing', exact: true });
     await resume.waitFor(); assert.equal(await resume.isEnabled(), true, 'Resume verification must be enabled for this stopped checkpoint.');
     proxy.armResume(); runMayBeActive = true; await resume.click();
     await pollProduct(async () => result.requests.some(request => request.afterResume && request.phase === 'verify' && request.completedAt), 'Resume verification did not complete its first local-fixture response.', 20000);
