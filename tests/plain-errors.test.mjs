@@ -17,7 +17,7 @@ const errorProducers = source => {
   return producers;
 };
 const errorInventory = {
-  "electron/pi-backend.ts": "935b04534f8c1abbef13e59bf506d4ba28c81265881e9533cdb58c8e3fdfa6da",
+  "electron/pi-backend.ts": "cd8aab04dd2f8091b09a543a33dc274f4a33d114d371115e66eb39dd487672bc",
   "electron/storage.ts": "0eb8a8c57de2ca3ccce8eccb478135fa55fc56e50b35e8b59ae7aac1151747dd",
   "electron/secrets.ts": "c9ce42334bdf6aaa122ff14d5b89e70c11c0229d82a0343e52a4bbadedc6bf0d",
   "harness/catalog.ts": "e0bbe010947264e3db3840d076b123504ea30658d401b4f74c273efd8e160e5e",
