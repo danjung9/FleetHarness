@@ -71,6 +71,7 @@ export class GenAiMil {
   #key = '';
   #address = GENAI_MIL_ADDRESS;
   #models: string[] = [];
+  #imageModels: string[] = [];
   #connected = false;
   #issue?: GenAiMilIssue;
   #retryAt = 0;
@@ -83,7 +84,7 @@ export class GenAiMil {
     this.#file = path.join(root, 'genai-mil.enc'); this.#fetch = options.fetch ?? globalThis.fetch; this.#now = options.now ?? Date.now;
   }
   view(): GenAiMilConnection {
-    return redactValue({ address: this.#address, hasKey: !!this.#key, connected: this.#connected, models: [...this.#models], ...(this.#issue ? { issue: { ...this.#issue } } : {}) });
+    return redactValue({ address: this.#address, hasKey: !!this.#key, connected: this.#connected, models: [...this.#models], imageModels: [...this.#imageModels], ...(this.#issue ? { issue: { ...this.#issue } } : {}) });
   }
   async load(): Promise<void> {
     try {
@@ -116,7 +117,7 @@ export class GenAiMil {
         await atomicHostWrite(path.dirname(this.#file), path.basename(this.#file), this.encryption.encryptString(JSON.stringify({ address: nextAddress, key: nextKey })));
       } catch { throw new Error('The GenAI.mil connection could not be saved. Check local storage and try again.'); }
       this.runtime.unregisterProvider(GENAI_MIL_PROVIDER);
-      this.#address = nextAddress; this.#key = nextKey; this.#models = []; this.#connected = false; this.#issue = undefined;
+      this.#address = nextAddress; this.#key = nextKey; this.#models = []; this.#imageModels = []; this.#connected = false; this.#issue = undefined;
     });
   }
   async clear(): Promise<void> {
@@ -124,22 +125,34 @@ export class GenAiMil {
       try { await fs.rm(this.#file, { force: true }); }
       catch { throw new Error('The GenAI.mil connection could not be cleared. Check local storage and try again.'); }
       this.runtime.unregisterProvider(GENAI_MIL_PROVIDER);
-      this.#key = ''; this.#address = GENAI_MIL_ADDRESS; this.#models = []; this.#connected = false; this.#issue = undefined;
+      this.#key = ''; this.#address = GENAI_MIL_ADDRESS; this.#models = []; this.#imageModels = []; this.#connected = false; this.#issue = undefined;
     });
   }
   assertModel(backend: string, model: string): void {
-    if (this.#busy || backend !== 'pi' || !this.#connected || !chatId(model) || !this.#models.includes(model))
-      throw new Error('Connect GenAI.mil and select an available -withtools model on Pi before building.');
+    if (this.#busy || !['pi', 'opencode'].includes(backend) || !this.#connected || !chatId(model) || !this.#models.includes(model))
+      throw new Error('Connect GenAI.mil and select an available model with tool support before building.');
+  }
+  /** Host-only transport; the provider credential never enters the coding engine. */
+  async buildRequest(model: string, body: Record<string, unknown>, signal: AbortSignal): Promise<Response> {
+    this.assertModel('opencode', model);
+    return this.#request('/chat/completions', { method: 'POST', signal,
+      body: JSON.stringify({ ...body, model, ...(body.stream ? { stream_options: { include_usage: true } } : {}) }) });
   }
   buildError(error: unknown): unknown { return this.#issue ? new GenAiMilRequestError(issueText(this.#issue)) : error; }
   async connect(): Promise<void> {
     return this.#exclusive(async () => {
-      this.runtime.unregisterProvider(GENAI_MIL_PROVIDER); this.#connected = false; this.#models = []; this.#issue = undefined;
+      this.runtime.unregisterProvider(GENAI_MIL_PROVIDER); this.#connected = false; this.#models = []; this.#imageModels = []; this.#issue = undefined;
       if (!this.#key) throw new Error('Save your GenAI.mil key before connecting.');
       try {
         const response = await this.#request('/models', { method: 'GET', signal: AbortSignal.timeout(30_000) });
         if (!response.ok) return;
-        this.#models = genAiMilModels(await response.json());
+        const catalog = await response.json();
+        this.#models = genAiMilModels(catalog);
+        this.#imageModels = object(catalog).data instanceof Array ? (object(catalog).data as unknown[]).filter(row => {
+          const item = object(row);
+          return this.#models.includes(String(item.id)) && (Array.isArray(item.input_modalities) && item.input_modalities.includes('image')
+            || object(object(item.capabilities).input).image === true);
+        }).map(row => String(object(row).id)) : [];
         this.#connected = true;
         if (!this.#models.length) this.#issue = { message: 'GenAI.mil returned no models that support agent tools.', nextStep: 'Ask your administrator for access to a -withtools chat model.' };
         this.#register();

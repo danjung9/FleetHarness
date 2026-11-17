@@ -28,6 +28,8 @@ export function codexGoalObjective() {
 export function codexGoalInstructions() {
   return `# One-shot application goal
 
+You are the sole AppYard coding agent for this session. Do all work yourself. Do not spawn subagents, delegate to other agents, or send agent-to-agent messages. If a skill requests delegation or a separate reviewer agent, perform that work yourself inline.
+
 ${codexGoalObjective()}
 
 ## Inputs and scope

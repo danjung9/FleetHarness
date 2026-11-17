@@ -13,3 +13,5 @@ build/icon.iconset/
 .vercel
 .env*
 dist-web/
+
+.devkit-inspect/

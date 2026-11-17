@@ -1,5 +1,10 @@
 # AppYard
 
+The combined OpenCode app builder now has a Vercel frontend and a separate persistent build worker. Start with an app prompt, inspect the preview, and refine through chat. See [deployment instructions](docs/deployment.md) and [harness integration](docs/opencode-builder.md).
+
+The hosted worker is a private single-workspace MVP. Existing desktop functionality remains available.
+
+
 `main` contains the local Electron application and static browser preview. The hosted application, including Supabase and Vercel Sandbox, lives on [`prod`](https://github.com/danjung9/FleetHarness/tree/prod). Only pushes to `prod` deploy to [fleetharness-studio.vercel.app](https://fleetharness-studio.vercel.app/); pushes to `main` do not change the live site. Keep local development on `main` and review the changes you bring into `prod` separately.
 
 **An AI-powered software factory for turning operational challenges into working, testable software.**
@@ -8,13 +13,13 @@
 
 AppYard has one interface: the original desktop app and its browser preview. The alternate Studio (UI 2) and Workbench (UI 3) designs have been removed.
 
-The Electron app now runs **Pi coding agents** for intake, research, planning, implementation and verification, with [bounded functional repair loops and an early executable user-workflow checkpoint](docs/functional-build-loop.md). Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
+The legacy Electron pipeline uses sequential model sessions for intake, research, planning, implementation and verification, with [bounded functional repair loops and an early executable user-workflow checkpoint](docs/functional-build-loop.md). Each phase inherits global workspace tools and adds its assigned skills and phase-specific tools. It includes saved challenges, the 39-entry Norfolk catalog, an inspectable factory graph, isolated app previews, real test evidence, human review, and delivery export.
 
-Agents can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities with full access, including self-hosted browsers and servers. Helpers inherit the run process marker for Stop and final cleanup.
+AppYard can also [create, test and reuse project-local helpers](docs/agent-helpers.md). Both backends discover helper metadata on demand and execute tested Node utilities with full access, including self-hosted browsers and servers. Helpers inherit the run process marker for Stop and final cleanup.
 
-See the [agent architecture diagrams](docs/agent-architecture.md) for the host orchestrator, worker roles, Pi and Codex backends, independent checks, repair loops, and human review.
+See the [agent architecture diagrams](docs/agent-architecture.md) for legacy session sequencing, backend selection, automated checks, repair loops, and human review.
 
-Build and verification agents can [open and interact with their app](docs/agent-browser.md) in a host-managed browser. They receive actual screenshots, page controls and console errors, then can edit the source and reopen the app to inspect the changes. Pi and Codex both support this loop with image-capable models.
+During build and verification, AppYard can [open and interact with their app](docs/agent-browser.md) in a host-managed browser. It receives actual screenshots, page controls and console errors, then can edit the source and reopen the app to inspect the changes. Pi and Codex both support this loop with image-capable models.
 
 **Apple Silicon build:** open release/mac-arm64/AppYard.app or install the DMG in release/. Connect a provider in **Pi settings**, choose a challenge, and start a build.
 
@@ -49,7 +54,7 @@ Use **Data & storage** to browse current and previous builds, inspect and export
 
 The **tokens** counter in the toolbar shows recorded workspace usage. Open it for each project's share, input/output counts, and cached input. Counts update during agent work and persist across builds; see [token usage](docs/token-usage.md) for coverage and limitations.
 
-The **Reasoning** bar beside the model picker adjusts effort from faster responses to deeper thinking. Drag it or use the arrow keys; the current level is named above the bar and saved locally. Choices come from the selected model's capabilities. The control is unavailable for fixed-effort models and while agents are working. Pi and Codex apply the choice when starting or resuming work; experiment candidates retain the effort pinned when their comparison began. An explicit choice also applies to new Terminal goals when the CLI's own model supports it.
+The **Reasoning** bar beside the model picker adjusts effort from faster responses to deeper thinking. Drag it or use the arrow keys; the current level is named above the bar and saved locally. Choices come from the selected model's capabilities. The control is unavailable for fixed-effort models and while AppYard is working. Pi and Codex apply the choice when starting or resuming work; experiment candidates retain the effort pinned when their comparison began. An explicit choice also applies to new Terminal goals when the CLI's own model supports it.
 
 Before handing off a change, run `npm run check`. It captures the current source and runs the frontend build, Electron and harness builds, foundation checksum validation, and both test suites in a private workspace. Logs, source hashes and results remain in `output/checks/`; shared build directories stay untouched. See [build validation](docs/build-validation.md) for prerequisites and result interpretation.
 
@@ -57,9 +62,9 @@ Use **Project lead** inside a saved project to discuss the brief, inspect progre
 
 Read [desktop setup, behavior, and limitations](docs/desktop.md) and the [challenge pipeline, recipes, skills, and tools](docs/pipeline.md). New builds declare computational capabilities and a browser, CLI, or local-service runtime. Host-owned evaluations, clean package execution and applicable browser checks gate delivery. Operational integrations and field readiness remain unverified. Read [solution contracts and evaluation](docs/solution-evaluation.md) for supported scorers, runtime profiles and factory benchmarks. The product vision below describes the broader goal.
 
-Application agents start from [versioned foundations](docs/application-foundations.md): the host copies a Node or Python service with a browser client, then agents extend its shared backend computation. Recipe-selected modules reuse message parsing, scheduling, evidence search, dependency analysis and record reconciliation. See [foundation research](docs/application-foundations-research.md) for the starter alternatives and selection rationale.
+AppYard starts from [versioned foundations](docs/application-foundations.md): the host copies a Node or Python service with a browser client, then extends its shared backend computation. Recipe-selected modules reuse message parsing, scheduling, evidence search, dependency analysis and record reconciliation. See [foundation research](docs/application-foundations-research.md) for the starter alternatives and selection rationale.
 
-Agents build the functional application and its integration interfaces. After the build, users implement their plugins and data connectors against those interfaces and configure access to their systems. The app should use normal product language and actionable setup states such as **Connect a data source** or **No records yet**. Development fixtures retain their provenance in test and developer artifacts; they must not become live-looking operational records or banners describing the app as synthetic, a mock, or a demo.
+AppYard builds the functional application and its integration interfaces. After the build, users implement their plugins and data connectors against those interfaces and configure access to their systems. The app should use normal product language and actionable setup states such as **Connect a data source** or **No records yet**. Development fixtures retain their provenance in test and developer artifacts; they must not become live-looking operational records or banners describing the app as synthetic, a mock, or a demo.
 
 ## Overview
 

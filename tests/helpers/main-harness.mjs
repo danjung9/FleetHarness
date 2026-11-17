@@ -15,6 +15,7 @@ import { exportVerifiedBundle } from '../../dist-electron/electron/source-export
 import { readVisualCapture } from '../../dist-electron/electron/visual-review.js';
 import { registerConnectorIPC } from '../../dist-electron/electron/connectors/index.js';
 import { GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilUnlockUrl } from '../../dist-electron/electron/genai-mil.js';
+import { savedReasoningEffort } from '../../dist-electron/shared/reasoning.js';
 
 import { PreviewBoundary } from '../../dist-electron/electron/preview-boundary.js';
 import { experimentMethodNames } from '../../dist-electron/shared/experiments.js';
@@ -33,7 +34,7 @@ export async function mainHarness(store, backend = { active: new Map() }, source
   let script = stripTypeScriptTypes(await fs.readFile(source, 'utf8'), { mode: 'strip' });
   script = script.replace(/^import .*?;\s*$/gm, '').replaceAll('import.meta.url', '__moduleUrl');
   const scope = {
-    PreviewBoundary, experimentMethodNames, storageMethodNames, redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
+    PreviewBoundary, experimentMethodNames, storageMethodNames, savedReasoningEffort, redactSecrets, redactValue, registerCredential, ...storage, ...delivery, ...review, ...verification, ...executable, atomicHostWrite, exportVerifiedBundle, reportPassed, readVisualCapture, registerConnectorIPC, GENAI_MIL_PROVIDER, genAiMilUnlockUrl, fs, disk: fs, path, fileURLToPath, process,
     __moduleUrl: pathToFileURL(path.resolve(source)).href,
     app, ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
     PreviewServers: class { close() {} }, ApplicationPreviews: class { async close() {} async stop() {} }, shell: { showItemInFolder() {} },

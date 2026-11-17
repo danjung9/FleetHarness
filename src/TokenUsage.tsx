@@ -61,7 +61,7 @@ export function TokenUsage({ projects }: { projects: Project[] }) {
           <span className="token-input" style={{ width: `${inputShare}%` }}/><span className="token-output" style={{ width: `${outputShare}%` }}/>
         </div>
         <div className="token-composition-key"><span><i className="token-input"/>Input {compact.format(summary.inputTokens)}</span><span><i className="token-output"/>Output {compact.format(summary.outputTokens)}</span></div>
-      </> : <div className="token-empty"><strong>No usage recorded yet</strong><p>Counts appear as your agents report usage during builds and project-lead conversations.</p></div>}
+      </> : <div className="token-empty"><strong>No usage recorded yet</strong><p>Counts appear as AppYard reports usage during builds and project conversations.</p></div>}
       {summary.unreportedSessions > 0 && <p className="token-pending">Some sessions haven’t reported usage. The total includes reported tokens only.</p>}
       {rows.length > 0 && <section className="token-projects" aria-labelledby={`${id}-projects`}>
         <div className="token-projects-heading"><h3 id={`${id}-projects`}>By project</h3><span>Share of total</span></div>
@@ -77,7 +77,7 @@ export function TokenUsage({ projects }: { projects: Project[] }) {
             <div className="token-project-detail">
               {usage.hasUsage ? <><TokenBreakdown totals={usage}/>
                 <dl className="token-subtotals">
-                  {currentRun?.hasUsage && <div><dt>Current run · all agents</dt><dd>{exact.format(currentRun.totalTokens)}</dd></div>}
+                  {currentRun?.hasUsage && <div><dt>Current run · all stages</dt><dd>{exact.format(currentRun.totalTokens)}</dd></div>}
                   {conversation.hasUsage && <div><dt>Project lead · all builds</dt><dd>{exact.format(conversation.totalTokens)}</dd></div>}
                 </dl>
               </> : <p>No token counts have been recorded for this project.</p>}

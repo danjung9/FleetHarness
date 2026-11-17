@@ -1,0 +1,10 @@
+.git
+node_modules
+output
+dist
+dist-web
+dist-electron
+dist-harness
+release
+.env*
+.vercel

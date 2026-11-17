@@ -9,6 +9,8 @@ import type { ConversationAction, ConversationMessage } from '../shared/conversa
 import { emptyConversation } from '../shared/conversation.js';
 import { Store, safeFile, validateInput } from './storage.js';
 import { runAgentStage, type AgentLimits, type StageSession } from './agent-runner.js';
+import { createOpenCodeSession } from './opencode-session.js';
+import type { OpenCodeRuntime } from './opencode-runtime.js';
 import { createCodexSession } from './codex-session.js';
 import type { CodexAccount } from './codex-account.js';
 import { reviewFeedback } from './review.js';
@@ -29,6 +31,7 @@ The current project snapshot is authoritative over older conversation messages. 
 
 interface Options {
   codex?: CodexAccount;
+  opencode?: OpenCodeRuntime;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   createCodexSession?: typeof createCodexSession;
   limits?: Partial<AgentLimits>;
@@ -162,6 +165,10 @@ export class ProjectLead {
         onUsage: tokenUsageRecorder(p, { source: 'conversation', runId: snapshotRunId, model: provider + '/' + modelId }, () => this.store.save(), this.notify),
         create: async signal => {
           stageSignal = signal;
+          if (backend === 'opencode') {
+            if (!this.options.opencode) throw new Error('Restart AppYard to connect your model.');
+            return createOpenCodeSession({ runtime: this.options.opencode, cwd, provider, model: modelId, signal, tools: customTools, conversationInstructions: instructions });
+          }
           if (backend === 'codex') {
             await this.options.codex?.refresh(); signal.throwIfAborted();
             if (provider !== 'chatgpt' || this.options.codex?.account.status !== 'connected' || (this.options.codex.account.authType !== 'apiKey' && !this.options.codex.account.planUsageEnabled) || !this.options.codex.models.some(m => m.id === modelId && m.configured)) throw new Error('Connect ChatGPT or an API key and choose a model in Settings to talk to the project lead.');

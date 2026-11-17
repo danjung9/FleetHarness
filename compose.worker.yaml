@@ -1,0 +1,22 @@
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3001:3001"
+    environment:
+      APPYARD_WORKER_TOKEN: ${APPYARD_WORKER_TOKEN:?Set a random token of at least 32 characters}
+      APPYARD_ENCRYPTION_KEY: ${APPYARD_ENCRYPTION_KEY:?Set a 64-character hex key}
+      APPYARD_FRONTEND_ORIGINS: ${APPYARD_FRONTEND_ORIGINS:?Set the exact Vercel frontend origin}
+      APPYARD_PREVIEW_DOMAIN: ${APPYARD_PREVIEW_DOMAIN:?Set a wildcard preview domain}
+      APPYARD_PREVIEW_SCHEME: https
+    volumes:
+      - appyard-data:/data
+    shm_size: 1gb
+    stop_grace_period: 45s
+volumes:
+  appyard-data:

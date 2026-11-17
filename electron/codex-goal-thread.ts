@@ -60,7 +60,8 @@ export async function prepareCodexGoalThread(options: CodexGoalThreadOptions): P
     await rpc.initialize();
     const started = await rpc.request('thread/start', { cwd: options.workspace, ephemeral: false,
       sandbox: 'danger-full-access', approvalPolicy: 'never',
-      ...(options.reasoningEffort === undefined ? {} : { config: { model_reasoning_effort: options.reasoningEffort } }) });
+      config: { 'features.multi_agent': false, 'features.multi_agent_v2': false, 'features.multi_agent_v2_dynamic_tools': false,
+          ...(options.reasoningEffort === undefined ? {} : { model_reasoning_effort: options.reasoningEffort }) } });
     const threadId = started.thread?.id;
     if (typeof threadId !== 'string' || !threadId) throw new Error('Codex did not create a goal session.');
     if (options.reasoningEffort !== undefined) {

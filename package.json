@@ -18,6 +18,7 @@
     "check": "node scripts/check.mjs",
     "setup:browser": "playwright install chromium",
     "test:flow": "npm run build:electron && node --test tests/agent-runner.test.mjs tests/pi-backend.test.mjs tests/pi-sdk.test.mjs tests/verification.test.mjs",
+    "test:builder": "tsc && vite build && node scripts/smoke-builder.mjs",
     "test:conversation": "npm run build && node scripts/smoke-conversation.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder --mac --arm64",
@@ -34,12 +35,16 @@
     "test:activity": "npm run build && node scripts/smoke-activity.mjs",
     "test:visual-review": "npm run build && node --test tests/visual-review.test.mjs && node scripts/smoke-visual-review.mjs",
     "test:chatgpt": "npm run build && node scripts/smoke-chatgpt.mjs",
-    "test:models": "npm run build && node scripts/smoke-model-selector.mjs",
+    "test:models": "npm run build && node scripts/smoke-model-connections.mjs",
     "test:executable": "npm run build && node scripts/smoke-executable.mjs",
     "test:solutions": "npm run build:electron && node --test tests/solution-*.test.mjs tests/factory-benchmark.test.mjs",
     "test:experiments": "npm run build:electron && node --test --test-concurrency=4 tests/experiment-*.test.mjs tests/learning-*.test.mjs tests/isolated-*.test.mjs tests/integration-broker.test.mjs tests/runtime-broker.test.mjs tests/codex-isolation.test.mjs tests/execution-*.test.mjs tests/preview-proxy.test.mjs",
     "smoke:experiments": "npm run build && node scripts/smoke-experiments.mjs && node scripts/smoke-experiment-activity.mjs && node scripts/smoke-experiment-isolation.mjs",
-    "benchmark:factory": "npm run build:electron && node scripts/benchmark-factory.mjs"
+    "benchmark:factory": "npm run build:electron && node scripts/benchmark-factory.mjs",
+    "worker:build": "tsc -p electron/tsconfig.json",
+    "worker:start": "node dist-electron/electron/worker-main.js",
+    "dev:worker": "npm run worker:build && npm run worker:start",
+    "build:siwc": "npm run build --prefix vendor/sign-in-with-chatgpt-devkit/packages/local && npm run build --prefix vendor/sign-in-with-chatgpt-devkit/packages/react"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.5.0",
@@ -47,14 +52,18 @@
     "@fontsource/dm-sans": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/manrope": "5.3.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@openai/codex": "0.166.0",
     "jose": "6.2.15",
     "lucide-react": "1.68.0",
+    "opencode-ai": "1.19.5",
     "playwright": "1.64.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "typebox": "1.3.27",
-    "yazl": "3.3.1"
+    "yazl": "3.3.1",
+    "@siwc/local": "file:vendor/sign-in-with-chatgpt-devkit/siwc-local-0.1.0.tgz",
+    "@siwc/react": "file:vendor/sign-in-with-chatgpt-devkit/siwc-react-0.1.0.tgz"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
@@ -68,7 +77,8 @@
     "electron-builder": "26.18.0",
     "typescript": "7.0.2",
     "vite": "8.3.5",
-    "wait-on": "9.5.1"
+    "wait-on": "9.5.1",
+    "@types/proper-lockfile": "^4.1.4"
   },
   "build": {
     "appId": "dev.fleetharness.desktop",
@@ -98,7 +108,10 @@
     "artifactName": "AppYard-${version}-${arch}.${ext}",
     "npmRebuild": false,
     "extraResources": [
-      { "from": "node_modules/electron/dist", "to": "electron-runtime" }
+      {
+        "from": "node_modules/electron/dist",
+        "to": "electron-runtime"
+      }
     ],
     "asarUnpack": [
       "node_modules/**/*",
@@ -108,5 +121,8 @@
       "package.json"
     ]
   },
-  "author": "AppYard"
+  "author": "AppYard",
+  "engines": {
+    "node": ">=22.19.0"
+  }
 }

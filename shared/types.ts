@@ -92,7 +92,7 @@ export interface Project extends BriefContext {
   resumeStage?: StageId;
   model?: string; report?: TestReport; feedback: string; approvedAt?: string; exportedTo?: string; error?: string;
 }
-export type AgentBackend = 'pi' | 'codex';
+export type AgentBackend = 'pi' | 'codex' | 'opencode';
 export interface AgentModel { id: string; provider: string; name: string; configured: boolean; backend?: AgentBackend; reasoningEfforts?: ReasoningEffort[]; defaultReasoningEffort?: ReasoningEffort }
 export interface Settings { backend?: AgentBackend; provider: string; model: string; rememberKey: boolean; developerMode?: boolean; reasoningEffort?: ReasoningEffort }
 export interface ChatGPTAccount {
@@ -106,7 +106,7 @@ export interface ChatGPTAccount {
 }
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
 export interface GenAiMilIssue { message: string; nextStep: string; unlockUrl?: string; replacementModel?: string; retryAt?: number }
-export interface GenAiMilConnection { address: string; hasKey: boolean; connected: boolean; models: string[]; issue?: GenAiMilIssue }
+export interface GenAiMilConnection { address: string; hasKey: boolean; connected: boolean; models: string[]; imageModels?: string[]; issue?: GenAiMilIssue }
 export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean; experiments?: boolean; planningContinuation?: boolean }; genAiMil?: GenAiMilConnection }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }

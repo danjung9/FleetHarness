@@ -1,4 +1,6 @@
-# AppYard agent architecture
+# AppYard execution architecture
+
+AppYard does not expose subagent delegation or agent-to-agent messaging. The OpenCode adapter disables its native task tool and instructs the session to complete all work inline. The one-shot Codex goal disables multi-agent features. The diagrams below describe the legacy staged pipeline, which still opens separate model sessions; they do not describe one continuous model session.
 
 Current implementation, checked against the working tree on November 5, 2026. The Electron host starts and sequences role-specific sessions, enforces contracts and repair budgets, and records evidence. Each run uses either Pi or Codex as its agent backend.
 
@@ -7,10 +9,10 @@ Current implementation, checked against the working tree on November 5, 2026. Th
 ```mermaid
 flowchart TB
     user["Operator"] <--> ui["AppYard desktop"]
-    ui <--> lead["Project lead agent<br/>Read project context and propose actions"]
-    ui -->|Applied start, stop or revise action| host["FleetBackend host orchestrator<br/>Session lifecycle, gates and repair budgets"]
+    ui <--> lead["Project conversation<br/>Read project context and propose actions"]
+    ui -->|Applied start, stop or revise action| host["FleetBackend application controller<br/>Session lifecycle, gates and repair budgets"]
     host --> backend["Selected agent backend<br/>Pi SDK or Codex"]
-    backend --> sessions["Separate worker sessions<br/>Intake → Research → Plan → Build → Verify"]
+    backend --> sessions["Sequential phase sessions<br/>Intake → Research → Plan → Build → Verify"]
     sessions <--> workspace[("Per-run workspace<br/>Source, plans, fixtures and evidence")]
     sessions --> tools["Assigned skills and tools<br/>Workspace tools, helpers and phase tools"]
     host --> checks["Host-owned checks<br/>Contracts, capability evaluation and clean-package tests"]
@@ -19,25 +21,25 @@ flowchart TB
     review -->|Approved revision| export["Host export<br/>Source hash check and evidence bundle"]
 ```
 
-The Project lead runs separately from factory workers. It can read project context and propose actions; the operator applies those proposals in the desktop app. Its model session also uses the selected Pi or Codex backend. Only the host starts worker sessions.
+Project conversation uses a separate model session from the staged build. It can read project context and propose actions; the operator applies those proposals in the desktop app. Its model session also uses the selected Pi or Codex backend. Only the host starts phase sessions.
 
-## Worker lifecycle and gates
+## Stage lifecycle and gates
 
-Rectangles identify agents or host operations; diamonds identify checks. The host controls every transition.
+Rectangles identify model stages or host operations; diamonds identify checks. The host controls every transition.
 
 ```mermaid
 flowchart TB
-    brief["Brief and supplied inputs"] --> intake["Requirements analyst<br/>Scope and data needs"]
-    intake -->|Inputs attached| research["Reuse researcher<br/>Supplied evidence and reuse decisions"]
-    intake -->|No inputs attached| synthetic["Synthetic data specialist<br/>Separate agent session"]
+    brief["Brief and supplied inputs"] --> intake["Intake<br/>Scope and data needs"]
+    intake -->|Inputs attached| research["Research<br/>Supplied evidence and reuse decisions"]
+    intake -->|No inputs attached| synthetic["Data preparation<br/>Data preparation session"]
     synthetic --> data["Host validates and freezes fixtures"]
     data --> research
-    research --> planner["Implementation planner<br/>Architecture, contracts and test plans"]
-    planner --> planReview{"Independent planning reviewer<br/>Read-only snapshot"}
+    research --> planner["Planning<br/>Architecture, contracts and test plans"]
+    planner --> planReview{"Planning review<br/>Read-only snapshot"}
     planReview -->|Revise| planner
     planReview -->|Approve| freeze["Host freezes contracts<br/>Seals answer keys and copies foundation"]
 
-    subgraph build["Implementation agent — one session with host checkpoints"]
+    subgraph build["Implementation — one session with host checkpoints"]
         direction TB
         core["Implement computational core"] --> coreGate{"Host core evaluation"}
         coreGate -->|Repair within budget| core
@@ -48,7 +50,7 @@ flowchart TB
     end
 
     freeze --> core
-    complete --> verifier["Verifier agent<br/>Inspect, test, repair and document"]
+    complete --> verifier["Verification stage<br/>Inspect, test, repair and document"]
     verifier --> finalGate{"Host final verification<br/>Capabilities, tests, journeys and visual evidence"}
     finalGate -->|Fresh verifier repair session| verifier
     finalGate -->|Pass| human["Human prototype review"]
@@ -57,7 +59,7 @@ flowchart TB
 
 Core, primary-workflow and final verification each have their own allowance: **three repairs, fifteen active minutes**, and an early stop after **two consecutive checks without semantic progress**. Consumption survives resume. Exhausting a gate stops the build before review. Planning revision and independent re-review repeat until approval within the applicable execution limits; they do not use this three-repair allowance.
 
-CLI applications use the callable-core checkpoint and skip browser journeys and visual reviews. Browser and service applications require desktop and narrow viewport evidence. The final host verification checks the finished source independently after the verifier agent completes.
+CLI applications use the callable-core checkpoint and skip browser journeys and visual reviews. Browser and service applications require desktop and narrow viewport evidence. The final host verification checks the finished source independently after the verification stage completes.
 
 ## Tools, artifacts and clarification
 

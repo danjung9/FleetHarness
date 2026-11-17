@@ -86,7 +86,7 @@ export function VisualReview({ projectId, report, runtimeProfile, runStatus }: {
   return <section className="visual-review" aria-label="Visual review">
     <div className="visual-review-heading"><h2>Visual review</h2><ReviewStatus status={status}/></div>
     <p className="visual-review-note">Saved screenshots and the agent’s comparison with the expected result. The host checks these records and their source version; the observations are the agent’s assessment.</p>
-    {!report ? <p className="visual-awaiting">{runStatus === 'running' ? 'Screenshots and review notes will appear here as the agents inspect the app.' : 'No visual review was recorded for this build.'}</p> : <>
+    {!report ? <p className="visual-awaiting">{runStatus === 'running' ? 'Screenshots and review notes will appear here as AppYard inspects the app.' : 'No visual review was recorded for this build.'}</p> : <>
       <div className="visual-stage-statuses">{(['build', 'verify'] as const).map(stage => {
         const latest = report.sessions.filter(session => session.stage === stage).at(-1);
         return <div key={stage}><span>{stages[stage]}</span><ReviewStatus status={latest?.status ?? 'pending'}/></div>;

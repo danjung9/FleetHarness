@@ -1,5 +1,14 @@
 # Product
 
+## Current direction: prompt-to-app builder
+
+The project workspace is a persistent two-pane editor: chat on the left and preview on the right. New app opens an empty chat directly. The initial prompt creates the project and starts a build when a model is connected. The separate briefing form, catalog intake modal, milestone navigation, build dashboard, and terminal-goal launch panel are removed from the primary UI. Files and Activity are output tabs; Review and Export appear when the project is ready. Clarifications and change proposals stay in chat. Failed starts keep this workspace open with an error and a retry action. On narrow screens, chat and preview stack vertically.
+
+AppYard now combines the FleetHarness execution engine with OpenCode. The primary flow is describe an app, open a working preview, refine it through chat, then review and export it. A React frontend can run on Vercel and connect to a separate persistent Node build worker. The worker release is a private, authenticated, single-workspace MVP; it does not provide public tenant accounts or isolated per-tenant machines. The existing Electron application remains available. Detailed build phases are inspectable behind the main chat-and-preview workflow.
+
+See `docs/deployment.md` for hosting configuration and supported hosted capabilities. The original product context below records the inherited operational factory.
+
+
 <!-- impeccable:product-schema 1 -->
 
 > Updated from the supplied product-direction brief, the user’s request for a Pi agent backend, and the implemented desktop application. Agents build functional applications; users implement their plugins and data connectors after the build. Operational integrations remain outside the verified scope until implemented and tested.

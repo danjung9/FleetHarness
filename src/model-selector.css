@@ -2,6 +2,12 @@
 .model-selector label{display:block;margin:0 0 4px;color:var(--muted);font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .model-selector label span{font-weight:400}
 .model-selector-control{position:relative}
+.model-connect-button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;height:34px;padding:0 11px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+.model-connect-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.model-connect-button svg{flex-shrink:0}
+.model-connect-button:hover:not(:disabled){background:var(--selected);border-color:var(--field-border)}
+.model-connect-button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.model-connect-button:disabled{color:var(--muted);cursor:not-allowed}
 .model-selector select{appearance:none;display:block;width:100%;min-width:0;height:34px;margin:0;padding:0 34px 0 11px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-size:12px;font-weight:500;line-height:1.5;cursor:pointer;text-overflow:ellipsis}
 .model-selector select:hover:not(:disabled){background:var(--raised);border-color:var(--field-border)}
 .model-selector select:focus-visible{border-color:var(--focus);outline:2px solid var(--focus);outline-offset:-1px}

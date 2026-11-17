@@ -1,6 +1,9 @@
-.model-settings-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line)}
-.model-settings-tabs [role=tab]{padding:12px 16px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font:inherit;cursor:pointer}
-.model-settings-tabs [aria-selected=true]{border-bottom-color:var(--accent,var(--ink));color:var(--ink);font-weight:600}
+.model-settings-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;margin-bottom:28px}
+.model-settings-tabs [role=tab]{padding:16px;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--ink);font:inherit;cursor:pointer}
+.model-settings-tabs [role=tab] strong{display:block;font-size:14px}
+.model-settings-tabs [role=tab] span{display:block;margin-top:6px;font-size:12px;line-height:1.5;color:var(--muted)}
+.model-settings-tabs [role=tab]:hover:not(:disabled){border-color:var(--field-border)}
+.model-settings-tabs [aria-selected=true]{border-color:var(--ink);background:var(--selected)}
 .model-settings-tabs [role=tab]:focus-visible{outline:2px solid var(--focus,var(--accent));outline-offset:-2px}
 .model-settings-tabs [role=tab]:disabled{cursor:not-allowed;opacity:.55}
 .genai-mil-connection h3{margin:0 0 8px;font-size:17px}
@@ -19,3 +22,19 @@
 .desktop-setup-notice h3{margin:0 0 10px;font-size:20px}
 .desktop-setup-notice p{font-size:13px;line-height:1.65;max-width:65ch;margin:0}
 .desktop-setup-notice p+p{margin-top:10px;color:var(--muted)}
+.builder-process{margin:0 0 30px}
+.builder-process h3{margin:0 0 8px}
+.builder-process p{max-width:65ch;color:var(--muted);font-size:13px;line-height:1.6}
+.builder-process ol{display:flex;flex-wrap:wrap;gap:8px 24px;padding-left:20px;margin-top:16px;font-size:12px}
+.model-choice-field{border:0;padding:0;margin:20px 0;min-width:0}
+.model-choice-field legend{font-size:13px;font-weight:600;margin-bottom:8px}
+.model-choice-list{max-height:260px;overflow:auto;scrollbar-color:var(--field-border) var(--field);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.model-settings-form .model-choice{display:flex;align-items:center;gap:12px;padding:12px 8px;margin:0;cursor:pointer;min-width:0}
+.model-settings-form .model-choice+ .model-choice{border-top:1px solid var(--line)}
+.model-settings-form .model-choice input{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:var(--ink)}
+.model-choice span{min-width:0;overflow-wrap:anywhere}
+.model-choice strong{font-size:13px;font-weight:500}
+.model-choice small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.model-choice:has(input:checked){background:var(--selected)}
+.model-choice:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-2px}
+.model-choice-field:disabled .model-choice{opacity:.55;cursor:not-allowed}

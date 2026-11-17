@@ -4,7 +4,8 @@ import { normalizeProjectInput } from '../shared/project-input';
 import { getChallenge } from '../harness/catalog';
 import { withDesktopCompatibility } from '../shared/desktop-api';
 import { defaultLearningSettings } from '../shared/learning';
-export const isDesktop = !!window.fleetHarness;
+import { workerAPI, workerURL } from './worker-api';
+export const isDesktop = !!window.fleetHarness || !!workerURL;
 function makeProject(input: NewProject): Project {
   const normalized = normalizeProjectInput(input);
   return { ...normalized, sourceChallenge: normalized.challengeId ? getChallenge(normalized.challengeId, browserState?.norfolkCatalog?.challenges) : undefined,
@@ -32,9 +33,9 @@ function save(nextState: AppState) {
   browserState = nextState;
   for (const fn of listeners) fn(structuredClone(browserState));
 }
-const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to run coding agents and access local artifacts.'); };
+const desktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app to build apps and access local artifacts.'); };
 const codexGoalDesktopOnly = async (): Promise<never> => { throw new Error('Open the AppYard desktop app on a Mac to launch Codex CLI in Terminal. Your brief is saved in this browser.'); };
-export const api: FleetAPI = window.fleetHarness ? withDesktopCompatibility(window.fleetHarness) : {
+export const api: FleetAPI = workerURL ? workerAPI : window.fleetHarness ? withDesktopCompatibility(window.fleetHarness) : {
   storageOverview: desktopOnly, storageFiles: desktopOnly, storageReadFile: desktopOnly,
   storageOpen: desktopOnly, storageExport: desktopOnly, storageTrash: desktopOnly,
   storageRestore: desktopOnly, storageDeleteForever: desktopOnly, storageArchiveProject: desktopOnly,

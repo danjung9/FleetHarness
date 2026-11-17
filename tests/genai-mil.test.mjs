@@ -8,6 +8,7 @@ import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { GenAiMil, GENAI_MIL_PROVIDER, GENAI_MIL_ADDRESS, genAiMilAddress, genAiMilModels, genAiMilError, genAiMilUnlockUrl } from '../dist-electron/electron/genai-mil.js';
 import { Store } from '../dist-electron/electron/storage.js';
 import { FleetBackend } from '../dist-electron/electron/pi-backend.js';
+import { OpenCodeRuntime } from '../dist-electron/electron/opencode-runtime.js';
 import { plainError } from '../dist-electron/electron/plain-errors.js';
 import { redactedSessionManager } from '../dist-electron/electron/session-logs.js';
 import { redactValue } from '../dist-electron/electron/secrets.js';
@@ -50,6 +51,19 @@ async function fixture(t, respond = list) {
   return { root, runtime, provider, requests, logs, secure, options, advance: ms => { now += ms; } };
 }
 const absent = value => assert.equal(JSON.stringify(value).includes(fakeKey), false, 'Synthetic credential escaped its transport or encrypted store.');
+
+test('browser image capability follows the connected service catalog and clears on connection changes', async t => {
+  const h = await fixture(t, () => Response.json({ data: [{ id: modelId, input_modalities: ['text', 'image'] }] }));
+  const runtime = new OpenCodeRuntime(h.root, () => h.provider);
+  await h.provider.save(GENAI_MIL_ADDRESS, fakeKey);
+  assert.equal(runtime.supportsImages(GENAI_MIL_PROVIDER, modelId), false);
+  await h.provider.connect();
+  assert.equal(runtime.supportsImages(GENAI_MIL_PROVIDER, modelId), true);
+  assert.equal(runtime.models[0].backend, 'opencode');
+  await h.provider.clear();
+  assert.equal(runtime.supportsImages(GENAI_MIL_PROVIDER, modelId), false);
+  assert.deepEqual(h.provider.view().imageModels, []);
+});
 async function complete(h, options = {}) {
   const stream = h.runtime.streamSimple(h.runtime.getModel(GENAI_MIL_PROVIDER, modelId), {
     systemPrompt: 'Synthetic system instruction.', messages: [{ role: 'user', content: 'Synthetic request.', timestamp: 0 }],
@@ -68,7 +82,7 @@ test('saves and clears encrypted configuration without connecting; load requires
   assert.equal(h.provider.view().connected, false);
   const encrypted = await fs.readFile(path.join(h.root, 'genai-mil.enc'));
   assert.equal(encrypted.includes(Buffer.from(fakeKey)), false);
-  assert.equal((await fs.stat(path.join(h.root, 'genai-mil.enc'))).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal((await fs.stat(path.join(h.root, 'genai-mil.enc'))).mode & 0o777, 0o600);
   assert.equal(JSON.parse(h.secure.decryptString(encrypted)).key, fakeKey);
   await h.provider.connect();
   assert.equal(h.provider.view().connected, true);
@@ -123,14 +137,14 @@ test('only discovered chat models ending in -withtools can be selected or built 
   assert.equal(h.runtime.hasConfiguredAuth(GENAI_MIL_PROVIDER), true);
   assert.equal(h.runtime.getModel(GENAI_MIL_PROVIDER, modelId).api, 'openai-completions');
   for (const [engine, id] of [['codex', modelId], ['pi', 'plain'], ['pi', 'undiscovered-withtools']])
-    assert.throws(() => h.provider.assertModel(engine, id), /-withtools model on Pi/);
+    assert.throws(() => h.provider.assertModel(engine, id), /model with tool support/);
   h.provider.assertModel('pi', modelId);
   const store = new Store(h.root); await store.init();
   const backend = new FleetBackend(store, process.execPath, () => {}, path.resolve('.'), { genAiMil: () => h.provider });
   backend.runtime = h.runtime;
   for (const [engine, id] of [['codex', modelId], ['pi', 'plain'], ['pi', 'undiscovered-withtools']]) {
     store.state.settings = { backend: engine, provider: GENAI_MIL_PROVIDER, model: id, rememberKey: true };
-    await assert.rejects(backend.start(store.state.projects[0].id), /-withtools model on Pi/);
+    await assert.rejects(backend.start(store.state.projects[0].id), /Connect .*Settings before building/);
     assert.equal(backend.active.size, 0);
   }
 });
@@ -283,6 +297,9 @@ test('connector and GenAI.mil IPC coexist with account controls and block provid
   const selected = await main.invoke('fleet:settings', { backend: 'pi', provider: GENAI_MIL_PROVIDER, model: modelId, rememberKey: true });
   assert.equal(selected.state.settings.provider, GENAI_MIL_PROVIDER);
   assert.equal(selected.credentialStatus, 'GenAI.mil connected');
+  const builder = await main.invoke('fleet:settings', { backend: 'opencode', provider: GENAI_MIL_PROVIDER, model: modelId, rememberKey: true });
+  assert.equal(builder.state.settings.backend, 'opencode');
+  assert.ok(builder.models.some(model => model.backend === 'opencode' && model.provider === GENAI_MIL_PROVIDER && model.configured));
   assert.equal((await connectors.store.read(preview.id)).digest, preview.digest);
   absent([saved, connected, selected]);
   for (const active of [backend.active, lead.active]) {

@@ -5,7 +5,7 @@ import { promises as fs } from 'node:fs';
 import { promises as disk } from 'original-fs';
 import { fileURLToPath } from 'node:url';
 import { Store, newProject, validateInput, listArtifacts, safeFile, sourceHash } from './storage.js';
-import { FleetBackend } from './pi-backend.js';
+import { AppBuilder } from './app-builder.js';
 import { CodexAccount } from './codex-account.js';
 import { applicationTestFiles, portableTestCommand } from './verification.js';
 import { CodexGoalService, openCodexGoalTerminal } from './codex-goal.js';
@@ -29,6 +29,7 @@ import { randomUUID } from 'node:crypto';
 import { recordReview, reviewFeedback } from './review.js';
 import { readVisualCapture } from './visual-review.js';
 import { GenAiMil, GENAI_MIL_PROVIDER, genAiMilUnlockUrl } from './genai-mil.js';
+import { ChatGPTDevkitAccount } from './chatgpt-devkit.js';
 import { createPreviewProxy } from './preview-proxy.js';
 import { PreviewBoundary } from './preview-boundary.js';
 import { ExperimentService } from './experiment-service.js';
@@ -54,7 +55,7 @@ app.on('second-instance', () => {
   if (window.isMinimized()) window.restore();
   window.show(); window.focus();
 });
-let store: Store, backend: FleetBackend, codex: CodexAccount;
+let store: Store, backend: AppBuilder, codex: CodexAccount;
 let genAiMil: GenAiMil;
 let connectors: ConnectorService;
 let lead: ProjectLead, clarifications: ClarificationBroker;
@@ -108,10 +109,10 @@ function handle(channel: string, fn: (...args: any[]) => unknown) {
 }
 const bootstrap = () => ({
   state: redactValue(store.state), models: backend.models(), storagePath: store.root,
-  capabilities: { projectConversation: true, experiments: true, planningContinuation: true },
+  capabilities: { projectConversation: true, experiments: false, planningContinuation: false },
   chatgpt: codex.account,
   genAiMil: genAiMil.view(),
-  credentialStatus: store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider === GENAI_MIL_PROVIDER ? (genAiMil.view().connected ? 'GenAI.mil connected' : 'Connect GenAI.mil in Model settings') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
+  credentialStatus: store.state.settings.backend === 'opencode' ? (backend.opencode.error || (backend.opencode.models.some(model => model.provider === store.state.settings.provider && model.configured) ? 'AppYard connected' : 'Connect an AppYard provider in Model settings')) : store.state.settings.backend === 'codex' ? (codex.account.status === 'connected' ? codex.route.label + ' connected' : 'Connect ChatGPT or an API key to run Codex') : store.state.settings.provider === GENAI_MIL_PROVIDER ? (genAiMil.view().connected ? 'GenAI.mil connected' : 'Connect GenAI.mil in Model settings') : store.state.settings.provider && backend.runtime.hasConfiguredAuth(store.state.settings.provider) ? 'Provider connected' : 'Connect a provider to run Pi agents',
   runtime: 'Codex 0.166.0 · Pi SDK 1.5.0 · Electron ' + process.versions.electron
 });
 function requireIdle(id: string, fromConversation = false) {
@@ -172,7 +173,6 @@ async function startRun(id: string, fromConversation = false, resuming = false, 
   if (resuming) return resumeRun(id, fromConversation);
   if (requireIdle(id, fromConversation).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
   requireRunCapacity();
-  if (feedback === undefined && experiments.learning.getSettings().mode !== 'off') { await experiments.startOrdinary(id); return; }
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
   try { if (feedback === undefined) await backend.start(id); else await backend.requestChanges(id, feedback); }
@@ -186,12 +186,7 @@ async function resumeRun(id: string, fromConversation = false) {
   let resolve!: () => void;
   const done = new Promise<void>(r => { resolve = r; }); startingRuns.set(id, done);
   try {
-    const project = store.project(id);
-    const planning = project.resumeStage === 'plan' || project.status === 'draft'
-      ? await readPlanningContinuation(store.root, project).catch(() => undefined) : undefined;
-    if (planning && (planning.briefHash !== briefFingerprint(project)
-      || project.error?.startsWith('Brief updated. Continue planning from the saved work;'))) await backend.continuePlanning(id);
-    else await backend.resume(id);
+    await backend.resume(id);
   }
   finally { try { if (quitting) await backend.stop(id); } finally { startingRuns.delete(id); resolve(); } }
 }
@@ -492,6 +487,7 @@ function registerIPC() {
   });
   for (const method of storageMethodNames) handle('fleet:storage:' + method, async (...args: unknown[]) => {
     if (quitting) throw new Error('AppYard is closing.');
+    if (['startExperiment', 'startAdaptive', 'resumeExperiment', 'resumeCandidate', 'startOrdinary'].includes(method)) throw new Error('The legacy experiment pipeline has been removed. Start a single-agent build.');
     if (method === 'storageOpen') {
       const target = await dataStorage.resolveTarget(args[0] as string, args[1] as string | undefined);
       if (target.directory) { const error = await shell.openPath(target.path); if (error) throw new Error(error); }
@@ -514,6 +510,7 @@ function registerIPC() {
   const requireNoRuns = () => { if (backend.active.size || startingRuns.size || experimentReservations.size || storageMutations.size || approvals.size || experiments.activeCount || lead.active.size || conversationActions.size) throw new Error('Stop active builds and project lead replies before changing model settings or accounts.'); };
   for (const method of experimentMethodNames) handle('fleet:experiment:' + method, async (...args: unknown[]) => {
     if (quitting) throw new Error('AppYard is closing.');
+    if (['startExperiment', 'startAdaptive', 'resumeExperiment', 'resumeCandidate', 'startOrdinary'].includes(method)) throw new Error('The legacy experiment pipeline has been removed. Start a single-agent build.');
     if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
     if (method === 'previewCandidate' && storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
     const request = method === 'previewCandidate' || method === 'closeCandidatePreview' ? ++previewRequestGeneration : previewRequestGeneration;
@@ -559,15 +556,27 @@ function registerIPC() {
   handle('fleet:settings', async (settings: Settings, key?: string) => {
     requireNoRuns();
     if (!settings || typeof settings.provider !== 'string' || typeof settings.model !== 'string' || typeof settings.rememberKey !== 'boolean' ||
-      !['pi', 'codex'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
+      !['pi', 'codex', 'opencode'].includes(settings.backend ?? 'pi')) throw new Error('Select a valid backend and model.');
     if (key !== undefined && (typeof key !== 'string' || key.length > 20000)) throw new Error('Invalid API key.');
     const selectedModel = backend.models().find(model => (model.backend ?? 'pi') === (settings.backend ?? 'pi') && model.provider === settings.provider && model.id === settings.model);
     const reasoningEffort = savedReasoningEffort(selectedModel, settings.reasoningEffort, store.state.settings.reasoningEffort);
     if (settings.provider === GENAI_MIL_PROVIDER) {
       if (key) throw new Error('Save the key in the GenAI.mil tab.');
       genAiMil.assertModel(settings.backend ?? 'pi', settings.model);
-      store.state.settings = { backend: 'pi', provider: GENAI_MIL_PROVIDER, model: settings.model, rememberKey: true, developerMode: store.state.settings.developerMode === true,
+      store.state.settings = { backend: settings.backend === 'opencode' ? 'opencode' : 'pi', provider: GENAI_MIL_PROVIDER, model: settings.model, rememberKey: true, developerMode: store.state.settings.developerMode === true,
         ...(reasoningEffort ? { reasoningEffort } : {}) };
+      await store.save(); notify(); return bootstrap();
+    }
+    if (settings.backend === 'opencode') {
+      if (!backend.opencode.models.some(model => model.provider === settings.provider && model.id === settings.model)) throw new Error('Select an available AppYard model.');
+      if (key?.trim()) {
+        if (settings.rememberKey && !safeStorage.isEncryptionAvailable()) throw new Error('Secure credential storage is unavailable. Use a session-only key.');
+        registerCredential(key.trim()); await backend.opencode.setKey(settings.provider, key.trim());
+        if (settings.rememberKey) await atomicHostWrite(store.root, 'opencode-credentials.enc', safeStorage.encryptString(JSON.stringify({ provider: settings.provider, key: key.trim() })));
+      }
+      if (!backend.opencode.models.some(model => model.provider === settings.provider && model.id === settings.model && model.configured)) throw new Error('Enter a provider API key or select a connected AppYard model.');
+      if (!settings.rememberKey) await fs.rm(path.join(store.root, 'opencode-credentials.enc'), { force: true });
+      store.state.settings = { backend: 'opencode', provider: settings.provider, model: settings.model, rememberKey: settings.rememberKey, developerMode: store.state.settings.developerMode === true };
       await store.save(); notify(); return bootstrap();
     }
     if (settings.backend === 'codex') {
@@ -650,10 +659,18 @@ if (ownsInstance) app.whenReady().then(async () => {
       if (quitting) throw new Error('AppYard is closing. Your prepared workspace is saved.');
       await openCodexGoalTerminal(file);
     } });
-    codex = new CodexAccount(store.root, url => shell.openExternal(url));
+    codex = new ChatGPTDevkitAccount(store.root, url => shell.openExternal(url), {
+      id: 'appyard-electron-safe-storage-v1', isAvailable: () => safeStorage.isEncryptionAvailable(),
+      encrypt: text => safeStorage.encryptString(text), decrypt: bytes => safeStorage.decryptString(Buffer.from(bytes))
+    });
     clarifications = new ClarificationBroker(store, notify);
-    backend = new FleetBackend(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
+    backend = new AppBuilder(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
     await backend.init(); await codex.refresh();
+    try { await backend.opencode.refresh(); } catch { backend.opencode.error = 'AppYard could not start. Reinstall dependencies and retry.'; }
+    try {
+      const saved = JSON.parse(safeStorage.decryptString(await fs.readFile(path.join(store.root, 'opencode-credentials.enc'))));
+      registerCredential(saved.key); await backend.opencode.setKey(saved.provider, saved.key);
+    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.error('AppYard credential could not be loaded. Reconnect in Model settings.'); }
     genAiMil = new GenAiMil(store.root, safeStorage, backend.runtime, { log: line => console.info(line) });
     await genAiMil.load();
     experiments = new ExperimentService({ store, executable: process.execPath, resourcesRoot: app.getAppPath(), runtime: backend.runtime, codex, cipher: safeStorage,
@@ -667,7 +684,7 @@ if (ownsInstance) app.whenReady().then(async () => {
         return () => { if (experimentReservations.get(projectId) === experimentId) experimentReservations.delete(projectId); };
       } });
     await experiments.init();
-    lead = new ProjectLead(store, backend.runtime, notify, { codex });
+    lead = new ProjectLead(store, backend.runtime, notify, { codex, opencode: backend.opencode });
     dataStorage = new DataStorageService({
       store, changed: notify,
       isActive: id => backend.active.has(id) || startingRuns.has(id) || experimentReservations.has(id) || codexGoals.isLaunching(id)

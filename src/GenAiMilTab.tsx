@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { ModelChoices } from './ModelChoices';
+import { workerURL } from './worker-api';
 import type { Bootstrap, FleetAPI } from '../shared/types';
 
 type Action = (task: () => Promise<unknown>, success?: string) => Promise<boolean>;
@@ -40,9 +42,7 @@ export function GenAiMilTab({ data, api, disabled, action, updated, onSaved }: {
     {demo ? <>
       <p className="connection-note" role="note"><strong>Demo mode. No connection or model requests are made.</strong></p>
       <p>Explore model selection using sample models from the supplied documentation. Your saved connection and model settings stay unchanged.</p>
-      <label>Demo model<select aria-label="GenAI.mil demo model" value={demoModel} onChange={e => { setDemoModel(e.target.value); setDemoSavedModel(''); }}>
-        {demoModels.map(id => <option key={id} value={id}>{id}</option>)}
-      </select></label>
+<ModelChoices label="GenAI.mil demo model" value={demoModel} onChange={next => { setDemoModel(next); setDemoSavedModel(''); }} options={demoModels.map(id => ({ id, name: id }))}/>
       <div className="connection-actions">
         <button className="button primary" type="button" onClick={() => setDemoSavedModel(demoModel)}>Use model in demo</button>
         <button className="button secondary" type="button" onClick={() => { setDemo(false); setDemoSavedModel(''); }}>Exit demo</button>
@@ -50,7 +50,7 @@ export function GenAiMilTab({ data, api, disabled, action, updated, onSaved }: {
       <p role="status" aria-live="polite">{demoSavedModel ? `${demoSavedModel} selected for this demo only. No build has been started.` : 'Choose a sample model to try the demo setup.'}</p>
     </> : <>
     <button className="button secondary" type="button" disabled={!!pending} onClick={() => { setKey(''); setDemoSavedModel(''); setDemo(true); }}>Try demo setup</button>
-    <p>Get your key from the GenAI.mil site. It locks every 14 days and must be unlocked there.</p>
+    <p>Enter the API service address and key issued for your GenAI.mil access. If the service reports a locked key, unlock it on GenAI.mil and reconnect.</p>
     <p>GenAI.mil is for government devices. Follow your command's rules on what can be sent.</p>
     <label>Service address<input type="url" value={address} disabled={locked} onChange={e => setAddress(e.target.value)} autoComplete="off" spellCheck={false}/></label>
     <label>GenAI.mil key <span className="field-hint">{connection?.hasKey ? 'Leave blank to keep the saved key at this address.' : 'Saved using operating-system encryption.'}</span>
@@ -73,16 +73,13 @@ export function GenAiMilTab({ data, api, disabled, action, updated, onSaved }: {
     </div>
     <p role="status" aria-live="polite">{pending === 'connect' ? 'Connecting and loading models...' : connected ? models.length ? 'Connected to the model catalog. Choose a model for builds.' : 'Connected to the model catalog, but no models for builds are available.' : changed ? 'Save and connect to load models for these connection details.' : connection?.hasKey ? 'Key saved. Connect to load available models.' : 'Enter your service address and key to connect.'}{waiting ? ` Try again in ${Math.ceil((issue!.retryAt! - now) / 1000)} seconds.` : ''}</p>
     {issue && <div className="connection-error" role="alert"><p>{issue.message} {issue.nextStep}</p>
-      {issue.unlockUrl && <button className="button secondary" type="button" disabled={locked || !api.openGenAiMilUnlock} onClick={() => void run('unlock', () => api.openGenAiMilUnlock!())}>{pending === 'unlock' ? 'Opening GenAI.mil...' : 'Unlock key on GenAI.mil'}</button>}
+      {issue.unlockUrl && (workerURL ? <a className="button secondary" href={issue.unlockUrl} target="_blank" rel="noreferrer">Unlock key on GenAI.mil</a> : <button className="button secondary" type="button" disabled={locked || !api.openGenAiMilUnlock} onClick={() => void run('unlock', () => api.openGenAiMilUnlock!())}>{pending === 'unlock' ? 'Opening GenAI.mil...' : 'Unlock key on GenAI.mil'}</button>)}
     </div>}
     {replacement && models.includes(replacement) && <button className="button secondary" type="button" disabled={locked} onClick={() => setModel(replacement)}>Select replacement {replacement}</button>}
-    <label>Model<select aria-label="GenAI.mil model" value={selected} disabled={locked || !connected || !models.length} onChange={e => setModel(e.target.value)}>
-      <option value="" disabled>{connected ? models.length ? 'Select a model' : 'No models available for builds' : 'Connect to load models'}</option>
-      {models.map(id => <option key={id} value={id}>{id}</option>)}
-    </select></label>
+    <ModelChoices label="GenAI.mil model" value={selected} disabled={locked || !connected || !models.length} onChange={setModel} options={models.map(id => ({ id, name: id }))}/>
     <p className="connection-note">Only models ending in -withtools support builds in AppYard. Connecting loads the model catalog; it does not run a model.</p>
     <button className="button primary" type="button" disabled={locked || !connected || !selected} onClick={() => void run('save', async () => {
-      const next = await api.saveSettings({ backend: 'pi', provider: 'genai-mil', model: selected, rememberKey: true });
+      const next = await api.saveSettings({ backend: 'opencode', provider: 'genai-mil', model: selected, rememberKey: true });
       updated(next); onSaved?.(next);
     }, 'Model settings saved.')}>{pending === 'save' ? 'Saving...' : 'Use model for builds'}</button>
     </>}

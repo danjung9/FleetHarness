@@ -1,4 +1,6 @@
 import type { ReasoningEffort } from '../shared/reasoning.js';
+import { createOpenCodeSession } from './opencode-session.js';
+import type { OpenCodeRuntime } from './opencode-runtime.js';
 import { piThinkingLevel } from './reasoning.js';
 import { redactValue } from './secrets.js';
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager, type CreateAgentSessionOptions, type ModelRuntime, type ToolDefinition } from '@earendil-works/pi-coding-agent';
@@ -25,6 +27,7 @@ export interface IndependentJudgment extends Verdict {
 }
 type JudgedReport = TestReport & { independentJudge: IndependentJudgment };
 interface JudgeEngine {
+  opencode?: OpenCodeRuntime;
   backend: AgentBackend; reasoningEffort?: ReasoningEffort; model: string; provider: string; runtime: ModelRuntime; agentDir: string; codexHome?: string;
   createSession?: (options: CreateAgentSessionOptions) => Promise<{ session: StageSession }>;
   getCodexCredentials?: () => Promise<CodexCredentials>;
@@ -225,6 +228,10 @@ async function readOnlyEvaluation(options: ReadOnlyOptions, files: Map<string, s
       },
       create: async signal => {
         const engine = options.engine;
+        if (engine.backend === 'opencode') {
+          if (!engine.opencode) throw new Error('AppYard evaluator is unavailable.');
+          return createOpenCodeSession({ runtime: engine.opencode, cwd: options.workspace, provider: engine.provider, model: engine.model, signal, tools: [tool], conversationInstructions: instructions });
+        }
         if (engine.backend === 'codex') return codexJudge(engine, options.workspace, signal, instructions, tool, value => { finalText = value; });
         const settingsManager = SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: true, maxRetries: 2 } });
         const loader = new DefaultResourceLoader({ cwd: options.workspace, agentDir: engine.agentDir, settingsManager,
