@@ -38,6 +38,10 @@ export interface AgentLimits {
 export const defaultAgentLimits: AgentLimits = { idleMs: 5 * 60_000 };
 export const stoppedMessage = 'Run stopped by you. Source and session logs are saved.';
 
+export class AgentResponseLimitError extends Error {
+  constructor() { super('The model exhausted its response limit before completing this stage.'); }
+}
+
 /** Enforce inactivity, cancellation and optional budgets even when the SDK ignores abort. */
 export async function runAgentStage(options: {
   label: string;
@@ -68,7 +72,7 @@ export async function runAgentStage(options: {
   if (options.signal.aborted) throw new Error(stoppedMessage);
   const controller = new AbortController();
   let session: StageSession | undefined, unsubscribe: (() => void) | undefined;
-  let closed = false, succeeded = false, failure: Error | undefined, assistantError = '', turns = 0;
+  let closed = false, succeeded = false, failure: Error | undefined, assistantError: Error | undefined, turns = 0;
   let usageWrites = Promise.resolve(), lastUsage = '', usageStarted = false;
   let usageWriteError: unknown, providerReportedUsage = false;
   let observedUsage: TokenTotals | undefined;
@@ -203,14 +207,14 @@ export async function runAgentStage(options: {
           accumulate(tokenUsage(event.message.usage, 'pi'));
         }
         const reason = event.message.stopReason;
-        assistantError = reason === 'error' ? (!options.privateActivity && event.message.errorMessage) || 'The model provider returned an error.'
-          : reason === 'aborted' ? 'The model stopped before completing this stage.'
-          : reason === 'length' ? 'The model exhausted its response limit before completing this stage.' : '';
+        assistantError = reason === 'error' ? new Error((!options.privateActivity && event.message.errorMessage) || 'The model provider returned an error.')
+          : reason === 'aborted' ? new Error('The model stopped before completing this stage.')
+          : reason === 'length' ? new AgentResponseLimitError() : undefined;
       }
       options.onEvent(event);
     });
     await options.work(async text => {
-      check(); assistantError = ''; lastActivity = 'waiting for the model'; heartbeat();
+      check(); assistantError = undefined; lastActivity = 'waiting for the model'; heartbeat();
       publishUsage(undefined);
       const before = receipts;
       pendingPromptReceipts = before;
@@ -223,8 +227,8 @@ export async function runAgentStage(options: {
       }
       check();
       if (assistantError) throw options.privateActivity
-        ? new Error(`Agent stage failure: ${options.label}: ${assistantError} ${options.recoveryHint ?? 'Check the model connection and retry.'}`)
-        : new Error(assistantError);
+        ? new Error(`Agent stage failure: ${options.label}: ${(assistantError as Error).message} ${options.recoveryHint ?? 'Check the model connection and retry.'}`)
+        : assistantError;
       lastActivity = 'checking stage artifacts'; heartbeat();
     }, controller.signal, async hostWork => {
       check(); hostWorking = true; clearTimeout(idleTimer);

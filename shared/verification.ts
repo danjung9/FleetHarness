@@ -1,4 +1,4 @@
-import type { TestReport } from './types.js';
+import type { Project, TestReport } from './types.js';
 import { isDeterministicEvaluator } from './solution.js';
 import type { EvaluationResult } from './solution.js';
 import { meanEvaluationScore } from './evaluation-score.js';
@@ -6,6 +6,13 @@ import { visualReviewPassed } from './visual-review.js';
 
 export function judgeAccepted(report?: TestReport): boolean {
   return report?.independentJudge?.verdict === 'SATISFACTORY';
+}
+
+export const singleAgentBuildContext = 'appyard-single-agent-v1';
+
+export function requiresJudgeGapAcceptance(project: Pick<Project, 'runCheckpoint' | 'report'>): boolean {
+  return (project.runCheckpoint?.context !== singleAgentBuildContext || !!project.report?.independentJudge)
+    && !judgeAccepted(project.report);
 }
 
 /** Missing evaluation evidence also needs an explicit human decision. */

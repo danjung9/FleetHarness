@@ -1,5 +1,5 @@
 import type { Project, StageId } from './types.js';
-import { judgeAccepted, reportPassed } from './verification.js';
+import { reportPassed, requiresJudgeGapAcceptance, singleAgentBuildContext } from './verification.js';
 import type { ExperimentSummary } from './learning.js';
 
 export function experimentRunning(experiment?: ExperimentSummary): boolean {
@@ -8,6 +8,7 @@ export function experimentRunning(experiment?: ExperimentSummary): boolean {
 
 /** Candidate execution is separate from the retained project build until selection. */
 export function pendingExperiment(project: Project): ExperimentSummary | undefined {
+  if (project.runCheckpoint?.context === singleAgentBuildContext) return undefined;
   const experiment = project.experiment;
   if (!experiment || experiment.status === 'complete' || experiment.selectedCandidateId) return undefined;
   if (experimentRunning(experiment)) return experiment;
@@ -121,8 +122,8 @@ export function getJourneyState(project: Project): JourneyState {
   const passed = reportPassed(project.report, project.qualityVersion ?? false);
   if (project.status === 'review' && project.workspace && passed) {
     return { current: 'review', completed: ['brief', 'build'], activeStage: 'review',
-      message: judgeAccepted(project.report) ? 'Your review is needed. Try the app and check the evidence.'
-        : 'Your review is needed. Read the independent check gaps, then accept them or request changes.', stale: false };
+      message: requiresJudgeGapAcceptance(project) ? 'Your review is needed. Read the independent check gaps, then accept them or request changes.'
+        : 'Your review is needed. Try the app and check the evidence.', stale: false };
   }
 
   const buildStages = project.stages.filter(stage => stage.id in buildMessages).reverse();

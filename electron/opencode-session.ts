@@ -55,7 +55,7 @@ export async function openCodeToolBridge(tools: ToolDefinition[], signal: AbortS
   return { url: `http://127.0.0.1:${address.port}/mcp`, token, close: () => new Promise<void>(resolve => { server.closeAllConnections(); server.close(() => resolve()); }) };
 }
 
-interface Reply { info: { error?: { data?: { message?: string }; name?: string }; tokens?: { input: number; output: number; reasoning?: number; cache: { read: number; write: number } } }; parts: { type: string; text?: string }[] }
+interface Reply { info: { finish?: string; error?: { data?: { message?: string }; name?: string }; tokens?: { input: number; output: number; reasoning?: number; cache: { read: number; write: number } } }; parts: { type: string; text?: string }[] }
 export async function createOpenCodeSession(options: {
   runtime: OpenCodeRuntime; cwd: string; provider: string; model: string; signal: AbortSignal; tools: ToolDefinition[];
   conversationInstructions?: string; skillPaths?: string[];
@@ -155,7 +155,7 @@ export async function createOpenCodeSession(options: {
           usage = { ...totals, uncachedInputTokens: totals.inputTokens - totals.cachedInputTokens,
             reasoningOutputTokens: null, uncachedPlusOutputTokens: totals.inputTokens - totals.cachedInputTokens + totals.outputTokens };
         }
-        emit({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text: finalText }], stopReason: 'stop' } });
+        emit({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text: finalText }], stopReason: reply.info.finish === 'length' ? 'length' : 'stop' } });
         if (usage) emit({ type: 'usage_update', usage });
       } finally { streamController.abort(); await stream; prompting = false; }
     },

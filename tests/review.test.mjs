@@ -6,7 +6,8 @@ import path from 'node:path';
 import { Store, sourceHash } from '../dist-electron/electron/storage.js';
 import { recordReview, reviewFeedback, copyReviewSource } from '../dist-electron/electron/review.js';
 import { applicationTestFiles } from '../dist-electron/electron/verification.js';
-import { reportHash } from '../dist-electron/electron/delivery.js';
+import { recoverReviewEvidence, reportHash, verifiedManifest } from '../dist-electron/electron/delivery.js';
+import { singleAgentBuildContext } from '../dist-electron/shared/verification.js';
 import { withDesktopCompatibility, reviewRestartMessage } from '../dist-electron/shared/desktop-api.js';
 
 async function fixture(t) {
@@ -55,6 +56,21 @@ test('a satisfactory judgment needs no gap flag and ignores an unnecessary flag'
     assert.equal(project.approval.judgeGapsAccepted, undefined);
     assert.equal(project.approval.acceptedJudgeGaps, undefined);
   }
+});
+
+test('a saved single-agent build recovers its receipt only for the verified files and can be approved', async t => {
+  const { store, project } = await fixture(t);
+  project.runCheckpoint = { context: singleAgentBuildContext, writerState: 'idle' };
+  project.verification = undefined;
+  delete project.report.independentJudge;
+  const entry = path.join(project.workspace, 'index.html');
+  await fs.writeFile(entry, '<h1>Changed after verification</h1>');
+  await assert.rejects(recoverReviewEvidence(project), /Artifacts changed after verification/);
+  await fs.writeFile(entry, '<h1>Current build</h1>');
+  project.verification = await recoverReviewEvidence(project);
+  const record = await recordReview(store, project, 'approved', 'Reviewed the verified single-agent build.');
+  assert.equal(record.judgeGapsAccepted, undefined);
+  await verifiedManifest(project, true);
 });
 
 test('change requests and later approval keep a durable run-scoped review history', async t => {

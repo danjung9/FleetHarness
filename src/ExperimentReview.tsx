@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Check, ChevronRight, GitCompareArrows, Play, Square, X } from 'lucide-react';
+import { Check, ChevronRight, Square, X } from 'lucide-react';
 import type { Artifact, Bootstrap, FleetAPI, Project } from '../shared/types';
 import type { CandidateReview, ExperimentState } from '../shared/experiments';
 import type { CandidateSummary, ExperimentSummary, LearningSettings, PreferenceRecord } from '../shared/learning';
@@ -35,7 +35,6 @@ export function ExperimentReview({ project, busy, action }: { project: Project; 
   const candidateIndex = candidates.findIndex(item => item.id === candidate?.id);
   const candidateLabel = `Candidate ${String.fromCharCode(65 + Math.max(0, candidateIndex))}`;
   const running = !!experiment && activeStatuses.has(experiment.status);
-  const finalized = candidates.length > 0 && candidates.every(item => item.status === 'passed' || item.status === 'failed');
   const hasActiveExperiment = state?.experiments.some(item => activeStatuses.has(item.status)) === true;
   const blocked = busy || pending;
   const titleId = useId();
@@ -87,18 +86,15 @@ export function ExperimentReview({ project, busy, action }: { project: Project; 
   if (!isDesktop) return null;
   if (state && !state.availability.available) return <section className="experiment-unavailable"><p>{state.availability.reason ?? 'Candidate comparisons are unavailable on this machine.'}</p></section>;
   return <section className="experiment-review" aria-labelledby={titleId} aria-busy={pending}>
-    <div className="experiment-heading"><div><h2 id={titleId}>Compare approaches</h2><p>Build two candidates from the same brief and checks, then inspect the differences.</p></div>
-      <button className="secondary" disabled={!state || blocked || hasActiveExperiment || project.status === 'running'} onClick={() => void perform(async () => { const started = await api.startExperiment(project.id, { mode: 'paired', requestId: crypto.randomUUID() }); setExperimentId(started.id); }, 'Candidate comparison started.')}><GitCompareArrows size={16}/>Compare 2 candidates</button></div>
+    <div className="experiment-heading"><div><h2 id={titleId}>Saved comparisons</h2><p>Inspect recorded evidence for each candidate.</p></div></div>
     {error && <p className="experiment-error" role="alert">{error} <button className="text-button" disabled={blocked} onClick={() => void perform(async () => {})}>Refresh comparison</button></p>}
     {!state && !error && <p className="experiment-note" role="status">Loading comparison availability…</p>}
     {experiment && <>
       <div className="experiment-toolbar">
         {experiments.length > 1 && <label>Comparison<select value={experiment.id} onChange={event => { setExperimentId(event.target.value); setCandidateId(''); }} disabled={blocked}>{experiments.map((item, index) => <option key={item.id} value={item.id}>{new Date(item.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · {statusLabel[item.status]}{index === 0 ? ' · latest' : ''}</option>)}</select></label>}
         <p className="experiment-status" role="status">{statusLabel[experiment.status] ?? experiment.status}</p>
-        {running ? <button className="text-button" disabled={blocked} onClick={() => void perform(() => api.stopExperiment(experiment.id), 'Comparison stopped.')}><Square size={13}/>Stop comparison</button>
-          : !finalized && ['stopped', 'failed'].includes(experiment.status) && <button className="text-button" disabled={blocked || project.status === 'running'} onClick={() => void perform(() => api.resumeExperiment(experiment.id), 'Comparison resumed.')}><Play size={13}/>Resume comparison</button>}
+        {running && <button className="text-button" disabled={blocked} onClick={() => void perform(() => api.stopExperiment(experiment.id), 'Comparison stopped.')}><Square size={13}/>Stop comparison</button>}
       </div>
-      {finalized && ['stopped', 'failed'].includes(experiment.status) && <p className="experiment-note">All candidate outcomes are final. Choose Compare 2 candidates to start a new attempt.</p>}
       {candidates.length > 0 && <>
         <div className="candidate-switch" role="group" aria-label="Choose candidate to inspect">{candidates.map((item, index) => <button type="button" key={item.id} aria-pressed={candidate?.id === item.id} onClick={() => setCandidateId(item.id)}><strong>Candidate {String.fromCharCode(65 + index)}</strong><span>{statusLabel[item.status]}{experiment.selectedCandidateId === item.id ? ' · selected' : ''}</span></button>)}</div>
         <div className="candidate-comparison-table"><table><caption>Recorded outcomes for each candidate</caption><thead><tr><th scope="col">Evidence</th>{candidates.map((item, index) => <th scope="col" key={item.id}>Candidate {String.fromCharCode(65 + index)}</th>)}</tr></thead><tbody>

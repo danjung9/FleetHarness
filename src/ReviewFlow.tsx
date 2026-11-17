@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { CheckCircle2, ClipboardCheck, Code2, Download, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
 import type { Project } from '../shared/types';
-import { judgeAccepted, judgeGaps, reportPassed } from '../shared/verification';
+import { judgeGaps, reportPassed, requiresJudgeGapAcceptance, singleAgentBuildContext } from '../shared/verification';
 import { pendingExperiment } from '../shared/journey';
 import { api, isDesktop } from './api';
 import { workerURL } from './worker-api';
@@ -51,7 +51,7 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
   const report = project.report;
   const choosingCandidate = !!pendingExperiment(project);
   const passed = reportPassed(report, project.qualityVersion ?? false);
-  const needsGapAcceptance = !judgeAccepted(report);
+  const needsGapAcceptance = requiresJudgeGapAcceptance(project);
   const gaps = judgeGaps(report);
   const humanSteps = report?.independentJudge?.humanSteps ?? [];
   const judgmentKey = JSON.stringify([project.runId, report?.sourceHash, report?.independentJudge, project.approvedAt]);
@@ -110,7 +110,8 @@ function ReviewContent({ project, busy, action, onPreview, onGuide, onApproved, 
   return <div className="page review-workspace">
     <div className="review-content">
       <div className="page-heading"><div><h1>Review</h1><p>{choosingCandidate ? 'Compare the candidate evidence and choose a build to review.' : approved ? 'Your review is recorded for this build.' : 'Try the app, inspect its evidence, then approve the app or request changes.'}</p></div></div>
-      <ExperimentReview project={project} busy={busy} action={action}/>
+      {project.runCheckpoint?.context !== singleAgentBuildContext && (project.experiment || project.qualityVersion === 4)
+        && <ExperimentReview project={project} busy={busy} action={action}/>}
       {choosingCandidate ? <p className="review-pending" role="status">Choose a passing candidate above before approving or requesting changes.{report && ' Your previous build remains saved until you select a candidate.'}</p> : <>
       {report && needsGapAcceptance && <section className="review-criteria">
         <h2>The independent check found {gaps.length} gaps</h2>

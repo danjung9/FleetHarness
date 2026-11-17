@@ -9,7 +9,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createOpenCodeSession, openCodeToolBridge } from '../dist-electron/electron/opencode-session.js';
 import { OpenCodeRuntime } from '../dist-electron/electron/opencode-runtime.js';
-import { runAgentStage } from '../dist-electron/electron/agent-runner.js';
+import { AgentResponseLimitError, runAgentStage } from '../dist-electron/electron/agent-runner.js';
 import { genAiModelBridge } from '../dist-electron/electron/genai-model-bridge.js';
 
 test('OpenCode MCP bridge authenticates, scopes tools and reports failures',async () => {
@@ -41,10 +41,11 @@ test('real OpenCode runtime calls a host tool, reuses history, and reports stage
       const name=body.tools?.find(tool=>tool.function.name.endsWith('echo'))?.function.name;
       const hasTool=body.messages.some(message=>message.role==='tool');
       const call=!!name&&!hasTool;
+      const finishReason=call?'tool_calls':JSON.stringify(body.messages.at(-1)).includes('Reach the response limit')?'length':'stop';
       const delta=call?{role:'assistant',tool_calls:[{index:0,id:'call_fixture',type:'function',function:{name,arguments:JSON.stringify({value:'host-tool-confirmed'})}}]}:{role:'assistant',content:'App change verified.'};
       if(call)toolCalls++;
-      const message={id:'chatcmpl-fixture',object:'chat.completion',created:1,model:'fixture',choices:[{index:0,message:call?{...delta,tool_calls:delta.tool_calls.map(({index,...tool})=>tool)}:delta,finish_reason:call?'tool_calls':'stop'}],usage:{prompt_tokens:10,completion_tokens:4,total_tokens:14}};
-      if(body.stream){res.writeHead(200,{'Content-Type':'text/event-stream'});res.write('data: '+JSON.stringify({...message,object:'chat.completion.chunk',choices:[{index:0,delta,finish_reason:null}],usage:undefined})+'\n\n');res.write('data: '+JSON.stringify({...message,object:'chat.completion.chunk',choices:[{index:0,delta:{},finish_reason:call?'tool_calls':'stop'}]})+'\n\n');res.end('data: [DONE]\n\n');}
+      const message={id:'chatcmpl-fixture',object:'chat.completion',created:1,model:'fixture',choices:[{index:0,message:call?{...delta,tool_calls:delta.tool_calls.map(({index,...tool})=>tool)}:delta,finish_reason:finishReason}],usage:{prompt_tokens:10,completion_tokens:4,total_tokens:14}};
+      if(body.stream){res.writeHead(200,{'Content-Type':'text/event-stream'});res.write('data: '+JSON.stringify({...message,object:'chat.completion.chunk',choices:[{index:0,delta,finish_reason:null}],usage:undefined})+'\n\n');res.write('data: '+JSON.stringify({...message,object:'chat.completion.chunk',choices:[{index:0,delta:{},finish_reason:finishReason}]})+'\n\n');res.end('data: [DONE]\n\n');}
       else {res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(message));}
     }catch(error){res.writeHead(500).end(String(error));}
   });
@@ -55,7 +56,11 @@ test('real OpenCode runtime calls a host tool, reuses history, and reports stage
   try {
     await runAgentStage({label:'OpenCode integration',signal:new AbortController().signal,limits:{timeoutMs:60000,idleMs:30000},
       create:async signal=>session=await createOpenCodeSession({runtime,cwd:root,provider:'fixture',model:'fixture',signal,tools:[{name:'echo',description:'Echo the supplied value',parameters:Type.Object({value:Type.String()}),execute:async (_id,args)=>({content:[{type:'text',text:args.value}],details:{}})}]}),
-      onEvent:event=>events.push(event),onMetrics:value=>metrics=value,work:async prompt=>{await prompt('Call echo, then confirm the app change.');await prompt('Confirm the previous change.');}});
+      onEvent:event=>events.push(event),onMetrics:value=>metrics=value,work:async prompt=>{
+        await prompt('Call echo, then confirm the app change.');
+        await assert.rejects(prompt('Reach the response limit'), AgentResponseLimitError);
+        await prompt('Continue in the same session.');
+      }});
     assert.ok(requests>=3);assert.equal(toolCalls,1);assert.equal(advertised.size,1);assert.ok([...advertised][0].endsWith('echo'));
     assert.ok(events.some(event=>event.type==='tool_execution_end'));
     assert.ok(events.some(event=>event.type==='message_end'&&event.message.content[0].text==='App change verified.'));

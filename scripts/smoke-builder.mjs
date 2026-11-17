@@ -78,6 +78,23 @@ try {
   assert.equal(await page.locator('.requirements-form,.requirements-page,.journey-header').count(), 0);
   await page.getByLabel('Message', { exact: true }).press('Escape');
   assert.equal(await page.locator('.builder-output').count(), 1, 'Escape does not close the workspace chat');
+  await page.evaluate(() => {
+    const { state, publish } = window.builderFixture;
+    Object.assign(state.projects[0], {
+      status: 'review',
+      runCheckpoint: { context: 'appyard-single-agent-v1' },
+      experiment: { status: 'failed' },
+      report: { exitCode: 0, total: 1, passed: 1, failed: 0, skipped: 0, output: 'Checks passed.', time: new Date().toISOString(), durationMs: 1 },
+    });
+    publish();
+  });
+  await page.getByRole('navigation', { name: 'App views' }).getByRole('button', { name: 'Review', exact: true }).click();
+  await page.getByText('Automated checks passed', { exact: true }).waitFor();
+  assert.equal(await page.locator('.experiment-review, .experiment-unavailable').count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Use these gaps as my change request' }).count(), 0);
+  await page.getByLabel('Review notes').fill('Checked the portal and its local revision workflow.');
+  await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
+  assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ passed: true, checks: ['new chat opens split workspace','no briefing UI','failed build preserves workspace','tabs preserve chat draft','chat send','live iframe preview','stop and resume','reopen saved project','desktop/minimum/mobile overflow'], screenshots: output }, null, 2));
 } finally { await browser.close(); await server?.httpServer.close(); }

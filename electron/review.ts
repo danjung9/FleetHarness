@@ -6,7 +6,7 @@ import { Store, artifactManifest, safeFile, sourceHash } from './storage.js';
 import { atomicHostWrite } from '../shared/host-files.js';
 import { evidenceJson, verifiedManifest } from './delivery.js';
 import { redactSecrets } from './secrets.js';
-import { judgeAccepted, judgeGaps } from '../shared/verification.js';
+import { judgeGaps, requiresJudgeGapAcceptance } from '../shared/verification.js';
 
 export function reviewFeedback(value: string): string {
   if (typeof value !== 'string' || value.trim().length < 10 || value.length > 10000) throw new Error('Add a review note of 10 to 10,000 characters.');
@@ -18,7 +18,7 @@ export async function recordReview(store: Pick<Store, 'save' | 'saveProject'>, p
   if (!project.runId || !project.workspace) throw new Error('Build an app before recording a review.');
   if (project.processScope?.runId !== project.runId || project.processScope.cleanup !== 'confirmed') throw new Error('Process cleanup must be confirmed for this run before approval or delivery.');
   if (decision === 'approved') await verifiedManifest(project);
-  const needsAcceptance = decision === 'approved' && !judgeAccepted(project.report);
+  const needsAcceptance = decision === 'approved' && requiresJudgeGapAcceptance(project);
   if (needsAcceptance && acceptJudgeGaps !== true) throw new Error('Read and accept the independent check gaps before approving this prototype.');
   const record: ReviewRecord = { id: randomUUID(), runId: project.runId, decision, feedback: note, createdAt: new Date().toISOString(), sourceHash: project.report?.sourceHash };
   if (needsAcceptance) {

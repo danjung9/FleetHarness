@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
+import { request as httpRequest, type IncomingMessage } from 'node:http';
+import { json } from 'node:stream/consumers';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { AgentModel } from '../shared/types.js';
@@ -14,6 +16,26 @@ export interface OpenCodeConnection {
   events(signal: AbortSignal): Promise<Response>;
   close(): Promise<void>;
 }
+function requestFailed(status: number | undefined) {
+  return new Error(`AppYard request failed (${status}). Check the model connection and retry.`);
+}
+
+async function postSessionMessage<T>(url: URL, headers: Record<string, string>, body: unknown, signal: AbortSignal): Promise<T> {
+  // OpenCode sends headers only when the turn finishes. The stage monitors progress
+  // through events and owns cancellation for turns that outlast fetch's header timeout.
+  const response = await new Promise<IncomingMessage>((resolve, reject) => {
+    const request = httpRequest(url, { method: 'POST', headers, signal }, resolve);
+    request.once('error', reject);
+    request.end(JSON.stringify(body));
+  });
+  const status = response.statusCode ?? 0;
+  if (status < 200 || status >= 300) {
+    response.resume();
+    throw requestFailed(status);
+  }
+  return await json(response) as T;
+}
+
 export function openCodeExecutable() {
   const require = createRequire(import.meta.url);
   // The package's postinstall selects the CPU-compatible native executable on every platform.
@@ -62,8 +84,10 @@ export async function launchOpenCode(options: { root: string; cwd: string; confi
     return {
       async request<T>(route: string, body?: unknown, signal?: AbortSignal): Promise<T> {
         if (closed) throw new Error('AppYard session is closed.');
-        const response = await fetch(endpoint(route), { method: body === undefined ? 'GET' : 'POST', headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal });
-        if (!response.ok) throw new Error(`AppYard request failed (${response.status}). Check the model connection and retry.`);
+        const url = endpoint(route);
+        if (signal && body !== undefined && /^\/session\/[^/]+\/message$/.test(route)) return postSessionMessage<T>(url, headers, body, signal);
+        const response = await fetch(url, { method: body === undefined ? 'GET' : 'POST', headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal });
+        if (!response.ok) throw requestFailed(response.status);
         return await response.json() as T;
       },
       events: signal => fetch(endpoint('/event'), { headers, signal }), close

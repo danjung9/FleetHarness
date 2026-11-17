@@ -20,7 +20,7 @@ import { ConnectorStore } from './connectors/store.js';
 import { connectorConfiguration, connectorEncryption, fixtureSource } from './connectors/config.js';
 import { DATA_SERVICE_SECRET_NAMES } from './connectors/custom-api.js';
 import { atomicHostWrite } from '../shared/host-files.js';
-import { assertReviewState, verifiedManifest, deliveryEvidence, evidenceJson } from './delivery.js';
+import { assertReviewState, verifiedManifest, deliveryEvidence, evidenceJson, recoverReviewEvidence } from './delivery.js';
 import { ProjectLead, briefHash, projectBrief, canRequestChange } from './conversation.js';
 import { ClarificationBroker } from './clarifications.js';
 import { RunProcessSweep } from './process-sweep.js';
@@ -210,6 +210,8 @@ async function stopPreview(id: string) {
 }
 async function assertVerified(id: string, reservedProject?: Project) {
   const p = reservedProject ?? requireIdle(id);
+  const recovered = await recoverReviewEvidence(p);
+  if (recovered) await store.saveProject({ ...p, verification: recovered });
   assertReviewState(p);
   await experiments.assertSelectedVerified(p);
   return p;
