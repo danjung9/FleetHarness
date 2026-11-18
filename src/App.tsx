@@ -8,7 +8,7 @@ import brandLogo from './assets/brand/logo-on-dark.svg';
 import { ReviewWorkspace, DeliveryWorkspace } from './ReviewFlow';
 import { ModelSettings } from './ModelSettings';
 import { ModelSelector } from './ModelSelector';
-import { ProjectConversation } from './ProjectConversation';
+import { ProjectConversation, QuestionForm, pendingClarifications } from './ProjectConversation';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import {
   Activity, Archive, Inbox, GitBranch, FlaskConical, ArrowRight, Check, CheckCircle2, CircleDot,
@@ -48,16 +48,51 @@ function Modal({ title, close, children, wide = false, className = '' }: { title
     <div className="dialog-inner"><div className="dialog-heading"><h2 id={headingId}>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={close}><X size={18}/></button></div>{children}</div>
   </dialog>;
 }
+function BuildQuestion({ project, questions, close }: { project: Project; questions: ReturnType<typeof pendingClarifications>; close: () => void }) {
+  const [answering, setAnswering] = useState(false);
+  const question = questions[0];
+  return <Modal title="A decision before building" className="build-question-dialog" close={() => { if (!answering) close(); }}>
+    {questions.length > 1 && <p className="build-question-count">{questions.length} questions remaining</p>}
+    <QuestionForm key={question.id} projectId={project.id} question={question} api={api} desktop={isDesktop} busy={answering}
+      onBusy={setAnswering} compact submitLabel={questions.length > 1 ? 'Next question' : 'Continue building'}/>
+  </Modal>;
+}
+function DraftBuildPlan({ plan }: { plan: NonNullable<Project['inProgressPlan']> }) {
+  const headingId = useId();
+  return <section className="preview-draft" aria-labelledby={headingId}>
+    <h3 id={headingId}>Draft plan</h3>
+    <p className="preview-draft-task">{plan.primaryTask}</p>
+    <p className="preview-draft-outcome">{plan.successOutcome}</p>
+    {plan.screens.length > 0 && <>
+      <h4>Planned screens</h4>
+      <ul role="list">
+        {plan.screens.map((screen, index) => <li key={`${screen.name}-${index}`}>
+          <strong>{screen.name}</strong>
+          <p>{screen.purpose}</p>
+          <p className="preview-draft-action"><ArrowRight size={14} aria-hidden="true"/>{screen.primaryAction}</p>
+        </li>)}
+      </ul>
+    </>}
+  </section>;
+}
 function Development({ project, action }: { project: Project; action: Action }) {
+  const checkedPreviews = isDesktop && !workerURL;
+  const buildingLocally = checkedPreviews && project.status === 'running';
+  const latest = buildingLocally ? project.inProgressPreview : undefined;
+  const waiting = buildingLocally && !latest;
+  // Start a fresh preview when the build or phase changes, or when its first checked snapshot arrives.
+  const phase = JSON.stringify([project.runId, project.status, waiting]);
+  return <DevelopmentPreview key={phase} project={project} action={action} latest={latest} waiting={waiting}/>;
+}
+function DevelopmentPreview({ project, action, latest, waiting }: { project: Project; action: Action; latest?: string; waiting: boolean }) {
+  const [inProgress, setInProgress] = useState(latest);
   const [revision, setRevision] = useState(0);
   const [opened, setOpened] = useState<{ key: string; url: string | null; failed: boolean }>();
-  const checkedPreviews = isDesktop && !workerURL;
-  const inProgress = checkedPreviews && project.status === 'running' ? project.inProgressPreview : undefined;
-  const waiting = checkedPreviews && project.status === 'running' && !inProgress;
   const completed = ['review', 'approved', 'delivered'].includes(project.status);
-  const key = JSON.stringify([project.runId, project.status, inProgress, revision]);
+  const key = JSON.stringify([inProgress, revision]);
   const preview = opened?.key === key ? opened : undefined;
-  const buildingMessage = checkedPreviews ? 'Your app is building. The preview opens after a workflow passes its first check.' : 'Your app is building. You can keep chatting while the preview is prepared.';
+  const draft = waiting && project.runtimeProfile !== 'cli' ? project.inProgressPlan : undefined;
+  const buildingMessage = waiting ? 'Your app is building. The preview opens when it’s ready.' : 'Your app is building. You can keep chatting while the preview is prepared.';
   const reload = () => setRevision(value => value + 1);
   useEffect(() => {
     if (waiting) return;
@@ -73,7 +108,8 @@ function Development({ project, action }: { project: Project; action: Action }) 
     return () => clearInterval(timer);
   }, [project.status, preview?.url]);
   let content;
-  if (!waiting && !preview) content = <p className="muted" role="status">Opening the latest preview…</p>;
+  if (draft) content = <DraftBuildPlan plan={draft}/>;
+  else if (!waiting && !preview) content = <p className="muted" role="status">Opening preview…</p>;
   else if (preview?.url) content = <iframe key={key} title={inProgress ? 'In-progress application preview' : 'Generated application preview'} src={preview.url}/>;
   else if (inProgress || (project.runtimeProfile !== 'cli' && (completed || (preview?.failed && project.status !== 'running')))) {
     content = <Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<button className="secondary" onClick={reload}>Retry preview</button>}>
@@ -88,6 +124,7 @@ function Development({ project, action }: { project: Project; action: Action }) 
     <div className="preview-toolbar"><div className="preview-heading"><h2>App preview</h2>
       {inProgress && <span className="preview-progress" role="status"><strong>In progress</strong> One workflow checked. Full verification is pending.</span>}
     </div><div className="preview-actions">
+      {latest && latest !== inProgress && <button type="button" className="secondary preview-update" onClick={() => setInProgress(latest)}>Open latest preview</button>}
       <IconButton label="Open source folder" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
       <IconButton label="Reload preview" disabled={waiting} onClick={reload}><RefreshCw size={17}/></IconButton>
     </div></div>
@@ -157,6 +194,7 @@ export default function App() {
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
+  const [dismissedQuestionBatch, setDismissedQuestionBatch] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const settingsReturn = useRef<View>('workspace');
@@ -176,6 +214,10 @@ export default function App() {
   useEffect(() => { if (!message) return; const timer = setTimeout(() => setMessage(''), 5000); return () => clearTimeout(timer); }, [message]);
   const projects = state?.projects.filter(project => !project.archivedAt) ?? [];
   const project = projects.find(project => project.id === current);
+  const questions = project && isDesktop ? pendingClarifications(project) : [];
+  const canAnswerQuestions = isDesktop && data?.capabilities?.projectConversation === true;
+  const questionBatch = questions[0] ? JSON.stringify([project?.id, questions[0].runId, questions[0].phase, questions[0].round]) : '';
+  useEffect(() => { if (!questionBatch) setDismissedQuestionBatch(''); }, [questionBatch]);
   const results = projects.filter(project => (project.title + ' ' + project.description).toLowerCase().includes(query.toLowerCase()));
   const configured = !!data?.models.some(model => (!state?.settings.model || model.id === state.settings.model) && model.provider === state?.settings.provider && model.configured && (model.backend ?? 'pi') === (state?.settings.backend ?? 'pi'));
   const action: Action = async (work, success) => {
@@ -222,9 +264,9 @@ export default function App() {
       {active === 'storage' && <DataStorage projects={state.projects} onOpenProject={openProject} onLearning={() => navigate('settings')}/>}
       {newSession && !globalView && <div className="builder-workspace"><NewChat busy={busy} configured={configured} build={build}/><div className="builder-preview-empty"><Code2 size={28}/><h2>Your app starts here</h2><p>Describe what you want in the chat. Your preview will appear here.</p></div></div>}
       {project && !newSession && !globalView && <div className="builder-workspace">
-        <ProjectConversation key={project.id} project={project} open focusRequest={0} api={api} desktop={isDesktop} configured={configured} restartRequired={isDesktop && data.capabilities?.projectConversation !== true} openSettings={() => navigate('settings')} onApplied={() => setActive('workspace')}/>
+        <ProjectConversation key={project.id} project={project} open focusRequest={0} api={api} desktop={isDesktop} configured={configured} restartRequired={isDesktop && !canAnswerQuestions} openSettings={() => navigate('settings')} onApplied={() => setActive('workspace')} onOpenQuestions={canAnswerQuestions ? () => setDismissedQuestionBatch('') : undefined}/>
         <section className="builder-output" aria-label="App workspace">
-          <div className="builder-output-toolbar"><nav aria-label="App views">{tabs.map(tab => <button key={tab.id} className={active === tab.id ? 'active' : ''} aria-current={active === tab.id ? 'page' : undefined} onClick={() => navigate(tab.id)}>{tab.label}</button>)}</nav><div className="builder-run-actions"><span className={'builder-status ' + project.status} role="status">{labels[project.status] || project.status}</span>{project.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(project.id))}><Square size={13}/>Stop</button> : ['draft', 'failed', 'stopped'].includes(project.status) && <button className="primary" disabled={busy || !isDesktop || !configured} onClick={() => void action(() => getResumeStage(project) ? api.resumeRun(project.id) : api.startRun(project.id))}><Play size={13}/>{busy ? 'Starting…' : getResumeStage(project) ? 'Resume' : project.status === 'failed' ? 'Retry build' : 'Build'}</button>}</div></div>
+          <div className="builder-output-toolbar"><nav aria-label="App views">{tabs.map(tab => <button key={tab.id} className={active === tab.id ? 'active' : ''} aria-current={active === tab.id ? 'page' : undefined} onClick={() => navigate(tab.id)}>{tab.label}</button>)}</nav><div className="builder-run-actions"><span className={'builder-status ' + project.status} role="status">{questions.length ? 'Waiting for your answer' : labels[project.status] || project.status}</span>{project.status === 'running' ? <button className="secondary" disabled={busy} onClick={() => void action(() => api.stopRun(project.id))}><Square size={13}/>Stop</button> : ['draft', 'failed', 'stopped'].includes(project.status) && <button className="primary" disabled={busy || !isDesktop || !configured} onClick={() => void action(() => getResumeStage(project) ? api.resumeRun(project.id) : api.startRun(project.id))}><Play size={13}/>{busy ? 'Starting…' : getResumeStage(project) ? 'Resume' : project.status === 'failed' ? 'Retry build' : 'Build'}</button>}</div></div>
           {project.error && project.status !== 'running' && !error && <div className="builder-error" role="alert"><XCircle size={17}/><span>{project.error}</span></div>}
           {getJourneyState(project).stale && <p className="builder-stale" role="status">This preview is from the previous build. Build your latest changes to update it.</p>}
           {active === 'workspace' && <Development key={project.id} project={project} action={action}/>}
@@ -236,6 +278,8 @@ export default function App() {
       </div>}
     </main>
     {message && <div className="toast" role="status"><CheckCircle2 size={17}/>{message}</div>}
+    {project && canAnswerQuestions && !newSession && !globalView && !search && questionBatch && questionBatch !== dismissedQuestionBatch &&
+      <BuildQuestion key={questionBatch} project={project} questions={questions} close={() => setDismissedQuestionBatch(questionBatch)}/>}
     {search && <Modal title="Find an app" close={() => setSearch(false)}><label className="search-field"><Search size={18}/><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Search your apps"/></label><div className="search-results">{results.map(project => <button key={project.id} onClick={() => openProject(project.id)}><span>{project.title}<small>{labels[project.status]}</small></span><ArrowRight size={16}/></button>)}{!results.length && <p className="muted">No matching apps.</p>}</div></Modal>}
   </div>;
 }

@@ -53,17 +53,26 @@ export function ClarificationNotice({ project, onOpen }: { project: Project; onO
   return <div className="conversation-waiting" role="status"><Pause size={16} aria-hidden="true"/><p><strong>{questions[0].phase === 'research' ? 'Research' : 'Planning'} is waiting for your answer.</strong><span>The build continues after you answer in Project lead.</span></p><button type="button" className="text-button" onClick={onOpen}>Answer question <ChevronRight size={15}/></button></div>;
 }
 
-function QuestionForm({ projectId, question, api, desktop, busy, onBusy }: { projectId: string; question: ClarificationQuestion; api: FleetAPI; desktop: boolean; busy: boolean; onBusy: (busy: boolean) => void }) {
+export function QuestionForm({ projectId, question, api, desktop, busy, onBusy, compact = false, submitLabel = 'Send answer & continue' }: {
+  projectId: string; question: ClarificationQuestion; api: FleetAPI; desktop: boolean; busy: boolean; onBusy: (busy: boolean) => void; compact?: boolean; submitLabel?: string;
+}) {
   const answerId = useId();
+  const questionTitle = useRef<HTMLHeadingElement>(null);
   const key = draftKey(projectId, question.id);
   const answerType = question.answerType ?? (question.options?.length ? 'single_choice' : 'text');
   const hasChoices = answerType !== 'text';
   const multiple = answerType === 'multiple_choice';
   const [answer, setAnswer] = useState(() => readAnswerDraft(key, question));
+  const [writing, setWriting] = useState(() => Boolean(answer.text));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const disabled = !desktop || submitting || busy;
   const hasAnswer = answer.selectedOptions.length > 0 || Boolean(answer.text.trim());
+  useEffect(() => {
+    if (!compact) return;
+    const frame = requestAnimationFrame(() => questionTitle.current?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [compact]);
   function edit(value: ClarificationAnswer) {
     setAnswer(value); setError('');
     saveDraft(key, value.selectedOptions.length || value.text ? JSON.stringify({ version: 1, ...value }) : '');
@@ -83,7 +92,7 @@ function QuestionForm({ projectId, question, api, desktop, busy, onBusy }: { pro
     finally { setSubmitting(false); onBusy(false); }
   }
   return <form className="conversation-question" onSubmit={event => void submit(event)} aria-labelledby={answerId + '-title'} aria-busy={submitting}>
-    <h3 id={answerId + '-title'}>{question.question}</h3>
+    <h3 ref={questionTitle} id={answerId + '-title'} tabIndex={compact ? -1 : undefined}>{question.question}</h3>
     {question.context && <p>{question.context}</p>}
     {question.recommendation && <p className="conversation-recommendation"><strong>Suggested approach</strong>{question.recommendation}</p>}
     {hasChoices && <fieldset className="conversation-options" disabled={disabled}>
@@ -94,14 +103,17 @@ function QuestionForm({ projectId, question, api, desktop, busy, onBusy }: { pro
       </label>)}
       {answer.selectedOptions.length > 0 && <button type="button" className="text-button conversation-clear-selection" onClick={() => edit({ ...answer, selectedOptions: [] })}>Clear {multiple ? 'selections' : 'selection'}</button>}
     </fieldset>}
-    <div className="conversation-answer-field">
+    {compact && hasChoices && !writing && <button type="button" className="text-button clarification-write" disabled={disabled} onClick={() => setWriting(true)}>
+      {answer.selectedOptions.length ? 'Add a note' : 'Write my own answer'}
+    </button>}
+    {(!compact || !hasChoices || writing) && <div className="conversation-answer-field">
       <label htmlFor={answerId}>{hasChoices ? 'Additional details or your own answer' : 'Your answer'}</label>
-      <textarea id={answerId} rows={3} maxLength={answerLimit} value={answer.text} disabled={disabled} onChange={event => edit({ ...answer, text: event.target.value })} aria-describedby={hasChoices ? answerId + '-hint' : undefined} placeholder={hasChoices ? 'Add context, or suggest another approach…' : 'Write the details the agent should use…'}/>
-    </div>
-    {hasChoices && <p className="conversation-input-hint" id={answerId + '-hint'}>Optional when you select an option. You can also answer in your own words.</p>}
+      <textarea id={answerId} rows={3} maxLength={answerLimit} value={answer.text} disabled={disabled} autoFocus={compact && writing} onChange={event => edit({ ...answer, text: event.target.value })} aria-describedby={hasChoices && !compact ? answerId + '-hint' : undefined} placeholder={hasChoices ? 'Add context, or suggest another approach…' : 'Write the details the agent should use…'}/>
+    </div>}
+    {hasChoices && !compact && <p className="conversation-input-hint" id={answerId + '-hint'}>Optional when you select an option. You can also answer in your own words.</p>}
     {error && <p className="conversation-error" role="alert">{error} Your answer is saved here; try again.</p>}
-    <button className="primary" type="submit" disabled={disabled || !hasAnswer}>{submitting ? 'Sending answer…' : 'Send answer & continue'}<ChevronRight size={15}/></button>
-    <p className="conversation-answer-note">{question.phase === 'research' ? 'Research' : 'Planning'} resumes once every question is answered.</p>
+    <button className="primary" type="submit" disabled={disabled || !hasAnswer}>{submitting ? 'Sending answer…' : submitLabel}<ChevronRight size={15}/></button>
+    {!compact && <p className="conversation-answer-note">{question.phase === 'research' ? 'Research' : 'Planning'} resumes once every question is answered.</p>}
   </form>;
 }
 
@@ -146,8 +158,8 @@ function ProposedAction({ action, project, api, desktop, configured, onApplied, 
   </section>;
 }
 
-export function ProjectConversation({ project, open, focusRequest, onClose, api, desktop, configured, restartRequired, openSettings, onApplied }: {
-  project: Project; open: boolean; focusRequest: number; onClose?: () => void; api: FleetAPI; desktop: boolean; configured: boolean; restartRequired: boolean; openSettings: () => void; onApplied: (action: ConversationAction) => void;
+export function ProjectConversation({ project, open, focusRequest, onClose, api, desktop, configured, restartRequired, openSettings, onApplied, onOpenQuestions }: {
+  project: Project; open: boolean; focusRequest: number; onClose?: () => void; api: FleetAPI; desktop: boolean; configured: boolean; restartRequired: boolean; openSettings: () => void; onApplied: (action: ConversationAction) => void; onOpenQuestions?: () => void;
 }) {
   const headingId = useId();
   const composerId = useId();
@@ -245,9 +257,9 @@ export function ProjectConversation({ project, open, focusRequest, onClose, api,
   if (!open) return null;
   return <aside className="conversation-panel" id={'project-conversation-' + project.id} aria-labelledby={headingId} onKeyDown={event => { if (event.key === 'Escape' && onClose) { event.stopPropagation(); onClose(); } }}>
     <header className="conversation-panel-heading"><div><h2 id={headingId} ref={headingRef} tabIndex={-1}><MessageSquare size={19} aria-hidden="true"/>Chat</h2><p>{project.title}</p></div>{onClose && <button type="button" className="icon-button" aria-label="Close project lead" onClick={onClose}><X size={18}/></button>}</header>
-    {questions.length > 0 && <button className="conversation-pending-link" type="button" onClick={focusQuestion}><Pause size={14}/>{questions.length === 1 ? 'A question is waiting for your answer' : `${questions.length} questions are waiting for your answer`}<ArrowUp size={14}/></button>}
+    {questions.length > 0 && <button className="conversation-pending-link" type="button" onClick={onOpenQuestions ?? focusQuestion}><Pause size={14}/>{questions.length === 1 ? 'A question is waiting for your answer' : `${questions.length} questions are waiting for your answer`}<ArrowUp size={14}/></button>}
     <div className="conversation-scroll" ref={scrollRef} onScroll={event => { const node = event.currentTarget; followingRef.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; if (followingRef.current) setNewMessages(false); }}>
-      {questions.length > 0 && <div ref={questionRef} className="conversation-questions" tabIndex={-1} aria-label="Questions awaiting your answer">{questions.map(question => <QuestionForm key={question.id} projectId={project.id} question={question} api={api} desktop={desktop && !restartRequired} busy={mutationBusy} onBusy={setMutationBusy}/>)}</div>}
+      {questions.length > 0 && !onOpenQuestions && <div ref={questionRef} className="conversation-questions" tabIndex={-1} aria-label="Questions awaiting your answer">{questions.map(question => <QuestionForm key={question.id} projectId={project.id} question={question} api={api} desktop={desktop && !restartRequired} busy={mutationBusy} onBusy={setMutationBusy}/>)}</div>}
       {!messages.some(message => message.role === 'user' && message.text === project.description) && <article className="conversation-message user initial-prompt"><div className="conversation-message-meta"><strong>You</strong></div><p>{project.description}</p></article>}
       {!messages.length && <div className="conversation-intro"><h3>{project.status === 'running' ? 'Working on your app' : 'Let’s build your app'}</h3><p>{project.status === 'running' ? 'I’ll ask here if I need anything. You can add details or request changes while I work.' : 'Add details, ask a question, or describe what you’d like to change.'}</p></div>}
       {!!messages.length && <div className="conversation-transcript" role="log" aria-label="Project conversation" aria-live="off">{messages.map(message => <article className={'conversation-message ' + message.role} key={message.id}><div className="conversation-message-meta"><strong>{message.role === 'user' ? 'You' : message.role === 'assistant' ? 'AppYard' : 'Project update'}</strong><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</time>{message.phase && <span>{message.phase === 'research' ? 'Research' : 'Planning'}</span>}</div><p>{message.text || (message.status === 'streaming' ? 'Thinking…' : '')}</p>{message.status === 'error' && <span className="conversation-message-error">Response interrupted. You can try again.</span>}</article>)}</div>}

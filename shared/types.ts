@@ -79,8 +79,14 @@ export interface Project extends BriefContext {
   executionFailure?: 'infrastructure' | 'integrity' | 'implementation' | 'budget' | 'cancelled';
   visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
-  /** Opaque revision of the checked workflow available during this build. */
+  /** Latest checked preview revision for the active build. */
   inProgressPreview?: string;
+  /** Draft screen map from the active build's planning stage. */
+  inProgressPlan?: {
+    primaryTask: string;
+    successOutcome: string;
+    screens: { name: string; purpose: string; primaryAction: string }[];
+  };
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];

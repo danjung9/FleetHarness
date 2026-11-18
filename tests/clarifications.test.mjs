@@ -236,6 +236,22 @@ test('question persistence failures leave no pending orphan questions', async t 
   assert.equal(project.conversation.questions[0].status, 'cancelled');
 });
 
+test('a question cannot accept answers before its request is saved', async t => {
+  const { project, store, broker, notifications } = await fixture(t);
+  const saving = Promise.withResolvers();
+  const save = store.save.bind(store);
+  store.save = async () => { await saving.promise; await save(); };
+  const request = broker.request(project, 'research', [question]);
+  const [pending] = project.conversation.questions;
+  try {
+    assert.equal(notifications(), 0);
+    await assert.rejects(broker.answer(project.id, pending.id, 'Operator'), /still being saved/);
+  } finally { saving.resolve(); }
+  await request;
+  await broker.answer(project.id, pending.id, 'Operator');
+  assert.equal(pending.status, 'answered');
+});
+
 test('all answer modes preserve selections and custom text in saved answers and model context', async t => {
   const { root, project, broker } = await fixture(t);
   const questions = await broker.request(project, 'research', [

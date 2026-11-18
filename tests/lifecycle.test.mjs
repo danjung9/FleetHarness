@@ -337,6 +337,39 @@ test('a reload during a starting preview replaces it without failing', async t =
   assert.equal(calls, 2);
 });
 
+test('preview IPC can reopen a checked revision after a newer one is published', async t => {
+  const { store, p, root } = await fixture(t);
+  const initial = path.join(root, 'first-snapshot');
+  const latest = path.join(root, 'second-snapshot');
+  const snapshots = new Map([['first', initial], ['second', latest]]);
+  const opened = [];
+  const backend = {
+    active: new Map([[p.id, {}]]),
+    inProgressPreview(id, revision) {
+      assert.equal(id, p.id);
+      return snapshots.get(revision);
+    }
+  };
+  p.status = 'running';
+  p.inProgressPreview = 'second';
+  const main = await mainHarness(store, backend, 'electron/main.ts', {
+    ApplicationPreviews: class {
+      async url(workspace) { opened.push(workspace); return 'http://127.0.0.1:' + (51000 + opened.length) + '/'; }
+      async stop() {}
+    },
+    RunProcessSweep: class { run(work) { return work(); } async stop() {} }
+  });
+
+  assert.equal(await main.invoke('fleet:preview', p.id, 'first'), 'http://127.0.0.1:51001/');
+  assert.equal(await main.invoke('fleet:preview', p.id, 'unknown'), null);
+  assert.equal(await main.invoke('fleet:preview', p.id, null), null);
+  assert.equal(await main.invoke('fleet:preview', p.id), 'http://127.0.0.1:51002/');
+  assert.deepEqual(opened, [initial, latest]);
+  p.status = 'review';
+  assert.equal(await main.invoke('fleet:preview', p.id, 'first'), null);
+  assert.deepEqual(opened, [initial, latest]);
+});
+
 test('Stop cancels a preview reserved before its first state save resumes', async t => {
   const { store, p } = await fixture(t), entered = deferred(), release = deferred();
   const save = store.save.bind(store); let first = true, starts = 0, sweeps = 0;

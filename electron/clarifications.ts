@@ -49,6 +49,7 @@ export class ClarificationBroker {
   private waiters = new Map<string, Set<Waiter>>();
   private cancelled = new Set<string>();
   private resuming = new Map<string, symbol>();
+  private savingQuestions = new Set<string>();
   private savingAnswers = new Set<string>();
   constructor(private store: Store, private notify: () => void) {}
   private key(project: Project, runId: string, phase: Phase) { return `${project.id}:${runId}:${phase}`; }
@@ -60,7 +61,7 @@ export class ClarificationBroker {
   private questions(project: Project, runId: string, phase: Phase) {
     return project.conversation?.questions.filter(question => question.runId === runId && question.phase === phase) ?? [];
   }
-  private async changed(project: Project) { project.updatedAt = new Date().toISOString(); this.notify(); await this.store.save(); }
+  private async changed(project: Project) { project.updatedAt = new Date().toISOString(); await this.store.save(); this.notify(); }
   private update(project: Project, runId: string, phase: Phase) {
     for (const waiter of this.waiters.get(this.key(project, runId, phase)) ?? []) waiter.update();
   }
@@ -87,6 +88,7 @@ export class ClarificationBroker {
       return { id: randomUUID(), runId, phase, round, question, context, answerType, ...(normalized ? { options: normalized } : {}),
         ...(value.recommendation !== undefined ? { recommendation: string(value.recommendation, 'Recommendation', 1000) } : {}), status: 'pending' as const, createdAt };
     });
+    questions.forEach(question => this.savingQuestions.add(question.id));
     const conversation = project.conversation ??= emptyConversation();
     conversation.questions.push(...questions);
     conversation.messages.push({ id: randomUUID(), role: 'assistant', runId, phase, createdAt, status: 'complete',
@@ -97,7 +99,7 @@ export class ClarificationBroker {
       questions.forEach(question => { question.status = 'cancelled'; });
       if (project.runId === runId) project.stages.find(stage => stage.id === phase)!.detail = stageDefinitions.find(stage => stage.id === phase)!.detail;
       this.update(project, runId, phase); throw error;
-    }
+    } finally { questions.forEach(question => this.savingQuestions.delete(question.id)); }
     this.active(project, runId, phase);
     if (questions.some(question => question.status === 'cancelled')) throw new Error(cancelledMessage);
     return questions;
@@ -135,6 +137,7 @@ export class ClarificationBroker {
     const project = this.store.project(projectId);
     const question = project.conversation?.questions.find(question => question.id === questionId);
     if (!question || question.status !== 'pending') throw new Error('This question is no longer waiting for an answer.');
+    if (this.savingQuestions.has(question.id)) throw new Error('The question is still being saved. Try again in a moment.');
     this.active(project, question.runId, question.phase);
     const { answer, response } = normalizeAnswer(question, value);
     this.savingAnswers.add(question.id);

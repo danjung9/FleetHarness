@@ -352,8 +352,10 @@ function registerIPC() {
     const p = store.project(id);
     if (quitting || p.archivedAt) return null;
     const inProgress = p.status === 'running' || typeof token === 'string';
-    const snapshot = inProgress && token !== null ? backend.inProgressPreview?.(id) : undefined;
-    if (inProgress && (!snapshot || p.status !== 'running' || (token !== undefined && token !== p.inProgressPreview))) return null;
+    const revision = token === undefined ? p.inProgressPreview : token;
+    const root = inProgress && revision ? backend.inProgressPreview(id, revision) : undefined;
+    const snapshot = root && revision ? { root, revision } : undefined;
+    if (inProgress && (!snapshot || p.status !== 'running')) return null;
     const earlier = previewQueue.get(id);
     if (earlier) {
       const starting = previewing.get(id);
@@ -367,12 +369,13 @@ function registerIPC() {
     current.then(forget, forget);
     return current;
   });
-  const openPreview = async (id: string, request: number, snapshot?: string) => {
+  const openPreview = async (id: string, request: number, snapshot?: { root: string; revision: string }) => {
     try {
       const current = () => request === previewRequestGeneration && !storageMutations.size && !quitting;
+      const snapshotAvailable = () => snapshot && backend.inProgressPreview(id, snapshot.revision) === snapshot.root;
       if (!current()) return null;
       const p = store.project(id);
-      if (p.archivedAt || (snapshot ? p.status !== 'running' || backend.inProgressPreview?.(id) !== snapshot : p.status === 'running')) return null;
+      if (p.archivedAt || (snapshot ? p.status !== 'running' || !snapshotAvailable() : p.status === 'running')) return null;
       const phase = snapshot ? 'in-progress' : 'workspace';
       setPreview(null);
       await stopPreview(id, phase);
@@ -381,7 +384,7 @@ function registerIPC() {
       if (!snapshot && p.status === 'review' && !startingRuns.has(id)) await backend.active.get(id)?.done;
       if (!current()) return null;
       if (!snapshot) requireIdle(id);
-      const root = snapshot ?? p.workspace;
+      const root = snapshot?.root ?? p.workspace;
       if (!root) return null;
       if (!snapshot && p.qualityVersion === 4) {
         await closeProjectPreviews();
@@ -393,7 +396,7 @@ function registerIPC() {
       await experiments.closeCandidatePreview();
       if (!current()) return null;
       if (snapshot) {
-        if (backend.inProgressPreview?.(id) !== snapshot) return null;
+        if (!snapshotAvailable()) return null;
       } else {
         requireIdle(id);
         if (p.workspace !== root) return null;
@@ -406,7 +409,7 @@ function registerIPC() {
         if (!snapshot) { p.processScope.cleanup = 'pending'; await store.save(); }
         if (preview.start.signal.aborted || !current()) { await stopPreview(id); return null; }
         const url = await scope.run(() => previews.url(root));
-        if (!url || preview.start.signal.aborted || !current() || (snapshot && backend.inProgressPreview?.(id) !== snapshot)) {
+        if (!url || preview.start.signal.aborted || !current() || (snapshot && !snapshotAvailable())) {
           await stopPreview(id); return null;
         }
         setPreview(url, id); return url;
