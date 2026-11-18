@@ -214,6 +214,8 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
         }
         const url = runtime?.url ?? sharedUrl;
         if (!url || !/^http:\/\/127\.0\.0\.1:\d+\//.test(url)) throw new Error('Verification requires a host-started loopback runtime.');
+        const routeBase = runtime?.routeBase ?? sharedRouteBase;
+        const previewMount = !captureArtifacts && routeBase ? { origin: new URL(url).origin, prefix: routeBase } : undefined;
         if (options.isolateNetwork) preparingProxy = originProxy(new URL(url).origin).then(async started => {
           if (attemptClosed) { await started.close(); throw new Error('Browser verification stopped.'); }
           attemptProxy = started; return started;
@@ -236,7 +238,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           tracing = true;
         }
         page = await deadline.run(context.newPage());
-        httpEvidence = await deadline.run(BrowserHttpEvidence.attach(page));
+        httpEvidence = await deadline.run(BrowserHttpEvidence.attach(page, previewMount));
         page.on('pageerror', error => record('Browser error: ' + error.message));
         page.on('console', entry => { if (entry.type() === 'error' && !httpEvidence!.captureConsole(entry)) record('Console error: ' + entry.text()); });
         page.on('dialog', dialog => { record('Unexpected ' + dialog.type() + ' dialog: ' + dialog.message()); void dialog.dismiss().catch(() => {}); });
@@ -249,6 +251,10 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
         });
         context.on('page', opened => { if (opened !== page) { record('Application opened an unexpected new window.'); void opened.close().catch(() => {}); } });
         await deadline.run(page.goto(url, { waitUntil: 'load', timeout: Math.min(stepTimeoutMs, deadline.remaining()) }));
+        if (previewMount) {
+          await deadline.run(httpEvidence.flush());
+          if (httpEvidence.previewAssetFailure) throw new Error(httpEvidence.previewAssetFailure);
+        }
         const downloads: DownloadCaptures = new Map();
         for (const step of journey.steps) {
           stepIndex++;
@@ -257,7 +263,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           try {
             const hooks = runtime?.provenance?.profile === 'service'
               ? { restart: runtime.restart?.bind(runtime), invokeService: runtime.invoke?.bind(runtime) } : undefined;
-            const operation = performBrowserStep(page, step, stepLimit, httpEvidence, ux, runtime?.routeBase ?? sharedRouteBase, downloads, hooks);
+            const operation = performBrowserStep(page, step, stepLimit, httpEvidence, ux, routeBase, downloads, hooks);
             // Runtime startup/invocation limits own service operations; the
             // journey deadline still bounds stalled hooks and cancellation.
             // Diagnostic runs let literal assertions report their last observation.
@@ -270,13 +276,14 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           if (overflow) record('Horizontal overflow prevents the application fitting the ' + viewport + ' viewport.');
         }
         await deadline.run(httpEvidence.flush());
+        if (httpEvidence.previewAssetFailure) throw new Error(httpEvidence.previewAssetFailure);
         recordHttpErrors();
         result.status = problems.length ? 'failed' : 'passed';
         result.detail = problems.length ? problems.join('\n') : `Completed ${journey.steps.length} steps at ${dimensions.width}×${dimensions.height}; no browser errors or horizontal overflow.`;
       } catch (error) {
         if (terminalFailure(error)) lifecycleFailure = error;
         recordHttpErrors();
-        result.detail = [`Step ${stepIndex || 'load'}: ${message(error)}`, ...problems].join('\n');
+        result.detail = [`Step ${stepIndex || 'load'}: ${httpEvidence?.previewAssetFailure || message(error)}`, ...problems].join('\n');
       } finally {
         try {
           deadline.check();

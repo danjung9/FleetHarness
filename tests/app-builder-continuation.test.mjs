@@ -231,6 +231,47 @@ test('failed early checks stay private and a final repair reruns the first obser
   assert.equal(project.error, 'Full verification reached again');
 });
 
+test('the first preview repair reports real asset 404s from the prefixed browser package', { timeout: 45_000 }, async t => {
+  const html = prefix => qualityFixtureHtml.replace('<textarea id="message"', '<textarea id="message" hidden')
+    .replace('</head>', `<link rel="stylesheet" href="${prefix}panel.css"><script type="module" src="${prefix}setup.mjs?testMarker=omit-this"></script></head>`);
+  const { project, run, prompts } = await fixture(t, {
+    plan(ids) {
+      const plan = structuredSolutionFixture(ids);
+      const contract = JSON.parse(plan['solution-contract.json']);
+      contract.runtime.files.push('panel.css', 'setup.mjs');
+      plan['solution-contract.json'] = JSON.stringify(contract);
+      return plan;
+    },
+    async prompt(text, cwd) {
+      if (text.startsWith(previewTurn)) {
+        assert.match(text, /Use app-relative URLs/);
+        await writeFiles(cwd, {
+          ...runtimeFiles, 'index.html': html('/'),
+          'panel.css': 'button { cursor: pointer; }',
+          'setup.mjs': "document.querySelector('#message').hidden = false;",
+        });
+      } else if (text.startsWith(previewRepair)) {
+        assert.equal(project.inProgressPreview, undefined);
+        assert.match(text, /Expected the application to load\. Observed HTTP 404/);
+        assert.match(text, /HTTP 404 loading script "\/setup\.mjs"/);
+        assert.match(text, /HTTP 404 loading stylesheet "\/panel\.css"/);
+        assert.match(text, /Use an app-relative asset URL/);
+        assert.doesNotMatch(text, /omit-this|Browser step exceeded/);
+        await writeFile(path.join(cwd, 'index.html'), html('./'));
+      } else if (!text.includes('Stop after planning')) {
+        assert.ok(project.inProgressPreview, 'The relative asset paths allow the checked preview to open.');
+        await writeFile(path.join(cwd, 'app.test.cjs'), appTest);
+      }
+    },
+  });
+
+  await run();
+  assert.equal(project.status, 'review', project.error);
+  assert.equal(prompts.filter(text => text.startsWith(previewRepair)).length, 1);
+  assert.equal(project.runCheckpoint.repairAttempts, 0);
+  assert.equal(reportPassed(project.report, 2), true);
+});
+
 test('stopping during the preview check invalidates a late pass and removes its snapshot', async t => {
   const checking = Promise.withResolvers();
   const finished = Promise.withResolvers();

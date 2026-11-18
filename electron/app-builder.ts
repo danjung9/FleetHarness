@@ -34,6 +34,7 @@ const maxPlanningCorrections = 4;
 const maxImplementationContinuations = 4;
 const planningWriteInstructions = 'Save planning artifacts incrementally. Write one small file per tool call. For larger files, start with a small valid JSON document and add a few entries at a time with edit. Do not batch documents in one shell command or tool call.';
 const incrementalImplementation = 'Save progress in small edits as you work. For a large file, write a short valid scaffold first, then add one function or section per tool call. Keep each tool call to a few dozen lines. Do not batch large writes or replace a whole file when a small edit works.';
+const browserAssetInstructions = 'AppYard hosts browser apps below a path prefix. Use app-relative URLs such as ./app.mjs and ./styles.css for packaged assets and relative module imports. Include those files in the declared browser runtime.';
 const frozenInputInstructions = 'Keep requirements.md, inputs/, .fleet/ and all frozen planning contracts unchanged.';
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 export const briefHash = (p: Project) => digest(JSON.stringify([p.title, p.description, p.criteria, p.inputs, p.outputs, p.dataInputs, p.resources, p.links, p.challengeId, p.sourceChallenge, p.connectedData]));
@@ -202,7 +203,9 @@ export class AppBuilder {
             };
             const previewCheck = this.options.checkBuildPreview ?? checkBuildPreview;
             const implement = async (task: 'implementation' | 'verification repair', instruction: string) => {
-              let next = instruction + '\n\n' + incrementalImplementation;
+              const guidance = '\n\n' + incrementalImplementation +
+                (state.quality?.solution?.runtime.profile === 'browser' ? '\n\n' + browserAssetInstructions : '');
+              let next = instruction + guidance;
               for (let continuations = 0; ; continuations++) {
                 try { await prompt(next); }
                 catch (error) {
@@ -212,7 +215,7 @@ export class AppBuilder {
                     throw new Error(`The model reached its response limit during ${task}. Saved files are available. Resume to continue from them.`);
                   }
                   this.log(p, current, 'info', `The model reached its response limit during ${task}. Continuing from saved files.`);
-                  next = 'Your previous response was cut off. Inspect the saved files and continue the current ' + task + ' from the first unfinished change. Keep working code already on disk. ' + frozenInputInstructions + ' ' + incrementalImplementation;
+                  next = 'Your previous response was cut off. Inspect the saved files and continue the current ' + task + ' from the first unfinished change. Keep working code already on disk. ' + frozenInputInstructions + guidance;
                   continue;
                 }
                 await integrity();

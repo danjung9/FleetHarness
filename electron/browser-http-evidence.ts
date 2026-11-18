@@ -6,6 +6,7 @@ type RequestEvidence = {
   redirected: boolean; status?: number; finished?: boolean; failed?: string;
 };
 type ResourceError = { text: string; url: string; requestId?: string };
+type PreviewMount = { origin: string; prefix: string };
 type PendingExpectation = {
   after: number; url: string; method: string; status: number; requestId?: string;
   resolve: (request: RequestEvidence) => void; reject: (error: Error) => void;
@@ -25,17 +26,18 @@ export class BrowserHttpEvidence {
   private readonly requests = new Map<string, RequestEvidence>();
   private readonly consoleErrors: ResourceError[] = [];
   private readonly networkErrors: ResourceError[] = [];
+  private readonly missingPreviewAssets = new Map<string, string>();
   private readonly expectedRequests = new Set<string>();
   private order = 0;
   private pending?: PendingExpectation;
   private failure?: string;
   private disposed = false;
 
-  private constructor(private readonly page: Page, private readonly session: CDPSession) {}
+  private constructor(private readonly page: Page, private readonly session: CDPSession, private readonly previewMount?: PreviewMount) {}
 
-  static async attach(page: Page): Promise<BrowserHttpEvidence> {
+  static async attach(page: Page, previewMount?: PreviewMount): Promise<BrowserHttpEvidence> {
     const session = await page.context().newCDPSession(page);
-    const evidence = new BrowserHttpEvidence(page, session);
+    const evidence = new BrowserHttpEvidence(page, session, previewMount);
     session.on('Network.requestWillBeSent', evidence.requested);
     session.on('Network.responseReceived', evidence.responded);
     session.on('Network.loadingFinished', evidence.finished);
@@ -78,12 +80,30 @@ export class BrowserHttpEvidence {
   };
 
   private readonly responded = (event: { requestId: string; type?: string; response: { status: number; url: string } }) => {
+    if (this.disposed) return;
+    this.recordMissingPreviewAsset(event.type, event.response);
     const request = this.requests.get(event.requestId);
-    if (!request || this.disposed) return;
+    if (!request) return;
     request.status = event.response.status;
     if (event.type !== request.type || event.response.url !== request.url) request.redirected = true;
     this.checkPending(request);
   };
+
+  private recordMissingPreviewAsset(type: string | undefined, response: { status: number; url: string }) {
+    const mount = this.previewMount;
+    if (!mount || response.status !== 404 || (type !== 'Script' && type !== 'Stylesheet') ||
+      this.missingPreviewAssets.has(type) || !response.url.startsWith(mount.origin + '/')) return;
+    const asset = new URL(response.url);
+    const insideMount = asset.pathname.startsWith(mount.prefix + '/');
+    // Omit the host's temporary mount token and any request query or fragment.
+    const file = insideMount ? './' + asset.pathname.slice(mount.prefix.length + 1) : asset.pathname;
+    const hint = insideMount
+      ? 'Check the asset path and include the file in the declared browser runtime.'
+      : 'Use an app-relative asset URL so it loads under the preview path prefix.';
+    this.missingPreviewAssets.set(type, `HTTP 404 loading ${type.toLowerCase()} ${JSON.stringify(file.slice(0, 200))}. ${hint}`);
+  }
+
+  get previewAssetFailure(): string { return [...this.missingPreviewAssets.values()].join(' '); }
 
   private readonly finished = (event: { requestId: string }) => {
     const request = this.requests.get(event.requestId);
