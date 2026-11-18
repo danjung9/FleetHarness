@@ -55,6 +55,9 @@ export interface BackendOptions {
   scoped?: ScopedWorkflow;
   /** Trusted test seam; production always runs host verification. */
   verify?: typeof import('./quality.js').verifyApplication;
+  checkBuildPreview?: typeof import('./build-preview-check.js').checkBuildPreview;
+  /** Release a published snapshot's desktop runtime before sweeping the build. */
+  closeInProgressPreview?: (id: string) => Promise<void>;
 }
 
 // Compatibility exports for saved data and integrations. The staged executor was removed.

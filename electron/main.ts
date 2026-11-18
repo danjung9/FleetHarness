@@ -60,8 +60,13 @@ let genAiMil: GenAiMil;
 let connectors: ConnectorService;
 let lead: ProjectLead, clarifications: ClarificationBroker;
 const conversationActions = new Map<string, Promise<void>>();
-const previewing = new Set<string>();
-const previewStarts = new Map<string, AbortController>();
+type ProjectPreview = {
+  root: string;
+  phase: 'in-progress' | 'workspace';
+  start: AbortController;
+  stopping?: Promise<void>;
+};
+const previewing = new Map<string, ProjectPreview>();
 const previews = new ApplicationPreviews(process.execPath, {
   clearStorage: origin => window!.webContents.session.clearStorageData({ origin })
 });
@@ -81,7 +86,12 @@ async function trackPreview<T>(work: () => Promise<T>): Promise<T> {
 let desktopProxy: Awaited<ReturnType<typeof createPreviewProxy>> | undefined;
 const experimentReservations = new Map<string, string>();
 const previewBoundary = new PreviewBoundary({ fileRoot: path.join(dirname, '../../dist'), developmentURL: !app.isPackaged ? process.env.VITE_DEV_SERVER_URL : undefined });
-async function closeLegacyPreviews() { await Promise.all([...previewing].map(id => stopPreview(id))); await previews.close(); }
+let previewProject: string | undefined;
+function setPreview(url: string | null, projectId?: string) {
+  previewBoundary.setPreview(url);
+  previewProject = url ? projectId : undefined;
+}
+async function closeProjectPreviews() { await Promise.all([...previewing.keys()].map(id => stopPreview(id))); }
 const deliveries = new Map<string, { controller: AbortController; done: Promise<void> }>();
 const startingRuns = new Map<string, Promise<void>>();
 let norfolkRefresh: ReturnType<typeof refreshNorfolkCatalog> | undefined;
@@ -133,10 +143,10 @@ function requireRunCapacity() {
 }
 async function stopRun(id: string) {
   const experiment = experiments?.activeExperiment(id);
-  if (experiment) await experiments.stopExperiment(experiment); else await backend.stop(id);
+  await Promise.all([stopPreview(id), experiment ? experiments.stopExperiment(experiment) : backend.stop(id)]);
 }
 async function updateProject(id: string, input: NewProject, fromConversation = false) {
-  await stopPreview(id);
+  await stopPreview(id, 'workspace');
   const p = requireIdle(id, fromConversation);
   const catalog = p.sourceChallenge ? [p.sourceChallenge, ...currentCatalog()] : currentCatalog();
   const normalized = validateInput(input, catalog);
@@ -169,7 +179,7 @@ async function updateProject(id: string, input: NewProject, fromConversation = f
 }
 async function startRun(id: string, fromConversation = false, resuming = false, feedback?: string) {
   if (quitting) throw new Error('AppYard is closing. Reopen it to start a build.');
-  await stopPreview(id);
+  await stopPreview(id, 'workspace');
   if (resuming) return resumeRun(id, fromConversation);
   if (requireIdle(id, fromConversation).archivedAt) throw new Error('Restore this archived project in Data & storage before starting a build.');
   requireRunCapacity();
@@ -180,7 +190,7 @@ async function startRun(id: string, fromConversation = false, resuming = false, 
 }
 async function resumeRun(id: string, fromConversation = false) {
   if (quitting) throw new Error('AppYard is closing. Reopen it to resume a build.');
-  await stopPreview(id);
+  await stopPreview(id, 'workspace');
   if (requireIdle(id, fromConversation).archivedAt) throw new Error('Restore this archived project in Data & storage before resuming a build.');
   requireRunCapacity();
   let resolve!: () => void;
@@ -197,16 +207,27 @@ async function readArtifact(id: string, file: string) {
   if ((await fs.stat(target)).size > 2_000_000) throw new Error('This file is too large for the viewer. Open its workspace folder.');
   return fs.readFile(target, 'utf8');
 }
-async function stopPreview(id: string) {
-  if (!previewing.has(id)) return;
-  previewStarts.get(id)?.abort();
-  const p = store.project(id);
-  try {
-    await previews.stop(p.workspace!);
-    await new RunProcessSweep({ marker: p.processScope!.marker }).stop();
-    p.processScope!.cleanup = 'confirmed'; previewing.delete(id);
-  } catch (error) { p.processScope!.cleanup = 'unconfirmed'; throw error; }
-  finally { await store.save(); }
+async function stopPreview(id: string, phase?: ProjectPreview['phase']) {
+  const preview = previewing.get(id);
+  if (!preview || (phase && preview.phase !== phase)) return;
+  if (previewProject === id) setPreview(null);
+  preview.start.abort();
+  return preview.stopping ??= (async () => {
+    if (preview.phase === 'in-progress') {
+      // The builder owns the saved marker and sweeps it at teardown. Closing a
+      // checked snapshot only closes that preview's server or runtime package.
+      try { await previews.stop(preview.root); }
+      finally { previewing.delete(id); }
+      return;
+    }
+    const p = store.project(id);
+    try {
+      await previews.stop(preview.root);
+      await new RunProcessSweep({ marker: p.processScope!.marker }).stop();
+      p.processScope!.cleanup = 'confirmed'; previewing.delete(id);
+    } catch (error) { p.processScope!.cleanup = 'unconfirmed'; throw error; }
+    finally { await store.save(); }
+  })().catch(error => { preview.stopping = undefined; throw error; });
 }
 async function assertVerified(id: string, reservedProject?: Project) {
   const p = reservedProject ?? requireIdle(id);
@@ -305,7 +326,6 @@ function registerIPC() {
   handle('fleet:resume', (id: string) => startRun(id, false, true));
   handle('fleet:stop', async (id: string) => {
     const delivery = deliveries.get(id); delivery?.controller.abort();
-    await stopPreview(id);
     await Promise.all([stopRun(id), delivery?.done]);
   });
   handle('fleet:request-changes', (id: string, feedback: string) => {
@@ -327,48 +347,71 @@ function registerIPC() {
   // Reload can arrive while the last request is still starting. Cancel that start and take turns,
   // so one request's cleanup can never stop the next request's preview.
   const previewQueue = new Map<string, Promise<unknown>>();
-  handle('fleet:preview', (id: string) => {
+  handle('fleet:preview', (id: string, token?: string | null) => {
+    if (storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
+    const p = store.project(id);
+    if (quitting || p.archivedAt) return null;
+    const inProgress = p.status === 'running' || typeof token === 'string';
+    const snapshot = inProgress && token !== null ? backend.inProgressPreview?.(id) : undefined;
+    if (inProgress && (!snapshot || p.status !== 'running' || (token !== undefined && token !== p.inProgressPreview))) return null;
     const earlier = previewQueue.get(id);
     if (earlier) {
-      previewStarts.get(id)?.abort();
-      const workspace = store.project(id).workspace;
-      if (workspace) previews.cancel?.(workspace);
+      const starting = previewing.get(id);
+      starting?.start.abort();
+      if (starting) previews.cancel?.(starting.root);
     }
-    const current = (earlier ?? Promise.resolve()).catch(() => {}).then(() => trackPreview(() => openPreview(id)));
+    const request = ++previewRequestGeneration;
+    const current = (earlier ?? Promise.resolve()).catch(() => {}).then(() => trackPreview(() => openPreview(id, request, snapshot)));
     previewQueue.set(id, current);
     const forget = () => { if (previewQueue.get(id) === current) previewQueue.delete(id); };
     current.then(forget, forget);
     return current;
   });
-  const openPreview = async (id: string) => {
+  const openPreview = async (id: string, request: number, snapshot?: string) => {
     try {
-      if (storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
-      const request = ++previewRequestGeneration;
-      previewBoundary.setPreview(null);
-      await stopPreview(id);
-      const p = requireIdle(id);
-      if (!p.workspace) return null;
-      if (p.qualityVersion === 4) {
-        await closeLegacyPreviews();
+      const current = () => request === previewRequestGeneration && !storageMutations.size && !quitting;
+      if (!current()) return null;
+      const p = store.project(id);
+      if (p.archivedAt || (snapshot ? p.status !== 'running' || backend.inProgressPreview?.(id) !== snapshot : p.status === 'running')) return null;
+      const phase = snapshot ? 'in-progress' : 'workspace';
+      setPreview(null);
+      await stopPreview(id, phase);
+      // The renderer can see the review status just before the builder's last
+      // state save releases its active reservation.
+      if (!snapshot && p.status === 'review' && !startingRuns.has(id)) await backend.active.get(id)?.done;
+      if (!current()) return null;
+      if (!snapshot) requireIdle(id);
+      const root = snapshot ?? p.workspace;
+      if (!root) return null;
+      if (!snapshot && p.qualityVersion === 4) {
+        await closeProjectPreviews();
+        if (!current()) return null;
         const url = await experiments.previewSelected(p);
-        if (request !== previewRequestGeneration || storageMutations.size) return null;
-        previewBoundary.setPreview(url); return url;
+        if (!current()) return null;
+        setPreview(url); return url;
       }
       await experiments.closeCandidatePreview();
-      if (request !== previewRequestGeneration || storageMutations.size) return null;
-      if (!p.runId || !p.processScope) throw new Error('Start a new build before opening a runtime preview.');
+      if (!current()) return null;
+      if (snapshot) {
+        if (backend.inProgressPreview?.(id) !== snapshot) return null;
+      } else {
+        requireIdle(id);
+        if (p.workspace !== root) return null;
+      }
+      if (!p.runId || !p.processScope || p.processScope.runId !== p.runId) throw new Error('Start a new build before opening a runtime preview.');
       const scope = new RunProcessSweep({ marker: p.processScope.marker });
-      const starting = new AbortController(); previewStarts.set(id, starting);
-      p.processScope.cleanup = 'pending'; previewing.add(id);
+      const preview: ProjectPreview = { root, start: new AbortController(), phase };
+      previewing.set(id, preview);
       try {
-        await store.save();
-        if (starting.signal.aborted || previewStarts.get(id) !== starting || quitting) return null;
-        const url = await scope.run(() => previews.url(p.workspace!));
-        if (request !== previewRequestGeneration || storageMutations.size) { await stopPreview(id); return null; }
-        previewBoundary.setPreview(url); return url;
+        if (!snapshot) { p.processScope.cleanup = 'pending'; await store.save(); }
+        if (preview.start.signal.aborted || !current()) { await stopPreview(id); return null; }
+        const url = await scope.run(() => previews.url(root));
+        if (!url || preview.start.signal.aborted || !current() || (snapshot && backend.inProgressPreview?.(id) !== snapshot)) {
+          await stopPreview(id); return null;
+        }
+        setPreview(url, id); return url;
       }
       catch (error) { await stopPreview(id); throw error; }
-      finally { if (previewStarts.get(id) === starting) previewStarts.delete(id); }
     }
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || !store.project(id).workspace) return null; throw error; }
   };
@@ -378,7 +421,7 @@ function registerIPC() {
   });
   handle('fleet:approve', async (id: string, feedback: string, acceptJudgeGaps?: boolean) => {
     reviewFeedback(feedback);
-    await stopPreview(id);
+    await stopPreview(id, 'workspace');
     const p = requireIdle(id);
     let finish!: () => void;
     const done = new Promise<void>(resolve => { finish = resolve; }); approvals.set(id, done);
@@ -386,7 +429,7 @@ function registerIPC() {
     finally { approvals.delete(id); finish(); }
   });
   handle('fleet:export', async (id: string) => {
-    await stopPreview(id);
+    await stopPreview(id, 'workspace');
     const project = requireIdle(id), p = structuredClone(project), controller = new AbortController();
     let finish!: () => void;
     const done = new Promise<void>(resolve => { finish = resolve; });
@@ -437,7 +480,7 @@ function registerIPC() {
     } finally { deliveries.delete(id); finish(); }
   });
   handle('fleet:download-executable', async (id: string) => {
-    await stopPreview(id);
+    await stopPreview(id, 'workspace');
     const p = requireIdle(id), controller = new AbortController();
     const prior = structuredClone(p);
     let finish!: () => void;
@@ -516,14 +559,14 @@ function registerIPC() {
     if (method === 'saveIntegrationOperation' || method === 'removeIntegrationOperation') requireNoRuns();
     if (method === 'previewCandidate' && storageMutations.size) throw new Error('Wait for the storage action to finish before opening a preview.');
     const request = method === 'previewCandidate' || method === 'closeCandidatePreview' ? ++previewRequestGeneration : previewRequestGeneration;
-    if (method === 'previewCandidate') { await closeLegacyPreviews(); previewBoundary.setPreview(null); }
-    if (method === 'closeCandidatePreview') previewBoundary.setPreview(null);
+    if (method === 'previewCandidate') { await closeProjectPreviews(); setPreview(null); }
+    if (method === 'closeCandidatePreview') setPreview(null);
     const result = method === 'previewCandidate'
       ? await trackPreview(() => Reflect.apply(experiments[method], experiments, args))
       : await Reflect.apply(experiments[method], experiments, args);
     if (method === 'previewCandidate') {
       if (request !== previewRequestGeneration || storageMutations.size) return null;
-      previewBoundary.setPreview(result as string | null);
+      setPreview(result as string | null);
     }
     return result;
   });
@@ -666,7 +709,10 @@ if (ownsInstance) app.whenReady().then(async () => {
       encrypt: text => safeStorage.encryptString(text), decrypt: bytes => safeStorage.decryptString(Buffer.from(bytes))
     });
     clarifications = new ClarificationBroker(store, notify);
-    backend = new AppBuilder(store, process.execPath, notify, app.getAppPath(), { codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil });
+    backend = new AppBuilder(store, process.execPath, notify, app.getAppPath(), {
+      codex, clarifications, connectorStore: connectors.store, genAiMil: () => genAiMil,
+      closeInProgressPreview: id => stopPreview(id, 'in-progress')
+    });
     await backend.init(); await codex.refresh();
     try { await backend.opencode.refresh(); } catch { backend.opencode.error = 'AppYard could not start. Reinstall dependencies and retry.'; }
     try {
@@ -693,7 +739,7 @@ if (ownsInstance) app.whenReady().then(async () => {
         || deliveries.has(id) || storageMutations.has(id) || approvals.has(id) || conversationActions.has(id) || lead.active.has(id) || experiments.isActive(id),
       beforeMutation: async id => {
         if (quitting) throw new Error('AppYard is closing.');
-        if (store.state.projects.some(project => project.id === id)) { await stopPreview(id); requireIdle(id); }
+        if (store.state.projects.some(project => project.id === id)) { await stopPreview(id, 'workspace'); requireIdle(id); }
         let finish!: () => void;
         const done = new Promise<void>(resolve => { finish = resolve; });
         storageMutations.set(id, done);
@@ -701,7 +747,7 @@ if (ownsInstance) app.whenReady().then(async () => {
         try {
           await lead.cancel(id);
           await Promise.allSettled([...previewRequests]);
-          await closeLegacyPreviews(); previewBoundary.setPreview(null); await experiments.closeCandidatePreview();
+          await closeProjectPreviews(); setPreview(null); await experiments.closeCandidatePreview();
         }
         catch (error) { storageMutations.delete(id); finish(); throw error; }
         return () => { storageMutations.delete(id); finish(); };
@@ -732,9 +778,9 @@ if (ownsInstance) app.whenReady().then(async () => {
 let quitting = false;
 app.on('before-quit', event => {
   if (!quitting && (experiments || connectors?.busy || previewing.size || backend?.active.size || lead?.active.size || deliveries.size || startingRuns.size || conversationActions.size || storageMutations.size || approvals.size)) {
-    event.preventDefault(); quitting = true;
+    event.preventDefault(); quitting = true; setPreview(null);
     for (const delivery of deliveries.values()) delivery.controller.abort();
-    void Promise.allSettled([connectors?.shutdown(), ...[...previewing].map(id => stopPreview(id)), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...(codexGoals?.pending() ?? []), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
+    void Promise.allSettled([connectors?.shutdown(), closeProjectPreviews(), backend?.stopAll(), lead?.stopAll(), experiments?.close(), desktopProxy?.close(), ...(codexGoals?.pending() ?? []), ...startingRuns.values(), ...conversationActions.values(), ...storageMutations.values(), ...approvals.values(), ...[...deliveries.values()].map(d => d.done)]).then(async () => {
       try { await store.save(); } catch { console.error('Could not save the final workspace state while closing.'); }
       app.quit();
     });

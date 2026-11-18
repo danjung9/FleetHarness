@@ -43,6 +43,7 @@ export class Store {
     this.state.settings.developerMode = this.state.settings.developerMode === true;
     if (!isReasoningEffort(this.state.settings.reasoningEffort)) delete this.state.settings.reasoningEffort;
     for (const p of this.state.projects) {
+      p.inProgressPreview = undefined;
       if (p.conversation) {
         p.conversation.status = 'idle';
         for (const message of p.conversation.messages) {

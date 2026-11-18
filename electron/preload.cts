@@ -67,7 +67,7 @@ contextBridge.exposeInMainWorld('fleetHarness', {
   artifacts: (id: string) => ipcRenderer.invoke('fleet:artifacts', id),
   readArtifact: (id: string, file: string) => ipcRenderer.invoke('fleet:read', id, file),
   visualReviewImage: (id: string, captureId: string) => ipcRenderer.invoke('fleet:visual-review-image', id, captureId),
-  preview: (id: string) => ipcRenderer.invoke('fleet:preview', id),
+  preview: (id: string, inProgressToken?: string | null) => ipcRenderer.invoke('fleet:preview', id, inProgressToken),
   openWorkspace: (id: string) => ipcRenderer.invoke('fleet:open', id),
   setDeveloperMode: (enabled: boolean) => ipcRenderer.invoke('fleet:developer-mode', enabled),
   saveSettings: (settings: Settings, apiKey?: string) => ipcRenderer.invoke('fleet:settings', settings, apiKey),

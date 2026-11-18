@@ -14,6 +14,7 @@ import { originProxy } from './agent-browser.js';
 import { createPreviewProxy } from './preview-proxy.js';
 import type { SolutionRuntime } from './solution-runtime.js';
 import { ClassifiedExecutionFailure } from './execution-failure.js';
+import { VerificationShutdownError } from './verification.js';
 
 export { performBrowserStep } from './browser-actions.js';
 import type { DownloadCaptures } from './browser-actions.js';
@@ -40,9 +41,13 @@ export interface BrowserVerificationOptions {
   signal?: AbortSignal;
   timeoutMs?: number;
   stepTimeoutMs?: number;
+  /** Selected viewports, in execution order. Defaults to desktop and narrow. */
+  viewports?: readonly JourneyResult['viewport'][];
+  /** Diagnostic runs return the outcome and failure details without saving browser artifacts. */
+  evidence?: 'artifacts' | 'diagnostic';
 }
 
-const viewports = { desktop: { width: 1280, height: 800 }, narrow: { width: 390, height: 844 } } as const;
+const viewportDimensions = { desktop: { width: 1280, height: 800 }, narrow: { width: 390, height: 844 } } as const;
 const maxArtifactBytes = 8_000_000;
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 1800);
 
@@ -121,7 +126,13 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
   const { root, contractHash, executable, signal } = options;
   const plan = structuredClone(options.plan), ux = options.ux === undefined ? undefined : structuredClone(options.ux);
   const timeoutMs = options.timeoutMs ?? 120_000, stepTimeoutMs = options.stepTimeoutMs ?? 5_000;
+  const viewports = [...(options.viewports ?? (Object.keys(viewportDimensions) as JourneyResult['viewport'][]))];
+  const captureArtifacts = options.evidence !== 'diagnostic';
+  const terminalFailure = (error: unknown) => classifiedFailure(error) || (!captureArtifacts && error instanceof VerificationShutdownError);
   for (const [name, value] of Object.entries({ timeoutMs, stepTimeoutMs })) if (!Number.isSafeInteger(value) || value <= 0) throw new Error('Invalid browser verification limit: ' + name);
+  if (!viewports.length || new Set(viewports).size !== viewports.length || viewports.some(viewport => !Object.hasOwn(viewportDimensions, viewport))) {
+    throw new Error('Browser verification requires a nonempty selection of distinct known viewports.');
+  }
   if (options.url && options.prepareRuntime) throw new Error('Browser verification accepts either a runtime factory or a shared URL, not both.');
   if (signal?.aborted) throw new Error('Browser verification stopped.');
   const deadline = new Deadline(timeoutMs, signal);
@@ -135,7 +146,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
   let redact = (text: string) => text;
   try {
     if (!plan.journeys.length) throw new Error('No browser journeys were supplied for verification.');
-    const evidence = await deadline.run(artifactPath(root, contractHash));
+    const evidence = captureArtifacts ? await deadline.run(artifactPath(root, contractHash)) : undefined;
     const sharedUrl = options.prepareRuntime ? undefined : options.url ?? await deadline.run(previews.url(root, ux?.schemaVersion === 2 ? ['index.html'] : undefined));
     const sharedRouteBase = options.routeBase ?? (!options.url && sharedUrl && ux?.schemaVersion === 2 ? new URL('.', sharedUrl).pathname.replace(/\/$/, '') : '');
     if (sharedUrl && !/^http:\/\/127\.0\.0\.1:\d+\//.test(sharedUrl)) throw new Error('Verification requires a host-started loopback runtime.');
@@ -167,9 +178,10 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
       }
     }
     if (!browser) throw new Error('Browser verification could not start. Install Google Chrome, or run `npm run setup:browser` from the source checkout to install Chromium, then retry. No browser is downloaded during a build.\n' + failures.join('\n').slice(0, 2000));
-    for (const journey of plan.journeys) for (const [viewport, dimensions] of Object.entries(viewports)) {
+    for (const journey of plan.journeys) for (const viewport of viewports) {
       deadline.check();
-      const result: JourneyResult = { id: journey.id, title: journey.title, viewport: viewport as JourneyResult['viewport'], status: 'failed', detail: '', completedSteps: 0, totalSteps: journey.steps.length };
+      const dimensions = viewportDimensions[viewport];
+      const result: JourneyResult = { id: journey.id, title: journey.title, viewport, status: 'failed', detail: '', completedSteps: 0, totalSteps: journey.steps.length };
       journeys.push(result);
       const problems: string[] = [];
       const record = (problem: string) => { if (problems.length < 12 && !problems.includes(problem)) problems.push(problem.slice(0, 1200)); };
@@ -179,13 +191,20 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
       let preparingProxy: Promise<Awaited<ReturnType<typeof originProxy>>> | undefined;
       let attemptClosed = false, lifecycleFailure: unknown;
       const cleanupLimit = Math.min(2000, timeoutMs);
+      const closeRuntime = async (target: JourneyRuntime, label: string) => {
+        try { await cleanupWithin(target.close(), cleanupLimit, label); }
+        catch (error) {
+          if (captureArtifacts || terminalFailure(error)) throw error;
+          throw new VerificationShutdownError(error);
+        }
+      };
       const recordHttpErrors = () => { for (const error of httpEvidence?.errors() ?? []) record(error); };
       const stem = journey.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80) + '-' + viewport;
       try {
         if (options.prepareRuntime) {
           preparing = Promise.resolve().then(() => options.prepareRuntime!(deadline.signal)).then(async started => {
             if (attemptClosed || deadline.signal.aborted) {
-              await cleanupWithin(started.close(), cleanupLimit, 'Late browser runtime');
+              await closeRuntime(started, 'Late browser runtime');
               throw new Error('Browser verification stopped before runtime preparation completed.');
             }
             runtime = started; redact = text => started.redactMessage(text); return started;
@@ -212,8 +231,10 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           record('Application requested a blocked WebSocket: ' + socket.url().slice(0, 300));
           await socket.close({ code: 1008, reason: 'WebSockets are unavailable during verification.' }).catch(() => {});
         }));
-        await deadline.run(context.tracing.start({ screenshots: true, snapshots: true, sources: false }));
-        tracing = true;
+        if (evidence) {
+          await deadline.run(context.tracing.start({ screenshots: true, snapshots: true, sources: false }));
+          tracing = true;
+        }
         page = await deadline.run(context.newPage());
         httpEvidence = await deadline.run(BrowserHttpEvidence.attach(page));
         page.on('pageerror', error => record('Browser error: ' + error.message));
@@ -239,7 +260,9 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
             const operation = performBrowserStep(page, step, stepLimit, httpEvidence, ux, runtime?.routeBase ?? sharedRouteBase, downloads, hooks);
             // Runtime startup/invocation limits own service operations; the
             // journey deadline still bounds stalled hooks and cancellation.
-            const hostDeadline = ['expectScreen', 'restartRuntime', 'expectServiceState'].includes(step.action);
+            // Diagnostic runs let literal assertions report their last observation.
+            const hostDeadline = ['expectScreen', 'restartRuntime', 'expectServiceState'].includes(step.action)
+              || (!captureArtifacts && (step.action === 'expectText' || step.action === 'expectValue'));
             await deadline.run(hostDeadline ? operation : stepWithin(operation, stepLimit));
             result.completedSteps = stepIndex;
           } finally { expectedDownloads = 0; }
@@ -251,20 +274,20 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
         result.status = problems.length ? 'failed' : 'passed';
         result.detail = problems.length ? problems.join('\n') : `Completed ${journey.steps.length} steps at ${dimensions.width}×${dimensions.height}; no browser errors or horizontal overflow.`;
       } catch (error) {
-        if (classifiedFailure(error)) lifecycleFailure = error;
+        if (terminalFailure(error)) lifecycleFailure = error;
         recordHttpErrors();
         result.detail = [`Step ${stepIndex || 'load'}: ${message(error)}`, ...problems].join('\n');
       } finally {
         try {
           deadline.check();
-          if (page && !page.isClosed()) {
+          if (evidence && page && !page.isClosed()) {
             const screenshot = path.join(evidence.relative, stem + '.png');
             const bytes = await deadline.run(page.screenshot({ timeout: Math.min(2000, deadline.remaining()), animations: 'disabled', fullPage: false }));
             await deadline.run(atomicHostWrite(evidence.base, screenshot, bytes));
             await deadline.run(keepArtifact(path.join(evidence.base, screenshot)));
             result.screenshot = screenshot.replaceAll(path.sep, '/');
           }
-          if (context && tracing) {
+          if (evidence && context && tracing) {
             const trace = path.join(evidence.relative, stem + '.zip');
             const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'appyard-trace-'));
             try {
@@ -290,17 +313,23 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
           try { await deadline.run(runtime.assertIntegrity()); }
           catch (error) { lifecycleFailure ??= error; result.status = 'failed'; result.detail += '\nRuntime integrity: ' + message(error); }
           finally {
-            try { await cleanupWithin(runtime.close(), cleanupLimit, 'Browser runtime'); }
-            catch (error) { lifecycleFailure ??= error; result.status = 'failed'; result.detail += '\nRuntime cleanup: ' + message(error); }
+            try { await closeRuntime(runtime, 'Browser runtime'); }
+            catch (error) {
+              if (!captureArtifacts && terminalFailure(error)) lifecycleFailure = error;
+              else lifecycleFailure ??= error;
+              result.status = 'failed'; result.detail += '\nRuntime cleanup: ' + message(error);
+            }
           }
           result.detail = runtime.redactMessage(result.detail);
-        } else if (preparing) await settleWithin(preparing, cleanupLimit);
+        } else if (preparing) await settleWithin(captureArtifacts ? preparing : preparing.catch(error => {
+          if (terminalFailure(error)) lifecycleFailure = error;
+        }), cleanupLimit);
       }
       if (lifecycleFailure) throw lifecycleFailure;
       try { deadline.check(); }
       catch (error) { result.status = 'failed'; result.detail += '\nVerification deadline: ' + redact(message(error)); throw error; }
     }
-  } catch (error) { if (classifiedFailure(error)) throw error; errors.push(redact(message(error))); }
+  } catch (error) { if (terminalFailure(error)) throw error; errors.push(redact(message(error))); }
   finally {
     closed = true;
     // Killing the browser server also interrupts unresponsive page scripts. A launch
@@ -314,7 +343,7 @@ export async function verifyBrowserJourneys(options: BrowserVerificationOptions)
     deadline.dispose();
   }
   if (signal?.aborted) throw new Error('Browser verification stopped.');
-  for (const journey of plan.journeys) for (const viewport of Object.keys(viewports) as JourneyResult['viewport'][]) {
+  for (const journey of plan.journeys) for (const viewport of viewports) {
     if (!journeys.some(result => result.id === journey.id && result.viewport === viewport)) journeys.push({ id: journey.id, title: journey.title, viewport, status: 'failed', detail: 'Not executed: ' + (errors[0] || 'browser verification interrupted') });
   }
   return { journeys, errors };

@@ -49,21 +49,49 @@ function Modal({ title, close, children, wide = false, className = '' }: { title
   </dialog>;
 }
 function Development({ project, action }: { project: Project; action: Action }) {
-  const [preview, setPreview] = useState<string | null>(null), [revision, setRevision] = useState(0), [loading, setLoading] = useState(true);
-  const [previewFailed, setPreviewFailed] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const [opened, setOpened] = useState<{ key: string; url: string | null; failed: boolean }>();
+  const checkedPreviews = isDesktop && !workerURL;
+  const inProgress = checkedPreviews && project.status === 'running' ? project.inProgressPreview : undefined;
+  const waiting = checkedPreviews && project.status === 'running' && !inProgress;
   const completed = ['review', 'approved', 'delivered'].includes(project.status);
+  const key = JSON.stringify([project.runId, project.status, inProgress, revision]);
+  const preview = opened?.key === key ? opened : undefined;
+  const buildingMessage = checkedPreviews ? 'Your app is building. The preview opens after a workflow passes its first check.' : 'Your app is building. You can keep chatting while the preview is prepared.';
+  const reload = () => setRevision(value => value + 1);
   useEffect(() => {
-    let current = true; setLoading(true); setPreviewFailed(false);
-    api.preview(project.id).then(value => { if (current) setPreview(value); }).catch(() => { if (current) { setPreview(null); setPreviewFailed(true); } }).finally(() => { if (current) setLoading(false); });
+    if (waiting) return;
+    let current = true;
+    api.preview(project.id, inProgress ?? null)
+      .then(url => { if (current) setOpened({ key, url, failed: false }); })
+      .catch(() => { if (current) setOpened({ key, url: null, failed: true }); });
     return () => { current = false; };
-  }, [project.id, project.runId, project.status, revision]);
-  useEffect(() => { if (project.status !== 'running' || preview) return; const timer = setInterval(() => setRevision(value => value + 1), 10000); return () => clearInterval(timer); }, [project.status, preview]);
+  }, [project.id, key, inProgress, waiting]);
+  useEffect(() => {
+    if (!workerURL || project.status !== 'running' || preview?.url) return;
+    const timer = setInterval(reload, 10000);
+    return () => clearInterval(timer);
+  }, [project.status, preview?.url]);
+  let content;
+  if (!waiting && !preview) content = <p className="muted" role="status">Opening the latest preview…</p>;
+  else if (preview?.url) content = <iframe key={key} title={inProgress ? 'In-progress application preview' : 'Generated application preview'} src={preview.url}/>;
+  else if (inProgress || (project.runtimeProfile !== 'cli' && (completed || (preview?.failed && project.status !== 'running')))) {
+    content = <Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<button className="secondary" onClick={reload}>Retry preview</button>}>
+      {inProgress ? 'Could not open the checked workflow. Your build is still running.' : 'Could not open the preview. Your build and its evidence are kept.'}
+    </Empty>;
+  } else {
+    content = <Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'}>
+      {project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? buildingMessage : 'Describe your app in the chat, then choose Build to start.'}
+    </Empty>;
+  }
   return <div className="development"><section className="preview-panel">
-    <div className="preview-toolbar"><h2>App preview</h2><div className="preview-actions">
+    <div className="preview-toolbar"><div className="preview-heading"><h2>App preview</h2>
+      {inProgress && <span className="preview-progress" role="status"><strong>In progress</strong> One workflow checked. Full verification is pending.</span>}
+    </div><div className="preview-actions">
       <IconButton label="Open source folder" disabled={!project.workspace} onClick={() => void action(() => api.openWorkspace(project.id))}><FolderOpen size={18}/></IconButton>
-      <IconButton label="Reload preview" onClick={() => setRevision(r => r + 1)}><RefreshCw size={17}/></IconButton>
+      <IconButton label="Reload preview" disabled={waiting} onClick={reload}><RefreshCw size={17}/></IconButton>
     </div></div>
-    {loading ? <div className="preview-placeholder"><p className="muted" role="status">Opening the latest preview…</p></div> : preview ? <iframe key={revision} title="Generated application preview" src={preview}/> : project.runtimeProfile !== 'cli' && (completed || (previewFailed && project.status !== 'running')) ? <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title="Preview unavailable" action={<><button className="secondary" onClick={() => setRevision(r => r + 1)}>Retry preview</button></>}>Could not open the preview. Your build and its evidence are kept.</Empty></div> : <div className="preview-placeholder"><Empty icon={<Code2 size={32}/>} title={project.runtimeProfile === 'cli' ? 'Command-line solution' : 'Your app will appear here'}>{project.runtimeProfile === 'cli' ? 'This solution runs from the command line. Review its capability evidence and open the workspace for startup instructions.' : project.status === 'running' ? 'Your app is building. You can keep chatting while the preview is prepared.' : 'Describe your app in the chat, then choose Build to start.'}</Empty></div>}
+    {preview?.url ? content : <div className="preview-placeholder">{content}</div>}
   </section></div>;
 }
 function Artifacts({ project, action, requested, onManage }: { project: Project; action: Action; requested: string; onManage: () => void }) {

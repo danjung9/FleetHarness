@@ -25,15 +25,21 @@ try {
       createProject: async input => { const project = { ...input, id: crypto.randomUUID(), status: 'draft', stages: structuredClone(stages), logs: [], feedback: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; state.projects.unshift(project); publish(); return structuredClone(project); },
       startRun: async id => { if (window.builderFixture.failStart) throw new Error('EPERM: operation not permitted, rename temporary -> .fleet'); find(id).status = 'running'; find(id).runId = 'local-run'; find(id).workspace = '/local-test'; find(id).resumeStage = 'build'; publish(); },
       resumeRun: async id => { find(id).status = 'running'; publish(); },
-      stopRun: async id => { find(id).status = 'stopped'; publish(); },
-      preview: async id => find(id).status === 'running' ? location.origin + '/fixture-preview' : null,
+      stopRun: async id => { find(id).status = 'stopped'; delete find(id).inProgressPreview; publish(); },
+      preview: async (id, token) => {
+        const project = find(id);
+        if (project.status === 'running' && token && token === project.inProgressPreview) return location.origin + '/fixture-checked-preview';
+        if (project.status === 'review' && token === null) return location.origin + '/fixture-verified-preview';
+        return null;
+      },
       artifacts: async () => [{ path: 'README.md', size: 100 }],
       readArtifact: async () => '# Local test app',
       sendMessage: async (id, text) => { const project = find(id); project.conversation ??= { status: 'idle', messages: [], questions: [], actions: [] }; project.conversation.messages.push({ id: crypto.randomUUID(), role: 'user', text, status: 'complete', createdAt: new Date().toISOString() }, { id: crypto.randomUUID(), role: 'assistant', text: 'I will update the app.', status: 'complete', createdAt: new Date().toISOString() }); publish(); },
       cancelMessage: async () => {}, answerClarification: async () => {}, applyConversationAction: async () => {}, dismissConversationAction: async () => {},
     };
   }, { stages: ['intake', 'research', 'plan', 'build', 'verify', 'review', 'deliver'].map(id => ({ id, label: id, detail: 'Local UI fixture', status: 'queued' })) });
-  await page.route('**/fixture-preview', route => route.fulfill({ contentType: 'text/html', body: '<html><body style="font-family:system-ui;padding:32px"><h1>Local test app</h1><p>Live preview connected.</p></body></html>' }));
+  await page.route('**/fixture-checked-preview', route => route.fulfill({ contentType: 'text/html', body: '<html><body style="font-family:system-ui;padding:32px"><h1>Local test app</h1><p>One workflow is ready to try.</p></body></html>' }));
+  await page.route('**/fixture-verified-preview', route => route.fulfill({ contentType: 'text/html', body: '<html><body><h1>Local verified app</h1></body></html>' }));
   await page.goto(url);
   page.setDefaultTimeout(5000);
   await page.getByRole('button', { name: 'New app', exact: true }).click();
@@ -56,13 +62,21 @@ try {
   await page.getByRole('navigation', { name: 'App views' }).getByRole('button', { name: 'Preview', exact: true }).click();
   await page.evaluate(() => { window.builderFixture.failStart = false; });
   await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await page.getByText('The preview opens after a workflow passes its first check.', { exact: false }).waitFor();
+  assert.equal(await page.locator('iframe').count(), 0);
+  await page.evaluate(() => {
+    const { state, publish } = window.builderFixture;
+    state.projects[0].inProgressPreview = 'checked-workflow-revision';
+    publish();
+  });
+  await page.getByText('In progress', { exact: true }).waitFor();
+  await page.frameLocator('iframe').getByRole('heading', { name: 'Local test app' }).waitFor();
+  const appViews = page.getByRole('navigation', { name: 'App views' });
+  assert.equal(await appViews.getByRole('button', { name: /^(Review|Export)$/ }).count(), 0);
+  await page.getByRole('button', { name: 'Reload preview', exact: true }).click();
   await page.frameLocator('iframe').getByRole('heading', { name: 'Local test app' }).waitFor();
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await page.getByText('I will update the app.', { exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await page.getByRole('button', { name: 'Resume', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Resume', exact: true }).click();
-  await page.frameLocator('iframe').getByRole('heading', { name: 'Local test app' }).waitFor();
   for (const [width, height, name] of [[1440,960,'desktop'],[1120,720,'minimum'],[390,844,'mobile']]) {
     await page.setViewportSize({ width, height });
     await page.evaluate(() => document.fonts.ready);
@@ -72,6 +86,12 @@ try {
     if (!process.env.BUILDER_SKIP_CAPTURES) await page.screenshot({ path: path.join(output, name + '.png'), fullPage: true, animations: 'disabled' });
   }
   await page.setViewportSize({ width: 1440, height: 960 });
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.locator('iframe').waitFor({ state: 'detached' });
+  assert.equal(await page.getByText('In progress', { exact: true }).count(), 0);
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  await page.getByText('The preview opens after a workflow passes its first check.', { exact: false }).waitFor();
+  assert.equal(await page.locator('iframe').count(), 0);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.locator('.home-build-list>button').first().click();
   await page.getByLabel('Message', { exact: true }).waitFor();
@@ -88,7 +108,9 @@ try {
     });
     publish();
   });
-  await page.getByRole('navigation', { name: 'App views' }).getByRole('button', { name: 'Review', exact: true }).click();
+  await page.frameLocator('iframe').getByRole('heading', { name: 'Local verified app' }).waitFor();
+  assert.equal(await page.getByText('In progress', { exact: true }).count(), 0);
+  await appViews.getByRole('button', { name: 'Review', exact: true }).click();
   await page.getByText('Automated checks passed', { exact: true }).waitFor();
   assert.equal(await page.locator('.experiment-review, .experiment-unavailable').count(), 0);
   assert.equal(await page.getByRole('button', { name: 'Use these gaps as my change request' }).count(), 0);
@@ -96,5 +118,5 @@ try {
   await page.getByLabel('I inspected the application, test evidence, and limitations.').check();
   assert.equal(await page.getByRole('button', { name: 'Approve app', exact: true }).isEnabled(), true);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, checks: ['new chat opens split workspace','no briefing UI','failed build preserves workspace','tabs preserve chat draft','chat send','live iframe preview','stop and resume','reopen saved project','desktop/minimum/mobile overflow'], screenshots: output }, null, 2));
+  console.log(JSON.stringify({ passed: true, checks: ['new chat opens split workspace','no briefing UI','failed build preserves workspace','tabs preserve chat draft','chat send','checked in-progress preview and reload','stop and resume','reopen saved project','verified preview and review gate','desktop/minimum/mobile overflow'], screenshots: output }, null, 2));
 } finally { await browser.close(); await server?.httpServer.close(); }

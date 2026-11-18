@@ -79,6 +79,8 @@ export interface Project extends BriefContext {
   executionFailure?: 'infrastructure' | 'integrity' | 'implementation' | 'budget' | 'cancelled';
   visualReview?: import('./visual-review.js').VisualReviewReport;
   runtimeProfile?: 'browser' | 'cli' | 'service';
+  /** Opaque revision of the checked workflow available during this build. */
+  inProgressPreview?: string;
   executable?: { status: 'packaging' | 'ready' | 'failed'; platform: string; arch: string; fileName: string; savedTo?: string; error?: string };
   phasePlan?: import('../harness/phases.js').PhaseContract[];
   globalTools?: string[];
@@ -134,7 +136,7 @@ export interface FleetAPI extends ExperimentAPI, DataStorageAPI {
   artifacts(id: string): Promise<Artifact[]>;
   readArtifact(id: string, file: string): Promise<string>;
   visualReviewImage(id: string, captureId: string): Promise<string>;
-  preview(id: string): Promise<string | null>;
+  preview(id: string, inProgressToken?: string | null): Promise<string | null>;
   openWorkspace(id: string): Promise<void>;
   setDeveloperMode(enabled: boolean): Promise<Bootstrap>;
   saveSettings(settings: Settings, apiKey?: string): Promise<Bootstrap>;
