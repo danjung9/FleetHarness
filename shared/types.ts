@@ -115,7 +115,7 @@ export interface ChatGPTAccount {
 export interface AppState { version: 1; projects: Project[]; settings: Settings; norfolkCatalog?: import('../harness/norfolk.js').NorfolkCatalog }
 export interface GenAiMilIssue { message: string; nextStep: string; unlockUrl?: string; replacementModel?: string; retryAt?: number }
 export interface GenAiMilConnection { address: string; hasKey: boolean; connected: boolean; models: string[]; imageModels?: string[]; issue?: GenAiMilIssue }
-export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean; experiments?: boolean; planningContinuation?: boolean }; genAiMil?: GenAiMilConnection }
+export interface Bootstrap { state: AppState; models: AgentModel[]; storagePath: string; credentialStatus: string; runtime: string; buildLabel?: string; chatgpt?: ChatGPTAccount; capabilities?: { projectConversation: boolean; experiments?: boolean; planningContinuation?: boolean }; genAiMil?: GenAiMilConnection }
 export interface NewProject extends BriefContext { title: string; description: string; criteria: string[]; challengeId?: string }
 export interface Artifact { path: string; size: number }
 export interface FleetAPI extends ExperimentAPI, DataStorageAPI {

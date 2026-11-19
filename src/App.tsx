@@ -256,7 +256,11 @@ export default function App() {
     <main className="workspace">
       <header className="topbar">
         {project && !globalView ? <div className="workspace-picker"><select aria-label="Current app" value={project.id} onChange={event => openProject(event.target.value)}>{projects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}</select></div> : <div className="workspace-title"><img className="brand-wordmark" src={brandLogo} width={452} height={112} alt="AppYard"/><span>/ {active === 'settings' ? 'Settings' : active === 'storage' ? 'Storage' : newSession && !showHome ? 'New app' : 'Home'}</span></div>}
-        <div className="top-actions"><ModelSelector compact data={{ ...data, state }} api={api} busy={busy} action={action} updated={updateBootstrap} desktop={isDesktop} openSettings={() => navigate('settings')}/><IconButton label="Find app (Ctrl+K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton></div>
+        <div className="top-actions">
+          {isDesktop && data.buildLabel && <span className="badge active build-label">{data.buildLabel}</span>}
+          <ModelSelector compact data={{ ...data, state }} api={api} busy={busy} action={action} updated={updateBootstrap} desktop={isDesktop} openSettings={() => navigate('settings')}/>
+          <IconButton label="Find app (Ctrl+K)" onClick={() => { setQuery(''); setSearch(true); }}><Search size={18}/></IconButton>
+        </div>
       </header>
       {error && <div className="builder-error" role="alert"><XCircle size={17}/><span>{error}</span><IconButton label="Dismiss error" onClick={() => setError('')}><X size={16}/></IconButton></div>}
       {showHome && <Home projects={projects} open={openProject} busy={busy} canBuild={configured} build={build}/>}
