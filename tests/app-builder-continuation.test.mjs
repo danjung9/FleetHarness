@@ -9,6 +9,7 @@ import { ClarificationBroker } from '../dist-electron/electron/clarifications.js
 import { RunProcessSweep } from '../dist-electron/electron/process-sweep.js';
 import { ApplicationPreviews } from '../dist-electron/electron/solution-preview.js';
 import { Store, newProject } from '../dist-electron/electron/storage.js';
+import { foundationRuntime } from '../dist-electron/harness/foundations.js';
 import { reportPassed } from '../dist-electron/shared/verification.js';
 import { cliFixtureProject, qualityFixtureHtml, qualityFixtureProject } from '../scripts/quality-fixture.mjs';
 import { cliSolutionFixture, solutionFixtureEvaluator, structuredSolutionFixture } from '../scripts/solution-fixture.mjs';
@@ -48,7 +49,7 @@ async function fixture(t, { brief = qualityFixtureProject, plan = structuredSolu
         subscribe(listener) { observe = listener; return () => { observe = undefined; }; },
         async prompt(text) {
           prompts.push(text);
-          if (text.includes(planTurn)) {
+          if (plan && text.includes(planTurn)) {
             const packet = JSON.parse(await readFile(path.join(cwd, '.fleet', 'packet.json'), 'utf8'));
             await writeFiles(cwd, plan(packet.acceptance.map(criterion => criterion.id)));
           }
@@ -80,6 +81,51 @@ const appTest = `const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { parse } = require('./core.cjs');
 test('extracts the task', () => assert.equal(parse('TASK: inspect pump'), 'inspect pump'));`;
+
+test('structured planning validates the whole contract and installs the selected service starter before implementation', async t => {
+  const { project, run, prompts } = await fixture(t, {
+    plan: null,
+    async prompt(text, cwd, _truncate, call) {
+      if (text.includes(planTurn)) {
+        assert.match(text, /submit_build_plan/);
+        const packet = JSON.parse(await readFile(path.join(cwd, '.fleet', 'packet.json'), 'utf8'));
+        const files = structuredSolutionFixture(packet.acceptance.map(criterion => criterion.id));
+        const acceptance = JSON.parse(files['acceptance-plan.json']);
+        const ux = JSON.parse(files['ux-spec.json']);
+        const solution = JSON.parse(files['solution-contract.json']);
+        const evaluation = JSON.parse(files['evaluation-plan.json']);
+        const foundation = { schemaVersion: 1, templateId: 'node-service', version: '1.0.0', computePack: 'offline', reason: 'Exercise the bundled service.' };
+        assert.equal((await call('submit_build_plan', { ux })).isError, false);
+        assert.equal(project.inProgressPlan.primaryTask, ux.primaryTask);
+        await assert.rejects(access(path.join(cwd, 'ux-spec.json')), { code: 'ENOENT' });
+        const mismatch = await call('submit_build_plan', { acceptance, solution, evaluation, foundation });
+        assert.equal(mismatch.isError, true);
+        assert.match(mismatch.content[0].text, /runtime does not match/);
+        assert.match(mismatch.content[0].text, /Retained sections: ux, acceptance, solution, evaluation, foundation/);
+        await assert.rejects(access(path.join(cwd, 'solution-contract.json')), { code: 'ENOENT' });
+        solution.runtime = foundationRuntime(foundation);
+        assert.equal((await call('submit_build_plan', { solution })).isError, false);
+      } else {
+        assert.match(text, new RegExp(previewTurn));
+        assert.equal((await call('submit_build_plan', {})).isError, true);
+        assert.equal(project.runtimeProfile, 'service');
+        const solutionText = await readFile(path.join(cwd, 'solution-contract.json'), 'utf8');
+        assert.match(solutionText, /^\{\n  "schemaVersion"/);
+        const { runtime } = JSON.parse(solutionText);
+        await Promise.all(runtime.files.map(file => access(path.join(cwd, file))));
+        const lock = JSON.parse(await readFile(path.join(cwd, 'foundation-lock.json'), 'utf8'));
+        assert.equal(lock.selection.templateId, 'node-service');
+        assert.equal(lock.selection.computePack, 'offline');
+        assert.ok(lock.files['lib/offline.js']);
+      }
+    },
+    async verify() { throw new Error('Fixture reached final verification with a complete starter.'); },
+  });
+  await run();
+  assert.equal(prompts.length, 2);
+  assert.equal(project.error, 'Fixture reached final verification with a complete starter.');
+  assert.ok(project.logs.some(entry => entry.text.includes('structured submission')));
+});
 
 test('AppBuilder continues truncated implementation and repair turns before running verification', async t => {
   const flow = [];
